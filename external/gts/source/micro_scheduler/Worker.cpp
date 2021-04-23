@@ -24,6 +24,7 @@
 #include "gts/platform/Assert.h"
 #include "gts/analysis/Trace.h"
 #include "gts/analysis/Counter.h"
+#include "gts/synchronization/Lock.h"
 
 #include "gts/micro_scheduler/MicroScheduler.h"
 #include "gts/micro_scheduler/WorkerPool.h"
@@ -31,6 +32,7 @@
 #include "LocalScheduler.h"
 
 static GTS_THREAD_LOCAL uintptr_t tl_threadState;
+static constexpr uint64_t LOWER_BOUND_SLEEP_CYCLES = 1024 * 10;
 
 //------------------------------------------------------------------------------
 static uintptr_t gtsGetThreadState()
@@ -62,6 +64,7 @@ Worker::Worker()
     , m_pSleepBlocker(nullptr)
     , m_pCurrentScheduler(nullptr)
     , m_pUserData(nullptr)
+    , m_minSleepCycles(UINT64_MAX)
     , m_pHaltSemaphore(nullptr)
     , m_pLocalSchedulersMutex(nullptr)
     , m_pGetThreadLocalStateFcn(nullptr)
@@ -424,11 +427,14 @@ void Worker::sleep(bool force)
     GTS_TRACE_SCOPED_ZONE_P2(analysis::CaptureMask::WORKERPOOL_ALL, analysis::Color::DarkRed, "WORKER SLEEP", this, id().localId());
     GTS_WP_COUNTER_INC(id(), gts::analysis::WorkerPoolCounters::NUM_SLEEP_SUCCESSES);
 
+    uint64_t startSleepTime = GTS_RDTSC();
+
     // Notify the WorkPool of the suspension.
     m_pMyPool->m_sleepingWorkerCount.fetch_add(1, memory_order::acquire);
 
     if (force)
     {
+        GTS_TRACE_ZONE_MARKER_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Yellow, "WORKER FORCE SLEEP RESET", this, id().localId());
         // For the Worker to sleep by reseting the semaphore.
         m_pSleepBlocker->semaphore.reset();
     }
@@ -436,14 +442,17 @@ void Worker::sleep(bool force)
     // Mark as asleep.
     m_pSleepBlocker->state.store(ThreadBlocker::IS_BLOCKED, memory_order::relaxed);
 
-    m_pSleepBlocker->semaphore.wait(); // Zzzz.....................
+    bool didSleep = m_pSleepBlocker->semaphore.wait(); // Zzzz.....................
+
+    GTS_TRACE_ZONE_MARKER_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Yellow, "WORKER OUT OF SEMAPHORE", this, id().localId());
 
     // Mark as awake.
-    m_pSleepBlocker->state.exchange(ThreadBlocker::IS_UNBLOCKED, memory_order::acq_rel);
+    m_pSleepBlocker->state.exchange(ThreadBlocker::IS_UNBLOCKED, memory_order::release);
 
     // Wait for the waker to exit its wake loop.
-    while (!m_pSleepBlocker->doneWaking.load(memory_order::acquire))
+    while (m_pSleepBlocker->state.load(memory_order::acquire) != ThreadBlocker::IS_OUT_OF_SIGNAL_LOOP)
     {
+        GTS_TRACE_ZONE_MARKER_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Yellow, "WORKER WAITING FOR IS_OUT_OF_SIGNAL_LOOP", this, id().localId());
         GTS_PAUSE();
     }
 
@@ -453,6 +462,8 @@ void Worker::sleep(bool force)
         m_pSleepBlocker->resetOnWake.store(false, memory_order::relaxed);
         m_pSleepBlocker->semaphore.reset();
     }
+
+    m_pSleepBlocker->state.exchange(ThreadBlocker::IS_AWAKE, memory_order::release);
 
     // Resume more Workers if needed.
     if (m_resumeCount > 0)
@@ -466,6 +477,25 @@ void Worker::sleep(bool force)
 
     // Notify the WorkPool of the resume.
     m_pMyPool->m_sleepingWorkerCount.fetch_sub(1, memory_order::release);
+
+    // Wait for wakers to exit.
+    while (m_pSleepBlocker->numWakers.load(memory_order::acquire) > 0)
+    {
+        GTS_PAUSE();
+    }
+
+    uint64_t endSleepTime = GTS_RDTSC();
+
+    if (didSleep && endSleepTime > startSleepTime)
+    {
+        uint64_t dt = endSleepTime - startSleepTime;
+        GTS_TRACE_ZONE_MARKER_P1(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::DarkRed, "WORKER SLEEP TIME", dt);
+        if (dt < m_minSleepCycles && dt > LOWER_BOUND_SLEEP_CYCLES)
+        {
+            GTS_TRACE_ZONE_MARKER_P1(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Green, "WORKER NEW SLEEP TIME", dt);
+            m_minSleepCycles = dt;
+        }
+    }
 
     GTS_TRACE_ZONE_MARKER_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Green, "WORKER WOKE", this, id().localId());
 }
@@ -485,12 +515,24 @@ bool Worker::wake(uint32_t count, bool reset, bool force)
         return false;
     }
 
-    GTS_TRACE_SCOPED_ZONE_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Green1, "ATTEMPTY WAKE WORKER", this, id().localId());
+    GTS_TRACE_SCOPED_ZONE_P2(analysis::CaptureMask::WORKERPOOL_ALL, analysis::Color::Green1, "ATTEMPTY WAKE WORKER", this, id().localId());
     GTS_WP_COUNTER_INC(id(), gts::analysis::WorkerPoolCounters::NUM_WAKE_CHECKS);
 
     if (force || m_pSleepBlocker->state.load(memory_order::acquire) == ThreadBlocker::IS_BLOCKED)
     {
-        m_pSleepBlocker->doneWaking.exchange(false, memory_order::acq_rel);
+        // Only allow one waker.
+        if (m_pSleepBlocker->numWakers.fetch_add(1, memory_order::acq_rel) != 0)
+        {
+            m_pSleepBlocker->numWakers.fetch_sub(1, memory_order::acq_rel);
+            return false;
+        }
+
+        // Quit if the Worker became unblock.
+        if (m_pSleepBlocker->state.load(memory_order::acquire) != ThreadBlocker::IS_BLOCKED)
+        {
+            m_pSleepBlocker->numWakers.fetch_sub(1, memory_order::acq_rel);
+            return false;
+        }
 
         GTS_TRACE_SCOPED_ZONE_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Green2, "WAKING WORKER", this, id().localId());
         do
@@ -502,7 +544,21 @@ bool Worker::wake(uint32_t count, bool reset, bool force)
         }
         while (m_pSleepBlocker->state.load(memory_order::acquire) == ThreadBlocker::IS_BLOCKED);
 
-        m_pSleepBlocker->doneWaking.exchange(true, memory_order::acq_rel);
+        // Let the sleeper know we are out of the wake loop.
+        m_pSleepBlocker->state.exchange(ThreadBlocker::IS_OUT_OF_SIGNAL_LOOP, memory_order::acq_rel);
+
+        GTS_TRACE_ZONE_MARKER_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Yellow, "WORKER IS_OUT_OF_SIGNAL_LOOP", this, id().localId());
+
+        // Wait until the Worker if fully awake before allowing new wakers to try.
+        while (m_pSleepBlocker->state.load(memory_order::acquire) != ThreadBlocker::IS_AWAKE)
+        {
+            GTS_TRACE_ZONE_MARKER_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Yellow, "WORKER WAITING FOR IS_AWAKE", this, id().localId());
+            GTS_PAUSE();
+        }
+
+        m_pSleepBlocker->numWakers.fetch_sub(1, memory_order::acq_rel);
+
+        GTS_TRACE_ZONE_MARKER_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::Yellow, "WORKER DONE WAKING", this, id().localId());
 
         m_resumeCount = count - 1;
         GTS_WP_COUNTER_INC(id(), gts::analysis::WorkerPoolCounters::NUM_WAKE_SUCCESSES);
@@ -612,7 +668,8 @@ void Worker::_schedulerExecutionLoop(SubIdType localWorkerId)
 
     GTS_TRACE_SCOPED_ZONE_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::AntiqueWhite, "WORKER EXE LOOP", this, localWorkerId);
 
-    TerminationBackoff backoff(1);
+    constexpr uint32_t minQuitThreshold = 1;
+    TerminationBackoff backoff(m_minSleepCycles, minQuitThreshold);
 
     Task* pFoundTask = nullptr;
 
@@ -692,6 +749,7 @@ void Worker::_schedulerExecutionLoop(SubIdType localWorkerId)
                 {
                     GTS_TRACE_ZONE_MARKER_P2(analysis::CaptureMask::WORKERPOOL_DEBUG, analysis::Color::OrangeRed, "WORKER ENTER SLEEP", this, localWorkerId);
                     sleep(false);
+                    backoff.resetQuitThreshold(m_minSleepCycles * 2, minQuitThreshold);
                 }
                 else
                 {

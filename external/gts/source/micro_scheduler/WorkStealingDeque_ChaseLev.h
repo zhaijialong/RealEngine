@@ -46,8 +46,8 @@ class Task;
  *  Nhat Minh Le, Antoniu Pop, Albert Cohen, and Francesco Zappa Nardelli. 2013.
  *  Correct and efficient work-stealing for weak memory models. In Proceedings of
  *  the 18th ACM SIGPLAN symposium on Principles and practice of parallel
- *  programming (PPoPP �13). Association for Computing Machinery, New York, NY,
- *  USA, 69�80. DOI: https://doi.org/10.1145/2442516.2442524.
+ *  programming (PPoPP ?3). Association for Computing Machinery, New York, NY,
+ *  USA, 69?0. DOI: https://doi.org/10.1145/2442516.2442524.
  */
 class WorkStealingDeque
 {
