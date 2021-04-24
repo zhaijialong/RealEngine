@@ -4,9 +4,6 @@
     <ClCompile Include="external\d3d12ma\D3D12MemAlloc.cpp">
       <Filter>external\d3d12ma</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="source\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -85,31 +82,28 @@
     <ClCompile Include="external\gts\source\platform\_win32\Thread_Win32.cpp">
       <Filter>external\gts</Filter>
     </ClCompile>
+    <ClCompile Include="source\core\engine.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gfx\gfx.cpp">
+      <Filter>source\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\renderer.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\core\world.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
+    <ClCompile Include="source\core\task_scheduler.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_device.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\core\log.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\math.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\memory.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\assert.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\async.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\parallel_for.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
       <Filter>external\d3d12ma</Filter>
-    </ClInclude>
-    <ClInclude Include="source\engine.h">
-      <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="external\gts\include\gts\analysis\ConcurrentLogger.h">
       <Filter>external\gts</Filter>
@@ -309,8 +303,71 @@
     <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_THE.h">
       <Filter>external\gts</Filter>
     </ClInclude>
-    <ClInclude Include="external\gts\user_config.h">
-      <Filter>external\gts</Filter>
+    <ClInclude Include="source\core\engine.h">
+      <Filter>source\core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\gfx.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\gfx_define.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_buffer.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_command_list.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_device.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_fence.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_pipeline_state.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_resource.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_sampler.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_shader.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_swapchain.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_texture.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\utils\assert.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\utils\log.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\utils\math.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\utils\memory.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\renderer.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\core\world.h">
+      <Filter>source\core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\core\task_scheduler.h">
+      <Filter>source\core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_device.h">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_header.h">
+      <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -335,10 +392,22 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{172bd163-11f1-4144-bb9c-24cbf71c52a2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\gfx\d3d12">
+      <UniqueIdentifier>{37cde1be-0427-4aae-9a30-fbc16e4f4a31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\renderer">
+      <UniqueIdentifier>{b2acc029-6278-4e76-943f-fbec6f89e475}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\utils">
+      <UniqueIdentifier>{3185c19b-e0eb-4235-95ef-36876f6627af}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis">
       <Filter>external\d3d12ma</Filter>
+    </Natvis>
+    <Natvis Include="external\gts\gts.natvis">
+      <Filter>external\gts</Filter>
     </Natvis>
   </ItemGroup>
   <ItemGroup>
@@ -371,6 +440,9 @@
     </None>
     <None Include="external\gts\include\gts\platform\AtomicImpl.inl">
       <Filter>external\gts</Filter>
+    </None>
+    <None Include="shaders\common.hlsli">
+      <Filter>shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

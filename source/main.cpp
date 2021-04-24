@@ -1,5 +1,5 @@
+#include "core/engine.h"
 #include <Windows.h>
-#include "engine.h"
 
 static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {   
@@ -49,8 +49,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     ShowWindow(hwnd, nCmdShow);
 
-    REngine engine;
-    //engine.Init(hwnd, window_width, window_height);
+    Engine::GetInstance()->Init(hwnd, window_width, window_height);
 
     // Main loop.
     MSG msg = {};
@@ -63,8 +62,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
 
-        //engine.Frame();
+        Engine::GetInstance()->Frame();
     }
+
+    Engine::GetInstance()->Shut();
 
     return 0;
 }
