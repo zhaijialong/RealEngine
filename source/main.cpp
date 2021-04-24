@@ -62,7 +62,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
 
-        Engine::GetInstance()->Frame();
+        Engine::GetInstance()->Tick();
     }
 
     Engine::GetInstance()->Shut();

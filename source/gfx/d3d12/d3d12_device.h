@@ -24,11 +24,8 @@ public:
 	virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, const std::string& name) override;
 	virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, const std::string& name) override;
 	virtual IGfxFence* CreateFence(const std::string& name) override;
-	virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, void* window_handle, const std::string& name) override;
+	virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name) override;
 	virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const std::string& name) override;
-
-	virtual IGfxRenderTargetView* CreateRenderTargetView(IGfxTexture* texture, const GfxRenderTargetViewDesc& desc, const std::string& name) override;
-	virtual IGfxDepthStencilView* CreateDepthStencilView(IGfxTexture* texture, const GfxDepthStencilViewDesc& desc, const std::string& name) override;
 
 	virtual void BeginFrame() override;
 	virtual void EndFrame() override;

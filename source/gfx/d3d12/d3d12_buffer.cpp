@@ -16,13 +16,14 @@ D3D12Buffer::~D3D12Buffer()
 	pDevice->Delete(m_pAllocation);
 }
 
-void* D3D12Buffer::Map()
+void* D3D12Buffer::GetCpuAddress()
 {
-	return nullptr;
+	return m_pCpuAddress;
 }
 
-void D3D12Buffer::Unmap()
+uint64_t D3D12Buffer::GetGpuAddress()
 {
+	return m_pBuffer->GetGPUVirtualAddress();
 }
 
 bool D3D12Buffer::Create()
@@ -47,10 +48,10 @@ bool D3D12Buffer::Create()
 	m_pBuffer->SetName(name_wstr.c_str());
 	m_pAllocation->SetName(name_wstr.c_str());
 
+	if (m_desc.memory_type != GfxMemoryType::GpuOnly)
+	{
+		CD3DX12_RANGE readRange(0, 0);
+		m_pBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pCpuAddress));
+	}
 	return true;
-}
-
-D3D12_GPU_VIRTUAL_ADDRESS D3D12Buffer::GetGpuAddress() const
-{
-	return m_pBuffer->GetGPUVirtualAddress();
 }

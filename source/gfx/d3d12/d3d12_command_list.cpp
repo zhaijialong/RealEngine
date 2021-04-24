@@ -4,11 +4,13 @@
 #include "d3d12_texture.h"
 //#include "d3d12_rtv.h"
 //#include "d3d12_dsv.h"
+#include "utils/assert.h"
 
-D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, const std::string& name)
+D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const std::string& name)
 {
 	m_pDevice = pDevice;
 	m_name = name;
+	m_queueType = queue_type;
 }
 
 D3D12CommandList::~D3D12CommandList()
@@ -18,14 +20,12 @@ D3D12CommandList::~D3D12CommandList()
 	pDevice->Delete(m_pCommandList);
 }
 
-bool D3D12CommandList::Create(GfxCommandQueue queue_type)
+bool D3D12CommandList::Create()
 {
-	m_queueType = queue_type;
-
 	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
 	D3D12_COMMAND_LIST_TYPE type;
 
-	switch (queue_type)
+	switch (m_queueType)
 	{
 	case GfxCommandQueue::Graphics:
 		type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -33,6 +33,7 @@ bool D3D12CommandList::Create(GfxCommandQueue queue_type)
 		break;
 	case GfxCommandQueue::Compute:
 		//todo
+		RE_ASSERT(false);
 		break;
 	case GfxCommandQueue::Copy:
 		type = D3D12_COMMAND_LIST_TYPE_COPY;

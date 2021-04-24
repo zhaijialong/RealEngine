@@ -9,10 +9,10 @@ class IGfxFence;
 class D3D12CommandList : public IGfxCommandList
 {
 public:
-	D3D12CommandList(IGfxDevice* pDevice, const std::string& name);
+	D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const std::string& name);
 	~D3D12CommandList();
 
-	bool Create(GfxCommandQueue queue_type);
+	bool Create();
 
 	virtual void* GetHandle() const override { return m_pCommandList; }
 

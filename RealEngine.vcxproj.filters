@@ -100,6 +100,21 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_device.cpp">
       <Filter>source\gfx\d3d12</Filter>
     </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_swapchain.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_fence.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -367,6 +382,21 @@
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
     <ClInclude Include="source\gfx\d3d12\d3d12_header.h">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_swapchain.h">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_fence.h">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_texture.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
   </ItemGroup>

@@ -111,7 +111,12 @@
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\task_scheduler.cpp" />
     <ClCompile Include="source\core\world.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_device.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_fence.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_swapchain.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
@@ -187,8 +192,13 @@
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\task_scheduler.h" />
     <ClInclude Include="source\core\world.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_device.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_fence.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_header.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_swapchain.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_texture.h" />
     <ClInclude Include="source\gfx\gfx.h" />
     <ClInclude Include="source\gfx\gfx_define.h" />
     <ClInclude Include="source\gfx\i_gfx_buffer.h" />

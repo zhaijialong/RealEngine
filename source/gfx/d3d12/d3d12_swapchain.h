@@ -17,9 +17,8 @@ public:
 	virtual bool Resize(uint32_t width, uint32_t height) override;
 	virtual const GfxSwapchainDesc& GetDesc() const override;
 	virtual IGfxTexture* GetBackBuffer() const override;
-	virtual IGfxRenderTargetView* GetRenderTargetView() const override;
 
-	bool Create(void* window_handle);
+	bool Create();
 
 private:
 	IDXGISwapChain3* m_pSwapChain = nullptr;
@@ -27,5 +26,4 @@ private:
 
 	uint32_t m_nCurrentBackBuffer = 0;
 	std::vector<IGfxTexture*> m_backBuffers;
-	std::vector<IGfxRenderTargetView*> m_RTVs;
 };

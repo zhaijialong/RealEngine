@@ -17,14 +17,13 @@ public:
 	~D3D12Buffer();
 
 	virtual void* GetHandle() const override { return m_pBuffer; }
-
-	virtual void* Map() override;
-	virtual void Unmap() override;
+	virtual void* GetCpuAddress() override;
+	virtual uint64_t GetGpuAddress() override;
 
 	bool Create();
-	D3D12_GPU_VIRTUAL_ADDRESS GetGpuAddress() const;
 
 private:
 	ID3D12Resource* m_pBuffer = nullptr;
 	D3D12MA::Allocation* m_pAllocation = nullptr;
+	void* m_pCpuAddress = nullptr;
 };

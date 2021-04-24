@@ -82,7 +82,6 @@ D3D12Device::~D3D12Device()
 
 IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, const std::string& name)
 {
-	/*
 	D3D12Buffer* pBuffer = new D3D12Buffer(this, desc, name);
 	if (!pBuffer->Create())
 	{
@@ -90,13 +89,10 @@ IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, const std::stri
 		return nullptr;
 	}
 	return pBuffer;
-	*/
-	return nullptr;
 }
 
 IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, const std::string& name)
 {
-	/*
 	D3D12Texture* pTexture = new D3D12Texture(this, desc, name);
 	if (!pTexture->Create())
 	{
@@ -104,13 +100,10 @@ IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, const std::s
 		return nullptr;
 	}
 	return pTexture;
-	*/
-	return nullptr;
 }
 
 IGfxFence* D3D12Device::CreateFence(const std::string& name)
 {
-	/*
 	D3D12Fence* pFence = new D3D12Fence(this, name);
 	if (!pFence->Create())
 	{
@@ -118,64 +111,28 @@ IGfxFence* D3D12Device::CreateFence(const std::string& name)
 		return nullptr;
 	}
 	return pFence;
-	*/
-	return nullptr;
 }
 
-IGfxSwapchain* D3D12Device::CreateSwapchain(const GfxSwapchainDesc& desc, void* window_handle, const std::string& name)
+IGfxSwapchain* D3D12Device::CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name)
 {
-	/*
 	D3D12Swapchain* pSwapchain = new D3D12Swapchain(this, desc, name);
-	if (!pSwapchain->Create(window_handle))
+	if (!pSwapchain->Create())
 	{
 		delete pSwapchain;
 		return nullptr;
 	}
 	return pSwapchain;
-	*/
-	return nullptr;
 }
 
 IGfxCommandList* D3D12Device::CreateCommandList(GfxCommandQueue queue_type, const std::string& name)
 {
-	/*
-	D3D12CommandList* pCommandList = new D3D12CommandList(this, name);
-	if (!pCommandList->Create(queue_type))
+	D3D12CommandList* pCommandList = new D3D12CommandList(this, queue_type, name);
+	if (!pCommandList->Create())
 	{
 		delete pCommandList;
 		return nullptr;
 	}
 	return pCommandList;
-	*/
-	return nullptr;
-}
-
-IGfxRenderTargetView* D3D12Device::CreateRenderTargetView(IGfxTexture* texture, const GfxRenderTargetViewDesc& desc, const std::string& name)
-{
-	/*
-	D3D12RTV* pRTV = new D3D12RTV(this, texture, desc, name);
-	if (!pRTV->Create())
-	{
-		delete pRTV;
-		return nullptr;
-	}
-
-	return pRTV;
-	*/
-	return nullptr;
-}
-
-IGfxDepthStencilView* D3D12Device::CreateDepthStencilView(IGfxTexture* texture, const GfxDepthStencilViewDesc& desc, const std::string& name)
-{
-/*	D3D12DSV* pDSV = new D3D12DSV(this, texture, desc, name);
-	if (!pDSV->Create())
-	{
-		delete pDSV;
-		return nullptr;
-	}
-	return pDSV;
-	*/
-	return nullptr;
 }
 
 void D3D12Device::BeginFrame()
@@ -233,14 +190,6 @@ bool D3D12Device::Init()
 	//SM6.6 is required !
 	RE_ASSERT(shaderModel.HighestShaderModel >= D3D_SHADER_MODEL_6_6);
 
-	D3D12MA::ALLOCATOR_DESC allocatorDesc = {};
-	allocatorDesc.pDevice = m_pDevice;
-	allocatorDesc.pAdapter = m_pDxgiAdapter;
-	if (FAILED(D3D12MA::CreateAllocator(&allocatorDesc, &m_pResourceAllocator)))
-	{
-		return false;
-	}
-
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -252,12 +201,30 @@ bool D3D12Device::Init()
 	m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_pCopyQueue));
 	m_pCopyQueue->SetName(L"Copy Queue");
 
+	D3D12MA::ALLOCATOR_DESC allocatorDesc = {};
+	allocatorDesc.pDevice = m_pDevice;
+	allocatorDesc.pAdapter = m_pDxgiAdapter;
+	if (FAILED(D3D12MA::CreateAllocator(&allocatorDesc, &m_pResourceAllocator)))
+	{
+		return false;
+	}
+
 	//m_pRtvAllocator = new D3D12DescriptorPoolAllocator(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 128, false);
 	//m_pDsvAllocator = new D3D12DescriptorPoolAllocator(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 128, false);
 	//m_pCbvSrvUavAllocator = new D3D12DescriptorPoolAllocator(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536, false);
 	//m_pSamplerAllocator = new D3D12DescriptorPoolAllocator(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, false);
 
     return true;
+}
+
+void D3D12Device::Delete(IUnknown* object)
+{
+	m_deletionQueue.push({ object, m_nFrameID });
+}
+
+void D3D12Device::Delete(D3D12MA::Allocation* allocation)
+{
+	m_deletionAllocationQueue.push({ allocation, m_nFrameID });
 }
 
 /*
@@ -291,16 +258,6 @@ D3D12Descriptor D3D12Device::AllocateDsv()
 	return m_pDsvAllocator->Allocate();
 }
 
-void D3D12Device::Delete(IUnknown* object)
-{
-	m_deletionQueue.push({ object, m_nFrameID });
-}
-
-void D3D12Device::Delete(D3D12MA::Allocation* allocation)
-{
-	m_deletionAllocationQueue.push({ allocation, m_nFrameID });
-}
-
 void D3D12Device::DeleteRtv(const D3D12Descriptor& descriptor)
 {
 }
@@ -331,7 +288,7 @@ void D3D12Device::DoDeferredDeletion()
 	while (!m_deletionQueue.empty())
 	{
 		auto item = m_deletionQueue.front();
-		if (item.frame + m_desc.maxFrameLag > m_nFrameID)
+		if (item.frame + m_desc.max_frame_lag > m_nFrameID)
 		{
 			break;
 		}
@@ -343,7 +300,7 @@ void D3D12Device::DoDeferredDeletion()
 	while (!m_deletionAllocationQueue.empty())
 	{
 		auto item = m_deletionAllocationQueue.front();
-		if (item.frame + m_desc.maxFrameLag > m_nFrameID)
+		if (item.frame + m_desc.max_frame_lag > m_nFrameID)
 		{
 			break;
 		}

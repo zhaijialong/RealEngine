@@ -1,9 +1,7 @@
 #include "d3d12_swapchain.h"
 #include "d3d12_device.h"
 #include "d3d12_texture.h"
-#include "d3d12_rtv.h"
-#include "../../core/assert.h"
-#include "../../core/mem_alloc.h"
+#include "utils/assert.h"
 
 D3D12Swapchain::D3D12Swapchain(D3D12Device* pDevice, const GfxSwapchainDesc& desc, const std::string& name)
 {
@@ -16,16 +14,11 @@ D3D12Swapchain::~D3D12Swapchain()
 {
 	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
 	pDevice->Delete(m_pSwapChain);
-
-	for (size_t i = 0; i < m_backBuffers.size(); ++i)
-	{
-		QK_DELETE m_backBuffers[i];
-	}
 }
 
 bool D3D12Swapchain::Present()
 {
-	HRESULT hr = m_pSwapChain->Present(m_desc.enable_vsync ? 1 : 0, 0);
+	HRESULT hr = m_pSwapChain->Present(m_desc.enableVsync ? 1 : 0, 0);
 
 	m_nCurrentBackBuffer = (m_nCurrentBackBuffer + 1) % m_desc.backbuffer_count;
 
@@ -48,12 +41,7 @@ IGfxTexture* D3D12Swapchain::GetBackBuffer() const
 	return m_backBuffers[m_nCurrentBackBuffer];
 }
 
-IGfxRenderTargetView* D3D12Swapchain::GetRenderTargetView() const
-{
-	return m_RTVs[m_nCurrentBackBuffer];
-}
-
-bool D3D12Swapchain::Create(void* window_handle)
+bool D3D12Swapchain::Create()
 {
 	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
 
@@ -70,7 +58,7 @@ bool D3D12Swapchain::Create(void* window_handle)
 	IDXGISwapChain1* pSwapChain = NULL;
 	HRESULT hr = pFactory->CreateSwapChainForHwnd(
 		pDevice->GetGraphicsQueue(), // Swap chain needs the queue so that it can force a flush on it.
-		(HWND)window_handle,
+		(HWND)m_desc.windowHandle,
 		&swapChainDesc,
 		nullptr,
 		nullptr,
@@ -84,13 +72,12 @@ bool D3D12Swapchain::Create(void* window_handle)
 	pSwapChain->QueryInterface(&m_pSwapChain);
 	SAFE_RELEASE(pSwapChain);
 
+	/*
 	GfxTextureDesc textureDesc;
 	textureDesc.width = m_desc.width;
 	textureDesc.height = m_desc.height;
 	textureDesc.format = m_desc.backbuffer_format;
 	textureDesc.usage = GfxTextureUsageRenderTarget;
-
-	GfxRenderTargetViewDesc rtvDesc;
 
 	for (uint32_t i = 0; i < m_desc.backbuffer_count; ++i)
 	{
@@ -104,10 +91,8 @@ bool D3D12Swapchain::Create(void* window_handle)
 		D3D12Texture* texture = QK_NEW D3D12Texture(pDevice, textureDesc, m_name + " texture " + std::to_string(i));
 		texture->m_pTexture = pBackbuffer;
 		m_backBuffers.push_back(texture);
-
-		IGfxRenderTargetView* rtv = pDevice->CreateRenderTargetView(texture, rtvDesc, texture->GetName() + " RTV");
-		m_RTVs.push_back(rtv);
 	}
+	*/
 
 	return true;
 }

@@ -1,8 +1,7 @@
 #include "d3d12_texture.h"
 #include "d3d12_device.h"
-#include "d3d12_descriptor_allocator.h"
 #include "d3d12ma/D3D12MemAlloc.h"
-#include "../core/assert.h"
+#include "utils/assert.h"
 
 static inline D3D12_RESOURCE_DESC d3d12_resource_desc(const GfxTextureDesc& desc)
 {

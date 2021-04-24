@@ -69,7 +69,7 @@ enum class GfxAllocationType
 {
 	Committed,
 	Placed,
-	SubAllocatedBuffer,
+	//todo : SubAllocatedBuffer,
 };
 
 enum GfxBufferUsageBit
@@ -164,16 +164,17 @@ static const uint32_t GFX_ALL_SUB_RESOURCE = 0xFFFFFFFF;
 struct GfxDeviceDesc
 {
 	GfxRenderBackend backend = GfxRenderBackend::D3D12;
-	uint32_t maxFrameLag = 3;
+	uint32_t max_frame_lag = 3;
 };
 
 struct GfxSwapchainDesc
 {
+	void* windowHandle = nullptr;
 	uint32_t width = 1;
 	uint32_t height = 1;
 	uint32_t backbuffer_count = 3;
 	GfxFormat backbuffer_format = GfxFormat::RGBA8SRGB;
-	bool enable_vsync = true;
+	bool enableVsync = true;
 };
 
 struct GfxBufferDesc
@@ -264,12 +265,13 @@ struct GfxUnorderedAccessViewDesc
 	};
 };
 
-class IGfxRenderTargetView;
-class IGfxDepthStencilView;
+class IGfxTexture;
 
 struct GfxRenderPassColorAttachment
 {
-	IGfxRenderTargetView* rtv = nullptr;
+	IGfxTexture* texture = nullptr;
+	uint32_t mip_slice = 0;
+	uint32_t array_slice = 0;
 	GfxRenderPassLoadOp load_op = GfxRenderPassLoadOp::Load;
 	GfxRenderPassStoreOp store_op = GfxRenderPassStoreOp::Store;
 	struct { float value[4]; } clear_color = {};
@@ -277,7 +279,9 @@ struct GfxRenderPassColorAttachment
 
 struct GfxRenderPassDepthAttachment
 {
-	IGfxDepthStencilView* dsv = nullptr;
+	IGfxTexture* texture = nullptr;
+	uint32_t mip_slice = 0;
+	uint32_t array_slice = 0;
 	GfxRenderPassLoadOp load_op = GfxRenderPassLoadOp::Load;
 	GfxRenderPassStoreOp store_op = GfxRenderPassStoreOp::Store;
 	GfxRenderPassLoadOp stencil_load_op = GfxRenderPassLoadOp::Load;
