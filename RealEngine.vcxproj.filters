@@ -115,6 +115,12 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp">
       <Filter>source\gfx\d3d12</Filter>
     </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_pipeline_state.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_shader.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -345,9 +351,6 @@
     <ClInclude Include="source\gfx\i_gfx_resource.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_sampler.h">
-      <Filter>source\gfx</Filter>
-    </ClInclude>
     <ClInclude Include="source\gfx\i_gfx_shader.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
@@ -397,6 +400,12 @@
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
     <ClInclude Include="source\gfx\d3d12\d3d12_texture.h">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_pipeline_state.h">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_shader.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
   </ItemGroup>

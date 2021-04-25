@@ -28,12 +28,14 @@ static inline D3D12_RESOURCE_DESC d3d12_resource_desc(const GfxTextureDesc& desc
 		resourceDesc.DepthOrArraySize = desc.depth;
 		break;
 	case GfxTextureType::TextureCube:
+		RE_ASSERT(desc.array_size == 6);
 		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 		resourceDesc.DepthOrArraySize = 6;
 		break;
 	case GfxTextureType::TextureCubeArray:
+		RE_ASSERT(desc.array_size % 6 == 0);
 		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		resourceDesc.DepthOrArraySize = 6 * desc.array_size;
+		resourceDesc.DepthOrArraySize = desc.array_size;
 		break;
 	default:
 		break;
@@ -54,6 +56,16 @@ D3D12Texture::~D3D12Texture()
 	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
 	pDevice->Delete(m_pTexture);
 	pDevice->Delete(m_pAllocation);
+
+	for (size_t i = 0; i < m_RTV.size(); ++i)
+	{
+		pDevice->DeleteRTV(m_RTV[i]);
+	}
+
+	for (size_t i = 0; i < m_DSV.size(); ++i)
+	{
+		pDevice->DeleteDSV(m_DSV[i]);
+	}
 }
 
 bool D3D12Texture::Create()
@@ -80,5 +92,85 @@ bool D3D12Texture::Create()
 	m_pAllocation->SetName(name_wstr.c_str());
 
 	return true;
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12Texture::GetRTV(uint32_t mip_slice, uint32_t array_slice)
+{
+	RE_ASSERT(m_desc.usage & GfxTextureUsageRenderTarget);
+
+	if (m_RTV.empty())
+	{
+		m_RTV.resize(m_desc.mip_levels * m_desc.array_size);
+	}
+
+	uint32_t index = m_desc.mip_levels * array_slice + mip_slice;
+	if (IsNullDescriptor(m_RTV[index]))
+	{
+		m_RTV[index] = ((D3D12Device*)m_pDevice)->AllocateRTV();
+
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		rtvDesc.Format = dxgi_format(m_desc.format);
+
+		switch (m_desc.type)
+		{
+		case GfxTextureType::Texture2D:
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+			rtvDesc.Texture2D.MipSlice = mip_slice;
+			break;
+		case GfxTextureType::Texture2DArray:
+		case GfxTextureType::TextureCube:
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+			rtvDesc.Texture2DArray.MipSlice = mip_slice;
+			rtvDesc.Texture2DArray.FirstArraySlice = array_slice;
+			rtvDesc.Texture2DArray.ArraySize = 1;
+			break;
+		default:
+			RE_ASSERT(false);
+			break;
+		}
+
+		ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
+		pDevice->CreateRenderTargetView(m_pTexture, &rtvDesc, m_RTV[index].cpu_handle);
+	}
+
+	return m_RTV[index].cpu_handle;
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12Texture::GetDSV(uint32_t mip_slice, uint32_t array_slice)
+{
+	RE_ASSERT(m_desc.usage & GfxTextureUsageDepthStencil);
+
+	if (m_DSV.empty())
+	{
+		m_DSV.resize(m_desc.mip_levels * m_desc.array_size);
+	}
+
+	uint32_t index = m_desc.mip_levels * array_slice + mip_slice;
+	if (IsNullDescriptor(m_DSV[index]))
+	{
+		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+		dsvDesc.Format = dxgi_format(m_desc.format);
+
+		switch (m_desc.type)
+		{
+		case GfxTextureType::Texture2D:
+			dsvDesc.Texture2D.MipSlice = mip_slice;
+			break;
+		case GfxTextureType::Texture2DArray:
+		case GfxTextureType::TextureCube:
+			dsvDesc.Texture2DArray.MipSlice = mip_slice;
+			dsvDesc.Texture2DArray.FirstArraySlice = array_slice;
+			dsvDesc.Texture2DArray.ArraySize = 1;
+			break;
+		default:
+			RE_ASSERT(false);
+			break;
+		}
+
+		ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
+		pDevice->CreateDepthStencilView(m_pTexture, &dsvDesc, m_DSV[index].cpu_handle);
+	}
+
+	return m_DSV[index].cpu_handle;
 }
 

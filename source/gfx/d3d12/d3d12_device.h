@@ -11,7 +11,23 @@ namespace D3D12MA
 	class Allocation;
 }
 
-class D3D12DescriptorPoolAllocator;
+class D3D12DescriptorAllocator
+{
+public:
+	D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count);
+	~D3D12DescriptorAllocator();
+
+	D3D12Descriptor Allocate();
+	void Free(const D3D12Descriptor& descriptor);
+
+private:
+	ID3D12DescriptorHeap* m_pHeap = nullptr;
+	uint32_t m_descriptorSize = 0;
+	uint32_t m_descirptorCount = 0;
+	uint32_t m_allocatedCount = 0;
+	bool m_bShaderVisible = false;
+	std::vector<D3D12Descriptor> m_freeDescriptors;
+};
 
 class D3D12Device : public IGfxDevice
 {
@@ -40,24 +56,18 @@ public:
 	void Delete(IUnknown* object);
 	void Delete(D3D12MA::Allocation* allocation);
 
-	/*
-	D3D12Descriptor AllocateRtv();
-	D3D12Descriptor AllocateDsv();
-	D3D12Descriptor AllocateCpuSrv();
-	D3D12Descriptor AllocateCpuCbv();
-	D3D12Descriptor AllocateCpuUav();
-	D3D12Descriptor AllocateCpuSampler();
+	D3D12Descriptor AllocateRTV();
+	D3D12Descriptor AllocateDSV();
+	D3D12Descriptor AllocateResourceDescriptor();
+	D3D12Descriptor AllocateSampler();
 
-	void DeleteRtv(const D3D12Descriptor& descriptor);
-	void DeleteDsv(const D3D12Descriptor& descriptor);
-	void DeleteCpuSrv(const D3D12Descriptor& descriptor);
-	void DeleteCpuCbv(const D3D12Descriptor& descriptor);
-	void DeleteCpuUav(const D3D12Descriptor& descriptor);
-	void DeleteCpuSampler(const D3D12Descriptor& descriptor);
-	*/
+	void DeleteRTV(const D3D12Descriptor& descriptor);
+	void DeleteDSV(const D3D12Descriptor& descriptor);
+	void DeleteResourceDescriptor(const D3D12Descriptor& descriptor);
+	void DeleteSampler(const D3D12Descriptor& descriptor);
 
 private:
-	void DoDeferredDeletion();
+	void DoDeferredDeletion(bool force_delete = false);
 
 private:
 	GfxDeviceDesc m_desc;
@@ -71,25 +81,34 @@ private:
 
 	D3D12MA::Allocator* m_pResourceAllocator = nullptr;
 
-	//none shader visible descriptors
-	D3D12DescriptorPoolAllocator* m_pRtvAllocator = nullptr;
-	D3D12DescriptorPoolAllocator* m_pDsvAllocator = nullptr;
-	D3D12DescriptorPoolAllocator* m_pCbvSrvUavAllocator = nullptr;
-	D3D12DescriptorPoolAllocator* m_pSamplerAllocator = nullptr;
+	std::unique_ptr<D3D12DescriptorAllocator> m_pRTVAllocator;
+	std::unique_ptr<D3D12DescriptorAllocator> m_pDSVAllocator;
+	std::unique_ptr<D3D12DescriptorAllocator> m_pResDescriptorAllocator;
+	std::unique_ptr<D3D12DescriptorAllocator> m_pSamplerAllocator;
 
 	uint64_t m_nFrameID = 0;
 
-	struct DeletionObject
+	struct ObjectDeletion
 	{
 		IUnknown* object;
 		uint64_t frame;
 	};
-	std::queue<DeletionObject> m_deletionQueue;
+	std::queue<ObjectDeletion> m_deletionQueue;
 
-	struct DeletionAllocation
+	struct AllocationDeletion
 	{
 		D3D12MA::Allocation* allocation;
 		uint64_t frame;
 	};
-	std::queue<DeletionAllocation> m_deletionAllocationQueue;
+	std::queue<AllocationDeletion> m_allocationDeletionQueue;
+
+	struct DescriptorDeletion
+	{
+		D3D12Descriptor descriptor;
+		uint64_t frame;
+	};
+	std::queue<DescriptorDeletion> m_rtvDeletionQueue;
+	std::queue<DescriptorDeletion> m_dsvDeletionQueue;
+	std::queue<DescriptorDeletion> m_resourceDeletionQueue;
+	std::queue<DescriptorDeletion> m_samplerDeletionQueue;
 };

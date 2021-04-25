@@ -115,6 +115,8 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_device.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_fence.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_pipeline_state.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_shader.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_swapchain.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
@@ -197,6 +199,8 @@
     <ClInclude Include="source\gfx\d3d12\d3d12_device.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_fence.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_header.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_pipeline_state.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_shader.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_swapchain.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_texture.h" />
     <ClInclude Include="source\gfx\gfx.h" />
@@ -207,7 +211,6 @@
     <ClInclude Include="source\gfx\i_gfx_fence.h" />
     <ClInclude Include="source\gfx\i_gfx_pipeline_state.h" />
     <ClInclude Include="source\gfx\i_gfx_resource.h" />
-    <ClInclude Include="source\gfx\i_gfx_sampler.h" />
     <ClInclude Include="source\gfx\i_gfx_shader.h" />
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />

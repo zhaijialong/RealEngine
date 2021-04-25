@@ -17,6 +17,11 @@ struct D3D12Descriptor
 	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = {};
 };
 
+inline bool IsNullDescriptor(const D3D12Descriptor& descriptor)
+{
+	return descriptor.cpu_handle.ptr == 0 && descriptor.gpu_handle.ptr == 0;
+}
+
 inline std::wstring string_to_wstring(std::string s)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;

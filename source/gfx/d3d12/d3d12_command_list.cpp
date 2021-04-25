@@ -128,7 +128,6 @@ void D3D12CommandList::UavBarrier(IGfxResource* resource)
 
 void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 {
-	/*
 	FlushPendingBarrier();
 
 	D3D12_RENDER_PASS_RENDER_TARGET_DESC rtDesc[8] = {};
@@ -137,30 +136,30 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 	unsigned int rt_count = 0;
 	for (int i = 0; i < 8; ++i)
 	{
-		if (render_pass.color[i].rtv == nullptr)
+		if (render_pass.color[i].texture == nullptr)
 		{
 			break;
 		}
 
-		rtDesc[i].cpuDescriptor = ((D3D12RTV*)render_pass.color[i].rtv)->GetCpuHandle();
+		rtDesc[i].cpuDescriptor = ((D3D12Texture*)render_pass.color[i].texture)->GetRTV(render_pass.color[i].mip_slice, render_pass.color[i].array_slice);
 		rtDesc[i].BeginningAccess.Type = d3d12_render_pass_loadop(render_pass.color[i].load_op);
-		rtDesc[i].BeginningAccess.Clear.ClearValue.Format = dxgi_format(((IGfxTexture*)render_pass.color[i].rtv->GetResource())->GetDesc().format);
+		rtDesc[i].BeginningAccess.Clear.ClearValue.Format = dxgi_format(render_pass.color[i].texture->GetDesc().format);
 		memcpy(rtDesc[i].BeginningAccess.Clear.ClearValue.Color, render_pass.color[i].clear_color.value, sizeof(float) * 4);
 		rtDesc[i].EndingAccess.Type = d3d12_render_pass_storeop(render_pass.color[i].store_op);
 
 		++rt_count;
 	}
 
-	if (render_pass.depth.dsv != nullptr)
+	if (render_pass.depth.texture != nullptr)
 	{
-		dsDesc.cpuDescriptor = ((D3D12DSV*)render_pass.depth.dsv)->GetCpuHandle();
+		dsDesc.cpuDescriptor = ((D3D12Texture*)render_pass.depth.texture)->GetDSV(render_pass.depth.mip_slice, render_pass.depth.array_slice);
 		dsDesc.DepthBeginningAccess.Type = d3d12_render_pass_loadop(render_pass.depth.load_op);
-		dsDesc.DepthBeginningAccess.Clear.ClearValue.Format = dxgi_format(((IGfxTexture*)render_pass.depth.dsv->GetResource())->GetDesc().format);
+		dsDesc.DepthBeginningAccess.Clear.ClearValue.Format = dxgi_format(render_pass.depth.texture->GetDesc().format);
 		dsDesc.DepthBeginningAccess.Clear.ClearValue.DepthStencil.Depth = render_pass.depth.clear_depth;
 		dsDesc.DepthBeginningAccess.Clear.ClearValue.DepthStencil.Stencil = render_pass.depth.clear_stencil;
 
 		dsDesc.StencilBeginningAccess.Type = d3d12_render_pass_loadop(render_pass.depth.stencil_load_op);
-		dsDesc.StencilBeginningAccess.Clear.ClearValue.Format = dxgi_format(((IGfxTexture*)render_pass.depth.dsv->GetResource())->GetDesc().format);
+		dsDesc.StencilBeginningAccess.Clear.ClearValue.Format = dxgi_format(render_pass.depth.texture->GetDesc().format);
 		dsDesc.StencilBeginningAccess.Clear.ClearValue.DepthStencil.Depth = render_pass.depth.clear_depth;
 		dsDesc.StencilBeginningAccess.Clear.ClearValue.DepthStencil.Stencil = render_pass.depth.clear_stencil;
 
@@ -169,8 +168,8 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 	}
 
 	m_pCommandList->BeginRenderPass(rt_count, rtDesc, 
-		render_pass.depth.dsv != nullptr ? &dsDesc : nullptr, D3D12_RENDER_PASS_FLAG_NONE);
-	*/
+		render_pass.depth.texture != nullptr ? &dsDesc : nullptr,
+		D3D12_RENDER_PASS_FLAG_NONE);
 }
 
 void D3D12CommandList::EndRenderPass()

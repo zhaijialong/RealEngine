@@ -46,19 +46,7 @@ D3D12Device::D3D12Device(const GfxDeviceDesc& desc)
 
 D3D12Device::~D3D12Device()
 {
-	while (!m_deletionQueue.empty())
-	{
-		auto item = m_deletionQueue.front();
-		SAFE_RELEASE(item.object);
-		m_deletionQueue.pop();
-	}
-
-	while (!m_deletionAllocationQueue.empty())
-	{
-		auto item = m_deletionAllocationQueue.front();
-		SAFE_RELEASE(item.allocation);
-		m_deletionAllocationQueue.pop();
-	}
+	DoDeferredDeletion(true);
 
 	SAFE_RELEASE(m_pResourceAllocator);
 	SAFE_RELEASE(m_pGraphicsQueue);
@@ -209,10 +197,10 @@ bool D3D12Device::Init()
 		return false;
 	}
 
-	//m_pRtvAllocator = new D3D12DescriptorPoolAllocator(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 128, false);
-	//m_pDsvAllocator = new D3D12DescriptorPoolAllocator(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 128, false);
-	//m_pCbvSrvUavAllocator = new D3D12DescriptorPoolAllocator(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536, false);
-	//m_pSamplerAllocator = new D3D12DescriptorPoolAllocator(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, false);
+	m_pRTVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 512);
+	m_pDSVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 128);
+	m_pResDescriptorAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536);
+    m_pSamplerAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32);
 
     return true;
 }
@@ -224,71 +212,67 @@ void D3D12Device::Delete(IUnknown* object)
 
 void D3D12Device::Delete(D3D12MA::Allocation* allocation)
 {
-	m_deletionAllocationQueue.push({ allocation, m_nFrameID });
+	m_allocationDeletionQueue.push({ allocation, m_nFrameID });
 }
 
-/*
-D3D12Descriptor D3D12Device::AllocateCpuSrv()
+D3D12Descriptor D3D12Device::AllocateRTV()
 {
-	return m_pCbvSrvUavAllocator->Allocate();
+	return m_pRTVAllocator->Allocate();
 }
 
-D3D12Descriptor D3D12Device::AllocateCpuCbv()
+D3D12Descriptor D3D12Device::AllocateDSV()
 {
-	return m_pCbvSrvUavAllocator->Allocate();
+	return m_pDSVAllocator->Allocate();
 }
 
-D3D12Descriptor D3D12Device::AllocateCpuUav()
+D3D12Descriptor D3D12Device::AllocateResourceDescriptor()
 {
-	return m_pCbvSrvUavAllocator->Allocate();
+	return m_pResDescriptorAllocator->Allocate();
 }
 
-D3D12Descriptor D3D12Device::AllocateCpuSampler()
+D3D12Descriptor D3D12Device::AllocateSampler()
 {
 	return m_pSamplerAllocator->Allocate();
 }
 
-D3D12Descriptor D3D12Device::AllocateRtv()
+void D3D12Device::DeleteRTV(const D3D12Descriptor& descriptor)
 {
-	return m_pRtvAllocator->Allocate();
+	if (!IsNullDescriptor(descriptor))
+	{
+		m_rtvDeletionQueue.push({ descriptor, m_nFrameID });
+	}
 }
 
-D3D12Descriptor D3D12Device::AllocateDsv()
+void D3D12Device::DeleteDSV(const D3D12Descriptor& descriptor)
 {
-	return m_pDsvAllocator->Allocate();
+	if (!IsNullDescriptor(descriptor))
+	{
+		m_dsvDeletionQueue.push({ descriptor, m_nFrameID });
+	}
 }
 
-void D3D12Device::DeleteRtv(const D3D12Descriptor& descriptor)
+void D3D12Device::DeleteResourceDescriptor(const D3D12Descriptor& descriptor)
 {
+	if (!IsNullDescriptor(descriptor))
+	{
+		m_resourceDeletionQueue.push({ descriptor, m_nFrameID });
+	}
 }
 
-void D3D12Device::DeleteDsv(const D3D12Descriptor& descriptor)
+void D3D12Device::DeleteSampler(const D3D12Descriptor& descriptor)
 {
+	if (!IsNullDescriptor(descriptor))
+	{
+		m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
+	}
 }
 
-void D3D12Device::DeleteCpuSrv(const D3D12Descriptor& descriptor)
-{
-}
-
-void D3D12Device::DeleteCpuCbv(const D3D12Descriptor& descriptor)
-{
-}
-
-void D3D12Device::DeleteCpuUav(const D3D12Descriptor& descriptor)
-{
-}
-
-void D3D12Device::DeleteCpuSampler(const D3D12Descriptor& descriptor)
-{
-}
-*/
-
-void D3D12Device::DoDeferredDeletion()
+void D3D12Device::DoDeferredDeletion(bool force_delete)
 {
 	while (!m_deletionQueue.empty())
 	{
 		auto item = m_deletionQueue.front();
-		if (item.frame + m_desc.max_frame_lag > m_nFrameID)
+		if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
 		{
 			break;
 		}
@@ -297,15 +281,114 @@ void D3D12Device::DoDeferredDeletion()
 		m_deletionQueue.pop();
 	}
 
-	while (!m_deletionAllocationQueue.empty())
+	while (!m_allocationDeletionQueue.empty())
 	{
-		auto item = m_deletionAllocationQueue.front();
-		if (item.frame + m_desc.max_frame_lag > m_nFrameID)
+		auto item = m_allocationDeletionQueue.front();
+		if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
 		{
 			break;
 		}
 
 		SAFE_RELEASE(item.allocation);
-		m_deletionAllocationQueue.pop();
+		m_allocationDeletionQueue.pop();
 	}
+
+	while (!m_rtvDeletionQueue.empty())
+	{
+		auto item = m_rtvDeletionQueue.front();
+		if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+		{
+			break;
+		}
+
+		m_pRTVAllocator->Free(item.descriptor);
+		m_rtvDeletionQueue.pop();
+	}
+
+	while (!m_dsvDeletionQueue.empty())
+	{
+		auto item = m_dsvDeletionQueue.front();
+		if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+		{
+			break;
+		}
+
+		m_pDSVAllocator->Free(item.descriptor);
+		m_dsvDeletionQueue.pop();
+	}
+
+	while (!m_resourceDeletionQueue.empty())
+	{
+		auto item = m_resourceDeletionQueue.front();
+		if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+		{
+			break;
+		}
+
+		m_pResDescriptorAllocator->Free(item.descriptor);
+		m_resourceDeletionQueue.pop();
+	}
+
+	while (!m_samplerDeletionQueue.empty())
+	{
+		auto item = m_samplerDeletionQueue.front();
+		if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+		{
+			break;
+		}
+
+		m_pSamplerAllocator->Free(item.descriptor);
+		m_samplerDeletionQueue.pop();
+	}
+}
+
+D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count)
+{
+	m_descriptorSize = device->GetDescriptorHandleIncrementSize(type);
+	m_descirptorCount = descriptor_count;
+	m_allocatedCount = 0;
+	m_bShaderVisible = (type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV || type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+	desc.Type = type;
+	desc.NumDescriptors = descriptor_count;
+	if (m_bShaderVisible)
+	{
+		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	}
+	device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_pHeap));
+}
+
+D3D12DescriptorAllocator::~D3D12DescriptorAllocator()
+{
+	m_pHeap->Release();
+}
+
+D3D12Descriptor D3D12DescriptorAllocator::Allocate()
+{
+	if (!m_freeDescriptors.empty())
+	{
+		D3D12Descriptor descriptor = m_freeDescriptors.back();
+		m_freeDescriptors.pop_back();
+		return descriptor;
+	}
+	
+	RE_ASSERT(m_allocatedCount <= m_descirptorCount);
+
+	D3D12Descriptor descriptor;
+	descriptor.cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_pHeap->GetCPUDescriptorHandleForHeapStart(), m_allocatedCount, m_descriptorSize);
+	
+	if (m_bShaderVisible)
+	{
+		descriptor.gpu_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_pHeap->GetGPUDescriptorHandleForHeapStart(), m_allocatedCount, m_descriptorSize);
+	}
+
+	m_allocatedCount++;
+
+	return descriptor;
+}
+
+void D3D12DescriptorAllocator::Free(const D3D12Descriptor& descriptor)
+{
+	m_freeDescriptors.push_back(descriptor);
 }

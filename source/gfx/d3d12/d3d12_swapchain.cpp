@@ -28,12 +28,8 @@ bool D3D12Swapchain::Present()
 bool D3D12Swapchain::Resize(uint32_t width, uint32_t height)
 {
 	//todo
+	RE_ASSERT(false);
 	return false;
-}
-
-const GfxSwapchainDesc& D3D12Swapchain::GetDesc() const
-{
-	return m_desc;
 }
 
 IGfxTexture* D3D12Swapchain::GetBackBuffer() const
@@ -72,7 +68,6 @@ bool D3D12Swapchain::Create()
 	pSwapChain->QueryInterface(&m_pSwapChain);
 	SAFE_RELEASE(pSwapChain);
 
-	/*
 	GfxTextureDesc textureDesc;
 	textureDesc.width = m_desc.width;
 	textureDesc.height = m_desc.height;
@@ -88,11 +83,10 @@ bool D3D12Swapchain::Create()
 			return false;
 		}
 
-		D3D12Texture* texture = QK_NEW D3D12Texture(pDevice, textureDesc, m_name + " texture " + std::to_string(i));
+		D3D12Texture* texture = new D3D12Texture(pDevice, textureDesc, m_name + " texture " + std::to_string(i));
 		texture->m_pTexture = pBackbuffer;
 		m_backBuffers.push_back(texture);
 	}
-	*/
 
 	return true;
 }

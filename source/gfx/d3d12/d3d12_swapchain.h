@@ -15,14 +15,12 @@ public:
 	virtual void* GetHandle() const override { return m_pSwapChain; }
 	virtual bool Present() override;
 	virtual bool Resize(uint32_t width, uint32_t height) override;
-	virtual const GfxSwapchainDesc& GetDesc() const override;
 	virtual IGfxTexture* GetBackBuffer() const override;
 
 	bool Create();
 
 private:
 	IDXGISwapChain3* m_pSwapChain = nullptr;
-	GfxSwapchainDesc m_desc;
 
 	uint32_t m_nCurrentBackBuffer = 0;
 	std::vector<IGfxTexture*> m_backBuffers;
