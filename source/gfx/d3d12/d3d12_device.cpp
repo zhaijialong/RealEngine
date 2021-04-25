@@ -48,9 +48,16 @@ D3D12Device::~D3D12Device()
 {
 	DoDeferredDeletion(true);
 
+	m_pRTVAllocator.reset();
+	m_pDSVAllocator.reset();
+	m_pResDescriptorAllocator.reset();
+	m_pSamplerAllocator.reset();
+
 	SAFE_RELEASE(m_pResourceAllocator);
 	SAFE_RELEASE(m_pGraphicsQueue);
 	SAFE_RELEASE(m_pCopyQueue);
+	SAFE_RELEASE(m_pDxgiAdapter);
+	SAFE_RELEASE(m_pDxgiFactory);
 
 #if defined(_DEBUG)
 	ID3D12DebugDevice* pDebugDevice = NULL;
@@ -63,8 +70,6 @@ D3D12Device::~D3D12Device()
 #endif
 
 	SAFE_RELEASE(m_pDevice);
-	SAFE_RELEASE(m_pDxgiAdapter);
-	SAFE_RELEASE(m_pDxgiFactory);
 }
 
 
