@@ -1,4 +1,10 @@
 #include "renderer.h"
+#include <fstream>
+
+Renderer::Renderer()
+{
+    m_pShaderCompiler = std::make_unique<ShaderCompiler>();
+}
 
 Renderer::~Renderer()
 {
@@ -24,6 +30,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
         std::string name = "Renderer::m_pCommandLists " + std::to_string(i);
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
+
+    CreateResources();
 }
 
 void Renderer::RenderFrame()
@@ -61,4 +69,27 @@ void Renderer::RenderFrame()
     m_pSwapchain->Present();
 
     m_pDevice->EndFrame();
+}
+
+void Renderer::CreateResources()
+{
+    //test code ...
+    std::string source;
+
+    std::ifstream is;
+    is.open("D:\\RealEngine\\shaders\\mesh.hlsl", std::ios::binary);
+    if (is.good())
+    {
+        is.seekg(0, std::ios::end);
+        uint32_t length = (uint32_t)is.tellg();
+        is.seekg(0, std::ios::beg);
+
+        source.resize(length);
+
+        is.read((char*)source.data(), length);
+        is.close();
+    }
+
+    std::vector<uint8_t> shader_blob;
+    m_pShaderCompiler->Compile(source, "mesh.hlsl", "main", "vs_6_6", { "ENABLE_TEST=1" }, shader_blob);
 }

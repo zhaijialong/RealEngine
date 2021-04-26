@@ -121,6 +121,9 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_shader.cpp">
       <Filter>source\gfx\d3d12</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\shader_compiler.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -408,6 +411,9 @@
     <ClInclude Include="source\gfx\d3d12\d3d12_shader.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\shader_compiler.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -483,5 +489,10 @@
     <None Include="shaders\common.hlsli">
       <Filter>shaders</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\mesh.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

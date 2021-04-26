@@ -18,6 +18,6 @@ public:
     Renderer* GetRenderer() const { return m_pRenderer.get(); }
 
 private:
-    std::unique_ptr<World> m_pWorld;
     std::unique_ptr<Renderer> m_pRenderer;
+    std::unique_ptr<World> m_pWorld;
 };
