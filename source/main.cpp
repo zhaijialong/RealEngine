@@ -14,6 +14,22 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
+static std::string GetWorkPath()
+{
+    wchar_t exe_file[MAX_PATH];
+    GetModuleFileName(NULL, exe_file, MAX_PATH);
+
+    DWORD size = WideCharToMultiByte(CP_ACP, 0, exe_file, -1, NULL, 0, NULL, FALSE);
+
+    std::string work_path;
+    work_path.resize(size);
+
+    WideCharToMultiByte(CP_ACP, 0, exe_file, -1, (LPSTR)work_path.c_str(), size, NULL, FALSE);
+
+    size_t last_slash = work_path.find_last_of('\\');
+    return work_path.substr(0, last_slash + 1);
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -49,7 +65,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     ShowWindow(hwnd, nCmdShow);
 
-    Engine::GetInstance()->Init(hwnd, window_width, window_height);
+    Engine::GetInstance()->Init(GetWorkPath(), hwnd, window_width, window_height);
 
     // Main loop.
     MSG msg = {};

@@ -124,6 +124,9 @@
     <ClCompile Include="source\renderer\shader_compiler.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="external\simpleini\ConvertUTF.c">
+      <Filter>external\simpleini</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -414,6 +417,12 @@
     <ClInclude Include="source\renderer\shader_compiler.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="external\simpleini\ConvertUTF.h">
+      <Filter>external\simpleini</Filter>
+    </ClInclude>
+    <ClInclude Include="external\simpleini\SimpleIni.h">
+      <Filter>external\simpleini</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -445,6 +454,9 @@
     </Filter>
     <Filter Include="source\utils">
       <UniqueIdentifier>{3185c19b-e0eb-4235-95ef-36876f6627af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\simpleini">
+      <UniqueIdentifier>{e7498b2e-04a0-4c99-af2b-de0568b82ef0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

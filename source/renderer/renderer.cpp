@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "core/engine.h"
 #include <fstream>
 
 Renderer::Renderer()
@@ -76,9 +77,10 @@ void Renderer::CreateResources()
     //test code ...
     std::string source;
 
+    std::string file = Engine::GetInstance()->GetShaderPath() + "mesh.hlsl";
     std::ifstream is;
-    is.open("D:\\RealEngine\\shaders\\mesh.hlsl", std::ios::binary);
-    if (is.good())
+    is.open(file.c_str(), std::ios::binary);
+    if (!is.fail())
     {
         is.seekg(0, std::ios::end);
         uint32_t length = (uint32_t)is.tellg();

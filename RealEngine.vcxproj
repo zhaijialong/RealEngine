@@ -108,6 +108,7 @@
     <ClCompile Include="external\gts\source\platform\_posix\Thread_Posix.cpp" />
     <ClCompile Include="external\gts\source\platform\_win32\Memory_Win32.cpp" />
     <ClCompile Include="external\gts\source\platform\_win32\Thread_Win32.cpp" />
+    <ClCompile Include="external\simpleini\ConvertUTF.c" />
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\task_scheduler.cpp" />
     <ClCompile Include="source\core\world.cpp" />
@@ -192,6 +193,8 @@
     <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_ChaseLev_Empty.h" />
     <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_ChaseLev_Flag.h" />
     <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_THE.h" />
+    <ClInclude Include="external\simpleini\ConvertUTF.h" />
+    <ClInclude Include="external\simpleini\SimpleIni.h" />
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\task_scheduler.h" />
     <ClInclude Include="source\core\world.h" />
