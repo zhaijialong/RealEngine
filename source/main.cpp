@@ -44,8 +44,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     windowClass.lpszClassName = L"REWindowClass";
     RegisterClassEx(&windowClass);
 
-    const unsigned int window_width = 1280;
-    const unsigned int window_height = 720;
+    const unsigned int window_width = 1600;
+    const unsigned int window_height = 900;
 
     RECT windowRect = { 0, 0, window_width, window_height };
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);

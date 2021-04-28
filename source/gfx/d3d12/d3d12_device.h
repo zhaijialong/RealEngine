@@ -42,6 +42,7 @@ public:
 	virtual IGfxFence* CreateFence(const std::string& name) override;
 	virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name) override;
 	virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const std::string& name) override;
+	virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name) override;
 
 	virtual void BeginFrame() override;
 	virtual void EndFrame() override;

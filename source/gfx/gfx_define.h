@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <string>
 
 enum class GfxRenderBackend
 {
@@ -294,4 +295,11 @@ struct GfxRenderPassDesc
 {
 	GfxRenderPassColorAttachment color[8];
 	GfxRenderPassDepthAttachment depth;
+};
+
+struct GfxShaderDesc
+{
+	std::string file;
+	std::string entry_point;
+	std::string profile;
 };

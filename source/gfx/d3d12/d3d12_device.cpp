@@ -4,6 +4,7 @@
 #include "d3d12_fence.h"
 #include "d3d12_swapchain.h"
 #include "d3d12_command_list.h"
+#include "d3d12_shader.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 #include "utils/log.h"
 #include "utils/assert.h"
@@ -126,6 +127,11 @@ IGfxCommandList* D3D12Device::CreateCommandList(GfxCommandQueue queue_type, cons
 		return nullptr;
 	}
 	return pCommandList;
+}
+
+IGfxShader* D3D12Device::CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name)
+{
+	return new D3D12Shader(this, desc, data, name);
 }
 
 void D3D12Device::BeginFrame()

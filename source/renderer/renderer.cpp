@@ -75,9 +75,9 @@ void Renderer::RenderFrame()
 void Renderer::CreateResources()
 {
     //test code ...
+    std::string file = Engine::GetInstance()->GetShaderPath() + "mesh.hlsl";
     std::string source;
 
-    std::string file = Engine::GetInstance()->GetShaderPath() + "mesh.hlsl";
     std::ifstream is;
     is.open(file.c_str(), std::ios::binary);
     if (!is.fail())
@@ -93,5 +93,12 @@ void Renderer::CreateResources()
     }
 
     std::vector<uint8_t> shader_blob;
-    m_pShaderCompiler->Compile(source, "mesh.hlsl", "main", "vs_6_6", { "ENABLE_TEST=1" }, shader_blob);
+    m_pShaderCompiler->Compile(source, file, "main", "vs_6_6", { "ENABLE_TEST=1" }, shader_blob);
+
+    GfxShaderDesc desc;
+    desc.file = file;
+    desc.entry_point = "main";
+    desc.profile = "vs_6_6";
+    
+    IGfxShader* shader = m_pDevice->CreateShader(desc, shader_blob, "test shader");
 }

@@ -2,12 +2,14 @@
 
 #include "gfx_define.h"
 #include <string>
+#include <vector>
 
 class IGfxBuffer;
 class IGfxTexture;
 class IGfxFence;
 class IGfxSwapchain;
 class IGfxCommandList;
+class IGfxShader;
 
 class IGfxDevice
 {
@@ -21,6 +23,7 @@ public:
 	virtual IGfxFence* CreateFence(const std::string& name) = 0;
 	virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, const std::string& name) = 0;
 	virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, const std::string& name) = 0;
+	virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name) = 0;
 
 	virtual void BeginFrame() = 0;
 	virtual void EndFrame() = 0;

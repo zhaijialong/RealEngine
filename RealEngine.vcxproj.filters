@@ -127,6 +127,12 @@
     <ClCompile Include="external\simpleini\ConvertUTF.c">
       <Filter>external\simpleini</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\shader_cache.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\pipeline_cache.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -422,6 +428,12 @@
     </ClInclude>
     <ClInclude Include="external\simpleini\SimpleIni.h">
       <Filter>external\simpleini</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\shader_cache.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\pipeline_cache.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

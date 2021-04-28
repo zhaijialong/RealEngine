@@ -2,6 +2,8 @@
 
 #include "gfx/gfx.h"
 #include "shader_compiler.h"
+#include "shader_cache.h"
+#include "pipeline_cache.h"
 #include <memory>
 
 class Renderer
@@ -12,6 +14,8 @@ public:
 
     void CreateDevice(void *window_handle, uint32_t window_width, uint32_t window_height);
     void RenderFrame();
+
+    IGfxShader* GetShader();
 
 private:
     void CreateResources();
@@ -28,4 +32,5 @@ private:
     std::unique_ptr<IGfxCommandList> m_pCommandLists[MAX_INFLIGHT_FRAMES];
 
     std::unique_ptr<ShaderCompiler> m_pShaderCompiler;
+    std::unique_ptr<ShaderCache> m_pShaderCache;
 };
