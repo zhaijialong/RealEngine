@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 enum class GfxRenderBackend
 {
@@ -302,4 +303,5 @@ struct GfxShaderDesc
 	std::string file;
 	std::string entry_point;
 	std::string profile;
+	std::vector<std::string> defines;
 };

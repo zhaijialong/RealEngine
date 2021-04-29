@@ -15,7 +15,11 @@ public:
     void CreateDevice(void *window_handle, uint32_t window_width, uint32_t window_height);
     void RenderFrame();
 
-    IGfxShader* GetShader();
+    IGfxDevice* GetDevice() const { return m_pDevice.get(); }
+    ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
+    
+    IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
+    IGfxPipelineState* GetPipelineState();
 
 private:
     void CreateResources();

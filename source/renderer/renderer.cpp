@@ -1,10 +1,10 @@
 #include "renderer.h"
 #include "core/engine.h"
-#include <fstream>
 
 Renderer::Renderer()
 {
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
+    m_pShaderCache = std::make_unique<ShaderCache>(this);
 }
 
 Renderer::~Renderer()
@@ -72,33 +72,14 @@ void Renderer::RenderFrame()
     m_pDevice->EndFrame();
 }
 
+IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines)
+{
+    return m_pShaderCache->GetShader(file, entry_point, profile, defines);
+}
+
 void Renderer::CreateResources()
 {
     //test code ...
-    std::string file = Engine::GetInstance()->GetShaderPath() + "mesh.hlsl";
-    std::string source;
-
-    std::ifstream is;
-    is.open(file.c_str(), std::ios::binary);
-    if (!is.fail())
-    {
-        is.seekg(0, std::ios::end);
-        uint32_t length = (uint32_t)is.tellg();
-        is.seekg(0, std::ios::beg);
-
-        source.resize(length);
-
-        is.read((char*)source.data(), length);
-        is.close();
-    }
-
-    std::vector<uint8_t> shader_blob;
-    m_pShaderCompiler->Compile(source, file, "main", "vs_6_6", { "ENABLE_TEST=1" }, shader_blob);
-
-    GfxShaderDesc desc;
-    desc.file = file;
-    desc.entry_point = "main";
-    desc.profile = "vs_6_6";
-    
-    IGfxShader* shader = m_pDevice->CreateShader(desc, shader_blob, "test shader");
+    IGfxShader* pShader = GetShader("mesh.hlsl", "main", "vs_6_6", { "TEST=1", "FOOBAR=1" });
+    pShader = GetShader("mesh.hlsl", "main", "vs_6_6", { "TEST=1", "FOOBAR=1" });
 }
