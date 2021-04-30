@@ -66,7 +66,11 @@ void D3D12CommandList::Begin()
 	m_pCommandAllocator->Reset();
 	m_pCommandList->Reset(m_pCommandAllocator, nullptr);
 
-	ID3D12RootSignature* pRootSignature = ((D3D12Device*)m_pDevice)->GetRootSignature();
+	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
+	ID3D12DescriptorHeap* heaps[2] = { pDevice->GetResourceDescriptorHeap(), pDevice->GetSamplerDescriptorHeap() };
+	m_pCommandList->SetDescriptorHeaps(2, heaps);
+	
+	ID3D12RootSignature* pRootSignature = pDevice->GetRootSignature();
 	m_pCommandList->SetGraphicsRootSignature(pRootSignature);
 	m_pCommandList->SetComputeRootSignature(pRootSignature);
 }

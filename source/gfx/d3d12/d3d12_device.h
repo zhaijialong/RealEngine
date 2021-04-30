@@ -20,6 +20,8 @@ public:
 	D3D12Descriptor Allocate();
 	void Free(const D3D12Descriptor& descriptor);
 
+	ID3D12DescriptorHeap* GetHeap() const { return m_pHeap; }
+
 private:
 	ID3D12DescriptorHeap* m_pHeap = nullptr;
 	uint32_t m_descriptorSize = 0;
@@ -55,6 +57,8 @@ public:
 	ID3D12CommandQueue* GetGraphicsQueue() const { return m_pGraphicsQueue; }
 	ID3D12CommandQueue* GetCopyQueue() const { return m_pCopyQueue; }
 	D3D12MA::Allocator* GetResourceAllocator() const { return m_pResourceAllocator; }
+	ID3D12DescriptorHeap* GetResourceDescriptorHeap() const { return m_pResDescriptorAllocator->GetHeap(); }
+	ID3D12DescriptorHeap* GetSamplerDescriptorHeap() const { return m_pSamplerAllocator->GetHeap(); }
 	ID3D12RootSignature* GetRootSignature() const { return m_pRootSignature; }
 
 	void Delete(IUnknown* object);
