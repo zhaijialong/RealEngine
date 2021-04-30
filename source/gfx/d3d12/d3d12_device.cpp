@@ -55,6 +55,7 @@ D3D12Device::~D3D12Device()
 	m_pResDescriptorAllocator.reset();
 	m_pSamplerAllocator.reset();
 
+	SAFE_RELEASE(m_pRootSignature);
 	SAFE_RELEASE(m_pResourceAllocator);
 	SAFE_RELEASE(m_pGraphicsQueue);
 	SAFE_RELEASE(m_pCopyQueue);
@@ -375,6 +376,36 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
 
 void D3D12Device::CreateRootSignature()
 {
+	//AMD : Try to stay below 13 DWORDs https://gpuopen.com/performance/
+	//4 root constants + 4 root CBVs == 12 DWORDs, everything else is bindless
+
+	CD3DX12_ROOT_PARAMETER1 root_parameters[5] = {};
+	root_parameters[0].InitAsConstants(4, 0);
+	root_parameters[1].InitAsConstantBufferView(1);
+	root_parameters[2].InitAsConstantBufferView(2);
+	root_parameters[3].InitAsConstantBufferView(3);
+	root_parameters[4].InitAsConstantBufferView(4);
+
+	D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
+		D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED;
+
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+	rootSignatureDesc.Init_1_1(_countof(root_parameters), root_parameters, 0, nullptr, rootSignatureFlags);
+
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+
+	ID3DBlob* signature = nullptr;
+	ID3DBlob* error = nullptr;
+	RE_ASSERT(SUCCEEDED(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error)));	
+	RE_ASSERT(SUCCEEDED(m_pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature))));
+
+	SAFE_RELEASE(signature);
+	SAFE_RELEASE(error);
 }
 
 D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count)
