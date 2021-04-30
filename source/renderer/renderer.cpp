@@ -82,7 +82,8 @@ void Renderer::CreateResources()
 {
     //test code ...
     GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = GetShader("mesh.hlsl", "main", "vs_6_6", { "TEST=1", "FOOBAR=1" });
+    psoDesc.vs = GetShader("mesh.hlsl", "vs_main", "vs_6_6", { "TEST=1", "FOOBAR=1" });
+    psoDesc.ps = GetShader("mesh.hlsl", "ps_main", "ps_6_6", { "TEST=1", "FOOBAR=1" });
     psoDesc.rt_format[0] = m_pSwapchain->GetBackBuffer()->GetDesc().format;
 
     IGfxPipelineState* pPSO = m_pDevice->CreateGraphicsPipelineState(psoDesc, "test pso");

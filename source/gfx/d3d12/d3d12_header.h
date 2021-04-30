@@ -198,3 +198,210 @@ inline D3D12_RENDER_PASS_ENDING_ACCESS_TYPE d3d12_render_pass_storeop(GfxRenderP
 		return D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE;
 	}
 }
+
+inline D3D12_BLEND d3d12_blend(GfxBlendFactor blend_factor)
+{
+	switch (blend_factor)
+	{
+	case GfxBlendFactor::Zero:
+		return D3D12_BLEND_ZERO;
+	case GfxBlendFactor::One:
+		return D3D12_BLEND_ONE;
+	case GfxBlendFactor::SrcColor:
+		return D3D12_BLEND_SRC_COLOR;
+	case GfxBlendFactor::InvSrcColor:
+		return D3D12_BLEND_INV_SRC_COLOR;
+	case GfxBlendFactor::SrcAlpha:
+		return D3D12_BLEND_SRC_ALPHA;
+	case GfxBlendFactor::InvSrcAlpha:
+		return D3D12_BLEND_INV_SRC_ALPHA;
+	case GfxBlendFactor::DstAlpha:
+		return D3D12_BLEND_DEST_ALPHA;
+	case GfxBlendFactor::InvDstAlpha:
+		return D3D12_BLEND_INV_DEST_ALPHA;
+	case GfxBlendFactor::DstColor:
+		return D3D12_BLEND_DEST_COLOR;
+	case GfxBlendFactor::InvDstColor:
+		return D3D12_BLEND_INV_DEST_COLOR;
+	case GfxBlendFactor::SrcAlphaClamp:
+		return D3D12_BLEND_SRC_ALPHA_SAT;
+	case GfxBlendFactor::ConstantFactor:
+		return D3D12_BLEND_BLEND_FACTOR;
+	case GfxBlendFactor::InvConstantFactor:
+		return D3D12_BLEND_INV_BLEND_FACTOR;
+	default:
+		return D3D12_BLEND_ONE;
+	}
+}
+
+inline D3D12_BLEND_OP d3d12_blend_op(GfxBlendOp blend_op)
+{
+	switch (blend_op)
+	{
+	case GfxBlendOp::Add:
+		return D3D12_BLEND_OP_ADD;
+	case GfxBlendOp::Subtract:
+		return D3D12_BLEND_OP_SUBTRACT;
+	case GfxBlendOp::ReverseSubtract:
+		return D3D12_BLEND_OP_REV_SUBTRACT;
+	case GfxBlendOp::Min:
+		return D3D12_BLEND_OP_MIN;
+	case GfxBlendOp::Max:
+		return D3D12_BLEND_OP_MAX;
+	default:
+		return D3D12_BLEND_OP_ADD;
+	}
+}
+
+inline D3D12_RENDER_TARGET_BLEND_DESC d3d12_rt_blend_desc(const GfxBlendState& blendState)
+{
+	D3D12_RENDER_TARGET_BLEND_DESC desc = {};
+	desc.BlendEnable = blendState.blend_enable;
+	desc.SrcBlend = d3d12_blend(blendState.color_src);
+	desc.DestBlend = d3d12_blend(blendState.color_dst);
+	desc.BlendOp = d3d12_blend_op(blendState.color_op);
+	desc.SrcBlendAlpha = d3d12_blend(blendState.alpha_src);
+	desc.DestBlendAlpha = d3d12_blend(blendState.alpha_dst);
+	desc.BlendOpAlpha = d3d12_blend_op(blendState.alpha_op);
+	desc.RenderTargetWriteMask = blendState.write_mask;
+
+	return desc;
+}
+
+inline D3D12_BLEND_DESC d3d12_blend_desc(const GfxBlendState* blendStates)
+{
+	D3D12_BLEND_DESC desc = {};
+	desc.AlphaToCoverageEnable = false;
+	desc.IndependentBlendEnable = true;
+
+	for (int i = 0; i < 8; ++i)
+	{
+		desc.RenderTarget[i] = d3d12_rt_blend_desc(blendStates[i]);
+	}
+
+	return desc;
+}
+
+inline D3D12_CULL_MODE d3d12_cull_mode(GfxCullMode cull_mode)
+{
+	switch (cull_mode)
+	{
+	case GfxCullMode::None:
+		return D3D12_CULL_MODE_NONE;
+	case GfxCullMode::Front:
+		return D3D12_CULL_MODE_FRONT;
+	case GfxCullMode::Back:
+		return D3D12_CULL_MODE_BACK;
+	default:
+		return D3D12_CULL_MODE_NONE;
+	}
+}
+
+inline D3D12_RASTERIZER_DESC d3d12_rasterizer_desc(const GfxRasterizerState& rasterizerState)
+{
+	D3D12_RASTERIZER_DESC desc = {};
+	desc.FillMode = rasterizerState.wireframe ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
+	desc.CullMode = d3d12_cull_mode(rasterizerState.cull_mode);
+	desc.FrontCounterClockwise = rasterizerState.front_ccw;
+	desc.DepthBias = (INT)rasterizerState.depth_bias;
+	desc.DepthBiasClamp = rasterizerState.depth_bias_clamp;
+	desc.SlopeScaledDepthBias = rasterizerState.depth_slope_scale;
+	desc.DepthClipEnable = rasterizerState.depth_clip;
+	desc.AntialiasedLineEnable = rasterizerState.line_aa;
+	desc.ConservativeRaster = rasterizerState.conservative_raster ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+	return desc;
+}
+
+inline D3D12_COMPARISON_FUNC d3d12_compare_func(GfxCompareFunc func)
+{
+	switch (func)
+	{
+	case GfxCompareFunc::Never:
+		return D3D12_COMPARISON_FUNC_NEVER;
+	case GfxCompareFunc::Less:
+		return D3D12_COMPARISON_FUNC_LESS;
+	case GfxCompareFunc::Equal:
+		return D3D12_COMPARISON_FUNC_EQUAL;
+	case GfxCompareFunc::LessEqual:
+		return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	case GfxCompareFunc::Greater:
+		return D3D12_COMPARISON_FUNC_GREATER;
+	case GfxCompareFunc::NotEqual:
+		return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+	case GfxCompareFunc::GreaterEqual:
+		return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	case GfxCompareFunc::Always:
+		return D3D12_COMPARISON_FUNC_ALWAYS;
+	default:
+		return D3D12_COMPARISON_FUNC_ALWAYS;
+	}
+}
+
+inline D3D12_STENCIL_OP d3d12_stencil_op(GfxStencilOp stencil_op)
+{
+	switch (stencil_op)
+	{
+	case GfxStencilOp::Keep:
+		return D3D12_STENCIL_OP_KEEP;
+	case GfxStencilOp::Zero:
+		return D3D12_STENCIL_OP_ZERO;
+	case GfxStencilOp::Replace:
+		return D3D12_STENCIL_OP_REPLACE;
+	case GfxStencilOp::IncreaseClamp:
+		return D3D12_STENCIL_OP_INCR_SAT;
+	case GfxStencilOp::DecreaseClamp:
+		return D3D12_STENCIL_OP_DECR_SAT;
+	case GfxStencilOp::Invert:
+		return D3D12_STENCIL_OP_INVERT;
+	case GfxStencilOp::IncreaseWrap:
+		return D3D12_STENCIL_OP_INCR;
+	case GfxStencilOp::DecreaseWrap:
+		return D3D12_STENCIL_OP_DECR;
+	default:
+		return D3D12_STENCIL_OP_KEEP;
+	}
+}
+
+inline D3D12_DEPTH_STENCILOP_DESC d3d12_depth_stencil_op(const GfxDepthStencilOp& depthStencilOp)
+{
+	D3D12_DEPTH_STENCILOP_DESC desc = {};
+	desc.StencilFailOp = d3d12_stencil_op(depthStencilOp.stencil_fail);
+	desc.StencilDepthFailOp = d3d12_stencil_op(depthStencilOp.depth_fail);
+	desc.StencilPassOp = d3d12_stencil_op(depthStencilOp.pass);
+	desc.StencilFunc = d3d12_compare_func(depthStencilOp.stencil_func);
+
+	return desc;
+}
+
+inline D3D12_DEPTH_STENCIL_DESC d3d12_depth_stencil_desc(const GfxDepthStencilState& depthStencilState)
+{
+	D3D12_DEPTH_STENCIL_DESC desc = {};
+	desc.DepthEnable = depthStencilState.depth_test;
+	desc.DepthWriteMask = depthStencilState.depth_write ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
+	desc.DepthFunc = d3d12_compare_func(depthStencilState.depth_func);
+	desc.StencilEnable = depthStencilState.stencil_test;
+	desc.StencilReadMask = depthStencilState.stencil_read_mask;
+	desc.StencilWriteMask = depthStencilState.stencil_write_mask;
+	desc.FrontFace = d3d12_depth_stencil_op(depthStencilState.front);
+	desc.BackFace = d3d12_depth_stencil_op(depthStencilState.back);
+
+	return desc;
+}
+
+inline D3D12_PRIMITIVE_TOPOLOGY_TYPE d3d12_topology_type(GfxPrimitiveType primitive_type)
+{
+	switch (primitive_type)
+	{
+	case GfxPrimitiveType::PointList:
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	case GfxPrimitiveType::LineList:
+	case GfxPrimitiveType::LineStrip:
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+	case GfxPrimitiveType::TriangleList:
+	case GfxPrimitiveType::TriangleTrip:
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	default:
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+	}
+}

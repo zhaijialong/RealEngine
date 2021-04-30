@@ -320,7 +320,7 @@ enum class GfxCompareFunc
 	Equal,
 	LessEqual,
 	Greater,
-	NotGreater,
+	NotEqual,
 	GreaterEqual,
 	Always,
 };
@@ -370,7 +370,8 @@ enum class GfxBlendFactor
 	DstColor,
 	InvDstColor,
 	SrcAlphaClamp,
-	constant_factor,
+	ConstantFactor,
+	InvConstantFactor,
 };
 
 enum class GfxBlendOp
@@ -423,12 +424,11 @@ struct GfxGraphicsPipelineDesc
 
 	GfxRasterizerState rasterizer_state;
 	GfxDepthStencilState depthstencil_state;
-	GfxBlendState blend_state;
+	GfxBlendState blend_state[8];
 
 	GfxFormat rt_format[8] = { GfxFormat::Unknown };
 	GfxFormat depthstencil_format = GfxFormat::Unknown;
 	GfxPrimitiveType primitive_type = GfxPrimitiveType::TriangleList;
-	uint32_t sample_mask = 0xFFFFFFFF;
 };
 
 struct GfxMeshShadingPipelineDesc
@@ -439,9 +439,8 @@ struct GfxMeshShadingPipelineDesc
 
 	GfxRasterizerState rasterizer_state;
 	GfxDepthStencilState depthstencil_state;
-	GfxBlendState blend_state;
+	GfxBlendState blend_state[8];
 
 	GfxFormat rt_format[8] = { GfxFormat::Unknown };
 	GfxFormat depthstencil_format = GfxFormat::Unknown;
-	uint32_t sample_mask = 0xFFFFFFFF;
 };

@@ -2,8 +2,6 @@
 #include "d3d12_device.h"
 #include "d3d12_fence.h"
 #include "d3d12_texture.h"
-//#include "d3d12_rtv.h"
-//#include "d3d12_dsv.h"
 #include "utils/assert.h"
 
 D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const std::string& name)
@@ -67,6 +65,10 @@ void D3D12CommandList::Begin()
 {
 	m_pCommandAllocator->Reset();
 	m_pCommandList->Reset(m_pCommandAllocator, nullptr);
+
+	ID3D12RootSignature* pRootSignature = ((D3D12Device*)m_pDevice)->GetRootSignature();
+	m_pCommandList->SetGraphicsRootSignature(pRootSignature);
+	m_pCommandList->SetComputeRootSignature(pRootSignature);
 }
 
 void D3D12CommandList::End()
