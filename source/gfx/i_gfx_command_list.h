@@ -15,6 +15,9 @@ public:
 	virtual void Begin() = 0;
 	virtual void End() = 0;
 
+	virtual void BeginEvent(const std::string& event_name) = 0;
+	virtual void EndEvent() = 0;
+
 	virtual void Wait(IGfxFence* fence, uint64_t value) = 0;
 	virtual void Signal(IGfxFence* fence, uint64_t value) = 0;
 	virtual void Submit() = 0;

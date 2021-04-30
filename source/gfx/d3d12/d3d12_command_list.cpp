@@ -2,6 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12_fence.h"
 #include "d3d12_texture.h"
+#include "pix_runtime.h"
 #include "utils/assert.h"
 
 D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const std::string& name)
@@ -80,6 +81,16 @@ void D3D12CommandList::End()
 	FlushPendingBarrier();
 
 	m_pCommandList->Close();
+}
+
+void D3D12CommandList::BeginEvent(const std::string& event_name)
+{
+	pix::BeginEvent(m_pCommandList, event_name.c_str());
+}
+
+void D3D12CommandList::EndEvent()
+{
+	pix::EndEvent(m_pCommandList);
 }
 
 void D3D12CommandList::Wait(IGfxFence* fence, uint64_t value)

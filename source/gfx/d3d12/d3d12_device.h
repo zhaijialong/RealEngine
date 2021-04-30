@@ -14,7 +14,7 @@ namespace D3D12MA
 class D3D12DescriptorAllocator
 {
 public:
-	D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count);
+	D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count, const std::string& name);
 	~D3D12DescriptorAllocator();
 
 	D3D12Descriptor Allocate();

@@ -19,6 +19,9 @@ public:
 	virtual void Begin() override;
 	virtual void End() override;
 
+	virtual void BeginEvent(const std::string& event_name) override;
+	virtual void EndEvent() override;
+
 	virtual void Wait(IGfxFence* fence, uint64_t value) override;
 	virtual void Signal(IGfxFence* fence, uint64_t value) override;
 	virtual void Submit() override;

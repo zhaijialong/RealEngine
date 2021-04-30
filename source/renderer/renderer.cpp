@@ -29,7 +29,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
     for (int i = 0; i < MAX_INFLIGHT_FRAMES; ++i)
     {
-        std::string name = "Renderer::m_pCommandLists " + std::to_string(i);
+        std::string name = "Renderer::m_pCommandLists[" + std::to_string(i) + "]";
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
 
@@ -44,6 +44,7 @@ void Renderer::RenderFrame()
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->Begin();
+    pCommandList->BeginEvent("Renderer::RenderFrame");
 
     IGfxTexture* pBackBuffer = m_pSwapchain->GetBackBuffer();
     pCommandList->ResourceBarrier(pBackBuffer, 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
@@ -57,9 +58,14 @@ void Renderer::RenderFrame()
     pCommandList->SetViewport(0, 0, pBackBuffer->GetDesc().width, pBackBuffer->GetDesc().height);
 
     //todo : render something
+    {
+        RENDER_EVENT(pCommandList, "Render something");
+    }
 
     pCommandList->EndRenderPass();
     pCommandList->ResourceBarrier(pBackBuffer, 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
+
+    pCommandList->EndEvent();
     pCommandList->End();
 
     ++m_nCurrentFenceValue;

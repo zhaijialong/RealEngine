@@ -136,6 +136,9 @@
     <ClCompile Include="external\xxHash\xxhash.c">
       <Filter>external\xxHash</Filter>
     </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -440,6 +443,9 @@
     </ClInclude>
     <ClInclude Include="external\xxHash\xxhash.h">
       <Filter>external\xxHash</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\pix_runtime.h">
+      <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

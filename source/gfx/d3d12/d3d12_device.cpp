@@ -7,6 +7,7 @@
 #include "d3d12_shader.h"
 #include "d3d12_pipeline_state.h"
 #include "d3d12ma/D3D12MemAlloc.h"
+#include "pix_runtime.h"
 #include "utils/log.h"
 #include "utils/assert.h"
 
@@ -227,12 +228,14 @@ bool D3D12Device::Init()
 		return false;
 	}
 
-	m_pRTVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 512);
-	m_pDSVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 128);
-	m_pResDescriptorAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536);
-    m_pSamplerAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32);
+	m_pRTVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 512, "RTV Heap");
+	m_pDSVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 128, "DSV Heap");
+	m_pResDescriptorAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536, "Resource Heap");
+    m_pSamplerAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, "Sampler Heap");
 
 	CreateRootSignature();
+
+	pix::Init();
 
     return true;
 }
@@ -406,9 +409,11 @@ void D3D12Device::CreateRootSignature()
 
 	SAFE_RELEASE(signature);
 	SAFE_RELEASE(error);
+
+	m_pRootSignature->SetName(L"D3D12Device::m_pRootSignature");
 }
 
-D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count)
+D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count, const std::string& name)
 {
 	m_descriptorSize = device->GetDescriptorHandleIncrementSize(type);
 	m_descirptorCount = descriptor_count;
@@ -423,6 +428,8 @@ D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_D
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	}
 	device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_pHeap));
+
+	m_pHeap->SetName(string_to_wstring(name).c_str());
 }
 
 D3D12DescriptorAllocator::~D3D12DescriptorAllocator()

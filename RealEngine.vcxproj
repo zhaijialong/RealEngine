@@ -121,6 +121,7 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_shader.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_swapchain.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp" />
+    <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
@@ -211,6 +212,7 @@
     <ClInclude Include="source\gfx\d3d12\d3d12_shader.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_swapchain.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_texture.h" />
+    <ClInclude Include="source\gfx\d3d12\pix_runtime.h" />
     <ClInclude Include="source\gfx\gfx.h" />
     <ClInclude Include="source\gfx\gfx_define.h" />
     <ClInclude Include="source\gfx\i_gfx_buffer.h" />

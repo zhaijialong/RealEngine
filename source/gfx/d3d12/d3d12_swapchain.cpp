@@ -83,7 +83,10 @@ bool D3D12Swapchain::Create()
 			return false;
 		}
 
-		D3D12Texture* texture = new D3D12Texture(pDevice, textureDesc, m_name + " texture " + std::to_string(i));
+		std::string name = m_name + " texture " + std::to_string(i);
+		pBackbuffer->SetName(string_to_wstring(name).c_str());
+
+		D3D12Texture* texture = new D3D12Texture(pDevice, textureDesc, name);
 		texture->m_pTexture = pBackbuffer;
 		m_backBuffers.push_back(texture);
 	}
