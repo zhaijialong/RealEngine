@@ -37,4 +37,5 @@ private:
 
     std::unique_ptr<ShaderCompiler> m_pShaderCompiler;
     std::unique_ptr<ShaderCache> m_pShaderCache;
+    std::unique_ptr<PipelineStateCache> m_pPipelineCache;
 };

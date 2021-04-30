@@ -133,6 +133,9 @@
     <ClCompile Include="source\renderer\pipeline_cache.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="external\xxHash\xxhash.c">
+      <Filter>external\xxHash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -435,6 +438,9 @@
     <ClInclude Include="source\renderer\pipeline_cache.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="external\xxHash\xxhash.h">
+      <Filter>external\xxHash</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -469,6 +475,9 @@
     </Filter>
     <Filter Include="external\simpleini">
       <UniqueIdentifier>{e7498b2e-04a0-4c99-af2b-de0568b82ef0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\xxHash">
+      <UniqueIdentifier>{b18a4fbd-542d-4aac-8196-c03e09aeb3ad}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

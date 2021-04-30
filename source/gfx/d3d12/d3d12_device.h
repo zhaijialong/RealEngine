@@ -43,6 +43,8 @@ public:
 	virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name) override;
 	virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const std::string& name) override;
 	virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name) override;
+	virtual IGfxPipelineState* CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name) override;
+	virtual IGfxPipelineState* CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name) override;
 
 	virtual void BeginFrame() override;
 	virtual void EndFrame() override;
@@ -69,6 +71,7 @@ public:
 
 private:
 	void DoDeferredDeletion(bool force_delete = false);
+	void CreateRootSignature();
 
 private:
 	GfxDeviceDesc m_desc;

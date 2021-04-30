@@ -203,19 +203,6 @@ struct GfxTextureDesc
 	GfxTextureUsageFlags usage = GfxTextureUsageShaderResource;
 };
 
-struct GfxRenderTargetViewDesc
-{
-	uint32_t mip_slice = 0;
-	uint32_t array_slice = 0;
-	uint32_t plane_slice = 0;
-};
-
-struct GfxDepthStencilViewDesc
-{
-	uint32_t mip_slice = 0;
-	uint32_t array_slice = 0;
-};
-
 struct GfxContantBufferViewDesc
 {
 	uint32_t size = 0;
@@ -304,4 +291,157 @@ struct GfxShaderDesc
 	std::string entry_point;
 	std::string profile;
 	std::vector<std::string> defines;
+};
+
+enum class GfxCullMode
+{
+	None,
+	Front,
+	Back,
+};
+
+struct GfxRasterizerState
+{
+	GfxCullMode cull_mode = GfxCullMode::None;
+	float depth_bias = 0.0f;
+	float depth_bias_clamp = 0.0f;
+	float depth_slope_scale = 0.0f;
+	bool wireframe = false;
+	bool front_ccw = false;
+	bool depth_clip = true;
+	bool line_aa = false;
+	bool conservative_raster = false;
+};
+
+enum class GfxCompareFunc
+{
+	Never,
+	Less,
+	Equal,
+	LessEqual,
+	Greater,
+	NotGreater,
+	GreaterEqual,
+	Always,
+};
+
+enum class GfxStencilOp
+{
+	Keep,
+	Zero,
+	Replace,
+	IncreaseClamp,
+	DecreaseClamp,
+	Invert,
+	IncreaseWrap,
+	DecreaseWrap,
+};
+
+struct GfxDepthStencilOp
+{
+	GfxStencilOp stencil_fail = GfxStencilOp::Keep;
+	GfxStencilOp depth_fail = GfxStencilOp::Keep;
+	GfxStencilOp pass = GfxStencilOp::Keep;
+	GfxCompareFunc stencil_func = GfxCompareFunc::Always;
+};
+
+struct GfxDepthStencilState
+{
+	GfxCompareFunc depth_func = GfxCompareFunc::Always;
+	bool depth_test = false;
+	bool depth_write = true;
+	GfxDepthStencilOp front;
+	GfxDepthStencilOp back;
+	bool stencil_test = false;
+	uint8_t stencil_read_mask = 0xFF;
+	uint8_t stencil_write_mask = 0xFF;
+};
+
+enum class GfxBlendFactor
+{
+	Zero,
+	One,
+	SrcColor,
+	InvSrcColor,
+	SrcAlpha,
+	InvSrcAlpha,
+	DstAlpha,
+	InvDstAlpha,
+	DstColor,
+	InvDstColor,
+	SrcAlphaClamp,
+	constant_factor,
+};
+
+enum class GfxBlendOp
+{
+	Add,
+	Subtract,
+	ReverseSubtract,
+	Min,
+	Max,
+};
+
+enum GfxColorWriteMaskBit
+{
+	GfxColorWriteMaskR = 1,
+	GfxColorWriteMaskG = 2,
+	GfxColorWriteMaskB = 4,
+	GfxColorWriteMaskA = 8,
+	GfxColorWriteMaskAll = (GfxColorWriteMaskR | GfxColorWriteMaskG | GfxColorWriteMaskB | GfxColorWriteMaskA),
+};
+
+using GfxColorWriteMask = uint8_t;
+
+struct GfxBlendState
+{
+	bool blend_enable = false;
+	GfxBlendFactor color_src = GfxBlendFactor::One;
+	GfxBlendFactor color_dst = GfxBlendFactor::One;
+	GfxBlendOp color_op = GfxBlendOp::Add;
+	GfxBlendFactor alpha_src = GfxBlendFactor::One;
+	GfxBlendFactor alpha_dst = GfxBlendFactor::One;
+	GfxBlendOp alpha_op = GfxBlendOp::Add;
+	GfxColorWriteMask write_mask = GfxColorWriteMaskAll;
+};
+
+enum class GfxPrimitiveType
+{
+	PointList,
+	LineList,
+	LineStrip,
+	TriangleList,
+	TriangleTrip,
+};
+
+class IGfxShader;
+
+struct GfxGraphicsPipelineDesc
+{
+	IGfxShader* vs = nullptr;
+	IGfxShader* ps = nullptr;
+
+	GfxRasterizerState rasterizer_state;
+	GfxDepthStencilState depthstencil_state;
+	GfxBlendState blend_state;
+
+	GfxFormat rt_format[8] = { GfxFormat::Unknown };
+	GfxFormat depthstencil_format = GfxFormat::Unknown;
+	GfxPrimitiveType primitive_type = GfxPrimitiveType::TriangleList;
+	uint32_t sample_mask = 0xFFFFFFFF;
+};
+
+struct GfxMeshShadingPipelineDesc
+{
+	IGfxShader* as = nullptr;
+	IGfxShader* ms = nullptr;
+	IGfxShader* ps = nullptr;
+
+	GfxRasterizerState rasterizer_state;
+	GfxDepthStencilState depthstencil_state;
+	GfxBlendState blend_state;
+
+	GfxFormat rt_format[8] = { GfxFormat::Unknown };
+	GfxFormat depthstencil_format = GfxFormat::Unknown;
+	uint32_t sample_mask = 0xFFFFFFFF;
 };

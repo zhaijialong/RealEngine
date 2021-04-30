@@ -5,6 +5,7 @@ Renderer::Renderer()
 {
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderCache = std::make_unique<ShaderCache>(this);
+    m_pPipelineCache = std::make_unique<PipelineStateCache>(this);
 }
 
 Renderer::~Renderer()
@@ -80,6 +81,9 @@ IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entr
 void Renderer::CreateResources()
 {
     //test code ...
-    IGfxShader* pShader = GetShader("mesh.hlsl", "main", "vs_6_6", { "TEST=1", "FOOBAR=1" });
-    pShader = GetShader("mesh.hlsl", "main", "vs_6_6", { "TEST=1", "FOOBAR=1" });
+    GfxGraphicsPipelineDesc psoDesc;
+    psoDesc.vs = GetShader("mesh.hlsl", "main", "vs_6_6", { "TEST=1", "FOOBAR=1" });
+    psoDesc.rt_format[0] = m_pSwapchain->GetBackBuffer()->GetDesc().format;
+
+    IGfxPipelineState* pPSO = m_pDevice->CreateGraphicsPipelineState(psoDesc, "test pso");
 }

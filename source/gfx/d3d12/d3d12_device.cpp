@@ -5,6 +5,7 @@
 #include "d3d12_swapchain.h"
 #include "d3d12_command_list.h"
 #include "d3d12_shader.h"
+#include "d3d12_pipeline_state.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 #include "utils/log.h"
 #include "utils/assert.h"
@@ -134,6 +135,23 @@ IGfxShader* D3D12Device::CreateShader(const GfxShaderDesc& desc, const std::vect
 	return new D3D12Shader(this, desc, data, name);
 }
 
+IGfxPipelineState* D3D12Device::CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name)
+{
+	D3D12GraphicsPipelineState* pPipeline = new D3D12GraphicsPipelineState(this, desc, name);
+	if (!pPipeline->Create())
+	{
+		delete pPipeline;
+		return nullptr;
+	}
+	return pPipeline;
+}
+
+IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name)
+{
+	//todo
+	return nullptr;
+}
+
 void D3D12Device::BeginFrame()
 {
 	DoDeferredDeletion();
@@ -212,6 +230,8 @@ bool D3D12Device::Init()
 	m_pDSVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 128);
 	m_pResDescriptorAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536);
     m_pSamplerAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32);
+
+	CreateRootSignature();
 
     return true;
 }
@@ -351,6 +371,10 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
 		m_pSamplerAllocator->Free(item.descriptor);
 		m_samplerDeletionQueue.pop();
 	}
+}
+
+void D3D12Device::CreateRootSignature()
+{
 }
 
 D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count)
