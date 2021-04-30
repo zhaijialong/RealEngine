@@ -12,7 +12,7 @@ public:
     Renderer();
     ~Renderer();
 
-    void CreateDevice(void *window_handle, uint32_t window_width, uint32_t window_height);
+    void CreateDevice(void *window_handle, uint32_t window_width, uint32_t window_height, bool enable_vsync);
     void RenderFrame();
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }

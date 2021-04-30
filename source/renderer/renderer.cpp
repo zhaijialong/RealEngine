@@ -13,16 +13,17 @@ Renderer::~Renderer()
     m_pFrameFence->Wait(m_nCurrentFenceValue);
 }
 
-void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height)
+void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height, bool enable_vsync)
 {
     GfxDeviceDesc desc;
     desc.max_frame_lag = MAX_INFLIGHT_FRAMES;
     m_pDevice.reset(CreateGfxDevice(desc));
 
     GfxSwapchainDesc swapchainDesc;
-    swapchainDesc.windowHandle = window_handle;
+    swapchainDesc.window_handle = window_handle;
     swapchainDesc.width = window_width;
     swapchainDesc.height = window_height;
+    swapchainDesc.enable_vsync = enable_vsync;
     m_pSwapchain.reset(m_pDevice->CreateSwapchain(swapchainDesc, "Renderer::m_pSwapchain"));
 
     m_pFrameFence.reset(m_pDevice->CreateFence("Renderer::m_pFrameFence"));

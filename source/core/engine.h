@@ -29,4 +29,5 @@ private:
     std::string m_workPath;
     std::string m_assetPath;
     std::string m_shaderPath;
+    bool m_enableVsync = false;
 };

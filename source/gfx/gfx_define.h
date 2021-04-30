@@ -171,12 +171,12 @@ struct GfxDeviceDesc
 
 struct GfxSwapchainDesc
 {
-	void* windowHandle = nullptr;
+	void* window_handle = nullptr;
 	uint32_t width = 1;
 	uint32_t height = 1;
 	uint32_t backbuffer_count = 3;
 	GfxFormat backbuffer_format = GfxFormat::RGBA8SRGB;
-	bool enableVsync = true;
+	bool enable_vsync = true;
 };
 
 struct GfxBufferDesc

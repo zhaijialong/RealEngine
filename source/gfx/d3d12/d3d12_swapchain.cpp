@@ -18,7 +18,7 @@ D3D12Swapchain::~D3D12Swapchain()
 
 bool D3D12Swapchain::Present()
 {
-	HRESULT hr = m_pSwapChain->Present(m_desc.enableVsync ? 1 : 0, 0);
+	HRESULT hr = m_pSwapChain->Present(m_desc.enable_vsync ? 1 : 0, 0);
 
 	m_nCurrentBackBuffer = (m_nCurrentBackBuffer + 1) % m_desc.backbuffer_count;
 
@@ -54,7 +54,7 @@ bool D3D12Swapchain::Create()
 	IDXGISwapChain1* pSwapChain = NULL;
 	HRESULT hr = pFactory->CreateSwapChainForHwnd(
 		pDevice->GetGraphicsQueue(), // Swap chain needs the queue so that it can force a flush on it.
-		(HWND)m_desc.windowHandle,
+		(HWND)m_desc.window_handle,
 		&swapChainDesc,
 		nullptr,
 		nullptr,

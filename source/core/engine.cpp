@@ -16,7 +16,7 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
     m_pWorld = std::make_unique<World>();
 
     m_pRenderer = std::make_unique<Renderer>();
-    m_pRenderer->CreateDevice(window_handle, window_width, window_height);
+    m_pRenderer->CreateDevice(window_handle, window_width, window_height, m_enableVsync);
 }
 
 void Engine::Shut()
@@ -44,4 +44,5 @@ void Engine::LoadEngineConfig()
 
     m_assetPath = m_workPath + Ini.GetValue("RealEngine", "AssetPath");
     m_shaderPath = m_workPath + Ini.GetValue("RealEngine", "ShaderPath");
+    m_enableVsync = Ini.GetBoolValue("RealEngine", "VSync");
 }
