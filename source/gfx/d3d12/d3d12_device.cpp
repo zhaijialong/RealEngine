@@ -404,8 +404,11 @@ void D3D12Device::CreateRootSignature()
 
 	ID3DBlob* signature = nullptr;
 	ID3DBlob* error = nullptr;
-	RE_ASSERT(SUCCEEDED(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error)));	
-	RE_ASSERT(SUCCEEDED(m_pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature))));
+	HRESULT hr = D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error);
+	RE_ASSERT(SUCCEEDED(hr));
+
+	hr = m_pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature));
+	RE_ASSERT(SUCCEEDED(hr));
 
 	SAFE_RELEASE(signature);
 	SAFE_RELEASE(error);
