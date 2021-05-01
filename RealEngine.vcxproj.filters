@@ -7,81 +7,6 @@
     <ClCompile Include="source\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="external\gts\source\analysis\ConcurrentLogger.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\analysis\Counter.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\containers\BinnedAllocator.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\ComputeResource.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\compute_resources\MicroScheduler_ComputeResource.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\compute_resources\MicroScheduler_Workload.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\DagUtils.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\MacroScheduler.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\Node.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\critically_aware_task_scheduling\CriticallyAware_MacroScheduler.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\critically_aware_task_scheduling\CriticallyAware_Schedule.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_ComputeResource.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_MacroScheduler.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_Schedule.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\malloc\GtsMalloc.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\malloc\GtsMallocRedirect.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\micro_scheduler\LocalScheduler.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\micro_scheduler\MicroScheduler.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\micro_scheduler\Worker.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\micro_scheduler\WorkerPool.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\platform\Assert.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\platform\_posix\Memory_Posix.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\platform\_posix\Thread_Posix.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\platform\_win32\Memory_Win32.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
-    <ClCompile Include="external\gts\source\platform\_win32\Thread_Win32.cpp">
-      <Filter>external\gts</Filter>
-    </ClCompile>
     <ClCompile Include="source\core\engine.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
@@ -92,9 +17,6 @@
       <Filter>source\renderer</Filter>
     </ClCompile>
     <ClCompile Include="source\core\world.cpp">
-      <Filter>source\core</Filter>
-    </ClCompile>
-    <ClCompile Include="source\core\task_scheduler.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
     <ClCompile Include="source\gfx\d3d12\d3d12_device.cpp">
@@ -139,208 +61,13 @@
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp">
       <Filter>source\gfx\d3d12</Filter>
     </ClCompile>
+    <ClCompile Include="source\core\camera.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
       <Filter>external\d3d12ma</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\ConcurrentLogger.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\Counter.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\Trace.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\TraceCaptureMask.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\TraceColors.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\Trace_ConcurrentLogger.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\Trace_IttNotify.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\Trace_RadTelemetry.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\analysis\Trace_Tracy.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\AlignedAllocator.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\OsHeapAllocator.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\parallel\BinnedAllocator.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\parallel\Guards.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\parallel\ParallelHashTable.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\parallel\ParallelVector.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\parallel\QueueMPMC.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\parallel\QueueMPSC.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\parallel\QueueSPMC.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\parallel\QueueSPSC.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\containers\Vector.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\ComputeResource.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\compute_resources\MicroScheduler_ComputeResource.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\compute_resources\MicroScheduler_Workload.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\DagUtils.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\MacroScheduler.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\MacroSchedulerTypes.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\Node.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\Schedule.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\critically_aware_task_scheduling\CriticallyAware_MacroScheduler.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\critically_aware_task_scheduling\CriticallyAware_Schedule.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_ComputeResource.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_MacroScheduler.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_Schedule.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\Workload.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\malloc\GtsMalloc.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\malloc\GtsMallocCOverride.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\malloc\GtsMallocCppOverride.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\malloc\GtsMallocRedirect.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\MicroScheduler.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\MicroSchedulerTypes.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\KdRange2d.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\KdRange3d.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\OctRange.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\ParallelFor.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\ParallelReduce.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\ParallelWavefront.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\Partitioners.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\QuadRange.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\Range1d.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\RangeSplitters.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\Task.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\WorkerPool.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\platform\Assert.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\platform\Atomic.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\platform\Machine.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\platform\Memory.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\platform\Thread.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\include\gts\platform\Utils.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\source\micro_scheduler\Containers.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\source\micro_scheduler\LocalScheduler.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\source\micro_scheduler\TerminationBackoff.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\source\micro_scheduler\Worker.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_ChaseLev.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_ChaseLev_Empty.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_ChaseLev_Flag.h">
-      <Filter>external\gts</Filter>
-    </ClInclude>
-    <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_THE.h">
-      <Filter>external\gts</Filter>
     </ClInclude>
     <ClInclude Include="source\core\engine.h">
       <Filter>source\core</Filter>
@@ -396,9 +123,6 @@
     <ClInclude Include="source\core\world.h">
       <Filter>source\core</Filter>
     </ClInclude>
-    <ClInclude Include="source\core\task_scheduler.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
     <ClInclude Include="source\gfx\d3d12\d3d12_device.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
@@ -447,6 +171,9 @@
     <ClInclude Include="source\gfx\d3d12\pix_runtime.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
+    <ClInclude Include="source\core\camera.h">
+      <Filter>source\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -454,9 +181,6 @@
     </Filter>
     <Filter Include="external\d3d12ma">
       <UniqueIdentifier>{86f06e99-38cb-4b6d-a029-b78bfaae983f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external\gts">
-      <UniqueIdentifier>{29e82e28-2f9e-43da-a200-bf4f656b223e}</UniqueIdentifier>
     </Filter>
     <Filter Include="source">
       <UniqueIdentifier>{2bfd411e-5688-4077-8299-eecd0889dbc2}</UniqueIdentifier>
@@ -490,41 +214,8 @@
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis">
       <Filter>external\d3d12ma</Filter>
     </Natvis>
-    <Natvis Include="external\gts\gts.natvis">
-      <Filter>external\gts</Filter>
-    </Natvis>
   </ItemGroup>
   <ItemGroup>
-    <None Include="external\gts\include\gts\containers\parallel\Guards.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\containers\parallel\ParallelHashTable.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\containers\parallel\ParallelVector.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\containers\parallel\QueueMPMC.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\containers\parallel\QueueMPSC.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\containers\parallel\QueueSPMC.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\containers\parallel\QueueSPSC.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\containers\VectorImpl.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\micro_scheduler\Task.inl">
-      <Filter>external\gts</Filter>
-    </None>
-    <None Include="external\gts\include\gts\platform\AtomicImpl.inl">
-      <Filter>external\gts</Filter>
-    </None>
     <None Include="shaders\common.hlsli">
       <Filter>shaders</Filter>
     </None>

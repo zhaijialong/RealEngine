@@ -57,7 +57,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/gts/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -72,7 +72,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/gts/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -83,35 +83,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="external\d3d12ma\D3D12MemAlloc.cpp" />
-    <ClCompile Include="external\gts\source\analysis\ConcurrentLogger.cpp" />
-    <ClCompile Include="external\gts\source\analysis\Counter.cpp" />
-    <ClCompile Include="external\gts\source\containers\BinnedAllocator.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\ComputeResource.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\compute_resources\MicroScheduler_ComputeResource.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\compute_resources\MicroScheduler_Workload.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\DagUtils.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\MacroScheduler.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\Node.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\critically_aware_task_scheduling\CriticallyAware_MacroScheduler.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\critically_aware_task_scheduling\CriticallyAware_Schedule.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_ComputeResource.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_MacroScheduler.cpp" />
-    <ClCompile Include="external\gts\source\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_Schedule.cpp" />
-    <ClCompile Include="external\gts\source\malloc\GtsMalloc.cpp" />
-    <ClCompile Include="external\gts\source\malloc\GtsMallocRedirect.cpp" />
-    <ClCompile Include="external\gts\source\micro_scheduler\LocalScheduler.cpp" />
-    <ClCompile Include="external\gts\source\micro_scheduler\MicroScheduler.cpp" />
-    <ClCompile Include="external\gts\source\micro_scheduler\Worker.cpp" />
-    <ClCompile Include="external\gts\source\micro_scheduler\WorkerPool.cpp" />
-    <ClCompile Include="external\gts\source\platform\Assert.cpp" />
-    <ClCompile Include="external\gts\source\platform\_posix\Memory_Posix.cpp" />
-    <ClCompile Include="external\gts\source\platform\_posix\Thread_Posix.cpp" />
-    <ClCompile Include="external\gts\source\platform\_win32\Memory_Win32.cpp" />
-    <ClCompile Include="external\gts\source\platform\_win32\Thread_Win32.cpp" />
     <ClCompile Include="external\simpleini\ConvertUTF.c" />
     <ClCompile Include="external\xxHash\xxhash.c" />
+    <ClCompile Include="source\core\camera.cpp" />
     <ClCompile Include="source\core\engine.cpp" />
-    <ClCompile Include="source\core\task_scheduler.cpp" />
     <ClCompile Include="source\core\world.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
@@ -131,77 +106,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\ConcurrentLogger.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\Counter.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\Trace.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\TraceCaptureMask.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\TraceColors.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\Trace_ConcurrentLogger.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\Trace_IttNotify.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\Trace_RadTelemetry.h" />
-    <ClInclude Include="external\gts\include\gts\analysis\Trace_Tracy.h" />
-    <ClInclude Include="external\gts\include\gts\containers\AlignedAllocator.h" />
-    <ClInclude Include="external\gts\include\gts\containers\OsHeapAllocator.h" />
-    <ClInclude Include="external\gts\include\gts\containers\parallel\BinnedAllocator.h" />
-    <ClInclude Include="external\gts\include\gts\containers\parallel\Guards.h" />
-    <ClInclude Include="external\gts\include\gts\containers\parallel\ParallelHashTable.h" />
-    <ClInclude Include="external\gts\include\gts\containers\parallel\ParallelVector.h" />
-    <ClInclude Include="external\gts\include\gts\containers\parallel\QueueMPMC.h" />
-    <ClInclude Include="external\gts\include\gts\containers\parallel\QueueMPSC.h" />
-    <ClInclude Include="external\gts\include\gts\containers\parallel\QueueSPMC.h" />
-    <ClInclude Include="external\gts\include\gts\containers\parallel\QueueSPSC.h" />
-    <ClInclude Include="external\gts\include\gts\containers\Vector.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\ComputeResource.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\compute_resources\MicroScheduler_ComputeResource.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\compute_resources\MicroScheduler_Workload.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\DagUtils.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\MacroScheduler.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\MacroSchedulerTypes.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\Node.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\Schedule.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\critically_aware_task_scheduling\CriticallyAware_MacroScheduler.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\critically_aware_task_scheduling\CriticallyAware_Schedule.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_ComputeResource.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_MacroScheduler.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\schedulers\dynamic\micro_scheduler\DynamicMicroScheduler_Schedule.h" />
-    <ClInclude Include="external\gts\include\gts\macro_scheduler\Workload.h" />
-    <ClInclude Include="external\gts\include\gts\malloc\GtsMalloc.h" />
-    <ClInclude Include="external\gts\include\gts\malloc\GtsMallocCOverride.h" />
-    <ClInclude Include="external\gts\include\gts\malloc\GtsMallocCppOverride.h" />
-    <ClInclude Include="external\gts\include\gts\malloc\GtsMallocRedirect.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\MicroScheduler.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\MicroSchedulerTypes.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\KdRange2d.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\KdRange3d.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\OctRange.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\ParallelFor.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\ParallelReduce.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\ParallelWavefront.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\Partitioners.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\QuadRange.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\Range1d.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\patterns\RangeSplitters.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\Task.h" />
-    <ClInclude Include="external\gts\include\gts\micro_scheduler\WorkerPool.h" />
-    <ClInclude Include="external\gts\include\gts\platform\Assert.h" />
-    <ClInclude Include="external\gts\include\gts\platform\Atomic.h" />
-    <ClInclude Include="external\gts\include\gts\platform\Machine.h" />
-    <ClInclude Include="external\gts\include\gts\platform\Memory.h" />
-    <ClInclude Include="external\gts\include\gts\platform\Thread.h" />
-    <ClInclude Include="external\gts\include\gts\platform\Utils.h" />
-    <ClInclude Include="external\gts\source\micro_scheduler\Containers.h" />
-    <ClInclude Include="external\gts\source\micro_scheduler\LocalScheduler.h" />
-    <ClInclude Include="external\gts\source\micro_scheduler\TerminationBackoff.h" />
-    <ClInclude Include="external\gts\source\micro_scheduler\Worker.h" />
-    <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_ChaseLev.h" />
-    <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_ChaseLev_Empty.h" />
-    <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_ChaseLev_Flag.h" />
-    <ClInclude Include="external\gts\source\micro_scheduler\WorkStealingDeque_THE.h" />
     <ClInclude Include="external\simpleini\ConvertUTF.h" />
     <ClInclude Include="external\simpleini\SimpleIni.h" />
     <ClInclude Include="external\xxHash\xxhash.h" />
+    <ClInclude Include="source\core\camera.h" />
     <ClInclude Include="source\core\engine.h" />
-    <ClInclude Include="source\core\task_scheduler.h" />
     <ClInclude Include="source\core\world.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h" />
@@ -235,19 +144,8 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis" />
-    <Natvis Include="external\gts\gts.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="external\gts\include\gts\containers\parallel\Guards.inl" />
-    <None Include="external\gts\include\gts\containers\parallel\ParallelHashTable.inl" />
-    <None Include="external\gts\include\gts\containers\parallel\ParallelVector.inl" />
-    <None Include="external\gts\include\gts\containers\parallel\QueueMPMC.inl" />
-    <None Include="external\gts\include\gts\containers\parallel\QueueMPSC.inl" />
-    <None Include="external\gts\include\gts\containers\parallel\QueueSPMC.inl" />
-    <None Include="external\gts\include\gts\containers\parallel\QueueSPSC.inl" />
-    <None Include="external\gts\include\gts\containers\VectorImpl.inl" />
-    <None Include="external\gts\include\gts\micro_scheduler\Task.inl" />
-    <None Include="external\gts\include\gts\platform\AtomicImpl.inl" />
     <None Include="shaders\common.hlsli" />
   </ItemGroup>
   <ItemGroup>

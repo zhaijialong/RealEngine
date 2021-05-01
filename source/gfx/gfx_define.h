@@ -429,7 +429,6 @@ struct GfxGraphicsPipelineDesc
 {
 	IGfxShader* vs = nullptr;
 	IGfxShader* ps = nullptr;
-
 	GfxRasterizerState rasterizer_state;
 	GfxDepthStencilState depthstencil_state;
 	GfxBlendState blend_state[8];
@@ -443,7 +442,6 @@ struct GfxMeshShadingPipelineDesc
 	IGfxShader* as = nullptr;
 	IGfxShader* ms = nullptr;
 	IGfxShader* ps = nullptr;
-
 	GfxRasterizerState rasterizer_state;
 	GfxDepthStencilState depthstencil_state;
 	GfxBlendState blend_state[8];
