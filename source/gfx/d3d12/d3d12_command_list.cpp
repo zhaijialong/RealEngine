@@ -2,6 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12_fence.h"
 #include "d3d12_texture.h"
+#include "d3d12_pipeline_state.h"
 #include "pix_runtime.h"
 #include "utils/assert.h"
 
@@ -196,6 +197,7 @@ void D3D12CommandList::EndRenderPass()
 
 void D3D12CommandList::SetPipelineState(IGfxPipelineState* state)
 {
+	m_pCommandList->SetPipelineState((ID3D12PipelineState*)state->GetHandle());
 }
 
 void D3D12CommandList::SetIndexBuffer(IGfxBuffer* buffer)

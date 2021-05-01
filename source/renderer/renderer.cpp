@@ -33,8 +33,6 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
         std::string name = "Renderer::m_pCommandLists[" + std::to_string(i) + "]";
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
-
-    CreateResources();
 }
 
 void Renderer::RenderFrame()
@@ -61,6 +59,14 @@ void Renderer::RenderFrame()
     //todo : render something
     {
         RENDER_EVENT(pCommandList, "Render something");
+
+        GfxGraphicsPipelineDesc psoDesc;
+        psoDesc.vs = GetShader("mesh.hlsl", "vs_main", "vs_6_6", {});
+        psoDesc.ps = GetShader("mesh.hlsl", "ps_main", "ps_6_6", {});
+        psoDesc.rt_format[0] = m_pSwapchain->GetBackBuffer()->GetDesc().format;
+
+        IGfxPipelineState* pPSO = GetPipelineState(psoDesc, "test pso");
+        pCommandList->SetPipelineState(pPSO);
     }
 
     pCommandList->EndRenderPass();
@@ -85,13 +91,7 @@ IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entr
     return m_pShaderCache->GetShader(file, entry_point, profile, defines);
 }
 
-void Renderer::CreateResources()
+IGfxPipelineState* Renderer::GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name)
 {
-    //test code ...
-    GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = GetShader("mesh.hlsl", "vs_main", "vs_6_6", { "TEST=1", "FOOBAR=1" });
-    psoDesc.ps = GetShader("mesh.hlsl", "ps_main", "ps_6_6", { "TEST=1", "FOOBAR=1" });
-    psoDesc.rt_format[0] = m_pSwapchain->GetBackBuffer()->GetDesc().format;
-
-    IGfxPipelineState* pPSO = m_pDevice->CreateGraphicsPipelineState(psoDesc, "test pso");
+    return m_pPipelineCache->GetPipelineState(desc, name);
 }

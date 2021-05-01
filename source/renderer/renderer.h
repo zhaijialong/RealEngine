@@ -19,10 +19,9 @@ public:
     ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
     
     IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
-    IGfxPipelineState* GetPipelineState();
+    IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
 
 private:
-    void CreateResources();
 
 private:
     std::unique_ptr<IGfxDevice> m_pDevice;

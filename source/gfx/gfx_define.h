@@ -425,7 +425,6 @@ struct GfxGraphicsPipelineDesc
 	GfxRasterizerState rasterizer_state;
 	GfxDepthStencilState depthstencil_state;
 	GfxBlendState blend_state[8];
-
 	GfxFormat rt_format[8] = { GfxFormat::Unknown };
 	GfxFormat depthstencil_format = GfxFormat::Unknown;
 	GfxPrimitiveType primitive_type = GfxPrimitiveType::TriangleList;
@@ -440,7 +439,6 @@ struct GfxMeshShadingPipelineDesc
 	GfxRasterizerState rasterizer_state;
 	GfxDepthStencilState depthstencil_state;
 	GfxBlendState blend_state[8];
-
 	GfxFormat rt_format[8] = { GfxFormat::Unknown };
 	GfxFormat depthstencil_format = GfxFormat::Unknown;
 };
