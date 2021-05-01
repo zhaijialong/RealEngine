@@ -3,6 +3,7 @@
 #include "../gfx/gfx.h"
 #include "xxHash/xxhash.h"
 #include <unordered_map>
+#include <memory>
 
 //cityhash Hash128to64
 inline uint64_t hash_combine_64(uint64_t hash0, uint64_t hash1)
@@ -47,5 +48,5 @@ public:
 
 private:
     Renderer* m_pRenderer;
-    std::unordered_map<GfxGraphicsPipelineDesc, IGfxPipelineState*> m_cachedGraphicsPSO;
+    std::unordered_map<GfxGraphicsPipelineDesc, std::unique_ptr<IGfxPipelineState>> m_cachedGraphicsPSO;
 };

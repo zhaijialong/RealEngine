@@ -2,6 +2,7 @@
 
 #include "../gfx/gfx.h"
 #include <unordered_map>
+#include <memory>
 
 namespace std
 {
@@ -35,5 +36,5 @@ private:
 
 private:
     Renderer* m_pRenderer;
-    std::unordered_map<GfxShaderDesc, IGfxShader*> m_cachedShaders;
+    std::unordered_map<GfxShaderDesc, std::unique_ptr<IGfxShader>> m_cachedShaders;
 };

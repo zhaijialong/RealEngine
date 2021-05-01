@@ -42,7 +42,7 @@ IGfxShader* ShaderCache::GetShader(const std::string& file, const std::string& e
     auto iter = m_cachedShaders.find(desc);
     if (iter != m_cachedShaders.end())
     {
-        return iter->second;
+        return iter->second.get();
     }
 
     IGfxShader* pShader = CreateShader(file, entry_point, profile, defines);

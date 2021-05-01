@@ -14,6 +14,11 @@ D3D12Swapchain::~D3D12Swapchain()
 {
 	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
 	pDevice->Delete(m_pSwapChain);
+
+	for (size_t i = 0; i < m_backBuffers.size(); ++i)
+	{
+		delete m_backBuffers[i];
+	}
 }
 
 bool D3D12Swapchain::Present()

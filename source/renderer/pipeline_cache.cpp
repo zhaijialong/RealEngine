@@ -32,7 +32,7 @@ IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxGraphicsPipelin
     auto iter = m_cachedGraphicsPSO.find(desc);
     if (iter != m_cachedGraphicsPSO.end())
     {
-        return iter->second;
+        return iter->second.get();
     }
 
     IGfxPipelineState* pPSO = m_pRenderer->GetDevice()->CreateGraphicsPipelineState(desc, name);
