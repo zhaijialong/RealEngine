@@ -159,6 +159,54 @@ IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShad
 	return nullptr;
 }
 
+uint32_t D3D12Device::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc)
+{
+	return uint32_t();
+}
+
+uint32_t D3D12Device::CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc)
+{
+	return uint32_t();
+}
+
+uint32_t D3D12Device::CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc)
+{
+	return uint32_t();
+}
+
+uint32_t D3D12Device::CreateSampler(const GfxSamplerDesc& desc)
+{
+	D3D12Descriptor descriptor = m_pSamplerAllocator->Allocate();
+
+	D3D12_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.Filter = d3d12_filter(desc);
+	samplerDesc.AddressU = d3d12_address_mode(desc.address_u);
+	samplerDesc.AddressV = d3d12_address_mode(desc.address_v);
+	samplerDesc.AddressW = d3d12_address_mode(desc.address_w);
+	samplerDesc.MipLODBias = desc.mip_bias;
+	samplerDesc.MaxAnisotropy = (UINT)desc.max_anisotropy;
+	samplerDesc.ComparisonFunc = d3d12_compare_func(desc.compare_func);
+	samplerDesc.MinLOD = desc.min_lod;
+	samplerDesc.MaxLOD = desc.max_lod;
+	memcpy(samplerDesc.BorderColor, desc.border_color, sizeof(float) * 4);
+
+	m_pDevice->CreateSampler(&samplerDesc, descriptor.cpu_handle);
+
+	return descriptor.index;
+}
+
+void D3D12Device::ReleaseResourceDescriptor(uint32_t index)
+{
+	D3D12Descriptor descriptor = m_pResDescriptorAllocator->GetDescriptor(index);
+	m_resourceDeletionQueue.push({ descriptor, m_nFrameID });
+}
+
+void D3D12Device::ReleaseSamplerDescriptor(uint32_t index)
+{
+	D3D12Descriptor descriptor = m_pSamplerAllocator->GetDescriptor(index);
+	m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
+}
+
 void D3D12Device::BeginFrame()
 {
 	DoDeferredDeletion();
@@ -260,7 +308,7 @@ D3D12_GPU_VIRTUAL_ADDRESS D3D12Device::AllocateConstantBuffer(void* data, size_t
 	uint64_t gpu_address;
 
 	uint32_t index = m_nFrameID % CB_ALLOCATOR_COUNT;
-	m_pConstantBufferAllocators[index]->Allocate(data_size, &cpu_address, &gpu_address);
+	m_pConstantBufferAllocators[index]->Allocate((uint32_t)data_size, &cpu_address, &gpu_address);
 
 	memcpy(cpu_address, data, data_size);
 
@@ -287,16 +335,6 @@ D3D12Descriptor D3D12Device::AllocateDSV()
 	return m_pDSVAllocator->Allocate();
 }
 
-D3D12Descriptor D3D12Device::AllocateResourceDescriptor()
-{
-	return m_pResDescriptorAllocator->Allocate();
-}
-
-D3D12Descriptor D3D12Device::AllocateSampler()
-{
-	return m_pSamplerAllocator->Allocate();
-}
-
 void D3D12Device::DeleteRTV(const D3D12Descriptor& descriptor)
 {
 	if (!IsNullDescriptor(descriptor))
@@ -310,22 +348,6 @@ void D3D12Device::DeleteDSV(const D3D12Descriptor& descriptor)
 	if (!IsNullDescriptor(descriptor))
 	{
 		m_dsvDeletionQueue.push({ descriptor, m_nFrameID });
-	}
-}
-
-void D3D12Device::DeleteResourceDescriptor(const D3D12Descriptor& descriptor)
-{
-	if (!IsNullDescriptor(descriptor))
-	{
-		m_resourceDeletionQueue.push({ descriptor, m_nFrameID });
-	}
-}
-
-void D3D12Device::DeleteSampler(const D3D12Descriptor& descriptor)
-{
-	if (!IsNullDescriptor(descriptor))
-	{
-		m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
 	}
 }
 
@@ -478,13 +500,7 @@ D3D12Descriptor D3D12DescriptorAllocator::Allocate()
 	
 	RE_ASSERT(m_allocatedCount <= m_descirptorCount);
 
-	D3D12Descriptor descriptor;
-	descriptor.cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_pHeap->GetCPUDescriptorHandleForHeapStart(), m_allocatedCount, m_descriptorSize);
-	
-	if (m_bShaderVisible)
-	{
-		descriptor.gpu_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_pHeap->GetGPUDescriptorHandleForHeapStart(), m_allocatedCount, m_descriptorSize);
-	}
+	D3D12Descriptor descriptor = GetDescriptor(m_allocatedCount);
 
 	m_allocatedCount++;
 
@@ -494,6 +510,21 @@ D3D12Descriptor D3D12DescriptorAllocator::Allocate()
 void D3D12DescriptorAllocator::Free(const D3D12Descriptor& descriptor)
 {
 	m_freeDescriptors.push_back(descriptor);
+}
+
+D3D12Descriptor D3D12DescriptorAllocator::GetDescriptor(uint32_t index) const
+{
+	D3D12Descriptor descriptor;
+	descriptor.cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_pHeap->GetCPUDescriptorHandleForHeapStart(), index, m_descriptorSize);
+
+	if (m_bShaderVisible)
+	{
+		descriptor.gpu_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_pHeap->GetGPUDescriptorHandleForHeapStart(), index, m_descriptorSize);
+	}
+
+	descriptor.index = index;
+
+	return descriptor;
 }
 
 D3D12ConstantBufferAllocator::D3D12ConstantBufferAllocator(D3D12Device* device, uint32_t buffer_size, const std::string& name)

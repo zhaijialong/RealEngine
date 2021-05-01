@@ -33,6 +33,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
         std::string name = "Renderer::m_pCommandLists[" + std::to_string(i) + "]";
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
+
+    CreateCommonResources();
 }
 
 void Renderer::RenderFrame()
@@ -68,7 +70,7 @@ void Renderer::RenderFrame()
         pCommandList->SetPipelineState(pPSO);
 
         float CB[4] = { 1.0f, 0.2f, 0.0f, 1.0 };
-        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, CB, sizeof(CB));
+        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, CB, sizeof(CB));
 
         pCommandList->Draw(4, 1);
     }
@@ -98,4 +100,15 @@ IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entr
 IGfxPipelineState* Renderer::GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name)
 {
     return m_pPipelineCache->GetPipelineState(desc, name);
+}
+
+void Renderer::CreateCommonResources()
+{
+    GfxSamplerDesc desc;
+    m_nPointSampler = m_pDevice->CreateSampler(desc);
+
+    desc.min_filter = GfxFilter::Linear;
+    desc.mag_filter = GfxFilter::Linear;
+    desc.mip_filter = GfxFilter::Linear;
+    m_nLinearSampler = m_pDevice->CreateSampler(desc);
 }

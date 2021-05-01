@@ -21,6 +21,7 @@ public:
 	void Free(const D3D12Descriptor& descriptor);
 
 	ID3D12DescriptorHeap* GetHeap() const { return m_pHeap; }
+	D3D12Descriptor GetDescriptor(uint32_t index) const;
 
 private:
 	ID3D12DescriptorHeap* m_pHeap = nullptr;
@@ -62,6 +63,13 @@ public:
 	virtual IGfxPipelineState* CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name) override;
 	virtual IGfxPipelineState* CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name) override;
 
+	virtual uint32_t CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc) override;
+	virtual uint32_t CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc) override;
+	virtual uint32_t CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc) override;
+	virtual uint32_t CreateSampler(const GfxSamplerDesc& desc) override;
+	virtual void ReleaseResourceDescriptor(uint32_t index) override;
+	virtual void ReleaseSamplerDescriptor(uint32_t index) override;
+
 	virtual void BeginFrame() override;
 	virtual void EndFrame() override;
 	virtual uint64_t GetFrameID() const override { return m_nFrameID; }
@@ -82,13 +90,8 @@ public:
 
 	D3D12Descriptor AllocateRTV();
 	D3D12Descriptor AllocateDSV();
-	D3D12Descriptor AllocateResourceDescriptor();
-	D3D12Descriptor AllocateSampler();
-
 	void DeleteRTV(const D3D12Descriptor& descriptor);
 	void DeleteDSV(const D3D12Descriptor& descriptor);
-	void DeleteResourceDescriptor(const D3D12Descriptor& descriptor);
-	void DeleteSampler(const D3D12Descriptor& descriptor);
 
 private:
 	void DoDeferredDeletion(bool force_delete = false);

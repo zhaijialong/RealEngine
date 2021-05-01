@@ -203,7 +203,7 @@ struct GfxTextureDesc
 	GfxTextureUsageFlags usage = GfxTextureUsageShaderResource;
 };
 
-struct GfxContantBufferViewDesc
+struct GfxConstantBufferViewDesc
 {
 	uint32_t size = 0;
 	uint32_t offset = 0;
@@ -449,4 +449,36 @@ struct GfxMeshShadingPipelineDesc
 	GfxBlendState blend_state[8];
 	GfxFormat rt_format[8] = { GfxFormat::Unknown };
 	GfxFormat depthstencil_format = GfxFormat::Unknown;
+};
+
+enum class GfxFilter
+{
+	Point,
+	Linear,
+};
+
+enum class GfxSamplerAddressMode
+{
+	Repeat,
+	MirroredRepeat,
+	ClampToEdge,
+	ClampToBorder,
+};
+
+struct GfxSamplerDesc
+{
+	GfxFilter min_filter = GfxFilter::Point;
+	GfxFilter mag_filter = GfxFilter::Point;
+	GfxFilter mip_filter = GfxFilter::Point;
+	GfxSamplerAddressMode address_u = GfxSamplerAddressMode::Repeat;
+	GfxSamplerAddressMode address_v = GfxSamplerAddressMode::Repeat;
+	GfxSamplerAddressMode address_w = GfxSamplerAddressMode::Repeat;
+	float mip_bias = 0.0f;
+	bool enable_anisotropy = false;
+	float max_anisotropy = 1.0f;
+	bool enable_compare = false;
+	GfxCompareFunc compare_func = GfxCompareFunc::Always;
+	float min_lod = -FLT_MAX;
+	float max_lod = FLT_MAX;
+	float border_color[4] = {};
 };

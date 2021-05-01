@@ -12,7 +12,7 @@ public:
     Renderer();
     ~Renderer();
 
-    void CreateDevice(void *window_handle, uint32_t window_width, uint32_t window_height, bool enable_vsync);
+    void CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height, bool enable_vsync);
     void RenderFrame();
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
@@ -22,6 +22,7 @@ public:
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
 
 private:
+    void CreateCommonResources();
 
 private:
     std::unique_ptr<IGfxDevice> m_pDevice;
@@ -37,4 +38,7 @@ private:
     std::unique_ptr<ShaderCompiler> m_pShaderCompiler;
     std::unique_ptr<ShaderCache> m_pShaderCache;
     std::unique_ptr<PipelineStateCache> m_pPipelineCache;
+
+    uint32_t m_nPointSampler = 0;
+    uint32_t m_nLinearSampler = 0;
 };

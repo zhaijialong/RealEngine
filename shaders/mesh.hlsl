@@ -19,12 +19,12 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     return output;
 }
 
-cbuffer cb : register(b1)
+cbuffer cb : register(b0)
 {
     float4 c_color;
 }
 
 float4 ps_main(VSOutput input) : SV_TARGET
 {
-    return c_color;//float4(input.uv, 0.0, 1.0);
+    return float4(input.uv, 0.0, 1.0);
 }

@@ -15,6 +15,7 @@ struct D3D12Descriptor
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle = {};
 	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = {};
+	uint32_t index = 0;
 };
 
 inline bool IsNullDescriptor(const D3D12Descriptor& descriptor)
@@ -422,5 +423,53 @@ inline D3D_PRIMITIVE_TOPOLOGY d3d12_primitive_topology(GfxPrimitiveType primitiv
 		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 	default:
 		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+	}
+}
+
+inline D3D12_FILTER_TYPE d3d12_filter_type(GfxFilter filter)
+{
+	switch (filter)
+	{
+	case GfxFilter::Point:
+		return D3D12_FILTER_TYPE_POINT;
+	case GfxFilter::Linear:
+		return D3D12_FILTER_TYPE_LINEAR;
+	default:
+		return D3D12_FILTER_TYPE_POINT;
+	}
+}
+
+inline D3D12_FILTER d3d12_filter(const GfxSamplerDesc& desc)
+{
+	D3D12_FILTER_REDUCTION_TYPE reduction = desc.enable_compare ? D3D12_FILTER_REDUCTION_TYPE_COMPARISON : D3D12_FILTER_REDUCTION_TYPE_STANDARD;
+
+	if (desc.enable_anisotropy)
+	{
+		return D3D12_ENCODE_ANISOTROPIC_FILTER(reduction);
+	}
+	else
+	{
+		D3D12_FILTER_TYPE min = d3d12_filter_type(desc.min_filter);
+		D3D12_FILTER_TYPE mag = d3d12_filter_type(desc.mag_filter);
+		D3D12_FILTER_TYPE mip = d3d12_filter_type(desc.mip_filter);
+
+		return D3D12_ENCODE_BASIC_FILTER(min, mag, mip, reduction);
+	}
+}
+
+inline D3D12_TEXTURE_ADDRESS_MODE d3d12_address_mode(GfxSamplerAddressMode mode)
+{
+	switch (mode)
+	{
+	case GfxSamplerAddressMode::Repeat:
+		return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	case GfxSamplerAddressMode::MirroredRepeat:
+		return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+	case GfxSamplerAddressMode::ClampToEdge:
+		return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	case GfxSamplerAddressMode::ClampToBorder:
+		return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	default:
+		return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	}
 }

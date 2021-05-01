@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+class IGfxResource;
 class IGfxBuffer;
 class IGfxTexture;
 class IGfxFence;
@@ -27,6 +28,13 @@ public:
 	virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name) = 0;
 	virtual IGfxPipelineState* CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name) = 0;
 	virtual IGfxPipelineState* CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name) = 0;
+
+	virtual uint32_t CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc) = 0;
+	virtual uint32_t CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc) = 0;
+	virtual uint32_t CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc) = 0;
+	virtual uint32_t CreateSampler(const GfxSamplerDesc& desc) = 0;
+	virtual void ReleaseResourceDescriptor(uint32_t index) = 0;
+	virtual void ReleaseSamplerDescriptor(uint32_t index) = 0;
 
 	virtual void BeginFrame() = 0;
 	virtual void EndFrame() = 0;
