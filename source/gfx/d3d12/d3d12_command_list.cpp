@@ -2,6 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12_fence.h"
 #include "d3d12_texture.h"
+#include "d3d12_buffer.h"
 #include "d3d12_pipeline_state.h"
 #include "pix_runtime.h"
 #include "utils/assert.h"
@@ -214,6 +215,12 @@ void D3D12CommandList::SetPipelineState(IGfxPipelineState* state)
 
 void D3D12CommandList::SetIndexBuffer(IGfxBuffer* buffer)
 {
+	D3D12_INDEX_BUFFER_VIEW ibv;
+	ibv.BufferLocation = buffer->GetGpuAddress();
+	ibv.SizeInBytes = buffer->GetDesc().size;
+	ibv.SizeInBytes = dxgi_format(buffer->GetDesc().format);
+
+	m_pCommandList->IASetIndexBuffer(&ibv);
 }
 
 void D3D12CommandList::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
@@ -228,6 +235,41 @@ void D3D12CommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, ui
 {
 	D3D12_RECT rect = { (LONG)x, (LONG)y, LONG(x + width), LONG(y + height) };
 	m_pCommandList->RSSetScissorRects(1, &rect);
+}
+
+void D3D12CommandList::SetConstantBuffer(GfxPipelineType type, uint32_t slot, void* data, size_t data_size)
+{
+	RE_ASSERT(slot != 0 || data_size == 16);
+
+	bool graphics = type == GfxPipelineType::Graphics || type == GfxPipelineType::MeshShading;
+
+	if (slot == 0)
+	{
+		if (graphics)
+		{
+			m_pCommandList->SetGraphicsRoot32BitConstants(0, 4, data, 0);
+		}
+		else
+		{
+			m_pCommandList->SetComputeRoot32BitConstants(0, 4, data, 0);
+		}
+	}
+	else
+	{
+		RE_ASSERT(slot <= 4);
+
+		D3D12_GPU_VIRTUAL_ADDRESS address = ((D3D12Device*)m_pDevice)->AllocateConstantBuffer(data, data_size);
+		RE_ASSERT(address);
+
+		if (graphics)
+		{
+			m_pCommandList->SetGraphicsRootConstantBufferView(slot, address);
+		}
+		else
+		{
+			m_pCommandList->SetComputeRootConstantBufferView(slot, address);
+		}
+	}
 }
 
 void D3D12CommandList::Draw(uint32_t vertex_count, uint32_t instance_count)

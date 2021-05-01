@@ -18,25 +18,22 @@ public:
 
 	virtual void Begin() override;
 	virtual void End() override;
-
-	virtual void BeginEvent(const std::string& event_name) override;
-	virtual void EndEvent() override;
-
 	virtual void Wait(IGfxFence* fence, uint64_t value) override;
 	virtual void Signal(IGfxFence* fence, uint64_t value) override;
 	virtual void Submit() override;
 
+	virtual void BeginEvent(const std::string& event_name) override;
+	virtual void EndEvent() override;
+
 	virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) override;
 	virtual void UavBarrier(IGfxResource* resource) override;
-
 	virtual void BeginRenderPass(const GfxRenderPassDesc& render_pass) override;
 	virtual void EndRenderPass() override;
-
 	virtual void SetPipelineState(IGfxPipelineState* state) override;
 	virtual void SetIndexBuffer(IGfxBuffer* buffer) override;
 	virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 	virtual void SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
-
+	virtual void SetConstantBuffer(GfxPipelineType type, uint32_t slot, void* data, size_t data_size) override;
 	virtual void Draw(uint32_t vertex_count, uint32_t instance_count) override;
 	virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count) override;
 

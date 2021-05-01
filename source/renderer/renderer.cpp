@@ -67,6 +67,9 @@ void Renderer::RenderFrame()
         IGfxPipelineState* pPSO = GetPipelineState(psoDesc, "test pso");
         pCommandList->SetPipelineState(pPSO);
 
+        float CB[4] = { 1.0f, 0.2f, 0.0f, 1.0 };
+        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, CB, sizeof(CB));
+
         pCommandList->Draw(4, 1);
     }
 

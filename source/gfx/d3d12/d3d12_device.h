@@ -31,6 +31,20 @@ private:
 	std::vector<D3D12Descriptor> m_freeDescriptors;
 };
 
+class D3D12Device;
+
+class D3D12ConstantBufferAllocator
+{
+public:
+	D3D12ConstantBufferAllocator(D3D12Device* device, uint32_t buffer_size, const std::string& name);
+
+	void Allocate(uint32_t size, void** cpu_address, uint64_t* gpu_address);
+	void Reset();
+private:
+	std::unique_ptr<IGfxBuffer> m_pBuffer = nullptr;
+	uint32_t m_allcatedSize = 0;
+};
+
 class D3D12Device : public IGfxDevice
 {
 public:
@@ -61,6 +75,8 @@ public:
 	ID3D12DescriptorHeap* GetSamplerDescriptorHeap() const { return m_pSamplerAllocator->GetHeap(); }
 	ID3D12RootSignature* GetRootSignature() const { return m_pRootSignature; }
 
+	D3D12_GPU_VIRTUAL_ADDRESS AllocateConstantBuffer(void* data, size_t data_size);
+
 	void Delete(IUnknown* object);
 	void Delete(D3D12MA::Allocation* allocation);
 
@@ -90,6 +106,9 @@ private:
 	ID3D12RootSignature* m_pRootSignature = nullptr;
 
 	D3D12MA::Allocator* m_pResourceAllocator = nullptr;
+
+	static const uint32_t CB_ALLOCATOR_COUNT = 3;
+	std::unique_ptr<D3D12ConstantBufferAllocator> m_pConstantBufferAllocators[CB_ALLOCATOR_COUNT];
 
 	std::unique_ptr<D3D12DescriptorAllocator> m_pRTVAllocator;
 	std::unique_ptr<D3D12DescriptorAllocator> m_pDSVAllocator;

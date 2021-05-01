@@ -37,8 +37,22 @@ bool D3D12Buffer::Create()
 	D3D12_RESOURCE_FLAGS flags = (m_desc.usage & GfxBufferUsageUnorderedAccess) ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAG_NONE;
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(m_desc.size, flags);
 
+	D3D12_RESOURCE_STATES initial_state;
+	if (allocationDesc.HeapType == D3D12_HEAP_TYPE_UPLOAD)
+	{
+		initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
+	}
+	else if (allocationDesc.HeapType == D3D12_HEAP_TYPE_READBACK)
+	{
+		initial_state = D3D12_RESOURCE_STATE_COPY_DEST;
+	}
+	else
+	{
+		initial_state = D3D12_RESOURCE_STATE_COMMON;
+	}
+
 	HRESULT hr = pAllocator->CreateResource(&allocationDesc, &resourceDesc,
-		D3D12_RESOURCE_STATE_COMMON, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pBuffer));
+		initial_state, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pBuffer));
 	if (FAILED(hr))
 	{
 		return false;

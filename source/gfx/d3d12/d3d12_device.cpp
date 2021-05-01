@@ -49,6 +49,11 @@ D3D12Device::D3D12Device(const GfxDeviceDesc& desc)
 
 D3D12Device::~D3D12Device()
 {
+	for (uint32_t i = 0; i < CB_ALLOCATOR_COUNT; ++i)
+	{
+		m_pConstantBufferAllocators[i].reset();
+	}
+
 	DoDeferredDeletion(true);
 
 	m_pRTVAllocator.reset();
@@ -157,6 +162,9 @@ IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShad
 void D3D12Device::BeginFrame()
 {
 	DoDeferredDeletion();
+
+	uint32_t index = m_nFrameID % CB_ALLOCATOR_COUNT;
+	m_pConstantBufferAllocators[index]->Reset();
 }
 
 void D3D12Device::EndFrame()
@@ -228,6 +236,12 @@ bool D3D12Device::Init()
 		return false;
 	}
 
+	for (uint32_t i = 0; i < CB_ALLOCATOR_COUNT; ++i)
+	{
+		std::string name = "CB Allocator " + std::to_string(i);
+		m_pConstantBufferAllocators[i] = std::make_unique<D3D12ConstantBufferAllocator>(this, 4 * 1024 * 1024, name);
+	}
+
 	m_pRTVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 512, "RTV Heap");
 	m_pDSVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 128, "DSV Heap");
 	m_pResDescriptorAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536, "Resource Heap");
@@ -238,6 +252,19 @@ bool D3D12Device::Init()
 	pix::Init();
 
     return true;
+}
+
+D3D12_GPU_VIRTUAL_ADDRESS D3D12Device::AllocateConstantBuffer(void* data, size_t data_size)
+{
+	void* cpu_address;
+	uint64_t gpu_address;
+
+	uint32_t index = m_nFrameID % CB_ALLOCATOR_COUNT;
+	m_pConstantBufferAllocators[index]->Allocate(data_size, &cpu_address, &gpu_address);
+
+	memcpy(cpu_address, data, data_size);
+
+	return gpu_address;
 }
 
 void D3D12Device::Delete(IUnknown* object)
@@ -467,4 +494,29 @@ D3D12Descriptor D3D12DescriptorAllocator::Allocate()
 void D3D12DescriptorAllocator::Free(const D3D12Descriptor& descriptor)
 {
 	m_freeDescriptors.push_back(descriptor);
+}
+
+D3D12ConstantBufferAllocator::D3D12ConstantBufferAllocator(D3D12Device* device, uint32_t buffer_size, const std::string& name)
+{
+	GfxBufferDesc desc;
+	desc.size = buffer_size;
+	desc.memory_type = GfxMemoryType::CpuToGpu;
+	desc.usage = GfxBufferUsageConstantBuffer;
+
+	m_pBuffer.reset(device->CreateBuffer(desc, name));
+}
+
+void D3D12ConstantBufferAllocator::Allocate(uint32_t size, void** cpu_address, uint64_t* gpu_address)
+{
+	RE_ASSERT(m_allcatedSize + size <= m_pBuffer->GetDesc().size);
+
+	*cpu_address = (char*)m_pBuffer->GetCpuAddress() + m_allcatedSize;
+	*gpu_address = m_pBuffer->GetGpuAddress() + m_allcatedSize;
+
+	m_allcatedSize += size;
+}
+
+void D3D12ConstantBufferAllocator::Reset()
+{
+	m_allcatedSize = 0;
 }
