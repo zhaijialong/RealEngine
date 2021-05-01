@@ -56,7 +56,6 @@ void Renderer::RenderFrame()
 
     pCommandList->SetViewport(0, 0, pBackBuffer->GetDesc().width, pBackBuffer->GetDesc().height);
 
-    //todo : render something
     {
         RENDER_EVENT(pCommandList, "Render something");
 
@@ -67,6 +66,8 @@ void Renderer::RenderFrame()
 
         IGfxPipelineState* pPSO = GetPipelineState(psoDesc, "test pso");
         pCommandList->SetPipelineState(pPSO);
+
+        pCommandList->Draw(4, 1);
     }
 
     pCommandList->EndRenderPass();

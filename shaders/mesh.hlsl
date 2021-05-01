@@ -1,14 +1,25 @@
 #include "common.hlsli"
 
-uint bufferIndex;
-
-float4 vs_main( uint vertex_id : SV_VertexID ) : SV_POSITION
+struct VSOutput
 {
-    Buffer<float4> buffer = ResourceDescriptorHeap[bufferIndex];
-    return foo(buffer[vertex_id]);
+    float4 pos : SV_POSITION;
+    float2 uv : TEXCOORD;
+};
+
+VSOutput vs_main(uint vertex_id : SV_VertexID)
+{
+    VSOutput output;
+    output.pos.x = (float) (vertex_id / 2) * 4.0 - 1.0;
+    output.pos.y = (float) (vertex_id % 2) * 4.0 - 1.0;
+    output.pos.z = 0.0;
+    output.pos.w = 1.0;
+    output.uv.x = (float) (vertex_id / 2) * 2.0;
+    output.uv.y = 1.0 - (float) (vertex_id % 2) * 2.0;
+    
+    return output;
 }
 
-float4 ps_main() : SV_TARGET
+float4 ps_main(VSOutput input) : SV_TARGET
 {
-    return float4(1.0, 0.0, 0.0, 1.0);
+    return float4(input.uv, 0.0, 1.0);
 }

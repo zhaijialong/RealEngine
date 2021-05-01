@@ -7,6 +7,8 @@ D3D12GraphicsPipelineState::D3D12GraphicsPipelineState(D3D12Device* pDevice, con
     m_pDevice = pDevice;
     m_name = name;
     m_desc = desc;
+    m_type = GfxPipelineType::Graphics;
+    m_primitiveTopology = d3d12_primitive_topology(desc.primitive_type);
 }
 
 D3D12GraphicsPipelineState::~D3D12GraphicsPipelineState()

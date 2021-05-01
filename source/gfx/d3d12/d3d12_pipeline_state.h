@@ -13,9 +13,13 @@ public:
 
     virtual void* GetHandle() const { return m_pPipelineState; }
     bool Create();
+
+    D3D_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const { return m_primitiveTopology; }
+
 private:
     ID3D12PipelineState* m_pPipelineState = nullptr;
     GfxGraphicsPipelineDesc m_desc;
+    D3D_PRIMITIVE_TOPOLOGY m_primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 };
 
 class D3D12MeshShadingPipelineState : public IGfxPipelineState

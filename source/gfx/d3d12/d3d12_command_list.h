@@ -37,6 +37,9 @@ public:
 	virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 	virtual void SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 
+	virtual void Draw(uint32_t vertex_count, uint32_t instance_count) override;
+	virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count) override;
+
 private:
 	void FlushPendingBarrier();
 
@@ -45,6 +48,8 @@ private:
 	ID3D12CommandQueue* m_pCommandQueue = nullptr;
 	ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
 	ID3D12GraphicsCommandList4* m_pCommandList = nullptr;
+
+	IGfxPipelineState* m_pCurrentPSO = nullptr;
 
 	struct FenceOp
 	{

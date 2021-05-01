@@ -405,3 +405,22 @@ inline D3D12_PRIMITIVE_TOPOLOGY_TYPE d3d12_topology_type(GfxPrimitiveType primit
 		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
 	}
 }
+
+inline D3D_PRIMITIVE_TOPOLOGY d3d12_primitive_topology(GfxPrimitiveType primitive_type)
+{
+	switch (primitive_type)
+	{
+	case GfxPrimitiveType::PointList:
+		return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+	case GfxPrimitiveType::LineList:
+		return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+	case GfxPrimitiveType::LineStrip:
+		return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+	case GfxPrimitiveType::TriangleList:
+		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	case GfxPrimitiveType::TriangleTrip:
+		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+	default:
+		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+	}
+}

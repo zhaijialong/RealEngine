@@ -415,6 +415,14 @@ enum class GfxPrimitiveType
 	TriangleTrip,
 };
 
+enum class GfxPipelineType
+{
+	Graphics,
+	MeshShading,
+	Compute,
+	Raytracing,
+};
+
 class IGfxShader;
 
 struct GfxGraphicsPipelineDesc

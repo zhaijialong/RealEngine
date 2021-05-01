@@ -75,6 +75,8 @@ void D3D12CommandList::Begin()
 	ID3D12RootSignature* pRootSignature = pDevice->GetRootSignature();
 	m_pCommandList->SetGraphicsRootSignature(pRootSignature);
 	m_pCommandList->SetComputeRootSignature(pRootSignature);
+
+	m_pCurrentPSO = nullptr;
 }
 
 void D3D12CommandList::End()
@@ -197,7 +199,17 @@ void D3D12CommandList::EndRenderPass()
 
 void D3D12CommandList::SetPipelineState(IGfxPipelineState* state)
 {
-	m_pCommandList->SetPipelineState((ID3D12PipelineState*)state->GetHandle());
+	if (m_pCurrentPSO != state)
+	{
+		m_pCurrentPSO = state;
+
+		m_pCommandList->SetPipelineState((ID3D12PipelineState*)state->GetHandle());
+
+		if (state->GetType() == GfxPipelineType::Graphics)
+		{
+			m_pCommandList->IASetPrimitiveTopology(((D3D12GraphicsPipelineState*)state)->GetPrimitiveTopology());
+		}
+	}
 }
 
 void D3D12CommandList::SetIndexBuffer(IGfxBuffer* buffer)
@@ -216,6 +228,16 @@ void D3D12CommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, ui
 {
 	D3D12_RECT rect = { (LONG)x, (LONG)y, LONG(x + width), LONG(y + height) };
 	m_pCommandList->RSSetScissorRects(1, &rect);
+}
+
+void D3D12CommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
+{
+	m_pCommandList->DrawInstanced(vertex_count, instance_count, 0, 0);
+}
+
+void D3D12CommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count)
+{
+	m_pCommandList->DrawIndexedInstanced(instance_count, instance_count, 0, 0, 0);
 }
 
 void D3D12CommandList::FlushPendingBarrier()
