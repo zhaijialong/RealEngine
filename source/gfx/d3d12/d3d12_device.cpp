@@ -548,6 +548,9 @@ D3D12ConstantBufferAllocator::D3D12ConstantBufferAllocator(D3D12Device* device, 
 	m_pBuffer.reset(device->CreateBuffer(desc, name));
 }
 
+
+#define ALIGN(bytes, alignment) (((bytes) + (alignment) - 1) & ~((alignment) - 1)) 
+
 void D3D12ConstantBufferAllocator::Allocate(uint32_t size, void** cpu_address, uint64_t* gpu_address)
 {
 	RE_ASSERT(m_allcatedSize + size <= m_pBuffer->GetDesc().size);
@@ -555,7 +558,7 @@ void D3D12ConstantBufferAllocator::Allocate(uint32_t size, void** cpu_address, u
 	*cpu_address = (char*)m_pBuffer->GetCpuAddress() + m_allcatedSize;
 	*gpu_address = m_pBuffer->GetGpuAddress() + m_allcatedSize;
 
-	m_allcatedSize += size;
+	m_allcatedSize += ALIGN(size, 256); //alignment be a multiple of 256
 }
 
 void D3D12ConstantBufferAllocator::Reset()
