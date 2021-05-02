@@ -54,7 +54,7 @@ D3D12Device::~D3D12Device()
 		m_pConstantBufferAllocators[i].reset();
 	}
 
-	DoDeferredDeletion(true);
+	FlushDeferredDeletions();
 
 	m_pRTVAllocator.reset();
 	m_pDSVAllocator.reset();
@@ -313,6 +313,11 @@ D3D12_GPU_VIRTUAL_ADDRESS D3D12Device::AllocateConstantBuffer(void* data, size_t
 	memcpy(cpu_address, data, data_size);
 
 	return gpu_address;
+}
+
+void D3D12Device::FlushDeferredDeletions()
+{
+	DoDeferredDeletion(true);
 }
 
 void D3D12Device::Delete(IUnknown* object)

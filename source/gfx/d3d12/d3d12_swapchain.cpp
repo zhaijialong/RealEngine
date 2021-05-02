@@ -12,13 +12,14 @@ D3D12Swapchain::D3D12Swapchain(D3D12Device* pDevice, const GfxSwapchainDesc& des
 
 D3D12Swapchain::~D3D12Swapchain()
 {
-	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
-	pDevice->Delete(m_pSwapChain);
-
 	for (size_t i = 0; i < m_backBuffers.size(); ++i)
 	{
 		delete m_backBuffers[i];
 	}
+	m_backBuffers.clear();
+
+	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
+	pDevice->Delete(m_pSwapChain);
 }
 
 bool D3D12Swapchain::Present()
@@ -32,9 +33,32 @@ bool D3D12Swapchain::Present()
 
 bool D3D12Swapchain::Resize(uint32_t width, uint32_t height)
 {
-	//todo
-	RE_ASSERT(false);
-	return false;
+	if (m_desc.width == width && m_desc.height == height)
+	{
+		return false;
+	}
+
+	m_desc.width = width;
+	m_desc.height = height;
+	m_nCurrentBackBuffer = 0;
+
+	for (size_t i = 0; i < m_backBuffers.size(); ++i)
+	{
+		delete m_backBuffers[i];
+	}
+	m_backBuffers.clear();
+
+	((D3D12Device*)m_pDevice)->FlushDeferredDeletions();
+
+	DXGI_SWAP_CHAIN_DESC desc = {};
+	m_pSwapChain->GetDesc(&desc);
+	HRESULT hr = m_pSwapChain->ResizeBuffers(m_desc.backbuffer_count, width, height, desc.BufferDesc.Format, desc.Flags);
+	if (!SUCCEEDED(hr))
+	{
+		return false;
+	}
+
+	return CreateTextures();
 }
 
 IGfxTexture* D3D12Swapchain::GetBackBuffer() const
@@ -73,6 +97,13 @@ bool D3D12Swapchain::Create()
 	pSwapChain->QueryInterface(&m_pSwapChain);
 	SAFE_RELEASE(pSwapChain);
 
+	return CreateTextures();
+}
+
+bool D3D12Swapchain::CreateTextures()
+{
+	D3D12Device* pDevice = (D3D12Device*)m_pDevice;
+
 	GfxTextureDesc textureDesc;
 	textureDesc.width = m_desc.width;
 	textureDesc.height = m_desc.height;
@@ -82,7 +113,7 @@ bool D3D12Swapchain::Create()
 	for (uint32_t i = 0; i < m_desc.backbuffer_count; ++i)
 	{
 		ID3D12Resource* pBackbuffer = NULL;
-		hr = m_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBackbuffer));
+		HRESULT hr = m_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBackbuffer));
 		if (FAILED(hr))
 		{
 			return false;

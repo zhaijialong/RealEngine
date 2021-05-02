@@ -20,6 +20,9 @@ public:
 	bool Create();
 
 private:
+	bool CreateTextures();
+
+private:
 	IDXGISwapChain3* m_pSwapChain = nullptr;
 
 	uint32_t m_nCurrentBackBuffer = 0;

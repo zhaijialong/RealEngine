@@ -85,6 +85,7 @@ public:
 
 	D3D12_GPU_VIRTUAL_ADDRESS AllocateConstantBuffer(void* data, size_t data_size);
 
+	void FlushDeferredDeletions();
 	void Delete(IUnknown* object);
 	void Delete(D3D12MA::Allocation* allocation);
 
