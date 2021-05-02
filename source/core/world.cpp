@@ -12,6 +12,8 @@ void World::Tick(float delta_time)
     TickGUI();
 
     m_pCamera->Tick(delta_time);
+
+    //todo : ticks, culling, ...
 }
 
 void World::TickGUI()

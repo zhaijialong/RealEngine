@@ -79,6 +79,9 @@ void Renderer::RenderFrame()
         pCommandList->Draw(3, 1);
     }
 
+    GUI* pGUI = Engine::GetInstance()->GetWorld()->GetGUI();
+    pGUI->Render(pCommandList);
+
     pCommandList->EndRenderPass();
     pCommandList->ResourceBarrier(pBackBuffer, 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
 

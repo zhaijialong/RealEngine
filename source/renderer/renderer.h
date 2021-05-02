@@ -6,6 +6,8 @@
 #include "pipeline_cache.h"
 #include "lsignal/lsignal.h"
 
+const static int MAX_INFLIGHT_FRAMES = 3;
+
 class Renderer
 {
 public:
@@ -17,6 +19,7 @@ public:
     void WaitGpuFinished();
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
+    IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
     ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
     
     IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
@@ -33,7 +36,6 @@ private:
     std::unique_ptr<IGfxFence> m_pFrameFence;
     uint64_t m_nCurrentFenceValue = 0;
 
-    const static int MAX_INFLIGHT_FRAMES = 3;
     uint64_t m_nFrameFenceValue[MAX_INFLIGHT_FRAMES] = {};
     std::unique_ptr<IGfxCommandList> m_pCommandLists[MAX_INFLIGHT_FRAMES];
 

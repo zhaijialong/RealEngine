@@ -38,3 +38,4 @@ x64
 *.exp
 *.iobj
 *.ipdb
+imgui.ini

@@ -205,7 +205,7 @@ void D3D12CommandList::SetIndexBuffer(IGfxBuffer* buffer)
 	D3D12_INDEX_BUFFER_VIEW ibv;
 	ibv.BufferLocation = buffer->GetGpuAddress();
 	ibv.SizeInBytes = buffer->GetDesc().size;
-	ibv.SizeInBytes = dxgi_format(buffer->GetDesc().format);
+	ibv.Format = dxgi_format(buffer->GetDesc().format);
 
 	m_pCommandList->IASetIndexBuffer(&ibv);
 }
@@ -264,9 +264,9 @@ void D3D12CommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
 	m_pCommandList->DrawInstanced(vertex_count, instance_count, 0, 0);
 }
 
-void D3D12CommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count)
+void D3D12CommandList::DrawIndexed(uint32_t index_count, uint32_t index_offset, uint32_t instance_count)
 {
-	m_pCommandList->DrawIndexedInstanced(instance_count, instance_count, 0, 0, 0);
+	m_pCommandList->DrawIndexedInstanced(index_count, instance_count, index_offset, 0, 0);
 }
 
 void D3D12CommandList::FlushPendingBarrier()

@@ -41,7 +41,6 @@ void Engine::Tick()
     m_pWorld->Tick(frame_time);
 
     m_pRenderer->RenderFrame();
-    m_pWorld->GetGUI()->Render();
 }
 
 void Engine::LoadEngineConfig()

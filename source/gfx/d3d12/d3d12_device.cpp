@@ -161,7 +161,34 @@ IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShad
 
 uint32_t D3D12Device::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc)
 {
-	return uint32_t();
+	D3D12Descriptor descriptor = m_pResDescriptorAllocator->Allocate();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	switch (desc.type)
+	{
+	case GfxShaderResourceViewType::StructuredBuffer:
+	{
+		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)resource)->GetDesc();
+		RE_ASSERT(bufferDesc.usage & GfxBufferUsageStructuredBuffer);
+		RE_ASSERT(desc.buffer.offset % bufferDesc.stride == 0);
+		RE_ASSERT(desc.buffer.size % bufferDesc.stride == 0);
+
+		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+		srvDesc.Buffer.FirstElement = desc.buffer.offset / bufferDesc.stride;
+		srvDesc.Buffer.NumElements = desc.buffer.size / bufferDesc.stride;
+		srvDesc.Buffer.StructureByteStride = bufferDesc.stride;
+		break;
+	}
+	default:
+		break;
+	}
+
+	m_pDevice->CreateShaderResourceView((ID3D12Resource*)resource->GetHandle(), &srvDesc, descriptor.cpu_handle);
+
+	return descriptor.index;
 }
 
 uint32_t D3D12Device::CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc)
@@ -197,14 +224,20 @@ uint32_t D3D12Device::CreateSampler(const GfxSamplerDesc& desc)
 
 void D3D12Device::ReleaseResourceDescriptor(uint32_t index)
 {
-	D3D12Descriptor descriptor = m_pResDescriptorAllocator->GetDescriptor(index);
-	m_resourceDeletionQueue.push({ descriptor, m_nFrameID });
+	if (index != GFX_INVALID_RESOURCE)
+	{
+		D3D12Descriptor descriptor = m_pResDescriptorAllocator->GetDescriptor(index);
+		m_resourceDeletionQueue.push({ descriptor, m_nFrameID });
+	}
 }
 
 void D3D12Device::ReleaseSamplerDescriptor(uint32_t index)
 {
-	D3D12Descriptor descriptor = m_pSamplerAllocator->GetDescriptor(index);
-	m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
+	if (index != GFX_INVALID_RESOURCE)
+	{
+		D3D12Descriptor descriptor = m_pSamplerAllocator->GetDescriptor(index);
+		m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
+	}
 }
 
 void D3D12Device::BeginFrame()

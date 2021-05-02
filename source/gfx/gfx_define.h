@@ -162,6 +162,7 @@ enum class GfxUnorderedAccessViewType
 };
 
 static const uint32_t GFX_ALL_SUB_RESOURCE = 0xFFFFFFFF;
+static const uint32_t GFX_INVALID_RESOURCE = 0xFFFFFFFF;
 
 struct GfxDeviceDesc
 {
