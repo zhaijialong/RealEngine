@@ -48,13 +48,5 @@ private:
 
 	IGfxPipelineState* m_pCurrentPSO = nullptr;
 
-	struct FenceOp
-	{
-		IGfxFence* fence;
-		uint64_t value;
-	};
-	std::vector<FenceOp> m_fenceWaits;
-	std::vector<FenceOp> m_fenceSignals;
-
 	std::vector<D3D12_RESOURCE_BARRIER> m_pendingBarriers;
 };

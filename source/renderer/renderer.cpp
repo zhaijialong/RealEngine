@@ -90,10 +90,9 @@ void Renderer::RenderFrame()
     ++m_nCurrentFenceValue;
     m_nFrameFenceValue[frame_index] = m_nCurrentFenceValue;
 
-    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFenceValue);
     pCommandList->Submit();
-
     m_pSwapchain->Present();
+    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFenceValue);
 
     m_pDevice->EndFrame();
 }

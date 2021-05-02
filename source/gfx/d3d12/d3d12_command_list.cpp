@@ -99,31 +99,18 @@ void D3D12CommandList::EndEvent()
 
 void D3D12CommandList::Wait(IGfxFence* fence, uint64_t value)
 {
-	m_fenceWaits.push_back({ fence, value });
+	m_pCommandQueue->Wait((ID3D12Fence*)fence->GetHandle(), value);
 }
 
 void D3D12CommandList::Signal(IGfxFence* fence, uint64_t value)
 {
-	m_fenceSignals.push_back({ fence, value });
+	m_pCommandQueue->Signal((ID3D12Fence*)fence->GetHandle(), value);
 }
 
 void D3D12CommandList::Submit()
 {
-	for (size_t i = 0; i < m_fenceWaits.size(); ++i)
-	{
-		m_pCommandQueue->Wait((ID3D12Fence*)m_fenceWaits[i].fence->GetHandle(), m_fenceWaits[i].value);
-	}
-
 	ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
 	m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
-
-	for (size_t i = 0; i < m_fenceSignals.size(); ++i)
-	{
-		m_pCommandQueue->Signal((ID3D12Fence*)m_fenceSignals[i].fence->GetHandle(), m_fenceSignals[i].value);
-	}
-
-	m_fenceWaits.clear();
-	m_fenceSignals.clear();
 }
 
 void D3D12CommandList::ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state)
