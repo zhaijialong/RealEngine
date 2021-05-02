@@ -1,16 +1,20 @@
 #include "renderer.h"
 #include "core/engine.h"
 
-Renderer::Renderer()
+Renderer::Renderer() : m_resizeConnection({})
 {
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderCache = std::make_unique<ShaderCache>(this);
     m_pPipelineCache = std::make_unique<PipelineStateCache>(this);
+
+    m_resizeConnection = Engine::GetInstance()->WindowResizeSignal.connect(this, &Renderer::OnWindowResize);
 }
 
 Renderer::~Renderer()
 {
-    m_pFrameFence->Wait(m_nCurrentFenceValue);
+    WaitGpuFinished();
+
+    Engine::GetInstance()->WindowResizeSignal.disconnect(m_resizeConnection);
 }
 
 void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height, bool enable_vsync)
@@ -53,7 +57,7 @@ void Renderer::RenderFrame()
     GfxRenderPassDesc render_pass;
     render_pass.color[0].texture = pBackBuffer;
     render_pass.color[0].load_op = GfxRenderPassLoadOp::Clear;
-    render_pass.color[0].clear_color = { 1.0f, 1.0f, 0.0f, 1.0f };
+    render_pass.color[0].clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
     pCommandList->BeginRenderPass(render_pass);
 
     pCommandList->SetViewport(0, 0, pBackBuffer->GetDesc().width, pBackBuffer->GetDesc().height);
@@ -69,10 +73,12 @@ void Renderer::RenderFrame()
         IGfxPipelineState* pPSO = GetPipelineState(psoDesc, "test pso");
         pCommandList->SetPipelineState(pPSO);
 
-        float CB[4] = { 1.0f, 0.2f, 0.0f, 1.0 };
-        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, CB, sizeof(CB));
+        Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+        camera->SetPosition(float3(0.0f, 0.0f, -10.0f));
 
-        pCommandList->Draw(4, 1);
+        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, (void*)&camera->GetViewProjectionMatrix(), sizeof(float4x4));
+
+        pCommandList->Draw(3, 1);
     }
 
     pCommandList->EndRenderPass();
@@ -90,6 +96,11 @@ void Renderer::RenderFrame()
     m_pSwapchain->Present();
 
     m_pDevice->EndFrame();
+}
+
+void Renderer::WaitGpuFinished()
+{
+    m_pFrameFence->Wait(m_nCurrentFenceValue);
 }
 
 IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines)
@@ -111,4 +122,11 @@ void Renderer::CreateCommonResources()
     desc.mag_filter = GfxFilter::Linear;
     desc.mip_filter = GfxFilter::Linear;
     m_nLinearSampler = m_pDevice->CreateSampler(desc);
+}
+
+void Renderer::OnWindowResize(uint32_t width, uint32_t height)
+{
+    WaitGpuFinished();
+
+    m_pSwapchain->Resize(width, height);
 }

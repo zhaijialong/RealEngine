@@ -5,7 +5,12 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 {   
     switch (message)
     {
-        //todo
+    case WM_SIZE:
+        if (wParam != SIZE_MINIMIZED)
+        {
+            Engine::GetInstance()->WindowResizeSignal(LOWORD(lParam), HIWORD(lParam));
+        }
+        return 0;
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;

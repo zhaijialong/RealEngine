@@ -317,12 +317,18 @@ D3D12_GPU_VIRTUAL_ADDRESS D3D12Device::AllocateConstantBuffer(void* data, size_t
 
 void D3D12Device::Delete(IUnknown* object)
 {
-	m_deletionQueue.push({ object, m_nFrameID });
+	if (object)
+	{
+		m_deletionQueue.push({ object, m_nFrameID });
+	}
 }
 
 void D3D12Device::Delete(D3D12MA::Allocation* allocation)
 {
-	m_allocationDeletionQueue.push({ allocation, m_nFrameID });
+	if (allocation)
+	{
+		m_allocationDeletionQueue.push({ allocation, m_nFrameID });
+	}
 }
 
 D3D12Descriptor D3D12Device::AllocateRTV()

@@ -1,11 +1,13 @@
 #pragma once
 
 #include "utils/math.h"
+#include "lsignal/lsignal.h"
 
 class Camera
 {
 public:
 	Camera();
+	~Camera();
 
 	void SetPerpective(float aspectRatio, float yfov, float znear, float zfar);
 
@@ -28,6 +30,7 @@ public:
 
 private:
 	void UpdateMatrix();
+	void OnWindowResize(uint32_t width, uint32_t height);
 
 private:
 	float3 m_pos;
@@ -37,4 +40,10 @@ private:
 	float4x4 m_view;
 	float4x4 m_projection;
 	float4x4 m_viewProjection;
+
+	float m_fov = 0.0f;
+	float m_znear = 0.0f;
+	float m_zfar = 0.0f;
+
+	lsignal::connection m_resizeConnection;
 };

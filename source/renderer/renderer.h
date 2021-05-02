@@ -4,7 +4,7 @@
 #include "shader_compiler.h"
 #include "shader_cache.h"
 #include "pipeline_cache.h"
-#include <memory>
+#include "lsignal/lsignal.h"
 
 class Renderer
 {
@@ -14,6 +14,7 @@ public:
 
     void CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height, bool enable_vsync);
     void RenderFrame();
+    void WaitGpuFinished();
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
@@ -23,6 +24,7 @@ public:
 
 private:
     void CreateCommonResources();
+    void OnWindowResize(uint32_t width, uint32_t height);
 
 private:
     std::unique_ptr<IGfxDevice> m_pDevice;
@@ -41,4 +43,6 @@ private:
 
     uint32_t m_nPointSampler = 0;
     uint32_t m_nLinearSampler = 0;
+
+    lsignal::connection m_resizeConnection;
 };
