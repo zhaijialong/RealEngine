@@ -1,6 +1,9 @@
 #include "engine.h"
 #include "utils/log.h"
 
+#define SOKOL_IMPL
+#include "sokol/sokol_time.h"
+
 Engine* Engine::GetInstance()
 {
     static Engine engine;
@@ -9,8 +12,12 @@ Engine* Engine::GetInstance()
 
 void Engine::Init(const std::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
+    m_windowHandle = window_handle;
     m_workPath = work_path;
     LoadEngineConfig();
+
+    m_pRenderer = std::make_unique<Renderer>();
+    m_pRenderer->CreateDevice(window_handle, window_width, window_height, m_configIni.GetBoolValue("RealEngine", "VSync"));
 
     m_pWorld = std::make_unique<World>();
 
@@ -20,8 +27,7 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
         (float)m_configIni.GetDoubleValue("Camera", "ZNear"),
         (float)m_configIni.GetDoubleValue("Camera", "ZFar"));
 
-    m_pRenderer = std::make_unique<Renderer>();
-    m_pRenderer->CreateDevice(window_handle, window_width, window_height, m_configIni.GetBoolValue("RealEngine", "VSync"));
+    stm_setup();
 }
 
 void Engine::Shut()
@@ -30,9 +36,12 @@ void Engine::Shut()
 
 void Engine::Tick()
 {
-    //todo : world tick, culling ...
+    float frame_time = (float)stm_sec(stm_laptime(&m_lastFrameTime));
+
+    m_pWorld->Tick(frame_time);
 
     m_pRenderer->RenderFrame();
+    m_pWorld->GetGUI()->Render();
 }
 
 void Engine::LoadEngineConfig()

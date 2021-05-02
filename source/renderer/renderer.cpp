@@ -74,8 +74,6 @@ void Renderer::RenderFrame()
         pCommandList->SetPipelineState(pPSO);
 
         Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
-        camera->SetPosition(float3(0.0f, 0.0f, -10.0f));
-
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, (void*)&camera->GetViewProjectionMatrix(), sizeof(float4x4));
 
         pCommandList->Draw(3, 1);

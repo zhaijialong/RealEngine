@@ -1,7 +1,9 @@
 #include "camera.h"
 #include "engine.h"
+#include "imgui/imgui.h"
 
-Camera::Camera() : m_resizeConnection({})
+Camera::Camera() : 
+	m_resizeConnection({})
 {
 	m_pos = float3(0.0f, 0.0f, 0.0f);
 	m_rotation = float3(0.0, 0.0, 0.0f);
@@ -40,6 +42,52 @@ void Camera::SetRotation(const float3& rotation)
 		m_rotation = rotation;
 		UpdateMatrix();
 	}
+}
+
+void Camera::Tick(float delta_time)
+{
+	//TODO
+	const float move_speed = 10.0f;
+
+	if (ImGui::IsKeyDown('A'))
+	{
+		m_pos += GetLeft() * move_speed * delta_time;
+	}
+	else if (ImGui::IsKeyDown('S'))
+	{
+		m_pos += GetBack() * move_speed * delta_time;
+	}
+	else if (ImGui::IsKeyDown('D'))
+	{
+		m_pos += GetRight() * move_speed * delta_time;
+	}
+	else if (ImGui::IsKeyDown('W'))
+	{
+		m_pos += GetForward() * move_speed * delta_time;
+	}
+
+	m_pos += GetForward() * ImGui::GetIO().MouseWheel * move_speed * delta_time;
+
+	/*
+	if (ImGui::IsMouseClicked(1))
+	{
+		m_mousePos = float2(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+	}
+
+	if (ImGui::IsMouseDragging(1))
+	{
+		float2 mouse_delta = float2(ImGui::GetMousePos().x, ImGui::GetMousePos().y) - m_mousePos;
+
+		float3 rotation = m_camera.GetRotation();
+		rotation.x += mouse_delta.y * m_cameraRotateSpeed;
+		rotation.y += mouse_delta.x * m_cameraRotateSpeed;
+		m_camera.SetRotation(rotation);
+
+		m_mousePos += mouse_delta;
+	}
+	*/
+
+	UpdateMatrix();
 }
 
 void Camera::UpdateMatrix()

@@ -28,6 +28,8 @@ public:
 	float3 GetUp() const { return m_world[1].xyz(); }
 	float3 GetDown() const { return -m_world[1].xyz(); }
 
+	void Tick(float delta_time);
+
 private:
 	void UpdateMatrix();
 	void OnWindowResize(uint32_t width, uint32_t height);
