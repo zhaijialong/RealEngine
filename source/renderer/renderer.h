@@ -21,9 +21,12 @@ public:
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
     ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
-    
+
     IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
+
+    uint32_t GetPointSampler() const { return m_nPointSampler; }
+    uint32_t GetLinearSampler() const { return m_nLinearSampler; }
 
 private:
     void CreateCommonResources();

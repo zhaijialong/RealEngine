@@ -53,9 +53,9 @@ PS_INPUT vs_main(uint vertex_id : SV_VertexID)
 
 float4 ps_main(PS_INPUT input) : SV_Target
 {
-//    Texture2D texture = ResourceDescriptorHeap[c_TextureID];
-//    SamplerState sampler= SamplerDescriptorHeap[c_SamplerID];
-    float4 out_col = input.col;// * texture.Sample(sampler, input.uv);
+    Texture2D texture = ResourceDescriptorHeap[c_TextureID];
+    SamplerState linear_sampler = SamplerDescriptorHeap[c_SamplerID];
+    float4 out_col = input.col;// * texture.Sample(linear_sampler, input.uv);
     out_col.xyz = pow(out_col.xyz, 2.2);
     return out_col;
 }
