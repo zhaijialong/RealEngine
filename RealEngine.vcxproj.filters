@@ -85,6 +85,9 @@
     <ClCompile Include="external\imgui\imgui_impl_win32.cpp">
       <Filter>external\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_descriptor.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -218,6 +221,12 @@
     </ClInclude>
     <ClInclude Include="external\imgui\imgui_impl_win32.h">
       <Filter>external\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_descriptor.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_descriptor.h">
+      <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

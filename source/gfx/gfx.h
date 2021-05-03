@@ -9,6 +9,7 @@
 #include "i_gfx_shader.h"
 #include "i_gfx_pipeline_state.h"
 #include "i_gfx_swapchain.h"
+#include "i_gfx_descriptor.h"
 
 IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc);
 

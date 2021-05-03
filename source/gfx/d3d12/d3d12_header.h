@@ -15,7 +15,7 @@ struct D3D12Descriptor
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle = {};
 	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = {};
-	uint32_t index = 0;
+	uint32_t index = GFX_INVALID_RESOURCE;
 };
 
 inline bool IsNullDescriptor(const D3D12Descriptor& descriptor)

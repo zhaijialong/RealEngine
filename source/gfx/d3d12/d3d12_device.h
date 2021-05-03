@@ -52,6 +52,9 @@ public:
 	D3D12Device(const GfxDeviceDesc& desc);
 	~D3D12Device();
 
+	virtual void BeginFrame() override;
+	virtual void EndFrame() override;
+	virtual uint64_t GetFrameID() const override { return m_nFrameID; }
 	virtual void* GetHandle() const override { return m_pDevice; }
 
 	virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, const std::string& name) override;
@@ -62,17 +65,11 @@ public:
 	virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name) override;
 	virtual IGfxPipelineState* CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name) override;
 	virtual IGfxPipelineState* CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name) override;
+	virtual IGfxDescriptor* CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const std::string& name) override;
+	virtual IGfxDescriptor* CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const std::string& name) override;
+	virtual IGfxDescriptor* CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name) override;
+	virtual IGfxDescriptor* CreateSampler(const GfxSamplerDesc& desc, const std::string& name) override;
 
-	virtual uint32_t CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc) override;
-	virtual uint32_t CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc) override;
-	virtual uint32_t CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc) override;
-	virtual uint32_t CreateSampler(const GfxSamplerDesc& desc) override;
-	virtual void ReleaseResourceDescriptor(uint32_t index) override;
-	virtual void ReleaseSamplerDescriptor(uint32_t index) override;
-
-	virtual void BeginFrame() override;
-	virtual void EndFrame() override;
-	virtual uint64_t GetFrameID() const override { return m_nFrameID; }
 
 	bool Init();
 	IDXGIFactory4* GetDxgiFactory4() const { return m_pDxgiFactory; }
@@ -91,8 +88,12 @@ public:
 
 	D3D12Descriptor AllocateRTV();
 	D3D12Descriptor AllocateDSV();
+	D3D12Descriptor AllocateResourceDescriptor();
+	D3D12Descriptor AllocateSampler();
 	void DeleteRTV(const D3D12Descriptor& descriptor);
 	void DeleteDSV(const D3D12Descriptor& descriptor);
+	void DeleteResourceDescriptor(const D3D12Descriptor& descriptor);
+	void DeleteSampler(const D3D12Descriptor& descriptor);
 
 private:
 	void DoDeferredDeletion(bool force_delete = false);

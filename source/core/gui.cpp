@@ -35,7 +35,7 @@ bool GUI::Init()
 	int width, height;
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-	io.Fonts->TexID = (ImTextureID)m_fontTextureSRV;
+	io.Fonts->TexID = (ImTextureID)m_pFontTextureSRV.get();
 
 	GfxGraphicsPipelineDesc desc;
 	desc.vs = pRenderer->GetShader("imgui.hlsl", "vs_main", "vs_6_6", {});
@@ -97,8 +97,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 		srvDesc.buffer.offset = 0;
 		srvDesc.buffer.size = desc.size;
 
-		pDevice->ReleaseResourceDescriptor(m_vertexBufferSRV[frame_index]);
-		m_vertexBufferSRV[frame_index] = pDevice->CreateShaderResourceView(m_pVertexBuffer[frame_index].get(), srvDesc);
+		m_pVertexBufferSRV[frame_index].reset(pDevice->CreateShaderResourceView(m_pVertexBuffer[frame_index].get(), srvDesc, "GUI VB SRV"));
 	}
 
 	if (m_pIndexBuffer[frame_index] == nullptr || m_pIndexBuffer[frame_index]->GetDesc().size < draw_data->TotalIdxCount * sizeof(ImDrawIdx))
@@ -161,7 +160,10 @@ void GUI::Render(IGfxCommandList* pCommandList)
 				{				
 					pCommandList->SetScissorRect((uint32_t)x, (uint32_t)y, (uint32_t)width, (uint32_t)height);
 
-					uint32_t resource_ids[4] = { m_vertexBufferSRV[frame_index], pcmd->VtxOffset + global_vtx_offset, m_fontTextureSRV, pRenderer->GetLinearSampler() };
+					uint32_t resource_ids[4] = { m_pVertexBufferSRV[frame_index]->GetIndex(), 
+						pcmd->VtxOffset + global_vtx_offset, 
+						0,//m_pFontTextureSRV->GetIndex(),
+						pRenderer->GetLinearSampler()->GetIndex() };
 					pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, resource_ids, sizeof(resource_ids));
 
 					pCommandList->DrawIndexed(pcmd->ElemCount, pcmd->IdxOffset + global_idx_offset, 1);

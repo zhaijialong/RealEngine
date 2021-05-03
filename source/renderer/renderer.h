@@ -25,8 +25,8 @@ public:
     IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
 
-    uint32_t GetPointSampler() const { return m_nPointSampler; }
-    uint32_t GetLinearSampler() const { return m_nLinearSampler; }
+    IGfxDescriptor* GetPointSampler() const { return m_pPointSampler.get(); }
+    IGfxDescriptor* GetLinearSampler() const { return m_pLinearSampler.get(); }
 
 private:
     void CreateCommonResources();
@@ -46,8 +46,8 @@ private:
     std::unique_ptr<ShaderCache> m_pShaderCache;
     std::unique_ptr<PipelineStateCache> m_pPipelineCache;
 
-    uint32_t m_nPointSampler = 0;
-    uint32_t m_nLinearSampler = 0;
+    std::unique_ptr<IGfxDescriptor> m_pPointSampler;
+    std::unique_ptr<IGfxDescriptor> m_pLinearSampler;
 
     lsignal::connection m_resizeConnection;
 };

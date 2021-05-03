@@ -6,6 +6,7 @@
 #include "d3d12_command_list.h"
 #include "d3d12_shader.h"
 #include "d3d12_pipeline_state.h"
+#include "d3d12_descriptor.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 #include "pix_runtime.h"
 #include "utils/log.h"
@@ -159,273 +160,48 @@ IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShad
 	return nullptr;
 }
 
-uint32_t D3D12Device::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc)
+IGfxDescriptor* D3D12Device::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const std::string& name)
 {
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-	switch (desc.type)
+	D3D12ShaderResourceView* pSRV = new D3D12ShaderResourceView(this, resource, desc, name);
+	if (!pSRV->Create())
 	{
-	case GfxShaderResourceViewType::Texture2D:
-	{
-		const GfxTextureDesc& textureDesc = ((IGfxTexture*)resource)->GetDesc();
-		RE_ASSERT(textureDesc.usage & GfxTextureUsageShaderResource);
-
-		srvDesc.Format = dxgi_format(textureDesc.format);
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MostDetailedMip = desc.texture.mip_slice;
-		srvDesc.Texture2D.MipLevels = desc.texture.mip_levels;
-		srvDesc.Texture2D.PlaneSlice = desc.texture.plane_slice;
-		break;
+		delete pSRV;
+		return nullptr;
 	}
-	case GfxShaderResourceViewType::Texture2DArray:
-	{
-		const GfxTextureDesc& textureDesc = ((IGfxTexture*)resource)->GetDesc();
-		RE_ASSERT(textureDesc.usage & GfxTextureUsageShaderResource);
-
-		srvDesc.Format = dxgi_format(textureDesc.format);
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-		srvDesc.Texture2DArray.MostDetailedMip = desc.texture.mip_slice;
-		srvDesc.Texture2DArray.MipLevels = desc.texture.mip_levels;
-		srvDesc.Texture2DArray.FirstArraySlice = desc.texture.array_slice;
-		srvDesc.Texture2DArray.ArraySize = desc.texture.array_size;
-		srvDesc.Texture2DArray.PlaneSlice = desc.texture.plane_slice;
-		break;
-	}
-	case GfxShaderResourceViewType::Texture3D:
-	{
-		const GfxTextureDesc& textureDesc = ((IGfxTexture*)resource)->GetDesc();
-		RE_ASSERT(textureDesc.usage & GfxTextureUsageShaderResource);
-
-		srvDesc.Format = dxgi_format(textureDesc.format);
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
-		srvDesc.Texture3D.MostDetailedMip = desc.texture.mip_slice;
-		srvDesc.Texture3D.MipLevels = desc.texture.mip_levels;
-		break;
-	}
-	case GfxShaderResourceViewType::TextureCube:
-	{
-		const GfxTextureDesc& textureDesc = ((IGfxTexture*)resource)->GetDesc();
-		RE_ASSERT(textureDesc.usage & GfxTextureUsageShaderResource);
-
-		srvDesc.Format = dxgi_format(textureDesc.format);
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-		srvDesc.TextureCube.MostDetailedMip = desc.texture.mip_slice;
-		srvDesc.TextureCube.MipLevels = desc.texture.mip_levels;
-		break;
-	}
-	case GfxShaderResourceViewType::TextureCubeArray:
-	{
-		const GfxTextureDesc& textureDesc = ((IGfxTexture*)resource)->GetDesc();
-		RE_ASSERT(textureDesc.usage & GfxTextureUsageShaderResource);
-
-		srvDesc.Format = dxgi_format(textureDesc.format);
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
-		srvDesc.TextureCubeArray.MostDetailedMip = desc.texture.mip_slice;
-		srvDesc.TextureCubeArray.MipLevels = desc.texture.mip_levels;
-		srvDesc.TextureCubeArray.First2DArrayFace = 0;
-		srvDesc.TextureCubeArray.NumCubes = desc.texture.array_size / 6;
-		break;
-	}
-	case GfxShaderResourceViewType::StructuredBuffer:
-	{
-		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)resource)->GetDesc();
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageStructuredBuffer);
-		RE_ASSERT(desc.buffer.offset % bufferDesc.stride == 0);
-		RE_ASSERT(desc.buffer.size % bufferDesc.stride == 0);
-
-		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-		srvDesc.Buffer.FirstElement = desc.buffer.offset / bufferDesc.stride;
-		srvDesc.Buffer.NumElements = desc.buffer.size / bufferDesc.stride;
-		srvDesc.Buffer.StructureByteStride = bufferDesc.stride;
-		break;
-	}
-	case GfxShaderResourceViewType::TypedBuffer:
-	{
-		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)resource)->GetDesc();
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageTypedBuffer);
-		RE_ASSERT(desc.buffer.offset % bufferDesc.stride == 0);
-		RE_ASSERT(desc.buffer.size % bufferDesc.stride == 0);
-
-		srvDesc.Format = dxgi_format(bufferDesc.format);
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-		srvDesc.Buffer.FirstElement = desc.buffer.offset / bufferDesc.stride;
-		srvDesc.Buffer.NumElements = desc.buffer.size / bufferDesc.stride;
-	}
-	case GfxShaderResourceViewType::RawBuffer:
-	{
-		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)resource)->GetDesc();
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageRawBuffer);
-		RE_ASSERT(bufferDesc.stride == 4);
-		RE_ASSERT(desc.buffer.offset % 4 == 0);
-		RE_ASSERT(desc.buffer.size % 4 == 0);
-
-		srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-		srvDesc.Buffer.FirstElement = desc.buffer.offset / 4;
-		srvDesc.Buffer.NumElements = desc.buffer.size / 4;
-		srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_RAW;
-		break;
-	}
-	default:
-		break;
-	}
-
-	D3D12Descriptor descriptor = m_pResDescriptorAllocator->Allocate();
-	m_pDevice->CreateShaderResourceView((ID3D12Resource*)resource->GetHandle(), &srvDesc, descriptor.cpu_handle);
-
-	return descriptor.index;
+	return pSRV;
 }
 
-uint32_t D3D12Device::CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc)
+IGfxDescriptor* D3D12Device::CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const std::string& name)
 {
-	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-
-	switch (desc.type)
+	D3D12UnorderedAccessView* pUAV = new D3D12UnorderedAccessView(this, resource, desc, name);
+	if (!pUAV->Create())
 	{
-	case GfxUnorderedAccessViewType::Texture2D:
-	{
-		const GfxTextureDesc& textureDesc = ((IGfxTexture*)resource)->GetDesc();
-		RE_ASSERT(textureDesc.usage & GfxTextureUsageUnorderedAccess);
-
-		uavDesc.Format = dxgi_format(textureDesc.format);
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-		uavDesc.Texture2D.MipSlice = desc.texture.mip_slice;
-		uavDesc.Texture2D.PlaneSlice = desc.texture.plane_slice;
-		break;
+		delete pUAV;
+		return nullptr;
 	}
-	case GfxUnorderedAccessViewType::Texture2DArray:
-	{
-		const GfxTextureDesc& textureDesc = ((IGfxTexture*)resource)->GetDesc();
-		RE_ASSERT(textureDesc.usage & GfxTextureUsageUnorderedAccess);
-
-		uavDesc.Format = dxgi_format(textureDesc.format);
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-		uavDesc.Texture2DArray.MipSlice = desc.texture.mip_slice;
-		uavDesc.Texture2DArray.FirstArraySlice = desc.texture.array_slice;
-		uavDesc.Texture2DArray.ArraySize = desc.texture.array_size;
-		uavDesc.Texture2DArray.PlaneSlice = desc.texture.plane_slice;
-		break;
-	}
-	case GfxUnorderedAccessViewType::Texture3D:
-	{
-		const GfxTextureDesc& textureDesc = ((IGfxTexture*)resource)->GetDesc();
-		RE_ASSERT(textureDesc.usage & GfxTextureUsageUnorderedAccess);
-
-		uavDesc.Format = dxgi_format(textureDesc.format);
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
-		uavDesc.Texture3D.MipSlice = desc.texture.mip_slice;
-		uavDesc.Texture3D.FirstWSlice = 0;
-		uavDesc.Texture3D.WSize = textureDesc.depth;
-		break;
-	}
-	case GfxUnorderedAccessViewType::StructuredBuffer:
-	{
-		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)resource)->GetDesc();
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageStructuredBuffer);
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageUnorderedAccess);
-		RE_ASSERT(desc.buffer.offset % bufferDesc.stride == 0);
-		RE_ASSERT(desc.buffer.size % bufferDesc.stride == 0);
-
-		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-		uavDesc.Buffer.FirstElement = desc.buffer.offset / bufferDesc.stride;
-		uavDesc.Buffer.NumElements = desc.buffer.size / bufferDesc.stride;
-		uavDesc.Buffer.StructureByteStride = bufferDesc.stride;
-		break;
-	}
-	case GfxUnorderedAccessViewType::TypedBuffer:
-	{
-		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)resource)->GetDesc();
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageTypedBuffer);
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageUnorderedAccess);
-		RE_ASSERT(desc.buffer.offset % bufferDesc.stride == 0);
-		RE_ASSERT(desc.buffer.size % bufferDesc.stride == 0);
-
-		uavDesc.Format = dxgi_format(bufferDesc.format);
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-		uavDesc.Buffer.FirstElement = desc.buffer.offset / bufferDesc.stride;
-		uavDesc.Buffer.NumElements = desc.buffer.size / bufferDesc.stride;
-		break;
-	}
-	case GfxUnorderedAccessViewType::RawBuffer:
-	{
-		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)resource)->GetDesc();
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageRawBuffer);
-		RE_ASSERT(bufferDesc.usage & GfxBufferUsageUnorderedAccess);
-		RE_ASSERT(bufferDesc.stride == 4);
-		RE_ASSERT(desc.buffer.offset % 4 == 0);
-		RE_ASSERT(desc.buffer.size % 4 == 0);
-
-		uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-		uavDesc.Buffer.FirstElement = desc.buffer.offset / 4;
-		uavDesc.Buffer.NumElements = desc.buffer.size / 4;
-		uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
-		break;
-	}
-	default:
-		break;
-	}
-
-	D3D12Descriptor descriptor = m_pResDescriptorAllocator->Allocate();
-	m_pDevice->CreateUnorderedAccessView((ID3D12Resource*)resource->GetHandle(), nullptr, &uavDesc, descriptor.cpu_handle);
-
-	return descriptor.index;
+	return pUAV;
 }
 
-uint32_t D3D12Device::CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc)
+IGfxDescriptor* D3D12Device::CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name)
 {
-	RE_ASSERT(buffer->GetDesc().usage & GfxBufferUsageConstantBuffer);
-
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-	cbvDesc.BufferLocation = buffer->GetGpuAddress() + desc.offset;
-	cbvDesc.SizeInBytes = desc.size;
-
-	D3D12Descriptor descriptor = m_pResDescriptorAllocator->Allocate();
-	m_pDevice->CreateConstantBufferView(&cbvDesc, descriptor.cpu_handle);
-
-	return descriptor.index;
-}
-
-uint32_t D3D12Device::CreateSampler(const GfxSamplerDesc& desc)
-{
-	D3D12Descriptor descriptor = m_pSamplerAllocator->Allocate();
-
-	D3D12_SAMPLER_DESC samplerDesc = {};
-	samplerDesc.Filter = d3d12_filter(desc);
-	samplerDesc.AddressU = d3d12_address_mode(desc.address_u);
-	samplerDesc.AddressV = d3d12_address_mode(desc.address_v);
-	samplerDesc.AddressW = d3d12_address_mode(desc.address_w);
-	samplerDesc.MipLODBias = desc.mip_bias;
-	samplerDesc.MaxAnisotropy = (UINT)desc.max_anisotropy;
-	samplerDesc.ComparisonFunc = d3d12_compare_func(desc.compare_func);
-	samplerDesc.MinLOD = desc.min_lod;
-	samplerDesc.MaxLOD = desc.max_lod;
-	memcpy(samplerDesc.BorderColor, desc.border_color, sizeof(float) * 4);
-
-	m_pDevice->CreateSampler(&samplerDesc, descriptor.cpu_handle);
-
-	return descriptor.index;
-}
-
-void D3D12Device::ReleaseResourceDescriptor(uint32_t index)
-{
-	if (index != GFX_INVALID_RESOURCE)
+	D3D12ConstantBufferView* pCBV = new D3D12ConstantBufferView(this, buffer, desc, name);
+	if (!pCBV->Create())
 	{
-		D3D12Descriptor descriptor = m_pResDescriptorAllocator->GetDescriptor(index);
-		m_resourceDeletionQueue.push({ descriptor, m_nFrameID });
+		delete pCBV;
+		return nullptr;
 	}
+	return pCBV;
 }
 
-void D3D12Device::ReleaseSamplerDescriptor(uint32_t index)
+IGfxDescriptor* D3D12Device::CreateSampler(const GfxSamplerDesc& desc, const std::string& name)
 {
-	if (index != GFX_INVALID_RESOURCE)
+	D3D12Sampler* pSampler = new D3D12Sampler(this, desc, name);
+	if (!pSampler->Create())
 	{
-		D3D12Descriptor descriptor = m_pSamplerAllocator->GetDescriptor(index);
-		m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
+		delete pSampler;
+		return nullptr;
 	}
+	return pSampler;
 }
 
 void D3D12Device::BeginFrame()
@@ -567,6 +343,16 @@ D3D12Descriptor D3D12Device::AllocateDSV()
 	return m_pDSVAllocator->Allocate();
 }
 
+D3D12Descriptor D3D12Device::AllocateResourceDescriptor()
+{
+	return m_pResDescriptorAllocator->Allocate();
+}
+
+D3D12Descriptor D3D12Device::AllocateSampler()
+{
+	return m_pSamplerAllocator->Allocate();
+}
+
 void D3D12Device::DeleteRTV(const D3D12Descriptor& descriptor)
 {
 	if (!IsNullDescriptor(descriptor))
@@ -580,6 +366,22 @@ void D3D12Device::DeleteDSV(const D3D12Descriptor& descriptor)
 	if (!IsNullDescriptor(descriptor))
 	{
 		m_dsvDeletionQueue.push({ descriptor, m_nFrameID });
+	}
+}
+
+void D3D12Device::DeleteResourceDescriptor(const D3D12Descriptor& descriptor)
+{
+	if (!IsNullDescriptor(descriptor))
+	{
+		m_resourceDeletionQueue.push({ descriptor, m_nFrameID });
+	}
+}
+
+void D3D12Device::DeleteSampler(const D3D12Descriptor& descriptor)
+{
+	if (!IsNullDescriptor(descriptor))
+	{
+		m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
 	}
 }
 

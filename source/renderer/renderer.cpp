@@ -116,12 +116,12 @@ IGfxPipelineState* Renderer::GetPipelineState(const GfxGraphicsPipelineDesc& des
 void Renderer::CreateCommonResources()
 {
     GfxSamplerDesc desc;
-    m_nPointSampler = m_pDevice->CreateSampler(desc);
+    m_pPointSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pPointSampler"));
 
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;
     desc.mip_filter = GfxFilter::Linear;
-    m_nLinearSampler = m_pDevice->CreateSampler(desc);
+    m_pLinearSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearSampler"));
 }
 
 void Renderer::OnWindowResize(uint32_t width, uint32_t height)

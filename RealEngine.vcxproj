@@ -97,6 +97,7 @@
     <ClCompile Include="source\core\world.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_descriptor.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_device.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_fence.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_pipeline_state.cpp" />
@@ -129,6 +130,7 @@
     <ClInclude Include="source\core\world.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_descriptor.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_device.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_fence.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_header.h" />
@@ -141,6 +143,7 @@
     <ClInclude Include="source\gfx\gfx_define.h" />
     <ClInclude Include="source\gfx\i_gfx_buffer.h" />
     <ClInclude Include="source\gfx\i_gfx_command_list.h" />
+    <ClInclude Include="source\gfx\i_gfx_descriptor.h" />
     <ClInclude Include="source\gfx\i_gfx_device.h" />
     <ClInclude Include="source\gfx\i_gfx_fence.h" />
     <ClInclude Include="source\gfx\i_gfx_pipeline_state.h" />
