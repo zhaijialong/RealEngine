@@ -28,26 +28,38 @@ GUI::~GUI()
 bool GUI::Init()
 {
 	Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+	IGfxDevice* pDevice = pRenderer->GetDevice();
 
-	//TODO : Build texture atlas
 	ImGuiIO& io = ImGui::GetIO();
 	unsigned char* pixels;
 	int width, height;
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
+	GfxTextureDesc textureDesc;
+	textureDesc.width = width;
+	textureDesc.height = height;
+	textureDesc.type = GfxTextureType::Texture2D;
+	textureDesc.format = GfxFormat::RGBA8UNORM;
+	textureDesc.alloc_type = GfxAllocationType::Placed;
+	m_pFontTexture.reset(pDevice->CreateTexture(textureDesc, "GUI::m_pFontTexture"));
+
+	GfxShaderResourceViewDesc srvDesc;
+	srvDesc.type = GfxShaderResourceViewType::Texture2D;
+	srvDesc.texture.mip_levels = 1;
+	m_pFontTextureSRV.reset(pDevice->CreateShaderResourceView(m_pFontTexture.get(), srvDesc, "GUI::m_pFontTextureSRV"));
+
 	io.Fonts->TexID = (ImTextureID)m_pFontTextureSRV.get();
 
-	GfxGraphicsPipelineDesc desc;
-	desc.vs = pRenderer->GetShader("imgui.hlsl", "vs_main", "vs_6_6", {});
-	desc.ps = pRenderer->GetShader("imgui.hlsl", "ps_main", "ps_6_6", {});
-	desc.blend_state[0].blend_enable = true;
-	desc.blend_state[0].color_src = GfxBlendFactor::SrcAlpha;
-	desc.blend_state[0].color_dst = GfxBlendFactor::InvSrcAlpha;
-	desc.blend_state[0].alpha_src = GfxBlendFactor::One;
-	desc.blend_state[0].alpha_dst = GfxBlendFactor::InvSrcAlpha;
-	desc.rt_format[0] = pRenderer->GetSwapchain()->GetBackBuffer()->GetDesc().format;
-
-	m_pPSO = pRenderer->GetPipelineState(desc, "GUI PSO");
+	GfxGraphicsPipelineDesc psoDesc;
+	psoDesc.vs = pRenderer->GetShader("imgui.hlsl", "vs_main", "vs_6_6", {});
+	psoDesc.ps = pRenderer->GetShader("imgui.hlsl", "ps_main", "ps_6_6", {});
+	psoDesc.blend_state[0].blend_enable = true;
+	psoDesc.blend_state[0].color_src = GfxBlendFactor::SrcAlpha;
+	psoDesc.blend_state[0].color_dst = GfxBlendFactor::InvSrcAlpha;
+	psoDesc.blend_state[0].alpha_src = GfxBlendFactor::One;
+	psoDesc.blend_state[0].alpha_dst = GfxBlendFactor::InvSrcAlpha;
+	psoDesc.rt_format[0] = pRenderer->GetSwapchain()->GetBackBuffer()->GetDesc().format;
+	m_pPSO = pRenderer->GetPipelineState(psoDesc, "GUI::m_PSO");
 
 	return true;
 }
@@ -88,6 +100,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 		desc.stride = sizeof(ImDrawVert);
 		desc.size = (draw_data->TotalVtxCount + 5000) * sizeof(ImDrawVert);
 		desc.memory_type = GfxMemoryType::CpuToGpu;
+		desc.alloc_type = GfxAllocationType::Placed;
 		desc.usage = GfxBufferUsageStructuredBuffer;
 
 		m_pVertexBuffer[frame_index].reset(pDevice->CreateBuffer(desc, "GUI VB"));
@@ -107,6 +120,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 		desc.size = (draw_data->TotalIdxCount + 10000) * sizeof(ImDrawIdx);
 		desc.format = GfxFormat::R16UI;
 		desc.memory_type = GfxMemoryType::CpuToGpu;
+		desc.alloc_type = GfxAllocationType::Placed;
 
 		m_pIndexBuffer[frame_index].reset(pDevice->CreateBuffer(desc, "GUI IB"));
 	}
@@ -160,10 +174,12 @@ void GUI::Render(IGfxCommandList* pCommandList)
 				{				
 					pCommandList->SetScissorRect((uint32_t)x, (uint32_t)y, (uint32_t)width, (uint32_t)height);
 
-					uint32_t resource_ids[4] = { m_pVertexBufferSRV[frame_index]->GetIndex(), 
+					uint32_t resource_ids[4] = { 
+						m_pVertexBufferSRV[frame_index]->GetIndex(), 
 						pcmd->VtxOffset + global_vtx_offset, 
-						0,//m_pFontTextureSRV->GetIndex(),
+						0,//((IGfxDescriptor*)pcmd->TextureId)->GetIndex(),
 						pRenderer->GetLinearSampler()->GetIndex() };
+
 					pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, resource_ids, sizeof(resource_ids));
 
 					pCommandList->DrawIndexed(pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset);

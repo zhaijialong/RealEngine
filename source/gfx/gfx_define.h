@@ -212,30 +212,32 @@ struct GfxConstantBufferViewDesc
 
 struct GfxShaderResourceViewDesc
 {
-	GfxShaderResourceViewType type;
+	GfxShaderResourceViewType type = GfxShaderResourceViewType::Texture2D;
 
 	union
 	{
 		struct
 		{
 			uint32_t mip_slice = 0;
-			uint32_t mip_levels = uint32_t(-1);
 			uint32_t array_slice = 0;
+			uint32_t mip_levels = uint32_t(-1);
 			uint32_t array_size = 1;
 			uint32_t plane_slice = 0;
 		} texture;
 
 		struct
 		{
-			uint32_t size;
-			uint32_t offset;
+			uint32_t size = 0;
+			uint32_t offset = 0;
 		} buffer;
 	};
+
+	GfxShaderResourceViewDesc() : texture() {}
 };
 
 struct GfxUnorderedAccessViewDesc
 {
-	GfxUnorderedAccessViewType type;
+	GfxUnorderedAccessViewType type = GfxUnorderedAccessViewType::Texture2D;
 
 	union
 	{
