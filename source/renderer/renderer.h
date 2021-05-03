@@ -57,7 +57,10 @@ private:
     struct TextureUpload
     {
         IGfxTexture* texture;
+        uint32_t mip_level;
+        uint32_t array_slice;
         StagingBuffer staging_buffer;
+        uint32_t offset;
     };
     std::vector<TextureUpload> m_pendingTextureUploads;
 

@@ -5,6 +5,7 @@
 #include "d3d12_buffer.h"
 #include "d3d12_pipeline_state.h"
 #include "pix_runtime.h"
+#include "../gfx.h"
 #include "utils/assert.h"
 
 D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const std::string& name)
@@ -104,26 +105,30 @@ void D3D12CommandList::EndEvent()
 	pix::EndEvent(m_pCommandList);
 }
 
-void D3D12CommandList::CopyBufferToTexture(IGfxTexture* texture, IGfxBuffer* buffer, uint32_t data_offset, uint32_t data_size)
+void D3D12CommandList::CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* buffer, uint32_t offset)
 {
-	//todo : refacoring
+	const GfxTextureDesc& desc = texture->GetDesc();
+	uint32_t subresource = array_slice * desc.mip_levels + mip_level;
 
 	D3D12_TEXTURE_COPY_LOCATION dst = {};
 	dst.pResource = (ID3D12Resource*)texture->GetHandle();
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-	dst.SubresourceIndex = 0;
+	dst.SubresourceIndex = subresource;
 
-	D3D12_RESOURCE_DESC desc = dst.pResource->GetDesc();
-	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+	uint32_t min_size = GetFormatBlockSize(desc.format);
+	uint32_t w = max(desc.width >> mip_level, min_size);
+	uint32_t h = max(desc.height >> mip_level, min_size);
+	uint32_t d = max(desc.depth >> mip_level, 1);
 
-	ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
-	pDevice->GetCopyableFootprints(&desc, 0, 1, 0, &footprint, nullptr, nullptr, nullptr);
-
-	D3D12_TEXTURE_COPY_LOCATION src;
+	D3D12_TEXTURE_COPY_LOCATION src = {};
 	src.pResource = (ID3D12Resource*)buffer->GetHandle();
 	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-	src.PlacedFootprint = footprint;
-	src.PlacedFootprint.Offset += data_offset;
+	src.PlacedFootprint.Offset = offset;
+	src.PlacedFootprint.Footprint.Format = dxgi_format(desc.format);
+	src.PlacedFootprint.Footprint.Width = w;
+	src.PlacedFootprint.Footprint.Height = h;
+	src.PlacedFootprint.Footprint.Depth = d;
+	src.PlacedFootprint.Footprint.RowPitch = GetFormatRowPitch(desc.format, w);
 
 	m_pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 }

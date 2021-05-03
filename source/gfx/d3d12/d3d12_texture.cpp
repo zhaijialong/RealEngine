@@ -174,3 +174,27 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12Texture::GetDSV(uint32_t mip_slice, uint32_t ar
 	return m_DSV[index].cpu_handle;
 }
 
+uint32_t D3D12Texture::GetRequiredStagingBufferSize() const
+{
+	ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
+
+	D3D12_RESOURCE_DESC desc = m_pTexture->GetDesc();
+	uint32_t subresource_count = m_desc.mip_levels * m_desc.array_size;
+
+	uint64_t size;
+	pDevice->GetCopyableFootprints(&desc, 0, subresource_count, 0, nullptr, nullptr, nullptr, &size);
+	return (uint32_t)size;
+}
+
+uint32_t D3D12Texture::GetRowPitch(uint32_t mip_level) const
+{
+	RE_ASSERT(mip_level < m_desc.mip_levels);
+
+	ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
+
+	D3D12_RESOURCE_DESC desc = m_pTexture->GetDesc();
+
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+	pDevice->GetCopyableFootprints(&desc, mip_level, 1, 0, &footprint, nullptr, nullptr, nullptr);
+	return footprint.Footprint.RowPitch;
+}

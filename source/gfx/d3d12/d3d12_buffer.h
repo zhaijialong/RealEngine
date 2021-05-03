@@ -19,6 +19,7 @@ public:
 	virtual void* GetHandle() const override { return m_pBuffer; }
 	virtual void* GetCpuAddress() override;
 	virtual uint64_t GetGpuAddress() override;
+	virtual uint32_t GetRequiredStagingBufferSize() const override;
 
 	bool Create();
 

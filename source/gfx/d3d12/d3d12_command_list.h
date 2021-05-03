@@ -25,7 +25,7 @@ public:
 	virtual void BeginEvent(const std::string& event_name) override;
 	virtual void EndEvent() override;
 
-	virtual void CopyBufferToTexture(IGfxTexture* texture, IGfxBuffer* buffer, uint32_t data_offset, uint32_t data_size) override;
+	virtual void CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* buffer, uint32_t offset) override;
 
 	virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) override;
 	virtual void UavBarrier(IGfxResource* resource) override;

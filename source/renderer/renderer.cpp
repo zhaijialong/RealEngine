@@ -86,7 +86,8 @@ void Renderer::UploadResources()
         for (size_t i = 0; i < m_pendingTextureUploads.size(); ++i)
         {
             const TextureUpload& upload = m_pendingTextureUploads[i];
-            pUploadCommandList->CopyBufferToTexture(upload.texture, upload.staging_buffer.buffer, upload.staging_buffer.offset, upload.staging_buffer.size);
+            pUploadCommandList->CopyBufferToTexture(upload.texture, upload.mip_level, upload.array_slice, 
+                upload.staging_buffer.buffer, upload.staging_buffer.offset + upload.offset);
         }
         m_pendingTextureUploads.clear();
 
@@ -200,15 +201,67 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     m_pSwapchain->Resize(width, height);
 }
 
+inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t w, uint32_t h, uint32_t d)
+{
+    uint32_t src_slice_size = src_row_pitch * h;
+    uint32_t dst_slice_size = dst_row_pitch * h;
+
+    for (uint32_t z = 0; z < d; z++)
+    {
+        char* dst_slice = dst_data + dst_slice_size * z;
+        char* src_slice = src_data + src_slice_size * z;
+
+        for (uint32_t row = 0; row < h; ++row)
+        {
+            memcpy(dst_slice + dst_row_pitch * row,
+                src_slice + src_row_pitch * row,
+                src_row_pitch);
+        }
+    }
+}
+
 void Renderer::UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size)
 {
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
 
-    StagingBuffer buffer = pAllocator->Allocate(data_size);
-    memcpy((char*)buffer.buffer->GetCpuAddress() + buffer.offset, data, data_size);
+    uint32_t required_size = texture->GetRequiredStagingBufferSize();
+    StagingBuffer buffer = pAllocator->Allocate(required_size);
 
-    m_pendingTextureUploads.push_back({ texture, buffer });
+    const GfxTextureDesc& desc = texture->GetDesc();
+
+    char* dst_data = (char*)buffer.buffer->GetCpuAddress() + buffer.offset;
+    uint32_t dst_offset = 0;
+    uint32_t src_offset = 0;
+
+    for (uint32_t slice = 0; slice < desc.array_size; ++slice)
+    {
+        for (uint32_t mip = 0; mip < desc.mip_levels; ++mip)
+        {
+            uint32_t min_size = GetFormatBlockSize(desc.format);
+            uint32_t w = max(desc.width >> mip, min_size);
+            uint32_t h = max(desc.height >> mip, min_size);
+            uint32_t d = max(desc.depth >> mip, 1);
+
+            uint32_t src_row_pitch = GetFormatRowPitch(desc.format, w);
+            uint32_t dst_row_pitch = texture->GetRowPitch(mip);
+
+            image_copy(dst_data + dst_offset, dst_row_pitch,
+                (char*)data + src_offset, src_row_pitch,
+                w, h, d);
+
+            TextureUpload upload;
+            upload.texture = texture;
+            upload.mip_level = mip;
+            upload.array_slice = slice;
+            upload.staging_buffer = buffer;
+            upload.offset = dst_offset;
+            m_pendingTextureUploads.push_back(upload);
+
+            dst_offset += dst_row_pitch * h * d;
+            src_offset += src_row_pitch * h * d;
+        }
+    }
 }
 
 void Renderer::UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size)
