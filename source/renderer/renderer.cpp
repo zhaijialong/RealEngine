@@ -38,10 +38,28 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
 
+    m_pUploadFence.reset(m_pDevice->CreateFence("Renderer::m_pUploadFence"));
+
+    for (int i = 0; i < MAX_INFLIGHT_FRAMES; ++i)
+    {
+        std::string name = "Renderer::m_pUploadCommandList[" + std::to_string(i) + "]";
+        m_pUploadCommandList[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Copy, name));
+
+        m_pStagingBufferAllocator[i] = std::make_unique<StagingBufferAllocator>(this);
+    }
+
     CreateCommonResources();
 }
 
 void Renderer::RenderFrame()
+{
+    BeginFrame();
+    UploadResources();
+    Render();
+    EndFrame();
+}
+
+void Renderer::BeginFrame()
 {
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     m_pFrameFence->Wait(m_nFrameFenceValue[frame_index]);
@@ -49,7 +67,52 @@ void Renderer::RenderFrame()
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->Begin();
-    pCommandList->BeginEvent("Renderer::RenderFrame");
+}
+
+void Renderer::UploadResources()
+{
+    if (m_pendingTextureUploads.empty() && m_pendingBufferUpload.empty())
+    {
+        return;
+    }
+
+    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    IGfxCommandList* pUploadCommandList = m_pUploadCommandList[frame_index].get();
+    pUploadCommandList->Begin();
+
+    {
+        RENDER_EVENT(pUploadCommandList, "Renderer::UploadResources");
+
+        for (size_t i = 0; i < m_pendingTextureUploads.size(); ++i)
+        {
+            const TextureUpload& upload = m_pendingTextureUploads[i];
+            pUploadCommandList->CopyBufferToTexture(upload.texture, upload.staging_buffer.buffer, upload.staging_buffer.offset, upload.staging_buffer.size);
+        }
+        m_pendingTextureUploads.clear();
+
+        for (size_t i = 0; i < m_pendingBufferUpload.size(); ++i)
+        {
+
+        }
+        m_pendingBufferUpload.clear();
+    }
+
+    pUploadCommandList->End();
+    pUploadCommandList->Submit();
+
+    m_nCurrentUploadFenceValue++;
+    pUploadCommandList->Signal(m_pUploadFence.get(), m_nCurrentUploadFenceValue);
+
+    IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
+    pCommandList->Wait(m_pUploadFence.get(), m_nCurrentUploadFenceValue);
+}
+
+void Renderer::Render()
+{
+    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
+
+    RENDER_EVENT(pCommandList, "Renderer::Render");
 
     IGfxTexture* pBackBuffer = m_pSwapchain->GetBackBuffer();
     pCommandList->ResourceBarrier(pBackBuffer, 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
@@ -84,23 +147,29 @@ void Renderer::RenderFrame()
 
     pCommandList->EndRenderPass();
     pCommandList->ResourceBarrier(pBackBuffer, 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
+}
 
-    pCommandList->EndEvent();
+void Renderer::EndFrame()
+{
+    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->End();
 
-    ++m_nCurrentFenceValue;
-    m_nFrameFenceValue[frame_index] = m_nCurrentFenceValue;
+    ++m_nCurrentFrameFenceValue;
+    m_nFrameFenceValue[frame_index] = m_nCurrentFrameFenceValue;
 
     pCommandList->Submit();
     m_pSwapchain->Present();
-    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFenceValue);
+    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
+
+    m_pStagingBufferAllocator[frame_index]->Reset();
 
     m_pDevice->EndFrame();
 }
 
 void Renderer::WaitGpuFinished()
 {
-    m_pFrameFence->Wait(m_nCurrentFenceValue);
+    m_pFrameFence->Wait(m_nCurrentFrameFenceValue);
 }
 
 IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines)
@@ -129,4 +198,19 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     WaitGpuFinished();
 
     m_pSwapchain->Resize(width, height);
+}
+
+void Renderer::UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size)
+{
+    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
+
+    StagingBuffer buffer = pAllocator->Allocate(data_size);
+    memcpy((char*)buffer.buffer->GetCpuAddress() + buffer.offset, data, data_size);
+
+    m_pendingTextureUploads.push_back({ texture, buffer });
+}
+
+void Renderer::UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size)
+{
 }

@@ -43,6 +43,8 @@ bool GUI::Init()
 	textureDesc.alloc_type = GfxAllocationType::Placed;
 	m_pFontTexture.reset(pDevice->CreateTexture(textureDesc, "GUI::m_pFontTexture"));
 
+	pRenderer->UploadTexture(m_pFontTexture.get(), pixels, width * height * 4);
+
 	GfxShaderResourceViewDesc srvDesc;
 	srvDesc.type = GfxShaderResourceViewType::Texture2D;
 	srvDesc.texture.mip_levels = 1;
@@ -177,7 +179,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 					uint32_t resource_ids[4] = { 
 						m_pVertexBufferSRV[frame_index]->GetIndex(), 
 						pcmd->VtxOffset + global_vtx_offset, 
-						0,//((IGfxDescriptor*)pcmd->TextureId)->GetIndex(),
+						((IGfxDescriptor*)pcmd->TextureId)->GetIndex(),
 						pRenderer->GetLinearSampler()->GetIndex() };
 
 					pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, resource_ids, sizeof(resource_ids));
