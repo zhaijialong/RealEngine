@@ -122,7 +122,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 		idx_dst += cmd_list->IdxBuffer.Size;
 	}
 
-	SetupRenderState(pCommandList, frame_index);
+	SetupRenderStates(pCommandList, frame_index);
 
 	// Render command lists
 	// (Because we merged all buffers into a single one, we maintain our own offset into them)
@@ -141,7 +141,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 				// (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
 				if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
 				{
-					SetupRenderState(pCommandList, frame_index);
+					SetupRenderStates(pCommandList, frame_index);
 				}
 				else
 				{
@@ -166,7 +166,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 						pRenderer->GetLinearSampler()->GetIndex() };
 					pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, resource_ids, sizeof(resource_ids));
 
-					pCommandList->DrawIndexed(pcmd->ElemCount, pcmd->IdxOffset + global_idx_offset, 1);
+					pCommandList->DrawIndexed(pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset);
 				}
 			}
 		}
@@ -175,7 +175,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 	}
 }
 
-void GUI::SetupRenderState(IGfxCommandList* pCommandList, uint32_t frame_index)
+void GUI::SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index)
 {
 	ImDrawData* draw_data = ImGui::GetDrawData();
 

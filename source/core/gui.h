@@ -14,7 +14,7 @@ public:
     void Render(IGfxCommandList* pCommandList);
 
 private:
-    void SetupRenderState(IGfxCommandList* pCommandList, uint32_t frame_index);
+    void SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index);
 
 private:
     IGfxPipelineState* m_pPSO = nullptr;

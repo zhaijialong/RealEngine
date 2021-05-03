@@ -264,7 +264,7 @@ void D3D12CommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
 	m_pCommandList->DrawInstanced(vertex_count, instance_count, 0, 0);
 }
 
-void D3D12CommandList::DrawIndexed(uint32_t index_count, uint32_t index_offset, uint32_t instance_count)
+void D3D12CommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_offset)
 {
 	m_pCommandList->DrawIndexedInstanced(index_count, instance_count, index_offset, 0, 0);
 }
