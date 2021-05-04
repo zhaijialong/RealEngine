@@ -21,7 +21,12 @@ public:
     void Reset();
 
 private:
+    void CreateNewBuffer();
+
+private:
     Renderer* m_pRenderer = nullptr;
-    std::unique_ptr<IGfxBuffer> m_pBuffer;
+    std::vector<std::unique_ptr<IGfxBuffer>> m_pBuffers;
+    uint32_t m_nCurrentBuffer = 0;
     uint32_t m_nAllocatedSize = 0;
+    uint64_t m_nLastAllocatedFrame = 0;
 };

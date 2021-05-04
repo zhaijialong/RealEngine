@@ -26,6 +26,7 @@ public:
     IGfxDescriptor* GetPointSampler() const { return m_pPointSampler.get(); }
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearSampler.get(); }
 
+    uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
     ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
 
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
