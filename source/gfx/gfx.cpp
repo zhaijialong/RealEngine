@@ -75,7 +75,14 @@ uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width)
     }
 }
 
-uint32_t GetFormatBlockSize(GfxFormat format)
+uint32_t GetFormatBlockWidth(GfxFormat format)
+{
+    //todo : compressed formats
+    RE_ASSERT(format <= GfxFormat::R8SNORM);
+    return 1;
+}
+
+uint32_t GetFormatBlockHeight(GfxFormat format)
 {
     //todo : compressed formats
     RE_ASSERT(format <= GfxFormat::R8SNORM);

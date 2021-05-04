@@ -115,9 +115,10 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_le
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	dst.SubresourceIndex = subresource;
 
-	uint32_t min_size = GetFormatBlockSize(desc.format);
-	uint32_t w = max(desc.width >> mip_level, min_size);
-	uint32_t h = max(desc.height >> mip_level, min_size);
+	uint32_t min_width = GetFormatBlockWidth(desc.format);
+	uint32_t min_height = GetFormatBlockHeight(desc.format);
+	uint32_t w = max(desc.width >> mip_level, min_width);
+	uint32_t h = max(desc.height >> mip_level, min_height);
 	uint32_t d = max(desc.depth >> mip_level, 1);
 
 	D3D12_TEXTURE_COPY_LOCATION src = {};
