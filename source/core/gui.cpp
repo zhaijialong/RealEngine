@@ -30,7 +30,11 @@ bool GUI::Init()
 	Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 	IGfxDevice* pDevice = pRenderer->GetDevice();
 
+	std::string font_file = Engine::GetInstance()->GetAssetPath() + "fonts/DroidSans.ttf";
+
 	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->AddFontFromFileTTF(font_file.c_str(), 14.0f);
+
 	unsigned char* pixels;
 	int width, height;
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
