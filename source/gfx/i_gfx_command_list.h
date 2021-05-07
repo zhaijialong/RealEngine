@@ -22,12 +22,15 @@ public:
 	virtual void EndEvent() = 0;
 
 	virtual void CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* buffer, uint32_t offset) = 0;
+	virtual void CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, IGfxBuffer* src_buffer, uint32_t src_offset, uint32_t size) = 0;
 
 	virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) = 0;
 	virtual void UavBarrier(IGfxResource* resource) = 0;
 	virtual void BeginRenderPass(const GfxRenderPassDesc& render_pass) = 0;
 	virtual void EndRenderPass() = 0;
 	virtual void SetPipelineState(IGfxPipelineState* state) = 0;
+	virtual void SetStencilReference(uint8_t stencil) = 0;
+	virtual void SetBlendFactor(const float* blend_factor) = 0;
 	virtual void SetIndexBuffer(IGfxBuffer* buffer) = 0;
 	virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 	virtual void SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;

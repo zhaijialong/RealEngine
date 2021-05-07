@@ -134,6 +134,12 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_le
 	m_pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 }
 
+void D3D12CommandList::CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, IGfxBuffer* src_buffer, uint32_t src_offset, uint32_t size)
+{
+	m_pCommandList->CopyBufferRegion((ID3D12Resource*)dst_buffer->GetHandle(), dst_offset,
+		(ID3D12Resource*)src_buffer->GetHandle(), src_offset, size);
+}
+
 void D3D12CommandList::Wait(IGfxFence* fence, uint64_t value)
 {
 	m_pCommandQueue->Wait((ID3D12Fence*)fence->GetHandle(), value);
@@ -235,6 +241,16 @@ void D3D12CommandList::SetPipelineState(IGfxPipelineState* state)
 			m_pCommandList->IASetPrimitiveTopology(((D3D12GraphicsPipelineState*)state)->GetPrimitiveTopology());
 		}
 	}
+}
+
+void D3D12CommandList::SetStencilReference(uint8_t stencil)
+{
+	m_pCommandList->OMSetStencilRef(stencil);
+}
+
+void D3D12CommandList::SetBlendFactor(const float* blend_factor)
+{
+	m_pCommandList->OMSetBlendFactor(blend_factor);
 }
 
 void D3D12CommandList::SetIndexBuffer(IGfxBuffer* buffer)
