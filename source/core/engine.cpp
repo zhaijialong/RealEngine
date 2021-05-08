@@ -20,6 +20,7 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
     m_pRenderer->CreateDevice(window_handle, window_width, window_height, m_configIni.GetBoolValue("RealEngine", "VSync"));
 
     m_pWorld = std::make_unique<World>();
+    m_pWorld->LoadScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
 
     Camera* camera = m_pWorld->GetCamera();
     camera->SetPerpective((float)window_width / window_height,
@@ -32,6 +33,7 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
 
 void Engine::Shut()
 {
+    //m_pWorld->SaveScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
 }
 
 void Engine::Tick()

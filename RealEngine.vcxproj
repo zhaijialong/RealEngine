@@ -92,10 +92,12 @@
     <ClCompile Include="external\imgui\imgui_tables.cpp" />
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="external\simpleini\ConvertUTF.c" />
+    <ClCompile Include="external\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="external\xxHash\xxhash.c" />
     <ClCompile Include="source\core\camera.cpp" />
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\gui.cpp" />
+    <ClCompile Include="source\core\model.cpp" />
     <ClCompile Include="source\core\world.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
@@ -126,10 +128,13 @@
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="external\simpleini\ConvertUTF.h" />
     <ClInclude Include="external\simpleini\SimpleIni.h" />
+    <ClInclude Include="external\tinyxml2\tinyxml2.h" />
     <ClInclude Include="external\xxHash\xxhash.h" />
     <ClInclude Include="source\core\camera.h" />
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\gui.h" />
+    <ClInclude Include="source\core\i_visible_object.h" />
+    <ClInclude Include="source\core\model.h" />
     <ClInclude Include="source\core\world.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h" />

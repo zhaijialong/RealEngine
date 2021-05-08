@@ -10,7 +10,7 @@ public:
     ~GUI();
 
     bool Init();
-    void NewFrame();
+    void Tick();
     void Render(IGfxCommandList* pCommandList);
 
 private:

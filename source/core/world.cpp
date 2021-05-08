@@ -1,4 +1,6 @@
 #include "world.h"
+#include "model.h"
+#include "utils/assert.h"
 
 World::World()
 {
@@ -7,18 +9,70 @@ World::World()
     m_pGUI->Init();
 }
 
-void World::Tick(float delta_time)
+void World::LoadScene(const std::string& file)
 {
-    TickGUI();
+    using namespace tinyxml2;
+    
+    XMLDocument doc;
+    if (XML_SUCCESS != doc.LoadFile(file.c_str()))
+    {
+        return;
+    }
 
-    m_pCamera->Tick(delta_time);
+    m_objects.clear();
 
-    //todo : ticks, culling, ...
+    XMLNode* root_node = doc.FirstChild();
+    RE_ASSERT(root_node != nullptr && strcmp(root_node->Value(), "scene") == 0);
+
+    for (XMLElement* element = root_node->FirstChildElement(); element != nullptr; element = (XMLElement*)element->NextSibling())
+    {
+        CreateVisibleObject(element);
+    }
 }
 
-void World::TickGUI()
+void World::SaveScene(const std::string& file)
 {
-    m_pGUI->NewFrame();
+}
 
-    //todo : imgui code goes here
+void World::AddObject(IVisibleObject* object)
+{
+    RE_ASSERT(object != nullptr);
+    m_objects.push_back(std::unique_ptr<IVisibleObject>(object));
+}
+
+void World::Tick(float delta_time)
+{
+    m_pGUI->Tick();
+    m_pCamera->Tick(delta_time);
+
+    for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+    {
+        iter->get()->Tick();
+    }
+
+    //todo : culling, ...
+}
+
+void World::CreateVisibleObject(tinyxml2::XMLElement* element)
+{
+    IVisibleObject* object = nullptr;
+
+    if (strcmp(element->Value(), "model") == 0)
+    {
+        object = new Model();
+    }
+    else
+    {
+        //todo
+    }
+
+    object->Load(element);
+
+    if (!object->Create())
+    {
+        delete object;
+        return;
+    }
+
+    AddObject(object);
 }
