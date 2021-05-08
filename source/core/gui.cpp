@@ -70,7 +70,7 @@ bool GUI::Init()
 	return true;
 }
 
-void GUI::NewFrame()
+void GUI::Tick()
 {
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();

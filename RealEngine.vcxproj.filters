@@ -91,6 +91,12 @@
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\core\model.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
+    <ClCompile Include="external\tinyxml2\tinyxml2.cpp">
+      <Filter>external\tinyxml2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -234,6 +240,15 @@
     <ClInclude Include="source\renderer\staging_buffer_allocator.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="source\core\model.h">
+      <Filter>source\core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\core\i_visible_object.h">
+      <Filter>source\core</Filter>
+    </ClInclude>
+    <ClInclude Include="external\tinyxml2\tinyxml2.h">
+      <Filter>external\tinyxml2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -271,6 +286,9 @@
     </Filter>
     <Filter Include="external\imgui">
       <UniqueIdentifier>{d3f278cc-98d9-4290-b65b-8751ba5a887c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\tinyxml2">
+      <UniqueIdentifier>{b945be11-16ed-417a-9d71-af54f0b19407}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

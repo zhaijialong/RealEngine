@@ -29,6 +29,7 @@ public:
     uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
     ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
 
+    IGfxTexture* LoadTexture(const std::string& file);
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 

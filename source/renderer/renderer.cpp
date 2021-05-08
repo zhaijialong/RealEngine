@@ -201,6 +201,11 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     m_pSwapchain->Resize(width, height);
 }
 
+IGfxTexture* Renderer::LoadTexture(const std::string& file)
+{
+    return nullptr;
+}
+
 inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t w, uint32_t h, uint32_t d)
 {
     uint32_t src_slice_size = src_row_pitch * h;

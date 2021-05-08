@@ -1,0 +1,4 @@
+<scene>
+    <model file="metal_rough_ball/MetalRoughSpheres.gltf" />
+    <model file="b.gltf" />
+</scene>
