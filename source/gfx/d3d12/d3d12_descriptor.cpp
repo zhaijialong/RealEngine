@@ -115,7 +115,7 @@ bool D3D12ShaderResourceView::Create()
 	{
 		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)m_pResource)->GetDesc();
 		RE_ASSERT(bufferDesc.usage & GfxBufferUsageRawBuffer);
-		//RE_ASSERT(bufferDesc.stride == 4);
+		RE_ASSERT(bufferDesc.stride % 4 == 0);
 		RE_ASSERT(m_desc.buffer.offset % 4 == 0);
 		RE_ASSERT(m_desc.buffer.size % 4 == 0);
 
@@ -227,7 +227,7 @@ bool D3D12UnorderedAccessView::Create()
 		const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)m_pResource)->GetDesc();
 		RE_ASSERT(bufferDesc.usage & GfxBufferUsageRawBuffer);
 		RE_ASSERT(bufferDesc.usage & GfxBufferUsageUnorderedAccess);
-		//RE_ASSERT(bufferDesc.stride == 4);
+		RE_ASSERT(bufferDesc.stride % 4 == 0);
 		RE_ASSERT(m_desc.buffer.offset % 4 == 0);
 		RE_ASSERT(m_desc.buffer.size % 4 == 0);
 
