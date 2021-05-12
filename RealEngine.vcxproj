@@ -116,6 +116,7 @@
     <ClCompile Include="source\renderer\shader_cache.cpp" />
     <ClCompile Include="source\renderer\shader_compiler.cpp" />
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
+    <ClCompile Include="source\renderer\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h" />
@@ -164,6 +165,7 @@
     <ClInclude Include="source\renderer\shader_cache.h" />
     <ClInclude Include="source\renderer\shader_compiler.h" />
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
+    <ClInclude Include="source\renderer\texture.h" />
     <ClInclude Include="source\utils\assert.h" />
     <ClInclude Include="source\utils\log.h" />
     <ClInclude Include="source\utils\math.h" />

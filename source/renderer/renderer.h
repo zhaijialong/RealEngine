@@ -1,10 +1,10 @@
 #pragma once
 
-#include "gfx/gfx.h"
 #include "shader_compiler.h"
 #include "shader_cache.h"
 #include "pipeline_cache.h"
 #include "staging_buffer_allocator.h"
+#include "texture.h"
 #include "lsignal/lsignal.h"
 
 const static int MAX_INFLIGHT_FRAMES = 3;
@@ -29,7 +29,7 @@ public:
     uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
     ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
 
-    IGfxTexture* LoadTexture(const std::string& file);
+    Texture* LoadTexture(const std::string& file);
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 

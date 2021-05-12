@@ -26,7 +26,7 @@ bool Model::Create()
     }
 
     cgltf_load_buffers(&options, data, file.c_str());
-
+    LoadTextures(data);
 
     cgltf_free(data);
     return true;
@@ -35,4 +35,23 @@ bool Model::Create()
 void Model::Tick()
 {
 
+}
+
+void Model::LoadTextures(cgltf_data* data)
+{
+    size_t last_slash = m_file.find_last_of('/');
+    std::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    for (cgltf_size i = 0; i < data->textures_count; ++i)
+    {
+        std::string file = path + data->textures[i].image->uri;
+        Texture* texture = pRenderer->LoadTexture(file);
+
+        if (texture != nullptr)
+        {
+            m_textures.push_back(std::unique_ptr<Texture>(texture));
+        }
+    }
 }
