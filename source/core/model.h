@@ -1,8 +1,9 @@
 #pragma once
 
 #include "i_visible_object.h"
-#include "gfx/gfx.h"
-#include <memory>
+#include "renderer/renderer.h"
+
+struct cgltf_data;
 
 class Model : public IVisibleObject
 {
@@ -13,6 +14,10 @@ public:
     virtual void Tick() override;
 
 private:
+    void LoadTextures(cgltf_data* data);
+
+private:
     std::string m_file;
-    std::vector<std::unique_ptr<IGfxTexture>> m_textures;
+
+    std::vector<std::unique_ptr<Texture>> m_textures;
 };
