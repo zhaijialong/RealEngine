@@ -181,10 +181,10 @@ void GUI::Render(IGfxCommandList* pCommandList)
 					pCommandList->SetScissorRect((uint32_t)x, (uint32_t)y, (uint32_t)width, (uint32_t)height);
 
 					uint32_t resource_ids[4] = { 
-						m_pVertexBufferSRV[frame_index]->GetIndex(), 
+						m_pVertexBufferSRV[frame_index]->GetHeapIndex(), 
 						pcmd->VtxOffset + global_vtx_offset, 
-						((IGfxDescriptor*)pcmd->TextureId)->GetIndex(),
-						pRenderer->GetLinearSampler()->GetIndex() };
+						((IGfxDescriptor*)pcmd->TextureId)->GetHeapIndex(),
+						pRenderer->GetLinearSampler()->GetHeapIndex() };
 
 					pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, resource_ids, sizeof(resource_ids));
 

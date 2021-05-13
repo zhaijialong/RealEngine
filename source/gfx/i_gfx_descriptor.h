@@ -5,5 +5,5 @@
 class IGfxDescriptor : public IGfxResource
 {
 public:
-    virtual uint32_t GetIndex() const = 0;
+    virtual uint32_t GetHeapIndex() const = 0;
 };

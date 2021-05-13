@@ -113,7 +113,8 @@ void Renderer::Render()
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
 
-    RENDER_EVENT(pCommandList, "Renderer::Render");
+    std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
+    RENDER_EVENT(pCommandList, event_name.c_str());
 
     IGfxTexture* pBackBuffer = m_pSwapchain->GetBackBuffer();
     pCommandList->ResourceBarrier(pBackBuffer, 0, GfxResourceState::Present, GfxResourceState::RenderTarget);

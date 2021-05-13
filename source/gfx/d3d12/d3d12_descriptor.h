@@ -13,7 +13,7 @@ public:
     ~D3D12ShaderResourceView();
 
     virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
-    virtual uint32_t GetIndex() const override { return m_descriptor.index; }
+    virtual uint32_t GetHeapIndex() const override { return m_descriptor.index; }
 
     bool Create();
 private:
@@ -29,7 +29,7 @@ public:
     ~D3D12UnorderedAccessView();
 
     virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
-    virtual uint32_t GetIndex() const override { return m_descriptor.index; }
+    virtual uint32_t GetHeapIndex() const override { return m_descriptor.index; }
 
     bool Create();
 private:
@@ -46,7 +46,7 @@ public:
     ~D3D12ConstantBufferView();
 
     virtual void* GetHandle() const override { return m_pBuffer->GetHandle(); }
-    virtual uint32_t GetIndex() const override { return m_descriptor.index; }
+    virtual uint32_t GetHeapIndex() const override { return m_descriptor.index; }
 
     bool Create();
 private:
@@ -62,7 +62,7 @@ public:
     ~D3D12Sampler();
 
     virtual void* GetHandle() const override { return nullptr; }
-    virtual uint32_t GetIndex() const override { return m_descriptor.index; }
+    virtual uint32_t GetHeapIndex() const override { return m_descriptor.index; }
 
     bool Create();
 private:
