@@ -266,7 +266,7 @@ struct GfxRenderPassColorAttachment
 	uint32_t array_slice = 0;
 	GfxRenderPassLoadOp load_op = GfxRenderPassLoadOp::Load;
 	GfxRenderPassStoreOp store_op = GfxRenderPassStoreOp::Store;
-	struct { float value[4]; } clear_color = {};
+	float clear_color[4] = {};
 };
 
 struct GfxRenderPassDepthAttachment

@@ -124,7 +124,10 @@ void Renderer::Render()
     GfxRenderPassDesc render_pass;
     render_pass.color[0].texture = pBackBuffer;
     render_pass.color[0].load_op = GfxRenderPassLoadOp::Clear;
-    render_pass.color[0].clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    render_pass.color[0].clear_color[0] = 0.0f;
+    render_pass.color[0].clear_color[1] = 0.0f;
+    render_pass.color[0].clear_color[2] = 0.0f;
+    render_pass.color[0].clear_color[3] = 1.0f;
     render_pass.depth.texture = m_pDepthRT->GetTexture();
     render_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
     render_pass.depth.stencil_load_op = GfxRenderPassLoadOp::Clear;
