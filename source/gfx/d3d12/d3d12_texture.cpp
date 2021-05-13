@@ -11,7 +11,26 @@ static inline D3D12_RESOURCE_DESC d3d12_resource_desc(const GfxTextureDesc& desc
 	resourceDesc.MipLevels = desc.mip_levels;
 	resourceDesc.Format = dxgi_format(desc.format);
 	resourceDesc.SampleDesc.Count = 1;
-	resourceDesc.Flags = (desc.usage & GfxTextureUsageUnorderedAccess) ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAG_NONE;
+
+	if (desc.usage & GfxTextureUsageRenderTarget)
+	{
+		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	}
+
+	if (desc.usage & GfxTextureUsageDepthStencil)
+	{
+		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	}
+
+	if (desc.usage & GfxTextureUsageUnorderedAccess)
+	{
+		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
+
+	if (!(desc.usage & GfxTextureUsageShaderResource))
+	{
+		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+	}
 
 	switch (desc.type)
 	{
@@ -148,16 +167,20 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12Texture::GetDSV(uint32_t mip_slice, uint32_t ar
 	uint32_t index = m_desc.mip_levels * array_slice + mip_slice;
 	if (IsNullDescriptor(m_DSV[index]))
 	{
+		m_DSV[index] = ((D3D12Device*)m_pDevice)->AllocateDSV();
+
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 		dsvDesc.Format = dxgi_format(m_desc.format);
 
 		switch (m_desc.type)
 		{
 		case GfxTextureType::Texture2D:
+			dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 			dsvDesc.Texture2D.MipSlice = mip_slice;
 			break;
 		case GfxTextureType::Texture2DArray:
 		case GfxTextureType::TextureCube:
+			dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
 			dsvDesc.Texture2DArray.MipSlice = mip_slice;
 			dsvDesc.Texture2DArray.FirstArraySlice = array_slice;
 			dsvDesc.Texture2DArray.ArraySize = 1;

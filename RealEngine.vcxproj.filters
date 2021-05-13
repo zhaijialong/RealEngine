@@ -100,6 +100,9 @@
     <ClCompile Include="source\renderer\texture.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\render_target.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -253,6 +256,9 @@
       <Filter>external\tinyxml2</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\texture.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_target.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>

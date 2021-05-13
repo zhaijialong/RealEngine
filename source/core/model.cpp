@@ -47,7 +47,7 @@ void Model::LoadTextures(cgltf_data* data)
     for (cgltf_size i = 0; i < data->textures_count; ++i)
     {
         std::string file = path + data->textures[i].image->uri;
-        Texture* texture = pRenderer->LoadTexture(file);
+        Texture* texture = pRenderer->CreateTexture(file);
 
         if (texture != nullptr)
         {

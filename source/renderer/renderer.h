@@ -5,6 +5,7 @@
 #include "pipeline_cache.h"
 #include "staging_buffer_allocator.h"
 #include "texture.h"
+#include "render_target.h"
 #include "lsignal/lsignal.h"
 
 const static int MAX_INFLIGHT_FRAMES = 3;
@@ -19,6 +20,11 @@ public:
     void RenderFrame();
     void WaitGpuFinished();
 
+    uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
+    ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
+    uint32_t GetBackbufferWidth() const { return m_pSwapchain->GetDesc().width; }
+    uint32_t GetBackbufferHeight() const { return m_pSwapchain->GetDesc().height; }
+
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
     IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
@@ -26,10 +32,10 @@ public:
     IGfxDescriptor* GetPointSampler() const { return m_pPointSampler.get(); }
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearSampler.get(); }
 
-    uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
-    ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
+    Texture* CreateTexture(const std::string& file);
+    RenderTarget* CreateRenderTarget(uint32_t width, uint32_t height, GfxFormat format, const std::string& name,
+        GfxTextureUsageFlags flags = GfxTextureUsageShaderResource | GfxTextureUsageRenderTarget, bool auto_resize = true, float size = 1.0f);
 
-    Texture* LoadTexture(const std::string& file);
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 
@@ -68,7 +74,8 @@ private:
 
     struct BufferUpload
     {
-
+        IGfxBuffer* buffer;
+        StagingBuffer staging_buffer;
     };
     std::vector<BufferUpload> m_pendingBufferUpload;
 
@@ -78,6 +85,8 @@ private:
 
     std::unique_ptr<IGfxDescriptor> m_pPointSampler;
     std::unique_ptr<IGfxDescriptor> m_pLinearSampler;
+
+    std::unique_ptr<RenderTarget> m_pDepthRT;
 
     lsignal::connection m_resizeConnection;
 };

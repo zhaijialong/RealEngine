@@ -47,7 +47,7 @@ void World::Tick(float delta_time)
 
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
     {
-        iter->get()->Tick();
+        (*iter)->Tick();
     }
 
     //todo : culling, ...

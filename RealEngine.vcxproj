@@ -113,6 +113,7 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
+    <ClCompile Include="source\renderer\render_target.cpp" />
     <ClCompile Include="source\renderer\shader_cache.cpp" />
     <ClCompile Include="source\renderer\shader_compiler.cpp" />
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
     <ClInclude Include="source\renderer\renderer.h" />
+    <ClInclude Include="source\renderer\render_target.h" />
     <ClInclude Include="source\renderer\shader_cache.h" />
     <ClInclude Include="source\renderer\shader_compiler.h" />
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
