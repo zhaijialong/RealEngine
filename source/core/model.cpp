@@ -1,5 +1,7 @@
 #include "model.h"
 #include "engine.h"
+#include "utils/assert.h"
+#include "utils/memory.h"
 
 #define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
@@ -28,6 +30,9 @@ bool Model::Create()
     cgltf_load_buffers(&options, data, file.c_str());
     LoadTextures(data);
 
+    RE_ASSERT(data->scenes_count == 1 && data->scene->nodes_count == 1);
+    m_pRootNode.reset(LoadNode(data->scene->nodes[0]));
+
     cgltf_free(data);
     return true;
 }
@@ -37,21 +42,170 @@ void Model::Tick()
 
 }
 
-void Model::LoadTextures(cgltf_data* data)
+void Model::LoadTextures(const cgltf_data* gltf_data)
 {
     size_t last_slash = m_file.find_last_of('/');
     std::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    for (cgltf_size i = 0; i < data->textures_count; ++i)
+    for (cgltf_size i = 0; i < gltf_data->textures_count; ++i)
     {
-        std::string file = path + data->textures[i].image->uri;
+        std::string file = path + gltf_data->textures[i].image->uri;
         Texture* texture = pRenderer->CreateTexture(file);
 
         if (texture != nullptr)
         {
-            m_textures.push_back(std::unique_ptr<Texture>(texture));
+            m_textures.insert(std::make_pair(gltf_data->textures[i].image->uri, std::unique_ptr<Texture>(texture)));
         }
     }
+}
+
+Model::Node* Model::LoadNode(const cgltf_node* gltf_node)
+{
+    if (gltf_node == nullptr) return nullptr;
+
+    Node* node = new Node;
+    node->name = gltf_node->name != nullptr ? gltf_node->name : "";
+
+    if (gltf_node->has_matrix)
+    {
+        node->localToParentMatrix = float4x4(gltf_node->matrix);
+        node->localToParentMatrix.w.z *= -1.0f;
+    }
+    else
+    {
+        float4x4 T = translation_matrix(float3(gltf_node->translation[0], gltf_node->translation[1], -gltf_node->translation[2]));
+        float4x4 R = rotation_matrix(float4(gltf_node->rotation));
+        float4x4 S = scaling_matrix(float3(gltf_node->scale));
+        node->localToParentMatrix = mul(T, mul(R, S));
+    }
+
+    if (gltf_node->mesh != nullptr)
+    {
+        for (cgltf_size i = 0; i < gltf_node->mesh->primitives_count; ++i)
+        {
+            Mesh* mesh = LoadMesh(&gltf_node->mesh->primitives[i], gltf_node->mesh->name ? gltf_node->mesh->name : "");
+            node->meshes.push_back(std::unique_ptr<Mesh>(mesh));
+        }
+    }
+
+    for (cgltf_size i = 0; i < gltf_node->children_count; ++i)
+    {
+        Node* child = LoadNode(gltf_node->children[i]);
+        node->childNodes.push_back(std::unique_ptr<Node>(child));
+    }
+
+    return node;
+}
+
+Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::string& name)
+{
+    if (gltf_primitive == nullptr) return nullptr;
+
+    Mesh* mesh = new Mesh;
+    mesh->name = name;
+    mesh->material.reset(LoadMaterial(gltf_primitive->material));
+    mesh->indexBuffer.reset(LoadIndexBuffer(gltf_primitive->indices, name + " IB"));
+    
+    for (cgltf_size i = 0; i < gltf_primitive->attributes_count; ++i)
+    {
+        IGfxBuffer* buffer = nullptr;
+        IGfxDescriptor* srv = nullptr;
+
+        switch (gltf_primitive->attributes[i].type)
+        {
+        case cgltf_attribute_type_position:
+            LoadVertexBuffer(gltf_primitive->attributes[i].data, mesh->name + " pos", &buffer, &srv);
+            mesh->posBuffer.reset(buffer);
+            mesh->posBufferSRV.reset(srv);
+            break;
+        case cgltf_attribute_type_texcoord:
+            //todo
+            break;
+        case cgltf_attribute_type_normal:
+            //todo
+            break;
+        case cgltf_attribute_type_tangent:
+            //todo
+            break;
+        default:
+            break;
+        }
+    }
+    return mesh;
+}
+
+Model::Material* Model::LoadMaterial(const cgltf_material* gltf_material)
+{
+    //todo
+    return nullptr;
+}
+
+IGfxBuffer* Model::LoadIndexBuffer(const cgltf_accessor* accessor, const std::string& name)
+{
+    GfxFormat format = GfxFormat::Unknown;
+    if (accessor->component_type == cgltf_component_type_r_32u)
+    {
+        format = GfxFormat::R32UI;
+    }
+    else if (accessor->component_type == cgltf_component_type_r_16u)
+    {
+        format = GfxFormat::R16UI;
+    }
+
+    uint32_t stride = (uint32_t)accessor->stride;
+    uint32_t size = stride * (uint32_t)accessor->count;
+    void* data = (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset;
+
+    GfxBufferDesc desc;
+    desc.stride = stride;
+    desc.size = size;
+    desc.format = format;
+    desc.alloc_type = GfxAllocationType::Placed;
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    IGfxDevice* pDevice = pRenderer->GetDevice();
+
+    IGfxBuffer* buffer = pDevice->CreateBuffer(desc, name);
+    pRenderer->UploadBuffer(buffer, data, size);
+
+    return buffer;
+}
+
+void Model::LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& name, IGfxBuffer** buffer, IGfxDescriptor** descriptor)
+{
+    RE_ASSERT(accessor->type == cgltf_type_vec3 && accessor->component_type == cgltf_component_type_r_32f);
+
+    uint32_t stride = (uint32_t)accessor->stride;
+    uint32_t size = stride * (uint32_t)accessor->count;
+
+    void* data = RE_ALLOC(size);
+    memcpy(data, (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset, size);
+
+    //convert right-hand to left-hand
+    for (uint32_t i = 0; i < (uint32_t)accessor->count; ++i)
+    {
+        float3* v = (float3*)data + i;
+        v->z = -v->z;
+    }
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    IGfxDevice* pDevice = pRenderer->GetDevice();
+
+    GfxBufferDesc desc;
+    desc.stride = stride;
+    desc.size = size;
+    desc.alloc_type = GfxAllocationType::Placed;
+    desc.usage = GfxBufferUsageStructuredBuffer;
+
+    *buffer = pDevice->CreateBuffer(desc, name);
+    RE_ASSERT(*buffer != nullptr);
+    RE_FREE(data);
+
+    GfxShaderResourceViewDesc srvDesc;
+    srvDesc.type = GfxShaderResourceViewType::StructuredBuffer;
+    srvDesc.buffer.size = size;
+
+    *descriptor = pDevice->CreateShaderResourceView(*buffer, srvDesc, name + " SRV");
 }
