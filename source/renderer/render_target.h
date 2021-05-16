@@ -21,13 +21,14 @@ private:
     void OnWindowResize(uint32_t width, uint32_t height);
 
 private:
+    std::string m_name;
+    bool m_bAutoResize;
+    float m_size;
+
     std::unique_ptr<IGfxTexture> m_pTexture;
     std::unique_ptr<IGfxDescriptor> m_pSRV;
     std::unique_ptr<IGfxDescriptor> m_pUAV;
 
-    std::string m_name;
-    bool m_bAutoResize;
-    float m_size;
 
     lsignal::connection m_resizeConnection;
 };

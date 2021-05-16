@@ -7,8 +7,14 @@
 #include "texture.h"
 #include "render_target.h"
 #include "lsignal/lsignal.h"
+#include <functional>
 
 const static int MAX_INFLIGHT_FRAMES = 3;
+
+class Camera;
+class Renderer;
+
+using RenderFunc = std::function<void(IGfxCommandList*, Renderer*, Camera*)>;
 
 class Renderer
 {
@@ -38,6 +44,8 @@ public:
 
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
+
+    void AddBasePassBatch(const RenderFunc& func) { m_basePassBatchs.push_back(func); }
 
 private:
     void CreateCommonResources();
@@ -89,4 +97,6 @@ private:
     std::unique_ptr<RenderTarget> m_pDepthRT;
 
     lsignal::connection m_resizeConnection;
+
+    std::vector<RenderFunc> m_basePassBatchs;
 };

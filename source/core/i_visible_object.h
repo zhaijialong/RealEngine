@@ -2,6 +2,8 @@
 
 #include "tinyxml2/tinyxml2.h"
 
+class Renderer;
+
 class IVisibleObject
 {
 public:
@@ -11,5 +13,6 @@ public:
     virtual void Store(tinyxml2::XMLElement* element) = 0;
 
     virtual bool Create() = 0;
-    virtual void Tick() = 0;
+    virtual void Tick(float delta_time) = 0;
+    virtual void Render(Renderer* pRenderer) = 0;
 };

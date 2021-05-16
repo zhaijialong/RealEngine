@@ -312,12 +312,15 @@
     <None Include="shaders\common.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\model.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\mesh.hlsl">
+    <FxCompile Include="shaders\imgui.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\imgui.hlsl">
+    <FxCompile Include="shaders\model.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

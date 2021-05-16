@@ -6,6 +6,8 @@
 #define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
 
+#include "model.hlsli"
+
 void Model::Load(tinyxml2::XMLElement* element)
 {
     m_file = element->FindAttribute("file")->Value();
@@ -37,9 +39,62 @@ bool Model::Create()
     return true;
 }
 
-void Model::Tick()
+void Model::Tick(float delta_time)
 {
 
+}
+
+void Model::Render(Renderer* pRenderer)
+{
+    float4x4 T = translation_matrix(m_pos);
+    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
+    float4x4 S = scaling_matrix(m_scale);
+    float4x4 mtxWorld = mul(T, mul(R, S));
+
+    RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, m_pRootNode.get(), mtxWorld);
+    pRenderer->AddBasePassBatch(bassPassBatch);
+}
+
+void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera, Node* pNode, const float4x4& parentWorld)
+{
+    float4x4 mtxWorld = mul(parentWorld, pNode->localToParentMatrix);
+    float4x4 mtxWVP = mul(pCamera->GetViewProjectionMatrix(), mtxWorld);
+
+    ModelConstant modelCB;
+    modelCB.mtxWVP = mtxWVP;
+    modelCB.mtxWorld = mtxWorld;
+    modelCB.mtxNormal = transpose(inverse(mtxWorld));
+
+    pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, &modelCB, sizeof(modelCB));
+
+    for (size_t i = 0; i < pNode->meshes.size(); ++i)
+    {
+        Mesh* mesh = pNode->meshes[i].get();
+        RENDER_EVENT(pCommandList, mesh->name);
+
+        GfxGraphicsPipelineDesc psoDesc;
+        psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", {});
+        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", {});
+//        psoDesc.rasterizer_state
+        psoDesc.depthstencil_state.depth_test = true;
+        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+        psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
+        psoDesc.depthstencil_format = GfxFormat::D32FS8;
+
+        IGfxPipelineState* pPSO = pRenderer->GetPipelineState(psoDesc, "model PSO");
+        pCommandList->SetPipelineState(pPSO);
+        pCommandList->SetIndexBuffer(mesh->indexBuffer.get());
+
+        uint32_t vertexCB[4] = { mesh->posBufferSRV->GetHeapIndex(), 0, 0, 0 };
+        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
+
+        pCommandList->DrawIndexed(mesh->indexCount, 1);
+    }
+
+    for (size_t i = 0; i < pNode->childNodes.size(); ++i)
+    {
+        RenderBassPass(pCommandList, pRenderer, pCamera, pNode->childNodes[i].get(), parentWorld);
+    }
 }
 
 void Model::LoadTextures(const cgltf_data* gltf_data)
@@ -107,6 +162,7 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
     mesh->name = name;
     mesh->material.reset(LoadMaterial(gltf_primitive->material));
     mesh->indexBuffer.reset(LoadIndexBuffer(gltf_primitive->indices, name + " IB"));
+    mesh->indexCount = (uint32_t)gltf_primitive->indices->count;
     
     for (cgltf_size i = 0; i < gltf_primitive->attributes_count; ++i)
     {
@@ -201,6 +257,8 @@ void Model::LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& 
 
     *buffer = pDevice->CreateBuffer(desc, name);
     RE_ASSERT(*buffer != nullptr);
+
+    pRenderer->UploadBuffer(*buffer, data, size);
     RE_FREE(data);
 
     GfxShaderResourceViewDesc srvDesc;
