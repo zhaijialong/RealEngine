@@ -178,6 +178,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\common.hlsli" />
+    <None Include="shaders\model.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">
@@ -186,7 +187,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="shaders\mesh.hlsl">
+    <FxCompile Include="shaders\model.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

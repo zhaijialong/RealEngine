@@ -114,6 +114,7 @@ void Renderer::Render()
 {
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
+    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 
     std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
     RENDER_EVENT(pCommandList, event_name.c_str());
@@ -136,20 +137,13 @@ void Renderer::Render()
     pCommandList->SetViewport(0, 0, pBackBuffer->GetDesc().width, pBackBuffer->GetDesc().height);
 
     {
-        RENDER_EVENT(pCommandList, "Render something");
+        RENDER_EVENT(pCommandList, "BassPass");
 
-        GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = GetShader("mesh.hlsl", "vs_main", "vs_6_6", {});
-        psoDesc.ps = GetShader("mesh.hlsl", "ps_main", "ps_6_6", {});
-        psoDesc.rt_format[0] = m_pSwapchain->GetBackBuffer()->GetDesc().format;
-
-        IGfxPipelineState* pPSO = GetPipelineState(psoDesc, "test pso");
-        pCommandList->SetPipelineState(pPSO);
-
-        Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
-        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, (void*)&camera->GetViewProjectionMatrix(), sizeof(float4x4));
-
-        pCommandList->Draw(3, 1);
+        for (size_t i = 0; i < m_basePassBatchs.size(); ++i)
+        {
+            m_basePassBatchs[i](pCommandList, this, camera);
+        }
+        m_basePassBatchs.clear();
     }
 
     GUI* pGUI = Engine::GetInstance()->GetWorld()->GetGUI();

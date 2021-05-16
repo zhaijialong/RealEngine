@@ -1,5 +1,6 @@
 #include "world.h"
 #include "model.h"
+#include "engine.h"
 #include "utils/assert.h"
 
 World::World()
@@ -10,21 +11,19 @@ World::World()
 }
 
 void World::LoadScene(const std::string& file)
-{
-    using namespace tinyxml2;
-    
-    XMLDocument doc;
-    if (XML_SUCCESS != doc.LoadFile(file.c_str()))
+{    
+    tinyxml2::XMLDocument doc;
+    if (tinyxml2::XML_SUCCESS != doc.LoadFile(file.c_str()))
     {
         return;
     }
 
     m_objects.clear();
 
-    XMLNode* root_node = doc.FirstChild();
+    tinyxml2::XMLNode* root_node = doc.FirstChild();
     RE_ASSERT(root_node != nullptr && strcmp(root_node->Value(), "scene") == 0);
 
-    for (XMLElement* element = root_node->FirstChildElement(); element != nullptr; element = (XMLElement*)element->NextSibling())
+    for (tinyxml2::XMLElement* element = root_node->FirstChildElement(); element != nullptr; element = (tinyxml2::XMLElement*)element->NextSibling())
     {
         CreateVisibleObject(element);
     }
@@ -47,10 +46,17 @@ void World::Tick(float delta_time)
 
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
     {
-        (*iter)->Tick();
+        (*iter)->Tick(delta_time);
     }
 
     //todo : culling, ...
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+    {
+        (*iter)->Render(pRenderer);
+    }
 }
 
 void World::CreateVisibleObject(tinyxml2::XMLElement* element)
