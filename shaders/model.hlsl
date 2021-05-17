@@ -43,5 +43,8 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 
 float4 ps_main(VSOutput input) : SV_TARGET
 {
-    return float4(input.uv, 0.0, 1.0);
+    Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[MaterialCB.linearSampler];
+    
+    return albedoTexture.Sample(linearSampler, input.uv);
 }

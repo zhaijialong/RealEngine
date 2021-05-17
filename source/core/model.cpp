@@ -95,6 +95,11 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         };
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
 
+        MaterialConstant materialCB;
+        materialCB.albedoTexture = mesh->material->albedoTexture->GetSRV()->GetHeapIndex();
+        materialCB.linearSampler = pRenderer->GetLinearSampler()->GetHeapIndex();
+        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 2, &materialCB, sizeof(materialCB));
+
         pCommandList->DrawIndexed(mesh->indexCount, 1);
     }
 
@@ -207,8 +212,33 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
 
 Model::Material* Model::LoadMaterial(const cgltf_material* gltf_material)
 {
-    //todo
-    return nullptr;
+    RE_ASSERT(gltf_material->has_pbr_metallic_roughness);
+
+    Material* material = new Material;
+    material->name = gltf_material->name != nullptr ? gltf_material->name : "";
+
+    if (gltf_material->pbr_metallic_roughness.base_color_texture.texture)
+    {
+        material->albedoTexture = m_textures.find(gltf_material->pbr_metallic_roughness.base_color_texture.texture->image->uri)->second.get();
+    }
+
+    if (gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture)
+    {
+        material->metallicRoughnessTexture = m_textures.find(gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture->image->uri)->second.get();
+    }
+
+    if (gltf_material->normal_texture.texture)
+    {
+        material->normalTexture = m_textures.find(gltf_material->normal_texture.texture->image->uri)->second.get();
+    }
+
+    material->albedoColor = float3(gltf_material->pbr_metallic_roughness.base_color_factor);
+    material->metallic = gltf_material->pbr_metallic_roughness.metallic_factor;
+    material->roughness = gltf_material->pbr_metallic_roughness.roughness_factor;
+    material->alphaCutoff = gltf_material->alpha_cutoff;
+    material->alphaTest = gltf_material->alpha_mode == cgltf_alpha_mode_mask;
+
+    return material;
 }
 
 IGfxBuffer* Model::LoadIndexBuffer(const cgltf_accessor* accessor, const std::string& name)

@@ -9,7 +9,8 @@ struct ModelConstant
 
 struct MaterialConstant
 {
-    
+    uint albedoTexture;
+    uint linearSampler;
 };
 
 #ifndef __cplusplus

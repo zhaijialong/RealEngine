@@ -14,7 +14,17 @@ class Model : public IVisibleObject
 {
 	struct Material
 	{
-		//todo
+		std::string name;
+
+		Texture* albedoTexture = nullptr;
+		Texture* metallicRoughnessTexture = nullptr;
+		Texture* normalTexture = nullptr;
+
+		float3 albedoColor;
+		float metallic;
+		float roughness;
+		float alphaCutoff;
+		bool alphaTest;
 	};
 
 	struct Mesh

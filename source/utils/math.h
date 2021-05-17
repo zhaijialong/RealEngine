@@ -5,6 +5,8 @@
 using namespace linalg;
 using namespace linalg::aliases;
 
+using uint = uint32_t;
+
 inline float degree_to_randian(float degree)
 {
 	const float PI = 3.141592653f;
