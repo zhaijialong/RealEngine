@@ -178,7 +178,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\common.hlsli" />
-    <None Include="shaders\model.hlsli" />
+    <None Include="shaders\global_constants.hlsli" />
+    <None Include="shaders\model_constants.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

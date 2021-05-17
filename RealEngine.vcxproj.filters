@@ -312,7 +312,10 @@
     <None Include="shaders\common.hlsli">
       <Filter>shaders</Filter>
     </None>
-    <None Include="shaders\model.hlsli">
+    <None Include="shaders\model_constants.hlsli">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\global_constants.hlsli">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

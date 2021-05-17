@@ -21,12 +21,15 @@ class Model : public IVisibleObject
 	{
 		std::string name;
 		std::unique_ptr<Material> material;
+
 		std::unique_ptr<IGfxBuffer> indexBuffer;
+		uint32_t indexCount = 0;
+
 		std::unique_ptr<IGfxBuffer> posBuffer;
 		std::unique_ptr<IGfxBuffer> uvBuffer;
 		std::unique_ptr<IGfxBuffer> normalBuffer;
 		std::unique_ptr<IGfxBuffer> tangentBuffer;
-		uint32_t indexCount = 0;
+
 		std::unique_ptr<IGfxDescriptor> posBufferSRV;
 		std::unique_ptr<IGfxDescriptor> uvBufferSRV;
 		std::unique_ptr<IGfxDescriptor> normalBufferSRV;

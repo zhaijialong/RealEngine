@@ -1,14 +1,12 @@
-#include "model.hlsli"
+#include "model_constants.hlsli"
 
-cbuffer vertexCB : register(b0)
+cbuffer VertexCB : register(b0)
 {
     uint c_posBuffer;
     uint c_uvBuffer;
     uint c_normalBuffer;
     uint c_tangentBuffer;
 };
-
-ConstantBuffer<ModelConstant> modelCB : register(b1);
 
 struct VSOutput
 {
@@ -31,13 +29,13 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     float4 pos = float4(posBuffer[vertex_id], 1.0);
     
     VSOutput output;
-    output.pos = mul(modelCB.mtxWVP, pos);
+    output.pos = mul(ModelCB.mtxWVP, pos);
     output.uv = uvBuffer[vertex_id];
-    output.normal = mul(modelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz;
-    output.worldPos = mul(modelCB.mtxWorld, pos).xyz;
+    output.normal = mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz;
+    output.worldPos = mul(ModelCB.mtxWorld, pos).xyz;
     
 #if NORMAL_TEXTURE
-    output.tangent = mul(modelCB.mtxWorld, float4(tangentBuffer[vertex_id], 0.0f)).xyz;
+    output.tangent = mul(ModelCB.mtxWorld, float4(tangentBuffer[vertex_id], 0.0f)).xyz;
 #endif
     
     return output;

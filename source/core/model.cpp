@@ -6,7 +6,7 @@
 #define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
 
-#include "model.hlsli"
+#include "model_constants.hlsli"
 
 void Model::Load(tinyxml2::XMLElement* element)
 {
