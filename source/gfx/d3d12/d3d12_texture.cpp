@@ -99,8 +99,22 @@ bool D3D12Texture::Create()
 
 	D3D12_RESOURCE_DESC resourceDesc = d3d12_resource_desc(m_desc);
 
+	D3D12_RESOURCE_STATES initial_state;
+	if (m_desc.usage & GfxTextureUsageRenderTarget)
+	{
+		initial_state = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	}
+	else if (m_desc.usage & GfxTextureUsageDepthStencil)
+	{
+		initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	}
+	else
+	{
+		initial_state = D3D12_RESOURCE_STATE_COMMON;
+	}
+
 	HRESULT hr = pAllocator->CreateResource(&allocationDesc, &resourceDesc,
-		D3D12_RESOURCE_STATE_COMMON, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pTexture));
+		initial_state, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pTexture));
 	if (FAILED(hr))
 	{
 		return false;

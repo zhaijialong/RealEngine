@@ -5,7 +5,7 @@
 Camera::Camera() : 
 	m_resizeConnection({})
 {
-	m_pos = float3(0.0f, 0.0f, -10.0f);
+	m_pos = float3(0.0f, 0.0f, 0.0f);
 	m_rotation = float3(0.0, 0.0, 0.0f);
 
 	m_resizeConnection = Engine::GetInstance()->WindowResizeSignal.connect(this, &Camera::OnWindowResize);
