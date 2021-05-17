@@ -56,7 +56,6 @@ void StagingBufferAllocator::CreateNewBuffer()
     GfxBufferDesc desc;
     desc.size = BUFFER_SIZE;
     desc.memory_type = GfxMemoryType::CpuOnly;
-    desc.alloc_type = GfxAllocationType::Placed;
 
     IGfxBuffer* buffer = m_pRenderer->GetDevice()->CreateBuffer(desc, "StagingBufferAllocator::m_pBuffer");
     m_pBuffers.push_back(std::unique_ptr<IGfxBuffer>(buffer));

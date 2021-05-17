@@ -16,7 +16,7 @@ void Editor::Tick()
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Tool"))
+        if (ImGui::BeginMenu("Tools"))
         {
             if (ImGui::MenuItem("Show GPU Memory Stats", "", &m_bShowGpuMemoryStats))
             {
@@ -38,9 +38,9 @@ void Editor::Tick()
         ImGui::EndMainMenuBar();
     }
 
-    if (m_bShowGpuMemoryStats)
+    if (m_bShowGpuMemoryStats && m_pGpuMemoryStats)
     {
-        ImGui::Begin("GPU Memory Stats");
+        ImGui::Begin("GPU Memory Stats", &m_bShowGpuMemoryStats);
         GfxTextureDesc desc = m_pGpuMemoryStats->GetTexture()->GetDesc();
         ImGui::Image((ImTextureID)m_pGpuMemoryStats->GetSRV(), ImVec2((float)desc.width, (float)desc.height));
         ImGui::End();
@@ -48,8 +48,13 @@ void Editor::Tick()
 
     if (m_bShowImguiDemo)
     {
-        ImGui::ShowDemoWindow();
+        ImGui::ShowDemoWindow(&m_bShowImguiDemo);
     }
+    
+    ImGui::SetNextWindowPos(ImVec2(Engine::GetInstance()->GetRenderer()->GetBackbufferWidth() - 200.0f, 50.0f));
+    ImGui::Begin("Frame Stats", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+    ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
 }
 
 void Editor::OpenScene()

@@ -231,7 +231,6 @@ IGfxBuffer* Model::LoadIndexBuffer(const cgltf_accessor* accessor, const std::st
     desc.stride = stride;
     desc.size = size;
     desc.format = format;
-    desc.alloc_type = GfxAllocationType::Placed;
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     IGfxDevice* pDevice = pRenderer->GetDevice();
@@ -268,7 +267,6 @@ void Model::LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& 
     GfxBufferDesc desc;
     desc.stride = stride;
     desc.size = size;
-    desc.alloc_type = GfxAllocationType::Placed;
     desc.usage = GfxBufferUsageStructuredBuffer;
 
     *buffer = pDevice->CreateBuffer(desc, name);

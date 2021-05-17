@@ -44,7 +44,6 @@ bool GUI::Init()
 	textureDesc.height = height;
 	textureDesc.type = GfxTextureType::Texture2D;
 	textureDesc.format = GfxFormat::RGBA8UNORM;
-	textureDesc.alloc_type = GfxAllocationType::Placed;
 	m_pFontTexture.reset(pDevice->CreateTexture(textureDesc, "GUI::m_pFontTexture"));
 
 	pRenderer->UploadTexture(m_pFontTexture.get(), pixels, width * height * 4);
@@ -74,11 +73,6 @@ void GUI::Tick()
 {
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-
-	//test code
-	ImGui::Begin("Hello, world!");
-	ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	ImGui::End();
 }
 
 void GUI::Render(IGfxCommandList* pCommandList)
@@ -104,7 +98,6 @@ void GUI::Render(IGfxCommandList* pCommandList)
 		desc.stride = sizeof(ImDrawVert);
 		desc.size = (draw_data->TotalVtxCount + 5000) * sizeof(ImDrawVert);
 		desc.memory_type = GfxMemoryType::CpuToGpu;
-		desc.alloc_type = GfxAllocationType::Placed;
 		desc.usage = GfxBufferUsageStructuredBuffer;
 
 		m_pVertexBuffer[frame_index].reset(pDevice->CreateBuffer(desc, "GUI VB"));
@@ -124,7 +117,6 @@ void GUI::Render(IGfxCommandList* pCommandList)
 		desc.size = (draw_data->TotalIdxCount + 10000) * sizeof(ImDrawIdx);
 		desc.format = GfxFormat::R16UI;
 		desc.memory_type = GfxMemoryType::CpuToGpu;
-		desc.alloc_type = GfxAllocationType::Placed;
 
 		m_pIndexBuffer[frame_index].reset(pDevice->CreateBuffer(desc, "GUI IB"));
 	}

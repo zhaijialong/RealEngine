@@ -31,6 +31,7 @@ bool RenderTarget::Create(uint32_t width, uint32_t height, GfxFormat format, Gfx
     desc.width = (uint32_t)ceilf(width * m_size);
     desc.height = (uint32_t)ceilf(height * m_size);
     desc.format = format;
+    desc.alloc_type = GfxAllocationType::Committed;
     desc.usage = flags;
 
     m_pTexture.reset(pDevice->CreateTexture(desc, m_name));

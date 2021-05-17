@@ -25,7 +25,6 @@ bool Texture::Create()
     desc.width = x;
     desc.height = y;
     desc.format = GfxFormat::RGBA8SRGB;
-    desc.alloc_type = GfxAllocationType::Placed;
 
     m_pTexture.reset(pDevice->CreateTexture(desc, m_file));
     if (m_pTexture == nullptr)

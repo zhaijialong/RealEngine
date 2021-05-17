@@ -186,7 +186,7 @@ struct GfxBufferDesc
 	uint32_t size = 1;
 	GfxFormat format = GfxFormat::Unknown;
 	GfxMemoryType memory_type = GfxMemoryType::GpuOnly;
-	GfxAllocationType alloc_type = GfxAllocationType::Committed;
+	GfxAllocationType alloc_type = GfxAllocationType::Placed;
 	GfxBufferUsageFlags usage = 0;
 };
 
@@ -200,7 +200,7 @@ struct GfxTextureDesc
 	GfxTextureType type = GfxTextureType::Texture2D;
 	GfxFormat format = GfxFormat::Unknown;
 	GfxMemoryType memory_type = GfxMemoryType::GpuOnly;
-	GfxAllocationType alloc_type = GfxAllocationType::Committed;
+	GfxAllocationType alloc_type = GfxAllocationType::Placed;
 	GfxTextureUsageFlags usage = GfxTextureUsageShaderResource;
 };
 
