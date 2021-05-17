@@ -30,6 +30,7 @@ bool Texture::Create()
     m_pTexture.reset(pDevice->CreateTexture(desc, m_file));
     if (m_pTexture == nullptr)
     {
+        stbi_image_free(data);
         return false;
     }
 
@@ -37,10 +38,12 @@ bool Texture::Create()
     m_pSRV.reset(pDevice->CreateShaderResourceView(m_pTexture.get(), srvDesc, m_file));
     if (m_pSRV == nullptr)
     {
+        stbi_image_free(data);
         return false;
     }
 
     m_pRenderer->UploadTexture(m_pTexture.get(), data, x * y * 4);
 
+    stbi_image_free(data);
     return true;
 }

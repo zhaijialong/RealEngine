@@ -129,7 +129,7 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_le
 	src.PlacedFootprint.Footprint.Width = w;
 	src.PlacedFootprint.Footprint.Height = h;
 	src.PlacedFootprint.Footprint.Depth = d;
-	src.PlacedFootprint.Footprint.RowPitch = GetFormatRowPitch(desc.format, w);
+	src.PlacedFootprint.Footprint.RowPitch = texture->GetRowPitch(mip_level);// GetFormatRowPitch(desc.format, w);
 
 	m_pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 }

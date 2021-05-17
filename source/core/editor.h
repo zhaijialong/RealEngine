@@ -1,5 +1,7 @@
 #pragma once
 
+#include "renderer/texture.h"
+
 class Editor
 {
 public:
@@ -7,5 +9,11 @@ public:
 
 private:
     void OpenScene();
-    void ShowGpuMemoryStats();
+    void CreateGpuMemoryStats();
+
+private:
+    bool m_bShowGpuMemoryStats = false;
+    bool m_bShowImguiDemo = false;
+
+    std::unique_ptr<Texture> m_pGpuMemoryStats;
 };
