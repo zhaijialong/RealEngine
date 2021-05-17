@@ -36,4 +36,6 @@ public:
 	virtual IGfxDescriptor* CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const std::string& name) = 0;
 	virtual IGfxDescriptor* CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name) = 0;
 	virtual IGfxDescriptor* CreateSampler(const GfxSamplerDesc& desc, const std::string& name) = 0;
+
+	virtual bool DumpMemoryStats(const std::string& file) = 0;
 };

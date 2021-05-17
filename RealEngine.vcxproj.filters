@@ -103,6 +103,9 @@
     <ClCompile Include="source\renderer\render_target.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\core\editor.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -260,6 +263,9 @@
     </ClInclude>
     <ClInclude Include="source\renderer\render_target.h">
       <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\core\editor.h">
+      <Filter>source\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

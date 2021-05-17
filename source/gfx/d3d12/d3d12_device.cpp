@@ -204,6 +204,25 @@ IGfxDescriptor* D3D12Device::CreateSampler(const GfxSamplerDesc& desc, const std
 	return pSampler;
 }
 
+bool D3D12Device::DumpMemoryStats(const std::string& file)
+{
+	FILE* f = nullptr;
+	_wfopen_s(&f, string_to_wstring(file).c_str(), L"wb");
+	if (f == nullptr)
+	{
+		return false;
+	}
+
+	WCHAR* pStatsString = nullptr;
+	m_pResourceAllocator->BuildStatsString(&pStatsString, true);
+
+	fwrite(pStatsString, 1, wcslen(pStatsString) * sizeof(WCHAR), f);
+	fclose(f);
+
+	m_pResourceAllocator->FreeStatsString(pStatsString);
+	return true;
+}
+
 void D3D12Device::BeginFrame()
 {
 	DoDeferredDeletion();
@@ -215,6 +234,8 @@ void D3D12Device::BeginFrame()
 void D3D12Device::EndFrame()
 {
 	++m_nFrameID;
+
+	m_pResourceAllocator->SetCurrentFrameIndex((UINT)m_nFrameID);
 }
 
 bool D3D12Device::Init()

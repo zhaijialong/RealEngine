@@ -6,6 +6,7 @@
 World::World()
 {
     m_pCamera = std::make_unique<Camera>();
+    m_pEditor = std::make_unique<Editor>();
     m_pGUI = std::make_unique<GUI>();
     m_pGUI->Init();
 }
@@ -42,6 +43,7 @@ void World::AddObject(IVisibleObject* object)
 void World::Tick(float delta_time)
 {
     m_pGUI->Tick();
+    m_pEditor->Tick();
     m_pCamera->Tick(delta_time);
 
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)

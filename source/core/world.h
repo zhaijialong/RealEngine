@@ -2,6 +2,7 @@
 
 #include "camera.h"
 #include "gui.h"
+#include "editor.h"
 #include "i_visible_object.h"
 #include <memory>
 
@@ -25,6 +26,7 @@ private:
 private:
     std::unique_ptr<Camera> m_pCamera;
     std::unique_ptr<GUI> m_pGUI;
+    std::unique_ptr<Editor> m_pEditor;
 
     std::list<std::unique_ptr<IVisibleObject>> m_objects;
 };

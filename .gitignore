@@ -25,3 +25,5 @@ x64
 *.iobj
 *.ipdb
 imgui.ini
+bin/d3d12ma.json
+bin/d3d12ma.png

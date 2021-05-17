@@ -95,6 +95,7 @@
     <ClCompile Include="external\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="external\xxHash\xxhash.c" />
     <ClCompile Include="source\core\camera.cpp" />
+    <ClCompile Include="source\core\editor.cpp" />
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\gui.cpp" />
     <ClCompile Include="source\core\model.cpp" />
@@ -133,6 +134,7 @@
     <ClInclude Include="external\tinyxml2\tinyxml2.h" />
     <ClInclude Include="external\xxHash\xxhash.h" />
     <ClInclude Include="source\core\camera.h" />
+    <ClInclude Include="source\core\editor.h" />
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\gui.h" />
     <ClInclude Include="source\core\i_visible_object.h" />
