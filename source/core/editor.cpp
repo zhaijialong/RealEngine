@@ -96,7 +96,7 @@ void Editor::Tick()
 
     if (m_bShowGpuMemoryStats && m_pGpuMemoryStats)
     {
-        ImGui::Begin("GPU Memory Stats", &m_bShowGpuMemoryStats, ImGuiWindowFlags_NoInputs);
+        ImGui::Begin("GPU Memory Stats", &m_bShowGpuMemoryStats);
         const GfxTextureDesc& desc = m_pGpuMemoryStats->GetTexture()->GetDesc();
         ImGui::Image((ImTextureID)m_pGpuMemoryStats->GetSRV(), ImVec2((float)desc.width, (float)desc.height));
         ImGui::End();

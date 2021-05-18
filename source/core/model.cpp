@@ -96,7 +96,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
 
         MaterialConstant materialCB;
-        materialCB.albedoTexture = mesh->material->albedoTexture->GetSRV()->GetHeapIndex();
+        materialCB.albedoTexture = mesh->material->albedoTexture ? mesh->material->albedoTexture->GetSRV()->GetHeapIndex() : 0;
         materialCB.linearSampler = pRenderer->GetLinearSampler()->GetHeapIndex();
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 2, &materialCB, sizeof(materialCB));
 
@@ -189,9 +189,12 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
             mesh->posBufferSRV.reset(srv);
             break;
         case cgltf_attribute_type_texcoord:
-            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model " + mesh->name + " UV", false, &buffer, &srv);
-            mesh->uvBuffer.reset(buffer);
-            mesh->uvBufferSRV.reset(srv);
+            if (gltf_primitive->attributes[i].index == 0)
+            {
+                LoadVertexBuffer(gltf_primitive->attributes[i].data, "model " + mesh->name + " UV", false, &buffer, &srv);
+                mesh->uvBuffer.reset(buffer);
+                mesh->uvBufferSRV.reset(srv);
+            }
             break;
         case cgltf_attribute_type_normal:
             LoadVertexBuffer(gltf_primitive->attributes[i].data, "model " + mesh->name + " normal", true, &buffer, &srv);

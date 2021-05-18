@@ -481,7 +481,7 @@ struct GfxSamplerDesc
 	float max_anisotropy = 1.0f;
 	bool enable_compare = false;
 	GfxCompareFunc compare_func = GfxCompareFunc::Always;
-	float min_lod = -FLT_MAX;
+	float min_lod = 0.0f;
 	float max_lod = FLT_MAX;
 	float border_color[4] = {};
 };
