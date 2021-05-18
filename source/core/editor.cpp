@@ -88,7 +88,7 @@ void Editor::Tick()
         if (ifd::FileDialog::Instance().HasResult()) 
         {
             std::string result = ifd::FileDialog::Instance().GetResult().u8string();
-            printf("OPEN[%s]\n", result.c_str());
+            Engine::GetInstance()->GetWorld()->LoadScene(result);
         }
 
         ifd::FileDialog::Instance().Close();
