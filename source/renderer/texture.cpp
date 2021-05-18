@@ -1,7 +1,7 @@
 #include "texture.h"
 #include "renderer.h"
 
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
 Texture::Texture(Renderer* pRenderer, const std::string& file)

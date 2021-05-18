@@ -1,16 +1,61 @@
 #include "editor.h"
 #include "engine.h"
+#include "utils/assert.h"
 #include "imgui/imgui.h"
+#include "ImFileDialog/ImFileDialog.h"
+
+Editor::Editor()
+{
+    ifd::FileDialog::Instance().CreateTexture = [this](uint8_t* data, int w, int h, char fmt) -> void* 
+    {
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+        IGfxDevice* pDevice = pRenderer->GetDevice();
+
+        GfxTextureDesc desc;
+        desc.width = w;
+        desc.height = h;
+        desc.format = fmt == 1 ? GfxFormat::RGBA8SRGB : GfxFormat::BGRA8SRGB;
+        IGfxTexture* texture = pDevice->CreateTexture(desc, "ImFileDialog Icon");
+        RE_ASSERT(texture != nullptr);
+
+        pRenderer->UploadTexture(texture, data, w * h * 4);
+
+        GfxShaderResourceViewDesc srvDesc;
+        srvDesc.type = GfxShaderResourceViewType::Texture2D;
+        srvDesc.texture.mip_levels = 1;
+        IGfxDescriptor* srv = pDevice->CreateShaderResourceView(texture, srvDesc, "ImFileDialog Icon");
+
+        m_fileDialogIcons.insert(std::make_pair(srv, texture));
+
+        return srv;
+    };
+
+    ifd::FileDialog::Instance().DeleteTexture = [this](void* tex) 
+    {
+        m_pendingDeletions.push_back((IGfxDescriptor*)tex); //should be deleted in next frame
+    };
+}
+
+Editor::~Editor()
+{
+    for (auto iter = m_fileDialogIcons.begin(); iter != m_fileDialogIcons.end(); ++iter)
+    {
+        delete iter->first;
+        delete iter->second;
+    }
+}
 
 void Editor::Tick()
 {
+    FlushPendingTextureDeletions();
+
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
             if (ImGui::MenuItem("Open Scene"))
             {
-                OpenScene();
+                ifd::FileDialog::Instance().Open("SceneOpenDialog", "Open Scene", "XML file (*.xml){.xml},.*");
             }
 
             ImGui::EndMenu();
@@ -38,10 +83,21 @@ void Editor::Tick()
         ImGui::EndMainMenuBar();
     }
 
+    if (ifd::FileDialog::Instance().IsDone("SceneOpenDialog")) 
+    {
+        if (ifd::FileDialog::Instance().HasResult()) 
+        {
+            std::string result = ifd::FileDialog::Instance().GetResult().u8string();
+            printf("OPEN[%s]\n", result.c_str());
+        }
+
+        ifd::FileDialog::Instance().Close();
+    }
+
     if (m_bShowGpuMemoryStats && m_pGpuMemoryStats)
     {
-        ImGui::Begin("GPU Memory Stats", &m_bShowGpuMemoryStats);
-        GfxTextureDesc desc = m_pGpuMemoryStats->GetTexture()->GetDesc();
+        ImGui::Begin("GPU Memory Stats", &m_bShowGpuMemoryStats, ImGuiWindowFlags_NoInputs);
+        const GfxTextureDesc& desc = m_pGpuMemoryStats->GetTexture()->GetDesc();
         ImGui::Image((ImTextureID)m_pGpuMemoryStats->GetSRV(), ImVec2((float)desc.width, (float)desc.height));
         ImGui::End();
     }
@@ -55,10 +111,6 @@ void Editor::Tick()
     ImGui::Begin("Frame Stats", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
-}
-
-void Editor::OpenScene()
-{
 }
 
 void Editor::CreateGpuMemoryStats()
@@ -78,4 +130,22 @@ void Editor::CreateGpuMemoryStats()
             m_pGpuMemoryStats.reset(pRenderer->CreateTexture(file));
         }
     }
+}
+
+void Editor::FlushPendingTextureDeletions()
+{
+    for (size_t i = 0; i < m_pendingDeletions.size(); ++i)
+    {
+        IGfxDescriptor* srv = m_pendingDeletions[i];
+        auto iter = m_fileDialogIcons.find(srv);
+        RE_ASSERT(iter != m_fileDialogIcons.end());
+
+        IGfxTexture* texture = iter->second;
+        m_fileDialogIcons.erase(srv);
+
+        delete texture;
+        delete srv;
+    }
+
+    m_pendingDeletions.clear();
 }

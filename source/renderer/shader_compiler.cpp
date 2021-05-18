@@ -1,16 +1,9 @@
 #include "shader_compiler.h"
 #include "utils/log.h"
+#include "utils/string.h"
 #include "dxc/dxcapi.h"
 
 #include <atlbase.h> //CComPtr
-#include <locale>
-#include <codecvt>
-
-inline std::wstring string_to_wstring(std::string s)
-{
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.from_bytes(s);
-}
 
 ShaderCompiler::ShaderCompiler()
 {

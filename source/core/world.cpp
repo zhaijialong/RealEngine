@@ -5,10 +5,11 @@
 
 World::World()
 {
-    m_pCamera = std::make_unique<Camera>();
-    m_pEditor = std::make_unique<Editor>();
     m_pGUI = std::make_unique<GUI>();
     m_pGUI->Init();
+
+    m_pCamera = std::make_unique<Camera>();
+    m_pEditor = std::make_unique<Editor>();
 }
 
 void World::LoadScene(const std::string& file)

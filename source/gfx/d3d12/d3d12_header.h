@@ -4,8 +4,7 @@
 #include "d3d12/d3dx12.h"
 #include "d3d12/dxgi1_6.h"
 #include "../gfx_define.h"
-#include <locale>
-#include <codecvt>
+#include "utils/string.h"
 
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(p) if(p){p->Release(); p = nullptr;}
@@ -22,13 +21,6 @@ inline bool IsNullDescriptor(const D3D12Descriptor& descriptor)
 {
 	return descriptor.cpu_handle.ptr == 0 && descriptor.gpu_handle.ptr == 0;
 }
-
-inline std::wstring string_to_wstring(std::string s)
-{
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	return converter.from_bytes(s);
-}
-
 
 inline D3D12_HEAP_TYPE d3d12_heap_type(GfxMemoryType memory_type)
 {
@@ -113,6 +105,10 @@ inline DXGI_FORMAT dxgi_format(GfxFormat format)
 		return DXGI_FORMAT_R8G8B8A8_SNORM;
 	case GfxFormat::RGBA8SRGB:
 		return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	case GfxFormat::BGRA8UNORM:
+		return DXGI_FORMAT_B8G8R8A8_UNORM;
+	case GfxFormat::BGRA8SRGB:
+		return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
 	case GfxFormat::RG32F:
 		return DXGI_FORMAT_R32G32_FLOAT;
 	case GfxFormat::RG32UI:
