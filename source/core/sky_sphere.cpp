@@ -110,8 +110,8 @@ void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Ca
 	{
 		float4x4 mtxWVP;
 		float4x4 mtxWorld;
-		float3 cameraPos;
 		uint posBuffer;
+		float3 cameraPos;
 	};
 
 	float4x4 mtxWorld = translation_matrix(pCamera->GetPosition());

@@ -1,9 +1,11 @@
+#include "atmosphere.hlsli"
+
 struct SkySphereConstant
 {
     float4x4 mtxWVP;
     float4x4 mtxWorld;
-    float3 cameraPos;
     uint posBuffer;
+    float3 cameraPos;
 };
 
 ConstantBuffer<SkySphereConstant> SkySphereCB : register(b1);
@@ -30,7 +32,26 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 
 float4 ps_main(VSOutput input) : SV_TARGET
 {
-    float3 V = normalize(SkySphereCB.cameraPos.xyz - input.worldPos);
+    float3 rayStart = SkySphereCB.cameraPos;
+    float3 rayDir = normalize(input.worldPos - SkySphereCB.cameraPos);
+    float rayLength = INFINITY;
 
-    return float4(V, 1.0);
+    bool PlanetShadow = false;
+    if (PlanetShadow)
+    {
+        float2 planetIntersection = PlanetIntersection(rayStart, rayDir);
+        if (planetIntersection.x > 0)
+        {
+            rayLength = min(rayLength, planetIntersection.x);
+        }
+    }
+
+    //todo
+    float3 lightDir = normalize(float3(1.0, 1.0, 1.0));
+    float3 lightColor = float3(1.0, 1.0, 1.0);
+
+    float3 transmittance;
+    float3 color = IntegrateScattering(rayStart, rayDir, rayLength, lightDir, lightColor, transmittance);
+
+    return float4(color, 1);
 }

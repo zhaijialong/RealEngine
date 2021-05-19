@@ -186,6 +186,7 @@
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\atmosphere.hlsli" />
     <None Include="shaders\common.hlsli" />
     <None Include="shaders\global_constants.hlsli" />
     <None Include="shaders\model_constants.hlsli" />
