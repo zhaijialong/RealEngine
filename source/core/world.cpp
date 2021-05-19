@@ -1,6 +1,7 @@
 #include "world.h"
-#include "model.h"
 #include "engine.h"
+#include "model.h"
+#include "sky_sphere.h"
 #include "utils/assert.h"
 
 World::World()
@@ -70,9 +71,9 @@ void World::CreateVisibleObject(tinyxml2::XMLElement* element)
     {
         object = new Model();
     }
-    else
+    else if(strcmp(element->Value(), "skysphere") == 0)
     {
-        //todo
+        object = new SkySphere();
     }
 
     object->Load(element);

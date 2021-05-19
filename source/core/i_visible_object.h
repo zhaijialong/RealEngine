@@ -1,8 +1,8 @@
 #pragma once
 
+#include "renderer/renderer.h"
+#include "utils/math.h"
 #include "tinyxml2/tinyxml2.h"
-
-class Renderer;
 
 class IVisibleObject
 {

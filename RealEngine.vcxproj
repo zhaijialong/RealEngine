@@ -102,6 +102,7 @@
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\gui.cpp" />
     <ClCompile Include="source\core\model.cpp" />
+    <ClCompile Include="source\core\sky_sphere.cpp" />
     <ClCompile Include="source\core\world.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="source\core\gui.h" />
     <ClInclude Include="source\core\i_visible_object.h" />
     <ClInclude Include="source\core\model.h" />
+    <ClInclude Include="source\core\sky_sphere.h" />
     <ClInclude Include="source\core\world.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h" />
@@ -198,6 +200,14 @@
     <FxCompile Include="shaders\model.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\sky_sphere.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

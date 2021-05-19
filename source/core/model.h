@@ -1,8 +1,6 @@
 #pragma once
 
 #include "i_visible_object.h"
-#include "renderer/renderer.h"
-#include "utils/math.h"
 
 struct cgltf_data;
 struct cgltf_node;
