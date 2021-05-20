@@ -124,5 +124,5 @@ void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Ca
 	
 	pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, &CB, sizeof(CB));
 
-	pCommandList->DrawIndexed(m_nIndexCount, 1);
+	pCommandList->DrawIndexed(m_nIndexCount);
 }

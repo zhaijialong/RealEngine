@@ -100,7 +100,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         materialCB.linearSampler = pRenderer->GetLinearSampler()->GetHeapIndex();
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 2, &materialCB, sizeof(materialCB));
 
-        pCommandList->DrawIndexed(mesh->indexCount, 1);
+        pCommandList->DrawIndexed(mesh->indexCount);
     }
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
