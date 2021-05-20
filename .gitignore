@@ -27,3 +27,6 @@ x64
 imgui.ini
 bin/d3d12ma.json
 bin/d3d12ma.png
+GPUCache
+VTune Profiler Results
+debug.log
