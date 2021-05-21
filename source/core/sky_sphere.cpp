@@ -103,6 +103,8 @@ void SkySphere::Render(Renderer* pRenderer)
 
 void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera)
 {
+	RENDER_EVENT(pCommandList, "SkySphere");
+
 	pCommandList->SetPipelineState(m_pPSO);
 	pCommandList->SetIndexBuffer(m_pIndexBuffer.get());
 

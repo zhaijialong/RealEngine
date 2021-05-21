@@ -165,7 +165,7 @@ float3 IntegrateScattering (float3 rayStart, float3 rayDir, float rayLength, flo
 	float  phaseR   = PhaseRayleigh(costh);
 	float  phaseM   = PhaseMie(costh);
 
-	int    sampleCount  = 64;
+    int sampleCount = 16;//64;
 
 	float3 opticalDepth = 0;
 	float3 rayleigh     = 0;
