@@ -8,8 +8,8 @@ bool SkySphere::Create()
 	std::vector<float3> vertices;
 	std::vector<uint16_t> indices;
 
-	int latitudeBands = 100;
-	int longitudeBands = 100;
+	int latitudeBands = 50;
+	int longitudeBands = 50;
 	float radius = 1000.0f;
 
 	for (int latNumber = 0; latNumber <= latitudeBands; latNumber++)
