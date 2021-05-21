@@ -20,6 +20,8 @@ public:
 
     void Tick(float delta_time);
 
+    IVisibleObject* GetSelectedObject() const;
+
 private:
     void CreateVisibleObject(tinyxml2::XMLElement* element);
 

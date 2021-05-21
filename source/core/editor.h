@@ -12,6 +12,10 @@ public:
     void Tick();
 
 private:
+    void DrawMenu();
+    void DrawGizmo();
+    void DrawFrameStats();
+
     void CreateGpuMemoryStats();
     void FlushPendingTextureDeletions();
 

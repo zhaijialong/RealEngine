@@ -2,6 +2,7 @@
 #include "engine.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
+#include "ImGuizmo/ImGuizmo.h"
 
 GUI::GUI()
 {
@@ -73,6 +74,11 @@ void GUI::Tick()
 {
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+
+	ImGuizmo::BeginFrame();
+
+	ImGuiIO& io = ImGui::GetIO();
+	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 }
 
 void GUI::Render(IGfxCommandList* pCommandList)

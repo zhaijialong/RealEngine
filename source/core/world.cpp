@@ -63,6 +63,21 @@ void World::Tick(float delta_time)
     }
 }
 
+IVisibleObject* World::GetSelectedObject() const
+{
+    //todo : implements mouse pick
+
+    for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+    {
+        if (dynamic_cast<Model*>(iter->get()) != nullptr)
+        {
+            return iter->get();
+        }
+    }
+
+    return nullptr;
+}
+
 void World::CreateVisibleObject(tinyxml2::XMLElement* element)
 {
     IVisibleObject* object = nullptr;

@@ -71,9 +71,6 @@ private:
 
 private:
     std::string m_file;
-	float3 m_pos = { 0.0f, 0.0f, 0.0f };
-	float3 m_rotation = { 0.0f, 0.0f, 0.0f };
-	float3 m_scale = { 1.0f, 1.0f, 1.0f };
 
 	std::unique_ptr<Node> m_pRootNode;
     std::unordered_map<std::string, std::unique_ptr<Texture>> m_textures;

@@ -50,6 +50,13 @@ void Editor::Tick()
 {
     FlushPendingTextureDeletions();
 
+    DrawMenu();
+    DrawGizmo();
+    DrawFrameStats();
+}
+
+void Editor::DrawMenu()
+{
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
@@ -84,9 +91,9 @@ void Editor::Tick()
         ImGui::EndMainMenuBar();
     }
 
-    if (ifd::FileDialog::Instance().IsDone("SceneOpenDialog")) 
+    if (ifd::FileDialog::Instance().IsDone("SceneOpenDialog"))
     {
-        if (ifd::FileDialog::Instance().HasResult()) 
+        if (ifd::FileDialog::Instance().HasResult())
         {
             std::string result = ifd::FileDialog::Instance().GetResult().u8string();
             Engine::GetInstance()->GetWorld()->LoadScene(result);
@@ -107,7 +114,32 @@ void Editor::Tick()
     {
         ImGui::ShowDemoWindow(&m_bShowImguiDemo);
     }
-    
+}
+
+void Editor::DrawGizmo()
+{
+    Camera* pCamera = Engine::GetInstance()->GetWorld()->GetCamera();
+    float4x4 view = pCamera->GetViewMatrix();
+    float4x4 proj = pCamera->GetProjectionMatrix();
+
+    IVisibleObject* pSelectedObject = Engine::GetInstance()->GetWorld()->GetSelectedObject();
+    float3 pos = pSelectedObject->GetPosition();
+    float3 rotation = pSelectedObject->GetRotation();
+    float3 scale = pSelectedObject->GetScale();
+
+    float4x4 mtxWorld;
+    ImGuizmo::RecomposeMatrixFromComponents((const float*)&pos, (const float*)&rotation, (const float*)&scale, (float*)&mtxWorld);
+
+    ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, ImGuizmo::TRANSLATE, ImGuizmo::WORLD, (float*)&mtxWorld);
+
+    ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&pos, (float*)&rotation, (float*)&scale);
+    pSelectedObject->SetPosition(pos);
+    pSelectedObject->SetRotation(rotation);
+    pSelectedObject->SetScale(scale);
+}
+
+void Editor::DrawFrameStats()
+{
     uint32_t window_width = Engine::GetInstance()->GetRenderer()->GetBackbufferWidth();
     uint32_t window_height = Engine::GetInstance()->GetRenderer()->GetBackbufferHeight();
 
@@ -115,19 +147,6 @@ void Editor::Tick()
     ImGui::Begin("Frame Stats", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
-
-    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
-    float4x4 mtxView = transpose(camera->GetViewMatrix());
-    ImGuizmo::BeginFrame();
-    ImGuizmo::ViewManipulate((float*)&mtxView, 8.0, ImVec2(0.0f, window_height - 100.0f), ImVec2(100.0f, 100.0f), 0x10101010);
-
-    if (transpose(mtxView) != camera->GetViewMatrix())
-    {
-        float3 pos, rotation, scale;
-        ImGuizmo::DecomposeMatrixToComponents((float*)&mtxView, (float*)&pos, (float*)&rotation, (float*)&scale);
-        camera->SetPosition(pos);
-        camera->SetRotation(rotation);
-    }
 }
 
 void Editor::CreateGpuMemoryStats()
