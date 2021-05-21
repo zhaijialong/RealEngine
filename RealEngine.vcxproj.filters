@@ -112,6 +112,9 @@
     <ClCompile Include="source\core\sky_sphere.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
+    <ClCompile Include="external\ImGuizmo\ImGuizmo.cpp">
+      <Filter>external\ImGuizmo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -282,6 +285,9 @@
     <ClInclude Include="source\core\sky_sphere.h">
       <Filter>source\core</Filter>
     </ClInclude>
+    <ClInclude Include="external\ImGuizmo\ImGuizmo.h">
+      <Filter>external\ImGuizmo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -325,6 +331,9 @@
     </Filter>
     <Filter Include="external\ImFileDialog">
       <UniqueIdentifier>{aa53a536-77b4-4572-a093-76a2b081ed6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\ImGuizmo">
+      <UniqueIdentifier>{398702c9-bd6c-4888-97c4-d14c5a10aeb0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

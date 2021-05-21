@@ -3,6 +3,7 @@
 #include "utils/assert.h"
 #include "imgui/imgui.h"
 #include "ImFileDialog/ImFileDialog.h"
+#include "ImGuizmo/ImGuizmo.h"
 
 Editor::Editor()
 {
@@ -107,10 +108,26 @@ void Editor::Tick()
         ImGui::ShowDemoWindow(&m_bShowImguiDemo);
     }
     
-    ImGui::SetNextWindowPos(ImVec2(Engine::GetInstance()->GetRenderer()->GetBackbufferWidth() - 200.0f, 50.0f));
+    uint32_t window_width = Engine::GetInstance()->GetRenderer()->GetBackbufferWidth();
+    uint32_t window_height = Engine::GetInstance()->GetRenderer()->GetBackbufferHeight();
+
+    ImGui::SetNextWindowPos(ImVec2(window_width - 200.0f, 50.0f));
     ImGui::Begin("Frame Stats", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
+
+    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+    float4x4 mtxView = transpose(camera->GetViewMatrix());
+    ImGuizmo::BeginFrame();
+    ImGuizmo::ViewManipulate((float*)&mtxView, 8.0, ImVec2(0.0f, window_height - 100.0f), ImVec2(100.0f, 100.0f), 0x10101010);
+
+    if (transpose(mtxView) != camera->GetViewMatrix())
+    {
+        float3 pos, rotation, scale;
+        ImGuizmo::DecomposeMatrixToComponents((float*)&mtxView, (float*)&pos, (float*)&rotation, (float*)&scale);
+        camera->SetPosition(pos);
+        camera->SetRotation(rotation);
+    }
 }
 
 void Editor::CreateGpuMemoryStats()

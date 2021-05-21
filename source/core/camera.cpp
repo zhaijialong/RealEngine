@@ -48,7 +48,7 @@ void Camera::Tick(float delta_time)
 {
 	//TODO
 	const float move_speed = 10.0f;
-	const float rotate_speed = 0.003f;
+	const float rotate_speed = 0.1f;
 
 	ImGuiIO& io = ImGui::GetIO();
 
@@ -78,8 +78,8 @@ void Camera::Tick(float delta_time)
 
 		if (ImGui::IsMouseDragging(1))
 		{
-			m_rotation.x += io.MouseDelta.y * rotate_speed;
-			m_rotation.y += io.MouseDelta.x * rotate_speed;
+			m_rotation.x = fmodf(m_rotation.x + io.MouseDelta.y * rotate_speed, 360.0f);
+			m_rotation.y = fmodf(m_rotation.y + io.MouseDelta.x * rotate_speed, 360.0f);
 		}
 	}
 
@@ -88,7 +88,9 @@ void Camera::Tick(float delta_time)
 
 void Camera::UpdateMatrix()
 {
-	m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(m_rotation)));
+	float3 radianRotation = degree_to_randian(m_rotation);
+
+	m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(radianRotation)));
 	m_view = inverse(m_world);
 	m_viewProjection = mul(m_projection, m_view);
 }

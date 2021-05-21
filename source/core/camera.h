@@ -36,7 +36,7 @@ private:
 
 private:
 	float3 m_pos;
-	float3 m_rotation;
+	float3 m_rotation; //in degrees
 
 	float4x4 m_world;
 	float4x4 m_view;

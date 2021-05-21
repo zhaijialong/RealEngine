@@ -57,7 +57,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -74,7 +74,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -88,6 +88,7 @@
   <ItemGroup>
     <ClCompile Include="external\d3d12ma\D3D12MemAlloc.cpp" />
     <ClCompile Include="external\ImFileDialog\ImFileDialog.cpp" />
+    <ClCompile Include="external\ImGuizmo\ImGuizmo.cpp" />
     <ClCompile Include="external\imgui\imgui.cpp" />
     <ClCompile Include="external\imgui\imgui_demo.cpp" />
     <ClCompile Include="external\imgui\imgui_draw.cpp" />
@@ -127,6 +128,7 @@
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h" />
     <ClInclude Include="external\ImFileDialog\ImFileDialog.h" />
+    <ClInclude Include="external\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="external\imgui\imconfig.h" />
     <ClInclude Include="external\imgui\imgui.h" />
     <ClInclude Include="external\imgui\imgui_impl_win32.h" />
