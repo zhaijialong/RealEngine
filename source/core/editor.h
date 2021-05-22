@@ -13,6 +13,7 @@ public:
 
 private:
     void DrawMenu();
+    void DrawToolBar();
     void DrawGizmo();
     void DrawFrameStats();
 
@@ -27,4 +28,16 @@ private:
     std::vector<IGfxDescriptor*> m_pendingDeletions;
 
     std::unique_ptr<Texture> m_pGpuMemoryStats;
+
+    enum class SelectEditMode
+    {
+        Translate,
+        Rotate,
+        Scale
+    };
+
+    SelectEditMode m_selectEditMode = SelectEditMode::Translate;
+    std::unique_ptr<Texture> m_pTranslateIcon;
+    std::unique_ptr<Texture> m_pRotateIcon;
+    std::unique_ptr<Texture> m_pScaleIcon;
 };

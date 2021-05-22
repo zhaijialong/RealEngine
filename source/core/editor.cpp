@@ -35,6 +35,12 @@ Editor::Editor()
     {
         m_pendingDeletions.push_back((IGfxDescriptor*)tex); //should be deleted in next frame
     };
+
+    std::string asset_path = Engine::GetInstance()->GetAssetPath();
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    m_pTranslateIcon.reset(pRenderer->CreateTexture(asset_path + "ui/translate.png"));
+    m_pRotateIcon.reset(pRenderer->CreateTexture(asset_path + "ui/translate.png"));
+    m_pScaleIcon.reset(pRenderer->CreateTexture(asset_path + "ui/translate.png"));
 }
 
 Editor::~Editor()
@@ -51,6 +57,7 @@ void Editor::Tick()
     FlushPendingTextureDeletions();
 
     DrawMenu();
+    DrawToolBar();
     DrawGizmo();
     DrawFrameStats();
 }
@@ -116,6 +123,37 @@ void Editor::DrawMenu()
     }
 }
 
+void Editor::DrawToolBar()
+{
+    ImGui::SetNextWindowPos(ImVec2(0, 20));
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 20));
+
+    ImGui::Begin("EditorToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
+        ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus);
+
+    ImVec4 focusedBG(1.0f, 1.0f, 0.0f, 0.2f);
+    ImVec4 normalBG(0.0f, 0.0f, 0.0f, 0.0f);
+
+    if (ImGui::ImageButton((ImTextureID)m_pTranslateIcon->GetSRV(), ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1), -1, m_selectEditMode == SelectEditMode::Translate ? focusedBG : normalBG))
+    {
+        m_selectEditMode = SelectEditMode::Translate;
+    }
+    
+    ImGui::SameLine();
+    if (ImGui::ImageButton((ImTextureID)m_pRotateIcon->GetSRV(), ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1), -1, m_selectEditMode == SelectEditMode::Rotate ? focusedBG : normalBG))
+    {
+        m_selectEditMode = SelectEditMode::Rotate;
+    }
+    
+    ImGui::SameLine();
+    if (ImGui::ImageButton((ImTextureID)m_pScaleIcon->GetSRV(), ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1), -1, m_selectEditMode == SelectEditMode::Scale ? focusedBG : normalBG))
+    {
+        m_selectEditMode = SelectEditMode::Scale;
+    }
+
+    ImGui::End();
+}
+
 void Editor::DrawGizmo()
 {
     Camera* pCamera = Engine::GetInstance()->GetWorld()->GetCamera();
@@ -130,7 +168,23 @@ void Editor::DrawGizmo()
     float4x4 mtxWorld;
     ImGuizmo::RecomposeMatrixFromComponents((const float*)&pos, (const float*)&rotation, (const float*)&scale, (float*)&mtxWorld);
 
-    ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, ImGuizmo::TRANSLATE, ImGuizmo::WORLD, (float*)&mtxWorld);
+    ImGuizmo::OPERATION operation;
+    switch (m_selectEditMode)
+    {
+    case Editor::SelectEditMode::Translate:
+        operation = ImGuizmo::TRANSLATE;
+        break;
+    case Editor::SelectEditMode::Rotate:
+        operation = ImGuizmo::ROTATE;
+        break;
+    case Editor::SelectEditMode::Scale:
+        operation = ImGuizmo::SCALE;
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
+    }
+    ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, operation, ImGuizmo::WORLD, (float*)&mtxWorld);
 
     ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&pos, (float*)&rotation, (float*)&scale);
     pSelectedObject->SetPosition(pos);
@@ -140,10 +194,7 @@ void Editor::DrawGizmo()
 
 void Editor::DrawFrameStats()
 {
-    uint32_t window_width = Engine::GetInstance()->GetRenderer()->GetBackbufferWidth();
-    uint32_t window_height = Engine::GetInstance()->GetRenderer()->GetBackbufferHeight();
-
-    ImGui::SetNextWindowPos(ImVec2(window_width - 200.0f, 50.0f));
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 200.0f, 50.0f));
     ImGui::Begin("Frame Stats", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
