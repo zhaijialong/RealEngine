@@ -124,6 +124,7 @@
     <ClCompile Include="source\renderer\shader_compiler.cpp" />
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
     <ClCompile Include="source\renderer\texture.cpp" />
+    <ClCompile Include="source\renderer\tonemap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h" />
@@ -178,6 +179,7 @@
     <ClInclude Include="source\renderer\shader_compiler.h" />
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
     <ClInclude Include="source\renderer\texture.h" />
+    <ClInclude Include="source\renderer\tonemap.h" />
     <ClInclude Include="source\utils\assert.h" />
     <ClInclude Include="source\utils\log.h" />
     <ClInclude Include="source\utils\math.h" />
@@ -211,6 +213,10 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\tonemap.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

@@ -6,6 +6,7 @@
 #include "staging_buffer_allocator.h"
 #include "texture.h"
 #include "render_target.h"
+#include "tonemap.h"
 #include "lsignal/lsignal.h"
 #include <functional>
 
@@ -94,7 +95,10 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pPointSampler;
     std::unique_ptr<IGfxDescriptor> m_pLinearSampler;
 
+    std::unique_ptr<RenderTarget> m_pHdrRT;
     std::unique_ptr<RenderTarget> m_pDepthRT;
+
+    std::unique_ptr<Tonemap> m_pToneMap; //test code
 
     lsignal::connection m_resizeConnection;
 

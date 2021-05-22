@@ -119,11 +119,8 @@ void Renderer::Render()
     std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
     RENDER_EVENT(pCommandList, event_name.c_str());
 
-    IGfxTexture* pBackBuffer = m_pSwapchain->GetBackBuffer();
-    pCommandList->ResourceBarrier(pBackBuffer, 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
-
     GfxRenderPassDesc render_pass;
-    render_pass.color[0].texture = pBackBuffer;
+    render_pass.color[0].texture = m_pHdrRT->GetTexture();
     render_pass.color[0].load_op = GfxRenderPassLoadOp::Clear;
     render_pass.color[0].clear_color[0] = 0.0f;
     render_pass.color[0].clear_color[1] = 0.0f;
@@ -132,25 +129,42 @@ void Renderer::Render()
     render_pass.depth.texture = m_pDepthRT->GetTexture();
     render_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
     render_pass.depth.stencil_load_op = GfxRenderPassLoadOp::Clear;
-    pCommandList->BeginRenderPass(render_pass);
-
-    pCommandList->SetViewport(0, 0, pBackBuffer->GetDesc().width, pBackBuffer->GetDesc().height);
 
     {
         RENDER_EVENT(pCommandList, "BassPass");
+
+        pCommandList->BeginRenderPass(render_pass);
+        pCommandList->SetViewport(0, 0, m_pHdrRT->GetTexture()->GetDesc().width, m_pHdrRT->GetTexture()->GetDesc().height);
 
         for (size_t i = 0; i < m_basePassBatchs.size(); ++i)
         {
             m_basePassBatchs[i](pCommandList, this, camera);
         }
         m_basePassBatchs.clear();
+
+        pCommandList->EndRenderPass();
+    }
+
+    pCommandList->ResourceBarrier(m_pHdrRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
+    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
+
+    render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
+    render_pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
+    render_pass.depth.texture = nullptr;
+    pCommandList->BeginRenderPass(render_pass);
+
+    {
+        RENDER_EVENT(pCommandList, "PostProcess");
+        m_pToneMap->Draw(pCommandList, m_pHdrRT->GetSRV());
     }
 
     GUI* pGUI = Engine::GetInstance()->GetWorld()->GetGUI();
     pGUI->Render(pCommandList);
 
     pCommandList->EndRenderPass();
-    pCommandList->ResourceBarrier(pBackBuffer, 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
+
+    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
+    pCommandList->ResourceBarrier(m_pHdrRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
 }
 
 void Renderer::EndFrame()
@@ -199,7 +213,11 @@ void Renderer::CreateCommonResources()
     IGfxTexture* pBackBuffer = m_pSwapchain->GetBackBuffer();
     uint32_t width = pBackBuffer->GetDesc().width;
     uint32_t height = pBackBuffer->GetDesc().height;
-    m_pDepthRT.reset(CreateRenderTarget(width, height, GfxFormat::D32FS8, "Renderer::m_pDepthRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource));
+
+    m_pDepthRT.reset(CreateRenderTarget(width, height, GfxFormat::D32FS8, "Renderer::m_pDepthRT", GfxTextureUsageDepthStencil /*| GfxTextureUsageShaderResource*/));
+    m_pHdrRT.reset(CreateRenderTarget(width, height, GfxFormat::RGBA16F, "Renderer::m_pHdrRT"));
+
+    m_pToneMap.reset(new Tonemap(this));
 }
 
 void Renderer::OnWindowResize(uint32_t width, uint32_t height)

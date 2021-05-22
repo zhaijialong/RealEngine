@@ -84,7 +84,7 @@ bool SkySphere::Create()
 	psoDesc.depthstencil_state.depth_write = false;
 	psoDesc.depthstencil_state.depth_test = true;
 	psoDesc.depthstencil_state.depth_func = GfxCompareFunc::Greater;
-	psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
+	psoDesc.rt_format[0] = GfxFormat::RGBA16F;
 	psoDesc.depthstencil_format = GfxFormat::D32FS8;
 	m_pPSO = pRenderer->GetPipelineState(psoDesc, "SkySphere PSO");
 

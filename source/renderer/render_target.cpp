@@ -40,7 +40,16 @@ bool RenderTarget::Create(uint32_t width, uint32_t height, GfxFormat format, Gfx
         return false;
     }
 
-    //todo : srv, uav
+    if (flags & GfxTextureUsageShaderResource)
+    {
+        GfxShaderResourceViewDesc srvDesc;
+        m_pSRV.reset(pDevice->CreateShaderResourceView(m_pTexture.get(), srvDesc, m_name));
+    }
+
+    if (flags & GfxTextureUsageUnorderedAccess)
+    {
+        //todo : uav
+    }
 
     return true;
 }
@@ -56,5 +65,11 @@ void RenderTarget::OnWindowResize(uint32_t width, uint32_t height)
 
     m_pTexture.reset(pDevice->CreateTexture(desc, m_name));
 
-    //todo : srv, uav
+    if (m_pSRV)
+    {
+        GfxShaderResourceViewDesc srvDesc;
+        m_pSRV.reset(pDevice->CreateShaderResourceView(m_pTexture.get(), srvDesc, m_name));
+    }
+
+    //todo : uav
 }
