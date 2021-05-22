@@ -31,7 +31,7 @@ StagingBuffer StagingBufferAllocator::Allocate(uint32_t size)
     buffer.size = size;
     buffer.offset = m_nAllocatedSize;
 
-    m_nAllocatedSize += ALIGN(size, 256); //256 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
+    m_nAllocatedSize += ALIGN(size, 512); //512 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
     m_nLastAllocatedFrame = m_pRenderer->GetFrameID();
 
     return buffer;

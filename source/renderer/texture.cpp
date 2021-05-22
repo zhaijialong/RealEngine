@@ -10,7 +10,7 @@ Texture::Texture(Renderer* pRenderer, const std::string& file)
     m_file = file;
 }
 
-bool Texture::Create()
+bool Texture::Create(bool srgb)
 {
     int x, y, comp;
     stbi_uc* data = stbi_load(m_file.c_str(), &x, &y, &comp, STBI_rgb_alpha);
@@ -24,7 +24,7 @@ bool Texture::Create()
     GfxTextureDesc desc;
     desc.width = x;
     desc.height = y;
-    desc.format = GfxFormat::RGBA8SRGB;
+    desc.format = srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM;
 
     m_pTexture.reset(pDevice->CreateTexture(desc, m_file));
     if (m_pTexture == nullptr)

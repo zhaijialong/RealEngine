@@ -39,7 +39,7 @@ public:
     IGfxDescriptor* GetPointSampler() const { return m_pPointSampler.get(); }
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearSampler.get(); }
 
-    Texture* CreateTexture(const std::string& file);
+    Texture* CreateTexture(const std::string& file, bool srgb = true);
     RenderTarget* CreateRenderTarget(uint32_t width, uint32_t height, GfxFormat format, const std::string& name,
         GfxTextureUsageFlags flags = GfxTextureUsageShaderResource | GfxTextureUsageRenderTarget, bool auto_resize = true, float size = 1.0f);
 

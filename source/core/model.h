@@ -62,7 +62,7 @@ public:
 private:
 	void RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera, Node* pNode, const float4x4& parentWorld);
 
-    void LoadTextures(const cgltf_data* gltf_data);
+	Texture* LoadTexture(const std::string& file, bool srgb);
 	Node* LoadNode(const cgltf_node* gltf_node);
 	Mesh* LoadMesh(const cgltf_primitive* gltf_primitive, const std::string& name);
 	Material* LoadMaterial(const cgltf_material* gltf_material);

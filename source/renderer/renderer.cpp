@@ -240,10 +240,10 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     m_pSwapchain->Resize(width, height);
 }
 
-Texture* Renderer::CreateTexture(const std::string& file)
+Texture* Renderer::CreateTexture(const std::string& file, bool srgb)
 {
     Texture* texture = new Texture(this, file);
-    if (!texture->Create())
+    if (!texture->Create(srgb))
     {
         delete texture;
         return nullptr;

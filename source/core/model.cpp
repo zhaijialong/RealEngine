@@ -30,7 +30,6 @@ bool Model::Create()
     }
 
     cgltf_load_buffers(&options, data, file.c_str());
-    LoadTextures(data);
 
     RE_ASSERT(data->scenes_count == 1 && data->scene->nodes_count == 1);
     m_pRootNode.reset(LoadNode(data->scene->nodes[0]));
@@ -123,23 +122,26 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
     }
 }
 
-void Model::LoadTextures(const cgltf_data* gltf_data)
+Texture* Model::LoadTexture(const std::string& file, bool srgb)
 {
+    auto iter = m_textures.find(file);
+    if (iter != m_textures.end())
+    {
+        return iter->second.get();
+    }
+
     size_t last_slash = m_file.find_last_of('/');
     std::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    Texture* texture = pRenderer->CreateTexture(path + file, srgb);
 
-    for (cgltf_size i = 0; i < gltf_data->textures_count; ++i)
+    if (texture != nullptr)
     {
-        std::string file = path + gltf_data->textures[i].image->uri;
-        Texture* texture = pRenderer->CreateTexture(file);
-
-        if (texture != nullptr)
-        {
-            m_textures.insert(std::make_pair(gltf_data->textures[i].image->uri, std::unique_ptr<Texture>(texture)));
-        }
+        m_textures.insert(std::make_pair(file, std::unique_ptr<Texture>(texture)));
     }
+
+    return texture;
 }
 
 Model::Node* Model::LoadNode(const cgltf_node* gltf_node)
@@ -236,17 +238,17 @@ Model::Material* Model::LoadMaterial(const cgltf_material* gltf_material)
 
     if (gltf_material->pbr_metallic_roughness.base_color_texture.texture)
     {
-        material->albedoTexture = m_textures.find(gltf_material->pbr_metallic_roughness.base_color_texture.texture->image->uri)->second.get();
+        material->albedoTexture = LoadTexture(gltf_material->pbr_metallic_roughness.base_color_texture.texture->image->uri, true);
     }
 
     if (gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture)
     {
-        material->metallicRoughnessTexture = m_textures.find(gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture->image->uri)->second.get();
+        material->metallicRoughnessTexture = LoadTexture(gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture->image->uri, false);
     }
 
     if (gltf_material->normal_texture.texture)
     {
-        material->normalTexture = m_textures.find(gltf_material->normal_texture.texture->image->uri)->second.get();
+        material->normalTexture = LoadTexture(gltf_material->normal_texture.texture->image->uri, false);
     }
 
     material->albedoColor = float3(gltf_material->pbr_metallic_roughness.base_color_factor);

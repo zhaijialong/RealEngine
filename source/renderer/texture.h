@@ -10,7 +10,7 @@ class Texture
 public:
     Texture(Renderer* pRenderer, const std::string& file);
 
-    bool Create();
+    bool Create(bool srgb);
 
     IGfxTexture* GetTexture() const { return m_pTexture.get(); }
     IGfxDescriptor* GetSRV() const { return m_pSRV.get(); }
