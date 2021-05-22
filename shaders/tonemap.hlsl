@@ -37,8 +37,8 @@ float3 ACESFilm(float3 x)
 
 float4 ps_main(VSOutput input) : SV_TARGET
 {
-    Texture2D hdrTexture = ResourceDescriptorHeap[0];
-    SamplerState pointSampler = SamplerDescriptorHeap[0];
+    Texture2D hdrTexture = ResourceDescriptorHeap[c_hdrTexture];
+    SamplerState pointSampler = SamplerDescriptorHeap[c_pointSampler];
     
     float3 color = hdrTexture.Sample(pointSampler, input.uv).xyz;
     color = ACESFilm(color);

@@ -46,38 +46,36 @@ void Camera::SetRotation(const float3& rotation)
 
 void Camera::Tick(float delta_time)
 {
-	//TODO
-	const float move_speed = 10.0f;
-	const float rotate_speed = 0.1f;
-
 	ImGuiIO& io = ImGui::GetIO();
 
 	if (!io.WantCaptureKeyboard)
 	{
 		if (ImGui::IsKeyDown('A'))
 		{
-			m_pos += GetLeft() * move_speed * delta_time;
+			m_pos += GetLeft() * m_moveSpeed * delta_time;
 		}
 		else if (ImGui::IsKeyDown('S'))
 		{
-			m_pos += GetBack() * move_speed * delta_time;
+			m_pos += GetBack() * m_moveSpeed * delta_time;
 		}
 		else if (ImGui::IsKeyDown('D'))
 		{
-			m_pos += GetRight() * move_speed * delta_time;
+			m_pos += GetRight() * m_moveSpeed * delta_time;
 		}
 		else if (ImGui::IsKeyDown('W'))
 		{
-			m_pos += GetForward() * move_speed * delta_time;
+			m_pos += GetForward() * m_moveSpeed * delta_time;
 		}
 	}
 
 	if (!io.WantCaptureMouse)
 	{
-		m_pos += GetForward() * io.MouseWheel * move_speed * delta_time;
+		m_pos += GetForward() * io.MouseWheel * m_moveSpeed * delta_time;
 
 		if (ImGui::IsMouseDragging(1))
 		{
+			const float rotate_speed = 0.1f;
+
 			m_rotation.x = fmodf(m_rotation.x + io.MouseDelta.y * rotate_speed, 360.0f);
 			m_rotation.y = fmodf(m_rotation.y + io.MouseDelta.x * rotate_speed, 360.0f);
 		}

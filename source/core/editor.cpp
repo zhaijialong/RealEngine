@@ -39,8 +39,8 @@ Editor::Editor()
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     m_pTranslateIcon.reset(pRenderer->CreateTexture(asset_path + "ui/translate.png"));
-    m_pRotateIcon.reset(pRenderer->CreateTexture(asset_path + "ui/translate.png"));
-    m_pScaleIcon.reset(pRenderer->CreateTexture(asset_path + "ui/translate.png"));
+    m_pRotateIcon.reset(pRenderer->CreateTexture(asset_path + "ui/rotate.png"));
+    m_pScaleIcon.reset(pRenderer->CreateTexture(asset_path + "ui/scale.png"));
 }
 
 Editor::~Editor()
@@ -126,30 +126,42 @@ void Editor::DrawMenu()
 void Editor::DrawToolBar()
 {
     ImGui::SetNextWindowPos(ImVec2(0, 20));
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 20));
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 30));
 
     ImGui::Begin("EditorToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
         ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus);
 
-    ImVec4 focusedBG(1.0f, 1.0f, 0.0f, 0.2f);
+    ImVec4 focusedBG(1.0f, 0.6f, 0.2f, 0.5f);
     ImVec4 normalBG(0.0f, 0.0f, 0.0f, 0.0f);
 
-    if (ImGui::ImageButton((ImTextureID)m_pTranslateIcon->GetSRV(), ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1), -1, m_selectEditMode == SelectEditMode::Translate ? focusedBG : normalBG))
+    if (ImGui::ImageButton((ImTextureID)m_pTranslateIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), 0, m_selectEditMode == SelectEditMode::Translate ? focusedBG : normalBG))
     {
         m_selectEditMode = SelectEditMode::Translate;
     }
     
-    ImGui::SameLine();
-    if (ImGui::ImageButton((ImTextureID)m_pRotateIcon->GetSRV(), ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1), -1, m_selectEditMode == SelectEditMode::Rotate ? focusedBG : normalBG))
+    ImGui::SameLine(0.0f, 0.0f);
+    if (ImGui::ImageButton((ImTextureID)m_pRotateIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), 0, m_selectEditMode == SelectEditMode::Rotate ? focusedBG : normalBG))
     {
         m_selectEditMode = SelectEditMode::Rotate;
     }
     
-    ImGui::SameLine();
-    if (ImGui::ImageButton((ImTextureID)m_pScaleIcon->GetSRV(), ImVec2(16, 16), ImVec2(0, 0), ImVec2(1, 1), -1, m_selectEditMode == SelectEditMode::Scale ? focusedBG : normalBG))
+    ImGui::SameLine(0.0f, 0.0f);
+    if (ImGui::ImageButton((ImTextureID)m_pScaleIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), 0, m_selectEditMode == SelectEditMode::Scale ? focusedBG : normalBG))
     {
         m_selectEditMode = SelectEditMode::Scale;
     }
+
+    ImGui::SameLine(0.0f, 20.0f);
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Camera Speed");
+
+    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+    float camera_speed = camera->GetMoveSpeed();
+
+    ImGui::SameLine(0.0f, 3.0f);
+    ImGui::SetNextItemWidth(100.0f);
+    ImGui::SliderFloat("##CameraSpeed", &camera_speed, 1.0f, 200.0f);
+    camera->SetMoveSpeed(camera_speed);
 
     ImGui::End();
 }

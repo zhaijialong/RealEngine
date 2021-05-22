@@ -78,7 +78,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         psoDesc.rasterizer_state.front_ccw = true;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-        psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
+        psoDesc.rt_format[0] = GfxFormat::RGBA16F;
         psoDesc.depthstencil_format = GfxFormat::D32FS8;
 
         IGfxPipelineState* pPSO = pRenderer->GetPipelineState(psoDesc, "model PSO");

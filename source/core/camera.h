@@ -28,6 +28,9 @@ public:
 	float3 GetUp() const { return m_world[1].xyz(); }
 	float3 GetDown() const { return -m_world[1].xyz(); }
 
+	float GetMoveSpeed() const { return m_moveSpeed; }
+	void SetMoveSpeed(float speed) { m_moveSpeed = speed; }
+
 	void Tick(float delta_time);
 
 private:
@@ -46,6 +49,7 @@ private:
 	float m_fov = 0.0f;
 	float m_znear = 0.0f;
 	float m_zfar = 0.0f;
+	float m_moveSpeed = 10.0f;
 
 	lsignal::connection m_resizeConnection;
 };
