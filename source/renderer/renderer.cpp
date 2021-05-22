@@ -1,6 +1,8 @@
 #include "renderer.h"
 #include "core/engine.h"
 
+#include "global_constants.hlsli"
+
 Renderer::Renderer() : m_resizeConnection({})
 {
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
@@ -67,6 +69,17 @@ void Renderer::BeginFrame()
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->Begin();
+
+    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+
+    CameraConstant cameraCB;
+    cameraCB.cameraPos = camera->GetPosition();
+    pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 3, &cameraCB, sizeof(cameraCB));
+
+    SceneConstant sceneCB;
+    sceneCB.lightDir = normalize(float3(1.0f, 1.0f, 1.0f));
+    sceneCB.lightColor = float3(1.0f, 1.0f, 1.0f);
+    pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 4, &sceneCB, sizeof(sceneCB));
 }
 
 void Renderer::UploadResources()

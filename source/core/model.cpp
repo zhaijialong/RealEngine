@@ -69,11 +69,19 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
     for (size_t i = 0; i < pNode->meshes.size(); ++i)
     {
         Mesh* mesh = pNode->meshes[i].get();
+        Material* material = mesh->material.get();
+
         RENDER_EVENT(pCommandList, mesh->name);
 
+        std::vector<std::string> defines;
+        if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (material->metallicRoughnessTexture) defines.push_back("METALLIC_ROUGHNESS_TEXTURE=1");
+        if (material->normalTexture) defines.push_back("NORMAL_TEXTURE=1");
+        if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
+
         GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", {});
-        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", {});
+        psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
+        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = true;
         psoDesc.depthstencil_state.depth_test = true;
@@ -95,8 +103,15 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
 
         MaterialConstant materialCB;
-        materialCB.albedoTexture = mesh->material->albedoTexture ? mesh->material->albedoTexture->GetSRV()->GetHeapIndex() : 0;
         materialCB.linearSampler = pRenderer->GetLinearSampler()->GetHeapIndex();
+        materialCB.albedoTexture = material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        materialCB.metallicRoughnessTexture = material->metallicRoughnessTexture ? material->metallicRoughnessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        materialCB.normalTexture = material->normalTexture ? material->normalTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        materialCB.albedo = material->albedoColor;
+        materialCB.metallic = material->metallic;
+        materialCB.roughness = material->roughness;
+        materialCB.alphaCutoff = material->alphaCutoff;
+
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 2, &materialCB, sizeof(materialCB));
 
         pCommandList->DrawIndexed(mesh->indexCount);

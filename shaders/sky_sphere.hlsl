@@ -1,4 +1,5 @@
 #include "atmosphere.hlsli"
+#include "global_constants.hlsli"
 
 struct SkySphereConstant
 {
@@ -46,9 +47,8 @@ float4 ps_main(VSOutput input) : SV_TARGET
         }
     }
 
-    //todo
-    float3 lightDir = normalize(float3(1.0, 1.0, 1.0));
-    float3 lightColor = float3(1.0, 1.0, 1.0);
+    float3 lightDir = SceneCB.lightDir;
+    float3 lightColor = SceneCB.lightColor;
 
     float3 transmittance;
     float3 color = IntegrateScattering(rayStart, rayDir, rayLength, lightDir, lightColor, transmittance);

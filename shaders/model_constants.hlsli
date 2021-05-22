@@ -9,8 +9,15 @@ struct ModelConstant
 
 struct MaterialConstant
 {
-    uint albedoTexture;
     uint linearSampler;
+    uint albedoTexture;
+    uint metallicRoughnessTexture;
+    uint normalTexture;
+    
+    float3 albedo;
+    float metallic;
+    float roughness;
+    float alphaCutoff;
 };
 
 #ifndef __cplusplus

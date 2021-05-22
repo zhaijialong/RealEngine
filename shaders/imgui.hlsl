@@ -48,6 +48,9 @@ PS_INPUT vs_main(uint vertex_id : SV_VertexID)
     output.pos = mul(ProjectionMatrix, float4(vertex.pos.xy, 0.f, 1.f));
     output.col = UnpackColor(vertex.col);
     output.uv = vertex.uv;
+    
+    output.col.xyz = pow(output.col.xyz, 2.2);
+    
     return output;
 }
 
@@ -55,7 +58,6 @@ float4 ps_main(PS_INPUT input) : SV_Target
 {
     Texture2D texture = ResourceDescriptorHeap[c_TextureID];
     SamplerState linear_sampler = SamplerDescriptorHeap[c_SamplerID];
-    float4 out_col = input.col * texture.Sample(linear_sampler, input.uv);
-    out_col.xyz = pow(out_col.xyz, 2.2);
-    return out_col;
+    
+    return input.col * texture.Sample(linear_sampler, input.uv);
 }
