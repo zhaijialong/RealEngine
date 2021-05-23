@@ -29,7 +29,9 @@ bool D3D12ShaderResourceView::Create()
 		const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
 		RE_ASSERT(textureDesc.usage & GfxTextureUsageShaderResource);
 
-		srvDesc.Format = dxgi_format(textureDesc.format);
+		bool depth = textureDesc.usage & GfxTextureUsageDepthStencil;
+
+		srvDesc.Format = dxgi_format(textureDesc.format, depth);
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MostDetailedMip = m_desc.texture.mip_slice;
 		srvDesc.Texture2D.MipLevels = m_desc.texture.mip_levels;

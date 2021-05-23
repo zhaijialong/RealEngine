@@ -73,7 +73,7 @@ inline D3D12_RESOURCE_STATES d3d12_resource_state(GfxResourceState state)
 	}
 }
 
-inline DXGI_FORMAT dxgi_format(GfxFormat format)
+inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false)
 {
 	switch (format)
 	{
@@ -158,11 +158,11 @@ inline DXGI_FORMAT dxgi_format(GfxFormat format)
 	case GfxFormat::R8SNORM:
 		return DXGI_FORMAT_R8_SNORM;
 	case GfxFormat::D32F:
-		return DXGI_FORMAT_D32_FLOAT;
+		return depth_srv ? DXGI_FORMAT_R32_FLOAT : DXGI_FORMAT_D32_FLOAT;
 	case GfxFormat::D32FS8:
-		return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+		return depth_srv ? DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS : DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
 	case GfxFormat::D16:
-		return DXGI_FORMAT_D16_UNORM;
+		return depth_srv ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_D16_UNORM;
 	default:
 		return DXGI_FORMAT_UNKNOWN;
 	}
