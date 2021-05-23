@@ -2,6 +2,18 @@
 #include "d3d12_device.h"
 #include "d3d12_shader.h"
 
+inline bool has_rt_binding(const GfxGraphicsPipelineDesc& desc)
+{
+    for (int i = 0; i < 8; ++i)
+    {
+        if (desc.rt_format[i] != GfxFormat::Unknown)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 D3D12GraphicsPipelineState::D3D12GraphicsPipelineState(D3D12Device* pDevice, const GfxGraphicsPipelineDesc& desc, const std::string& name)
 {
     m_pDevice = pDevice;
@@ -32,7 +44,7 @@ bool D3D12GraphicsPipelineState::Create()
     desc.DepthStencilState = d3d12_depth_stencil_desc(m_desc.depthstencil_state);
     desc.BlendState = d3d12_blend_desc(m_desc.blend_state);
 
-    desc.NumRenderTargets = 8;
+    desc.NumRenderTargets = has_rt_binding(m_desc) ? 8 : 0;
     for (int i = 0; i < 8; ++i)
     {
         desc.RTVFormats[i] = dxgi_format(m_desc.rt_format[i]);
