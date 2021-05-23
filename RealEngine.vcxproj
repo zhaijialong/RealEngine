@@ -106,6 +106,7 @@
     <ClCompile Include="source\core\i_light.cpp" />
     <ClCompile Include="source\core\i_visible_object.cpp" />
     <ClCompile Include="source\core\model.cpp" />
+    <ClCompile Include="source\core\post_processor.cpp" />
     <ClCompile Include="source\core\sky_sphere.cpp" />
     <ClCompile Include="source\core\world.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
@@ -120,11 +121,13 @@
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\renderer\base_pass.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
     <ClCompile Include="source\renderer\render_target.cpp" />
     <ClCompile Include="source\renderer\shader_cache.cpp" />
     <ClCompile Include="source\renderer\shader_compiler.cpp" />
+    <ClCompile Include="source\renderer\shadow_pass.cpp" />
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
     <ClCompile Include="source\renderer\texture.cpp" />
     <ClCompile Include="source\renderer\tonemap.cpp" />
@@ -152,6 +155,7 @@
     <ClInclude Include="source\core\i_light.h" />
     <ClInclude Include="source\core\i_visible_object.h" />
     <ClInclude Include="source\core\model.h" />
+    <ClInclude Include="source\core\post_processor.h" />
     <ClInclude Include="source\core\sky_sphere.h" />
     <ClInclude Include="source\core\world.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
@@ -177,11 +181,13 @@
     <ClInclude Include="source\gfx\i_gfx_shader.h" />
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
+    <ClInclude Include="source\renderer\base_pass.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
     <ClInclude Include="source\renderer\renderer.h" />
     <ClInclude Include="source\renderer\render_target.h" />
     <ClInclude Include="source\renderer\shader_cache.h" />
     <ClInclude Include="source\renderer\shader_compiler.h" />
+    <ClInclude Include="source\renderer\shadow_pass.h" />
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
     <ClInclude Include="source\renderer\texture.h" />
     <ClInclude Include="source\renderer\tonemap.h" />
@@ -210,6 +216,10 @@
     <FxCompile Include="shaders\model.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\model_shadow.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

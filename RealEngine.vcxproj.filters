@@ -127,6 +127,15 @@
     <ClCompile Include="source\core\i_light.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\base_pass.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\shadow_pass.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\core\post_processor.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -309,6 +318,15 @@
     <ClInclude Include="source\core\directional_light.h">
       <Filter>source\core</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\base_pass.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\shadow_pass.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\core\post_processor.h">
+      <Filter>source\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -387,6 +405,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\tonemap.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\model_shadow.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

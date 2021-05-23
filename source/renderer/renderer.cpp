@@ -81,7 +81,16 @@ void Renderer::BeginFrame()
 
     SceneConstant sceneCB;
     sceneCB.lightDir = light->GetLightDirection();
+    sceneCB.shadowRT = m_pShadowRT->GetSRV()->GetHeapIndex();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
+
+    float3 light_dir = light->GetLightDirection();
+    float3 eye = light_dir * 100.0f;
+    float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
+    float4x4 mtxProj = ortho_matrix(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 500.0f);
+    float4x4 mtxVP = mul(mtxProj, mtxView);
+    sceneCB.mtxlightVP = mtxVP;
+
     pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 4, &sceneCB, sizeof(sceneCB));
 }
 
@@ -135,20 +144,46 @@ void Renderer::Render()
     std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
     RENDER_EVENT(pCommandList, event_name.c_str());
 
-    GfxRenderPassDesc render_pass;
-    render_pass.color[0].texture = m_pHdrRT->GetTexture();
-    render_pass.color[0].load_op = GfxRenderPassLoadOp::Clear;
-    render_pass.color[0].clear_color[0] = 0.0f;
-    render_pass.color[0].clear_color[1] = 0.0f;
-    render_pass.color[0].clear_color[2] = 0.0f;
-    render_pass.color[0].clear_color[3] = 1.0f;
-    render_pass.depth.texture = m_pDepthRT->GetTexture();
-    render_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
-    render_pass.depth.stencil_load_op = GfxRenderPassLoadOp::Clear;
+    {
+        RENDER_EVENT(pCommandList, "ShadowPass");
+
+        GfxRenderPassDesc shadow_pass;
+        shadow_pass.depth.texture = m_pShadowRT->GetTexture();
+        shadow_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
+        shadow_pass.depth.clear_depth = 1.0f;
+        pCommandList->BeginRenderPass(shadow_pass);
+        pCommandList->SetViewport(0, 0, m_pShadowRT->GetTexture()->GetDesc().width, m_pShadowRT->GetTexture()->GetDesc().height);
+
+        ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
+        float3 light_dir = light->GetLightDirection();
+        float3 eye = light_dir * 100.0f;
+        float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
+        float4x4 mtxProj = ortho_matrix(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 500.0f);
+        float4x4 mtxVP = mul(mtxProj, mtxView);
+
+        for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
+        {
+            m_shadowPassBatchs[i](pCommandList, this, mtxVP);
+        }
+        m_shadowPassBatchs.clear();
+
+        pCommandList->EndRenderPass();
+        pCommandList->ResourceBarrier(m_pShadowRT->GetTexture(), 0, GfxResourceState::DepthStencil, GfxResourceState::ShaderResourcePSOnly);
+    }
 
     {
         RENDER_EVENT(pCommandList, "BassPass");
 
+        GfxRenderPassDesc render_pass;
+        render_pass.color[0].texture = m_pHdrRT->GetTexture();
+        render_pass.color[0].load_op = GfxRenderPassLoadOp::Clear;
+        render_pass.color[0].clear_color[0] = 0.0f;
+        render_pass.color[0].clear_color[1] = 0.0f;
+        render_pass.color[0].clear_color[2] = 0.0f;
+        render_pass.color[0].clear_color[3] = 1.0f;
+        render_pass.depth.texture = m_pDepthRT->GetTexture();
+        render_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
+        render_pass.depth.stencil_load_op = GfxRenderPassLoadOp::Clear;
         pCommandList->BeginRenderPass(render_pass);
         pCommandList->SetViewport(0, 0, m_pHdrRT->GetTexture()->GetDesc().width, m_pHdrRT->GetTexture()->GetDesc().height);
 
@@ -159,19 +194,20 @@ void Renderer::Render()
         m_basePassBatchs.clear();
 
         pCommandList->EndRenderPass();
+        pCommandList->ResourceBarrier(m_pHdrRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
     }
 
-    pCommandList->ResourceBarrier(m_pHdrRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
     pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
-
-    render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
-    render_pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
-    render_pass.depth.texture = nullptr;
-    pCommandList->BeginRenderPass(render_pass);
 
     {
         RENDER_EVENT(pCommandList, "PostProcess");
+        GfxRenderPassDesc render_pass;
+        render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
+        render_pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
+        pCommandList->BeginRenderPass(render_pass);
+
         m_pToneMap->Draw(pCommandList, m_pHdrRT->GetSRV());
+        //m_pToneMap->Draw(pCommandList, m_pShadowRT->GetSRV());
     }
 
     GUI* pGUI = Engine::GetInstance()->GetWorld()->GetGUI();
@@ -181,6 +217,7 @@ void Renderer::Render()
 
     pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
     pCommandList->ResourceBarrier(m_pHdrRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
+    pCommandList->ResourceBarrier(m_pShadowRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::DepthStencil);
 }
 
 void Renderer::EndFrame()
@@ -230,8 +267,10 @@ void Renderer::CreateCommonResources()
     uint32_t width = pBackBuffer->GetDesc().width;
     uint32_t height = pBackBuffer->GetDesc().height;
 
-    m_pDepthRT.reset(CreateRenderTarget(width, height, GfxFormat::D32FS8, "Renderer::m_pDepthRT", GfxTextureUsageDepthStencil /*| GfxTextureUsageShaderResource*/));
+    m_pDepthRT.reset(CreateRenderTarget(width, height, GfxFormat::D32FS8, "Renderer::m_pDepthRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource));
     m_pHdrRT.reset(CreateRenderTarget(width, height, GfxFormat::RGBA16F, "Renderer::m_pHdrRT"));
+
+    m_pShadowRT.reset(CreateRenderTarget(2048, 2048, GfxFormat::D32F, "Renderer::m_pShadowRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, false));
 
     m_pToneMap.reset(new Tonemap(this));
 }

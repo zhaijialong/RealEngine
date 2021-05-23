@@ -3,10 +3,12 @@
 struct SceneConstant
 {
     float3 lightDir;
-    float _padding0;
+    uint shadowRT;
     
     float3 lightColor;
     float _padding1;
+    
+    float4x4 mtxlightVP;
 };
 
 struct CameraConstant

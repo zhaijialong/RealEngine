@@ -54,6 +54,63 @@ void Model::Render(Renderer* pRenderer)
 
     RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, m_pRootNode.get(), mtxWorld);
     pRenderer->AddBasePassBatch(bassPassBatch);
+
+    ShadowRenderFunc shadowPassBatch = std::bind(&Model::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, m_pRootNode.get(), mtxWorld);
+    pRenderer->AddShadowPassBatch(shadowPassBatch);
+}
+
+void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld)
+{
+    float4x4 mtxWorld = mul(parentWorld, pNode->localToParentMatrix);
+    float4x4 mtxWVP = mul(mtxVP, mtxWorld);
+
+    ModelConstant modelCB;
+    modelCB.mtxWVP = mtxWVP;
+    modelCB.mtxWorld = mtxWorld;
+    modelCB.mtxNormal = transpose(inverse(mtxWorld));
+
+    pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, &modelCB, sizeof(modelCB));
+
+    for (size_t i = 0; i < pNode->meshes.size(); ++i)
+    {
+        Mesh* mesh = pNode->meshes[i].get();
+        Material* material = mesh->material.get();
+
+        RENDER_EVENT(pCommandList, mesh->name);
+
+        std::vector<std::string> defines;
+        if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
+
+        GfxGraphicsPipelineDesc psoDesc;
+        psoDesc.vs = pRenderer->GetShader("model_shadow.hlsl", "vs_main", "vs_6_6", defines);
+        //psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.depthstencil_state.depth_test = true;
+        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::LessEqual;
+        psoDesc.depthstencil_format = GfxFormat::D32F;
+
+        IGfxPipelineState* pPSO = pRenderer->GetPipelineState(psoDesc, "model shadow PSO");
+        pCommandList->SetPipelineState(pPSO);
+        pCommandList->SetIndexBuffer(mesh->indexBuffer.get());
+
+        uint32_t vertexCB[4] =
+        {
+            mesh->posBufferSRV->GetHeapIndex(),
+            mesh->uvBufferSRV->GetHeapIndex(),
+            material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
+            pRenderer->GetLinearSampler()->GetHeapIndex()
+        };
+        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
+
+        pCommandList->DrawIndexed(mesh->indexCount);
+    }
+
+    for (size_t i = 0; i < pNode->childNodes.size(); ++i)
+    {
+        RenderShadowPass(pCommandList, pRenderer, mtxVP, pNode->childNodes[i].get(), parentWorld);
+    }
 }
 
 void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera, Node* pNode, const float4x4& parentWorld)
@@ -100,7 +157,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
             mesh->posBufferSRV->GetHeapIndex(),
             mesh->uvBufferSRV->GetHeapIndex(),
             mesh->normalBufferSRV->GetHeapIndex(),
-            mesh->tangentBufferSRV ? mesh->tangentBufferSRV->GetHeapIndex() : 0
+            mesh->tangentBufferSRV ? mesh->tangentBufferSRV->GetHeapIndex() : GFX_INVALID_RESOURCE
         };
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
 

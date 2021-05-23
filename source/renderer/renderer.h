@@ -8,6 +8,7 @@
 #include "render_target.h"
 #include "tonemap.h"
 #include "lsignal/lsignal.h"
+#include "utils/math.h"
 #include <functional>
 
 const static int MAX_INFLIGHT_FRAMES = 3;
@@ -16,6 +17,7 @@ class Camera;
 class Renderer;
 
 using RenderFunc = std::function<void(IGfxCommandList*, Renderer*, Camera*)>;
+using ShadowRenderFunc = std::function<void(IGfxCommandList*, Renderer*, const float4x4&)>;
 
 class Renderer
 {
@@ -46,6 +48,7 @@ public:
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 
+    void AddShadowPassBatch(const ShadowRenderFunc& func) { m_shadowPassBatchs.push_back(func); }
     void AddBasePassBatch(const RenderFunc& func) { m_basePassBatchs.push_back(func); }
 
 private:
@@ -97,10 +100,12 @@ private:
 
     std::unique_ptr<RenderTarget> m_pHdrRT;
     std::unique_ptr<RenderTarget> m_pDepthRT;
+    std::unique_ptr<RenderTarget> m_pShadowRT;
 
     std::unique_ptr<Tonemap> m_pToneMap; //test code
 
     lsignal::connection m_resizeConnection;
 
+    std::vector<ShadowRenderFunc> m_shadowPassBatchs;
     std::vector<RenderFunc> m_basePassBatchs;
 };
