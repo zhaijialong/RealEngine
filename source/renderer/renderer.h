@@ -97,6 +97,7 @@ private:
 
     std::unique_ptr<IGfxDescriptor> m_pPointSampler;
     std::unique_ptr<IGfxDescriptor> m_pLinearSampler;
+    std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
 
     std::unique_ptr<RenderTarget> m_pHdrRT;
     std::unique_ptr<RenderTarget> m_pDepthRT;

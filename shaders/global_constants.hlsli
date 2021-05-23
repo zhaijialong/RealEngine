@@ -6,7 +6,7 @@ struct SceneConstant
     uint shadowRT;
     
     float3 lightColor;
-    float _padding1;
+    uint shadowSampler;
     
     float4x4 mtxlightVP;
 };

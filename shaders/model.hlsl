@@ -43,16 +43,22 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     return output;
 }
 
-float Shadow(float3 worldPos, float4x4 mtxlightVP, Texture2D shadowRT, SamplerState shadowSampler)
+float Shadow(float3 worldPos, float4x4 mtxlightVP, Texture2D shadowRT, SamplerComparisonState shadowSampler)
 {
     float4 shadow_coord = mul(SceneCB.mtxlightVP, float4(worldPos, 1.0));
     shadow_coord /= shadow_coord.w;
     shadow_coord.xy = shadow_coord.xy * float2(0.5, -0.5) + 0.5;
     
-    float shadow = shadowRT.Sample(shadowSampler, shadow_coord.xy).x;
-    float visibility = shadow >= shadow_coord.z ? 1.0 : 0.0;
-    
-    return visibility;
+#if 0
+    return shadowRT.SampleCmpLevelZero(shadowSampler, shadow_coord.xy, shadow_coord.z).x;
+#else
+    const float halfTexel = 0.5 / 2048;
+    float visibility = shadowRT.SampleCmpLevelZero(shadowSampler, shadow_coord.xy + float2(halfTexel, halfTexel), shadow_coord.z).x;
+    visibility += shadowRT.SampleCmpLevelZero(shadowSampler, shadow_coord.xy + float2(-halfTexel, halfTexel), shadow_coord.z).x;
+    visibility += shadowRT.SampleCmpLevelZero(shadowSampler, shadow_coord.xy + float2(halfTexel, halfTexel), shadow_coord.z).x;
+    visibility += shadowRT.SampleCmpLevelZero(shadowSampler, shadow_coord.xy + float2(-halfTexel, -halfTexel), shadow_coord.z).x;
+    return visibility / 4.0f;
+#endif
 }
 
 float4 ps_main(VSOutput input) : SV_TARGET
@@ -98,7 +104,8 @@ float4 ps_main(VSOutput input) : SV_TARGET
     float3 specular = lerp(0.04, albedo.xyz, metallic);
 
     Texture2D shadowRT = ResourceDescriptorHeap[SceneCB.shadowRT];
-    float visibility = Shadow(input.worldPos, SceneCB.mtxlightVP, shadowRT, linearSampler);
+    SamplerComparisonState shadowSampler = SamplerDescriptorHeap[SceneCB.shadowSampler];
+    float visibility = Shadow(input.worldPos + N * 0.001, SceneCB.mtxlightVP, shadowRT, shadowSampler);
     
     float3 direct_light = BRDF(SceneCB.lightDir, SceneCB.lightColor, N, V, diffuse, specular, roughness) * visibility;
     

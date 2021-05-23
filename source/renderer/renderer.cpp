@@ -61,6 +61,17 @@ void Renderer::RenderFrame()
     EndFrame();
 }
 
+//test code
+inline float4x4 GetLightVP(ILight* light)
+{
+    float3 light_dir = light->GetLightDirection();
+    float3 eye = light_dir * 50.0f;
+    float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
+    float4x4 mtxProj = ortho_matrix(-15.0f, 15.0f, -15.0f, 15.0f, 0.1f, 500.0f);
+    float4x4 mtxVP = mul(mtxProj, mtxView);
+    return mtxVP;
+}
+
 void Renderer::BeginFrame()
 {
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
@@ -83,13 +94,8 @@ void Renderer::BeginFrame()
     sceneCB.lightDir = light->GetLightDirection();
     sceneCB.shadowRT = m_pShadowRT->GetSRV()->GetHeapIndex();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
-
-    float3 light_dir = light->GetLightDirection();
-    float3 eye = light_dir * 100.0f;
-    float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
-    float4x4 mtxProj = ortho_matrix(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 500.0f);
-    float4x4 mtxVP = mul(mtxProj, mtxView);
-    sceneCB.mtxlightVP = mtxVP;
+    sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
+    sceneCB.mtxlightVP = GetLightVP(light);
 
     pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 4, &sceneCB, sizeof(sceneCB));
 }
@@ -155,11 +161,7 @@ void Renderer::Render()
         pCommandList->SetViewport(0, 0, m_pShadowRT->GetTexture()->GetDesc().width, m_pShadowRT->GetTexture()->GetDesc().height);
 
         ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
-        float3 light_dir = light->GetLightDirection();
-        float3 eye = light_dir * 100.0f;
-        float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
-        float4x4 mtxProj = ortho_matrix(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 500.0f);
-        float4x4 mtxVP = mul(mtxProj, mtxView);
+        float4x4 mtxVP = GetLightVP(light);
 
         for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
         {
@@ -262,6 +264,13 @@ void Renderer::CreateCommonResources()
     desc.mag_filter = GfxFilter::Linear;
     desc.mip_filter = GfxFilter::Linear;
     m_pLinearSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearSampler"));
+
+    desc.min_filter = GfxFilter::Linear;
+    desc.mag_filter = GfxFilter::Linear;
+    desc.mip_filter = GfxFilter::Point;
+    desc.enable_compare = true;
+    desc.compare_func = GfxCompareFunc::LessEqual;
+    m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
 
     IGfxTexture* pBackBuffer = m_pSwapchain->GetBackBuffer();
     uint32_t width = pBackBuffer->GetDesc().width;

@@ -87,6 +87,8 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
         //psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.rasterizer_state.depth_bias = 5.0f;
+        psoDesc.rasterizer_state.depth_slope_scale = 1.0f;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::LessEqual;
         psoDesc.depthstencil_format = GfxFormat::D32F;
