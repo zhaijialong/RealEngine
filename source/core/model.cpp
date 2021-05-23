@@ -10,11 +10,14 @@
 
 void Model::Load(tinyxml2::XMLElement* element)
 {
+    IVisibleObject::Load(element);
+
     m_file = element->FindAttribute("file")->Value();
 }
 
 void Model::Store(tinyxml2::XMLElement* element)
 {
+    IVisibleObject::Store(element);
 }
 
 bool Model::Create()

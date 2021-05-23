@@ -1,6 +1,7 @@
 #pragma once
 
 #include "linalg/linalg.h"
+#include <vector>
 
 using namespace linalg;
 using namespace linalg::aliases;
@@ -29,4 +30,9 @@ inline float3 radian_to_degree(float3 radian)
 {
 	const float PI = 3.141592653f;
 	return radian * 180.0f / PI;
+}
+
+inline float3 vector_to_float3(const std::vector<float>& v)
+{
+	return float3(v[0], v[1], v[2]);
 }

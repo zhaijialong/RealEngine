@@ -99,9 +99,12 @@
     <ClCompile Include="external\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="external\xxHash\xxhash.c" />
     <ClCompile Include="source\core\camera.cpp" />
+    <ClCompile Include="source\core\directional_light.cpp" />
     <ClCompile Include="source\core\editor.cpp" />
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\gui.cpp" />
+    <ClCompile Include="source\core\i_light.cpp" />
+    <ClCompile Include="source\core\i_visible_object.cpp" />
     <ClCompile Include="source\core\model.cpp" />
     <ClCompile Include="source\core\sky_sphere.cpp" />
     <ClCompile Include="source\core\world.cpp" />
@@ -142,9 +145,11 @@
     <ClInclude Include="external\tinyxml2\tinyxml2.h" />
     <ClInclude Include="external\xxHash\xxhash.h" />
     <ClInclude Include="source\core\camera.h" />
+    <ClInclude Include="source\core\directional_light.h" />
     <ClInclude Include="source\core\editor.h" />
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\gui.h" />
+    <ClInclude Include="source\core\i_light.h" />
     <ClInclude Include="source\core\i_visible_object.h" />
     <ClInclude Include="source\core\model.h" />
     <ClInclude Include="source\core\sky_sphere.h" />

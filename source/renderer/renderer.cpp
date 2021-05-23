@@ -70,15 +70,18 @@ void Renderer::BeginFrame()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->Begin();
 
-    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+    World* world = Engine::GetInstance()->GetWorld();
+    Camera* camera = world->GetCamera();
 
     CameraConstant cameraCB;
     cameraCB.cameraPos = camera->GetPosition();
     pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 3, &cameraCB, sizeof(cameraCB));
 
+    ILight* light = world->GetPrimaryLight();
+
     SceneConstant sceneCB;
-    sceneCB.lightDir = normalize(float3(1.0f, 1.0f, 1.0f));
-    sceneCB.lightColor = float3(1.0f, 1.0f, 1.0f);
+    sceneCB.lightDir = light->GetLightDirection();
+    sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
     pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 4, &sceneCB, sizeof(sceneCB));
 }
 

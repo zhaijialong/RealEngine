@@ -2,6 +2,7 @@
 #include "engine.h"
 #include "model.h"
 #include "sky_sphere.h"
+#include "directional_light.h"
 #include "utils/assert.h"
 
 World::World()
@@ -21,7 +22,7 @@ void World::LoadScene(const std::string& file)
         return;
     }
 
-    m_objects.clear();
+    ClearScene();
 
     tinyxml2::XMLNode* root_node = doc.FirstChild();
     RE_ASSERT(root_node != nullptr && strcmp(root_node->Value(), "scene") == 0);
@@ -42,6 +43,12 @@ void World::AddObject(IVisibleObject* object)
     m_objects.push_back(std::unique_ptr<IVisibleObject>(object));
 }
 
+void World::AddLight(ILight* light)
+{
+    RE_ASSERT(light != nullptr);
+    m_lights.push_back(std::unique_ptr<ILight>(light));
+}
+
 void World::Tick(float delta_time)
 {
     m_pGUI->Tick();
@@ -49,6 +56,11 @@ void World::Tick(float delta_time)
     m_pCamera->Tick(delta_time);
 
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+    {
+        (*iter)->Tick(delta_time);
+    }
+
+    for (auto iter = m_lights.begin(); iter != m_lights.end(); ++iter)
     {
         (*iter)->Tick(delta_time);
     }
@@ -78,8 +90,27 @@ IVisibleObject* World::GetSelectedObject() const
     return nullptr;
 }
 
+ILight* World::GetPrimaryLight() const
+{
+    RE_ASSERT(m_pPrimaryLight != nullptr);
+    return m_pPrimaryLight;
+}
+
+void World::ClearScene()
+{
+    m_objects.clear();
+    m_lights.clear();
+    m_pPrimaryLight = nullptr;
+}
+
 void World::CreateVisibleObject(tinyxml2::XMLElement* element)
 {
+    if (strcmp(element->Value(), "light") == 0)
+    {
+        CreateLight(element);
+        return;
+    }
+
     IVisibleObject* object = nullptr;
 
     if (strcmp(element->Value(), "model") == 0)
@@ -100,4 +131,38 @@ void World::CreateVisibleObject(tinyxml2::XMLElement* element)
     }
 
     AddObject(object);
+}
+
+void World::CreateLight(tinyxml2::XMLElement* element)
+{
+    ILight* light = nullptr;
+
+    const tinyxml2::XMLAttribute* type = element->FindAttribute("type");
+    RE_ASSERT(type != nullptr);
+
+    if (strcmp(type->Value(), "directional") == 0)
+    {
+        light = new DirectionalLight();
+    }
+    else
+    {
+        //todo
+        RE_ASSERT(false);
+    }
+
+    light->Load(element);
+
+    if (!light->Create())
+    {
+        delete light;
+        return;
+    }
+
+    AddLight(light);
+
+    const tinyxml2::XMLAttribute* primary = element->FindAttribute("primary");
+    if (primary && primary->BoolValue())
+    {
+        m_pPrimaryLight = light;
+    }
 }

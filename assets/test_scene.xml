@@ -1,4 +1,5 @@
 <scene>
     <model file="metal_rough_ball/MetalRoughSpheres.gltf" />
     <skysphere />
+    <light type="directional" primary="true" rotation="45.000,0.000,0.000"/>
 </scene>

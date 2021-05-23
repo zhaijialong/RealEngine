@@ -118,6 +118,15 @@
     <ClCompile Include="source\renderer\tonemap.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\core\directional_light.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
+    <ClCompile Include="source\core\i_visible_object.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
+    <ClCompile Include="source\core\i_light.cpp">
+      <Filter>source\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -293,6 +302,12 @@
     </ClInclude>
     <ClInclude Include="source\renderer\tonemap.h">
       <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\core\i_light.h">
+      <Filter>source\core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\core\directional_light.h">
+      <Filter>source\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

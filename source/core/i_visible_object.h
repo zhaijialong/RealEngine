@@ -9,8 +9,8 @@ class IVisibleObject
 public:
     virtual ~IVisibleObject() {}
 
-    virtual void Load(tinyxml2::XMLElement* element) = 0;
-    virtual void Store(tinyxml2::XMLElement* element) = 0;
+    virtual void Load(tinyxml2::XMLElement* element);
+    virtual void Store(tinyxml2::XMLElement* element);
 
     virtual bool Create() = 0;
     virtual void Tick(float delta_time) = 0;
