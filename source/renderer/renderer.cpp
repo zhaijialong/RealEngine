@@ -95,7 +95,7 @@ void Renderer::BeginFrame()
     sceneCB.shadowRT = m_pShadowRT->GetSRV()->GetHeapIndex();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
     sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
-    sceneCB.mtxlightVP = GetLightVP(light);
+    sceneCB.mtxLightVP = GetLightVP(light);
 
     pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 4, &sceneCB, sizeof(sceneCB));
 }

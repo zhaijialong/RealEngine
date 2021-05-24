@@ -8,7 +8,7 @@ struct SceneConstant
     float3 lightColor;
     uint shadowSampler;
     
-    float4x4 mtxlightVP;
+    float4x4 mtxLightVP;
 };
 
 struct CameraConstant

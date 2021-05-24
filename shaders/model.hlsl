@@ -43,9 +43,9 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     return output;
 }
 
-float Shadow(float3 worldPos, float4x4 mtxlightVP, Texture2D shadowRT, SamplerComparisonState shadowSampler)
+float Shadow(float3 worldPos, float3 worldNormal, float4x4 mtxLightVP, Texture2D shadowRT, SamplerComparisonState shadowSampler)
 {
-    float4 shadow_coord = mul(SceneCB.mtxlightVP, float4(worldPos, 1.0));
+    float4 shadow_coord = mul(mtxLightVP, float4(worldPos + worldNormal * 0.001, 1.0));
     shadow_coord /= shadow_coord.w;
     shadow_coord.xy = shadow_coord.xy * float2(0.5, -0.5) + 0.5;
     
@@ -105,9 +105,9 @@ float4 ps_main(VSOutput input) : SV_TARGET
 
     Texture2D shadowRT = ResourceDescriptorHeap[SceneCB.shadowRT];
     SamplerComparisonState shadowSampler = SamplerDescriptorHeap[SceneCB.shadowSampler];
-    float visibility = Shadow(input.worldPos + N * 0.001, SceneCB.mtxlightVP, shadowRT, shadowSampler);
+    float visibility = Shadow(input.worldPos, N, SceneCB.mtxLightVP, shadowRT, shadowSampler);
     
-    float3 direct_light = BRDF(SceneCB.lightDir, SceneCB.lightColor, N, V, diffuse, specular, roughness) * visibility;
+    float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor;
     
     float3 indirect_light = diffuse * ambient;
 

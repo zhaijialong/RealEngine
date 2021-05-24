@@ -22,11 +22,11 @@ float3 D_GGX(float3 N, float3 H, float a)
 float3 V_SmithGGX(float3 N, float3 V, float3 L, float a)
 {
     float a2 = a * a;
-    float NoV = saturate(dot(N, V));
-    float NoL = saturate(dot(N, L));
+    float NdotV = saturate(dot(N, V));
+    float NdotL = saturate(dot(N, L));
 
-    float G_V = NoV + sqrt((NoV - NoV * a2) * NoV + a2);
-    float G_L = NoL + sqrt((NoL - NoL * a2) * NoL + a2);
+    float G_V = NdotV + sqrt((NdotV - NdotV * a2) * NdotV + a2);
+    float G_L = NdotL + sqrt((NdotL - NdotL * a2) * NdotL + a2);
     return rcp(G_V * G_L);
 }
 
@@ -50,13 +50,13 @@ float3 SpecularBRDF(float3 N, float3 V, float3 L, float3 specular, float roughne
     return D * Vis * F;
 }
 
-float3 BRDF(float3 L, float3 light_radiance, float3 N, float3 V, float3 diffuse, float3 specular, float roughness)
+float3 BRDF(float3 L, float3 V, float3 N, float3 diffuse, float3 specular, float roughness)
 {
-    float NdotL = saturate(dot(N, L));
-
     float3 F;
     float3 specular_brdf = SpecularBRDF(N, V, L, specular, roughness, F);
     float3 diffuse_brdf = DiffuseBRDF(diffuse) * (1.0 - F);    
+    
+    float NdotL = saturate(dot(N, L));
 
-    return (diffuse_brdf + specular_brdf) * light_radiance * NdotL;
+    return (diffuse_brdf + specular_brdf) * NdotL;
 }
