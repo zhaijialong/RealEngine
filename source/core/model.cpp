@@ -76,7 +76,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
         Mesh* mesh = pNode->meshes[i].get();
         Material* material = mesh->material.get();
 
-        RENDER_EVENT(pCommandList, mesh->name);
+        RENDER_EVENT(pCommandList, m_file + " " + mesh->name);
 
         std::vector<std::string> defines;
         if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
@@ -132,7 +132,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         Mesh* mesh = pNode->meshes[i].get();
         Material* material = mesh->material.get();
 
-        RENDER_EVENT(pCommandList, mesh->name);
+        RENDER_EVENT(pCommandList, m_file + " " + mesh->name);
 
         std::vector<std::string> defines;
         if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
@@ -251,7 +251,7 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
     Mesh* mesh = new Mesh;
     mesh->name = name;
     mesh->material.reset(LoadMaterial(gltf_primitive->material));
-    mesh->indexBuffer.reset(LoadIndexBuffer(gltf_primitive->indices, "model " + name + " IB"));
+    mesh->indexBuffer.reset(LoadIndexBuffer(gltf_primitive->indices, "model(" + m_file + " " + name + ") IB"));
     mesh->indexCount = (uint32_t)gltf_primitive->indices->count;
     
     for (cgltf_size i = 0; i < gltf_primitive->attributes_count; ++i)
@@ -262,25 +262,25 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
         switch (gltf_primitive->attributes[i].type)
         {
         case cgltf_attribute_type_position:
-            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model " + mesh->name + " pos", true, &buffer, &srv);
+            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") pos", true, &buffer, &srv);
             mesh->posBuffer.reset(buffer);
             mesh->posBufferSRV.reset(srv);
             break;
         case cgltf_attribute_type_texcoord:
             if (gltf_primitive->attributes[i].index == 0)
             {
-                LoadVertexBuffer(gltf_primitive->attributes[i].data, "model " + mesh->name + " UV", false, &buffer, &srv);
+                LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") UV", false, &buffer, &srv);
                 mesh->uvBuffer.reset(buffer);
                 mesh->uvBufferSRV.reset(srv);
             }
             break;
         case cgltf_attribute_type_normal:
-            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model " + mesh->name + " normal", true, &buffer, &srv);
+            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") normal", true, &buffer, &srv);
             mesh->normalBuffer.reset(buffer);
             mesh->normalBufferSRV.reset(srv);
             break;
         case cgltf_attribute_type_tangent:
-            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model " + mesh->name + " tangent", true, &buffer, &srv);
+            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") tangent", true, &buffer, &srv);
             mesh->tangentBuffer.reset(buffer);
             mesh->tangentBufferSRV.reset(srv);
             break;
