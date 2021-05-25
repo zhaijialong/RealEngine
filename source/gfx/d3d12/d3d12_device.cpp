@@ -493,22 +493,19 @@ void D3D12Device::CreateRootSignature()
 	root_parameters[3].InitAsConstantBufferView(3);
 	root_parameters[4].InitAsConstantBufferView(4);
 
-	D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+	D3D12_ROOT_SIGNATURE_FLAGS flags =
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
 		D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED;
 
-	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init_1_1(_countof(root_parameters), root_parameters, 0, nullptr, rootSignatureFlags);
-
-	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
-	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
+	desc.Init_1_1(_countof(root_parameters), root_parameters, 0, nullptr, flags);
 
 	ID3DBlob* signature = nullptr;
 	ID3DBlob* error = nullptr;
-	HRESULT hr = D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error);
+	HRESULT hr = D3DX12SerializeVersionedRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_1, &signature, &error);
 	RE_ASSERT(SUCCEEDED(hr));
 
 	hr = m_pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature));
