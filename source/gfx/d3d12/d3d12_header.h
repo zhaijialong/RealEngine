@@ -445,11 +445,11 @@ inline D3D12_FILTER d3d12_filter(const GfxSamplerDesc& desc)
 	}
 	else
 	{
-		D3D12_FILTER_TYPE min = d3d12_filter_type(desc.min_filter);
-		D3D12_FILTER_TYPE mag = d3d12_filter_type(desc.mag_filter);
-		D3D12_FILTER_TYPE mip = d3d12_filter_type(desc.mip_filter);
+		D3D12_FILTER_TYPE min_filter = d3d12_filter_type(desc.min_filter);
+		D3D12_FILTER_TYPE mag_filter = d3d12_filter_type(desc.mag_filter);
+		D3D12_FILTER_TYPE mip_filter = d3d12_filter_type(desc.mip_filter);
 
-		return D3D12_ENCODE_BASIC_FILTER(min, mag, mip, reduction);
+		return D3D12_ENCODE_BASIC_FILTER(min_filter, mag_filter, mip_filter, reduction);
 	}
 }
 

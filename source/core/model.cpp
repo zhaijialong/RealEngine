@@ -111,7 +111,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
     {
-        RenderShadowPass(pCommandList, pRenderer, mtxVP, pNode->childNodes[i].get(), parentWorld);
+        RenderShadowPass(pCommandList, pRenderer, mtxVP, pNode->childNodes[i].get(), mtxWorld);
     }
 }
 
@@ -180,7 +180,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
     {
-        RenderBassPass(pCommandList, pRenderer, pCamera, pNode->childNodes[i].get(), parentWorld);
+        RenderBassPass(pCommandList, pRenderer, pCamera, pNode->childNodes[i].get(), mtxWorld);
     }
 }
 
