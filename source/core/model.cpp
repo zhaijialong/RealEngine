@@ -91,7 +91,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
         psoDesc.rasterizer_state.depth_slope_scale = 1.0f;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::LessEqual;
-        psoDesc.depthstencil_format = GfxFormat::D32F;
+        psoDesc.depthstencil_format = GfxFormat::D16;
 
         IGfxPipelineState* pPSO = pRenderer->GetPipelineState(psoDesc, "model shadow PSO");
         pCommandList->SetPipelineState(pPSO);

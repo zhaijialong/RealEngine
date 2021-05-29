@@ -2,7 +2,7 @@
 #include "renderer.h"
 #include "utils/assert.h"
 
-#define BUFFER_SIZE (32 * 1024 * 1024)
+#define BUFFER_SIZE (64 * 1024 * 1024)
 #define ALIGN(address, alignment) (((address) + (alignment) - 1) & ~((alignment) - 1)) 
 
 StagingBufferAllocator::StagingBufferAllocator(Renderer* pRenderer)

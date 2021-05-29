@@ -65,9 +65,9 @@ void Renderer::RenderFrame()
 inline float4x4 GetLightVP(ILight* light)
 {
     float3 light_dir = light->GetLightDirection();
-    float3 eye = light_dir * 50.0f;
+    float3 eye = light_dir * 100.0f;
     float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
-    float4x4 mtxProj = ortho_matrix(-15.0f, 15.0f, -15.0f, 15.0f, 0.1f, 500.0f);
+    float4x4 mtxProj = ortho_matrix(-50.0f, 50.0f, -50.0f, 50.0f, 0.1f, 500.0f);
     float4x4 mtxVP = mul(mtxProj, mtxView);
     return mtxVP;
 }
@@ -282,7 +282,7 @@ void Renderer::CreateCommonResources()
     m_pDepthRT.reset(CreateRenderTarget(width, height, GfxFormat::D32FS8, "Renderer::m_pDepthRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource));
     m_pHdrRT.reset(CreateRenderTarget(width, height, GfxFormat::RGBA16F, "Renderer::m_pHdrRT"));
 
-    m_pShadowRT.reset(CreateRenderTarget(2048, 2048, GfxFormat::D32F, "Renderer::m_pShadowRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, false));
+    m_pShadowRT.reset(CreateRenderTarget(2048, 2048, GfxFormat::D16, "Renderer::m_pShadowRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, false));
 
     m_pToneMap.reset(new Tonemap(this));
 }
@@ -305,9 +305,9 @@ Texture* Renderer::CreateTexture(const std::string& file, bool srgb)
     return texture;
 }
 
-RenderTarget* Renderer::CreateRenderTarget(uint32_t width, uint32_t height, GfxFormat format, const std::string& name, GfxTextureUsageFlags flags, bool auto_resize, float size)
+RenderTexture* Renderer::CreateRenderTarget(uint32_t width, uint32_t height, GfxFormat format, const std::string& name, GfxTextureUsageFlags flags, bool auto_resize, float size)
 {
-    RenderTarget* rt = new RenderTarget(auto_resize, size, name);
+    RenderTexture* rt = new RenderTexture(auto_resize, size, name);
     if (!rt->Create(width, height, format, flags))
     {
         delete rt;

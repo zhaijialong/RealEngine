@@ -1,5 +1,5 @@
 <scene>
-    <model file="metal_rough_ball/MetalRoughSpheres.gltf" />
+    <model file="pica_pica/scene.gltf" />
     <skysphere />
-    <light type="directional" primary="true" rotation="45.000,0.000,0.000"/>
+    <light type="directional" primary="true" rotation="-45.000,45.000,0.000"/>
 </scene>

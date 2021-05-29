@@ -5,7 +5,7 @@
 #include "pipeline_cache.h"
 #include "staging_buffer_allocator.h"
 #include "texture.h"
-#include "render_target.h"
+#include "render_texture.h"
 #include "tonemap.h"
 #include "lsignal/lsignal.h"
 #include "utils/math.h"
@@ -42,7 +42,7 @@ public:
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearSampler.get(); }
 
     Texture* CreateTexture(const std::string& file, bool srgb = true);
-    RenderTarget* CreateRenderTarget(uint32_t width, uint32_t height, GfxFormat format, const std::string& name,
+    RenderTexture* CreateRenderTarget(uint32_t width, uint32_t height, GfxFormat format, const std::string& name,
         GfxTextureUsageFlags flags = GfxTextureUsageShaderResource | GfxTextureUsageRenderTarget, bool auto_resize = true, float size = 1.0f);
 
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
@@ -99,9 +99,9 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pLinearSampler;
     std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
 
-    std::unique_ptr<RenderTarget> m_pHdrRT;
-    std::unique_ptr<RenderTarget> m_pDepthRT;
-    std::unique_ptr<RenderTarget> m_pShadowRT;
+    std::unique_ptr<RenderTexture> m_pHdrRT;
+    std::unique_ptr<RenderTexture> m_pDepthRT;
+    std::unique_ptr<RenderTexture> m_pShadowRT;
 
     std::unique_ptr<Tonemap> m_pToneMap; //test code
 
