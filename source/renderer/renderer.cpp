@@ -268,6 +268,9 @@ void Renderer::CreateCommonResources()
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;
     desc.mip_filter = GfxFilter::Point;
+    desc.address_u = GfxSamplerAddressMode::ClampToEdge;
+    desc.address_v = GfxSamplerAddressMode::ClampToEdge;
+    desc.address_w = GfxSamplerAddressMode::ClampToEdge;
     desc.enable_compare = true;
     desc.compare_func = GfxCompareFunc::LessEqual;
     m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
