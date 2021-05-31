@@ -100,9 +100,6 @@
     <ClCompile Include="source\renderer\texture.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\render_target.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="source\core\editor.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
@@ -135,6 +132,18 @@
     </ClCompile>
     <ClCompile Include="source\core\post_processor.cpp">
       <Filter>source\core</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\render_graph.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\render_texture.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\render_graph_builder.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\render_graph_resource.cpp">
+      <Filter>source\renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -291,9 +300,6 @@
     <ClInclude Include="source\renderer\texture.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\render_target.h">
-      <Filter>source\renderer</Filter>
-    </ClInclude>
     <ClInclude Include="source\core\editor.h">
       <Filter>source\core</Filter>
     </ClInclude>
@@ -326,6 +332,21 @@
     </ClInclude>
     <ClInclude Include="source\core\post_processor.h">
       <Filter>source\core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_graph.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_pass.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_texture.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_graph_resource.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_graph_builder.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -124,7 +124,10 @@
     <ClCompile Include="source\renderer\base_pass.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
-    <ClCompile Include="source\renderer\render_target.cpp" />
+    <ClCompile Include="source\renderer\render_graph.cpp" />
+    <ClCompile Include="source\renderer\render_graph_builder.cpp" />
+    <ClCompile Include="source\renderer\render_graph_resource.cpp" />
+    <ClCompile Include="source\renderer\render_texture.cpp" />
     <ClCompile Include="source\renderer\shader_cache.cpp" />
     <ClCompile Include="source\renderer\shader_compiler.cpp" />
     <ClCompile Include="source\renderer\shadow_pass.cpp" />
@@ -184,7 +187,11 @@
     <ClInclude Include="source\renderer\base_pass.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
     <ClInclude Include="source\renderer\renderer.h" />
-    <ClInclude Include="source\renderer\render_target.h" />
+    <ClInclude Include="source\renderer\render_graph.h" />
+    <ClInclude Include="source\renderer\render_graph_builder.h" />
+    <ClInclude Include="source\renderer\render_graph_resource.h" />
+    <ClInclude Include="source\renderer\render_pass.h" />
+    <ClInclude Include="source\renderer\render_texture.h" />
     <ClInclude Include="source\renderer\shader_cache.h" />
     <ClInclude Include="source\renderer\shader_compiler.h" />
     <ClInclude Include="source\renderer\shadow_pass.h" />
