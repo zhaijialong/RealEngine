@@ -10,25 +10,12 @@ Editor::Editor()
     ifd::FileDialog::Instance().CreateTexture = [this](uint8_t* data, int w, int h, char fmt) -> void* 
     {
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-        IGfxDevice* pDevice = pRenderer->GetDevice();
+        Texture2D* texture = pRenderer->CreateTexture2D(w, h, fmt == 1 ? GfxFormat::RGBA8SRGB : GfxFormat::BGRA8SRGB, GfxTextureUsageShaderResource, "ImFileDialog Icon");
+        pRenderer->UploadTexture(texture->GetTexture(), data, w * h * 4);
 
-        GfxTextureDesc desc;
-        desc.width = w;
-        desc.height = h;
-        desc.format = fmt == 1 ? GfxFormat::RGBA8SRGB : GfxFormat::BGRA8SRGB;
-        IGfxTexture* texture = pDevice->CreateTexture(desc, "ImFileDialog Icon");
-        RE_ASSERT(texture != nullptr);
+        m_fileDialogIcons.insert(std::make_pair(texture->GetSRV(), texture));
 
-        pRenderer->UploadTexture(texture, data, w * h * 4);
-
-        GfxShaderResourceViewDesc srvDesc;
-        srvDesc.type = GfxShaderResourceViewType::Texture2D;
-        srvDesc.texture.mip_levels = 1;
-        IGfxDescriptor* srv = pDevice->CreateShaderResourceView(texture, srvDesc, "ImFileDialog Icon");
-
-        m_fileDialogIcons.insert(std::make_pair(srv, texture));
-
-        return srv;
+        return texture->GetSRV();
     };
 
     ifd::FileDialog::Instance().DeleteTexture = [this](void* tex) 
@@ -38,9 +25,9 @@ Editor::Editor()
 
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    m_pTranslateIcon.reset(pRenderer->CreateTexture(asset_path + "ui/translate.png"));
-    m_pRotateIcon.reset(pRenderer->CreateTexture(asset_path + "ui/rotate.png"));
-    m_pScaleIcon.reset(pRenderer->CreateTexture(asset_path + "ui/scale.png"));
+    m_pTranslateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/translate.png"));
+    m_pRotateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/rotate.png"));
+    m_pScaleIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/scale.png"));
 }
 
 Editor::~Editor()
@@ -232,7 +219,7 @@ void Editor::CreateGpuMemoryStats()
         if (WinExec(cmd.c_str(), 0) > 31) //"If the function succeeds, the return value is greater than 31."
         {
             std::string file = path + "d3d12ma.png";
-            m_pGpuMemoryStats.reset(pRenderer->CreateTexture(file));
+            m_pGpuMemoryStats.reset(pRenderer->CreateTexture2D(file));
         }
     }
 }
@@ -245,11 +232,10 @@ void Editor::FlushPendingTextureDeletions()
         auto iter = m_fileDialogIcons.find(srv);
         RE_ASSERT(iter != m_fileDialogIcons.end());
 
-        IGfxTexture* texture = iter->second;
+        Texture2D* texture = iter->second;
         m_fileDialogIcons.erase(srv);
 
         delete texture;
-        delete srv;
     }
 
     m_pendingDeletions.clear();

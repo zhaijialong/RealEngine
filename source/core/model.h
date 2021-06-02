@@ -14,9 +14,9 @@ class Model : public IVisibleObject
 	{
 		std::string name;
 
-		Texture* albedoTexture = nullptr;
-		Texture* metallicRoughnessTexture = nullptr;
-		Texture* normalTexture = nullptr;
+		Texture2D* albedoTexture = nullptr;
+		Texture2D* metallicRoughnessTexture = nullptr;
+		Texture2D* normalTexture = nullptr;
 
 		float3 albedoColor;
 		float metallic;
@@ -30,18 +30,12 @@ class Model : public IVisibleObject
 		std::string name;
 		std::unique_ptr<Material> material;
 
-		std::unique_ptr<IGfxBuffer> indexBuffer;
-		uint32_t indexCount = 0;
+		std::unique_ptr<IndexBuffer> indexBuffer;
 
-		std::unique_ptr<IGfxBuffer> posBuffer;
-		std::unique_ptr<IGfxBuffer> uvBuffer;
-		std::unique_ptr<IGfxBuffer> normalBuffer;
-		std::unique_ptr<IGfxBuffer> tangentBuffer;
-
-		std::unique_ptr<IGfxDescriptor> posBufferSRV;
-		std::unique_ptr<IGfxDescriptor> uvBufferSRV;
-		std::unique_ptr<IGfxDescriptor> normalBufferSRV;
-		std::unique_ptr<IGfxDescriptor> tangentBufferSRV;
+		std::unique_ptr<StructuredBuffer> posBuffer;
+		std::unique_ptr<StructuredBuffer> uvBuffer;
+		std::unique_ptr<StructuredBuffer> normalBuffer;
+		std::unique_ptr<StructuredBuffer> tangentBuffer;
 	};
 
 	struct Node
@@ -63,16 +57,16 @@ private:
 	void RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld);
 	void RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera, Node* pNode, const float4x4& parentWorld);
 
-	Texture* LoadTexture(const std::string& file, bool srgb);
+	Texture2D* LoadTexture(const std::string& file, bool srgb);
 	Node* LoadNode(const cgltf_node* gltf_node);
 	Mesh* LoadMesh(const cgltf_primitive* gltf_primitive, const std::string& name);
 	Material* LoadMaterial(const cgltf_material* gltf_material);
-	IGfxBuffer* LoadIndexBuffer(const cgltf_accessor* accessor, const std::string& name);
-	void LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& name, bool convertToLH, IGfxBuffer** buffer, IGfxDescriptor** descriptor);
+	IndexBuffer* LoadIndexBuffer(const cgltf_accessor* accessor, const std::string& name);
+	StructuredBuffer* LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& name, bool convertToLH);
 
 private:
     std::string m_file;
 
 	std::unique_ptr<Node> m_pRootNode;
-    std::unordered_map<std::string, std::unique_ptr<Texture>> m_textures;
+    std::unordered_map<std::string, std::unique_ptr<Texture2D>> m_textures;
 };

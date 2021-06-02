@@ -40,21 +40,10 @@ bool GUI::Init()
 	int width, height;
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-	GfxTextureDesc textureDesc;
-	textureDesc.width = width;
-	textureDesc.height = height;
-	textureDesc.type = GfxTextureType::Texture2D;
-	textureDesc.format = GfxFormat::RGBA8UNORM;
-	m_pFontTexture.reset(pDevice->CreateTexture(textureDesc, "GUI::m_pFontTexture"));
+	m_pFontTexture.reset(pRenderer->CreateTexture2D(width, height, GfxFormat::RGBA8UNORM, GfxTextureUsageShaderResource, "GUI::m_pFontTexture"));
+	pRenderer->UploadTexture(m_pFontTexture->GetTexture(), pixels, width * height * 4);
 
-	pRenderer->UploadTexture(m_pFontTexture.get(), pixels, width * height * 4);
-
-	GfxShaderResourceViewDesc srvDesc;
-	srvDesc.type = GfxShaderResourceViewType::Texture2D;
-	srvDesc.texture.mip_levels = 1;
-	m_pFontTextureSRV.reset(pDevice->CreateShaderResourceView(m_pFontTexture.get(), srvDesc, "GUI::m_pFontTextureSRV"));
-
-	io.Fonts->TexID = (ImTextureID)m_pFontTextureSRV.get();
+	io.Fonts->TexID = (ImTextureID)m_pFontTexture->GetSRV();
 
 	GfxGraphicsPipelineDesc psoDesc;
 	psoDesc.vs = pRenderer->GetShader("imgui.hlsl", "vs_main", "vs_6_6", {});
@@ -98,37 +87,18 @@ void GUI::Render(IGfxCommandList* pCommandList)
 
 	uint32_t frame_index = pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
 
-	if (m_pVertexBuffer[frame_index] == nullptr || m_pVertexBuffer[frame_index]->GetDesc().size < draw_data->TotalVtxCount * sizeof(ImDrawVert))
+	if (m_pVertexBuffer[frame_index] == nullptr || m_pVertexBuffer[frame_index]->GetBuffer()->GetDesc().size < draw_data->TotalVtxCount * sizeof(ImDrawVert))
 	{
-		GfxBufferDesc desc;
-		desc.stride = sizeof(ImDrawVert);
-		desc.size = (draw_data->TotalVtxCount + 5000) * sizeof(ImDrawVert);
-		desc.memory_type = GfxMemoryType::CpuToGpu;
-		desc.usage = GfxBufferUsageStructuredBuffer;
-
-		m_pVertexBuffer[frame_index].reset(pDevice->CreateBuffer(desc, "GUI VB"));
-
-		GfxShaderResourceViewDesc srvDesc = {};
-		srvDesc.type = GfxShaderResourceViewType::StructuredBuffer;
-		srvDesc.buffer.offset = 0;
-		srvDesc.buffer.size = desc.size;
-
-		m_pVertexBufferSRV[frame_index].reset(pDevice->CreateShaderResourceView(m_pVertexBuffer[frame_index].get(), srvDesc, "GUI VB SRV"));
+		m_pVertexBuffer[frame_index].reset(pRenderer->CreateStructuredBuffer(nullptr, sizeof(ImDrawVert), draw_data->TotalVtxCount + 5000, "GUI VB", GfxMemoryType::CpuToGpu));
 	}
 
-	if (m_pIndexBuffer[frame_index] == nullptr || m_pIndexBuffer[frame_index]->GetDesc().size < draw_data->TotalIdxCount * sizeof(ImDrawIdx))
+	if (m_pIndexBuffer[frame_index] == nullptr || m_pIndexBuffer[frame_index]->GetIndexCount() < (uint32_t)draw_data->TotalIdxCount)
 	{
-		GfxBufferDesc desc;
-		desc.stride = sizeof(ImDrawIdx);
-		desc.size = (draw_data->TotalIdxCount + 10000) * sizeof(ImDrawIdx);
-		desc.format = GfxFormat::R16UI;
-		desc.memory_type = GfxMemoryType::CpuToGpu;
-
-		m_pIndexBuffer[frame_index].reset(pDevice->CreateBuffer(desc, "GUI IB"));
+		m_pIndexBuffer[frame_index].reset(pRenderer->CreateIndexBuffer(nullptr, sizeof(ImDrawIdx), draw_data->TotalIdxCount + 10000, "GUI IB", GfxMemoryType::CpuToGpu));
 	}
 
-	ImDrawVert* vtx_dst = (ImDrawVert*)m_pVertexBuffer[frame_index]->GetCpuAddress();
-	ImDrawIdx* idx_dst = (ImDrawIdx*)m_pIndexBuffer[frame_index]->GetCpuAddress();
+	ImDrawVert* vtx_dst = (ImDrawVert*)m_pVertexBuffer[frame_index]->GetBuffer()->GetCpuAddress();
+	ImDrawIdx* idx_dst = (ImDrawIdx*)m_pIndexBuffer[frame_index]->GetBuffer()->GetCpuAddress();
 	for (int n = 0; n < draw_data->CmdListsCount; n++)
 	{
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -177,7 +147,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 					pCommandList->SetScissorRect((uint32_t)x, (uint32_t)y, (uint32_t)width, (uint32_t)height);
 
 					uint32_t resource_ids[4] = { 
-						m_pVertexBufferSRV[frame_index]->GetHeapIndex(), 
+						m_pVertexBuffer[frame_index]->GetSRV()->GetHeapIndex(), 
 						pcmd->VtxOffset + global_vtx_offset, 
 						((IGfxDescriptor*)pcmd->TextureId)->GetHeapIndex(),
 						pRenderer->GetLinearSampler()->GetHeapIndex() };
@@ -199,7 +169,7 @@ void GUI::SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index)
 
 	pCommandList->SetViewport(0, 0, (uint32_t)draw_data->DisplaySize.x, (uint32_t)draw_data->DisplaySize.y);
 	pCommandList->SetPipelineState(m_pPSO);
-	pCommandList->SetIndexBuffer(m_pIndexBuffer[frame_index].get());
+	pCommandList->SetIndexBuffer(m_pIndexBuffer[frame_index]->GetBuffer());
 
 	float L = draw_data->DisplayPos.x;
 	float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;

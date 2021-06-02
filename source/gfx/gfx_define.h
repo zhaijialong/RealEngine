@@ -257,6 +257,8 @@ struct GfxUnorderedAccessViewDesc
 			uint32_t offset;
 		} buffer;
 	};
+
+	GfxUnorderedAccessViewDesc() : texture() {}
 };
 
 class IGfxTexture;

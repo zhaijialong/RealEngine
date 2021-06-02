@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/texture.h"
+#include "renderer/renderer.h"
 #include <unordered_map>
 
 class Editor
@@ -24,10 +24,10 @@ private:
     bool m_bShowGpuMemoryStats = false;
     bool m_bShowImguiDemo = false;
 
-    std::unordered_map<IGfxDescriptor*, IGfxTexture*> m_fileDialogIcons;
+    std::unordered_map<IGfxDescriptor*, Texture2D*> m_fileDialogIcons;
     std::vector<IGfxDescriptor*> m_pendingDeletions;
 
-    std::unique_ptr<Texture> m_pGpuMemoryStats;
+    std::unique_ptr<Texture2D> m_pGpuMemoryStats;
 
     enum class SelectEditMode
     {
@@ -37,7 +37,7 @@ private:
     };
 
     SelectEditMode m_selectEditMode = SelectEditMode::Translate;
-    std::unique_ptr<Texture> m_pTranslateIcon;
-    std::unique_ptr<Texture> m_pRotateIcon;
-    std::unique_ptr<Texture> m_pScaleIcon;
+    std::unique_ptr<Texture2D> m_pTranslateIcon;
+    std::unique_ptr<Texture2D> m_pRotateIcon;
+    std::unique_ptr<Texture2D> m_pScaleIcon;
 };

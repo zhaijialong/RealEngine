@@ -19,10 +19,8 @@ private:
 private:
     IGfxPipelineState* m_pPSO = nullptr;
 
-    std::unique_ptr<IGfxTexture> m_pFontTexture;
-    std::unique_ptr<IGfxDescriptor> m_pFontTextureSRV;
+    std::unique_ptr<Texture2D> m_pFontTexture;
 
-    std::unique_ptr<IGfxBuffer> m_pVertexBuffer[MAX_INFLIGHT_FRAMES];
-    std::unique_ptr<IGfxDescriptor> m_pVertexBufferSRV[MAX_INFLIGHT_FRAMES];
-    std::unique_ptr<IGfxBuffer> m_pIndexBuffer[MAX_INFLIGHT_FRAMES];
+    std::unique_ptr<StructuredBuffer> m_pVertexBuffer[MAX_INFLIGHT_FRAMES];
+    std::unique_ptr<IndexBuffer> m_pIndexBuffer[MAX_INFLIGHT_FRAMES];
 };

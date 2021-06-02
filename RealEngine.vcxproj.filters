@@ -97,9 +97,6 @@
     <ClCompile Include="external\tinyxml2\tinyxml2.cpp">
       <Filter>external\tinyxml2</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\texture.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="source\core\editor.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
@@ -124,19 +121,7 @@
     <ClCompile Include="source\core\i_light.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\base_pass.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="source\renderer\shadow_pass.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="source\core\post_processor.cpp">
-      <Filter>source\core</Filter>
-    </ClCompile>
     <ClCompile Include="source\renderer\render_graph.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="source\renderer\render_texture.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
     <ClCompile Include="source\renderer\render_graph_builder.cpp">
@@ -144,6 +129,24 @@
     </ClCompile>
     <ClCompile Include="source\renderer\render_graph_resource.cpp">
       <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\pass\shadow_pass.cpp">
+      <Filter>source\renderer\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\pass\base_pass.cpp">
+      <Filter>source\renderer\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\post_processor.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\resource\texture2d.cpp">
+      <Filter>source\renderer\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\resource\index_buffer.cpp">
+      <Filter>source\renderer\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\resource\structured_buffer.cpp">
+      <Filter>source\renderer\resource</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -297,9 +300,6 @@
     <ClInclude Include="external\tinyxml2\tinyxml2.h">
       <Filter>external\tinyxml2</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\texture.h">
-      <Filter>source\renderer</Filter>
-    </ClInclude>
     <ClInclude Include="source\core\editor.h">
       <Filter>source\core</Filter>
     </ClInclude>
@@ -324,22 +324,10 @@
     <ClInclude Include="source\core\directional_light.h">
       <Filter>source\core</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\base_pass.h">
-      <Filter>source\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="source\renderer\shadow_pass.h">
-      <Filter>source\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\post_processor.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
     <ClInclude Include="source\renderer\render_graph.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\render_pass.h">
-      <Filter>source\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="source\renderer\render_texture.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\render_graph_resource.h">
@@ -350,6 +338,24 @@
     </ClInclude>
     <ClInclude Include="source\utils\system.h">
       <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\pass\base_pass.h">
+      <Filter>source\renderer\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\pass\shadow_pass.h">
+      <Filter>source\renderer\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\post_processor.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\resource\texture2d.h">
+      <Filter>source\renderer\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\resource\index_buffer.h">
+      <Filter>source\renderer\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\resource\structured_buffer.h">
+      <Filter>source\renderer\resource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -397,6 +403,12 @@
     </Filter>
     <Filter Include="external\ImGuizmo">
       <UniqueIdentifier>{398702c9-bd6c-4888-97c4-d14c5a10aeb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\renderer\resource">
+      <UniqueIdentifier>{1554a0c9-b28a-474b-a477-f9cffe113e1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\renderer\pass">
+      <UniqueIdentifier>{f7c203f2-ade0-46ea-818c-2ba9a8a0ec4d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "core/engine.h"
+#include "stb/stb_image.h"
 
 #include "global_constants.hlsli"
 
@@ -275,11 +276,11 @@ void Renderer::CreateCommonResources()
     desc.compare_func = GfxCompareFunc::LessEqual;
     m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
 
+    void* window = Engine::GetInstance()->GetWindowHandle();
+    m_pDepthRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::D32FS8, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pDepthRT"));
+    m_pHdrRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::RGBA16F, GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource, "Renderer::m_pHdrRT"));
 
-    m_pDepthRT.reset(CreateAutoResizedRenderTexture(1.0f, 1.0f, GfxFormat::D32FS8, "Renderer::m_pDepthRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource));
-    m_pHdrRT.reset(CreateAutoResizedRenderTexture(1.0f, 1.0f, GfxFormat::RGBA16F, "Renderer::m_pHdrRT"));
-
-    m_pShadowRT.reset(CreateRenderTexture(2048, 2048, GfxFormat::D16, "Renderer::m_pShadowRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource));
+    m_pShadowRT.reset(CreateTexture2D(2048, 2048, GfxFormat::D16, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pShadowRT"));
 
     m_pToneMap.reset(new Tonemap(this));
 }
@@ -294,10 +295,67 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
     }
 }
 
-Texture* Renderer::CreateTexture(const std::string& file, bool srgb)
+IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type)
 {
-    Texture* texture = new Texture(this, file);
-    if (!texture->Create(srgb))
+    IndexBuffer* buffer = new IndexBuffer(name);
+    if (!buffer->Create(stride, index_count, memory_type))
+    {
+        delete buffer;
+        return nullptr;
+    }
+
+    if (data)
+    {
+        UploadBuffer(buffer->GetBuffer(), data, stride * index_count);
+    }
+
+    return buffer;
+}
+
+StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type)
+{
+    StructuredBuffer* buffer = new StructuredBuffer(name);
+    if (!buffer->Create(stride, element_count, memory_type))
+    {
+        delete buffer;
+        return nullptr;
+    }
+
+    if (data)
+    {
+        UploadBuffer(buffer->GetBuffer(), data, stride * element_count);
+    }
+
+    return buffer;
+}
+
+Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
+{
+    int x, y, comp;
+    stbi_uc* data = stbi_load(file.c_str(), &x, &y, &comp, STBI_rgb_alpha);
+    if (data == nullptr)
+    {
+        return nullptr;
+    }
+
+    Texture2D* texture = new Texture2D(file);
+    if (!texture->Create(x, y, srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM, GfxTextureUsageShaderResource))
+    {
+        stbi_image_free(data);
+        delete texture;
+        return nullptr;
+    }
+
+    UploadTexture(texture->GetTexture(), data, x * y * 4);
+
+    stbi_image_free(data);
+    return texture;
+}
+
+Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name)
+{
+    Texture2D* texture = new Texture2D(name);
+    if (!texture->Create(width, height, format, flags))
     {
         delete texture;
         return nullptr;
@@ -305,31 +363,15 @@ Texture* Renderer::CreateTexture(const std::string& file, bool srgb)
     return texture;
 }
 
-RenderTexture* Renderer::CreateRenderTexture(uint32_t width, uint32_t height, GfxFormat format, const std::string& name, GfxTextureUsageFlags flags)
+Texture2D* Renderer::CreateTexture2D(void* window, float width_ratio, float height_ratio, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name)
 {
-    RenderTexture* rt = new RenderTexture(name);
-    if (!rt->Create(width, height, format, flags))
+    Texture2D* texture = new Texture2D(name);
+    if (!texture->Create(window, width_ratio, height_ratio, format, flags))
     {
-        delete rt;
+        delete texture;
         return nullptr;
     }
-    return rt;
-}
-
-RenderTexture* Renderer::CreateAutoResizedRenderTexture(float width_ratio, float height_ratio, GfxFormat format, const std::string& name, GfxTextureUsageFlags flags, void* window)
-{
-    if (window == nullptr)
-    {
-        window = Engine::GetInstance()->GetWindowHandle();
-    }
-
-    RenderTexture* rt = new RenderTexture(name);
-    if (!rt->Create(window, width_ratio, height_ratio, format, flags))
-    {
-        delete rt;
-        return nullptr;
-    }
-    return rt;
+    return texture;
 }
 
 inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t w, uint32_t h, uint32_t d)

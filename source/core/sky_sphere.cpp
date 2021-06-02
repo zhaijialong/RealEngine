@@ -47,36 +47,17 @@ bool SkySphere::Create()
 	Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 	IGfxDevice* pDevice = pRenderer->GetDevice();
 
-	m_nIndexCount = (uint32_t)indices.size();
-
-	GfxBufferDesc desc;
-	desc.stride = sizeof(uint16_t);
-	desc.size = sizeof(uint16_t) * m_nIndexCount;
-	desc.format = GfxFormat::R16UI;
-
-	m_pIndexBuffer.reset(pDevice->CreateBuffer(desc, "SkySphere IB"));
+	m_pIndexBuffer.reset(pRenderer->CreateIndexBuffer(indices.data(), sizeof(uint16_t), (uint32_t)indices.size(), "SkySphere IB"));
 	if (m_pIndexBuffer == nullptr)
 	{
 		return false;
 	}
 
-	desc.stride = sizeof(float3);
-	desc.size = sizeof(float3) * (uint32_t)vertices.size();
-	desc.format = GfxFormat::Unknown;
-	desc.usage = GfxBufferUsageStructuredBuffer;
-	m_pVertexBuffer.reset(pDevice->CreateBuffer(desc, "SkySphere VB"));
+	m_pVertexBuffer.reset(pRenderer->CreateStructuredBuffer(vertices.data(), sizeof(float3), (uint32_t)vertices.size(), "SkySphere VB"));
 	if (m_pVertexBuffer == nullptr)
 	{
 		return false;
 	}
-
-	pRenderer->UploadBuffer(m_pIndexBuffer.get(), indices.data(), sizeof(uint16_t) * (uint32_t)indices.size());
-	pRenderer->UploadBuffer(m_pVertexBuffer.get(), vertices.data(), sizeof(float3) * (uint32_t)vertices.size());
-
-	GfxShaderResourceViewDesc srvDesc;
-	srvDesc.type = GfxShaderResourceViewType::StructuredBuffer;
-	srvDesc.buffer.size = sizeof(float3) * (uint32_t)vertices.size();
-	m_pVertexBufferSRV.reset(pDevice->CreateShaderResourceView(m_pVertexBuffer.get(), srvDesc, "SkySphere VB SRV"));
 
 	GfxGraphicsPipelineDesc psoDesc;
 	psoDesc.vs = pRenderer->GetShader("sky_sphere.hlsl", "vs_main", "vs_6_6", {});
@@ -106,7 +87,7 @@ void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Ca
 	RENDER_EVENT(pCommandList, "SkySphere");
 
 	pCommandList->SetPipelineState(m_pPSO);
-	pCommandList->SetIndexBuffer(m_pIndexBuffer.get());
+	pCommandList->SetIndexBuffer(m_pIndexBuffer->GetBuffer());
 
 	struct SkySphereConstant
 	{
@@ -122,9 +103,9 @@ void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Ca
 	CB.mtxWVP = mul(pCamera->GetViewProjectionMatrix(), mtxWorld);
 	CB.mtxWorld = mtxWorld;
 	CB.cameraPos = pCamera->GetPosition();
-	CB.posBuffer = m_pVertexBufferSRV->GetHeapIndex();
+	CB.posBuffer = m_pVertexBuffer->GetSRV()->GetHeapIndex();
 	
 	pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, &CB, sizeof(CB));
 
-	pCommandList->DrawIndexed(m_nIndexCount);
+	pCommandList->DrawIndexed(m_pIndexBuffer->GetIndexCount());
 }

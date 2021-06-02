@@ -95,18 +95,18 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
 
         IGfxPipelineState* pPSO = pRenderer->GetPipelineState(psoDesc, "model shadow PSO");
         pCommandList->SetPipelineState(pPSO);
-        pCommandList->SetIndexBuffer(mesh->indexBuffer.get());
+        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
 
         uint32_t vertexCB[4] =
         {
-            mesh->posBufferSRV->GetHeapIndex(),
-            mesh->uvBufferSRV->GetHeapIndex(),
+            mesh->posBuffer->GetSRV()->GetHeapIndex(),
+            mesh->uvBuffer->GetSRV()->GetHeapIndex(),
             material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
             pRenderer->GetLinearSampler()->GetHeapIndex()
         };
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
 
-        pCommandList->DrawIndexed(mesh->indexCount);
+        pCommandList->DrawIndexed(mesh->indexBuffer->GetIndexCount());
     }
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
@@ -152,14 +152,14 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
 
         IGfxPipelineState* pPSO = pRenderer->GetPipelineState(psoDesc, "model PSO");
         pCommandList->SetPipelineState(pPSO);
-        pCommandList->SetIndexBuffer(mesh->indexBuffer.get());
+        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
 
         uint32_t vertexCB[4] = 
         { 
-            mesh->posBufferSRV->GetHeapIndex(),
-            mesh->uvBufferSRV->GetHeapIndex(),
-            mesh->normalBufferSRV->GetHeapIndex(),
-            mesh->tangentBufferSRV ? mesh->tangentBufferSRV->GetHeapIndex() : GFX_INVALID_RESOURCE
+            mesh->posBuffer->GetSRV()->GetHeapIndex(),
+            mesh->uvBuffer->GetSRV()->GetHeapIndex(),
+            mesh->normalBuffer->GetSRV()->GetHeapIndex(),
+            mesh->tangentBuffer ? mesh->tangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE
         };
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
 
@@ -175,7 +175,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
 
         pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 2, &materialCB, sizeof(materialCB));
 
-        pCommandList->DrawIndexed(mesh->indexCount);
+        pCommandList->DrawIndexed(mesh->indexBuffer->GetIndexCount());
     }
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
@@ -184,7 +184,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
     }
 }
 
-Texture* Model::LoadTexture(const std::string& file, bool srgb)
+Texture2D* Model::LoadTexture(const std::string& file, bool srgb)
 {
     auto iter = m_textures.find(file);
     if (iter != m_textures.end())
@@ -196,11 +196,11 @@ Texture* Model::LoadTexture(const std::string& file, bool srgb)
     std::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    Texture* texture = pRenderer->CreateTexture(path + file, srgb);
+    Texture2D* texture = pRenderer->CreateTexture2D(path + file, srgb);
 
     if (texture != nullptr)
     {
-        m_textures.insert(std::make_pair(file, std::unique_ptr<Texture>(texture)));
+        m_textures.insert(std::make_pair(file, std::unique_ptr<Texture2D>(texture)));
     }
 
     return texture;
@@ -252,37 +252,25 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
     mesh->name = name;
     mesh->material.reset(LoadMaterial(gltf_primitive->material));
     mesh->indexBuffer.reset(LoadIndexBuffer(gltf_primitive->indices, "model(" + m_file + " " + name + ") IB"));
-    mesh->indexCount = (uint32_t)gltf_primitive->indices->count;
     
     for (cgltf_size i = 0; i < gltf_primitive->attributes_count; ++i)
     {
-        IGfxBuffer* buffer = nullptr;
-        IGfxDescriptor* srv = nullptr;
-
         switch (gltf_primitive->attributes[i].type)
         {
         case cgltf_attribute_type_position:
-            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") pos", true, &buffer, &srv);
-            mesh->posBuffer.reset(buffer);
-            mesh->posBufferSRV.reset(srv);
+            mesh->posBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") pos", true));
             break;
         case cgltf_attribute_type_texcoord:
             if (gltf_primitive->attributes[i].index == 0)
             {
-                LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") UV", false, &buffer, &srv);
-                mesh->uvBuffer.reset(buffer);
-                mesh->uvBufferSRV.reset(srv);
+                mesh->uvBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") UV", false));
             }
             break;
         case cgltf_attribute_type_normal:
-            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") normal", true, &buffer, &srv);
-            mesh->normalBuffer.reset(buffer);
-            mesh->normalBufferSRV.reset(srv);
+            mesh->normalBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") normal", true));
             break;
         case cgltf_attribute_type_tangent:
-            LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") tangent", true, &buffer, &srv);
-            mesh->tangentBuffer.reset(buffer);
-            mesh->tangentBufferSRV.reset(srv);
+            mesh->tangentBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") tangent", true));
             break;
         default:
             break;
@@ -322,37 +310,21 @@ Model::Material* Model::LoadMaterial(const cgltf_material* gltf_material)
     return material;
 }
 
-IGfxBuffer* Model::LoadIndexBuffer(const cgltf_accessor* accessor, const std::string& name)
+IndexBuffer* Model::LoadIndexBuffer(const cgltf_accessor* accessor, const std::string& name)
 {
-    GfxFormat format = GfxFormat::Unknown;
-    if (accessor->component_type == cgltf_component_type_r_32u)
-    {
-        format = GfxFormat::R32UI;
-    }
-    else if (accessor->component_type == cgltf_component_type_r_16u)
-    {
-        format = GfxFormat::R16UI;
-    }
+    RE_ASSERT(accessor->component_type == cgltf_component_type_r_16u || accessor->component_type == cgltf_component_type_r_32u);
 
     uint32_t stride = (uint32_t)accessor->stride;
-    uint32_t size = stride * (uint32_t)accessor->count;
+    uint32_t index_count = (uint32_t)accessor->count;
     void* data = (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset;
 
-    GfxBufferDesc desc;
-    desc.stride = stride;
-    desc.size = size;
-    desc.format = format;
-
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    IGfxDevice* pDevice = pRenderer->GetDevice();
-
-    IGfxBuffer* buffer = pDevice->CreateBuffer(desc, name);
-    pRenderer->UploadBuffer(buffer, data, size);
+    IndexBuffer* buffer = pRenderer->CreateIndexBuffer(data, stride, index_count, name);
 
     return buffer;
 }
 
-void Model::LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& name, bool convertToLH, IGfxBuffer** buffer, IGfxDescriptor** descriptor)
+StructuredBuffer* Model::LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& name, bool convertToLH)
 {
     RE_ASSERT(accessor->component_type == cgltf_component_type_r_32f);
 
@@ -373,22 +345,7 @@ void Model::LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& 
     }
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    IGfxDevice* pDevice = pRenderer->GetDevice();
+    StructuredBuffer* buffer = pRenderer->CreateStructuredBuffer(data, stride, (uint32_t)accessor->count, name);
 
-    GfxBufferDesc desc;
-    desc.stride = stride;
-    desc.size = size;
-    desc.usage = GfxBufferUsageStructuredBuffer;
-
-    *buffer = pDevice->CreateBuffer(desc, name);
-    RE_ASSERT(*buffer != nullptr);
-
-    pRenderer->UploadBuffer(*buffer, data, size);
-    RE_FREE(data);
-
-    GfxShaderResourceViewDesc srvDesc;
-    srvDesc.type = GfxShaderResourceViewType::StructuredBuffer;
-    srvDesc.buffer.size = size;
-
-    *descriptor = pDevice->CreateShaderResourceView(*buffer, srvDesc, name + " SRV");
+    return buffer;
 }

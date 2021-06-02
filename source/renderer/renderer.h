@@ -4,8 +4,9 @@
 #include "shader_cache.h"
 #include "pipeline_cache.h"
 #include "staging_buffer_allocator.h"
-#include "texture.h"
-#include "render_texture.h"
+#include "resource/texture2d.h"
+#include "resource/index_buffer.h"
+#include "resource/structured_buffer.h"
 #include "tonemap.h"
 #include "lsignal/lsignal.h"
 #include "utils/math.h"
@@ -41,13 +42,12 @@ public:
     IGfxDescriptor* GetPointSampler() const { return m_pPointSampler.get(); }
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearSampler.get(); }
 
-    Texture* CreateTexture(const std::string& file, bool srgb = true);
-    //fixed size
-    RenderTexture* CreateRenderTexture(uint32_t width, uint32_t height, GfxFormat format, const std::string& name,
-        GfxTextureUsageFlags flags = GfxTextureUsageShaderResource | GfxTextureUsageRenderTarget);
-    //auto-resized with window
-    RenderTexture* CreateAutoResizedRenderTexture(float width_ratio, float height_ratio, GfxFormat format, const std::string& name,
-        GfxTextureUsageFlags flags = GfxTextureUsageShaderResource | GfxTextureUsageRenderTarget, void* window = nullptr);
+    IndexBuffer* CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
+    StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
+
+    Texture2D* CreateTexture2D(const std::string& file, bool srgb = true);
+    Texture2D* CreateTexture2D(uint32_t width, uint32_t height, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
+    Texture2D* CreateTexture2D(void* window, float width_ratio, float height_ratio, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
 
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
@@ -103,9 +103,9 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pLinearSampler;
     std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
 
-    std::unique_ptr<RenderTexture> m_pHdrRT;
-    std::unique_ptr<RenderTexture> m_pDepthRT;
-    std::unique_ptr<RenderTexture> m_pShadowRT;
+    std::unique_ptr<Texture2D> m_pHdrRT;
+    std::unique_ptr<Texture2D> m_pDepthRT;
+    std::unique_ptr<Texture2D> m_pShadowRT;
 
     std::unique_ptr<Tonemap> m_pToneMap; //test code
 
