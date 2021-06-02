@@ -4,7 +4,7 @@
 #include "shader_cache.h"
 #include "pipeline_cache.h"
 #include "staging_buffer_allocator.h"
-#include "resource/texture2d.h"
+#include "resource/texture_2d.h"
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
 #include "tonemap.h"

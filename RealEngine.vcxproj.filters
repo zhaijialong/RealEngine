@@ -139,13 +139,28 @@
     <ClCompile Include="source\renderer\post_processor.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\resource\texture2d.cpp">
+    <ClCompile Include="source\renderer\resource\texture_2d.cpp">
       <Filter>source\renderer\resource</Filter>
     </ClCompile>
     <ClCompile Include="source\renderer\resource\index_buffer.cpp">
       <Filter>source\renderer\resource</Filter>
     </ClCompile>
     <ClCompile Include="source\renderer\resource\structured_buffer.cpp">
+      <Filter>source\renderer\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\resource\typed_buffer.cpp">
+      <Filter>source\renderer\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\resource\raw_buffer.cpp">
+      <Filter>source\renderer\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\resource\texture_3d.cpp">
+      <Filter>source\renderer\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\resource\texture_cube.cpp">
+      <Filter>source\renderer\resource</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\resource\constant_buffer.cpp">
       <Filter>source\renderer\resource</Filter>
     </ClCompile>
   </ItemGroup>
@@ -348,13 +363,28 @@
     <ClInclude Include="source\renderer\post_processor.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\resource\texture2d.h">
+    <ClInclude Include="source\renderer\resource\texture_2d.h">
       <Filter>source\renderer\resource</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\resource\index_buffer.h">
       <Filter>source\renderer\resource</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\resource\structured_buffer.h">
+      <Filter>source\renderer\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\resource\typed_buffer.h">
+      <Filter>source\renderer\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\resource\raw_buffer.h">
+      <Filter>source\renderer\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\resource\texture_3d.h">
+      <Filter>source\renderer\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\resource\texture_cube.h">
+      <Filter>source\renderer\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\resource\constant_buffer.h">
       <Filter>source\renderer\resource</Filter>
     </ClInclude>
   </ItemGroup>

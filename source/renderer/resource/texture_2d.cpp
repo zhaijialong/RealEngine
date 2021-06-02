@@ -1,4 +1,4 @@
-#include "texture2d.h"
+#include "texture_2d.h"
 #include "core/engine.h"
 #include "../renderer.h"
 #include "utils/system.h"
