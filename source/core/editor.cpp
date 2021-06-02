@@ -168,11 +168,12 @@ void Editor::DrawToolBar()
 
 void Editor::DrawGizmo()
 {
-    Camera* pCamera = Engine::GetInstance()->GetWorld()->GetCamera();
-    float4x4 view = pCamera->GetViewMatrix();
-    float4x4 proj = pCamera->GetProjectionMatrix();
-
     IVisibleObject* pSelectedObject = Engine::GetInstance()->GetWorld()->GetSelectedObject();
+    if (pSelectedObject == nullptr)
+    {
+        return;
+    }
+
     float3 pos = pSelectedObject->GetPosition();
     float3 rotation = pSelectedObject->GetRotation();
     float3 scale = pSelectedObject->GetScale();
@@ -196,6 +197,11 @@ void Editor::DrawGizmo()
         RE_ASSERT(false);
         break;
     }
+
+    Camera* pCamera = Engine::GetInstance()->GetWorld()->GetCamera();
+    float4x4 view = pCamera->GetViewMatrix();
+    float4x4 proj = pCamera->GetProjectionMatrix();
+
     ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, operation, ImGuizmo::WORLD, (float*)&mtxWorld);
 
     ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&pos, (float*)&rotation, (float*)&scale);

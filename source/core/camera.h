@@ -35,7 +35,7 @@ public:
 
 private:
 	void UpdateMatrix();
-	void OnWindowResize(uint32_t width, uint32_t height);
+	void OnWindowResize(void* window, uint32_t width, uint32_t height);
 
 private:
 	float3 m_pos;

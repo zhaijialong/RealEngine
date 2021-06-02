@@ -275,23 +275,23 @@ void Renderer::CreateCommonResources()
     desc.compare_func = GfxCompareFunc::LessEqual;
     m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
 
-    IGfxTexture* pBackBuffer = m_pSwapchain->GetBackBuffer();
-    uint32_t width = pBackBuffer->GetDesc().width;
-    uint32_t height = pBackBuffer->GetDesc().height;
 
-    m_pDepthRT.reset(CreateRenderTarget(width, height, GfxFormat::D32FS8, "Renderer::m_pDepthRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource));
-    m_pHdrRT.reset(CreateRenderTarget(width, height, GfxFormat::RGBA16F, "Renderer::m_pHdrRT"));
+    m_pDepthRT.reset(CreateAutoResizedRenderTexture(1.0f, 1.0f, GfxFormat::D32FS8, "Renderer::m_pDepthRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource));
+    m_pHdrRT.reset(CreateAutoResizedRenderTexture(1.0f, 1.0f, GfxFormat::RGBA16F, "Renderer::m_pHdrRT"));
 
-    m_pShadowRT.reset(CreateRenderTarget(2048, 2048, GfxFormat::D16, "Renderer::m_pShadowRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, false));
+    m_pShadowRT.reset(CreateRenderTexture(2048, 2048, GfxFormat::D16, "Renderer::m_pShadowRT", GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource));
 
     m_pToneMap.reset(new Tonemap(this));
 }
 
-void Renderer::OnWindowResize(uint32_t width, uint32_t height)
+void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
 {
     WaitGpuFinished();
 
-    m_pSwapchain->Resize(width, height);
+    if (m_pSwapchain->GetDesc().window_handle == window)
+    {
+        m_pSwapchain->Resize(width, height);
+    }
 }
 
 Texture* Renderer::CreateTexture(const std::string& file, bool srgb)
@@ -305,10 +305,26 @@ Texture* Renderer::CreateTexture(const std::string& file, bool srgb)
     return texture;
 }
 
-RenderTexture* Renderer::CreateRenderTarget(uint32_t width, uint32_t height, GfxFormat format, const std::string& name, GfxTextureUsageFlags flags, bool auto_resize, float size)
+RenderTexture* Renderer::CreateRenderTexture(uint32_t width, uint32_t height, GfxFormat format, const std::string& name, GfxTextureUsageFlags flags)
 {
-    RenderTexture* rt = new RenderTexture(auto_resize, size, name);
+    RenderTexture* rt = new RenderTexture(name);
     if (!rt->Create(width, height, format, flags))
+    {
+        delete rt;
+        return nullptr;
+    }
+    return rt;
+}
+
+RenderTexture* Renderer::CreateAutoResizedRenderTexture(float width_ratio, float height_ratio, GfxFormat format, const std::string& name, GfxTextureUsageFlags flags, void* window)
+{
+    if (window == nullptr)
+    {
+        window = Engine::GetInstance()->GetWindowHandle();
+    }
+
+    RenderTexture* rt = new RenderTexture(name);
+    if (!rt->Create(window, width_ratio, height_ratio, format, flags))
     {
         delete rt;
         return nullptr;

@@ -203,6 +203,7 @@
     <ClInclude Include="source\utils\math.h" />
     <ClInclude Include="source\utils\memory.h" />
     <ClInclude Include="source\utils\string.h" />
+    <ClInclude Include="source\utils\system.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis" />

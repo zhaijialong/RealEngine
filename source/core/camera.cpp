@@ -93,7 +93,7 @@ void Camera::UpdateMatrix()
 	m_viewProjection = mul(m_projection, m_view);
 }
 
-void Camera::OnWindowResize(uint32_t width, uint32_t height)
+void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
 {
 	SetPerpective((float)width / height, m_fov, m_znear, m_zfar);
 }

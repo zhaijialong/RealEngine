@@ -42,8 +42,12 @@ public:
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearSampler.get(); }
 
     Texture* CreateTexture(const std::string& file, bool srgb = true);
-    RenderTexture* CreateRenderTarget(uint32_t width, uint32_t height, GfxFormat format, const std::string& name,
-        GfxTextureUsageFlags flags = GfxTextureUsageShaderResource | GfxTextureUsageRenderTarget, bool auto_resize = true, float size = 1.0f);
+    //fixed size
+    RenderTexture* CreateRenderTexture(uint32_t width, uint32_t height, GfxFormat format, const std::string& name,
+        GfxTextureUsageFlags flags = GfxTextureUsageShaderResource | GfxTextureUsageRenderTarget);
+    //auto-resized with window
+    RenderTexture* CreateAutoResizedRenderTexture(float width_ratio, float height_ratio, GfxFormat format, const std::string& name,
+        GfxTextureUsageFlags flags = GfxTextureUsageShaderResource | GfxTextureUsageRenderTarget, void* window = nullptr);
 
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
@@ -53,7 +57,7 @@ public:
 
 private:
     void CreateCommonResources();
-    void OnWindowResize(uint32_t width, uint32_t height);
+    void OnWindowResize(void* window, uint32_t width, uint32_t height);
 
     void BeginFrame();
     void UploadResources();

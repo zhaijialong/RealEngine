@@ -23,7 +23,7 @@ public:
     const std::string& GetShaderPath() const { return m_shaderPath; }
 
 public:
-    lsignal::signal<void(uint32_t, uint32_t)> WindowResizeSignal;
+    lsignal::signal<void(void*, uint32_t, uint32_t)> WindowResizeSignal;
 
 private:
     void LoadEngineConfig();
