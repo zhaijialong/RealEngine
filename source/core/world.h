@@ -30,6 +30,7 @@ private:
 
     void CreateVisibleObject(tinyxml2::XMLElement* element);
     void CreateLight(tinyxml2::XMLElement* element);
+    void CreateCamera(tinyxml2::XMLElement* element);
 
 private:
     std::unique_ptr<Camera> m_pCamera;

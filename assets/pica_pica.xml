@@ -1,5 +1,6 @@
 <scene>
     <model file="pica_pica/scene.gltf" />
     <skysphere />
+    <camera position="-13.482,20.457,-42.455" rotation="19.199,16.599,0.0" />
     <light type="directional" primary="true" rotation="-45.000,45.000,0.000"/>
 </scene>

@@ -4,6 +4,7 @@
 #include "sky_sphere.h"
 #include "directional_light.h"
 #include "utils/assert.h"
+#include "utils/string.h"
 
 World::World()
 {
@@ -110,6 +111,11 @@ void World::CreateVisibleObject(tinyxml2::XMLElement* element)
         CreateLight(element);
         return;
     }
+    else if (strcmp(element->Value(), "camera") == 0)
+    {
+        CreateCamera(element);
+        return;
+    }
 
     IVisibleObject* object = nullptr;
 
@@ -122,6 +128,7 @@ void World::CreateVisibleObject(tinyxml2::XMLElement* element)
         object = new SkySphere();
     }
 
+    RE_ASSERT(object != nullptr);
     object->Load(element);
 
     if (!object->Create())
@@ -164,5 +171,24 @@ void World::CreateLight(tinyxml2::XMLElement* element)
     if (primary && primary->BoolValue())
     {
         m_pPrimaryLight = light;
+    }
+}
+
+void World::CreateCamera(tinyxml2::XMLElement* element)
+{
+    const tinyxml2::XMLAttribute* position = element->FindAttribute("position");
+    if (position)
+    {
+        std::vector<float> v;
+        string_to_float_array(position->Value(), v);
+        m_pCamera->SetPosition(vector_to_float3(v));
+    }
+
+    const tinyxml2::XMLAttribute* rotation = element->FindAttribute("rotation");
+    if (rotation)
+    {
+        std::vector<float> v;
+        string_to_float_array(rotation->Value(), v);
+        m_pCamera->SetRotation(vector_to_float3(v));
     }
 }
