@@ -1,5 +1,5 @@
 <scene>
-    <model file="sponza/sponza.gltf" position="5.000,0.000,0.000" />
+    <model file="model/sponza/sponza.gltf" position="5.000,0.000,0.000" />
     <skysphere />
     <light type="directional" primary="true" rotation="45.000,0.000,0.000"/>
 </scene>
