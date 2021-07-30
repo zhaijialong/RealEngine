@@ -9,6 +9,9 @@ struct SceneConstant
     uint shadowSampler;
     
     float4x4 mtxLightVP;
+    
+    uint envTexture;
+    uint brdfTexture;
 };
 
 struct CameraConstant

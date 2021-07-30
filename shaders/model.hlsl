@@ -105,9 +105,19 @@ float4 ps_main(VSOutput input) : SV_TARGET
     float visibility = Shadow(input.worldPos, N, SceneCB.mtxLightVP, shadowRT, shadowSampler);
     float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor;
     
-    float3 indirect_light = diffuse * 0.2;
+    float3 indirect_diffuse = diffuse * 0.2;
+    
 
-    float3 radiance = direct_light + indirect_light;
+    TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
+    Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.brdfTexture];
+    
+    const float MAX_REFLECTION_LOD = 7.0;
+    float3 R = reflect(-V, N);
+    float3 filtered_env = 0.5f;//envTexture.SampleLevel(linearSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
+    float2 env_brdf = brdfTexture.Sample(linearSampler, float2(max(dot(N, V), 0.0), roughness)).xy;
+    float3 indirect_specular = filtered_env * (specular * env_brdf.x + env_brdf.y);
+    
+    float3 radiance = direct_light + indirect_diffuse + indirect_specular;
 
     return float4(radiance, 1.0);
 }

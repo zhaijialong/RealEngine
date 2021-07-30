@@ -1,6 +1,6 @@
 #include "renderer.h"
 #include "core/engine.h"
-#include "stb/stb_image.h"
+#include "texture_loader.h"
 
 #include "global_constants.hlsli"
 
@@ -97,6 +97,8 @@ void Renderer::BeginFrame()
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
     sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
     sceneCB.mtxLightVP = GetLightVP(light);
+    //sceneCB.envTexture = m_pEnvTexture->
+    sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
 
     pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 4, &sceneCB, sizeof(sceneCB));
 }
@@ -210,7 +212,6 @@ void Renderer::Render()
         pCommandList->BeginRenderPass(render_pass);
 
         m_pToneMap->Draw(pCommandList, m_pHdrRT->GetSRV());
-        //m_pToneMap->Draw(pCommandList, m_pShadowRT->GetSRV());
     }
 
     GUI* pGUI = Engine::GetInstance()->GetWorld()->GetGUI();
@@ -283,6 +284,10 @@ void Renderer::CreateCommonResources()
     m_pShadowRT.reset(CreateTexture2D(2048, 2048, GfxFormat::D16, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pShadowRT"));
 
     m_pToneMap.reset(new Tonemap(this));
+    
+    std::string asset_path = Engine::GetInstance()->GetAssetPath();
+    m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/ibl_brdf_lut.png", false));
+    m_pEnvTexture.reset(CreateTextureCube(asset_path + "textures/output_pmrem.dds"));
 }
 
 void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
@@ -331,24 +336,21 @@ StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, 
 
 Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
 {
-    int x, y, comp;
-    stbi_uc* data = stbi_load(file.c_str(), &x, &y, &comp, STBI_rgb_alpha);
-    if (data == nullptr)
+    TextureLoader loader;
+    if (!loader.Load(file, srgb))
     {
         return nullptr;
     }
 
     Texture2D* texture = new Texture2D(file);
-    if (!texture->Create(x, y, srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM, GfxTextureUsageShaderResource))
+    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetFormat(), GfxTextureUsageShaderResource))
     {
-        stbi_image_free(data);
         delete texture;
         return nullptr;
     }
 
-    UploadTexture(texture->GetTexture(), data, x * y * 4);
+    UploadTexture(texture->GetTexture(), loader.GetData(), loader.GetDataSize());
 
-    stbi_image_free(data);
     return texture;
 }
 
@@ -371,6 +373,26 @@ Texture2D* Renderer::CreateTexture2D(void* window, float width_ratio, float heig
         delete texture;
         return nullptr;
     }
+    return texture;
+}
+
+TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
+{
+    TextureLoader loader;
+    if (!loader.Load(file, srgb))
+    {
+        return nullptr;
+    }
+
+    TextureCube* texture = new TextureCube();
+    //if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetFormat(), GfxTextureUsageShaderResource))
+    {
+        delete texture;
+        return nullptr;
+    }
+
+    //UploadTexture(texture->GetTexture(), loader.GetData(), loader.GetDataSize());
+
     return texture;
 }
 

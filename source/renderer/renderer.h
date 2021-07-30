@@ -5,6 +5,7 @@
 #include "pipeline_cache.h"
 #include "staging_buffer_allocator.h"
 #include "resource/texture_2d.h"
+#include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
 #include "tonemap.h"
@@ -48,6 +49,8 @@ public:
     Texture2D* CreateTexture2D(const std::string& file, bool srgb = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     Texture2D* CreateTexture2D(void* window, float width_ratio, float height_ratio, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
+
+    TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
     void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
@@ -102,6 +105,9 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pPointSampler;
     std::unique_ptr<IGfxDescriptor> m_pLinearSampler;
     std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
+
+    std::unique_ptr<Texture2D> m_pBrdfTexture;
+    std::unique_ptr<TextureCube> m_pEnvTexture;
 
     std::unique_ptr<Texture2D> m_pHdrRT;
     std::unique_ptr<Texture2D> m_pDepthRT;

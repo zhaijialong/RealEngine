@@ -163,6 +163,9 @@
     <ClCompile Include="source\renderer\resource\constant_buffer.cpp">
       <Filter>source\renderer\resource</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\texture_loader.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -386,6 +389,9 @@
     </ClInclude>
     <ClInclude Include="source\renderer\resource\constant_buffer.h">
       <Filter>source\renderer\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\texture_loader.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
