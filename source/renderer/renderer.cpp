@@ -384,14 +384,14 @@ TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
         return nullptr;
     }
 
-    TextureCube* texture = new TextureCube();
-    //if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetFormat(), GfxTextureUsageShaderResource))
+    TextureCube* texture = new TextureCube(file);
+    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), GfxTextureUsageShaderResource))
     {
         delete texture;
         return nullptr;
     }
 
-    //UploadTexture(texture->GetTexture(), loader.GetData(), loader.GetDataSize());
+    UploadTexture(texture->GetTexture(), loader.GetData(), loader.GetDataSize());
 
     return texture;
 }
