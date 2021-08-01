@@ -105,7 +105,7 @@ bool TextureLoader::LoadDDS(bool srgb)
         m_type = GfxTextureType::Texture2D;
         m_format = GfxFormat::RG16UNORM;
 
-        uint32_t header_size = sizeof(uint32_t) + sizeof(DDS_HEADER);
+        header_size = sizeof(uint32_t) + sizeof(DDS_HEADER);
 	}
 
 

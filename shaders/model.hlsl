@@ -117,7 +117,7 @@ float4 ps_main(VSOutput input) : SV_TARGET
     float3 filtered_env = envTexture.SampleLevel(linearSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
     
     float NdotV = saturate(dot(N, V));
-    float2 PreintegratedGF = brdfTexture.Sample(linearSampler, float2(NdotV, roughness)).xy;
+    float2 PreintegratedGF = brdfTexture.Sample(pointSampler, float2(NdotV, roughness)).xy;
     float3 indirect_specular = filtered_env * (specular * PreintegratedGF.x + PreintegratedGF.y);
     
     float3 radiance = direct_light + indirect_diffuse + indirect_specular;
