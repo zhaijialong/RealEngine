@@ -113,7 +113,7 @@ float4 ps_main(VSOutput input) : SV_TARGET
     
     const float MAX_REFLECTION_LOD = 7.0;
     float3 R = reflect(-V, N);
-    float3 filtered_env = 0.5f;//envTexture.SampleLevel(linearSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
+    float3 filtered_env = envTexture.SampleLevel(linearSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
     float2 env_brdf = brdfTexture.Sample(linearSampler, float2(max(dot(N, V), 0.0), roughness)).xy;
     float3 indirect_specular = filtered_env * (specular * env_brdf.x + env_brdf.y);
     
