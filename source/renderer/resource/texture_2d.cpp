@@ -10,7 +10,7 @@ Texture2D::Texture2D(const std::string& name) : m_resizeConnection({})
     m_name = name;
 }
 
-bool Texture2D::Create(uint32_t width, uint32_t height, GfxFormat format, GfxTextureUsageFlags flags)
+bool Texture2D::Create(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags)
 {
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     IGfxDevice* pDevice = pRenderer->GetDevice();
@@ -18,6 +18,7 @@ bool Texture2D::Create(uint32_t width, uint32_t height, GfxFormat format, GfxTex
     GfxTextureDesc desc;
     desc.width = width;
     desc.height = height;
+    desc.mip_levels = levels;
     desc.format = format;
     desc.usage = flags;
 
@@ -52,7 +53,7 @@ bool Texture2D::Create(void* window_handle, float width_ratio, float height_rati
     uint32_t width = (uint32_t)ceilf(GetWindowWidth(window_handle) * width_ratio);
     uint32_t height = (uint32_t)ceilf(GetWindowHeight(window_handle) * height_ratio);
 
-    return Create(width, height, format, flags);
+    return Create(width, height, 1, format, flags);
 }
 
 void Texture2D::OnWindowResize(void* window, uint32_t width, uint32_t height)
@@ -69,5 +70,5 @@ void Texture2D::OnWindowResize(void* window, uint32_t width, uint32_t height)
     m_pTexture.reset();
     m_pSRV.reset();
 
-    Create(new_width, new_height, desc.format, desc.usage);
+    Create(new_width, new_height, 1, desc.format, desc.usage);
 }

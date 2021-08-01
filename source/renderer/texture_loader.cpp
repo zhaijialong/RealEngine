@@ -80,6 +80,10 @@ bool TextureLoader::LoadDDS(bool srgb)
 
         switch (dxt10_header.resourceDimension)
         {
+        case DDS_DIMENSION_TEXTURE2D:
+            break;
+        case DDS_DIMENSION_TEXTURE3D:
+            break;
         default:
             break;
         }

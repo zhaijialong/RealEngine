@@ -47,7 +47,7 @@ public:
     StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
 
     Texture2D* CreateTexture2D(const std::string& file, bool srgb = true);
-    Texture2D* CreateTexture2D(uint32_t width, uint32_t height, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
+    Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     Texture2D* CreateTexture2D(void* window, float width_ratio, float height_ratio, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
 
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);

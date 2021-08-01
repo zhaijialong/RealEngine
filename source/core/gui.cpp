@@ -40,7 +40,7 @@ bool GUI::Init()
 	int width, height;
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-	m_pFontTexture.reset(pRenderer->CreateTexture2D(width, height, GfxFormat::RGBA8UNORM, GfxTextureUsageShaderResource, "GUI::m_pFontTexture"));
+	m_pFontTexture.reset(pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA8UNORM, GfxTextureUsageShaderResource, "GUI::m_pFontTexture"));
 	pRenderer->UploadTexture(m_pFontTexture->GetTexture(), pixels, width * height * 4);
 
 	io.Fonts->TexID = (ImTextureID)m_pFontTexture->GetSRV();

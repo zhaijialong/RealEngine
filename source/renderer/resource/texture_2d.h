@@ -12,7 +12,7 @@ public:
     Texture2D(const std::string& name);
     virtual ~Texture2D() {}
 
-    bool Create(uint32_t width, uint32_t height, GfxFormat format, GfxTextureUsageFlags flags);
+    bool Create(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags);
     bool Create(void* window_handle, float width_ratio, float height_ratio, GfxFormat format, GfxTextureUsageFlags flags);
 
     IGfxTexture* GetTexture() const { return m_pTexture.get(); }

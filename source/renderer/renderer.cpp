@@ -281,7 +281,7 @@ void Renderer::CreateCommonResources()
     m_pDepthRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::D32FS8, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pDepthRT"));
     m_pHdrRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::RGBA16F, GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource, "Renderer::m_pHdrRT"));
 
-    m_pShadowRT.reset(CreateTexture2D(2048, 2048, GfxFormat::D16, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pShadowRT"));
+    m_pShadowRT.reset(CreateTexture2D(2048, 2048, 1, GfxFormat::D16, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pShadowRT"));
 
     m_pToneMap.reset(new Tonemap(this));
     
@@ -343,7 +343,7 @@ Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
     }
 
     Texture2D* texture = new Texture2D(file);
-    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetFormat(), GfxTextureUsageShaderResource))
+    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), GfxTextureUsageShaderResource))
     {
         delete texture;
         return nullptr;
@@ -354,10 +354,10 @@ Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
     return texture;
 }
 
-Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name)
+Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name)
 {
     Texture2D* texture = new Texture2D(name);
-    if (!texture->Create(width, height, format, flags))
+    if (!texture->Create(width, height, levels, format, flags))
     {
         delete texture;
         return nullptr;
