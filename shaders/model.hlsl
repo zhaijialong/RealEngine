@@ -67,7 +67,8 @@ float4 ps_main(VSOutput input) : SV_TARGET
     float metallic = MaterialCB.metallic;
     float roughness = MaterialCB.roughness;
 
-    SamplerState linearSampler = SamplerDescriptorHeap[MaterialCB.linearSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
+    SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     
 #if ALBEDO_TEXTURE
     Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
@@ -105,7 +106,7 @@ float4 ps_main(VSOutput input) : SV_TARGET
     float visibility = Shadow(input.worldPos, N, SceneCB.mtxLightVP, shadowRT, shadowSampler);
     float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor;
     
-    float3 indirect_diffuse = diffuse * 0.2;
+    float3 indirect_diffuse = diffuse * float3(0.15, 0.15, 0.2);
     
 
     TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
@@ -114,8 +115,10 @@ float4 ps_main(VSOutput input) : SV_TARGET
     const float MAX_REFLECTION_LOD = 7.0;
     float3 R = reflect(-V, N);
     float3 filtered_env = envTexture.SampleLevel(linearSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
-    float2 env_brdf = brdfTexture.Sample(linearSampler, float2(max(dot(N, V), 0.0), roughness)).xy;
-    float3 indirect_specular = filtered_env * (specular * env_brdf.x + env_brdf.y);
+    
+    float NdotV = saturate(dot(N, V));
+    float2 PreintegratedGF = brdfTexture.Sample(linearSampler, float2(NdotV, roughness)).xy;
+    float3 indirect_specular = filtered_env * (specular * PreintegratedGF.x + PreintegratedGF.y);
     
     float3 radiance = direct_light + indirect_diffuse + indirect_specular;
 

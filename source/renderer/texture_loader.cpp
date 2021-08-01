@@ -69,14 +69,24 @@ bool TextureLoader::LoadDDS(bool srgb)
 	m_depth = header.depth;
 	m_levels = header.mipMapCount;
 
+    uint32_t header_size = 0;
 	// Check for DX10 extension
 	if ((header.ddspf.flags & DDS_FOURCC) && (MAKEFOURCC('D', 'X', '1', '0') == header.ddspf.fourCC))
 	{
 		DDS_HEADER_DXT10 dxt10_header = *(DDS_HEADER_DXT10*)(data + sizeof(uint32_t) + sizeof(DDS_HEADER));
 
-        m_arraySize = 6;// dxt10_header.arraySize;
-        m_type = GfxTextureType::TextureCube;
-        m_format = GfxFormat::RGBA16F;
+        if (dxt10_header.miscFlag & DDS_RESOURCE_MISC_TEXTURECUBE)
+        {
+
+            m_arraySize = 6;// dxt10_header.arraySize;
+            m_type = GfxTextureType::TextureCube;
+            m_format = GfxFormat::RGBA16F;
+        }
+        else
+        {
+            m_type = GfxTextureType::Texture2D;
+            m_format = GfxFormat::RG16UNORM;
+        }
 
         switch (dxt10_header.resourceDimension)
         {
@@ -87,17 +97,20 @@ bool TextureLoader::LoadDDS(bool srgb)
         default:
             break;
         }
-		//m_format = dxt10_header.dxgiFormat;
 
-        uint32_t header_size = sizeof(uint32_t) + sizeof(DDS_HEADER) + sizeof(DDS_HEADER_DXT10);
-		m_pTextureData = data + header_size;
-        m_textureSize = (uint32_t)m_fileData.size() - header_size;
+        header_size = sizeof(uint32_t) + sizeof(DDS_HEADER) + sizeof(DDS_HEADER_DXT10);
 	}
 	else
 	{
-		//todo
-		RE_ASSERT(false);
+        m_type = GfxTextureType::Texture2D;
+        m_format = GfxFormat::RG16UNORM;
+
+        uint32_t header_size = sizeof(uint32_t) + sizeof(DDS_HEADER);
 	}
+
+
+    m_pTextureData = data + header_size;
+    m_textureSize = (uint32_t)m_fileData.size() - header_size;
 
     return true;
 }

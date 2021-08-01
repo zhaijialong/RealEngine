@@ -10,6 +10,11 @@ struct SceneConstant
     
     float4x4 mtxLightVP;
     
+    uint pointRepeatSampler;
+    uint pointClampSampler;
+    uint linearRepeatSampler;
+    uint linearClampSampler;
+    
     uint envTexture;
     uint brdfTexture;
 };

@@ -97,6 +97,10 @@ void Renderer::BeginFrame()
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
     sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
     sceneCB.mtxLightVP = GetLightVP(light);
+    sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
+    sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
+    sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
+    sceneCB.linearClampSampler = m_pLinearClampSampler->GetHeapIndex();
     sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
     sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
 
@@ -260,12 +264,25 @@ IGfxPipelineState* Renderer::GetPipelineState(const GfxGraphicsPipelineDesc& des
 void Renderer::CreateCommonResources()
 {
     GfxSamplerDesc desc;
-    m_pPointSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pPointSampler"));
+    m_pPointRepeatSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pPointRepeatSampler"));
 
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;
     desc.mip_filter = GfxFilter::Linear;
-    m_pLinearSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearSampler"));
+    m_pLinearRepeatSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearRepeatSampler"));
+
+    desc.min_filter = GfxFilter::Point;
+    desc.mag_filter = GfxFilter::Point;
+    desc.mip_filter = GfxFilter::Point;
+    desc.address_u = GfxSamplerAddressMode::ClampToEdge;
+    desc.address_v = GfxSamplerAddressMode::ClampToEdge;
+    desc.address_w = GfxSamplerAddressMode::ClampToEdge;
+    m_pPointClampSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pPointClampSampler"));
+
+    desc.min_filter = GfxFilter::Linear;
+    desc.mag_filter = GfxFilter::Linear;
+    desc.mip_filter = GfxFilter::Linear;
+    m_pLinearClampSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearClampSampler"));
 
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;
@@ -286,7 +303,7 @@ void Renderer::CreateCommonResources()
     m_pToneMap.reset(new Tonemap(this));
     
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
-    m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/ibl_brdf_lut.png", false));
+    m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
     m_pEnvTexture.reset(CreateTextureCube(asset_path + "textures/output_pmrem.dds"));
 }
 

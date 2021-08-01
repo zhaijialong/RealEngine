@@ -40,8 +40,8 @@ public:
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
     IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
-    IGfxDescriptor* GetPointSampler() const { return m_pPointSampler.get(); }
-    IGfxDescriptor* GetLinearSampler() const { return m_pLinearSampler.get(); }
+    IGfxDescriptor* GetPointSampler() const { return m_pPointRepeatSampler.get(); }
+    IGfxDescriptor* GetLinearSampler() const { return m_pLinearRepeatSampler.get(); }
 
     IndexBuffer* CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
@@ -102,8 +102,10 @@ private:
     std::unique_ptr<ShaderCache> m_pShaderCache;
     std::unique_ptr<PipelineStateCache> m_pPipelineCache;
 
-    std::unique_ptr<IGfxDescriptor> m_pPointSampler;
-    std::unique_ptr<IGfxDescriptor> m_pLinearSampler;
+    std::unique_ptr<IGfxDescriptor> m_pPointRepeatSampler;
+    std::unique_ptr<IGfxDescriptor> m_pPointClampSampler;
+    std::unique_ptr<IGfxDescriptor> m_pLinearRepeatSampler;
+    std::unique_ptr<IGfxDescriptor> m_pLinearClampSampler;
     std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
 
     std::unique_ptr<Texture2D> m_pBrdfTexture;
