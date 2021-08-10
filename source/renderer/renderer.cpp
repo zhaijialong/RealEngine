@@ -306,7 +306,7 @@ void Renderer::CreateCommonResources()
     void* window = Engine::GetInstance()->GetWindowHandle();
     m_pDepthRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::D32FS8, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pDepthRT"));
     m_pHdrRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::RGBA16F, GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource, "Renderer::m_pHdrRT"));
-    m_pLdrRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::RGBA8SRGB, GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource, "Renderer::m_pAntiAliasedRT"));
+    m_pLdrRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::RGBA8SRGB, GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource, "Renderer::m_pLdrRT"));
 
     m_pShadowRT.reset(CreateTexture2D(2048, 2048, 1, GfxFormat::D16, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pShadowRT"));
 
