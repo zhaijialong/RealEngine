@@ -120,6 +120,7 @@
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\renderer\fxaa.cpp" />
     <ClCompile Include="source\renderer\pass\base_pass.cpp" />
     <ClCompile Include="source\renderer\pass\shadow_pass.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="external\simpleini\SimpleIni.h" />
     <ClInclude Include="external\tinyxml2\tinyxml2.h" />
     <ClInclude Include="external\xxHash\xxhash.h" />
+    <ClInclude Include="shaders\fxaa.hlsli" />
     <ClInclude Include="source\core\camera.h" />
     <ClInclude Include="source\core\directional_light.h" />
     <ClInclude Include="source\core\editor.h" />
@@ -190,6 +192,7 @@
     <ClInclude Include="source\gfx\i_gfx_shader.h" />
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
+    <ClInclude Include="source\renderer\fxaa.h" />
     <ClInclude Include="source\renderer\pass\base_pass.h" />
     <ClInclude Include="source\renderer\pass\shadow_pass.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
@@ -229,6 +232,10 @@
     <None Include="shaders\model_constants.hlsli" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="shaders\fxaa.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="shaders\imgui.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>

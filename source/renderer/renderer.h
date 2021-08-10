@@ -9,6 +9,7 @@
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
 #include "tonemap.h"
+#include "fxaa.h"
 #include "lsignal/lsignal.h"
 #include "utils/math.h"
 #include <functional>
@@ -114,8 +115,10 @@ private:
     std::unique_ptr<Texture2D> m_pHdrRT;
     std::unique_ptr<Texture2D> m_pDepthRT;
     std::unique_ptr<Texture2D> m_pShadowRT;
+    std::unique_ptr<Texture2D> m_pLdrRT;
 
     std::unique_ptr<Tonemap> m_pToneMap; //test code
+    std::unique_ptr<FXAA> m_pFXAA;
 
     lsignal::connection m_resizeConnection;
 

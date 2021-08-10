@@ -211,11 +211,19 @@ void Renderer::Render()
     {
         RENDER_EVENT(pCommandList, "PostProcess");
         GfxRenderPassDesc render_pass;
-        render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
+        render_pass.color[0].texture = m_pLdrRT->GetTexture();
         render_pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
         pCommandList->BeginRenderPass(render_pass);
-
+        
         m_pToneMap->Draw(pCommandList, m_pHdrRT->GetSRV());
+
+        pCommandList->EndRenderPass();
+        pCommandList->ResourceBarrier(m_pLdrRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
+
+        render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
+        pCommandList->BeginRenderPass(render_pass);
+
+        m_pFXAA->Draw(pCommandList, m_pLdrRT.get());
     }
 
     GUI* pGUI = Engine::GetInstance()->GetWorld()->GetGUI();
@@ -225,6 +233,7 @@ void Renderer::Render()
 
     pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
     pCommandList->ResourceBarrier(m_pHdrRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
+    pCommandList->ResourceBarrier(m_pLdrRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
     pCommandList->ResourceBarrier(m_pShadowRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::DepthStencil);
 }
 
@@ -297,10 +306,12 @@ void Renderer::CreateCommonResources()
     void* window = Engine::GetInstance()->GetWindowHandle();
     m_pDepthRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::D32FS8, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pDepthRT"));
     m_pHdrRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::RGBA16F, GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource, "Renderer::m_pHdrRT"));
+    m_pLdrRT.reset(CreateTexture2D(window, 1.0f, 1.0f, GfxFormat::RGBA8SRGB, GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource, "Renderer::m_pAntiAliasedRT"));
 
     m_pShadowRT.reset(CreateTexture2D(2048, 2048, 1, GfxFormat::D16, GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource, "Renderer::m_pShadowRT"));
 
     m_pToneMap.reset(new Tonemap(this));
+    m_pFXAA.reset(new FXAA(this));
     
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
     m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
