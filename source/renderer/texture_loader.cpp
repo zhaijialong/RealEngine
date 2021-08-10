@@ -1,11 +1,115 @@
 #include "texture_loader.h"
 #include "utils/assert.h"
 #include "stb/stb_image.h"
-#include "d3d12/dxgiformat.h"
-#include "dds/dds.h"
+#include "ddspp/ddspp.h"
 #include <fstream>
 
-using namespace DirectX;
+static inline GfxTextureType get_texture_type(ddspp::TextureType type, bool array)
+{
+    switch (type)
+    {
+    case ddspp::Texture2D:
+        return array ? GfxTextureType::Texture2DArray : GfxTextureType::Texture2D;
+    case ddspp::Texture3D:
+        return GfxTextureType::Texture3D;
+    case ddspp::Cubemap:
+        return array ? GfxTextureType::TextureCubeArray : GfxTextureType::TextureCube;
+    case ddspp::Texture1D:
+    default:
+        RE_ASSERT(false);
+        return GfxTextureType::Texture2D;
+    }
+}
+
+static inline GfxFormat get_texture_format(ddspp::DXGIFormat format)
+{
+    switch(format)
+    {
+    case ddspp::UNKNOWN:
+        return GfxFormat::Unknown;
+    case ddspp::R32G32B32A32_FLOAT:
+        return GfxFormat::RGBA32F;
+    case ddspp::R32G32B32A32_UINT:
+        return GfxFormat::RGBA32UI;
+    case ddspp::R32G32B32A32_SINT:
+        return GfxFormat::RGBA32SI;
+    case ddspp::R16G16B16A16_FLOAT:
+        return GfxFormat::RGBA16F;
+    case ddspp::R16G16B16A16_UINT:
+        return GfxFormat::RGBA16UI;
+    case ddspp::R16G16B16A16_SINT:
+        return GfxFormat::RGBA16SI;
+    case ddspp::R16G16B16A16_UNORM:
+        return GfxFormat::RGBA16UNORM;
+    case ddspp::R16G16B16A16_SNORM:
+        return GfxFormat::RGBA16SNORM;
+    case ddspp::R8G8B8A8_UINT:
+        return GfxFormat::RGBA8UI;
+    case ddspp::R8G8B8A8_SINT:
+        return GfxFormat::RGBA8SI;
+    case ddspp::R8G8B8A8_UNORM:
+        return GfxFormat::RGBA8UNORM;
+    case ddspp::R8G8B8A8_SNORM:
+        return GfxFormat::RGBA8SNORM;
+    case ddspp::R8G8B8A8_UNORM_SRGB:
+        return GfxFormat::RGBA8SRGB;
+    case ddspp::B8G8R8A8_UNORM:
+        return GfxFormat::BGRA8UNORM;
+    case ddspp::B8G8R8A8_UNORM_SRGB:
+        return GfxFormat::BGRA8SRGB;
+    case ddspp::R32G32_FLOAT:
+        return GfxFormat::RG32F;
+    case ddspp::R32G32_UINT:
+        return GfxFormat::RG32UI;
+    case ddspp::R32G32_SINT:
+        return GfxFormat::RG32SI;
+    case ddspp::R16G16_FLOAT:
+        return GfxFormat::RG16F;
+    case ddspp::R16G16_UINT:
+        return GfxFormat::RG16UI;
+    case ddspp::R16G16_SINT:
+        return GfxFormat::RG16SI;
+    case ddspp::R16G16_UNORM:
+        return GfxFormat::RG16UNORM;
+    case ddspp::R16G16_SNORM:
+        return GfxFormat::RG16SNORM;
+    case ddspp::R8G8_UINT:
+        return GfxFormat::RG8UI;
+    case ddspp::R8G8_SINT:
+        return GfxFormat::RG8SI;
+    case ddspp::R8G8_UNORM:
+        return GfxFormat::RG8UNORM;
+    case ddspp::R8G8_SNORM:
+        return GfxFormat::RG8SNORM;
+    case ddspp::R32_FLOAT:
+        return GfxFormat::R32F;
+    case ddspp::R32_UINT:
+        return GfxFormat::R32UI;
+    case ddspp::R32_SINT:
+        return GfxFormat::R32SI;
+    case ddspp::R16_FLOAT:
+        return GfxFormat::R16F;
+    case ddspp::R16_UINT:
+        return GfxFormat::R16UI;
+    case ddspp::R16_SINT:
+        return GfxFormat::R16SI;
+    case ddspp::R16_UNORM:
+        return GfxFormat::R16UNORM;
+    case ddspp::R16_SNORM:
+        return GfxFormat::R16SNORM;
+    case ddspp::R8_UINT:
+        return GfxFormat::R8UI;
+    case ddspp::R8_SINT:
+        return GfxFormat::R8SI;
+    case ddspp::R8_UNORM:
+        return GfxFormat::R8UNORM;
+    case ddspp::R8_SNORM:
+        return GfxFormat::R8SNORM;
+    default:
+        RE_ASSERT(false);
+        return GfxFormat::Unknown;
+    }
+}
 
 TextureLoader::TextureLoader()
 {
@@ -13,9 +117,9 @@ TextureLoader::TextureLoader()
 
 TextureLoader::~TextureLoader()
 {
-    if (m_bReleaseData)
+    if (m_pDecompressedData)
     {
-        free(m_pTextureData);
+        stbi_image_free(m_pDecompressedData);
     }
 }
 
@@ -52,65 +156,23 @@ bool TextureLoader::LoadDDS(bool srgb)
 {
 	uint8_t* data = m_fileData.data();
 
-	uint32_t fourcc = *(uint32_t*)data;
-	if (fourcc != DDS_MAGIC)
-	{
-		return false;
-	}
+    ddspp::Descriptor desc;
+    ddspp::Result result = ddspp::decode_header((unsigned char*)data, desc);
+    if (result != ddspp::Success)
+    {
+        return false;
+    }
 
-	DDS_HEADER header = *(DDS_HEADER*)(data + sizeof(uint32_t));
-	if (header.size != sizeof(DDS_HEADER) || header.ddspf.size != sizeof(DDS_PIXELFORMAT))
-	{
-		return false;
-	}
+    m_width = desc.width;
+    m_height = desc.height;
+    m_depth = desc.depth;
+    m_levels = desc.numMips;
+    m_arraySize = desc.arraySize;
+    m_type = get_texture_type(desc.type, desc.arraySize > 1);
+    m_format = get_texture_format(desc.format);
 
-	m_width = header.width;
-	m_height = header.height;
-	m_depth = header.depth;
-	m_levels = header.mipMapCount;
-
-    uint32_t header_size = 0;
-	// Check for DX10 extension
-	if ((header.ddspf.flags & DDS_FOURCC) && (MAKEFOURCC('D', 'X', '1', '0') == header.ddspf.fourCC))
-	{
-		DDS_HEADER_DXT10 dxt10_header = *(DDS_HEADER_DXT10*)(data + sizeof(uint32_t) + sizeof(DDS_HEADER));
-
-        if (dxt10_header.miscFlag & DDS_RESOURCE_MISC_TEXTURECUBE)
-        {
-
-            m_arraySize = 6;// dxt10_header.arraySize;
-            m_type = GfxTextureType::TextureCube;
-            m_format = GfxFormat::RGBA16F;
-        }
-        else
-        {
-            m_type = GfxTextureType::Texture2D;
-            m_format = GfxFormat::RG16UNORM;
-        }
-
-        switch (dxt10_header.resourceDimension)
-        {
-        case DDS_DIMENSION_TEXTURE2D:
-            break;
-        case DDS_DIMENSION_TEXTURE3D:
-            break;
-        default:
-            break;
-        }
-
-        header_size = sizeof(uint32_t) + sizeof(DDS_HEADER) + sizeof(DDS_HEADER_DXT10);
-	}
-	else
-	{
-        m_type = GfxTextureType::Texture2D;
-        m_format = GfxFormat::RG16UNORM;
-
-        header_size = sizeof(uint32_t) + sizeof(DDS_HEADER);
-	}
-
-
-    m_pTextureData = data + header_size;
-    m_textureSize = (uint32_t)m_fileData.size() - header_size;
+    m_pTextureData = data + desc.headerSize;
+    m_textureSize = (uint32_t)m_fileData.size() - desc.headerSize;
 
     return true;
 }
@@ -118,8 +180,8 @@ bool TextureLoader::LoadDDS(bool srgb)
 bool TextureLoader::LoadSTB(bool srgb)
 {
     int x, y, comp;
-    m_pTextureData = stbi_load_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, STBI_rgb_alpha);
-    if (m_pTextureData == nullptr)
+    m_pDecompressedData = stbi_load_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, STBI_rgb_alpha);
+    if (m_pDecompressedData == nullptr)
     {
         return false;
     }
@@ -127,7 +189,6 @@ bool TextureLoader::LoadSTB(bool srgb)
     m_width = x;
     m_height = y;
     m_format = srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM;
-    m_bReleaseData = true;
     m_textureSize = x * y * 4;    
 
     return true;

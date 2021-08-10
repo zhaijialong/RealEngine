@@ -12,10 +12,11 @@ public:
 
 	uint32_t GetWidth() const { return m_width; }
 	uint32_t GetHeight() const { return m_height; }
+	uint32_t GetDepth() const { return m_depth; }
 	uint32_t GetMipLevels() const { return m_levels; }
 	GfxFormat GetFormat() const { return m_format; }
 
-	void* GetData() const { return m_pTextureData; }
+	void* GetData() const { return m_pDecompressedData != nullptr ? m_pDecompressedData : m_pTextureData; }
 	uint32_t GetDataSize() const { return m_textureSize; }
 
 private:
@@ -31,8 +32,8 @@ private:
 	GfxFormat m_format = GfxFormat::Unknown;
 	GfxTextureType m_type = GfxTextureType::Texture2D;
 
-	bool m_bReleaseData = false;
 	void* m_pTextureData = nullptr;
+	void* m_pDecompressedData = nullptr;
 	uint32_t m_textureSize = 0;
 
 	std::vector<uint8_t> m_fileData;
