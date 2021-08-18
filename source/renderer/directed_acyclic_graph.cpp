@@ -1,5 +1,7 @@
 #include "directed_acyclic_graph.h"
 #include "utils/assert.h"
+#include <fstream>
+#include <algorithm>
 
 DAGEdge::DAGEdge(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to) :
     from(from->GetId()),
@@ -104,4 +106,92 @@ std::vector<DAGEdge*> DirectedAcyclicGraph::GetOutgoingEdges(const DAGNode* node
         }
     }
     return result;
+}
+
+void DirectedAcyclicGraph::ExportGraphviz(const char* file)
+{
+    std::ofstream out;
+    out.open(file);
+    if (out.fail())
+    {
+        return;
+    }
+
+    out << "digraph {\n";
+    out << "rankdir = LR\n";
+    out << "bgcolor = black\n";
+    out << "node [shape=rectangle, fontname=\"helvetica\", fontsize=10]\n\n";
+
+    for (size_t i = 0; i < m_nodes.size(); ++i) 
+    {
+        uint32_t id = m_nodes[i]->GetId();
+        std::string s = m_nodes[i]->Graphvizify();
+        out << "\"N" << id << "\" " << s << "\n";
+    }
+
+    out << "\n";
+    for (size_t i = 0; i < m_nodes.size(); ++i) 
+    {
+        DAGNode* node = m_nodes[i];
+        uint32_t id = node->GetId();
+
+        auto edges = GetOutgoingEdges(node);
+        auto first = edges.begin();
+        auto pos = std::partition(first, edges.end(),
+            [this](auto const& edge) { return IsEdgeValid(edge); });
+
+        std::string s = node->GraphvizifyEdgeColor();
+
+        // render the valid edges
+        if (first != pos) 
+        {
+            out << "N" << id << " -> { ";
+            while (first != pos) 
+            {
+                DAGNode const* ref = GetNode((*first++)->to);
+                out << "N" << ref->GetId() << " ";
+            }
+            out << "} [color=" << s.c_str() << "2]\n";
+        }
+
+        // render the invalid edges
+        if (first != edges.end()) 
+        {
+            out << "N" << id << " -> { ";
+            while (first != edges.end()) 
+            {
+                DAGNode const* ref = GetNode((*first++)->to);
+                out << "N" << ref->GetId() << " ";
+            }
+            out << "} [color=" << s.c_str() << "4 style=dashed]\n";
+        }
+    }
+
+    out << "}" << std::endl;
+
+    out.close();
+}
+
+std::string DAGNode::Graphvizify() const
+{
+    std::string s;
+    s.reserve(128);
+
+    s.append("[label=\"");
+    s.append(GetName());
+    s.append("\\nrefs: ");
+    s.append(std::to_string(GetRefCount()));
+    s.append(", id: ");
+    s.append(std::to_string(GetId()));
+    s.append("\", style=filled, fillcolor=");
+    s.append(!IsCulled() ? "skyblue" : "skyblue4");
+    s.append("]");
+    s.shrink_to_fit();
+
+    return s;
+}
+
+std::string DAGNode::GraphvizifyEdgeColor() const
+{
+    return "darkolivegreen";
 }

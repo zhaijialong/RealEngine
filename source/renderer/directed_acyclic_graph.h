@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 using DAGNodeID = uint32_t;
 
@@ -30,6 +31,10 @@ public:
     bool IsCulled() const { return m_nRefCount == 0; }
     uint32_t GetRefCount() const { return IsTarget() ? 1 : m_nRefCount; }
 
+    virtual char const* GetName() const { return "unknown"; }
+    virtual std::string Graphvizify() const;
+    virtual std::string GraphvizifyEdgeColor() const;
+
 private:
     DAGNodeID m_ID;
     uint32_t m_nRefCount = 0;
@@ -55,6 +60,8 @@ public:
     std::vector<DAGEdge*> GetIncomingEdges(const DAGNode* node) const;
     std::vector<DAGEdge*> GetOutgoingEdges(const DAGNode* node) const;
 
+    //dot.ext -Tpng -O file
+    void ExportGraphviz(const char* file);
 private:
     std::vector<DAGNode*> m_nodes;
     std::vector<DAGEdge*> m_edges;
