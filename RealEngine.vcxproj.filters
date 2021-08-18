@@ -172,6 +172,12 @@
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\render_graph_blackboard.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\render_graph_handle.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -351,7 +357,7 @@
     <ClInclude Include="source\renderer\render_graph.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\render_pass.h">
+    <ClInclude Include="source\renderer\render_graph_pass.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\render_graph_resource.h">
@@ -406,6 +412,12 @@
       <Filter>shaders</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\directed_acyclic_graph.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_graph_blackboard.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_graph_handle.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>

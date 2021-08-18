@@ -1,7 +1,7 @@
 #pragma once
-#pragma once
 
-#include "render_pass.h"
+#include "render_graph_pass.h"
+#include "directed_acyclic_graph.h"
 
 class RenderGraph
 {

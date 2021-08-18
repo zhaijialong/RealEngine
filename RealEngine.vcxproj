@@ -128,7 +128,9 @@
     <ClCompile Include="source\renderer\post_processor.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
     <ClCompile Include="source\renderer\render_graph.cpp" />
+    <ClCompile Include="source\renderer\render_graph_blackboard.cpp" />
     <ClCompile Include="source\renderer\render_graph_builder.cpp" />
+    <ClCompile Include="source\renderer\render_graph_handle.cpp" />
     <ClCompile Include="source\renderer\render_graph_resource.cpp" />
     <ClCompile Include="source\renderer\resource\constant_buffer.cpp" />
     <ClCompile Include="source\renderer\resource\index_buffer.cpp" />
@@ -201,9 +203,11 @@
     <ClInclude Include="source\renderer\post_processor.h" />
     <ClInclude Include="source\renderer\renderer.h" />
     <ClInclude Include="source\renderer\render_graph.h" />
+    <ClInclude Include="source\renderer\render_graph_blackboard.h" />
     <ClInclude Include="source\renderer\render_graph_builder.h" />
+    <ClInclude Include="source\renderer\render_graph_handle.h" />
     <ClInclude Include="source\renderer\render_graph_resource.h" />
-    <ClInclude Include="source\renderer\render_pass.h" />
+    <ClInclude Include="source\renderer\render_graph_pass.h" />
     <ClInclude Include="source\renderer\resource\constant_buffer.h" />
     <ClInclude Include="source\renderer\resource\index_buffer.h" />
     <ClInclude Include="source\renderer\resource\raw_buffer.h" />

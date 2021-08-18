@@ -1,5 +1,5 @@
 #include "render_graph_builder.h"
-#include "render_pass.h"
+#include "render_graph_pass.h"
 
 RenderGraphResource* RenderGraphBuilder::Read(RenderGraphResource* resource)
 {
