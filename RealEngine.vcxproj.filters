@@ -169,6 +169,9 @@
     <ClCompile Include="source\renderer\fxaa.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\directed_acyclic_graph.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -401,6 +404,9 @@
     </ClInclude>
     <ClInclude Include="shaders\fxaa.hlsli">
       <Filter>shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\directed_acyclic_graph.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

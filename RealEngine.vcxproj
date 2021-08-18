@@ -120,6 +120,7 @@
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\renderer\directed_acyclic_graph.cpp" />
     <ClCompile Include="source\renderer\fxaa.cpp" />
     <ClCompile Include="source\renderer\pass\base_pass.cpp" />
     <ClCompile Include="source\renderer\pass\shadow_pass.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="source\gfx\i_gfx_shader.h" />
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
+    <ClInclude Include="source\renderer\directed_acyclic_graph.h" />
     <ClInclude Include="source\renderer\fxaa.h" />
     <ClInclude Include="source\renderer\pass\base_pass.h" />
     <ClInclude Include="source\renderer\pass\shadow_pass.h" />
