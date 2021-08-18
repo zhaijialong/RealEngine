@@ -79,7 +79,7 @@ void DirectedAcyclicGraph::Cull()
 
 bool DirectedAcyclicGraph::IsEdgeValid(const DAGEdge* edge) const
 {
-    return !GetNode(edge->from)->IsCulled() && GetNode(edge->to)->IsCulled();
+    return !GetNode(edge->from)->IsCulled() && !GetNode(edge->to)->IsCulled();
 }
 
 std::vector<DAGEdge*> DirectedAcyclicGraph::GetIncomingEdges(const DAGNode* node) const
