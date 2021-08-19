@@ -20,6 +20,19 @@ DAGNode::DAGNode(DirectedAcyclicGraph& graph)
     graph.RegisterNode(this);
 }
 
+DAGEdge* DirectedAcyclicGraph::GetEdge(DAGNodeID from, DAGNodeID to) const
+{
+    for (size_t i = 0; i < m_edges.size(); ++i)
+    {
+        if (m_edges[i]->from == from && m_edges[i]->to == to)
+        {
+            return m_edges[i];
+        }
+    }
+
+    return nullptr;
+}
+
 void DirectedAcyclicGraph::RegisterNode(DAGNode* node)
 {
     RE_ASSERT(node->GetId() == m_nodes.size());

@@ -49,6 +49,7 @@ class DirectedAcyclicGraph
 public:
     DAGNodeID GenerateNodeId() { return (DAGNodeID)m_nodes.size(); }
     DAGNode* GetNode(DAGNodeID id) const { return m_nodes[id]; }
+    DAGEdge* GetEdge(DAGNodeID from, DAGNodeID to) const;
 
     void RegisterNode(DAGNode* node);
     void RegisterEdge(DAGEdge* edge);
