@@ -4,11 +4,11 @@
 #include <algorithm>
 
 DAGEdge::DAGEdge(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to) :
-    from(from->GetId()),
-    to(to->GetId())
+    m_from(from->GetId()),
+    m_to(to->GetId())
 {
-    RE_ASSERT(graph.GetNode(this->from) == from);
-    RE_ASSERT(graph.GetNode(this->to) == to);
+    RE_ASSERT(graph.GetNode(m_from) == from);
+    RE_ASSERT(graph.GetNode(m_to) == to);
 
     graph.RegisterEdge(this);
 }
@@ -24,7 +24,7 @@ DAGEdge* DirectedAcyclicGraph::GetEdge(DAGNodeID from, DAGNodeID to) const
 {
     for (size_t i = 0; i < m_edges.size(); ++i)
     {
-        if (m_edges[i]->from == from && m_edges[i]->to == to)
+        if (m_edges[i]->m_from == from && m_edges[i]->m_to == to)
         {
             return m_edges[i];
         }
@@ -57,7 +57,7 @@ void DirectedAcyclicGraph::Cull()
     for (size_t i = 0; i < m_edges.size(); ++i)
     {
         DAGEdge* edge = m_edges[i];
-        DAGNode* node = m_nodes[edge->from];
+        DAGNode* node = m_nodes[edge->m_from];
         node->m_nRefCount++;
     }
 
@@ -80,7 +80,7 @@ void DirectedAcyclicGraph::Cull()
 
         for (size_t i = 0; i < incoming.size(); ++i) 
         {
-            DAGNode* linked_node = GetNode(incoming[i]->from);
+            DAGNode* linked_node = GetNode(incoming[i]->m_from);
 
             if (--linked_node->m_nRefCount == 0)
             {
@@ -92,7 +92,7 @@ void DirectedAcyclicGraph::Cull()
 
 bool DirectedAcyclicGraph::IsEdgeValid(const DAGEdge* edge) const
 {
-    return !GetNode(edge->from)->IsCulled() && !GetNode(edge->to)->IsCulled();
+    return !GetNode(edge->m_from)->IsCulled() && !GetNode(edge->m_to)->IsCulled();
 }
 
 std::vector<DAGEdge*> DirectedAcyclicGraph::GetIncomingEdges(const DAGNode* node) const
@@ -100,7 +100,7 @@ std::vector<DAGEdge*> DirectedAcyclicGraph::GetIncomingEdges(const DAGNode* node
     std::vector<DAGEdge*> result;
     for (size_t i = 0; i < m_edges.size(); ++i)
     {
-        if (m_edges[i]->to == node->GetId())
+        if (m_edges[i]->m_to == node->GetId())
         {
             result.push_back(m_edges[i]);
         }
@@ -113,7 +113,7 @@ std::vector<DAGEdge*> DirectedAcyclicGraph::GetOutgoingEdges(const DAGNode* node
     std::vector<DAGEdge*> result;
     for (size_t i = 0; i < m_edges.size(); ++i)
     {
-        if (m_edges[i]->from == node->GetId())
+        if (m_edges[i]->m_from == node->GetId())
         {
             result.push_back(m_edges[i]);
         }
@@ -161,7 +161,7 @@ void DirectedAcyclicGraph::ExportGraphviz(const char* file)
             out << "N" << id << " -> { ";
             while (first != pos) 
             {
-                DAGNode const* ref = GetNode((*first++)->to);
+                DAGNode const* ref = GetNode((*first++)->m_to);
                 out << "N" << ref->GetId() << " ";
             }
             out << "} [color=" << s.c_str() << "2]\n";
@@ -173,7 +173,7 @@ void DirectedAcyclicGraph::ExportGraphviz(const char* file)
             out << "N" << id << " -> { ";
             while (first != edges.end()) 
             {
-                DAGNode const* ref = GetNode((*first++)->to);
+                DAGNode const* ref = GetNode((*first++)->m_to);
                 out << "N" << ref->GetId() << " ";
             }
             out << "} [color=" << s.c_str() << "4 style=dashed]\n";

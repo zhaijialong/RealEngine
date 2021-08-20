@@ -8,16 +8,24 @@ using DAGNodeID = uint32_t;
 class DirectedAcyclicGraph;
 class DAGNode;
 
-struct DAGEdge
+class DAGEdge
 {
-    const DAGNodeID from;
-    const DAGNodeID to;
-
+    friend class DirectedAcyclicGraph;
+public:
     DAGEdge(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to);
+    virtual ~DAGEdge() {}
+
+    DAGNodeID GetFromNode() const { return m_from; }
+    DAGNodeID GetToNode() const { return m_to; }
+
+private:
+    const DAGNodeID m_from;
+    const DAGNodeID m_to;
 };
 
 class DAGNode
 {
+    friend class DirectedAcyclicGraph;
 public:
     DAGNode(DirectedAcyclicGraph& graph);
     virtual ~DAGNode() {}
@@ -40,8 +48,6 @@ private:
     uint32_t m_nRefCount = 0;
 
     static const uint32_t TARGET = 0x80000000u;
-
-    friend class DirectedAcyclicGraph;
 };
 
 class DirectedAcyclicGraph
@@ -61,7 +67,7 @@ public:
     std::vector<DAGEdge*> GetIncomingEdges(const DAGNode* node) const;
     std::vector<DAGEdge*> GetOutgoingEdges(const DAGNode* node) const;
 
-    //dot.ext -Tpng -O file
+    //dot.exe -Tpng -O file
     void ExportGraphviz(const char* file);
 private:
     std::vector<DAGNode*> m_nodes;
