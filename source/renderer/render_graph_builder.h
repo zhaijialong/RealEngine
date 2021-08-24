@@ -1,9 +1,6 @@
 #pragma once
 
-#include "directed_acyclic_graph.h"
-#include "render_graph_handle.h"
-
-class RenderGraph;
+#include "render_graph.h"
 
 class RenderGraphBuilder
 {
@@ -16,7 +13,12 @@ public:
 
     void MakeTarget() { m_pPass->MakeTarget(); }
 
-    RenderGraphHandle Create();
+    template<typename Resource>
+    RenderGraphHandle Create(const char* name, const typename Resource::Desc& desc)
+    {
+        return m_pGraph->Create<Resource>(name, desc);
+    }
+
     RenderGraphHandle Read(RenderGraphHandle input /*, usage */);
     RenderGraphHandle Write(RenderGraphHandle input /*, usage */);
 

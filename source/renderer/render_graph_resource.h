@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include "gfx/gfx.h"
 
 class RenderGraphResource
 {
@@ -17,15 +16,23 @@ public:
 
 protected:
     std::string m_name;
-
-    friend class RenderGraphBuilder;
 };
 
 class RenderGraphTexture : public RenderGraphResource
 {
 public:
-    virtual void Realize() override;
-    virtual void Derealize() override;
+    using Desc = GfxTextureDesc;
+
+    RenderGraphTexture(const std::string& name, const Desc& desc) : RenderGraphResource(name)
+    {
+        m_desc = desc;
+    }
+
+    virtual void Realize() override {}
+    virtual void Derealize() override {}
+
+private:
+    Desc m_desc;
 };
 
 class RenderGraphBuffer : public RenderGraphResource
