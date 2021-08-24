@@ -9,9 +9,9 @@ public:
     template<typename Data, typename Setup, typename Exec>
     RenderGraphPass<Data>& AddPass(const char* name, const Setup& setup, const Exec& execute);
 
+    void Clear();
     void Compile();
     void Execute();
-    void Clear();
 
 private:
     //todo : LinearAllocator m_allocator;

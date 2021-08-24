@@ -1,6 +1,7 @@
 #pragma once
 
 #include "directed_acyclic_graph.h"
+#include "render_graph_handle.h"
 
 class RenderGraph;
 
@@ -13,11 +14,15 @@ public:
         m_pPass = pass;
     }
 
-    //RenderGraphResource* Read(RenderGraphResource* resource);
-    //RenderGraphResource* Write(RenderGraphResource* resource);
+    void MakeTarget() { m_pPass->MakeTarget(); }
 
-    //RenderGraphTexture* CreateTexture(const std::string& name, uint32_t width, uint32_t height);
-    //todo : RenderGraphBuffer* CreateBuffer(const std::string& name);
+    RenderGraphHandle Create();
+    RenderGraphHandle Read(RenderGraphHandle input /*, usage */);
+    RenderGraphHandle Write(RenderGraphHandle input /*, usage */);
+
+private:
+    RenderGraphBuilder(RenderGraphBuilder const&) = delete;
+    RenderGraphBuilder& operator=(RenderGraphBuilder const&) = delete;
 
 private:
     RenderGraph* m_pGraph = nullptr;

@@ -124,12 +124,6 @@
     <ClCompile Include="source\renderer\render_graph.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\render_graph_builder.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="source\renderer\render_graph_resource.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="source\renderer\pass\shadow_pass.cpp">
       <Filter>source\renderer\pass</Filter>
     </ClCompile>
@@ -170,9 +164,6 @@
       <Filter>source\renderer</Filter>
     </ClCompile>
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="source\renderer\render_graph_blackboard.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
   </ItemGroup>
