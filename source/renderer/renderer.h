@@ -125,4 +125,6 @@ private:
 
     std::vector<ShadowRenderFunc> m_shadowPassBatchs;
     std::vector<RenderFunc> m_basePassBatchs;
+
+    RenderGraph m_renderGraph;
 };

@@ -1,22 +1,31 @@
 #pragma once
 
 #include "render_graph_pass.h"
-#include "directed_acyclic_graph.h"
+#include "render_graph_builder.h"
 
 class RenderGraph
 {
 public:
-    void AddPass(RenderPass* pass);
-
-    template<class ParamT, class... ArgT>
-    void AddPass();
+    template<typename Data, typename Setup, typename Exec>
+    RenderGraphPass<Data>& AddPass(const char* name, const Setup& setup, const Exec& execute);
 
     void Compile();
     void Execute();
     void Clear();
+
+private:
+    //todo : LinearAllocator m_allocator;
+
+    DirectedAcyclicGraph m_graph;
 };
 
-template<class ParamT, class ...ArgT>
-inline void RenderGraph::AddPass()
+template<typename Data, typename Setup, typename Exec>
+inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup& setup, const Exec& execute)
 {
+    auto* pass = new RenderGraphPass<Data>(name, m_graph, execute);
+
+    RenderGraphBuilder builder(this, pass);
+    setup(pass->GetData(), builder);
+
+    return *pass;
 }

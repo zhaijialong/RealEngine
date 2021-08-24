@@ -1,60 +1,32 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include "directed_acyclic_graph.h"
 #include <functional>
 
-class RenderGraphBuilder;
 class RenderGraphResource;
 
-class RenderPass
-{
-public:
-    RenderPass(const std::string& name) : m_name(name) {}
-    virtual ~RenderPass() {}
-
-    virtual void Setup(RenderGraphBuilder& builder) = 0;
-    virtual void Execute() = 0;
-
-protected:
-    std::string m_name;
-    bool m_bIngoreCulling = false;
-    uint32_t m_nRefCount = 0;
-
-    std::vector<const RenderGraphResource*> m_creates;
-    std::vector<const RenderGraphResource*> m_reads;
-    std::vector<const RenderGraphResource*> m_writes;
-
-    friend class RenderGraphBuilder;
-};
-
 template<class T>
-class LambdaRenderPass : public RenderPass
+class RenderGraphPass : public DAGNode
 {
 public:
-    LambdaRenderPass(const std::string& name,
-        const std::function<void(T&, RenderGraphBuilder&)>& setup,
-        const std::function<void(const T&)> execute) :
-        RenderPass(name)
+    RenderGraphPass(const std::string& name, DirectedAcyclicGraph& graph,
+        const std::function<void(const T&)>& execute) :
+        DAGNode(graph)
     {
-        m_setup = setup;
+        m_name = name;
         m_execute = execute;
     }
 
-private:
-    virtual void Setup(RenderGraphBuilder& builder) override
-    {
-        m_setup(m_parameters, builder);
-    }
+    T& GetData() { return m_parameters; }
 
-    virtual void Execute() override
+    void Execute()
     {
         m_execute(m_parameters);
     }
 
 protected:
+    std::string m_name;
     T m_parameters;
-    std::function<void(T&, RenderGraphBuilder&)> m_setup;
     std::function<void(const T&)> m_execute;
 };
 

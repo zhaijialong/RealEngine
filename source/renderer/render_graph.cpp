@@ -1,8 +1,9 @@
 #include "render_graph.h"
 
-void RenderGraph::AddPass(RenderPass* pass)
+class RenderGraphEdge : public DAGEdge
 {
-}
+
+};
 
 void RenderGraph::Compile()
 {

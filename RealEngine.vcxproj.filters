@@ -175,9 +175,6 @@
     <ClCompile Include="source\renderer\render_graph_blackboard.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\render_graph_handle.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
