@@ -30,3 +30,5 @@ bin/d3d12ma.png
 GPUCache
 VTune Profiler Results
 debug.log
+bin/rendergraph
+bin/rendergraph.png

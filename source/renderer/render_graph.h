@@ -21,6 +21,8 @@ public:
 
     void Present(const RenderGraphHandle& handle);
 
+    bool Export(const std::string& file);
+
 private:
     template<typename T>
     T* Allocate();

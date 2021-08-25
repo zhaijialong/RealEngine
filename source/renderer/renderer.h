@@ -38,6 +38,8 @@ public:
     uint32_t GetBackbufferWidth() const { return m_pSwapchain->GetDesc().width; }
     uint32_t GetBackbufferHeight() const { return m_pSwapchain->GetDesc().height; }
 
+    RenderGraph& GetRenderGraph() { return m_renderGraph; }
+
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
     IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);

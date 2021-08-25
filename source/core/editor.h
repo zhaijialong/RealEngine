@@ -18,16 +18,19 @@ private:
     void DrawFrameStats();
 
     void CreateGpuMemoryStats();
+    void CreateRenderGraph();
     void FlushPendingTextureDeletions();
 
 private:
     bool m_bShowGpuMemoryStats = false;
+    bool m_bShowRenderGraph = false;
     bool m_bShowImguiDemo = false;
 
     std::unordered_map<IGfxDescriptor*, Texture2D*> m_fileDialogIcons;
     std::vector<IGfxDescriptor*> m_pendingDeletions;
 
     std::unique_ptr<Texture2D> m_pGpuMemoryStats;
+    std::unique_ptr<Texture2D> m_pRenderGraph;
 
     enum class SelectEditMode
     {

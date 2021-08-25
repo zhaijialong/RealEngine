@@ -70,7 +70,7 @@ public:
     std::vector<DAGEdge*> GetOutgoingEdges(const DAGNode* node) const;
 
     //dot.exe -Tpng -O file
-    void ExportGraphviz(const char* file);
+    bool ExportGraphviz(const char* file);
 private:
     std::vector<DAGNode*> m_nodes;
     std::vector<DAGEdge*> m_edges;

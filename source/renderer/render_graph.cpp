@@ -1,4 +1,5 @@
 #include "render_graph.h"
+#include "core/engine.h"
 
 void RenderGraph::Clear()
 {
@@ -21,13 +22,18 @@ void RenderGraph::Compile()
 
 void RenderGraph::Execute()
 {
-    m_graph.ExportGraphviz("A:/rendergraph.dot");
+    
 }
 
 void RenderGraph::Present(const RenderGraphHandle& handle)
 {
     RenderGraphResourceNode* node = m_resourceNodes[handle.node];
     node->MakeTarget();
+}
+
+bool RenderGraph::Export(const std::string& file)
+{
+    return m_graph.ExportGraphviz(file.c_str());
 }
 
 RenderGraphHandle RenderGraph::Read(DAGNode* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource)

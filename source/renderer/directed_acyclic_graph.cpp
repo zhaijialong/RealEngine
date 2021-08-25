@@ -130,13 +130,13 @@ std::vector<DAGEdge*> DirectedAcyclicGraph::GetOutgoingEdges(const DAGNode* node
     return result;
 }
 
-void DirectedAcyclicGraph::ExportGraphviz(const char* file)
+bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
 {
     std::ofstream out;
     out.open(file);
     if (out.fail())
     {
-        return;
+        return false;
     }
 
     out << "digraph {\n";
@@ -192,6 +192,7 @@ void DirectedAcyclicGraph::ExportGraphviz(const char* file)
     out << "}" << std::endl;
 
     out.close();
+    return true;
 }
 
 std::string DAGNode::Graphvizify() const

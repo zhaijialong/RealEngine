@@ -77,6 +77,18 @@ void Editor::DrawMenu()
                 }
             }
 
+            if (ImGui::MenuItem("Show Render Graph", "", &m_bShowRenderGraph))
+            {
+                if (m_bShowRenderGraph)
+                {
+                    CreateRenderGraph();
+                }
+                else
+                {
+                    m_pRenderGraph.reset();
+                }
+            }
+
             ImGui::MenuItem("Show Imgui Demo", "", &m_bShowImguiDemo);
 
             ImGui::EndMenu();
@@ -101,6 +113,14 @@ void Editor::DrawMenu()
         ImGui::Begin("GPU Memory Stats", &m_bShowGpuMemoryStats);
         const GfxTextureDesc& desc = m_pGpuMemoryStats->GetTexture()->GetDesc();
         ImGui::Image((ImTextureID)m_pGpuMemoryStats->GetSRV(), ImVec2((float)desc.width, (float)desc.height));
+        ImGui::End();
+    }
+
+    if (m_bShowRenderGraph && m_pRenderGraph)
+    {
+        ImGui::Begin("Render Graph", &m_bShowRenderGraph);
+        const GfxTextureDesc& desc = m_pRenderGraph->GetTexture()->GetDesc();
+        ImGui::Image((ImTextureID)m_pRenderGraph->GetSRV(), ImVec2((float)desc.width, (float)desc.height));
         ImGui::End();
     }
 
@@ -220,6 +240,26 @@ void Editor::CreateGpuMemoryStats()
         {
             std::string file = path + "d3d12ma.png";
             m_pGpuMemoryStats.reset(pRenderer->CreateTexture2D(file));
+        }
+    }
+}
+
+void Editor::CreateRenderGraph()
+{
+    Engine* pEngine = Engine::GetInstance();
+    Renderer* pRenderer = pEngine->GetRenderer();
+
+    std::string path = pEngine->GetWorkPath();
+    std::string graph_file = path + "rendergraph";
+
+    if (pRenderer->GetRenderGraph().Export(graph_file))
+    {
+        std::string dot_exe = Engine::GetInstance()->GetWorkPath() + "tools/graphviz/dot.exe";
+        std::string cmd = dot_exe + " -Tpng -O " + graph_file;
+        if (WinExec(cmd.c_str(), 0) > 31)
+        {
+            std::string png_file = graph_file + ".png";
+            m_pRenderGraph.reset(pRenderer->CreateTexture2D(png_file));
         }
     }
 }
