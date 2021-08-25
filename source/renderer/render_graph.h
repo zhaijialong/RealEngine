@@ -22,6 +22,9 @@ public:
     void Present(const RenderGraphHandle& handle);
 
 private:
+    template<typename T>
+    T* Allocate();
+
     template<typename Resource>
     RenderGraphHandle Create(const char* name, const typename Resource::Desc& desc);
 

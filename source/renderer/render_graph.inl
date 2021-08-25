@@ -49,11 +49,16 @@ private:
     uint32_t m_subresource;
 };
 
+template<typename T>
+inline T* RenderGraph::Allocate()
+{
+    return (T*)m_allocator.Alloc(sizeof(T));
+}
 
 template<typename Data, typename Setup, typename Exec>
 inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup& setup, const Exec& execute)
 {
-    auto* pass = new (m_allocator.Alloc(sizeof(RenderGraphPass<Data>))) RenderGraphPass<Data>(name, m_graph, execute);
+    auto* pass = new (Allocate<RenderGraphPass<Data>>()) RenderGraphPass<Data>(name, m_graph, execute);
 
     RenderGraphBuilder builder(this, pass);
     setup(pass->GetData(), builder);
@@ -64,8 +69,8 @@ inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup
 template<typename Resource>
 inline RenderGraphHandle RenderGraph::Create(const char* name, const typename Resource::Desc& desc)
 {
-    auto* resource = new (m_allocator.Alloc(sizeof(Resource))) Resource(name, desc);
-    auto* node = new (m_allocator.Alloc(sizeof(RenderGraphResourceNode))) RenderGraphResourceNode(m_graph, resource, 0);
+    auto* resource = new (Allocate<Resource>()) Resource(name, desc);
+    auto* node = new (Allocate<RenderGraphResourceNode>()) RenderGraphResourceNode(m_graph, resource, 0);
 
     RenderGraphHandle handle;
     handle.index = (uint16_t)m_resources.size();
