@@ -1,21 +1,5 @@
 #include "render_graph.h"
 
-class RenderGraphEdge : public DAGEdge
-{
-public:
-    RenderGraphEdge(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxResourceState usage, uint32_t subresource) :
-        DAGEdge(graph, from, to)
-    {
-        m_usage = usage;
-        m_subresource = subresource;
-    }
-
-private:
-    GfxResourceState m_usage;
-    uint32_t m_subresource;
-};
-
-
 void RenderGraph::Clear()
 {
 }
@@ -45,9 +29,31 @@ RenderGraphHandle RenderGraph::Read(DAGNode* pass, const RenderGraphHandle& inpu
     return input;
 }
 
-RenderGraphHandle RenderGraph::Write(DAGNode* pass, const RenderGraphHandle& output, GfxResourceState usage, uint32_t subresource)
+RenderGraphHandle RenderGraph::Write(DAGNode* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource)
 {
-    RenderGraphResourceNode* output_node = m_resourceNodes[output.node];
+    RenderGraphResource* resource = m_resources[input.index];
+    RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
+
+    RenderGraphHandle output;
+    RenderGraphResourceNode* output_node;
+
+    if (input_node->GetVersion() == 0)
+    {
+        output_node = input_node;
+        output = input;
+
+        input_node->SetVersion(1);
+    }
+    else
+    {
+        uint32_t version = input_node->GetVersion() + 1;
+        output_node = new RenderGraphResourceNode(m_graph, resource, version);
+        
+        output.index = input.index;
+        output.node = (uint16_t)m_resourceNodes.size();
+
+        m_resourceNodes.push_back(output_node);
+    }
 
     new RenderGraphEdge(m_graph, pass, output_node, usage, subresource);
 

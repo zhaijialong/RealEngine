@@ -25,9 +25,9 @@ public:
         return m_pGraph->Read(m_pPass, input, usage, subresource);
     }
 
-    RenderGraphHandle Write(const RenderGraphHandle& output, GfxResourceState usage, uint32_t subresource = GFX_ALL_SUB_RESOURCE)
+    RenderGraphHandle Write(const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource = GFX_ALL_SUB_RESOURCE)
     {
-        return m_pGraph->Write(m_pPass, output, usage, subresource);
+        return m_pGraph->Write(m_pPass, input, usage, subresource);
     }
 
 private:

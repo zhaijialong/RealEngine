@@ -25,7 +25,7 @@ private:
     RenderGraphHandle Create(const char* name, const typename Resource::Desc& desc);
 
     RenderGraphHandle Read(DAGNode* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
-    RenderGraphHandle Write(DAGNode* pass, const RenderGraphHandle& output, GfxResourceState usage, uint32_t subresource);
+    RenderGraphHandle Write(DAGNode* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
 
 private:
     //todo : LinearAllocator m_allocator;
