@@ -1,6 +1,7 @@
 #include "editor.h"
 #include "engine.h"
 #include "utils/assert.h"
+#include "utils/system.h"
 #include "imgui/imgui.h"
 #include "ImFileDialog/ImFileDialog.h"
 #include "ImGuizmo/ImGuizmo.h"
@@ -236,7 +237,7 @@ void Editor::CreateGpuMemoryStats()
         std::string path = pEngine->GetWorkPath();
         std::string cmd = "python " + path + "tools/D3d12maDumpVis.py -o " + path + "d3d12ma.png " + path + "d3d12ma.json";
 
-        if (WinExec(cmd.c_str(), 0) > 31) //"If the function succeeds, the return value is greater than 31."
+        if (ExecuteCommand(cmd.c_str()))
         {
             std::string file = path + "d3d12ma.png";
             m_pGpuMemoryStats.reset(pRenderer->CreateTexture2D(file));
@@ -256,7 +257,7 @@ void Editor::CreateRenderGraph()
     {
         std::string dot_exe = Engine::GetInstance()->GetWorkPath() + "tools/graphviz/dot.exe";
         std::string cmd = dot_exe + " -Tpng -O " + graph_file;
-        if (WinExec(cmd.c_str(), 0) > 31)
+        if (ExecuteCommand(cmd.c_str()))
         {
             std::string png_file = graph_file + ".png";
             m_pRenderGraph.reset(pRenderer->CreateTexture2D(png_file));
