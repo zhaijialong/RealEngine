@@ -232,6 +232,7 @@
     <None Include="shaders\common.hlsli" />
     <None Include="shaders\global_constants.hlsli" />
     <None Include="shaders\model_constants.hlsli" />
+    <None Include="source\renderer\render_graph.inl" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\fxaa.hlsl">
