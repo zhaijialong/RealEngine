@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render_graph.h"
+#include "gfx/gfx_define.h"
 
 class RenderGraphBuilder
 {
@@ -19,8 +20,15 @@ public:
         return m_pGraph->Create<Resource>(name, desc);
     }
 
-    RenderGraphHandle Read(RenderGraphHandle input /*, usage */);
-    RenderGraphHandle Write(RenderGraphHandle input /*, usage */);
+    RenderGraphHandle Read(const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource = GFX_ALL_SUB_RESOURCE)
+    {
+        return m_pGraph->Read(m_pPass, input, usage, subresource);
+    }
+
+    RenderGraphHandle Write(const RenderGraphHandle& output, GfxResourceState usage, uint32_t subresource = GFX_ALL_SUB_RESOURCE)
+    {
+        return m_pGraph->Write(m_pPass, output, usage, subresource);
+    }
 
 private:
     RenderGraphBuilder(RenderGraphBuilder const&) = delete;

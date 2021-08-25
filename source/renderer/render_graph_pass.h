@@ -24,6 +24,10 @@ public:
         m_execute(m_parameters);
     }
 
+    virtual char const* GetName() const override { return m_name.c_str(); }
+
+    T const* operator->() { return &GetData(); }
+
 protected:
     std::string m_name;
     T m_parameters;

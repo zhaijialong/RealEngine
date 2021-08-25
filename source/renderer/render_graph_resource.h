@@ -14,6 +14,8 @@ public:
     virtual void Realize() = 0;
     virtual void Derealize() = 0;
 
+    const char* GetName() const { return m_name.c_str(); }
+
 protected:
     std::string m_name;
 };

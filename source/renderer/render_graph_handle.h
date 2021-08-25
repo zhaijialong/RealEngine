@@ -4,8 +4,7 @@
 
 struct RenderGraphHandle
 {
-    uint16_t index = uint16_t(-1);
-    uint16_t version = 0;
-
-    bool IsInitialized() const { return index != uint16_t(-1); }
+    uint16_t index = 0;
+    uint16_t node = 0;
+    //uint32_t version = 0;
 };
