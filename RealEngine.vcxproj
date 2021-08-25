@@ -218,6 +218,7 @@
     <ClInclude Include="source\renderer\texture_loader.h" />
     <ClInclude Include="source\renderer\tonemap.h" />
     <ClInclude Include="source\utils\assert.h" />
+    <ClInclude Include="source\utils\linear_allocator.h" />
     <ClInclude Include="source\utils\log.h" />
     <ClInclude Include="source\utils\math.h" />
     <ClInclude Include="source\utils\memory.h" />

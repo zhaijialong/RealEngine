@@ -4,6 +4,7 @@
 #include "render_graph_handle.h"
 #include "render_graph_resource.h"
 #include "render_graph_blackboard.h"
+#include "utils/linear_allocator.h"
 
 class RenderGraphResourceNode;
 
@@ -28,8 +29,7 @@ private:
     RenderGraphHandle Write(DAGNode* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
 
 private:
-    //todo : LinearAllocator m_allocator;
-
+    LinearAllocator m_allocator{32 * 1024};
     DirectedAcyclicGraph m_graph;
     RenderGraphBlackboard m_blackboard;
 

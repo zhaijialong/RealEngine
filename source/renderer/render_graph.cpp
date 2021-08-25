@@ -2,6 +2,16 @@
 
 void RenderGraph::Clear()
 {
+    m_graph.Clear();
+    m_resourceNodes.clear();
+
+    for (size_t i = 0; i < m_resources.size(); ++i)
+    {
+        m_resources[i]->~RenderGraphResource();
+    }
+    m_resources.clear();
+
+    m_allocator.Reset();
 }
 
 void RenderGraph::Compile()
@@ -24,7 +34,7 @@ RenderGraphHandle RenderGraph::Read(DAGNode* pass, const RenderGraphHandle& inpu
 {
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
 
-    new RenderGraphEdge(m_graph, input_node, pass, usage, subresource);
+    new (m_allocator.Alloc(sizeof(RenderGraphEdge))) RenderGraphEdge(m_graph, input_node, pass, usage, subresource);
 
     return input;
 }
@@ -47,7 +57,7 @@ RenderGraphHandle RenderGraph::Write(DAGNode* pass, const RenderGraphHandle& inp
     else
     {
         uint32_t version = input_node->GetVersion() + 1;
-        output_node = new RenderGraphResourceNode(m_graph, resource, version);
+        output_node = new (m_allocator.Alloc(sizeof(RenderGraphResourceNode))) RenderGraphResourceNode(m_graph, resource, version);
         
         output.index = input.index;
         output.node = (uint16_t)m_resourceNodes.size();
@@ -55,7 +65,7 @@ RenderGraphHandle RenderGraph::Write(DAGNode* pass, const RenderGraphHandle& inp
         m_resourceNodes.push_back(output_node);
     }
 
-    new RenderGraphEdge(m_graph, pass, output_node, usage, subresource);
+    new (m_allocator.Alloc(sizeof(RenderGraphEdge))) RenderGraphEdge(m_graph, pass, output_node, usage, subresource);
 
     return output;
 }

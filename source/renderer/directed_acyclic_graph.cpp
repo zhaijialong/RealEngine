@@ -47,7 +47,16 @@ void DirectedAcyclicGraph::RegisterEdge(DAGEdge* edge)
 
 void DirectedAcyclicGraph::Clear()
 {
+    for (size_t i = 0; i < m_edges.size(); ++i)
+    {
+        m_edges[i]->~DAGEdge();
+    }
     m_edges.clear();
+
+    for (size_t i = 0; i < m_nodes.size(); ++i)
+    {
+        m_nodes[i]->~DAGNode();
+    }
     m_nodes.clear();
 }
 
