@@ -18,7 +18,16 @@ public:
     uint32_t GetVersion() const { return m_version; }
     void SetVersion(uint32_t version) { m_version = version; }
 
-    virtual char const* GetName() const override { return m_pResource->GetName(); }
+    virtual std::string GetGraphvizName() const override 
+    {
+        std::string s = m_pResource->GetName();
+        s.append("(version ");
+        s.append(std::to_string(m_version));
+        s.append(")");
+        return s;
+    }
+    
+    virtual const char* GetGraphvizShape() const { return "ellipse"; }
 
 private:
     RenderGraphResource* m_pResource;

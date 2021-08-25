@@ -132,8 +132,8 @@ void DirectedAcyclicGraph::ExportGraphviz(const char* file)
 
     out << "digraph {\n";
     out << "rankdir = LR\n";
-    out << "bgcolor = black\n";
-    out << "node [shape=rectangle, fontname=\"helvetica\", fontsize=10]\n\n";
+    //out << "bgcolor = black\n";
+    out << "node [fontname=\"helvetica\", fontsize=10]\n\n";
 
     for (size_t i = 0; i < m_nodes.size(); ++i) 
     {
@@ -153,7 +153,7 @@ void DirectedAcyclicGraph::ExportGraphviz(const char* file)
         auto pos = std::partition(first, edges.end(),
             [this](auto const& edge) { return IsEdgeValid(edge); });
 
-        std::string s = node->GraphvizifyEdgeColor();
+        std::string s = node->GetGraphvizEdgeColor();
 
         // render the valid edges
         if (first != pos) 
@@ -191,12 +191,14 @@ std::string DAGNode::Graphvizify() const
     s.reserve(128);
 
     s.append("[label=\"");
-    s.append(GetName());
+    s.append(GetGraphvizName());
     s.append("\\nrefs: ");
     s.append(std::to_string(GetRefCount()));
-    s.append(", id: ");
-    s.append(std::to_string(GetId()));
-    s.append("\", style=filled, fillcolor=");
+    //s.append(", id: ");
+    //s.append(std::to_string(GetId()));
+    s.append("\", style=filled, shape=");
+    s.append(GetGraphvizShape());
+    s.append(", fillcolor = ");
     s.append(!IsCulled() ? "skyblue" : "skyblue4");
     s.append("]");
     s.shrink_to_fit();
@@ -204,7 +206,3 @@ std::string DAGNode::Graphvizify() const
     return s;
 }
 
-std::string DAGNode::GraphvizifyEdgeColor() const
-{
-    return "darkolivegreen";
-}

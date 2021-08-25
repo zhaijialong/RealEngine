@@ -39,9 +39,11 @@ public:
     bool IsCulled() const { return m_nRefCount == 0; }
     uint32_t GetRefCount() const { return IsTarget() ? 1 : m_nRefCount; }
 
-    virtual char const* GetName() const { return "unknown"; }
-    virtual std::string Graphvizify() const;
-    virtual std::string GraphvizifyEdgeColor() const;
+    virtual std::string GetGraphvizName() const { return "unknown"; }
+    virtual const char* GetGraphvizEdgeColor() const { return "darkolivegreen"; }
+    virtual const char* GetGraphvizShape() const { return "rectangle"; }
+
+    std::string Graphvizify() const;
 
 private:
     DAGNodeID m_ID;
