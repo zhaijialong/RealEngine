@@ -25,7 +25,8 @@ public:
         s.append(std::to_string(m_version));
         return s;
     }
-    
+
+    virtual const char* GetGraphvizColor() const { return !IsCulled() ? "lightskyblue1" : "lightskyblue4"; }
     virtual const char* GetGraphvizShape() const { return "ellipse"; }
 
 private:

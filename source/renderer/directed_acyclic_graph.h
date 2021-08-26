@@ -40,9 +40,9 @@ public:
     uint32_t GetRefCount() const { return IsTarget() ? 1 : m_nRefCount; }
 
     virtual std::string GetGraphvizName() const { return "unknown"; }
+    virtual const char* GetGraphvizColor() const { return !IsCulled() ? "skyblue" : "skyblue4"; }
     virtual const char* GetGraphvizEdgeColor() const { return "darkolivegreen"; }
     virtual const char* GetGraphvizShape() const { return "rectangle"; }
-
     std::string Graphvizify() const;
 
 private:

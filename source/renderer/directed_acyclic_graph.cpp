@@ -209,7 +209,7 @@ std::string DAGNode::Graphvizify() const
     s.append("\", style=filled, shape=");
     s.append(GetGraphvizShape());
     s.append(", fillcolor = ");
-    s.append(!IsCulled() ? "skyblue" : "skyblue4");
+    s.append(GetGraphvizColor());
     s.append("]");
     s.shrink_to_fit();
 

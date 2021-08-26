@@ -25,6 +25,7 @@ public:
     }
 
     virtual std::string GetGraphvizName() const override { return m_name.c_str(); }
+    virtual const char* GetGraphvizColor() const { return !IsCulled() ? "darkgoldenrod1" : "darkgoldenrod4"; }
 
     T const* operator->() { return &GetData(); }
 
