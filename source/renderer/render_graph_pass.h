@@ -17,8 +17,6 @@ public:
         m_execute = execute;
     }
 
-    T& GetData() { return m_parameters; }
-
     void Execute()
     {
         m_execute(m_parameters);
@@ -27,6 +25,7 @@ public:
     virtual std::string GetGraphvizName() const override { return m_name.c_str(); }
     virtual const char* GetGraphvizColor() const { return !IsCulled() ? "darkgoldenrod1" : "darkgoldenrod4"; }
 
+    T& GetData() { return m_parameters; }
     T const* operator->() { return &GetData(); }
 
 protected:

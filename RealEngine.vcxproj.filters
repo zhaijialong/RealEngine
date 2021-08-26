@@ -124,12 +124,6 @@
     <ClCompile Include="source\renderer\render_graph.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\pass\shadow_pass.cpp">
-      <Filter>source\renderer\pass</Filter>
-    </ClCompile>
-    <ClCompile Include="source\renderer\pass\base_pass.cpp">
-      <Filter>source\renderer\pass</Filter>
-    </ClCompile>
     <ClCompile Include="source\renderer\post_processor.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
@@ -357,12 +351,6 @@
     <ClInclude Include="source\utils\system.h">
       <Filter>source\utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\pass\base_pass.h">
-      <Filter>source\renderer\pass</Filter>
-    </ClInclude>
-    <ClInclude Include="source\renderer\pass\shadow_pass.h">
-      <Filter>source\renderer\pass</Filter>
-    </ClInclude>
     <ClInclude Include="source\renderer\post_processor.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
@@ -460,9 +448,6 @@
     </Filter>
     <Filter Include="source\renderer\resource">
       <UniqueIdentifier>{1554a0c9-b28a-474b-a477-f9cffe113e1b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\renderer\pass">
-      <UniqueIdentifier>{f7c203f2-ade0-46ea-818c-2ba9a8a0ec4d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
