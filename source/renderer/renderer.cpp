@@ -52,6 +52,13 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     }
 
     CreateCommonResources();
+}
+
+void Renderer::RenderFrame()
+{
+    BeginFrame();
+    UploadResources();
+    Render();
 
     m_renderGraph.Clear();
 
@@ -99,10 +106,9 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
             data.someRT = builder.Create<RenderGraphTexture>("Some RT", desc);
 
             data.shadowRT = builder.Read(shadow_pass->depthRT, GfxResourceState::ShaderResourcePSOnly);
-            data.depthRT = builder.Read(depth_pass->depthRT, GfxResourceState::DepthStencil);
             data.someRT = builder.Read(data.someRT, GfxResourceState::ShaderResource);
 
-            data.depthRT = builder.Write(data.depthRT, GfxResourceState::DepthStencil);
+            data.depthRT = builder.Write(depth_pass->depthRT, GfxResourceState::DepthStencil);
             data.colorRT = builder.Write(data.colorRT, GfxResourceState::RenderTarget);
         },
         [](const BassPassData& data)
@@ -112,13 +118,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_renderGraph.Present(base_pass->colorRT);
     m_renderGraph.Compile();
     m_renderGraph.Execute();
-}
 
-void Renderer::RenderFrame()
-{
-    BeginFrame();
-    UploadResources();
-    Render();
     EndFrame();
 }
 
