@@ -119,7 +119,7 @@ void Editor::DrawMenu()
 
     if (m_bShowRenderGraph && m_pRenderGraph)
     {
-        ImGui::Begin("Render Graph", &m_bShowRenderGraph);
+        ImGui::Begin("Render Graph", &m_bShowRenderGraph, ImGuiWindowFlags_HorizontalScrollbar);
         const GfxTextureDesc& desc = m_pRenderGraph->GetTexture()->GetDesc();
         ImGui::Image((ImTextureID)m_pRenderGraph->GetSRV(), ImVec2((float)desc.width, (float)desc.height));
         ImGui::End();

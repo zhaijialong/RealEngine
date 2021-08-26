@@ -78,44 +78,49 @@ void Renderer::RenderFrame()
         {
         });
 
-    auto depth_pass = m_renderGraph.AddPass<DepthPassData>("depth pass",
-        [](DepthPassData& data, RenderGraphBuilder& builder)
-        {
-            RenderGraphTexture::Desc desc;
-            data.depthRT = builder.Create<RenderGraphTexture>("Depth RT", desc);
-            data.depthRT = builder.Write(data.depthRT, GfxResourceState::DepthStencil);
-        },
-        [](const DepthPassData& data)
-        {
-        });
-
     struct BassPassData
     {
         RenderGraphHandle shadowRT;
         RenderGraphHandle depthRT;
-        RenderGraphHandle colorRT;
-
-        RenderGraphHandle someRT;
+        RenderGraphHandle hdrRT;
     };
 
     auto base_pass = m_renderGraph.AddPass<BassPassData>("base pass",
         [&](BassPassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
-            data.colorRT = builder.Create<RenderGraphTexture>("Color RT", desc);
-            data.someRT = builder.Create<RenderGraphTexture>("Some RT", desc);
+            data.hdrRT = builder.Create<RenderGraphTexture>("HDR RT", desc);
+            data.depthRT = builder.Create<RenderGraphTexture>("Depth RT", desc);
 
             data.shadowRT = builder.Read(shadow_pass->depthRT, GfxResourceState::ShaderResourcePSOnly);
-            data.someRT = builder.Read(data.someRT, GfxResourceState::ShaderResource);
 
-            data.depthRT = builder.Write(depth_pass->depthRT, GfxResourceState::DepthStencil);
-            data.colorRT = builder.Write(data.colorRT, GfxResourceState::RenderTarget);
+            data.hdrRT = builder.Write(data.hdrRT, GfxResourceState::RenderTarget);
+            data.depthRT = builder.Write(data.depthRT, GfxResourceState::DepthStencil);
         },
         [](const BassPassData& data)
         {
         });
+    
+    struct TonemapPassData
+    {
+        RenderGraphHandle hdrRT;
+        RenderGraphHandle ldrRT;
+    };
 
-    m_renderGraph.Present(base_pass->colorRT);
+    auto tonemap_pass = m_renderGraph.AddPass<TonemapPassData>("tonemap pass",
+        [&](TonemapPassData& data, RenderGraphBuilder& builder)
+        {
+            RenderGraphTexture::Desc desc;
+            data.ldrRT = builder.Create<RenderGraphTexture>("LDR RT", desc);
+
+            data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResourcePSOnly);
+            data.ldrRT = builder.Write(data.ldrRT, GfxResourceState::RenderTarget);
+        },
+        [](const TonemapPassData& data)
+        {
+        });
+
+    m_renderGraph.Present(tonemap_pass->ldrRT);
     m_renderGraph.Compile();
     m_renderGraph.Execute();
 

@@ -202,8 +202,8 @@ std::string DAGNode::Graphvizify() const
 
     s.append("[label=\"");
     s.append(GetGraphvizName());
-    s.append("\\nrefs: ");
-    s.append(std::to_string(GetRefCount()));
+    //s.append("\\nrefs: ");
+    //s.append(std::to_string(GetRefCount()));
     //s.append(", id: ");
     //s.append(std::to_string(GetId()));
     s.append("\", style=filled, shape=");

@@ -21,9 +21,8 @@ public:
     virtual std::string GetGraphvizName() const override 
     {
         std::string s = m_pResource->GetName();
-        s.append("(version ");
+        s.append("\nversion:");
         s.append(std::to_string(m_version));
-        s.append(")");
         return s;
     }
     
