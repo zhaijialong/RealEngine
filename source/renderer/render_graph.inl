@@ -14,9 +14,7 @@ public:
     }
 
     RenderGraphResource* GetResource() const { return m_pResource; }
-
     uint32_t GetVersion() const { return m_version; }
-    void SetVersion(uint32_t version) { m_version = version; }
 
     virtual std::string GetGraphvizName() const override 
     {
@@ -62,6 +60,8 @@ inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup
 
     RenderGraphBuilder builder(this, pass);
     setup(pass->GetData(), builder);
+
+    m_passes.push_back(pass);
 
     return *pass;
 }

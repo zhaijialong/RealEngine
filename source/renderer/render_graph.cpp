@@ -4,6 +4,17 @@
 void RenderGraph::Clear()
 {
     m_graph.Clear();
+
+    for (size_t i = 0; i < m_passes.size(); ++i)
+    {
+        m_passes[i]->~RenderGraphPassBase();
+    }
+    m_passes.clear();
+
+    for (size_t i = 0; i < m_resourceNodes.size(); ++i)
+    {
+        m_resourceNodes[i]->~RenderGraphResourceNode();
+    }
     m_resourceNodes.clear();
 
     for (size_t i = 0; i < m_resources.size(); ++i)

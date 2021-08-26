@@ -38,6 +38,7 @@ private:
     DirectedAcyclicGraph m_graph;
     RenderGraphBlackboard m_blackboard;
 
+    std::vector<RenderGraphPassBase*> m_passes;
     std::vector<RenderGraphResource*> m_resources;
     std::vector<RenderGraphResourceNode*> m_resourceNodes;
 };
