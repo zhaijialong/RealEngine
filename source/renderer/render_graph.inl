@@ -74,7 +74,7 @@ inline RenderGraphHandle RenderGraph::Create(const char* name, const typename Re
 
     RenderGraphHandle handle;
     handle.index = (uint16_t)m_resources.size();
-    handle.node = (uint32_t)m_resourceNodes.size();
+    handle.node = (uint16_t)m_resourceNodes.size();
 
     m_resources.push_back(resource);
     m_resourceNodes.push_back(node);
