@@ -307,19 +307,6 @@ enum class GfxCullMode
 	Back,
 };
 
-struct GfxRasterizerState
-{
-	GfxCullMode cull_mode = GfxCullMode::None;
-	float depth_bias = 0.0f;
-	float depth_bias_clamp = 0.0f;
-	float depth_slope_scale = 0.0f;
-	bool wireframe = false;
-	bool front_ccw = false;
-	bool depth_clip = true;
-	bool line_aa = false;
-	bool conservative_raster = false;
-};
-
 enum class GfxCompareFunc
 {
 	Never,
@@ -342,26 +329,6 @@ enum class GfxStencilOp
 	Invert,
 	IncreaseWrap,
 	DecreaseWrap,
-};
-
-struct GfxDepthStencilOp
-{
-	GfxStencilOp stencil_fail = GfxStencilOp::Keep;
-	GfxStencilOp depth_fail = GfxStencilOp::Keep;
-	GfxStencilOp pass = GfxStencilOp::Keep;
-	GfxCompareFunc stencil_func = GfxCompareFunc::Always;
-};
-
-struct GfxDepthStencilState
-{
-	GfxCompareFunc depth_func = GfxCompareFunc::Always;
-	bool depth_test = false;
-	bool depth_write = true;
-	GfxDepthStencilOp front;
-	GfxDepthStencilOp back;
-	bool stencil_test = false;
-	uint8_t stencil_read_mask = 0xFF;
-	uint8_t stencil_write_mask = 0xFF;
 };
 
 enum class GfxBlendFactor
@@ -401,18 +368,6 @@ enum GfxColorWriteMaskBit
 
 using GfxColorWriteMask = uint8_t;
 
-struct GfxBlendState
-{
-	bool blend_enable = false;
-	GfxBlendFactor color_src = GfxBlendFactor::One;
-	GfxBlendFactor color_dst = GfxBlendFactor::One;
-	GfxBlendOp color_op = GfxBlendOp::Add;
-	GfxBlendFactor alpha_src = GfxBlendFactor::One;
-	GfxBlendFactor alpha_dst = GfxBlendFactor::One;
-	GfxBlendOp alpha_op = GfxBlendOp::Add;
-	GfxColorWriteMask write_mask = GfxColorWriteMaskAll;
-};
-
 enum class GfxPrimitiveType
 {
 	PointList,
@@ -431,6 +386,52 @@ enum class GfxPipelineType
 };
 
 class IGfxShader;
+
+#pragma pack(push, 1)
+struct GfxRasterizerState
+{
+	GfxCullMode cull_mode = GfxCullMode::None;
+	float depth_bias = 0.0f;
+	float depth_bias_clamp = 0.0f;
+	float depth_slope_scale = 0.0f;
+	bool wireframe = false;
+	bool front_ccw = false;
+	bool depth_clip = true;
+	bool line_aa = false;
+	bool conservative_raster = false;
+};
+
+struct GfxDepthStencilOp
+{
+	GfxStencilOp stencil_fail = GfxStencilOp::Keep;
+	GfxStencilOp depth_fail = GfxStencilOp::Keep;
+	GfxStencilOp pass = GfxStencilOp::Keep;
+	GfxCompareFunc stencil_func = GfxCompareFunc::Always;
+};
+
+struct GfxDepthStencilState
+{
+	GfxCompareFunc depth_func = GfxCompareFunc::Always;
+	bool depth_test = false;
+	bool depth_write = true;
+	GfxDepthStencilOp front;
+	GfxDepthStencilOp back;
+	bool stencil_test = false;
+	uint8_t stencil_read_mask = 0xFF;
+	uint8_t stencil_write_mask = 0xFF;
+};
+
+struct GfxBlendState
+{
+	bool blend_enable = false;
+	GfxBlendFactor color_src = GfxBlendFactor::One;
+	GfxBlendFactor color_dst = GfxBlendFactor::One;
+	GfxBlendOp color_op = GfxBlendOp::Add;
+	GfxBlendFactor alpha_src = GfxBlendFactor::One;
+	GfxBlendFactor alpha_dst = GfxBlendFactor::One;
+	GfxBlendOp alpha_op = GfxBlendOp::Add;
+	GfxColorWriteMask write_mask = GfxColorWriteMaskAll;
+};
 
 struct GfxGraphicsPipelineDesc
 {
@@ -455,6 +456,7 @@ struct GfxMeshShadingPipelineDesc
 	GfxFormat rt_format[8] = { GfxFormat::Unknown };
 	GfxFormat depthstencil_format = GfxFormat::Unknown;
 };
+#pragma pack(pop)
 
 enum class GfxFilter
 {
