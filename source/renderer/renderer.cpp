@@ -206,8 +206,6 @@ void Renderer::Render()
         pCommandList->ResourceBarrier(m_pHdrRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
     }
 
-    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
-
     {
         RENDER_EVENT(pCommandList, "PostProcess");
         GfxRenderPassDesc render_pass;
@@ -219,6 +217,7 @@ void Renderer::Render()
 
         pCommandList->EndRenderPass();
         pCommandList->ResourceBarrier(m_pLdrRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
+        pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
 
         render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
         pCommandList->BeginRenderPass(render_pass);
@@ -296,7 +295,26 @@ void Renderer::Render()
         {
         });
 
-    m_renderGraph.Present(tonemap_pass->ldrRT);
+    struct FXAAPassData
+    {
+        RenderGraphHandle ldrRT;
+        RenderGraphHandle outputRT;
+    };
+
+    auto fxaa_pass = m_renderGraph.AddPass<FXAAPassData>("fxaa pass",
+        [&](FXAAPassData& data, RenderGraphBuilder& builder)
+        {
+            RenderGraphTexture::Desc desc;
+            data.outputRT = builder.Create<RenderGraphTexture>("Output RT", desc);
+
+            data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourcePSOnly);
+            data.outputRT = builder.Write(data.outputRT, GfxResourceState::RenderTarget);
+        },
+        [](const FXAAPassData& data, const RenderGraph& graph, IGfxCommandList* pCommandList)
+        {
+        });
+
+    m_renderGraph.Present(fxaa_pass->outputRT);
     m_renderGraph.Compile();
     m_renderGraph.Execute(pCommandList);
 }
