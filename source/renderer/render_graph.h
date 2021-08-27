@@ -17,7 +17,7 @@ public:
 
     void Clear();
     void Compile();
-    void Execute();
+    void Execute(IGfxCommandList* pCommandList);
 
     void Present(const RenderGraphHandle& handle);
 

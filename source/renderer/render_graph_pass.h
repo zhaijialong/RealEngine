@@ -4,6 +4,8 @@
 #include <functional>
 
 class RenderGraphResource;
+class RenderGraph;
+class IGfxCommandList;
 
 class RenderGraphPassBase : public DAGNode
 {
@@ -13,7 +15,7 @@ public:
         m_name = name;
     }
 
-    virtual void Execute() = 0;
+    virtual void Execute(const RenderGraph& graph, IGfxCommandList* pCommandList) = 0;
 
     virtual std::string GetGraphvizName() const override { return m_name.c_str(); }
     virtual const char* GetGraphvizColor() const { return !IsCulled() ? "darkgoldenrod1" : "darkgoldenrod4"; }
@@ -26,15 +28,15 @@ template<class T>
 class RenderGraphPass : public RenderGraphPassBase
 {
 public:
-    RenderGraphPass(const std::string& name, DirectedAcyclicGraph& graph, const std::function<void(const T&)>& execute) :
+    RenderGraphPass(const std::string& name, DirectedAcyclicGraph& graph, const std::function<void(const T&, const RenderGraph&, IGfxCommandList*)>& execute) :
         RenderGraphPassBase(name, graph)
     {
         m_execute = execute;
     }
 
-    void Execute() override
+    void Execute(const RenderGraph& graph, IGfxCommandList* pCommandList) override
     {
-        m_execute(m_parameters);
+        m_execute(m_parameters, graph, pCommandList);
     }
 
     T& GetData() { return m_parameters; }
@@ -42,6 +44,6 @@ public:
 
 protected:
     T m_parameters;
-    std::function<void(const T&)> m_execute;
+    std::function<void(const T&, const RenderGraph&, IGfxCommandList*)> m_execute;
 };
 

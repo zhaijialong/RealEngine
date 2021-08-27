@@ -31,7 +31,7 @@ void RenderGraph::Compile()
     m_graph.Cull();
 }
 
-void RenderGraph::Execute()
+void RenderGraph::Execute(IGfxCommandList* pCommandList)
 {
     
 }
