@@ -17,7 +17,7 @@ inline uint32_t GetWindowHeight(void* window)
     return rect.bottom - rect.top;
 }
 
-inline bool ExecuteCommand(const char* cmd)
+inline int ExecuteCommand(const char* cmd)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -54,5 +54,5 @@ inline bool ExecuteCommand(const char* cmd)
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
 
-    return exit_code == 0;
+    return exit_code;
 }

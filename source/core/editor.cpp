@@ -237,7 +237,7 @@ void Editor::CreateGpuMemoryStats()
         std::string path = pEngine->GetWorkPath();
         std::string cmd = "python " + path + "tools/D3d12maDumpVis.py -o " + path + "d3d12ma.png " + path + "d3d12ma.json";
 
-        if (ExecuteCommand(cmd.c_str()))
+        if (ExecuteCommand(cmd.c_str()) == 0)
         {
             std::string file = path + "d3d12ma.png";
             m_pGpuMemoryStats.reset(pRenderer->CreateTexture2D(file));
@@ -257,7 +257,7 @@ void Editor::CreateRenderGraph()
     {
         std::string dot_exe = Engine::GetInstance()->GetWorkPath() + "tools/graphviz/dot.exe";
         std::string cmd = dot_exe + " -Tpng -O " + graph_file;
-        if (ExecuteCommand(cmd.c_str()))
+        if (ExecuteCommand(cmd.c_str()) == 0)
         {
             std::string png_file = graph_file + ".png";
             m_pRenderGraph.reset(pRenderer->CreateTexture2D(png_file));
