@@ -160,6 +160,9 @@
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\render_graph_resource_allocator.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -398,6 +401,9 @@
     </ClInclude>
     <ClInclude Include="source\utils\linear_allocator.h">
       <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_graph_resource_allocator.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

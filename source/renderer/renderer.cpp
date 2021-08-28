@@ -249,7 +249,7 @@ void Renderer::Render()
             data.depthRT = builder.Create<RenderGraphTexture>("Shadow RT", desc);
             data.depthRT = builder.Write(data.depthRT, GfxResourceState::DepthStencil);
         },
-        [](const DepthPassData& data, const RenderGraph& graph, IGfxCommandList* pCommandList)
+        [](const DepthPassData& data, IGfxCommandList* pCommandList)
         {
         });
 
@@ -272,7 +272,7 @@ void Renderer::Render()
             data.hdrRT = builder.Write(data.hdrRT, GfxResourceState::RenderTarget);
             data.depthRT = builder.Write(data.depthRT, GfxResourceState::DepthStencil);
         },
-        [](const BassPassData& data, const RenderGraph& graph, IGfxCommandList* pCommandList)
+        [](const BassPassData& data, IGfxCommandList* pCommandList)
         {
         });
 
@@ -291,7 +291,7 @@ void Renderer::Render()
             data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResourcePSOnly);
             data.ldrRT = builder.Write(data.ldrRT, GfxResourceState::RenderTarget);
         },
-        [](const TonemapPassData& data, const RenderGraph& graph, IGfxCommandList* pCommandList)
+        [](const TonemapPassData& data, IGfxCommandList* pCommandList)
         {
         });
 
@@ -310,7 +310,7 @@ void Renderer::Render()
             data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourcePSOnly);
             data.outputRT = builder.Write(data.outputRT, GfxResourceState::RenderTarget);
         },
-        [](const FXAAPassData& data, const RenderGraph& graph, IGfxCommandList* pCommandList)
+        [](const FXAAPassData& data, IGfxCommandList* pCommandList)
         {
         });
 
