@@ -249,8 +249,27 @@ void Renderer::Render()
             data.depthRT = builder.Create<RenderGraphTexture>("Shadow RT", desc);
             data.depthRT = builder.Write(data.depthRT, GfxResourceState::DepthStencil);
         },
-        [](const DepthPassData& data, IGfxCommandList* pCommandList)
+        [&](const DepthPassData& data, IGfxCommandList* pCommandList)
         {
+            RenderGraphTexture* shadowRT = (RenderGraphTexture*)m_renderGraph.GetResource(data.depthRT);
+
+            GfxRenderPassDesc shadow_pass;
+            shadow_pass.depth.texture = shadowRT->GetTexture();
+            shadow_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
+            shadow_pass.depth.clear_depth = 1.0f;
+            pCommandList->BeginRenderPass(shadow_pass);
+            pCommandList->SetViewport(0, 0, shadowRT->GetTexture()->GetDesc().width, shadowRT->GetTexture()->GetDesc().height);
+
+            ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
+            float4x4 mtxVP = GetLightVP(light);
+
+            for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
+            {
+                m_shadowPassBatchs[i](pCommandList, this, mtxVP);
+            }
+            m_shadowPassBatchs.clear();
+
+            pCommandList->EndRenderPass();
         });
 
     struct BassPassData

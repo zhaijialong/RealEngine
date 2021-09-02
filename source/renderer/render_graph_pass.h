@@ -14,6 +14,9 @@ public:
         m_name = name;
     }
 
+    const char* GetName() const { return m_name.c_str(); }
+    void FlushBarriers() {}
+
     virtual void Execute(IGfxCommandList* pCommandList) = 0;
 
     virtual std::string GetGraphvizName() const override { return m_name.c_str(); }

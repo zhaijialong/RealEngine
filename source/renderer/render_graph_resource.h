@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_graph_resource_allocator.h"
 #include "gfx/gfx.h"
 
 class RenderGraphResource
@@ -11,13 +12,15 @@ public:
     }
     virtual ~RenderGraphResource() {}
 
-    virtual void Realize() = 0;
-    virtual void Derealize() = 0;
+    virtual void Realize(RenderGraphResourceAllocator& allocator) = 0;
 
     const char* GetName() const { return m_name.c_str(); }
 
 protected:
     std::string m_name;
+
+    uint32_t m_firstPass = 0;
+    uint32_t m_lastPass = 0;
 };
 
 class RenderGraphTexture : public RenderGraphResource
@@ -30,11 +33,16 @@ public:
         m_desc = desc;
     }
 
-    virtual void Realize() override {}
-    virtual void Derealize() override {}
+    IGfxTexture* GetTexture() const { return m_pTexture; }
+
+    virtual void Realize(RenderGraphResourceAllocator& allocator) override
+    {
+        m_pTexture = allocator.AllocateTexture(m_desc, m_name);
+    }
 
 private:
     Desc m_desc;
+    IGfxTexture* m_pTexture = nullptr;
 };
 
 class RenderGraphBuffer : public RenderGraphResource

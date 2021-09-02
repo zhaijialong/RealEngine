@@ -24,22 +24,70 @@ void RenderGraph::Clear()
     m_resources.clear();
 
     m_allocator.Reset();
+    m_resourceAllocator.Reset();
 }
 
 void RenderGraph::Compile()
 {
     m_graph.Cull();
+
+    //allocate resources (todo : aliasing)
+    for (size_t i = 0; i < m_resourceNodes.size(); ++i)
+    {
+        RenderGraphResourceNode* node = m_resourceNodes[i];
+        if (node->IsCulled())
+        {
+            continue;
+        }
+
+        if (node->GetVersion() == 0)
+        {
+            RenderGraphResource* resource = node->GetResource();
+            resource->Realize(m_resourceAllocator);
+        }
+    }
+
+    //resolve barriers
+    for (size_t i = 0; i < m_passes.size(); ++i)
+    {
+        RenderGraphPassBase* pass = m_passes[i];
+        if (pass->IsCulled())
+        {
+            continue;
+        }
+
+        //todo
+    }
 }
 
 void RenderGraph::Execute(IGfxCommandList* pCommandList)
 {
-    
+    RENDER_EVENT(pCommandList, "RenderGraph");
+
+    for (size_t i = 0; i < m_passes.size(); ++i)
+    {
+        RenderGraphPassBase* pass = m_passes[i];
+        if (pass->IsCulled())
+        {
+            continue;
+        }
+
+        pass->FlushBarriers();
+
+        RENDER_EVENT(pCommandList, pass->GetName());
+        pass->Execute(pCommandList);
+    }
 }
 
 void RenderGraph::Present(const RenderGraphHandle& handle)
 {
     RenderGraphResourceNode* node = m_resourceNodes[handle.node];
     node->MakeTarget();
+}
+
+RenderGraphResource* RenderGraph::GetResource(const RenderGraphHandle& handle)
+{
+    return m_resources[handle.index];
 }
 
 bool RenderGraph::Export(const std::string& file)

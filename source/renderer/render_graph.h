@@ -20,6 +20,7 @@ public:
     void Execute(IGfxCommandList* pCommandList);
 
     void Present(const RenderGraphHandle& handle);
+    RenderGraphResource* GetResource(const RenderGraphHandle& handle);
 
     bool Export(const std::string& file);
 
@@ -34,7 +35,8 @@ private:
     RenderGraphHandle Write(DAGNode* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
 
 private:
-    LinearAllocator m_allocator{32 * 1024};
+    LinearAllocator m_allocator { 32 * 1024 };
+    RenderGraphResourceAllocator m_resourceAllocator;
     DirectedAcyclicGraph m_graph;
     RenderGraphBlackboard m_blackboard;
 
