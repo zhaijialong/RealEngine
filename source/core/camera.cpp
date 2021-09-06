@@ -86,9 +86,7 @@ void Camera::Tick(float delta_time)
 
 void Camera::UpdateMatrix()
 {
-	float3 radianRotation = degree_to_randian(m_rotation);
-
-	m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(radianRotation)));
+	m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(m_rotation)));
 	m_view = inverse(m_world);
 	m_viewProjection = mul(m_projection, m_view);
 }

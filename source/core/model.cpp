@@ -48,7 +48,7 @@ void Model::Tick(float delta_time)
 void Model::Render(Renderer* pRenderer)
 {
     float4x4 T = translation_matrix(m_pos);
-    float4x4 R = rotation_matrix(rotation_quat(degree_to_randian(m_rotation)));
+    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
     float4x4 S = scaling_matrix(m_scale);
     float4x4 mtxWorld = mul(T, mul(R, S));
 
