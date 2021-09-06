@@ -29,10 +29,7 @@ inline float3 vector_to_float3(const std::vector<float>& v)
 
 inline float4 rotation_quat(const float3& euler_angles) //pitch-yaw-roll order, in degrees
 {
-	float3 radians;
-	radians.x = degree_to_randian(std::fmodf(euler_angles.x, 360.0f));
-	radians.y = degree_to_randian(std::fmodf(euler_angles.y, 360.0f));
-	radians.z = degree_to_randian(std::fmodf(euler_angles.z, 360.0f));
+	float3 radians = degree_to_randian(euler_angles);
 
 	float cx = std::cos(radians.x * 0.5f);
 	float sx = std::sin(radians.x * 0.5f);
