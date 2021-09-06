@@ -48,15 +48,38 @@ private:
 };
 
 template<typename T>
-inline T* RenderGraph::Allocate()
+void ClassFinalizer(void* p)
 {
-    return (T*)m_allocator.Alloc(sizeof(T));
+    ((T*)p)->~T();
+}
+
+template<typename T, typename... ArgsT>
+inline T* RenderGraph::Allocate(ArgsT&&... arguments)
+{
+    T* p = (T*)m_allocator.Alloc(sizeof(T));
+    new (p) T(arguments...);
+
+    ObjFinalizer finalizer;
+    finalizer.obj = p;
+    finalizer.finalizer = &ClassFinalizer<T>;
+    m_objFinalizer.push_back(finalizer);
+
+    return p;
+}
+
+template<typename T, typename... ArgsT>
+inline T* RenderGraph::AllocatePOD(ArgsT&&... arguments)
+{
+    T* p = (T*)m_allocator.Alloc(sizeof(T));
+    new (p) T(arguments...);
+
+    return p;
 }
 
 template<typename Data, typename Setup, typename Exec>
 inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup& setup, const Exec& execute)
 {
-    auto* pass = new (Allocate<RenderGraphPass<Data>>()) RenderGraphPass<Data>(name, m_graph, execute);
+    auto* pass = Allocate<RenderGraphPass<Data>>(name, m_graph, execute);
 
     RenderGraphBuilder builder(this, pass);
     setup(pass->GetData(), builder);
@@ -69,8 +92,8 @@ inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup
 template<typename Resource>
 inline RenderGraphHandle RenderGraph::Create(const char* name, const typename Resource::Desc& desc)
 {
-    auto* resource = new (Allocate<Resource>()) Resource(name, desc);
-    auto* node = new (Allocate<RenderGraphResourceNode>()) RenderGraphResourceNode(m_graph, resource, 0);
+    auto* resource = Allocate<Resource>(name, desc);
+    auto* node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
 
     RenderGraphHandle handle;
     handle.index = (uint16_t)m_resources.size();

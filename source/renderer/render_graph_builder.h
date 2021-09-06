@@ -6,7 +6,7 @@
 class RenderGraphBuilder
 {
 public:
-    RenderGraphBuilder(RenderGraph* graph, DAGNode* pass)
+    RenderGraphBuilder(RenderGraph* graph, RenderGraphPassBase* pass)
     {
         m_pGraph = graph;
         m_pPass = pass;
@@ -36,5 +36,5 @@ private:
 
 private:
     RenderGraph* m_pGraph = nullptr;
-    DAGNode* m_pPass = nullptr;
+    RenderGraphPassBase* m_pPass = nullptr;
 };

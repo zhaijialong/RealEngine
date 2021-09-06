@@ -25,14 +25,17 @@ public:
     bool Export(const std::string& file);
 
 private:
-    template<typename T>
-    T* Allocate();
+    template<typename T, typename... ArgsT>
+    T* Allocate(ArgsT&&... arguments);
+
+    template<typename T, typename... ArgsT>
+    T* AllocatePOD(ArgsT&&... arguments);
 
     template<typename Resource>
     RenderGraphHandle Create(const char* name, const typename Resource::Desc& desc);
 
-    RenderGraphHandle Read(DAGNode* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
-    RenderGraphHandle Write(DAGNode* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
+    RenderGraphHandle Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
+    RenderGraphHandle Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
 
 private:
     LinearAllocator m_allocator { 32 * 1024 };
@@ -43,6 +46,13 @@ private:
     std::vector<RenderGraphPassBase*> m_passes;
     std::vector<RenderGraphResource*> m_resources;
     std::vector<RenderGraphResourceNode*> m_resourceNodes;
+
+    struct ObjFinalizer
+    {
+        void* obj;
+        void(*finalizer)(void*);
+    };
+    std::vector<ObjFinalizer>  m_objFinalizer;
 };
 
 #include "render_graph.inl"
