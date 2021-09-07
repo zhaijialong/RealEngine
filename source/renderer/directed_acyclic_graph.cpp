@@ -131,15 +131,15 @@ bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
     }
 
     out << "digraph {\n";
-    out << "rankdir = LR\n";
+    out << "  rankdir = LR\n";
     //out << "bgcolor = black\n";
-    out << "node [fontname=\"helvetica\", fontsize=10]\n\n";
+    out << "  node [fontname=\"helvetica\", fontsize=10]\n\n";
 
     for (size_t i = 0; i < m_nodes.size(); ++i) 
     {
         uint32_t id = m_nodes[i]->GetId();
         std::string s = m_nodes[i]->Graphvizify();
-        out << "\"N" << id << "\" " << s << "\n";
+        out << "  \"N" << id << "\" " << s << "\n";
     }
 
     out << "\n";
@@ -158,7 +158,7 @@ bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
         // render the valid edges
         if (first != pos) 
         {
-            out << "N" << id << " -> { ";
+            out << "  N" << id << " -> { ";
             while (first != pos) 
             {
                 DAGNode const* ref = GetNode((*first++)->m_to);
@@ -170,7 +170,7 @@ bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
         // render the invalid edges
         if (first != edges.end()) 
         {
-            out << "N" << id << " -> { ";
+            out << "  N" << id << " -> { ";
             while (first != edges.end()) 
             {
                 DAGNode const* ref = GetNode((*first++)->m_to);
