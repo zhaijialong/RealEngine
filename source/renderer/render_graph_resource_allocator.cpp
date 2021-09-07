@@ -36,7 +36,7 @@ void RenderGraphResourceAllocator::Reset()
 
 IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(const GfxTextureDesc& desc, const std::string& name)
 {
-    for (auto iter = m_freeTextures.begin(); iter != m_freeTextures.end(); )
+    for (auto iter = m_freeTextures.begin(); iter != m_freeTextures.end(); ++iter)
     {
         IGfxTexture* texture = iter->texture;
         if (texture->GetDesc() == desc)
