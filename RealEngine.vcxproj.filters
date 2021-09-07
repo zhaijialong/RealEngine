@@ -497,5 +497,8 @@
     <FxCompile Include="shaders\fxaa.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\copy.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

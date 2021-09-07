@@ -253,7 +253,7 @@ void Editor::CreateRenderGraph()
     std::string path = pEngine->GetWorkPath();
     std::string graph_file = path + "rendergraph";
 
-    if (pRenderer->GetRenderGraph().Export(graph_file))
+    if (pRenderer->GetRenderGraph()->Export(graph_file))
     {
         std::string dot_exe = Engine::GetInstance()->GetWorkPath() + "tools/graphviz/dot.exe";
         std::string cmd = dot_exe + " -Tpng -O " + graph_file;

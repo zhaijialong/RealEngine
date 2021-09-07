@@ -15,9 +15,9 @@ public:
     void MakeTarget() { m_pPass->MakeTarget(); }
 
     template<typename Resource>
-    RenderGraphHandle Create(const char* name, const typename Resource::Desc& desc)
+    RenderGraphHandle Create(const typename Resource::Desc& desc, const char* name)
     {
-        return m_pGraph->Create<Resource>(name, desc);
+        return m_pGraph->Create<Resource>(desc, name);
     }
 
     RenderGraphHandle Read(const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource = GFX_ALL_SUB_RESOURCE)

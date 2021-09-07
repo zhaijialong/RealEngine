@@ -206,6 +206,20 @@ struct GfxTextureDesc
 	GfxTextureUsageFlags usage = GfxTextureUsageShaderResource;
 };
 
+inline bool operator==(const GfxTextureDesc& lhs, const GfxTextureDesc& rhs)
+{
+	return lhs.width == lhs.width &&
+		lhs.height == rhs.height &&
+		lhs.depth == rhs.depth &&
+		lhs.mip_levels == rhs.mip_levels &&
+		lhs.array_size == rhs.array_size &&
+		lhs.type == rhs.type &&
+		lhs.format == rhs.format &&
+		lhs.memory_type == rhs.memory_type &&
+		lhs.alloc_type == rhs.alloc_type &&
+		lhs.usage == rhs.usage;
+}
+
 struct GfxConstantBufferViewDesc
 {
 	uint32_t size = 0;
@@ -236,6 +250,16 @@ struct GfxShaderResourceViewDesc
 
 	GfxShaderResourceViewDesc() : texture() {}
 };
+
+inline bool operator==(const GfxShaderResourceViewDesc& lhs, const GfxShaderResourceViewDesc& rhs)
+{
+	return lhs.type == rhs.type &&
+		lhs.texture.mip_slice == rhs.texture.mip_slice &&
+		lhs.texture.mip_levels == rhs.texture.mip_levels &&
+		lhs.texture.array_slice == rhs.texture.array_slice &&
+		lhs.texture.array_size == rhs.texture.array_size &&
+		lhs.texture.plane_slice == rhs.texture.plane_slice;
+}
 
 struct GfxUnorderedAccessViewDesc
 {

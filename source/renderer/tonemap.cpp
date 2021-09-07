@@ -14,8 +14,6 @@ Tonemap::Tonemap(Renderer* pRenderer)
 
 void Tonemap::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrRT)
 {
-    RENDER_EVENT(pCommandList, "Tonemap");
-
 	pCommandList->SetPipelineState(m_pPSO);
 
 	uint32_t resourceCB[4] = { pHdrRT->GetHeapIndex(), m_pRenderer->GetPointSampler()->GetHeapIndex(), 0, 0 };

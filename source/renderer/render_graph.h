@@ -7,11 +7,14 @@
 #include "utils/linear_allocator.h"
 
 class RenderGraphResourceNode;
+class Renderer;
 
 class RenderGraph
 {
     friend class RenderGraphBuilder;
 public:
+    RenderGraph(Renderer* pRenderer);
+
     template<typename Data, typename Setup, typename Exec>
     RenderGraphPass<Data>& AddPass(const char* name, const Setup& setup, const Exec& execute);
 
@@ -32,7 +35,7 @@ private:
     T* AllocatePOD(ArgsT&&... arguments);
 
     template<typename Resource>
-    RenderGraphHandle Create(const char* name, const typename Resource::Desc& desc);
+    RenderGraphHandle Create(const typename Resource::Desc& desc, const char* name);
 
     RenderGraphHandle Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
     RenderGraphHandle Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);

@@ -12,10 +12,8 @@ FXAA::FXAA(Renderer* pRenderer)
 	m_pPSO = pRenderer->GetPipelineState(psoDesc, "FXAA PSO");
 }
 
-void FXAA::Draw(IGfxCommandList* pCommandList, Texture2D* pLdrRT)
+void FXAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, uint32_t width, uint32_t height)
 {
-	RENDER_EVENT(pCommandList, "FXAA");
-
 	pCommandList->SetPipelineState(m_pPSO);
 
 	struct CB
@@ -27,10 +25,10 @@ void FXAA::Draw(IGfxCommandList* pCommandList, Texture2D* pLdrRT)
 	};
 
 	CB constantBuffer = {
-		pLdrRT->GetSRV()->GetHeapIndex(), 
+		input->GetHeapIndex(), 
 		m_pRenderer->GetLinearSampler()->GetHeapIndex(), 
-		1.0f / pLdrRT->GetTexture()->GetDesc().width,
-		1.0f / pLdrRT->GetTexture()->GetDesc().height,
+		1.0f / width,
+		1.0f / height,
 	};
 
 	pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, &constantBuffer, sizeof(constantBuffer));

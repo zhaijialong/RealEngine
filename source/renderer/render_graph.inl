@@ -90,9 +90,9 @@ inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup
 }
 
 template<typename Resource>
-inline RenderGraphHandle RenderGraph::Create(const char* name, const typename Resource::Desc& desc)
+inline RenderGraphHandle RenderGraph::Create(const typename Resource::Desc& desc, const char* name)
 {
-    auto* resource = Allocate<Resource>(name, desc);
+    auto* resource = Allocate<Resource>(m_resourceAllocator, name, desc);
     auto* node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
 
     RenderGraphHandle handle;

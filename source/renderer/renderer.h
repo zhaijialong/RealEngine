@@ -38,7 +38,7 @@ public:
     uint32_t GetBackbufferWidth() const { return m_pSwapchain->GetDesc().width; }
     uint32_t GetBackbufferHeight() const { return m_pSwapchain->GetDesc().height; }
 
-    RenderGraph& GetRenderGraph() { return m_renderGraph; }
+    RenderGraph* GetRenderGraph() { return m_pRenderGraph.get(); }
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
@@ -74,6 +74,10 @@ private:
 private:
     std::unique_ptr<IGfxDevice> m_pDevice;
     std::unique_ptr<IGfxSwapchain> m_pSwapchain;
+
+    std::unique_ptr<RenderGraph> m_pRenderGraph;
+    uint32_t m_nWindowWidth;
+    uint32_t m_nWindowHeight;
 
     std::unique_ptr<IGfxFence> m_pFrameFence;
     uint64_t m_nCurrentFrameFenceValue = 0;
@@ -115,18 +119,13 @@ private:
     std::unique_ptr<Texture2D> m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;
 
-    std::unique_ptr<Texture2D> m_pHdrRT;
-    std::unique_ptr<Texture2D> m_pDepthRT;
-    std::unique_ptr<Texture2D> m_pShadowRT;
-    std::unique_ptr<Texture2D> m_pLdrRT;
-
     std::unique_ptr<Tonemap> m_pToneMap; //test code
     std::unique_ptr<FXAA> m_pFXAA;
+
+    IGfxPipelineState* m_pCopyPSO = nullptr;
 
     lsignal::connection m_resizeConnection;
 
     std::vector<ShadowRenderFunc> m_shadowPassBatchs;
     std::vector<RenderFunc> m_basePassBatchs;
-
-    RenderGraph m_renderGraph;
 };

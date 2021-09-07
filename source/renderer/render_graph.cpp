@@ -1,6 +1,11 @@
 #include "render_graph.h"
 #include "core/engine.h"
 
+RenderGraph::RenderGraph(Renderer* pRenderer) :
+    m_resourceAllocator(pRenderer->GetDevice())
+{
+}
+
 void RenderGraph::Clear()
 {
     for (size_t i = 0; i < m_objFinalizer.size(); ++i)
@@ -35,7 +40,7 @@ void RenderGraph::Compile()
         if (node->GetVersion() == 0)
         {
             RenderGraphResource* resource = node->GetResource();
-            resource->Realize(m_resourceAllocator);
+            resource->Realize();
         }
     }
 
