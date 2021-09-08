@@ -184,6 +184,9 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 	D3D12_RENDER_PASS_RENDER_TARGET_DESC rtDesc[8] = {};
 	D3D12_RENDER_PASS_DEPTH_STENCIL_DESC dsDesc = {};
 
+	uint32_t width = 0;
+	uint32_t height = 0;
+
 	unsigned int rt_count = 0;
 	for (int i = 0; i < 8; ++i)
 	{
@@ -191,6 +194,19 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 		{
 			break;
 		}
+
+		if (width == 0)
+		{
+			width = render_pass.color[i].texture->GetDesc().width;
+		}
+
+		if (height == 0)
+		{
+			height = render_pass.color[i].texture->GetDesc().height;
+		}
+
+		RE_ASSERT(width == render_pass.color[i].texture->GetDesc().width);
+		RE_ASSERT(height == render_pass.color[i].texture->GetDesc().height);
 
 		rtDesc[i].cpuDescriptor = ((D3D12Texture*)render_pass.color[i].texture)->GetRTV(render_pass.color[i].mip_slice, render_pass.color[i].array_slice);
 		rtDesc[i].BeginningAccess.Type = d3d12_render_pass_loadop(render_pass.color[i].load_op);
@@ -203,6 +219,19 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 
 	if (render_pass.depth.texture != nullptr)
 	{
+		if (width == 0)
+		{
+			width = render_pass.depth.texture->GetDesc().width;
+		}
+
+		if (height == 0)
+		{
+			height = render_pass.depth.texture->GetDesc().height;
+		}
+
+		RE_ASSERT(width == render_pass.depth.texture->GetDesc().width);
+		RE_ASSERT(height == render_pass.depth.texture->GetDesc().height);
+
 		dsDesc.cpuDescriptor = ((D3D12Texture*)render_pass.depth.texture)->GetDSV(render_pass.depth.mip_slice, render_pass.depth.array_slice);
 		dsDesc.DepthBeginningAccess.Type = d3d12_render_pass_loadop(render_pass.depth.load_op);
 		dsDesc.DepthBeginningAccess.Clear.ClearValue.Format = dxgi_format(render_pass.depth.texture->GetDesc().format);
@@ -221,6 +250,8 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 	m_pCommandList->BeginRenderPass(rt_count, rtDesc, 
 		render_pass.depth.texture != nullptr ? &dsDesc : nullptr,
 		D3D12_RENDER_PASS_FLAG_NONE);
+
+	SetViewport(0, 0, width, height);
 }
 
 void D3D12CommandList::EndRenderPass()

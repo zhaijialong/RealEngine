@@ -171,7 +171,6 @@ void Renderer::Render()
             shadow_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
             shadow_pass.depth.clear_depth = 1.0f;
             pCommandList->BeginRenderPass(shadow_pass);
-            pCommandList->SetViewport(0, 0, shadowRT->GetTexture()->GetDesc().width, shadowRT->GetTexture()->GetDesc().height);
 
             ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
             float4x4 mtxVP = GetLightVP(light);
@@ -248,7 +247,6 @@ void Renderer::Render()
             render_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
             render_pass.depth.stencil_load_op = GfxRenderPassLoadOp::Clear;
             pCommandList->BeginRenderPass(render_pass);
-            pCommandList->SetViewport(0, 0, m_nWindowWidth, m_nWindowHeight);
 
             for (size_t i = 0; i < m_basePassBatchs.size(); ++i)
             {
