@@ -10,7 +10,6 @@ RenderGraphPassBase::RenderGraphPassBase(const std::string& name, DirectedAcycli
 void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
 {
     std::vector<DAGEdge*> incoming_edge = graph.GetIncomingEdges(this);
-    std::vector<DAGEdge*> outgoing_edge = graph.GetOutgoingEdges(this);
 
     for (size_t i = 0; i < incoming_edge.size(); ++i)
     {

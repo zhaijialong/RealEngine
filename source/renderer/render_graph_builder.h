@@ -32,7 +32,7 @@ public:
 
     //todo : automatically Begin/EndRenderPass with inferred store_op
     //RenderGraphHandle WriteColor(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, float* clear_color = nullptr);
-    //RenderGraphHandle WriteDepth(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, float clear_depth = 0.0f, uint32_t clear_stencil = 0);
+    //RenderGraphHandle WriteDepth(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stenil_load_op, float clear_depth = 0.0f, uint32_t clear_stencil = 0);
 
 private:
     RenderGraphBuilder(RenderGraphBuilder const&) = delete;
