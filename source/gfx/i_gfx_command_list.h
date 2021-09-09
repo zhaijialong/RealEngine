@@ -26,6 +26,7 @@ public:
 
 	virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) = 0;
 	virtual void UavBarrier(IGfxResource* resource) = 0;
+	virtual void AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after) = 0;
 	virtual void BeginRenderPass(const GfxRenderPassDesc& render_pass) = 0;
 	virtual void EndRenderPass() = 0;
 	virtual void SetPipelineState(IGfxPipelineState* state) = 0;
@@ -37,4 +38,5 @@ public:
 	virtual void SetConstantBuffer(GfxPipelineType type, uint32_t slot, void* data, size_t data_size) = 0;
 	virtual void Draw(uint32_t vertex_count, uint32_t instance_count = 1) = 0;
 	virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t index_offset = 0) = 0;
+	virtual void Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z) = 0;
 };

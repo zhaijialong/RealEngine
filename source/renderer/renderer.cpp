@@ -16,6 +16,7 @@ Renderer::Renderer() : m_resizeConnection({})
 Renderer::~Renderer()
 {
     WaitGpuFinished();
+    m_pRenderGraph->Clear();
 
     Engine::GetInstance()->WindowResizeSignal.disconnect(m_resizeConnection);
 }
@@ -144,6 +145,8 @@ void Renderer::Render()
 
     std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
     RENDER_EVENT(pCommandList, event_name.c_str());
+
+    m_pRenderGraph->Clear();
 
     struct DepthPassData
     {
@@ -367,8 +370,6 @@ void Renderer::Render()
         //todo : remove it
         pCommandList->ResourceBarrier(outputRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
     }
-
-    m_pRenderGraph->Clear();
 }
 
 void Renderer::EndFrame()

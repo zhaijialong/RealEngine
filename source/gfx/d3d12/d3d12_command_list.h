@@ -30,6 +30,7 @@ public:
 
 	virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) override;
 	virtual void UavBarrier(IGfxResource* resource) override;
+	virtual void AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after) override;
 	virtual void BeginRenderPass(const GfxRenderPassDesc& render_pass) override;
 	virtual void EndRenderPass() override;
 	virtual void SetPipelineState(IGfxPipelineState* state) override;
@@ -41,6 +42,7 @@ public:
 	virtual void SetConstantBuffer(GfxPipelineType type, uint32_t slot, void* data, size_t data_size) override;
 	virtual void Draw(uint32_t vertex_count, uint32_t instance_count = 1) override;
 	virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t index_offset = 0) override;
+	virtual void Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z) override;
 
 private:
 	void FlushPendingBarrier();

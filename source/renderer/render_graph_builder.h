@@ -30,7 +30,7 @@ public:
         return m_pGraph->Write(m_pPass, input, usage, subresource);
     }
 
-    //todo
+    //todo : automatically Begin/EndRenderPass with inferred store_op
     //RenderGraphHandle WriteColor(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, float* clear_color = nullptr);
     //RenderGraphHandle WriteDepth(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, float clear_depth = 0.0f, uint32_t clear_stencil = 0);
 

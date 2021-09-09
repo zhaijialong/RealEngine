@@ -177,6 +177,16 @@ void D3D12CommandList::UavBarrier(IGfxResource* resource)
 	m_pendingBarriers.push_back(barrier);
 }
 
+void D3D12CommandList::AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after)
+{
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
+	barrier.Aliasing.pResourceBefore = (ID3D12Resource*)resource_before;
+	barrier.Aliasing.pResourceAfter = (ID3D12Resource*)resource_after;
+
+	m_pendingBarriers.push_back(barrier);
+}
+
 void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 {
 	FlushPendingBarrier();
@@ -351,6 +361,13 @@ void D3D12CommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
 void D3D12CommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_offset)
 {
 	m_pCommandList->DrawIndexedInstanced(index_count, instance_count, index_offset, 0, 0);
+}
+
+void D3D12CommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
+{
+	FlushPendingBarrier();
+
+	m_pCommandList->Dispatch(group_count_x, group_count_y, group_count_z);
 }
 
 void D3D12CommandList::FlushPendingBarrier()
