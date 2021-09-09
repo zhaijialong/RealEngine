@@ -126,6 +126,7 @@
     <ClCompile Include="source\renderer\post_processor.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
     <ClCompile Include="source\renderer\render_graph.cpp" />
+    <ClCompile Include="source\renderer\render_graph_pass.cpp" />
     <ClCompile Include="source\renderer\render_graph_resource_allocator.cpp" />
     <ClCompile Include="source\renderer\resource\constant_buffer.cpp" />
     <ClCompile Include="source\renderer\resource\index_buffer.cpp" />

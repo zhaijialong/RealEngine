@@ -42,6 +42,9 @@ public:
         m_subresource = subresource;
     }
 
+    GfxResourceState GetUsage() const { return m_usage; }
+    uint32_t GetSubresource() const { return m_subresource; }
+
 private:
     GfxResourceState m_usage;
     uint32_t m_subresource;

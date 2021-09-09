@@ -15,6 +15,7 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc);
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width);
 uint32_t GetFormatBlockWidth(GfxFormat format);
 uint32_t GetFormatBlockHeight(GfxFormat format);
+bool IsDepthFormat(GfxFormat format);
 
 
 class RenderEvent

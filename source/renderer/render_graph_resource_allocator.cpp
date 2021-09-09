@@ -89,3 +89,12 @@ void RenderGraphResourceAllocator::DeleteDescriptor(IGfxResource* resource)
         }
     }
 }
+
+GfxResourceState RenderGraphResourceAllocator::GetInitialState(IGfxTexture* texture)
+{
+    if (IsDepthFormat(texture->GetDesc().format))
+    {
+        return GfxResourceState::DepthStencil;
+    }
+    return GfxResourceState::RenderTarget;
+}

@@ -185,9 +185,6 @@ void Renderer::Render()
             m_shadowPassBatchs.clear();
 
             pCommandList->EndRenderPass();
-
-            //todo : remove it
-            pCommandList->ResourceBarrier(shadowRT->GetTexture(), 0, GfxResourceState::DepthStencil, GfxResourceState::ShaderResourcePSOnly);
         });
 
     struct BassPassData
@@ -260,7 +257,6 @@ void Renderer::Render()
             pCommandList->EndRenderPass();
 
             //todo : remove it
-            pCommandList->ResourceBarrier(sceneColorRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
             pCommandList->ResourceBarrier(shadowMapRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::DepthStencil);
         });
 
@@ -299,7 +295,6 @@ void Renderer::Render()
 
             //todo : remove it
             pCommandList->ResourceBarrier(sceneColorRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
-            pCommandList->ResourceBarrier(ldrRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
         });
 
     struct FXAAPassData

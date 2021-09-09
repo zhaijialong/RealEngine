@@ -44,7 +44,6 @@ void RenderGraph::Compile()
         }
     }
 
-    //resolve barriers
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
         RenderGraphPassBase* pass = m_passes[i];
@@ -53,7 +52,7 @@ void RenderGraph::Compile()
             continue;
         }
 
-        //todo
+        pass->Resolve(m_graph);
     }
 }
 
@@ -69,10 +68,11 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList)
             continue;
         }
 
-        pass->FlushBarriers();
-
         RENDER_EVENT(pCommandList, pass->GetName());
+
+        pass->Begin(pCommandList);
         pass->Execute(pCommandList);
+        pass->End(pCommandList);
     }
 }
 

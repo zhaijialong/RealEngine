@@ -15,6 +15,8 @@ public:
 
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc);
 
+    GfxResourceState GetInitialState(IGfxTexture* texture);
+
 private:
     void DeleteDescriptor(IGfxResource* resource);
 

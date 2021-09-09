@@ -90,3 +90,8 @@ uint32_t GetFormatBlockHeight(GfxFormat format)
     RE_ASSERT(format <= GfxFormat::R8SNORM);
     return 1;
 }
+
+bool IsDepthFormat(GfxFormat format)
+{
+    return format == GfxFormat::D32FS8 || format == GfxFormat::D32F || format == GfxFormat::D16;
+}

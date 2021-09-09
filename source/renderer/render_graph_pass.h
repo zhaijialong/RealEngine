@@ -1,21 +1,20 @@
 #pragma once
 
 #include "directed_acyclic_graph.h"
+#include "gfx/gfx.h"
 #include <functional>
 
 class RenderGraphResource;
-class IGfxCommandList;
 
 class RenderGraphPassBase : public DAGNode
 {
 public:
-    RenderGraphPassBase(const std::string& name, DirectedAcyclicGraph& graph) : DAGNode(graph)
-    {
-        m_name = name;
-    }
+    RenderGraphPassBase(const std::string& name, DirectedAcyclicGraph& graph);
 
     const char* GetName() const { return m_name.c_str(); }
-    void FlushBarriers() {}
+    void Resolve(const DirectedAcyclicGraph& graph);
+    void Begin(IGfxCommandList* pCommandList);
+    void End(IGfxCommandList* pCommandList);
 
     virtual void Execute(IGfxCommandList* pCommandList) = 0;
 
@@ -24,6 +23,15 @@ public:
 
 protected:
     std::string m_name;
+
+    struct ResourceBarrier
+    {
+        RenderGraphResource* resource;
+        uint32_t sub_resource;
+        GfxResourceState old_state;
+        GfxResourceState new_state;
+    };
+    std::vector<ResourceBarrier> m_resourceBarriers;
 };
 
 template<class T>

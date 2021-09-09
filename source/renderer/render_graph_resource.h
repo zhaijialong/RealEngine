@@ -13,6 +13,8 @@ public:
     virtual ~RenderGraphResource() {}
 
     virtual void Realize() = 0;
+    virtual IGfxResource* GetResource() = 0;
+    virtual GfxResourceState GetInitialState() = 0;
 
     const char* GetName() const { return m_name.c_str(); }
 
@@ -46,6 +48,13 @@ public:
     virtual void Realize() override
     {
         m_pTexture = m_allocator.AllocateTexture(m_desc, m_name);
+    }
+
+    virtual IGfxResource* GetResource() override { return m_pTexture; }
+
+    virtual GfxResourceState GetInitialState() override
+    {
+        return m_allocator.GetInitialState(m_pTexture);
     }
 
 private:
