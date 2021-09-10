@@ -29,7 +29,7 @@ void RenderGraph::Clear()
 
 void RenderGraph::Compile()
 {
-    CPU_EVENT("RenderGraph::Compile", MP_AZURE3);
+    CPU_EVENT("Render", "RenderGraph::Compile", MP_AZURE3);
 
     m_graph.Cull();
 
@@ -78,7 +78,7 @@ void RenderGraph::Compile()
 
 void RenderGraph::Execute(IGfxCommandList* pCommandList)
 {
-    CPU_EVENT("RenderGraph::Execute", MP_GREEN2);
+    CPU_EVENT("Render", "RenderGraph::Execute", MP_GREEN2);
     GPU_EVENT(pCommandList, "RenderGraph");
 
     for (size_t i = 0; i < m_passes.size(); ++i)

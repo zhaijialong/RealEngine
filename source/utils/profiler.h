@@ -2,7 +2,7 @@
 
 #include "microprofile/microprofile.h"
 
-#define CPU_EVENT(name, color) MICROPROFILE_SCOPEI("RealEngine", name, color)
+#define CPU_EVENT(group, name, color) MICROPROFILE_SCOPEI(group, name, color)
 
 inline void StartProfiler()
 {

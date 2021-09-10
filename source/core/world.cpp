@@ -53,7 +53,7 @@ void World::AddLight(ILight* light)
 
 void World::Tick(float delta_time)
 {
-    CPU_EVENT("World::Tick", MP_GREEN);
+    CPU_EVENT("Tick", "World::Tick", MP_GREEN);
 
     m_pGUI->Tick();
     m_pEditor->Tick();

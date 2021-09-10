@@ -42,12 +42,9 @@ void Engine::Shut()
     //m_pWorld->SaveScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
 }
 
-//MICROPROFILE_DEFINE(MAIN, "MAIN", "Main", MP_AUTO);
 void Engine::Tick()
 {
-    //MICROPROFILE_SCOPE(MAIN);
-
-    CPU_EVENT("Engine::Tick", MP_YELLOW);
+    CPU_EVENT("Tick", "Engine::Tick", MP_YELLOW);
 
     float frame_time = (float)stm_sec(stm_laptime(&m_lastFrameTime));
 

@@ -61,7 +61,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
 void Renderer::RenderFrame()
 {
-    CPU_EVENT("Renderer::RenderFrame", MP_PINK);
+    CPU_EVENT("Render", "Renderer::RenderFrame", MP_PINK);
 
     BeginFrame();
     UploadResources();
@@ -71,7 +71,7 @@ void Renderer::RenderFrame()
 
 void Renderer::BeginFrame()
 {
-    CPU_EVENT("Renderer::BeginFrame", MP_WHEAT);
+    CPU_EVENT("Render", "Renderer::BeginFrame", MP_WHEAT);
 
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     m_pFrameFence->Wait(m_nFrameFenceValue[frame_index]);
@@ -83,7 +83,7 @@ void Renderer::BeginFrame()
 
 void Renderer::UploadResources()
 {
-    CPU_EVENT("Renderer::UploadResources", MP_MAGENTA);
+    CPU_EVENT("Render", "Renderer::UploadResources", MP_MAGENTA);
 
     if (m_pendingTextureUploads.empty() && m_pendingBufferUpload.empty())
     {
@@ -126,7 +126,7 @@ void Renderer::UploadResources()
 
 void Renderer::Render()
 {
-    CPU_EVENT("Renderer::Render", MP_ORANGERED);
+    CPU_EVENT("Render", "Renderer::Render", MP_ORANGERED);
 
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
@@ -169,7 +169,7 @@ void Renderer::Render()
 
 void Renderer::EndFrame()
 {
-    CPU_EVENT("Renderer::EndFrame", MP_BISQUE1);
+    CPU_EVENT("Render", "Renderer::EndFrame", MP_BISQUE1);
 
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
@@ -180,7 +180,7 @@ void Renderer::EndFrame()
 
     pCommandList->Submit();
     {
-        CPU_EVENT("IGfxSwapchain::Present", MP_GREY);
+        CPU_EVENT("Render", "IGfxSwapchain::Present", MP_GREY);
         m_pSwapchain->Present();
     }
     pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
