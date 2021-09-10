@@ -1,8 +1,10 @@
 #include "engine.h"
 #include "utils/log.h"
+#include "utils/profiler.h"
 
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
+
 
 Engine* Engine::GetInstance()
 {
@@ -29,20 +31,31 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
         (float)m_configIni.GetDoubleValue("Camera", "ZFar"));
 
     stm_setup();
+
+    StartProfiler();
 }
 
 void Engine::Shut()
 {
+    ShutdownProfiler();
+
     //m_pWorld->SaveScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
 }
 
+//MICROPROFILE_DEFINE(MAIN, "MAIN", "Main", MP_AUTO);
 void Engine::Tick()
 {
+    //MICROPROFILE_SCOPE(MAIN);
+
+    CPU_EVENT("Engine::Tick", MP_YELLOW);
+
     float frame_time = (float)stm_sec(stm_laptime(&m_lastFrameTime));
 
     m_pWorld->Tick(frame_time);
 
     m_pRenderer->RenderFrame();
+
+    TickProfiler();
 }
 
 void Engine::LoadEngineConfig()

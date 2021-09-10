@@ -72,7 +72,7 @@ void GUI::Tick()
 
 void GUI::Render(IGfxCommandList* pCommandList)
 {
-	RENDER_EVENT(pCommandList, "GUI");
+	GPU_EVENT(pCommandList, "GUI");
 	ImGui::Render();
 
 	Renderer* pRenderer = Engine::GetInstance()->GetRenderer();

@@ -5,6 +5,7 @@
 #include "directional_light.h"
 #include "utils/assert.h"
 #include "utils/string.h"
+#include "utils/profiler.h"
 
 World::World()
 {
@@ -52,6 +53,8 @@ void World::AddLight(ILight* light)
 
 void World::Tick(float delta_time)
 {
+    CPU_EVENT("World::Tick", MP_GREEN);
+
     m_pGUI->Tick();
     m_pEditor->Tick();
     m_pCamera->Tick(delta_time);

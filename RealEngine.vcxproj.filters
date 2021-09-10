@@ -420,6 +420,9 @@
     <ClInclude Include="external\microprofile\microprofile.h">
       <Filter>external\microprofile</Filter>
     </ClInclude>
+    <ClInclude Include="source\utils\profiler.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">

@@ -1,5 +1,6 @@
 #include "render_graph.h"
 #include "core/engine.h"
+#include "utils/profiler.h"
 
 RenderGraph::RenderGraph(Renderer* pRenderer) :
     m_resourceAllocator(pRenderer->GetDevice())
@@ -28,6 +29,8 @@ void RenderGraph::Clear()
 
 void RenderGraph::Compile()
 {
+    CPU_EVENT("RenderGraph::Compile", MP_AZURE3);
+
     m_graph.Cull();
 
     //allocate resources (todo : aliasing)
@@ -75,7 +78,8 @@ void RenderGraph::Compile()
 
 void RenderGraph::Execute(IGfxCommandList* pCommandList)
 {
-    RENDER_EVENT(pCommandList, "RenderGraph");
+    CPU_EVENT("RenderGraph::Execute", MP_GREEN2);
+    GPU_EVENT(pCommandList, "RenderGraph");
 
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
@@ -85,7 +89,7 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList)
             continue;
         }
 
-        RENDER_EVENT(pCommandList, pass->GetName());
+        GPU_EVENT(pCommandList, pass->GetName());
 
         pass->Begin(pCommandList);
         pass->Execute(pCommandList);

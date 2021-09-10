@@ -1,6 +1,7 @@
 #include "renderer.h"
-#include "core/engine.h"
 #include "texture_loader.h"
+#include "core/engine.h"
+#include "utils/profiler.h"
 
 Renderer::Renderer() : m_resizeConnection({})
 {
@@ -60,6 +61,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
 void Renderer::RenderFrame()
 {
+    CPU_EVENT("Renderer::RenderFrame", MP_PINK);
+
     BeginFrame();
     UploadResources();
     Render();
@@ -68,6 +71,8 @@ void Renderer::RenderFrame()
 
 void Renderer::BeginFrame()
 {
+    CPU_EVENT("Renderer::BeginFrame", MP_WHEAT);
+
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     m_pFrameFence->Wait(m_nFrameFenceValue[frame_index]);
     m_pDevice->BeginFrame();
@@ -78,6 +83,8 @@ void Renderer::BeginFrame()
 
 void Renderer::UploadResources()
 {
+    CPU_EVENT("Renderer::UploadResources", MP_MAGENTA);
+
     if (m_pendingTextureUploads.empty() && m_pendingBufferUpload.empty())
     {
         return;
@@ -88,7 +95,7 @@ void Renderer::UploadResources()
     pUploadCommandList->Begin();
 
     {
-        RENDER_EVENT(pUploadCommandList, "Renderer::UploadResources");
+        GPU_EVENT(pUploadCommandList, "Renderer::UploadResources");
 
         for (size_t i = 0; i < m_pendingTextureUploads.size(); ++i)
         {
@@ -119,12 +126,14 @@ void Renderer::UploadResources()
 
 void Renderer::Render()
 {
+    CPU_EVENT("Renderer::Render", MP_ORANGERED);
+
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 
     std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
-    RENDER_EVENT(pCommandList, event_name.c_str());
+    GPU_EVENT(pCommandList, event_name.c_str());
 
     m_pRenderGraph->Clear();
 
@@ -135,7 +144,7 @@ void Renderer::Render()
     m_pRenderGraph->Execute(pCommandList);
 
     {
-        RENDER_EVENT(pCommandList, "GUI Pass");
+        GPU_EVENT(pCommandList, "GUI Pass");
 
         pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
 
@@ -160,6 +169,8 @@ void Renderer::Render()
 
 void Renderer::EndFrame()
 {
+    CPU_EVENT("Renderer::EndFrame", MP_BISQUE1);
+
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->End();
@@ -168,7 +179,10 @@ void Renderer::EndFrame()
     m_nFrameFenceValue[frame_index] = m_nCurrentFrameFenceValue;
 
     pCommandList->Submit();
-    m_pSwapchain->Present();
+    {
+        CPU_EVENT("IGfxSwapchain::Present", MP_GREY);
+        m_pSwapchain->Present();
+    }
     pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
 
     m_pStagingBufferAllocator[frame_index]->Reset();

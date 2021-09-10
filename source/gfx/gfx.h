@@ -36,4 +36,4 @@ private:
     IGfxCommandList* m_pCommandList;
 };
 
-#define RENDER_EVENT(pCommandList, event_name) RenderEvent __render_event__(pCommandList, event_name)
+#define GPU_EVENT(pCommandList, event_name) RenderEvent __render_event__(pCommandList, event_name)

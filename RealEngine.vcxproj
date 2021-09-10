@@ -229,6 +229,7 @@
     <ClInclude Include="source\utils\log.h" />
     <ClInclude Include="source\utils\math.h" />
     <ClInclude Include="source\utils\memory.h" />
+    <ClInclude Include="source\utils\profiler.h" />
     <ClInclude Include="source\utils\string.h" />
     <ClInclude Include="source\utils\system.h" />
   </ItemGroup>
