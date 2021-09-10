@@ -172,6 +172,9 @@
     <ClCompile Include="source\renderer\renderer_frame.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="external\microprofile\microprofile.cpp">
+      <Filter>external\microprofile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -414,6 +417,9 @@
     <ClInclude Include="source\renderer\render_graph_resource_allocator.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="external\microprofile\microprofile.h">
+      <Filter>external\microprofile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -463,6 +469,9 @@
     </Filter>
     <Filter Include="source\renderer\resource">
       <UniqueIdentifier>{1554a0c9-b28a-474b-a477-f9cffe113e1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\microprofile">
+      <UniqueIdentifier>{9cc4d8f3-9f42-494c-a073-b1b7d639eb50}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
