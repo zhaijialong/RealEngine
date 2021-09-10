@@ -69,6 +69,7 @@ private:
     void BeginFrame();
     void UploadResources();
     void Render();
+    RenderGraphHandle BuildRenderGraph();
     void EndFrame();
 
 private:
