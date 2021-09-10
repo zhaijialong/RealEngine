@@ -10,12 +10,10 @@ public:
 
     void Reset();
 
-    IGfxTexture* AllocateTexture(const GfxTextureDesc& desc, const std::string& name);
-    void Free(IGfxTexture* texture);
+    IGfxTexture* AllocateTexture(const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state);
+    void Free(IGfxTexture* texture, GfxResourceState state);
 
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc);
-
-    GfxResourceState GetInitialState(IGfxTexture* texture);
 
 private:
     void DeleteDescriptor(IGfxResource* resource);
@@ -26,6 +24,7 @@ private:
     struct FreeTexture
     {
         uint64_t lastUsedFrame;
+        GfxResourceState lastUsedState;
         IGfxTexture* texture;
     };
     std::vector<FreeTexture> m_freeTextures;

@@ -1,7 +1,11 @@
 #pragma once
 
+#include "directed_acyclic_graph.h"
 #include "render_graph_resource_allocator.h"
 #include "gfx/gfx.h"
+
+class RenderGraphEdge;
+class RenderGraphPassBase;
 
 class RenderGraphResource
 {
@@ -18,11 +22,17 @@ public:
 
     const char* GetName() const { return m_name.c_str(); }
 
+    void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass);
+
+    GfxResourceState GetFinalState() const { return m_lastState; }
+    void SetFinalState(GfxResourceState state) { m_lastState = state; }
+
 protected:
     std::string m_name;
 
-    uint32_t m_firstPass = 0;
-    uint32_t m_lastPass = 0;
+    DAGNodeID m_firstPass = 0;
+    DAGNodeID m_lastPass = 0;
+    GfxResourceState m_lastState = GfxResourceState::Common;
 };
 
 class RenderGraphTexture : public RenderGraphResource
@@ -39,7 +49,7 @@ public:
 
     ~RenderGraphTexture()
     {
-        m_allocator.Free(m_pTexture);
+        m_allocator.Free(m_pTexture, m_lastState);
     }
 
     IGfxTexture* GetTexture() const { return m_pTexture; }
@@ -47,19 +57,16 @@ public:
 
     virtual void Realize() override
     {
-        m_pTexture = m_allocator.AllocateTexture(m_desc, m_name);
+        m_pTexture = m_allocator.AllocateTexture(m_desc, m_name, m_initialState);
     }
 
     virtual IGfxResource* GetResource() override { return m_pTexture; }
-
-    virtual GfxResourceState GetInitialState() override
-    {
-        return m_allocator.GetInitialState(m_pTexture);
-    }
+    virtual GfxResourceState GetInitialState() override { return m_initialState; }
 
 private:
     Desc m_desc;
     IGfxTexture* m_pTexture = nullptr;
+    GfxResourceState m_initialState = GfxResourceState::Common;
     RenderGraphResourceAllocator& m_allocator;
 };
 

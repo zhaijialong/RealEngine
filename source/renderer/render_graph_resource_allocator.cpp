@@ -34,26 +34,29 @@ void RenderGraphResourceAllocator::Reset()
     }
 }
 
-IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(const GfxTextureDesc& desc, const std::string& name)
+IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state)
 {
     for (auto iter = m_freeTextures.begin(); iter != m_freeTextures.end(); ++iter)
     {
         IGfxTexture* texture = iter->texture;
         if (texture->GetDesc() == desc)
         {
+            initial_state = iter->lastUsedState;
+
             m_freeTextures.erase(iter);
             return texture;
         }
     }
 
+    initial_state = IsDepthFormat(desc.format) ? GfxResourceState::DepthStencil : GfxResourceState::RenderTarget;
     return m_pDevice->CreateTexture(desc, name);
 }
 
-void RenderGraphResourceAllocator::Free(IGfxTexture* texture)
+void RenderGraphResourceAllocator::Free(IGfxTexture* texture, GfxResourceState state)
 {
     if (texture != nullptr)
     {
-        m_freeTextures.push_back({ m_pDevice->GetFrameID(), texture });
+        m_freeTextures.push_back({ m_pDevice->GetFrameID(), state, texture });
     }
 }
 
@@ -88,13 +91,4 @@ void RenderGraphResourceAllocator::DeleteDescriptor(IGfxResource* resource)
             ++iter;
         }
     }
-}
-
-GfxResourceState RenderGraphResourceAllocator::GetInitialState(IGfxTexture* texture)
-{
-    if (IsDepthFormat(texture->GetDesc().format))
-    {
-        return GfxResourceState::DepthStencil;
-    }
-    return GfxResourceState::RenderTarget;
 }

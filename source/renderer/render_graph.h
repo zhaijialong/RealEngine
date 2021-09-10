@@ -56,6 +56,8 @@ private:
         void(*finalizer)(void*);
     };
     std::vector<ObjFinalizer>  m_objFinalizer;
+
+    RenderGraphResource* m_pOutputResource = nullptr;
 };
 
 #include "render_graph.inl"

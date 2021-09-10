@@ -255,9 +255,6 @@ void Renderer::Render()
             m_basePassBatchs.clear();
 
             pCommandList->EndRenderPass();
-
-            //todo : remove it
-            pCommandList->ResourceBarrier(shadowMapRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::DepthStencil);
         });
 
     struct TonemapPassData
@@ -292,9 +289,6 @@ void Renderer::Render()
             m_pToneMap->Draw(pCommandList, sceneColorRT->GetSRV());
 
             pCommandList->EndRenderPass();
-
-            //todo : remove it
-            pCommandList->ResourceBarrier(sceneColorRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
         });
 
     struct FXAAPassData
@@ -329,10 +323,6 @@ void Renderer::Render()
             m_pFXAA->Draw(pCommandList, ldrRT->GetSRV(), m_nWindowWidth, m_nWindowHeight);
 
             pCommandList->EndRenderPass();
-
-            //todo : remove it
-            pCommandList->ResourceBarrier(ldrRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
-            pCommandList->ResourceBarrier(outputRT->GetTexture(), 0, GfxResourceState::RenderTarget, GfxResourceState::ShaderResourcePSOnly);
         });
 
     m_pRenderGraph->Present(fxaa_pass->outputRT);
@@ -361,9 +351,6 @@ void Renderer::Render()
 
         pCommandList->EndRenderPass();
         pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
-
-        //todo : remove it
-        pCommandList->ResourceBarrier(outputRT->GetTexture(), 0, GfxResourceState::ShaderResourcePSOnly, GfxResourceState::RenderTarget);
     }
 }
 
