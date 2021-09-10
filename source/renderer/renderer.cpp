@@ -95,7 +95,7 @@ void Renderer::UploadResources()
     pUploadCommandList->Begin();
 
     {
-        GPU_EVENT(pUploadCommandList, "Renderer::UploadResources");
+        GPU_EVENT(pUploadCommandList, "Renderer::UploadResources", MP_LIGHTCYAN4);
 
         for (size_t i = 0; i < m_pendingTextureUploads.size(); ++i)
         {
@@ -133,7 +133,7 @@ void Renderer::Render()
     Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 
     std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
-    GPU_EVENT(pCommandList, event_name.c_str());
+    GPU_EVENT(pCommandList, event_name.c_str(), MP_TOMATO2);
 
     m_pRenderGraph->Clear();
 
@@ -144,7 +144,7 @@ void Renderer::Render()
     m_pRenderGraph->Execute(pCommandList);
 
     {
-        GPU_EVENT(pCommandList, "GUI Pass");
+        GPU_EVENT(pCommandList, "GUI Pass", MP_DARKBLUE);
 
         pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
 

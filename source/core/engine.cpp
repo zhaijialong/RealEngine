@@ -14,6 +14,8 @@ Engine* Engine::GetInstance()
 
 void Engine::Init(const std::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
+    StartProfiler();
+
     m_windowHandle = window_handle;
     m_workPath = work_path;
     LoadEngineConfig();
@@ -31,8 +33,6 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
         (float)m_configIni.GetDoubleValue("Camera", "ZFar"));
 
     stm_setup();
-
-    StartProfiler();
 }
 
 void Engine::Shut()
@@ -52,7 +52,7 @@ void Engine::Tick()
 
     m_pRenderer->RenderFrame();
 
-    TickProfiler();
+    //TickProfiler();
 }
 
 void Engine::LoadEngineConfig()

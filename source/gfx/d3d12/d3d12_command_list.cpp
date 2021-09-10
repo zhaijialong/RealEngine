@@ -7,6 +7,7 @@
 #include "pix_runtime.h"
 #include "../gfx.h"
 #include "utils/assert.h"
+#include "utils/profiler.h"
 
 D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const std::string& name)
 {
@@ -85,6 +86,10 @@ void D3D12CommandList::Begin()
 		{
 			m_pCommandList->SetGraphicsRootSignature(pRootSignature);
 		}
+
+#if MICROPROFILE_GPU_TIMERS_D3D12
+		MICROPROFILE_GPU_SET_CONTEXT(m_pCommandList, MicroProfileGetGlobalGpuThreadLog());
+#endif
 	}
 }
 
@@ -154,6 +159,13 @@ void D3D12CommandList::Submit()
 {
 	ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
 	m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
+
+#if MICROPROFILE_GPU_TIMERS_D3D12
+	if (m_queueType == GfxCommandQueue::Graphics || m_queueType == GfxCommandQueue::Compute)
+	{
+		MicroProfileFlip(m_pCommandList);
+	}
+#endif
 }
 
 void D3D12CommandList::ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state)

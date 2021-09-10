@@ -79,7 +79,7 @@ void RenderGraph::Compile()
 void RenderGraph::Execute(IGfxCommandList* pCommandList)
 {
     CPU_EVENT("Render", "RenderGraph::Execute", MP_GREEN2);
-    GPU_EVENT(pCommandList, "RenderGraph");
+    GPU_EVENT(pCommandList, "RenderGraph", MP_YELLOW);
 
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
@@ -89,7 +89,7 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList)
             continue;
         }
 
-        GPU_EVENT(pCommandList, pass->GetName());
+        GPU_EVENT(pCommandList, pass->GetName(), MP_LIGHTCYAN4);
 
         pass->Begin(pCommandList);
         pass->Execute(pCommandList);

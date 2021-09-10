@@ -11,6 +11,7 @@
 #include "pix_runtime.h"
 #include "utils/log.h"
 #include "utils/assert.h"
+#include "utils/profiler.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -316,6 +317,11 @@ bool D3D12Device::Init()
 	CreateRootSignature();
 
 	pix::Init();
+
+#if MICROPROFILE_GPU_TIMERS_D3D12
+	MicroProfileGpuInitD3D12(m_pDevice, 1, (void**)&m_pGraphicsQueue);
+	MicroProfileSetCurrentNodeD3D12(0);
+#endif
 
     return true;
 }

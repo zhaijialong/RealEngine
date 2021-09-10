@@ -10,6 +10,7 @@
 #include "i_gfx_pipeline_state.h"
 #include "i_gfx_swapchain.h"
 #include "i_gfx_descriptor.h"
+#include "microprofile/microprofile.h"
 
 IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc);
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width);
@@ -36,4 +37,4 @@ private:
     IGfxCommandList* m_pCommandList;
 };
 
-#define GPU_EVENT(pCommandList, event_name) RenderEvent __render_event__(pCommandList, event_name)
+#define GPU_EVENT(pCommandList, event_name, color) RenderEvent __render_event__(pCommandList, event_name);MICROPROFILE_SCOPEGPUI(event_name, color)
