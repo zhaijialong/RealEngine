@@ -319,6 +319,10 @@ bool D3D12Device::Init()
 	pix::Init();
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
+	m_nProfileGraphicsQueue = MicroProfileInitGpuQueue("GPU Graphics Queue");
+	m_nProfileComputeQueue = MicroProfileInitGpuQueue("GPU Compute Queue");
+	//m_nProfileCopyQueue = MicroProfileInitGpuQueue("GPU Copy Queue");  //microprofile现在并不支持copy queue的timestamp
+
 	MicroProfileGpuInitD3D12(m_pDevice, 1, (void**)&m_pGraphicsQueue);
 	MicroProfileSetCurrentNodeD3D12(0);
 #endif

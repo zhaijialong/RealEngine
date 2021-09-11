@@ -52,7 +52,7 @@ void Engine::Tick()
 
     m_pRenderer->RenderFrame();
 
-    //TickProfiler();
+    TickProfiler();
 }
 
 void Engine::LoadEngineConfig()

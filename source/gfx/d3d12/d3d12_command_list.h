@@ -44,6 +44,10 @@ public:
 	virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t index_offset = 0) override;
 	virtual void Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z) override;
 
+#if MICROPROFILE_GPU_TIMERS_D3D12
+	virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override { return m_pProfileLog; }
+#endif
+
 private:
 	void FlushPendingBarrier();
 
@@ -56,4 +60,9 @@ private:
 	IGfxPipelineState* m_pCurrentPSO = nullptr;
 
 	std::vector<D3D12_RESOURCE_BARRIER> m_pendingBarriers;
+
+#if MICROPROFILE_GPU_TIMERS_D3D12
+	struct MicroProfileThreadLogGpu* m_pProfileLog = nullptr;
+	int m_nProfileQueue = -1;
+#endif
 };

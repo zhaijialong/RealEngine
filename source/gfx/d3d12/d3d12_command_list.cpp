@@ -33,6 +33,9 @@ bool D3D12CommandList::Create()
 	case GfxCommandQueue::Graphics:
 		type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 		m_pCommandQueue = pDevice->GetGraphicsQueue();
+#if MICROPROFILE_GPU_TIMERS_D3D12
+		m_nProfileQueue = pDevice->GetProfileGraphicsQueue();
+#endif
 		break;
 	case GfxCommandQueue::Compute:
 		//todo
@@ -41,6 +44,9 @@ bool D3D12CommandList::Create()
 	case GfxCommandQueue::Copy:
 		type = D3D12_COMMAND_LIST_TYPE_COPY;
 		m_pCommandQueue = pDevice->GetCopyQueue();
+#if MICROPROFILE_GPU_TIMERS_D3D12
+		m_nProfileQueue = pDevice->GetProfileCopyQueue();
+#endif
 		break;
 	default:
 		break;
@@ -86,11 +92,15 @@ void D3D12CommandList::Begin()
 		{
 			m_pCommandList->SetGraphicsRootSignature(pRootSignature);
 		}
+	}
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
-		MICROPROFILE_GPU_SET_CONTEXT(m_pCommandList, MicroProfileGetGlobalGpuThreadLog());
-#endif
+	if (m_nProfileQueue != -1)
+	{
+		m_pProfileLog = MicroProfileThreadLogGpuAlloc();
+		MicroProfileGpuBegin(m_pCommandList, m_pProfileLog);
 	}
+#endif
 }
 
 void D3D12CommandList::End()
@@ -160,10 +170,11 @@ void D3D12CommandList::Submit()
 	ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
 	m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
 
-#if MICROPROFILE_GPU_TIMERS_D3D12
-	if (m_queueType == GfxCommandQueue::Graphics || m_queueType == GfxCommandQueue::Compute)
+#if MICROPROFILE_GPU_TIMERS_D3D12	
+	if (m_nProfileQueue != -1)
 	{
-		MicroProfileFlip(m_pCommandList);
+		MicroProfileGpuSubmit(m_nProfileQueue, MicroProfileGpuEnd(m_pProfileLog));
+		MicroProfileThreadLogGpuFree(m_pProfileLog);
 	}
 #endif
 }

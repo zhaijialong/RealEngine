@@ -96,6 +96,13 @@ public:
 	void DeleteResourceDescriptor(const D3D12Descriptor& descriptor);
 	void DeleteSampler(const D3D12Descriptor& descriptor);
 
+
+#if MICROPROFILE_GPU_TIMERS_D3D12
+	int GetProfileGraphicsQueue() const { return m_nProfileGraphicsQueue; }
+	int GetProfileComputeQueue() const { return m_nProfileComputeQueue; }
+	int GetProfileCopyQueue() const { return m_nProfileCopyQueue; }
+#endif
+
 private:
 	void DoDeferredDeletion(bool force_delete = false);
 	void CreateRootSignature();
@@ -146,4 +153,10 @@ private:
 	std::queue<DescriptorDeletion> m_dsvDeletionQueue;
 	std::queue<DescriptorDeletion> m_resourceDeletionQueue;
 	std::queue<DescriptorDeletion> m_samplerDeletionQueue;
+
+#if MICROPROFILE_GPU_TIMERS_D3D12
+	int m_nProfileGraphicsQueue = -1;
+	int m_nProfileComputeQueue = -1;
+	int m_nProfileCopyQueue = -1;
+#endif
 };
