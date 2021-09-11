@@ -66,7 +66,12 @@ void Editor::DrawMenu()
 
         if (ImGui::BeginMenu("Tools"))
         {
-            if (ImGui::MenuItem("Show GPU Memory Stats", "", &m_bShowGpuMemoryStats))
+            if (ImGui::MenuItem("Profiler"))
+            {
+                ShellExecute(0, 0, L"http://localhost:1338/", 0, 0, SW_SHOW);
+            }
+
+            if (ImGui::MenuItem("GPU Memory Stats", "", &m_bShowGpuMemoryStats))
             {
                 if (m_bShowGpuMemoryStats)
                 {
@@ -78,7 +83,7 @@ void Editor::DrawMenu()
                 }
             }
 
-            if (ImGui::MenuItem("Show Render Graph", "", &m_bShowRenderGraph))
+            if (ImGui::MenuItem("Render Graph", "", &m_bShowRenderGraph))
             {
                 if (m_bShowRenderGraph)
                 {
@@ -90,7 +95,7 @@ void Editor::DrawMenu()
                 }
             }
 
-            ImGui::MenuItem("Show Imgui Demo", "", &m_bShowImguiDemo);
+            ImGui::MenuItem("Imgui Demo", "", &m_bShowImguiDemo);
 
             ImGui::EndMenu();
         }
