@@ -49,7 +49,7 @@ float Shadow(float3 worldPos, float3 worldNormal, float4x4 mtxLightVP, Texture2D
     shadowPos /= shadowPos.w;
     shadowPos.xy = shadowPos.xy * float2(0.5, -0.5) + 0.5;
     
-    const float halfTexel = 0.5 / 2048;
+    const float halfTexel = 0.5 / 4096;
     float visibility = shadowRT.SampleCmpLevelZero(shadowSampler, shadowPos.xy + float2(halfTexel, halfTexel), shadowPos.z).x;
     visibility += shadowRT.SampleCmpLevelZero(shadowSampler, shadowPos.xy + float2(-halfTexel, halfTexel), shadowPos.z).x;
     visibility += shadowRT.SampleCmpLevelZero(shadowSampler, shadowPos.xy + float2(halfTexel, -halfTexel), shadowPos.z).x;
