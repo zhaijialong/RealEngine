@@ -38,8 +38,11 @@ bool D3D12CommandList::Create()
 #endif
 		break;
 	case GfxCommandQueue::Compute:
-		//todo
-		RE_ASSERT(false);
+		type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+		m_pCommandQueue = pDevice->GetComputeQueue();
+#if MICROPROFILE_GPU_TIMERS_D3D12
+		m_nProfileQueue = pDevice->GetProfileComputeQueue();
+#endif
 		break;
 	case GfxCommandQueue::Copy:
 		type = D3D12_COMMAND_LIST_TYPE_COPY;

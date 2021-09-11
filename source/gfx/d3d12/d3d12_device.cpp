@@ -66,6 +66,7 @@ D3D12Device::~D3D12Device()
 	SAFE_RELEASE(m_pRootSignature);
 	SAFE_RELEASE(m_pResourceAllocator);
 	SAFE_RELEASE(m_pGraphicsQueue);
+	SAFE_RELEASE(m_pComputeQueue);
 	SAFE_RELEASE(m_pCopyQueue);
 	SAFE_RELEASE(m_pDxgiAdapter);
 	SAFE_RELEASE(m_pDxgiFactory);
@@ -290,6 +291,10 @@ bool D3D12Device::Init()
 
 	m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_pGraphicsQueue));
 	m_pGraphicsQueue->SetName(L"Graphics Queue");
+
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+	m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_pComputeQueue));
+	m_pComputeQueue->SetName(L"Compute Queue");
 
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
 	m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_pCopyQueue));

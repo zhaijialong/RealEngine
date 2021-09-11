@@ -75,6 +75,7 @@ public:
 	bool Init();
 	IDXGIFactory4* GetDxgiFactory4() const { return m_pDxgiFactory; }
 	ID3D12CommandQueue* GetGraphicsQueue() const { return m_pGraphicsQueue; }
+	ID3D12CommandQueue* GetComputeQueue() const { return m_pComputeQueue; }
 	ID3D12CommandQueue* GetCopyQueue() const { return m_pCopyQueue; }
 	D3D12MA::Allocator* GetResourceAllocator() const { return m_pResourceAllocator; }
 	ID3D12DescriptorHeap* GetResourceDescriptorHeap() const { return m_pResDescriptorAllocator->GetHeap(); }
@@ -115,6 +116,7 @@ private:
 
 	ID3D12Device* m_pDevice = nullptr;
 	ID3D12CommandQueue* m_pGraphicsQueue = nullptr;
+	ID3D12CommandQueue* m_pComputeQueue = nullptr;
 	ID3D12CommandQueue* m_pCopyQueue = nullptr;
 	ID3D12RootSignature* m_pRootSignature = nullptr;
 
