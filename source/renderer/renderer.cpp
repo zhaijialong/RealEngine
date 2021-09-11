@@ -74,7 +74,10 @@ void Renderer::BeginFrame()
     CPU_EVENT("Render", "Renderer::BeginFrame", MP_WHEAT);
 
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
-    m_pFrameFence->Wait(m_nFrameFenceValue[frame_index]);
+    {
+        CPU_EVENT("Render", "IGfxFence::Wait", MP_WHEAT);
+        m_pFrameFence->Wait(m_nFrameFenceValue[frame_index]);
+    }
     m_pDevice->BeginFrame();
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
