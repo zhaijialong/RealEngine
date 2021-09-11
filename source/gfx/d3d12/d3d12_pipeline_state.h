@@ -25,3 +25,17 @@ private:
 class D3D12MeshShadingPipelineState : public IGfxPipelineState
 {
 };
+
+class D3D12ComputePipelineState : public IGfxPipelineState
+{
+public:
+    D3D12ComputePipelineState(D3D12Device* pDevice, const GfxComputePipelineDesc& desc, const std::string& name);
+    ~D3D12ComputePipelineState();
+
+    virtual void* GetHandle() const { return m_pPipelineState; }
+    bool Create();
+
+private:
+    ID3D12PipelineState* m_pPipelineState = nullptr;
+    GfxComputePipelineDesc m_desc;
+};

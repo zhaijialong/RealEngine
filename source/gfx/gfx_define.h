@@ -480,6 +480,11 @@ struct GfxMeshShadingPipelineDesc
 	GfxFormat rt_format[8] = { GfxFormat::Unknown };
 	GfxFormat depthstencil_format = GfxFormat::Unknown;
 };
+
+struct GfxComputePipelineDesc
+{
+	IGfxShader* cs = nullptr;
+};
 #pragma pack(pop)
 
 enum class GfxFilter

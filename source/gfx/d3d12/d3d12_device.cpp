@@ -162,6 +162,17 @@ IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShad
 	return nullptr;
 }
 
+IGfxPipelineState* D3D12Device::CreateComputePipelineState(const GfxComputePipelineDesc& desc, const std::string& name)
+{
+	D3D12ComputePipelineState* pPipeline = new D3D12ComputePipelineState(this, desc, name);
+	if (!pPipeline->Create())
+	{
+		delete pPipeline;
+		return nullptr;
+	}
+	return pPipeline;
+}
+
 IGfxDescriptor* D3D12Device::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const std::string& name)
 {
 	D3D12ShaderResourceView* pSRV = new D3D12ShaderResourceView(this, resource, desc, name);

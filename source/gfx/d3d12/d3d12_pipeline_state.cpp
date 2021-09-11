@@ -64,3 +64,34 @@ bool D3D12GraphicsPipelineState::Create()
 
     return true;
 }
+
+D3D12ComputePipelineState::D3D12ComputePipelineState(D3D12Device* pDevice, const GfxComputePipelineDesc& desc, const std::string& name)
+{
+    m_pDevice = pDevice;
+    m_name = name;
+    m_desc = desc;
+    m_type = GfxPipelineType::Compute;
+}
+
+D3D12ComputePipelineState::~D3D12ComputePipelineState()
+{
+    D3D12Device* pDevice = (D3D12Device*)m_pDevice;
+    pDevice->Delete(m_pPipelineState);
+}
+
+bool D3D12ComputePipelineState::Create()
+{
+    D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
+    desc.pRootSignature = ((D3D12Device*)m_pDevice)->GetRootSignature();
+    desc.CS = ((D3D12Shader*)m_desc.cs)->GetByteCode();
+
+    ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
+    if (FAILED(pDevice->CreateComputePipelineState(&desc, IID_PPV_ARGS(&m_pPipelineState))))
+    {
+        return false;
+    }
+
+    m_pPipelineState->SetName(string_to_wstring(m_name).c_str());
+
+    return true;
+}
