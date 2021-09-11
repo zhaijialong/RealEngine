@@ -89,7 +89,7 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList)
             continue;
         }
 
-        GPU_EVENT(pCommandList, pass->GetName(), MP_LIGHTCYAN4);
+        GPU_EVENT_TOKEN(pCommandList, pass->GetName(), pass->GetGpuToken());
 
         pass->Begin(pCommandList);
         pass->Execute(pCommandList);

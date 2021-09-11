@@ -38,3 +38,11 @@ private:
 };
 
 #define GPU_EVENT(pCommandList, event_name, color) RenderEvent __render_event__(pCommandList, event_name);MICROPROFILE_SCOPEGPUI(event_name, color)
+
+#define GPU_TOKEN MicroProfileToken
+#define GPU_EVENT_TOKEN(pCommandList, event_name, token) RenderEvent __render_event__(pCommandList, event_name);MICROPROFILE_SCOPEGPU_TOKEN(token)
+
+inline GPU_TOKEN GetGpuEventToken(const char* name, uint32_t color)
+{
+    return MicroProfileGetToken("GPU", name, color, MicroProfileTokenTypeGpu);
+}
