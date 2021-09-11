@@ -95,7 +95,7 @@ void Renderer::UploadResources()
     pUploadCommandList->Begin();
 
     {
-        GPU_EVENT(pUploadCommandList, "Renderer::UploadResources", MP_LIGHTCYAN4);
+        //GPU_EVENT(pUploadCommandList, "Renderer::UploadResources", MP_LIGHTCYAN4);
 
         for (size_t i = 0; i < m_pendingTextureUploads.size(); ++i)
         {
