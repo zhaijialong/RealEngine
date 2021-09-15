@@ -40,7 +40,5 @@ public:
 	virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t index_offset = 0) = 0;
 	virtual void Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z) = 0;
 
-#if MICROPROFILE_GPU_TIMERS_D3D12
 	virtual struct MicroProfileThreadLogGpu* GetProfileLog() const = 0;
-#endif
 };
