@@ -44,7 +44,7 @@ void Engine::Shut()
 
 void Engine::Tick()
 {
-    CPU_EVENT("Tick", "Engine::Tick", MP_YELLOW);
+    CPU_EVENT("Tick", "Engine::Tick");
 
     float frame_time = (float)stm_sec(stm_laptime(&m_lastFrameTime));
 
