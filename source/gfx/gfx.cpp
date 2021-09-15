@@ -1,6 +1,8 @@
 #include "gfx.h"
 #include "d3d12/d3d12_device.h"
 #include "utils/assert.h"
+#include "xxHash/xxhash.h"
+#include "microprofile/microprofile.h"
 
 IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
 {
@@ -17,6 +19,36 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
 	}
 	
 	return pDevice;
+}
+
+MPRenderEvent::MPRenderEvent(IGfxCommandList* pCommandList, const std::string& event_name) :
+    m_pCommandList(pCommandList)
+{
+    static const uint32_t EVENT_COLOR[] =
+    {
+        MP_LIGHTCYAN4,
+        MP_SKYBLUE2,
+        MP_SEAGREEN4,
+        MP_LIGHTGOLDENROD4,
+        MP_BROWN3,
+        MP_MEDIUMPURPLE2,
+        MP_SIENNA,
+        MP_LIMEGREEN,
+        MP_MISTYROSE,
+        MP_LIGHTYELLOW,
+    };
+
+    uint32_t color_count = sizeof(EVENT_COLOR) / sizeof(EVENT_COLOR[0]);
+    uint32_t color = EVENT_COLOR[XXH32(event_name.c_str(), strlen(event_name.c_str()), 0) % color_count];
+
+    MicroProfileToken token = MicroProfileGetToken("GPU", event_name.c_str(), color, MicroProfileTokenTypeGpu);
+
+    MICROPROFILE_GPU_ENTER_TOKEN_L(pCommandList->GetProfileLog(), token);
+}
+
+MPRenderEvent::~MPRenderEvent()
+{
+    MICROPROFILE_GPU_LEAVE_L(m_pCommandList->GetProfileLog());
 }
 
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width)

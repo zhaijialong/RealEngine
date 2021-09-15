@@ -12,7 +12,6 @@ public:
     RenderGraphPassBase(const std::string& name, DirectedAcyclicGraph& graph);
 
     const char* GetName() const { return m_name.c_str(); }
-    GPU_TOKEN GetGpuToken() const { return m_token; }
 
     void Resolve(const DirectedAcyclicGraph& graph);
     void Begin(IGfxCommandList* pCommandList);
@@ -25,7 +24,6 @@ public:
 
 protected:
     std::string m_name;
-    GPU_TOKEN m_token;
 
     struct ResourceBarrier
     {

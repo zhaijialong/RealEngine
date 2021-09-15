@@ -84,7 +84,7 @@ void SkySphere::Render(Renderer* pRenderer)
 
 void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera)
 {
-	GPU_EVENT(pCommandList, "SkySphere", MP_SKYBLUE3);
+	GPU_EVENT(pCommandList, "SkySphere");
 
 	pCommandList->SetPipelineState(m_pPSO);
 	pCommandList->SetIndexBuffer(m_pIndexBuffer->GetBuffer());

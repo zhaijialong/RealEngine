@@ -10,7 +10,6 @@
 #include "i_gfx_pipeline_state.h"
 #include "i_gfx_swapchain.h"
 #include "i_gfx_descriptor.h"
-#include "microprofile/microprofile.h"
 
 IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc);
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width);
@@ -37,14 +36,16 @@ private:
     IGfxCommandList* m_pCommandList;
 };
 
-#define GPU_EVENT(pCommandList, event_name, color) RenderEvent __render_event__(pCommandList, event_name); \
-    MICROPROFILE_SCOPEGPUI_L(pCommandList->GetProfileLog(), event_name, color)
-
-#define GPU_TOKEN MicroProfileToken
-#define GPU_EVENT_TOKEN(pCommandList, event_name, token) RenderEvent __render_event__(pCommandList, event_name); \
-    MICROPROFILE_SCOPEGPU_TOKEN_L(pCommandList->GetProfileLog(), token)
-
-inline GPU_TOKEN GetGpuEventToken(const char* name, uint32_t color)
+class MPRenderEvent
 {
-    return MicroProfileGetToken("GPU", name, color, MicroProfileTokenTypeGpu);
-}
+public:
+    MPRenderEvent(IGfxCommandList* pCommandList, const std::string& event_name);
+    ~MPRenderEvent();
+
+private:
+    IGfxCommandList* m_pCommandList;
+};
+
+#define GPU_EVENT(pCommandList, event_name) RenderEvent __render_event__(pCommandList, event_name); MPRenderEvent __mp_event__(pCommandList, event_name)
+#define GPU_EVENT_DEBUG(pCommandList, event_name) RenderEvent __render_event__(pCommandList, event_name)
+#define GPU_EVENT_PROFILER(pCommandList, event_name) MPRenderEvent __mp_event__(pCommandList, event_name)

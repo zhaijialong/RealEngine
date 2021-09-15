@@ -1,28 +1,10 @@
 #include "render_graph_pass.h"
 #include "render_graph.h"
 
-static const uint32_t EVENT_COLOR[] =
-{
-    MP_LIGHTCYAN4,
-    MP_SKYBLUE2,
-    MP_SEAGREEN4,
-    MP_LIGHTGOLDENROD4,
-    MP_BROWN3,
-    MP_MEDIUMPURPLE2,
-    MP_SIENNA,
-    MP_LIMEGREEN,
-    MP_MISTYROSE,
-    MP_LIGHTYELLOW,
-};
-
 RenderGraphPassBase::RenderGraphPassBase(const std::string& name, DirectedAcyclicGraph& graph) :
     DAGNode(graph)
 {
     m_name = name;
-
-    uint32_t color_count = sizeof(EVENT_COLOR) / sizeof(EVENT_COLOR[0]);
-    uint32_t color = EVENT_COLOR[GetId() % color_count];
-    m_token = GetGpuEventToken(name.c_str(), color);
 }
 
 void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)

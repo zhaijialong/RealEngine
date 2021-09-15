@@ -77,7 +77,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
         Material* material = mesh->material.get();
 
         std::string event_name = m_file + " " + mesh->name;
-        GPU_EVENT(pCommandList, event_name.c_str(), MP_GREEN);
+        GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
 
         std::vector<std::string> defines;
         if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
@@ -134,7 +134,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         Material* material = mesh->material.get();
 
         std::string event_name = m_file + " " + mesh->name;
-        GPU_EVENT(pCommandList, event_name.c_str(), MP_GREEN);
+        GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
 
         std::vector<std::string> defines;
         if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
