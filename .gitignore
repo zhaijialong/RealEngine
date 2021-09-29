@@ -32,3 +32,4 @@ VTune Profiler Results
 debug.log
 bin/rendergraph
 bin/rendergraph.png
+*.aps

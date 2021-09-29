@@ -1,5 +1,6 @@
 #include "core/engine.h"
 #include "imgui/imgui_impl_win32.h"
+#include "../resource.h"
 #include <Windows.h>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -54,6 +55,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     windowClass.lpfnWndProc = WindowProc;
     windowClass.hInstance = hInstance;
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    windowClass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
     windowClass.lpszClassName = L"REWindowClass";
     RegisterClassEx(&windowClass);
 

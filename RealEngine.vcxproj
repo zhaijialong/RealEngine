@@ -165,6 +165,7 @@
     <ClInclude Include="external\simpleini\SimpleIni.h" />
     <ClInclude Include="external\tinyxml2\tinyxml2.h" />
     <ClInclude Include="external\xxHash\xxhash.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
     <ClInclude Include="source\core\camera.h" />
     <ClInclude Include="source\core\directional_light.h" />
@@ -280,6 +281,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RealEngine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
