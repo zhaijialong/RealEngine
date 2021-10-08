@@ -4,9 +4,6 @@
     <ClCompile Include="external\d3d12ma\D3D12MemAlloc.cpp">
       <Filter>external\d3d12ma</Filter>
     </ClCompile>
-    <ClCompile Include="source\main.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="source\core\engine.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
@@ -174,6 +171,9 @@
     </ClCompile>
     <ClCompile Include="external\microprofile\microprofile.cpp">
       <Filter>external\microprofile</Filter>
+    </ClCompile>
+    <ClCompile Include="source\windows\main.cpp">
+      <Filter>source\windows</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -423,8 +423,8 @@
     <ClInclude Include="source\utils\profiler.h">
       <Filter>source\utils</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>resource</Filter>
+    <ClInclude Include="source\windows\resource.h">
+      <Filter>source\windows</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -479,8 +479,8 @@
     <Filter Include="external\microprofile">
       <UniqueIdentifier>{9cc4d8f3-9f42-494c-a073-b1b7d639eb50}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resource">
-      <UniqueIdentifier>{b900f66e-9709-4d87-9630-49a4b7bda279}</UniqueIdentifier>
+    <Filter Include="source\windows">
+      <UniqueIdentifier>{a8c7dadd-4b19-4c53-b88b-ab9ded644368}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -529,13 +529,13 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon.ico">
-      <Filter>resource</Filter>
+    <Image Include="source\windows\icon.ico">
+      <Filter>source\windows</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="RealEngine.rc">
-      <Filter>resource</Filter>
+    <ResourceCompile Include="source\windows\RealEngine.rc">
+      <Filter>source\windows</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

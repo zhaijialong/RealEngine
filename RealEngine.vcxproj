@@ -124,7 +124,6 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp" />
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
-    <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp" />
     <ClCompile Include="source\renderer\fxaa.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
@@ -148,6 +147,7 @@
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
     <ClCompile Include="source\renderer\texture_loader.cpp" />
     <ClCompile Include="source\renderer\tonemap.cpp" />
+    <ClCompile Include="source\windows\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h" />
@@ -165,7 +165,6 @@
     <ClInclude Include="external\simpleini\SimpleIni.h" />
     <ClInclude Include="external\tinyxml2\tinyxml2.h" />
     <ClInclude Include="external\xxHash\xxhash.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
     <ClInclude Include="source\core\camera.h" />
     <ClInclude Include="source\core\directional_light.h" />
@@ -233,6 +232,7 @@
     <ClInclude Include="source\utils\profiler.h" />
     <ClInclude Include="source\utils\string.h" />
     <ClInclude Include="source\utils\system.h" />
+    <ClInclude Include="source\windows\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis" />
@@ -283,10 +283,10 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="RealEngine.rc" />
+    <Image Include="source\windows\icon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon.ico" />
+    <ResourceCompile Include="source\windows\RealEngine.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
