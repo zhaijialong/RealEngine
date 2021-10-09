@@ -344,38 +344,37 @@ void D3D12CommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, ui
 	m_pCommandList->RSSetScissorRects(1, &rect);
 }
 
-void D3D12CommandList::SetConstantBuffer(GfxPipelineType type, uint32_t slot, void* data, size_t data_size)
+void D3D12CommandList::SetGraphicsConstants(uint32_t slot, void* data, size_t data_size)
 {
-	RE_ASSERT(slot != 0 || data_size == 16);
-
-	bool graphics = type == GfxPipelineType::Graphics || type == GfxPipelineType::MeshShading;
+	RE_ASSERT((slot == 0 && data_size == 16) || (slot >= 1 && slot <= 4));
 
 	if (slot == 0)
 	{
-		if (graphics)
-		{
-			m_pCommandList->SetGraphicsRoot32BitConstants(0, 4, data, 0);
-		}
-		else
-		{
-			m_pCommandList->SetComputeRoot32BitConstants(0, 4, data, 0);
-		}
+		m_pCommandList->SetGraphicsRoot32BitConstants(0, 4, data, 0);
 	}
 	else
 	{
-		RE_ASSERT(slot <= 4);
-
 		D3D12_GPU_VIRTUAL_ADDRESS address = ((D3D12Device*)m_pDevice)->AllocateConstantBuffer(data, data_size);
 		RE_ASSERT(address);
 
-		if (graphics)
-		{
-			m_pCommandList->SetGraphicsRootConstantBufferView(slot, address);
-		}
-		else
-		{
-			m_pCommandList->SetComputeRootConstantBufferView(slot, address);
-		}
+		m_pCommandList->SetGraphicsRootConstantBufferView(slot, address);
+	}
+}
+
+void D3D12CommandList::SetComputeConstants(uint32_t slot, void* data, size_t data_size)
+{
+	RE_ASSERT((slot == 0 && data_size == 16) || (slot >= 1 && slot <= 4));
+
+	if (slot == 0)
+	{
+		m_pCommandList->SetComputeRoot32BitConstants(0, 4, data, 0);
+	}
+	else
+	{
+		D3D12_GPU_VIRTUAL_ADDRESS address = ((D3D12Device*)m_pDevice)->AllocateConstantBuffer(data, data_size);
+		RE_ASSERT(address);
+
+		m_pCommandList->SetComputeRootConstantBufferView(slot, address);
 	}
 }
 

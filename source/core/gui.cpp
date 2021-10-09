@@ -152,7 +152,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
 						((IGfxDescriptor*)pcmd->TextureId)->GetHeapIndex(),
 						pRenderer->GetLinearSampler()->GetHeapIndex() };
 
-					pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, resource_ids, sizeof(resource_ids));
+					pCommandList->SetGraphicsConstants(0, resource_ids, sizeof(resource_ids));
 
 					pCommandList->DrawIndexed(pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset);
 				}
@@ -183,5 +183,5 @@ void GUI::SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index)
 		{ (R+L)/(L-R),  (T+B)/(B-T),    0.5f,       1.0f },
 	};
 
-	pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, mvp, sizeof(mvp));
+	pCommandList->SetGraphicsConstants(1, mvp, sizeof(mvp));
 }

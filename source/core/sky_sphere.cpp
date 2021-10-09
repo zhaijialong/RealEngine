@@ -105,7 +105,7 @@ void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Ca
 	CB.cameraPos = pCamera->GetPosition();
 	CB.posBuffer = m_pVertexBuffer->GetSRV()->GetHeapIndex();
 	
-	pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, &CB, sizeof(CB));
+	pCommandList->SetGraphicsConstants(1, &CB, sizeof(CB));
 
 	pCommandList->DrawIndexed(m_pIndexBuffer->GetIndexCount());
 }

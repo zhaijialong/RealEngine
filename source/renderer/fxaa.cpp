@@ -31,7 +31,7 @@ void FXAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, uint32_t w
 		1.0f / height,
 	};
 
-	pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, &constantBuffer, sizeof(constantBuffer));
+	pCommandList->SetGraphicsConstants(0, &constantBuffer, sizeof(constantBuffer));
 
 	pCommandList->Draw(3);
 }

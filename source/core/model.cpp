@@ -69,7 +69,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
     modelCB.mtxWorld = mtxWorld;
     modelCB.mtxNormal = transpose(inverse(mtxWorld));
 
-    pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, &modelCB, sizeof(modelCB));
+    pCommandList->SetGraphicsConstants(1, &modelCB, sizeof(modelCB));
 
     for (size_t i = 0; i < pNode->meshes.size(); ++i)
     {
@@ -105,7 +105,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
             material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
             pRenderer->GetLinearSampler()->GetHeapIndex()
         };
-        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
+        pCommandList->SetGraphicsConstants(0, vertexCB, sizeof(vertexCB));
 
         pCommandList->DrawIndexed(mesh->indexBuffer->GetIndexCount());
     }
@@ -126,7 +126,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
     modelCB.mtxWorld = mtxWorld;
     modelCB.mtxNormal = transpose(inverse(mtxWorld));
 
-    pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 1, &modelCB, sizeof(modelCB));
+    pCommandList->SetGraphicsConstants(1, &modelCB, sizeof(modelCB));
 
     for (size_t i = 0; i < pNode->meshes.size(); ++i)
     {
@@ -163,7 +163,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
             mesh->normalBuffer->GetSRV()->GetHeapIndex(),
             mesh->tangentBuffer ? mesh->tangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE
         };
-        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, vertexCB, sizeof(vertexCB));
+        pCommandList->SetGraphicsConstants(0, vertexCB, sizeof(vertexCB));
 
         MaterialConstant materialCB;
         materialCB.linearSampler = pRenderer->GetLinearSampler()->GetHeapIndex();
@@ -175,7 +175,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         materialCB.roughness = material->roughness;
         materialCB.alphaCutoff = material->alphaCutoff;
 
-        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 2, &materialCB, sizeof(materialCB));
+        pCommandList->SetGraphicsConstants(2, &materialCB, sizeof(materialCB));
 
         pCommandList->DrawIndexed(mesh->indexBuffer->GetIndexCount());
     }

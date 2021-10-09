@@ -17,7 +17,7 @@ void Tonemap::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrRT)
 	pCommandList->SetPipelineState(m_pPSO);
 
 	uint32_t resourceCB[4] = { pHdrRT->GetHeapIndex(), m_pRenderer->GetPointSampler()->GetHeapIndex(), 0, 0 };
-	pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, resourceCB, sizeof(resourceCB));
+	pCommandList->SetGraphicsConstants(0, resourceCB, sizeof(resourceCB));
 
 	pCommandList->Draw(3);
 }

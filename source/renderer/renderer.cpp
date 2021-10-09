@@ -160,7 +160,7 @@ void Renderer::Render()
 
         RenderGraphTexture* outputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(outputHandle);
         uint32_t constants[4] = { outputRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex(), 0, 0 };
-        pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 0, constants, sizeof(constants));
+        pCommandList->SetGraphicsConstants(0, constants, sizeof(constants));
         pCommandList->SetPipelineState(m_pCopyPSO);
         pCommandList->Draw(3);
 

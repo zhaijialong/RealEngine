@@ -92,7 +92,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
 
             CameraConstant cameraCB;
             cameraCB.cameraPos = camera->GetPosition();
-            pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 3, &cameraCB, sizeof(cameraCB));
+            pCommandList->SetGraphicsConstants(3, &cameraCB, sizeof(cameraCB));
 
             SceneConstant sceneCB;
             sceneCB.lightDir = light->GetLightDirection();
@@ -107,7 +107,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
             sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
 
-            pCommandList->SetConstantBuffer(GfxPipelineType::Graphics, 4, &sceneCB, sizeof(sceneCB));
+            pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
 
             GfxRenderPassDesc render_pass;
             render_pass.color[0].texture = sceneColorRT->GetTexture();
