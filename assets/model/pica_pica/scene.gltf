@@ -14124,22 +14124,22 @@
   ],
   "images": [
     {
-      "uri": "textures/Decal_Keyboard_01_baseColor.png"
+      "uri": "textures/Decal_Keyboard_01_baseColor.dds"
     },
     {
-      "uri": "textures/Decal_Caution_baseColor.png"
+      "uri": "textures/Decal_Caution_baseColor.dds"
     },
     {
-      "uri": "textures/Wax_Pastel_Label_02_baseColor.png"
+      "uri": "textures/Wax_Pastel_Label_02_baseColor.dds"
     },
     {
-      "uri": "textures/Metal_Aluminium_metallicRoughness.png"
+      "uri": "textures/Metal_Aluminium_metallicRoughness.dds"
     },
     {
-      "uri": "textures/Decal_First_Aid_Kit_baseColor.png"
+      "uri": "textures/Decal_First_Aid_Kit_baseColor.dds"
     },
     {
-      "uri": "textures/Decal_Note_01_baseColor.png"
+      "uri": "textures/Decal_Note_01_baseColor.dds"
     }
   ],
   "materials": [
