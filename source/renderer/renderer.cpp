@@ -319,7 +319,7 @@ Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
         return nullptr;
     }
 
-    UploadTexture(texture->GetTexture(), loader.GetData(), loader.GetDataSize());
+    UploadTexture(texture->GetTexture(), loader.GetData());
 
     return texture;
 }
@@ -361,22 +361,22 @@ TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
         return nullptr;
     }
 
-    UploadTexture(texture->GetTexture(), loader.GetData(), loader.GetDataSize());
+    UploadTexture(texture->GetTexture(), loader.GetData());
 
     return texture;
 }
 
-inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t w, uint32_t h, uint32_t d)
+inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t row_num, uint32_t d)
 {
-    uint32_t src_slice_size = src_row_pitch * h;
-    uint32_t dst_slice_size = dst_row_pitch * h;
+    uint32_t src_slice_size = src_row_pitch * row_num;
+    uint32_t dst_slice_size = dst_row_pitch * row_num;
 
     for (uint32_t z = 0; z < d; z++)
     {
         char* dst_slice = dst_data + dst_slice_size * z;
         char* src_slice = src_data + src_slice_size * z;
 
-        for (uint32_t row = 0; row < h; ++row)
+        for (uint32_t row = 0; row < row_num; ++row)
         {
             memcpy(dst_slice + dst_row_pitch * row,
                 src_slice + src_row_pitch * row,
@@ -385,7 +385,7 @@ inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, u
     }
 }
 
-void Renderer::UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size)
+void Renderer::UploadTexture(IGfxTexture* texture, void* data)
 {
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
@@ -409,12 +409,14 @@ void Renderer::UploadTexture(IGfxTexture* texture, void* data, uint32_t data_siz
             uint32_t h = max(desc.height >> mip, min_height);
             uint32_t d = max(desc.depth >> mip, 1);
 
-            uint32_t src_row_pitch = GetFormatRowPitch(desc.format, w);
+            uint32_t src_row_pitch = GetFormatRowPitch(desc.format, w) * GetFormatBlockHeight(desc.format);
             uint32_t dst_row_pitch = texture->GetRowPitch(mip);
+
+            uint32_t row_num = h / GetFormatBlockHeight(desc.format);
 
             image_copy(dst_data + dst_offset, dst_row_pitch,
                 (char*)data + src_offset, src_row_pitch,
-                w, h, d);
+                row_num, d);
 
             TextureUpload upload;
             upload.texture = texture;
@@ -424,8 +426,10 @@ void Renderer::UploadTexture(IGfxTexture* texture, void* data, uint32_t data_siz
             upload.offset = dst_offset;
             m_pendingTextureUploads.push_back(upload);
 
-            dst_offset += dst_row_pitch * h * d;
-            src_offset += src_row_pitch * h * d;
+#define ALIGN(address, alignment) (((address) + (alignment) - 1) & ~((alignment) - 1)) 
+
+            dst_offset += ALIGN(dst_row_pitch * row_num, 512); //512 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
+            src_offset += src_row_pitch * row_num;
         }
     }
 }

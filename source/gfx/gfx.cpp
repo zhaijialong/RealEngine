@@ -103,6 +103,22 @@ uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width)
     case GfxFormat::R8UNORM:
     case GfxFormat::R8SNORM:
         return width;
+    case GfxFormat::BC1UNORM:
+    case GfxFormat::BC1SRGB:
+    case GfxFormat::BC4UNORM:
+    case GfxFormat::BC4SNORM:
+        return width * 0.5;
+    case GfxFormat::BC2UNORM:
+    case GfxFormat::BC2SRGB:
+    case GfxFormat::BC3UNORM:
+    case GfxFormat::BC3SRGB:
+    case GfxFormat::BC5UNORM:
+    case GfxFormat::BC5SNORM:
+    case GfxFormat::BC6U16F:
+    case GfxFormat::BC6S16F:
+    case GfxFormat::BC7UNORM:
+    case GfxFormat::BC7SRGB:
+        return width;
     default:
         RE_ASSERT(false);
         return 0;
@@ -111,15 +127,21 @@ uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width)
 
 uint32_t GetFormatBlockWidth(GfxFormat format)
 {
-    //todo : compressed formats
-    RE_ASSERT(format <= GfxFormat::R8SNORM);
+    if (format >= GfxFormat::BC1UNORM && format <= GfxFormat::BC7SRGB)
+    {
+        return 4;
+    }
+
     return 1;
 }
 
 uint32_t GetFormatBlockHeight(GfxFormat format)
 {
-    //todo : compressed formats
-    RE_ASSERT(format <= GfxFormat::R8SNORM);
+    if (format >= GfxFormat::BC1UNORM && format <= GfxFormat::BC7SRGB)
+    {
+        return 4;
+    }
+
     return 1;
 }
 

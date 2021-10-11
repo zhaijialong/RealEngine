@@ -12,7 +12,7 @@ Editor::Editor()
     {
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
         Texture2D* texture = pRenderer->CreateTexture2D(w, h, 1, fmt == 1 ? GfxFormat::RGBA8SRGB : GfxFormat::BGRA8SRGB, GfxTextureUsageShaderResource, "ImFileDialog Icon");
-        pRenderer->UploadTexture(texture->GetTexture(), data, w * h * 4);
+        pRenderer->UploadTexture(texture->GetTexture(), data);
 
         m_fileDialogIcons.insert(std::make_pair(texture->GetSRV(), texture));
 

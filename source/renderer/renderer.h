@@ -56,7 +56,7 @@ public:
 
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
-    void UploadTexture(IGfxTexture* texture, void* data, uint32_t data_size);
+    void UploadTexture(IGfxTexture* texture, void* data);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 
     void AddShadowPassBatch(const ShadowRenderFunc& func) { m_shadowPassBatchs.push_back(func); }
