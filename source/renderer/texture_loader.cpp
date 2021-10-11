@@ -105,6 +105,34 @@ static inline GfxFormat get_texture_format(ddspp::DXGIFormat format)
         return GfxFormat::R8UNORM;
     case ddspp::R8_SNORM:
         return GfxFormat::R8SNORM;
+    case ddspp::BC1_UNORM:
+        return GfxFormat::BC1UNORM;
+    case ddspp::BC1_UNORM_SRGB:
+        return GfxFormat::BC1SRGB;
+    case ddspp::BC2_UNORM:
+        return GfxFormat::BC2UNORM;
+    case ddspp::BC2_UNORM_SRGB:
+        return GfxFormat::BC2SRGB;
+    case ddspp::BC3_UNORM:
+        return GfxFormat::BC3UNORM;
+    case ddspp::BC3_UNORM_SRGB:
+        return GfxFormat::BC3SRGB;
+    case ddspp::BC4_UNORM:
+        return GfxFormat::BC4UNORM;
+    case ddspp::BC4_SNORM:
+        return GfxFormat::BC4SNORM;
+    case ddspp::BC5_UNORM:
+        return GfxFormat::BC5UNORM;
+    case ddspp::BC5_SNORM:
+        return GfxFormat::BC5SNORM;
+    case ddspp::BC6H_UF16:
+        return GfxFormat::BC6U16F;
+    case ddspp::BC6H_SF16:
+        return GfxFormat::BC6S16F;
+    case ddspp::BC7_UNORM:
+        return GfxFormat::BC7UNORM;
+    case ddspp::BC7_UNORM_SRGB:
+        return GfxFormat::BC7SRGB;
     default:
         RE_ASSERT(false);
         return GfxFormat::Unknown;

@@ -5,6 +5,7 @@
 #include "d3d12/dxgi1_6.h"
 #include "../gfx_define.h"
 #include "utils/string.h"
+#include "utils/assert.h"
 
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(p) if(p){p->Release(); p = nullptr;}
@@ -163,7 +164,36 @@ inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false)
 		return depth_srv ? DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS : DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
 	case GfxFormat::D16:
 		return depth_srv ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_D16_UNORM;
+	case GfxFormat::BC1UNORM:
+		return DXGI_FORMAT_BC1_UNORM;
+	case GfxFormat::BC1SRGB:
+		return DXGI_FORMAT_BC1_UNORM_SRGB;
+	case GfxFormat::BC2UNORM:
+		return DXGI_FORMAT_BC2_UNORM;
+	case GfxFormat::BC2SRGB:
+		return DXGI_FORMAT_BC2_UNORM_SRGB;
+	case GfxFormat::BC3UNORM:
+		return DXGI_FORMAT_BC3_UNORM;
+	case GfxFormat::BC3SRGB:
+		return DXGI_FORMAT_BC3_UNORM_SRGB;
+	case GfxFormat::BC4UNORM:
+		return DXGI_FORMAT_BC4_UNORM;
+	case GfxFormat::BC4SNORM:
+		return DXGI_FORMAT_BC4_SNORM;
+	case GfxFormat::BC5UNORM:
+		return DXGI_FORMAT_BC5_UNORM;
+	case GfxFormat::BC5SNORM:
+		return DXGI_FORMAT_BC5_SNORM;
+	case GfxFormat::BC6U16F:
+		return DXGI_FORMAT_BC6H_UF16;
+	case GfxFormat::BC6S16F:
+		return DXGI_FORMAT_BC6H_SF16;
+	case GfxFormat::BC7UNORM:
+		return DXGI_FORMAT_BC7_UNORM;
+	case GfxFormat::BC7SRGB:
+		return DXGI_FORMAT_BC7_UNORM_SRGB;
 	default:
+		RE_ASSERT(false);
 		return DXGI_FORMAT_UNKNOWN;
 	}
 }
