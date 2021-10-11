@@ -21,7 +21,7 @@ static inline GfxTextureType get_texture_type(ddspp::TextureType type, bool arra
     }
 }
 
-static inline GfxFormat get_texture_format(ddspp::DXGIFormat format)
+static inline GfxFormat get_texture_format(ddspp::DXGIFormat format, bool srgb)
 {
     switch(format)
     {
@@ -48,13 +48,13 @@ static inline GfxFormat get_texture_format(ddspp::DXGIFormat format)
     case ddspp::R8G8B8A8_SINT:
         return GfxFormat::RGBA8SI;
     case ddspp::R8G8B8A8_UNORM:
-        return GfxFormat::RGBA8UNORM;
+        return srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM;
     case ddspp::R8G8B8A8_SNORM:
         return GfxFormat::RGBA8SNORM;
     case ddspp::R8G8B8A8_UNORM_SRGB:
         return GfxFormat::RGBA8SRGB;
     case ddspp::B8G8R8A8_UNORM:
-        return GfxFormat::BGRA8UNORM;
+        return srgb ? GfxFormat::BGRA8SRGB : GfxFormat::BGRA8UNORM;
     case ddspp::B8G8R8A8_UNORM_SRGB:
         return GfxFormat::BGRA8SRGB;
     case ddspp::R32G32_FLOAT:
@@ -106,15 +106,15 @@ static inline GfxFormat get_texture_format(ddspp::DXGIFormat format)
     case ddspp::R8_SNORM:
         return GfxFormat::R8SNORM;
     case ddspp::BC1_UNORM:
-        return GfxFormat::BC1UNORM;
+        return srgb ? GfxFormat::BC1SRGB : GfxFormat::BC1UNORM;
     case ddspp::BC1_UNORM_SRGB:
         return GfxFormat::BC1SRGB;
     case ddspp::BC2_UNORM:
-        return GfxFormat::BC2UNORM;
+        return srgb ? GfxFormat::BC2SRGB : GfxFormat::BC2UNORM;
     case ddspp::BC2_UNORM_SRGB:
         return GfxFormat::BC2SRGB;
     case ddspp::BC3_UNORM:
-        return GfxFormat::BC3UNORM;
+        return srgb ? GfxFormat::BC3SRGB : GfxFormat::BC3UNORM;
     case ddspp::BC3_UNORM_SRGB:
         return GfxFormat::BC3SRGB;
     case ddspp::BC4_UNORM:
@@ -130,7 +130,7 @@ static inline GfxFormat get_texture_format(ddspp::DXGIFormat format)
     case ddspp::BC6H_SF16:
         return GfxFormat::BC6S16F;
     case ddspp::BC7_UNORM:
-        return GfxFormat::BC7UNORM;
+        return srgb ? GfxFormat::BC7SRGB : GfxFormat::BC7UNORM;
     case ddspp::BC7_UNORM_SRGB:
         return GfxFormat::BC7SRGB;
     default:
@@ -197,7 +197,7 @@ bool TextureLoader::LoadDDS(bool srgb)
     m_levels = desc.numMips;
     m_arraySize = desc.arraySize;
     m_type = get_texture_type(desc.type, desc.arraySize > 1);
-    m_format = get_texture_format(desc.format);
+    m_format = get_texture_format(desc.format, srgb);
 
     m_pTextureData = data + desc.headerSize;
     m_textureSize = (uint32_t)m_fileData.size() - desc.headerSize;
