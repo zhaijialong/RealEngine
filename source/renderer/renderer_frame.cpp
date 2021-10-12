@@ -30,18 +30,10 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
 
             data.depthRT = builder.Create<RenderGraphTexture>(desc, "ShadowMap");
-            data.depthRT = builder.Write(data.depthRT, GfxResourceState::DepthStencil);
+            data.depthRT = builder.WriteDepth(data.depthRT, 0, GfxRenderPassLoadOp::Clear, 1.0f);
         },
         [&](const DepthPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* shadowRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.depthRT);
-
-            GfxRenderPassDesc shadow_pass;
-            shadow_pass.depth.texture = shadowRT->GetTexture();
-            shadow_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
-            shadow_pass.depth.clear_depth = 1.0f;
-            pCommandList->BeginRenderPass(shadow_pass);
-
             ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
             float4x4 mtxVP = GetLightVP(light);
 
@@ -50,8 +42,39 @@ RenderGraphHandle Renderer::BuildRenderGraph()
                 m_shadowPassBatchs[i](pCommandList, this, mtxVP);
             }
             m_shadowPassBatchs.clear();
+        });
 
-            pCommandList->EndRenderPass();
+    struct CSMPassData
+    {
+        RenderGraphHandle initialRT;
+
+        RenderGraphHandle depthRT;
+    };
+
+    auto csm_pass0 = m_pRenderGraph->AddPass<CSMPassData>("CSM Pass 0",
+        [](CSMPassData& data, RenderGraphBuilder& builder)
+        {
+            RenderGraphTexture::Desc desc;
+            desc.width = desc.height = 4096;
+            desc.format = GfxFormat::D16;
+            desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
+            desc.type = GfxTextureType::Texture2DArray;
+            desc.array_size = 2;
+
+            data.initialRT = builder.Create<RenderGraphTexture>(desc, "CSM RT");
+            data.depthRT = builder.WriteDepth(data.initialRT, 0, GfxRenderPassLoadOp::Clear, 1.0f);
+        },
+        [&](const CSMPassData& data, IGfxCommandList* pCommandList)
+        {
+        });
+
+    auto csm_pass1 = m_pRenderGraph->AddPass<DepthPassData>("CSM Pass 1",
+        [&](DepthPassData& data, RenderGraphBuilder& builder)
+        {
+            data.depthRT = builder.WriteDepth(csm_pass0->initialRT, 1, GfxRenderPassLoadOp::Clear, 1.0f);
+        },
+        [&](const DepthPassData& data, IGfxCommandList* pCommandList)
+        {
         });
 
     struct BassPassData
@@ -59,11 +82,18 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         RenderGraphHandle shadowRT;
         RenderGraphHandle depthRT;
         RenderGraphHandle hdrRT;
+
+        RenderGraphHandle csmRT;
     };
 
     auto base_pass = m_pRenderGraph->AddPass<BassPassData>("Base Pass",
         [&](BassPassData& data, RenderGraphBuilder& builder)
         {
+            data.shadowRT = builder.Read(shadow_pass->depthRT, GfxResourceState::ShaderResourcePSOnly);
+
+            data.csmRT = builder.Read(csm_pass0->depthRT, GfxResourceState::ShaderResourcePSOnly, 0);
+            data.csmRT = builder.Read(csm_pass1->depthRT, GfxResourceState::ShaderResourcePSOnly, 1);
+
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
@@ -75,16 +105,12 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
             data.depthRT = builder.Create<RenderGraphTexture>(desc, "SceneDepth");
 
-            data.shadowRT = builder.Read(shadow_pass->depthRT, GfxResourceState::ShaderResourcePSOnly);
-
-            data.hdrRT = builder.Write(data.hdrRT, GfxResourceState::RenderTarget);
-            data.depthRT = builder.Write(data.depthRT, GfxResourceState::DepthStencil);
+            data.hdrRT = builder.WriteColor(0, data.hdrRT, 0, GfxRenderPassLoadOp::Clear);
+            data.depthRT = builder.WriteDepth(data.depthRT, 0, GfxRenderPassLoadOp::Clear, GfxRenderPassLoadOp::Clear);
         },
         [&](const BassPassData& data, IGfxCommandList* pCommandList)
         {
             RenderGraphTexture* shadowMapRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.shadowRT);
-            RenderGraphTexture* sceneColorRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.hdrRT);
-            RenderGraphTexture* sceneDepthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.depthRT);
 
             World* world = Engine::GetInstance()->GetWorld();
             Camera* camera = world->GetCamera();
@@ -109,25 +135,11 @@ RenderGraphHandle Renderer::BuildRenderGraph()
 
             pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
 
-            GfxRenderPassDesc render_pass;
-            render_pass.color[0].texture = sceneColorRT->GetTexture();
-            render_pass.color[0].load_op = GfxRenderPassLoadOp::Clear;
-            render_pass.color[0].clear_color[0] = 0.0f;
-            render_pass.color[0].clear_color[1] = 0.0f;
-            render_pass.color[0].clear_color[2] = 0.0f;
-            render_pass.color[0].clear_color[3] = 1.0f;
-            render_pass.depth.texture = sceneDepthRT->GetTexture();
-            render_pass.depth.load_op = GfxRenderPassLoadOp::Clear;
-            render_pass.depth.stencil_load_op = GfxRenderPassLoadOp::Clear;
-            pCommandList->BeginRenderPass(render_pass);
-
             for (size_t i = 0; i < m_basePassBatchs.size(); ++i)
             {
                 m_basePassBatchs[i](pCommandList, this, camera);
             }
             m_basePassBatchs.clear();
-
-            pCommandList->EndRenderPass();
         });
 
     struct TonemapPassData
@@ -139,29 +151,21 @@ RenderGraphHandle Renderer::BuildRenderGraph()
     auto tonemap_pass = m_pRenderGraph->AddPass<TonemapPassData>("Tonemapping",
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
         {
+            data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResourcePSOnly);
+
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
             desc.format = GfxFormat::RGBA8SRGB;
             desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
             data.ldrRT = builder.Create<RenderGraphTexture>(desc, "Tonemapping Output");
-
-            data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResourcePSOnly);
-            data.ldrRT = builder.Write(data.ldrRT, GfxResourceState::RenderTarget);
+            data.ldrRT = builder.WriteColor(0, data.ldrRT, 0, GfxRenderPassLoadOp::DontCare);
         },
         [&](const TonemapPassData& data, IGfxCommandList* pCommandList)
         {
             RenderGraphTexture* sceneColorRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.hdrRT);
-            RenderGraphTexture* ldrRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.ldrRT);
-
-            GfxRenderPassDesc pass;
-            pass.color[0].texture = ldrRT->GetTexture();
-            pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
-            pCommandList->BeginRenderPass(pass);
 
             m_pToneMap->Draw(pCommandList, sceneColorRT->GetSRV());
-
-            pCommandList->EndRenderPass();
         });
 
     struct FXAAPassData
@@ -173,29 +177,21 @@ RenderGraphHandle Renderer::BuildRenderGraph()
     auto fxaa_pass = m_pRenderGraph->AddPass<FXAAPassData>("FXAA",
         [&](FXAAPassData& data, RenderGraphBuilder& builder)
         {
+            data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourcePSOnly);
+
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
             desc.format = GfxFormat::RGBA8SRGB;
             desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
             data.outputRT = builder.Create<RenderGraphTexture>(desc, "FXAA Output");
-
-            data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourcePSOnly);
-            data.outputRT = builder.Write(data.outputRT, GfxResourceState::RenderTarget);
+            data.outputRT = builder.WriteColor(0, data.outputRT, 0, GfxRenderPassLoadOp::DontCare);
         },
         [&](const FXAAPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* outputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.outputRT);
             RenderGraphTexture* ldrRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.ldrRT);
 
-            GfxRenderPassDesc pass;
-            pass.color[0].texture = outputRT->GetTexture();
-            pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
-            pCommandList->BeginRenderPass(pass);
-
             m_pFXAA->Draw(pCommandList, ldrRT->GetSRV(), m_nWindowWidth, m_nWindowHeight);
-
-            pCommandList->EndRenderPass();
         });
 
     return fxaa_pass->outputRT;

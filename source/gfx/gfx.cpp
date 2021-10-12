@@ -149,3 +149,14 @@ bool IsDepthFormat(GfxFormat format)
 {
     return format == GfxFormat::D32FS8 || format == GfxFormat::D32F || format == GfxFormat::D16;
 }
+
+uint32_t CalcSubresource(const GfxTextureDesc& desc, uint32_t mip, uint32_t slice)
+{
+    return mip + desc.mip_levels * slice;
+}
+
+void DecomposeSubresource(const GfxTextureDesc& desc, uint32_t subresource, uint32_t& mip, uint32_t& slice)
+{
+    mip = subresource % desc.mip_levels;
+    slice = (subresource / desc.mip_levels) % desc.array_size;
+}

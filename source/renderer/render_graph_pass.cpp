@@ -22,43 +22,67 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
         std::vector<DAGEdge*> resource_incoming = graph.GetIncomingEdges(resource_node);
         RE_ASSERT(resource_incoming.size() <= 1); //应该只有1个或者0个pass输出到这个RT
 
-        bool first_use = resource_node->GetVersion() == 0;
-        if (first_use)
-        {
-            GfxResourceState initial_state = resource->GetInitialState();
-            if (initial_state != edge->GetUsage())
-            {
-                ResourceBarrier barrier;
-                barrier.resource = resource_node->GetResource();
-                barrier.sub_resource = edge->GetSubresource();
-                barrier.old_state = initial_state;
-                barrier.new_state = edge->GetUsage();
+        GfxResourceState old_state;
+        GfxResourceState new_state = edge->GetUsage();
 
-                m_resourceBarriers.push_back(barrier);
-            }
+        if (resource_incoming.empty())
+        {
+            RE_ASSERT(resource_node->GetVersion() == 0);
+            old_state = resource->GetInitialState();
         }
         else
         {
-            RenderGraphEdge* before_edge = (RenderGraphEdge*)resource_incoming[0];
+            old_state = ((RenderGraphEdge*)resource_incoming[0])->GetUsage();
+        }
 
-            //todo : subresource需要再仔细考虑
-            RE_ASSERT(before_edge->GetSubresource() == edge->GetSubresource());
+        if (old_state != new_state)
+        {
+            //TODO : uav/aliasing barrier
+            ResourceBarrier barrier;
+            barrier.resource = resource_node->GetResource();
+            barrier.sub_resource = edge->GetSubresource();
+            barrier.old_state = old_state;
+            barrier.new_state = new_state;
 
-            if (before_edge->GetUsage() != edge->GetUsage())
-            {
-                ResourceBarrier barrier;
-                barrier.resource = resource_node->GetResource();
-                barrier.sub_resource = edge->GetSubresource();
-                barrier.old_state = before_edge->GetUsage();
-                barrier.new_state = edge->GetUsage();
+            m_resourceBarriers.push_back(barrier);
+        }
+    }
 
-                m_resourceBarriers.push_back(barrier);
-            }
+    std::vector<DAGEdge*> outgoing_edge = graph.GetOutgoingEdges(this);
+
+    for (size_t i = 0; i < outgoing_edge.size(); ++i)
+    {
+        RenderGraphEdge* edge = (RenderGraphEdge*)outgoing_edge[i];
+        RE_ASSERT(edge->GetFromNode() == this->GetId());
+
+        GfxResourceState new_state = edge->GetUsage();
+
+        if (new_state == GfxResourceState::RenderTarget)
+        {
+            RE_ASSERT(dynamic_cast<RenderGraphEdgeColorAttchment*>(edge) != nullptr);
+
+            RenderGraphEdgeColorAttchment* color_rt = (RenderGraphEdgeColorAttchment*)edge;
+            m_pColorRT[color_rt->GetColorIndex()] = color_rt;
+        }
+        else if (new_state == GfxResourceState::DepthStencil || new_state == GfxResourceState::DepthStencilReadOnly)
+        {
+            RE_ASSERT(dynamic_cast<RenderGraphEdgeDepthAttchment*>(edge) != nullptr);
+
+            m_pDepthRT = (RenderGraphEdgeDepthAttchment*)edge;
         }
     }
 }
 
-void RenderGraphPassBase::Begin(IGfxCommandList* pCommandList)
+void RenderGraphPassBase::Execute(const RenderGraph& graph, IGfxCommandList* pCommandList)
+{
+    GPU_EVENT(pCommandList, m_name);
+
+    Begin(graph, pCommandList);
+    ExecuteImpl(pCommandList);
+    End(pCommandList);
+}
+
+void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pCommandList)
 {
     for (size_t i = 0; i < m_resourceBarriers.size(); ++i)
     {
@@ -66,9 +90,70 @@ void RenderGraphPassBase::Begin(IGfxCommandList* pCommandList)
 
         pCommandList->ResourceBarrier(barrier.resource->GetResource(), barrier.sub_resource, barrier.old_state, barrier.new_state);
     }
+
+    if (HasGfxRenderPass())
+    {
+        GfxRenderPassDesc desc;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            if (m_pColorRT[i] != nullptr)
+            {
+                RenderGraphResourceNode* node = (RenderGraphResourceNode*)graph.GetDAG().GetNode(m_pColorRT[i]->GetToNode());
+                IGfxTexture* texture = ((RenderGraphTexture*)node->GetResource())->GetTexture();
+
+                uint32_t mip, slice;
+                DecomposeSubresource(texture->GetDesc(), m_pColorRT[i]->GetSubresource(), mip, slice);
+
+                desc.color[i].texture = texture;
+                desc.color[i].mip_slice = mip;
+                desc.color[i].array_slice = slice;
+                desc.color[i].load_op = m_pColorRT[i]->GetLoadOp();
+                desc.color[i].store_op = node->IsCulled() ? GfxRenderPassStoreOp::DontCare : GfxRenderPassStoreOp::Store;
+                memcpy(desc.color[i].clear_color, m_pColorRT[i]->GetClearColor(), sizeof(float) * 4);
+            }
+        }
+
+        if (m_pDepthRT != nullptr)
+        {
+            RenderGraphResourceNode* node = (RenderGraphResourceNode*)graph.GetDAG().GetNode(m_pDepthRT->GetToNode());
+            IGfxTexture* texture = ((RenderGraphTexture*)node->GetResource())->GetTexture();
+
+            uint32_t mip, slice;
+            DecomposeSubresource(texture->GetDesc(), m_pDepthRT->GetSubresource(), mip, slice);
+
+            desc.depth.texture = ((RenderGraphTexture*)node->GetResource())->GetTexture();
+            desc.depth.load_op = m_pDepthRT->GetDepthLoadOp();
+            desc.depth.mip_slice = mip;
+            desc.depth.array_slice = slice;
+            desc.depth.store_op = node->IsCulled() ? GfxRenderPassStoreOp::DontCare : GfxRenderPassStoreOp::Store;
+            desc.depth.stencil_load_op = m_pDepthRT->GetStencilLoadOp();
+            desc.depth.stencil_store_op = node->IsCulled() ? GfxRenderPassStoreOp::DontCare : GfxRenderPassStoreOp::Store;
+            desc.depth.clear_depth = m_pDepthRT->GetClearDepth();
+            desc.depth.clear_stencil = m_pDepthRT->GetClearStencil();
+        }
+
+        pCommandList->BeginRenderPass(desc);
+    }
 }
 
 void RenderGraphPassBase::End(IGfxCommandList* pCommandList)
 {
-    //todo
+    if (HasGfxRenderPass())
+    {
+        pCommandList->EndRenderPass();
+    }
+}
+
+bool RenderGraphPassBase::HasGfxRenderPass() const
+{
+    for (int i = 0; i < 8; i++)
+    {
+        if (m_pColorRT[i] != nullptr)
+        {
+            return true;
+        }
+    }
+
+    return m_pDepthRT != nullptr;
 }

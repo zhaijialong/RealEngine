@@ -261,7 +261,7 @@ bool D3D12Device::Init()
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 	{
 		debugController->EnableDebugLayer();
-		//debugController1->SetEnableGPUBasedValidation(TRUE);
+		//debugController->SetEnableGPUBasedValidation(TRUE);
 
 		dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 	}

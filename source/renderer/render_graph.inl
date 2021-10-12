@@ -50,6 +50,56 @@ private:
     uint32_t m_subresource;
 };
 
+class RenderGraphEdgeColorAttchment : public RenderGraphEdge
+{
+public:
+    RenderGraphEdgeColorAttchment(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxResourceState usage, uint32_t subresource, 
+        uint32_t color_index, GfxRenderPassLoadOp load_op, const float4& clear_color) :
+        RenderGraphEdge(graph, from, to, usage, subresource)
+    {
+        m_colorIndex = color_index;
+        m_loadOp = load_op;
+
+        m_clearColor[0] = clear_color[0];
+        m_clearColor[1] = clear_color[1];
+        m_clearColor[2] = clear_color[2];
+        m_clearColor[3] = clear_color[3];
+    }
+    uint32_t GetColorIndex() const { return m_colorIndex; }
+    GfxRenderPassLoadOp GetLoadOp() const { return m_loadOp; }
+    const float* GetClearColor() const { return m_clearColor; }
+
+private:
+    uint32_t m_colorIndex;
+    GfxRenderPassLoadOp m_loadOp;
+    float m_clearColor[4] = {};
+};
+
+class RenderGraphEdgeDepthAttchment : public RenderGraphEdge
+{
+public:
+    RenderGraphEdgeDepthAttchment(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxResourceState usage, uint32_t subresource,
+        GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil) :
+        RenderGraphEdge(graph, from, to, usage, subresource)
+    {
+        m_depthLoadOp = depth_load_op;
+        m_stencilLoadOp = stencil_load_op;
+        m_clearDepth = clear_depth;
+        m_clearStencil = clear_stencil;
+    }
+
+    GfxRenderPassLoadOp GetDepthLoadOp() const { return m_depthLoadOp; };
+    GfxRenderPassLoadOp GetStencilLoadOp() const { return m_stencilLoadOp; };
+    float GetClearDepth() const { return m_clearDepth; }
+    uint32_t GetClearStencil() const { return m_clearStencil; };
+
+private:
+    GfxRenderPassLoadOp m_depthLoadOp;
+    GfxRenderPassLoadOp m_stencilLoadOp;
+    float m_clearDepth;
+    uint32_t m_clearStencil;
+};
+
 template<typename T>
 void ClassFinalizer(void* p)
 {

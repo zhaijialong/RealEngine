@@ -89,11 +89,7 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList)
             continue;
         }
 
-        GPU_EVENT(pCommandList, pass->GetName());
-
-        pass->Begin(pCommandList);
-        pass->Execute(pCommandList);
-        pass->End(pCommandList);
+        pass->Execute(*this, pCommandList);
     }
 
     if (m_pOutputResource)
@@ -141,6 +137,48 @@ RenderGraphHandle RenderGraph::Write(RenderGraphPassBase* pass, const RenderGrap
     AllocatePOD<RenderGraphEdge>(m_graph, pass, output_node, usage, subresource);
 
     RenderGraphHandle output;        
+    output.index = input.index;
+    output.node = (uint16_t)m_resourceNodes.size();
+
+    m_resourceNodes.push_back(output_node);
+
+    return output;
+}
+
+RenderGraphHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t color_index, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, const float4& clear_color)
+{
+    RenderGraphResource* resource = m_resources[input.index];
+
+    GfxResourceState usage = GfxResourceState::RenderTarget;
+
+    RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
+    AllocatePOD<RenderGraphEdgeColorAttchment>(m_graph, input_node, pass, usage, subresource, color_index, load_op, clear_color);
+
+    RenderGraphResourceNode* output_node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, input_node->GetVersion() + 1);
+    AllocatePOD<RenderGraphEdgeColorAttchment>(m_graph, pass, output_node, usage, subresource, color_index, load_op, clear_color);
+
+    RenderGraphHandle output;
+    output.index = input.index;
+    output.node = (uint16_t)m_resourceNodes.size();
+
+    m_resourceNodes.push_back(output_node);
+
+    return output;
+}
+
+RenderGraphHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource, bool read_only, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil)
+{
+    RenderGraphResource* resource = m_resources[input.index];
+
+    GfxResourceState usage = read_only ? GfxResourceState::DepthStencilReadOnly : GfxResourceState::DepthStencil;
+
+    RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
+    AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, input_node, pass, usage, subresource, depth_load_op, stencil_load_op, clear_depth, clear_stencil);
+
+    RenderGraphResourceNode* output_node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, input_node->GetVersion() + 1);
+    AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, pass, output_node, usage, subresource, depth_load_op, stencil_load_op, clear_depth, clear_stencil);
+
+    RenderGraphHandle output;
     output.index = input.index;
     output.node = (uint16_t)m_resourceNodes.size();
 
