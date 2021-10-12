@@ -15,6 +15,11 @@ struct SceneConstant
     uint linearRepeatSampler;
     uint linearClampSampler;
     
+    uint aniso2xSampler;
+    uint aniso4xSampler;
+    uint aniso8xSampler;
+    uint aniso16xSampler;
+    
     uint envTexture;
     uint brdfTexture;
 };

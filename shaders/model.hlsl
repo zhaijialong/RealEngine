@@ -67,7 +67,7 @@ float4 ps_main(VSOutput input) : SV_TARGET
     float metallic = MaterialCB.metallic;
     float roughness = MaterialCB.roughness;
 
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
     SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     
 #if ALBEDO_TEXTURE

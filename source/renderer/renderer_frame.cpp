@@ -130,6 +130,10 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
             sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
             sceneCB.linearClampSampler = m_pLinearClampSampler->GetHeapIndex();
+            sceneCB.aniso2xSampler = m_pAniso2xSampler->GetHeapIndex();
+            sceneCB.aniso4xSampler = m_pAniso4xSampler->GetHeapIndex();
+            sceneCB.aniso8xSampler = m_pAniso8xSampler->GetHeapIndex();
+            sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
             sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
             sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
 

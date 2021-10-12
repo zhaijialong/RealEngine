@@ -111,6 +111,10 @@ private:
     std::unique_ptr<ShaderCache> m_pShaderCache;
     std::unique_ptr<PipelineStateCache> m_pPipelineCache;
 
+    std::unique_ptr<IGfxDescriptor> m_pAniso2xSampler;
+    std::unique_ptr<IGfxDescriptor> m_pAniso4xSampler;
+    std::unique_ptr<IGfxDescriptor> m_pAniso8xSampler;
+    std::unique_ptr<IGfxDescriptor> m_pAniso16xSampler;
     std::unique_ptr<IGfxDescriptor> m_pPointRepeatSampler;
     std::unique_ptr<IGfxDescriptor> m_pPointClampSampler;
     std::unique_ptr<IGfxDescriptor> m_pLinearRepeatSampler;

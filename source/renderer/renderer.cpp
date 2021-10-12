@@ -243,6 +243,25 @@ void Renderer::CreateCommonResources()
     desc.compare_func = GfxCompareFunc::LessEqual;
     m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
 
+    desc.min_filter = GfxFilter::Linear;
+    desc.mag_filter = GfxFilter::Linear;
+    desc.mip_filter = GfxFilter::Linear;
+    desc.address_u = GfxSamplerAddressMode::Repeat;
+    desc.address_v = GfxSamplerAddressMode::Repeat;
+    desc.address_w = GfxSamplerAddressMode::Repeat;
+    desc.enable_anisotropy = true;
+    desc.max_anisotropy = 2.0f;
+    m_pAniso2xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso2xSampler"));
+
+    desc.max_anisotropy = 4.0f;
+    m_pAniso4xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso4xSampler"));
+
+    desc.max_anisotropy = 8.0f;
+    m_pAniso8xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso8xSampler"));
+
+    desc.max_anisotropy = 16.0f;
+    m_pAniso16xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso16xSampler"));
+
     m_pToneMap.reset(new Tonemap(this));
     m_pFXAA.reset(new FXAA(this));
     
