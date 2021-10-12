@@ -92,7 +92,13 @@ float4 ps_main(VSOutput input) : SV_TARGET
 
     Texture2D normalTexture = ResourceDescriptorHeap[MaterialCB.normalTexture];
     float3 normal = normalTexture.Sample(linearSampler, input.uv).xyz;
+    
+#if RG_NORMAL_TEXTURE
+    normal.xy = normal.xy * 2.0 - 1.0;
+    normal.z = sqrt(1.0 - normal.x * normal.x - normal.y * normal.y);
+#else
     normal = normal * 2.0 - 1.0;
+#endif
 
     N = normalize(normal.x * T + normal.y * B + normal.z * N);
 #endif
