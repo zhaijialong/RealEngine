@@ -171,22 +171,22 @@ A_STATIC void LpmMatMul3x3(outAF3 ox,outAF3 oy,outAF3 oz,inAF3 ax,inAF3 ay,inAF3
  oz[0]=ADotF3(az,bx2);oz[1]=ADotF3(az,by2);oz[2]=ADotF3(az,bz2);}
 //------------------------------------------------------------------------------------------------------------------------------
 // D65 xy coordinates.
-A_STATIC varAF2(lpmColD65)=initAF2(AF1_(0.3127),AF1_(0.3290));
+static varAF2(lpmColD65)=initAF2(AF1_(0.3127),AF1_(0.3290));
 //------------------------------------------------------------------------------------------------------------------------------
 // Rec709 xy coordinates, (D65 white point).
-A_STATIC varAF2(lpmCol709R)=initAF2(AF1_(0.64),AF1_(0.33));
-A_STATIC varAF2(lpmCol709G)=initAF2(AF1_(0.30),AF1_(0.60));
-A_STATIC varAF2(lpmCol709B)=initAF2(AF1_(0.15),AF1_(0.06));
+static varAF2(lpmCol709R)=initAF2(AF1_(0.64),AF1_(0.33));
+static varAF2(lpmCol709G)=initAF2(AF1_(0.30),AF1_(0.60));
+static varAF2(lpmCol709B)=initAF2(AF1_(0.15),AF1_(0.06));
 //------------------------------------------------------------------------------------------------------------------------------
 // DCI-P3 xy coordinates, (D65 white point).
-A_STATIC varAF2(lpmColP3R)=initAF2(AF1_(0.680),AF1_(0.320));
-A_STATIC varAF2(lpmColP3G)=initAF2(AF1_(0.265),AF1_(0.690));
-A_STATIC varAF2(lpmColP3B)=initAF2(AF1_(0.150),AF1_(0.060));
+static varAF2(lpmColP3R)=initAF2(AF1_(0.680),AF1_(0.320));
+static varAF2(lpmColP3G)=initAF2(AF1_(0.265),AF1_(0.690));
+static varAF2(lpmColP3B)=initAF2(AF1_(0.150),AF1_(0.060));
 //------------------------------------------------------------------------------------------------------------------------------
 // Rec2020 xy coordinates, (D65 white point).
-A_STATIC varAF2(lpmCol2020R)=initAF2(AF1_(0.708),AF1_(0.292));
-A_STATIC varAF2(lpmCol2020G)=initAF2(AF1_(0.170),AF1_(0.797));
-A_STATIC varAF2(lpmCol2020B)=initAF2(AF1_(0.131),AF1_(0.046));
+static varAF2(lpmCol2020R)=initAF2(AF1_(0.708),AF1_(0.292));
+static varAF2(lpmCol2020G)=initAF2(AF1_(0.170),AF1_(0.797));
+static varAF2(lpmCol2020B)=initAF2(AF1_(0.131),AF1_(0.046));
 //------------------------------------------------------------------------------------------------------------------------------
 // Computes z from xy, returns xyz.
 A_STATIC void LpmColXyToZ(outAF3 d,inAF2 s){d[0]=s[0];d[1]=s[1];d[2]=AF1_(1.0)-(s[0]+s[1]);}
