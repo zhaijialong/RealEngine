@@ -53,10 +53,12 @@ inline D3D12_RESOURCE_STATES d3d12_resource_state(GfxResourceState state)
 		return D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	case GfxResourceState::DepthStencilReadOnly:
 		return D3D12_RESOURCE_STATE_DEPTH_READ;
-	case GfxResourceState::ShaderResource:
-		return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-	case GfxResourceState::ShaderResourcePSOnly:
+	case GfxResourceState::ShaderResourceNonPS:
+		return D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+	case GfxResourceState::ShaderResourcePS:
 		return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	case GfxResourceState::ShaderResourceAll:
+		return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
 	case GfxResourceState::IndirectArg:
 		return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
 	case GfxResourceState::CopyDst:

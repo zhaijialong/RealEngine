@@ -94,8 +94,8 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList)
 
     if (m_pOutputResource)
     {
-        pCommandList->ResourceBarrier(m_pOutputResource->GetResource(), GFX_ALL_SUB_RESOURCE, m_pOutputResource->GetFinalState(), GfxResourceState::ShaderResourcePSOnly);
-        m_pOutputResource->SetFinalState(GfxResourceState::ShaderResourcePSOnly);
+        pCommandList->ResourceBarrier(m_pOutputResource->GetResource(), GFX_ALL_SUB_RESOURCE, m_pOutputResource->GetFinalState(), GfxResourceState::ShaderResourcePS);
+        m_pOutputResource->SetFinalState(GfxResourceState::ShaderResourcePS);
     }
 }
 

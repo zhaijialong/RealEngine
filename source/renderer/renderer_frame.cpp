@@ -89,10 +89,10 @@ RenderGraphHandle Renderer::BuildRenderGraph()
     auto base_pass = m_pRenderGraph->AddPass<BassPassData>("Base Pass",
         [&](BassPassData& data, RenderGraphBuilder& builder)
         {
-            data.shadowRT = builder.Read(shadow_pass->depthRT, GfxResourceState::ShaderResourcePSOnly);
+            data.shadowRT = builder.Read(shadow_pass->depthRT, GfxResourceState::ShaderResourcePS);
 
-            data.csmRT = builder.Read(csm_pass0->depthRT, GfxResourceState::ShaderResourcePSOnly, 0);
-            data.csmRT = builder.Read(csm_pass1->depthRT, GfxResourceState::ShaderResourcePSOnly, 1);
+            data.csmRT = builder.Read(csm_pass0->depthRT, GfxResourceState::ShaderResourcePS, 0);
+            data.csmRT = builder.Read(csm_pass1->depthRT, GfxResourceState::ShaderResourcePS, 1);
 
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
@@ -155,7 +155,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
     auto tonemap_pass = m_pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
         {
-            data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResource);
+            data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
@@ -185,7 +185,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
     auto fxaa_pass = m_pRenderGraph->AddPass<FXAAPassData>("FXAA",
         [&](FXAAPassData& data, RenderGraphBuilder& builder)
         {
-            data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourcePSOnly);
+            data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourcePS);
 
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
