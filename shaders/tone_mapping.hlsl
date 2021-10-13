@@ -1,9 +1,9 @@
 cbuffer ResourceCB : register(b0)
 {
     uint c_hdrTexture;
-    uint c_pointSampler;
-    uint c_padding0;
-    uint c_padding1;
+    uint c_ldrTexture;
+    uint c_width;
+    uint c_height;
 };
 
 cbuffer cbPerFrame : register(b1)
@@ -20,25 +20,6 @@ cbuffer cbPerFrame : register(b1)
     uint4 u_ctl[24];
 }
 
-struct VSOutput
-{
-    float4 pos : SV_POSITION;
-    float2 uv : TEXCOORD;
-};
-
-VSOutput vs_main(uint vertex_id : SV_VertexID)
-{
-    VSOutput output;
-    output.pos.x = (float) (vertex_id / 2) * 4.0 - 1.0;
-    output.pos.y = (float) (vertex_id % 2) * 4.0 - 1.0;
-    output.pos.z = 0.0;
-    output.pos.w = 1.0;
-    output.uv.x = (float) (vertex_id / 2) * 2.0;
-    output.uv.y = 1.0 - (float) (vertex_id % 2) * 2.0;
-
-    return output;
-}
-
 float3 ACESFilm(float3 x)
 {
     float a = 2.51f;
@@ -48,7 +29,6 @@ float3 ACESFilm(float3 x)
     float e = 0.14f;
     return saturate((x * (a * x + b)) / (x * (c * x + d) + e));
 }
-
 
 
 #define A_GPU 1
@@ -65,18 +45,25 @@ uint4 LpmFilterCtl(uint i)
 
 #include "transferFunction.h"
 
-float4 ps_main(VSOutput input) : SV_TARGET
+[numthreads(8, 8, 1)]
+void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D hdrTexture = ResourceDescriptorHeap[c_hdrTexture];
-    SamplerState pointSampler = SamplerDescriptorHeap[c_pointSampler];
+    if (dispatchThreadID.x >= c_width || dispatchThreadID.y >= c_height)
+    {
+        return;
+    }
     
-    float4 color = hdrTexture.Sample(pointSampler, input.uv);
+    RWTexture2D<float4> ldrTexture = ResourceDescriptorHeap[c_ldrTexture];
+    Texture2D hdrTexture = ResourceDescriptorHeap[c_hdrTexture];
+    
+    float4 color = hdrTexture[dispatchThreadID.xy];
     //color.xyz = ACESFilm(color.xyz);
     
     color = mul(u_inputToOutputMatrix, color);
     
     LpmFilter(color.r, color.g, color.b, u_shoulder, u_con, u_soft, u_con2, u_clip, u_scaleOnly);
 
+    /*
     switch (u_displayMode)
     {
         case 1:
@@ -91,6 +78,7 @@ float4 ps_main(VSOutput input) : SV_TARGET
             color.xyz = ApplyPQ(color.xyz);
             break;
     }
+    */
     
-    return color;
+    ldrTexture[dispatchThreadID.xy] = float4(ApplyGamma(color.xyz), 1.0);
 }

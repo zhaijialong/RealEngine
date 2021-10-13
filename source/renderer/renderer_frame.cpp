@@ -155,21 +155,25 @@ RenderGraphHandle Renderer::BuildRenderGraph()
     auto tonemap_pass = m_pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
         {
-            data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResourcePSOnly);
+            data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResource);
 
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
             desc.format = GfxFormat::RGBA8SRGB;
-            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
             data.ldrRT = builder.Create<RenderGraphTexture>(desc, "ToneMapping Output");
-            data.ldrRT = builder.WriteColor(0, data.ldrRT, 0, GfxRenderPassLoadOp::DontCare);
+            data.ldrRT = builder.Write(data.ldrRT, GfxResourceState::UnorderedAccess);
         },
         [&](const TonemapPassData& data, IGfxCommandList* pCommandList)
         {
             RenderGraphTexture* sceneColorRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.hdrRT);
+            RenderGraphTexture* ldrRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.ldrRT);
 
-            m_pToneMap->Draw(pCommandList, sceneColorRT->GetSRV());
+            uint32_t width = sceneColorRT->GetTexture()->GetDesc().width;
+            uint32_t height = sceneColorRT->GetTexture()->GetDesc().height;
+
+            m_pToneMap->Draw(pCommandList, sceneColorRT->GetSRV(), ldrRT->GetUAV(), width, height);
         });
 
     struct FXAAPassData

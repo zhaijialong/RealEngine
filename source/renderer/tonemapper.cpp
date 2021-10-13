@@ -131,11 +131,16 @@ Tonemapper::Tonemapper(Renderer* pRenderer, DisplayMode display_mode, ColorSpace
 {
     m_pRenderer = pRenderer;
 
+    /*
 	GfxGraphicsPipelineDesc psoDesc;
 	psoDesc.vs = pRenderer->GetShader("tone_mapping.hlsl", "vs_main", "vs_6_6", {});
 	psoDesc.ps = pRenderer->GetShader("tone_mapping.hlsl", "ps_main", "ps_6_6", {});
 	psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
-	m_pPSO = pRenderer->GetPipelineState(psoDesc, "LPM PSO");
+	m_pPSO = pRenderer->GetPipelineState(psoDesc, "LPM PSO");*/
+
+    GfxComputePipelineDesc psoDesc;
+    psoDesc.cs = pRenderer->GetShader("tone_mapping.hlsl", "cs_main", "cs_6_6", {});
+    m_pPSO = pRenderer->GetDevice()->CreateComputePipelineState(psoDesc, "LPM PSO");
 
     m_displayMode = display_mode;
 
@@ -315,12 +320,12 @@ Tonemapper::Tonemapper(Renderer* pRenderer, DisplayMode display_mode, ColorSpace
         m_saturation, m_crosstalk);
 }
 
-void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrRT)
+void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* pLdrUAV, uint32_t width, uint32_t height)
 {
 	pCommandList->SetPipelineState(m_pPSO);
 
-	uint32_t resourceCB[4] = { pHdrRT->GetHeapIndex(), m_pRenderer->GetPointSampler()->GetHeapIndex(), 0, 0 };
-	pCommandList->SetGraphicsConstants(0, resourceCB, sizeof(resourceCB));
+	uint32_t resourceCB[4] = { pHdrSRV->GetHeapIndex(), pLdrUAV->GetHeapIndex(), width, height };
+	pCommandList->SetComputeConstants(0, resourceCB, sizeof(resourceCB));
 
     struct LPMConsts {
         uint32_t shoulder;
@@ -350,9 +355,9 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrRT)
         lpmConsts.ctl[i] = ctl[i];
     }
 
-    pCommandList->SetGraphicsConstants(1, &lpmConsts, sizeof(lpmConsts));
+    pCommandList->SetComputeConstants(1, &lpmConsts, sizeof(lpmConsts));
 
-	pCommandList->Draw(3);
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
 void Tonemapper::SetLPMConfig(bool con, bool soft, bool con2, bool clip, bool scaleOnly)

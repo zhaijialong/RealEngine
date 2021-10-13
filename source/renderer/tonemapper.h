@@ -27,7 +27,7 @@ class Tonemapper
 public:
     Tonemapper(Renderer* pRenderer, DisplayMode display_mode, ColorSpace color_space);
 
-    void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrRT);
+    void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* pLdrUAV, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;
