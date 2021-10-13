@@ -45,8 +45,10 @@ public:
     PipelineStateCache(Renderer* pRenderer);
 
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
+    IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name);
 
 private:
     Renderer* m_pRenderer;
     std::unordered_map<GfxGraphicsPipelineDesc, std::unique_ptr<IGfxPipelineState>> m_cachedGraphicsPSO;
+    std::unordered_map<uint64_t, std::unique_ptr<IGfxPipelineState>> m_cachedComputePSO;
 };

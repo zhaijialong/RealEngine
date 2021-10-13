@@ -43,3 +43,20 @@ IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxGraphicsPipelin
 
     return pPSO;
 }
+
+IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name)
+{
+    auto iter = m_cachedComputePSO.find(desc.cs->GetHash());
+    if (iter != m_cachedComputePSO.end())
+    {
+        return iter->second.get();
+    }
+
+    IGfxPipelineState* pPSO = m_pRenderer->GetDevice()->CreateComputePipelineState(desc, name);
+    if (pPSO)
+    {
+        m_cachedComputePSO.insert(std::make_pair(desc.cs->GetHash(), pPSO));
+    }
+
+    return pPSO;
+}

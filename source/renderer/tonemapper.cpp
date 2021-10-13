@@ -131,16 +131,9 @@ Tonemapper::Tonemapper(Renderer* pRenderer, DisplayMode display_mode, ColorSpace
 {
     m_pRenderer = pRenderer;
 
-    /*
-	GfxGraphicsPipelineDesc psoDesc;
-	psoDesc.vs = pRenderer->GetShader("tone_mapping.hlsl", "vs_main", "vs_6_6", {});
-	psoDesc.ps = pRenderer->GetShader("tone_mapping.hlsl", "ps_main", "ps_6_6", {});
-	psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
-	m_pPSO = pRenderer->GetPipelineState(psoDesc, "LPM PSO");*/
-
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = pRenderer->GetShader("tone_mapping.hlsl", "cs_main", "cs_6_6", {});
-    m_pPSO = pRenderer->GetDevice()->CreateComputePipelineState(psoDesc, "LPM PSO");
+    m_pPSO = pRenderer->GetPipelineState(psoDesc, "LPM PSO");
 
     m_displayMode = display_mode;
 

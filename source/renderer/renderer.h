@@ -42,6 +42,7 @@ public:
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
     IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
+    IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name);
     IGfxDescriptor* GetPointSampler() const { return m_pPointRepeatSampler.get(); }
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearRepeatSampler.get(); }
 

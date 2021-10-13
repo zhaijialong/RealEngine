@@ -210,6 +210,11 @@ IGfxPipelineState* Renderer::GetPipelineState(const GfxGraphicsPipelineDesc& des
     return m_pPipelineCache->GetPipelineState(desc, name);
 }
 
+IGfxPipelineState* Renderer::GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name)
+{
+    return m_pPipelineCache->GetPipelineState(desc, name);
+}
+
 void Renderer::CreateCommonResources()
 {
     GfxSamplerDesc desc;
