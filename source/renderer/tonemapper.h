@@ -4,10 +4,10 @@
 
 class Renderer;
 
-class Tonemap
+class Tonemapper
 {
 public:
-    Tonemap(Renderer* pRenderer);
+    Tonemapper(Renderer* pRenderer);
 
     void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrRT);
 

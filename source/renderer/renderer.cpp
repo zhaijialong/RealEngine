@@ -262,7 +262,7 @@ void Renderer::CreateCommonResources()
     desc.max_anisotropy = 16.0f;
     m_pAniso16xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso16xSampler"));
 
-    m_pToneMap.reset(new Tonemap(this));
+    m_pToneMap.reset(new Tonemapper(this));
     m_pFXAA.reset(new FXAA(this));
     
     std::string asset_path = Engine::GetInstance()->GetAssetPath();

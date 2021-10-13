@@ -106,7 +106,7 @@
     <ClCompile Include="external\ImGuizmo\ImGuizmo.cpp">
       <Filter>external\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\tonemap.cpp">
+    <ClCompile Include="source\renderer\tonemapper.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
     <ClCompile Include="source\core\directional_light.cpp">
@@ -342,7 +342,7 @@
     <ClInclude Include="external\ImGuizmo\ImGuizmo.h">
       <Filter>external\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\tonemap.h">
+    <ClInclude Include="source\renderer\tonemapper.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
     <ClInclude Include="source\core\i_light.h">
@@ -515,7 +515,7 @@
     <FxCompile Include="shaders\sky_sphere.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\tonemap.hlsl">
+    <FxCompile Include="shaders\tone_mapping.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\model_shadow.hlsl">

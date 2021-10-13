@@ -9,11 +9,9 @@
 #include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
-#include "tonemap.h"
+#include "tonemapper.h"
 #include "fxaa.h"
 #include "lsignal/lsignal.h"
-#include "utils/math.h"
-#include <functional>
 
 const static int MAX_INFLIGHT_FRAMES = 3;
 
@@ -124,7 +122,7 @@ private:
     std::unique_ptr<Texture2D> m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;
 
-    std::unique_ptr<Tonemap> m_pToneMap; //test code
+    std::unique_ptr<Tonemapper> m_pToneMap; //test code
     std::unique_ptr<FXAA> m_pFXAA;
 
     IGfxPipelineState* m_pCopyPSO = nullptr;

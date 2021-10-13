@@ -152,7 +152,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         RenderGraphHandle ldrRT;
     };
 
-    auto tonemap_pass = m_pRenderGraph->AddPass<TonemapPassData>("Tonemapping",
+    auto tonemap_pass = m_pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
         {
             data.hdrRT = builder.Read(base_pass->hdrRT, GfxResourceState::ShaderResourcePSOnly);
@@ -162,7 +162,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             desc.height = m_nWindowHeight;
             desc.format = GfxFormat::RGBA8SRGB;
             desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
-            data.ldrRT = builder.Create<RenderGraphTexture>(desc, "Tonemapping Output");
+            data.ldrRT = builder.Create<RenderGraphTexture>(desc, "ToneMapping Output");
             data.ldrRT = builder.WriteColor(0, data.ldrRT, 0, GfxRenderPassLoadOp::DontCare);
         },
         [&](const TonemapPassData& data, IGfxCommandList* pCommandList)

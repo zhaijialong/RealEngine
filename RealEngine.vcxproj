@@ -146,7 +146,7 @@
     <ClCompile Include="source\renderer\shader_compiler.cpp" />
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
     <ClCompile Include="source\renderer\texture_loader.cpp" />
-    <ClCompile Include="source\renderer\tonemap.cpp" />
+    <ClCompile Include="source\renderer\tonemapper.cpp" />
     <ClCompile Include="source\windows\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -223,7 +223,7 @@
     <ClInclude Include="source\renderer\shader_compiler.h" />
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
     <ClInclude Include="source\renderer\texture_loader.h" />
-    <ClInclude Include="source\renderer\tonemap.h" />
+    <ClInclude Include="source\renderer\tonemapper.h" />
     <ClInclude Include="source\utils\assert.h" />
     <ClInclude Include="source\utils\linear_allocator.h" />
     <ClInclude Include="source\utils\log.h" />
@@ -277,7 +277,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="shaders\tonemap.hlsl">
+    <FxCompile Include="shaders\tone_mapping.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
