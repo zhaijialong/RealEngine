@@ -426,6 +426,15 @@
     <ClInclude Include="source\windows\resource.h">
       <Filter>source\windows</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\ffx_a.h">
+      <Filter>shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\ffx_lpm.h">
+      <Filter>shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\transferFunction.h">
+      <Filter>shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
