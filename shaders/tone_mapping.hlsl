@@ -43,7 +43,7 @@ uint4 LpmFilterCtl(uint i)
 #define LPM_NO_SETUP 1
 #include "ffx_lpm.h"
 
-#include "transferFunction.h"
+#include "common.hlsli"
 
 [numthreads(8, 8, 1)]
 void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
@@ -80,5 +80,5 @@ void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
     */
     
-    ldrTexture[dispatchThreadID.xy] = float4(ApplyGamma(color.xyz), 1.0);
+    ldrTexture[dispatchThreadID.xy] = float4(LinearToSrgb(color.xyz), 1.0);
 }

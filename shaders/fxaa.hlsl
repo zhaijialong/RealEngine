@@ -4,41 +4,32 @@
 #define FXAA_GREEN_AS_LUMA 1
 
 #include "fxaa.hlsli"
+#include "common.hlsli"
 
-struct VSOutput
-{
-    float4 pos : SV_POSITION;
-    float2 uv : TEXCOORD;
-};
-
-VSOutput vs_main(uint vertex_id : SV_VertexID)
-{
-    VSOutput output;
-    output.pos.x = (float) (vertex_id / 2) * 4.0 - 1.0;
-    output.pos.y = (float) (vertex_id % 2) * 4.0 - 1.0;
-    output.pos.z = 0.0;
-    output.pos.w = 1.0;
-    output.uv.x = (float) (vertex_id / 2) * 2.0;
-    output.uv.y = 1.0 - (float) (vertex_id % 2) * 2.0;
-
-    return output;
-}
-
-cbuffer CB : register(b0)
+cbuffer CB : register(b1)
 {
     uint c_ldrTexture;
+    uint c_outTexture;
     uint c_linearSampler;
+    uint c_width;
+    uint c_height;
     float c_rcpWidth;
     float c_rcpHeight;
 };
 
-float4 ps_main(VSOutput input) : SV_TARGET
+[numthreads(8, 8, 1)]
+void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
+    if (dispatchThreadID.x >= c_width || dispatchThreadID.y >= c_height)
+    {
+        return;
+    }
+    
     Texture2D ldrTexture = ResourceDescriptorHeap[c_ldrTexture];
     SamplerState linearSampler = SamplerDescriptorHeap[c_linearSampler];
     
     FxaaTex tex = { linearSampler, ldrTexture };
-    FxaaFloat2 pos = input.uv;
+    FxaaFloat2 pos = (dispatchThreadID.xy + float2(0.5, 0.5)) * float2(c_rcpWidth, c_rcpHeight);
     FxaaFloat2 fxaaQualityRcpFrame = FxaaFloat2(c_rcpWidth, c_rcpHeight);
     FxaaFloat fxaaQualitySubpix = 0.75;
     FxaaFloat fxaaQualityEdgeThreshold = 0.125;
@@ -54,7 +45,9 @@ float4 ps_main(VSOutput input) : SV_TARGET
     FxaaFloat fxaaConsoleEdgeThresholdMin;
     FxaaFloat4 fxaaConsole360ConstDir;
     
-    return FxaaPixelShader(
+    RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_outTexture];
+    
+    float4 color = FxaaPixelShader(
         pos, 
         fxaaConsolePosPos, 
         tex,
@@ -71,4 +64,8 @@ float4 ps_main(VSOutput input) : SV_TARGET
         fxaaConsoleEdgeThreshold, 
         fxaaConsoleEdgeThresholdMin, 
         fxaaConsole360ConstDir);
+    
+    color.xyz = LinearToSrgb(color.xyz);
+    
+    outTexture[dispatchThreadID.xy] = color;
 }

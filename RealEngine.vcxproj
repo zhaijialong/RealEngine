@@ -168,7 +168,6 @@
     <ClInclude Include="shaders\ffx_a.h" />
     <ClInclude Include="shaders\ffx_lpm.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
-    <ClInclude Include="shaders\transferFunction.h" />
     <ClInclude Include="source\core\camera.h" />
     <ClInclude Include="source\core\directional_light.h" />
     <ClInclude Include="source\core\editor.h" />

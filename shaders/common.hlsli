@@ -60,3 +60,22 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 diffuse, float3 specular, float
 
     return (diffuse_brdf + specular_brdf) * NdotL;
 }
+
+
+half LinearToSrgbChannel(half lin)
+{
+    if (lin < 0.00313067)
+        return lin * 12.92;
+    return pow(lin, (1.0 / 2.4)) * 1.055 - 0.055;
+}
+
+half3 LinearToSrgb(half3 lin)
+{
+    return half3(LinearToSrgbChannel(lin.r), LinearToSrgbChannel(lin.g), LinearToSrgbChannel(lin.b));
+}
+
+half3 SrgbToLinear(half3 Color)
+{
+    Color = max(6.10352e-5, Color);
+    return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
+}

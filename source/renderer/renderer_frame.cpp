@@ -170,10 +170,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             RenderGraphTexture* sceneColorRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.hdrRT);
             RenderGraphTexture* ldrRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.ldrRT);
 
-            uint32_t width = sceneColorRT->GetTexture()->GetDesc().width;
-            uint32_t height = sceneColorRT->GetTexture()->GetDesc().height;
-
-            m_pToneMap->Draw(pCommandList, sceneColorRT->GetSRV(), ldrRT->GetUAV(), width, height);
+            m_pToneMap->Draw(pCommandList, sceneColorRT->GetSRV(), ldrRT->GetUAV(), m_nWindowWidth, m_nWindowHeight);
         });
 
     struct FXAAPassData
@@ -185,21 +182,22 @@ RenderGraphHandle Renderer::BuildRenderGraph()
     auto fxaa_pass = m_pRenderGraph->AddPass<FXAAPassData>("FXAA",
         [&](FXAAPassData& data, RenderGraphBuilder& builder)
         {
-            data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourcePS);
+            data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
             desc.format = GfxFormat::RGBA8SRGB;
-            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
             data.outputRT = builder.Create<RenderGraphTexture>(desc, "FXAA Output");
-            data.outputRT = builder.WriteColor(0, data.outputRT, 0, GfxRenderPassLoadOp::DontCare);
+            data.outputRT = builder.Write(data.outputRT, GfxResourceState::UnorderedAccess);
         },
         [&](const FXAAPassData& data, IGfxCommandList* pCommandList)
         {
             RenderGraphTexture* ldrRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.ldrRT);
+            RenderGraphTexture* outRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.outputRT);
 
-            m_pFXAA->Draw(pCommandList, ldrRT->GetSRV(), m_nWindowWidth, m_nWindowHeight);
+            m_pFXAA->Draw(pCommandList, ldrRT->GetSRV(), outRT->GetUAV(), m_nWindowWidth, m_nWindowHeight);
         });
 
     return fxaa_pass->outputRT;
