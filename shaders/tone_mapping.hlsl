@@ -6,6 +6,20 @@ cbuffer ResourceCB : register(b0)
     uint c_padding1;
 };
 
+cbuffer cbPerFrame : register(b1)
+{
+    bool u_shoulder;
+    bool u_con;
+    bool u_soft;
+    bool u_con2;
+    bool u_clip;
+    bool u_scaleOnly;
+    uint u_displayMode;
+    uint pad;
+    matrix u_inputToOutputMatrix;
+    uint4 u_ctl[24];
+}
+
 struct VSOutput
 {
     float4 pos : SV_POSITION;
@@ -35,13 +49,48 @@ float3 ACESFilm(float3 x)
     return saturate((x * (a * x + b)) / (x * (c * x + d) + e));
 }
 
+
+
+#define A_GPU 1
+#define A_HLSL 1
+#include "ffx_a.h"
+
+uint4 LpmFilterCtl(uint i)
+{
+    return u_ctl[i];
+}
+
+#define LPM_NO_SETUP 1
+#include "ffx_lpm.h"
+
+#include "transferFunction.h"
+
 float4 ps_main(VSOutput input) : SV_TARGET
 {
     Texture2D hdrTexture = ResourceDescriptorHeap[c_hdrTexture];
     SamplerState pointSampler = SamplerDescriptorHeap[c_pointSampler];
     
-    float3 color = hdrTexture.Sample(pointSampler, input.uv).xyz;
-    color = ACESFilm(color);
+    float4 color = hdrTexture.Sample(pointSampler, input.uv);
+    //color.xyz = ACESFilm(color.xyz);
     
-    return float4(color, 1.0);
+    color = mul(u_inputToOutputMatrix, color);
+    
+    LpmFilter(color.r, color.g, color.b, u_shoulder, u_con, u_soft, u_con2, u_clip, u_scaleOnly);
+
+    switch (u_displayMode)
+    {
+        case 1:
+            // FS2_DisplayNative
+            // Apply gamma
+            color.xyz = ApplyGamma(color.xyz);
+            break;
+
+        case 3:
+            // HDR10_ST2084
+            // Apply ST2084 curve
+            color.xyz = ApplyPQ(color.xyz);
+            break;
+    }
+    
+    return color;
 }
