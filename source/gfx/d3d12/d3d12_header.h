@@ -74,7 +74,7 @@ inline D3D12_RESOURCE_STATES d3d12_resource_state(GfxResourceState state)
 	}
 }
 
-inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false)
+inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false, bool uav = false)
 {
 	switch (format)
 	{
@@ -105,11 +105,11 @@ inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false)
 	case GfxFormat::RGBA8SNORM:
 		return DXGI_FORMAT_R8G8B8A8_SNORM;
 	case GfxFormat::RGBA8SRGB:
-		return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		return uav ? DXGI_FORMAT_R8G8B8A8_UNORM : DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	case GfxFormat::BGRA8UNORM:
 		return DXGI_FORMAT_B8G8R8A8_UNORM;
 	case GfxFormat::BGRA8SRGB:
-		return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+		return uav ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
 	case GfxFormat::RGB10A2UNORM:
 		return DXGI_FORMAT_R10G10B10A2_UNORM;
 	case GfxFormat::RG32F:

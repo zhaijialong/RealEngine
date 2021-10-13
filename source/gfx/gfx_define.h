@@ -293,13 +293,22 @@ struct GfxUnorderedAccessViewDesc
 
 		struct
 		{
-			uint32_t size;
-			uint32_t offset;
+			uint32_t size = 0;
+			uint32_t offset = 0;
 		} buffer;
 	};
 
 	GfxUnorderedAccessViewDesc() : texture() {}
 };
+
+inline bool operator==(const GfxUnorderedAccessViewDesc& lhs, const GfxUnorderedAccessViewDesc& rhs)
+{
+	return lhs.type == rhs.type &&
+		lhs.texture.mip_slice == rhs.texture.mip_slice &&
+		lhs.texture.array_slice == rhs.texture.array_slice &&
+		lhs.texture.array_size == rhs.texture.array_size &&
+		lhs.texture.plane_slice == rhs.texture.plane_slice;
+}
 
 class IGfxTexture;
 

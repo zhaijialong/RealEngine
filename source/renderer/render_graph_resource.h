@@ -54,6 +54,7 @@ public:
 
     IGfxTexture* GetTexture() const { return m_pTexture; }
     IGfxDescriptor* GetSRV() { return m_allocator.GetDescriptor(m_pTexture, GfxShaderResourceViewDesc()); }
+    IGfxDescriptor* GetUAV() { return m_allocator.GetDescriptor(m_pTexture, GfxUnorderedAccessViewDesc()); }
 
     virtual void Realize() override
     {

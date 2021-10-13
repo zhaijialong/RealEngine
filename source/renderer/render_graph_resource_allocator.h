@@ -14,6 +14,7 @@ public:
     void Free(IGfxTexture* texture, GfxResourceState state);
 
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc);
+    IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc);
 
 private:
     void DeleteDescriptor(IGfxResource* resource);
@@ -36,4 +37,12 @@ private:
         GfxShaderResourceViewDesc desc;
     };
     std::vector<SRVDescriptor> m_allocatedSRVs;
+
+    struct UAVDescriptor
+    {
+        IGfxResource* resource;
+        IGfxDescriptor* descriptor;
+        GfxUnorderedAccessViewDesc desc;
+    };
+    std::vector<UAVDescriptor> m_allocatedUAVs;
 };

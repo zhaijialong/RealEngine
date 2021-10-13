@@ -48,7 +48,15 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(const GfxTextureDesc&
         }
     }
 
-    initial_state = IsDepthFormat(desc.format) ? GfxResourceState::DepthStencil : GfxResourceState::RenderTarget;
+    if (IsDepthFormat(desc.format))
+    {
+        initial_state = GfxResourceState::DepthStencil;
+    }
+    else if (desc.usage & GfxTextureUsageRenderTarget)
+    {
+        initial_state = GfxResourceState::RenderTarget;
+    }
+
     return m_pDevice->CreateTexture(desc, name);
 }
 
@@ -77,6 +85,23 @@ IGfxDescriptor* RenderGraphResourceAllocator::GetDescriptor(IGfxResource* resour
     return srv;
 }
 
+IGfxDescriptor* RenderGraphResourceAllocator::GetDescriptor(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc)
+{
+    for (size_t i = 0; i < m_allocatedUAVs.size(); ++i)
+    {
+        if (m_allocatedUAVs[i].resource == resource &&
+            m_allocatedUAVs[i].desc == desc)
+        {
+            return m_allocatedUAVs[i].descriptor;
+        }
+    }
+
+    IGfxDescriptor* srv = m_pDevice->CreateUnorderedAccessView(resource, desc, resource->GetName());
+    m_allocatedUAVs.push_back({ resource, srv, desc });
+
+    return srv;
+}
+
 void RenderGraphResourceAllocator::DeleteDescriptor(IGfxResource* resource)
 {
     for (auto iter = m_allocatedSRVs.begin(); iter != m_allocatedSRVs.end(); )
@@ -85,6 +110,19 @@ void RenderGraphResourceAllocator::DeleteDescriptor(IGfxResource* resource)
         {
             delete iter->descriptor;
             iter = m_allocatedSRVs.erase(iter);
+        }
+        else
+        {
+            ++iter;
+        }
+    }
+
+    for (auto iter = m_allocatedUAVs.begin(); iter != m_allocatedUAVs.end(); )
+    {
+        if (iter->resource == resource)
+        {
+            delete iter->descriptor;
+            iter = m_allocatedUAVs.erase(iter);
         }
         else
         {
