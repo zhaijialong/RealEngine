@@ -1,9 +1,12 @@
 #pragma once
 
-#include "gfx/gfx.h"
+#include "render_graph.h"
 
-class Renderer;
-class Texture2D;
+struct FXAAPassData
+{
+    RenderGraphHandle ldrRT;
+    RenderGraphHandle outputRT;
+};
 
 class FXAA
 {

@@ -43,24 +43,15 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     return output;
 }
 
-float Shadow(float3 worldPos, float3 worldNormal, float4x4 mtxLightVP, Texture2D shadowRT, SamplerComparisonState shadowSampler)
+struct GBufferOutput
 {
-    float4 shadowPos = mul(mtxLightVP, float4(worldPos + worldNormal * 0.001, 1.0));
-    shadowPos /= shadowPos.w;
-    shadowPos.xy = shadowPos.xy * float2(0.5, -0.5) + 0.5;
-    
-    const float halfTexel = 0.5 / 4096;
-    float visibility = shadowRT.SampleCmpLevelZero(shadowSampler, shadowPos.xy + float2(halfTexel, halfTexel), shadowPos.z).x;
-    visibility += shadowRT.SampleCmpLevelZero(shadowSampler, shadowPos.xy + float2(-halfTexel, halfTexel), shadowPos.z).x;
-    visibility += shadowRT.SampleCmpLevelZero(shadowSampler, shadowPos.xy + float2(halfTexel, -halfTexel), shadowPos.z).x;
-    visibility += shadowRT.SampleCmpLevelZero(shadowSampler, shadowPos.xy + float2(-halfTexel, -halfTexel), shadowPos.z).x;
+    float4 albedoRT : SV_TARGET0;
+    float4 normalRT : SV_TARGET1;
+    float4 emissiveRT : SV_TARGET2;
+};
 
-    return visibility / 4.0f;
-}
-
-float4 ps_main(VSOutput input) : SV_TARGET
+GBufferOutput ps_main(VSOutput input)
 {
-    float3 V = normalize(CameraCB.cameraPos - input.worldPos);
     float3 N = normalize(input.normal);
 
     float4 albedo = float4(MaterialCB.albedo.xyz, 1.0);
@@ -68,7 +59,6 @@ float4 ps_main(VSOutput input) : SV_TARGET
     float roughness = MaterialCB.roughness;
 
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
-    SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     
 #if ALBEDO_TEXTURE
     Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
@@ -103,30 +93,10 @@ float4 ps_main(VSOutput input) : SV_TARGET
     N = normalize(normal.x * T + normal.y * B + normal.z * N);
 #endif
     
-    float3 diffuse = albedo.xyz * (1.0 - metallic);
-    float3 specular = lerp(0.04, albedo.xyz, metallic);
-
-    Texture2D shadowRT = ResourceDescriptorHeap[SceneCB.shadowRT];
-    SamplerComparisonState shadowSampler = SamplerDescriptorHeap[SceneCB.shadowSampler];
+    GBufferOutput output;
+    output.albedoRT = float4(albedo.xyz, 1.0); //todo : ao
+    output.normalRT = float4(OctNormalEncode(N), roughness, 0.0);
+    output.emissiveRT = float4(float3(0.0, 0.0, 0.0), metallic); //todo : emissive
     
-    float visibility = Shadow(input.worldPos, N, SceneCB.mtxLightVP, shadowRT, shadowSampler);
-    float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor;
-    
-    float3 indirect_diffuse = diffuse * float3(0.15, 0.15, 0.2);
-    
-
-    TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
-    Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.brdfTexture];
-    
-    const float MAX_REFLECTION_LOD = 7.0;
-    float3 R = reflect(-V, N);
-    float3 filtered_env = envTexture.SampleLevel(linearSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
-    
-    float NdotV = saturate(dot(N, V));
-    float2 PreintegratedGF = brdfTexture.Sample(pointSampler, float2(NdotV, roughness)).xy;
-    float3 indirect_specular = filtered_env * (specular * PreintegratedGF.x + PreintegratedGF.y);
-    
-    float3 radiance = direct_light + indirect_diffuse + indirect_specular;
-
-    return float4(radiance, 1.0);
+    return output;
 }

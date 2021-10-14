@@ -1,7 +1,6 @@
 #pragma once
 
-#include "gfx/gfx.h"
-#include "utils/math.h"
+#include "render_graph.h"
 
 enum DisplayMode
 {
@@ -20,7 +19,11 @@ enum ColorSpace
     ColorSpace_Display
 };
 
-class Renderer;
+struct TonemapPassData
+{
+    RenderGraphHandle hdrRT;
+    RenderGraphHandle ldrRT;
+};
 
 class Tonemapper
 {

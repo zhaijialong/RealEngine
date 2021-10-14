@@ -84,6 +84,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             CameraConstant cameraCB;
             cameraCB.cameraPos = camera->GetPosition();
             pCommandList->SetGraphicsConstants(3, &cameraCB, sizeof(cameraCB));
+            pCommandList->SetComputeConstants(3, &cameraCB, sizeof(cameraCB));
 
             SceneConstant sceneCB;
             sceneCB.lightDir = light->GetLightDirection();
@@ -103,24 +104,14 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
 
             pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
+            pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
 
             for (size_t i = 0; i < m_basePassBatchs.size(); ++i)
             {
-                //m_basePassBatchs[i](pCommandList, this, camera);
+                m_basePassBatchs[i](pCommandList, this, camera);
             }
             m_basePassBatchs.clear();
         });
-
-    struct ClusterShadingPassData
-    {
-        RenderGraphHandle albedoRT;
-        RenderGraphHandle normalRT;
-        RenderGraphHandle emissiveRT;
-        RenderGraphHandle depthRT;
-        RenderGraphHandle shadowRT;
-
-        RenderGraphHandle hdrRT;
-    };
 
     auto cluster_shading_pass = m_pRenderGraph->AddPass<ClusterShadingPassData>("ClusterShading",
         [&](ClusterShadingPassData& data, RenderGraphBuilder& builder)
@@ -142,7 +133,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         },
         [&](const ClusterShadingPassData& data, IGfxCommandList* pCommandList)
         {
-            m_pClusteredShading->Draw(pCommandList);
+            m_pClusteredShading->Draw(pCommandList, data, m_nWindowWidth, m_nWindowHeight);
         }
         );
 
@@ -154,11 +145,6 @@ RenderGraphHandle Renderer::BuildRenderGraph()
 
     //todo : forward pass
 
-    struct TonemapPassData
-    {
-        RenderGraphHandle hdrRT;
-        RenderGraphHandle ldrRT;
-    };
 
     auto tonemap_pass = m_pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
@@ -181,11 +167,6 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             m_pToneMapper->Draw(pCommandList, sceneColorRT->GetSRV(), ldrRT->GetUAV(), m_nWindowWidth, m_nWindowHeight);
         });
 
-    struct FXAAPassData
-    {
-        RenderGraphHandle ldrRT;
-        RenderGraphHandle outputRT;
-    };
 
     auto fxaa_pass = m_pRenderGraph->AddPass<FXAAPassData>("FXAA",
         [&](FXAAPassData& data, RenderGraphBuilder& builder)
