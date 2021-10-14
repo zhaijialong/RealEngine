@@ -4,14 +4,14 @@ my toy engine, mainly for rendering expariment and learning
 
 ## planned features
 
-* render graph(barriers, resource aliasing, async compute)
+* render graph(~~barriers~~, resource aliasing, async compute)
 * GTAO
 * SSR
 * SSGI
 * clustered shading
 * volume cloud
 * volume fog
-* LPM
+* ~~LPM~~
 * TAA
 * CAS
 * sparse texture
