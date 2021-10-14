@@ -11,6 +11,7 @@
 #include "resource/structured_buffer.h"
 #include "tonemapper.h"
 #include "fxaa.h"
+#include "clustered_shading.h"
 #include "lsignal/lsignal.h"
 
 const static int MAX_INFLIGHT_FRAMES = 3;
@@ -123,7 +124,8 @@ private:
     std::unique_ptr<Texture2D> m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;
 
-    std::unique_ptr<Tonemapper> m_pToneMap; //test code
+    std::unique_ptr<ClusteredShading> m_pClusteredShading;
+    std::unique_ptr<Tonemapper> m_pToneMapper;
     std::unique_ptr<FXAA> m_pFXAA;
 
     IGfxPipelineState* m_pCopyPSO = nullptr;

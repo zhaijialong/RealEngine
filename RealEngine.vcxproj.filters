@@ -175,6 +175,9 @@
     <ClCompile Include="source\windows\main.cpp">
       <Filter>source\windows</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\clustered_shading.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -432,6 +435,9 @@
     <ClInclude Include="shaders\ffx_lpm.h">
       <Filter>shaders</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\clustered_shading.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -531,6 +537,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\copy.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\clustered_shading.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

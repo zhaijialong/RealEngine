@@ -124,6 +124,7 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp" />
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
+    <ClCompile Include="source\renderer\clustered_shading.cpp" />
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp" />
     <ClCompile Include="source\renderer\fxaa.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="source\gfx\i_gfx_shader.h" />
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
+    <ClInclude Include="source\renderer\clustered_shading.h" />
     <ClInclude Include="source\renderer\directed_acyclic_graph.h" />
     <ClInclude Include="source\renderer\fxaa.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
@@ -247,6 +249,10 @@
     <None Include="source\renderer\render_graph.inl" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="shaders\clustered_shading.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="shaders\copy.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
