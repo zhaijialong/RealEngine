@@ -57,13 +57,19 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         return;
     }
     
+    int3 pos = int3(dispatchThreadID.xy, 0);
+    
+    Texture2D depthRT = ResourceDescriptorHeap[c_depthRT];
+    float depth = depthRT.Load(pos).x;
+    //float linear_depth = 1.0f / (depth * c_zparams.x - c_zparams.y);
+    if(depth == 0.0)
+    {
+        return;
+    }
+    
     Texture2D albedoRT = ResourceDescriptorHeap[c_albedoRT];
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     Texture2D emissiveRT = ResourceDescriptorHeap[c_emissiveRT];
-    Texture2D depthRT = ResourceDescriptorHeap[c_depthRT];
-    Texture2D shadowRT = ResourceDescriptorHeap[c_shadowRT];
-
-    int3 pos = int3(dispatchThreadID.xy, 0);
     
     float4 albedo = albedoRT.Load(pos);
     float4 normal = normalRT.Load(pos);
@@ -73,22 +79,19 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float roughness = normal.z;
     float metallic = emissive.w;
     
-    float depth = depthRT.Load(pos).x;
-    //float linear_depth = 1.0f / (depth * c_zparams.x - c_zparams.y);
     float3 worldPos = GetWorldPosition(pos.xy, depth);
-    
     float3 V = normalize(CameraCB.cameraPos - worldPos);
 
     float3 diffuse = albedo.xyz * (1.0 - metallic);
     float3 specular = lerp(0.04, albedo.xyz, metallic);
-
+    
+    Texture2D shadowRT = ResourceDescriptorHeap[c_shadowRT];
     SamplerComparisonState shadowSampler = SamplerDescriptorHeap[SceneCB.shadowSampler];
     
     float visibility = Shadow(worldPos, N, SceneCB.mtxLightVP, shadowRT, shadowSampler);
     float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor;
     
     float3 indirect_diffuse = diffuse * float3(0.15, 0.15, 0.2);
-    
 
     TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
     Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.brdfTexture];
@@ -104,7 +107,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float2 PreintegratedGF = brdfTexture.Sample(pointSampler, float2(NdotV, roughness)).xy;
     float3 indirect_specular = filtered_env * (specular * PreintegratedGF.x + PreintegratedGF.y);
     
-    float3 radiance = direct_light + indirect_diffuse +indirect_specular;
+    float3 radiance = direct_light + indirect_diffuse + indirect_specular;
     
     RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_hdrRT];    
     outTexture[dispatchThreadID.xy] = float4(radiance, 1.0);
