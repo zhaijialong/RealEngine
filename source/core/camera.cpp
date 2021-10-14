@@ -18,6 +18,7 @@ Camera::~Camera()
 
 void Camera::SetPerpective(float aspectRatio, float yfov, float znear, float zfar)
 {
+	m_aspectRatio = aspectRatio;
 	m_fov = yfov;
 	m_znear = znear;
 	m_zfar = zfar;
@@ -42,6 +43,13 @@ void Camera::SetRotation(const float3& rotation)
 		m_rotation = rotation;
 		UpdateMatrix();
 	}
+}
+
+void Camera::SetFov(float fov)
+{
+	m_fov = fov;
+
+	SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
 }
 
 void Camera::Tick(float delta_time)
@@ -93,5 +101,7 @@ void Camera::UpdateMatrix()
 
 void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
 {
-	SetPerpective((float)width / height, m_fov, m_znear, m_zfar);
+	m_aspectRatio = (float)width / height;
+
+	SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
 }

@@ -31,6 +31,9 @@ public:
 	float GetMoveSpeed() const { return m_moveSpeed; }
 	void SetMoveSpeed(float speed) { m_moveSpeed = speed; }
 
+	float GetFov() const { return m_fov; }
+	void SetFov(float fov);
+
 	void Tick(float delta_time);
 
 private:
@@ -46,6 +49,7 @@ private:
 	float4x4 m_projection;
 	float4x4 m_viewProjection;
 
+	float m_aspectRatio = 0.0f;
 	float m_fov = 0.0f;
 	float m_znear = 0.0f;
 	float m_zfar = 0.0f;

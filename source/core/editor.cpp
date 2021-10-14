@@ -170,11 +170,21 @@ void Editor::DrawToolBar()
 
     Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
     float camera_speed = camera->GetMoveSpeed();
+    float fov = camera->GetFov();
 
     ImGui::SameLine(0.0f, 3.0f);
     ImGui::SetNextItemWidth(100.0f);
     ImGui::SliderFloat("##CameraSpeed", &camera_speed, 1.0f, 200.0f);
     camera->SetMoveSpeed(camera_speed);
+
+    ImGui::SameLine(0.0f, 20.0f);
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("FOV");
+
+    ImGui::SameLine(0.0f, 3.0f);
+    ImGui::SetNextItemWidth(100.0f);
+    ImGui::SliderFloat("##CameraFOV", &fov, 5.0f, 135.0f);
+    camera->SetFov(fov);
 
     ImGui::End();
 }
