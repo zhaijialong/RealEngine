@@ -53,7 +53,7 @@ void Model::Render(Renderer* pRenderer)
     float4x4 mtxWorld = mul(T, mul(R, S));
 
     RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, m_pRootNode.get(), mtxWorld);
-    pRenderer->AddBasePassBatch(bassPassBatch);
+    pRenderer->AddGBufferPassBatch(bassPassBatch);
 
     ShadowRenderFunc shadowPassBatch = std::bind(&Model::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, m_pRootNode.get(), mtxWorld);
     pRenderer->AddShadowPassBatch(shadowPassBatch);

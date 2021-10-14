@@ -106,11 +106,11 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
             pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
 
-            for (size_t i = 0; i < m_basePassBatchs.size(); ++i)
+            for (size_t i = 0; i < m_gbufferPassBatchs.size(); ++i)
             {
-                m_basePassBatchs[i](pCommandList, this, camera);
+                m_gbufferPassBatchs[i](pCommandList, this, camera);
             }
-            m_basePassBatchs.clear();
+            m_gbufferPassBatchs.clear();
         });
 
     auto cluster_shading_pass = m_pRenderGraph->AddPass<ClusterShadingPassData>("ClusterShading",
@@ -143,13 +143,29 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         RenderGraphHandle depthRT;
     };
 
-    //todo : forward pass
+    auto forward_pass = m_pRenderGraph->AddPass<ForwardPassData>("Forward Pass",
+        [&](ForwardPassData& data, RenderGraphBuilder& builder)
+        {
+            data.hdrRT = builder.WriteColor(0, cluster_shading_pass->hdrRT, 0, GfxRenderPassLoadOp::Load);
+            data.depthRT = builder.WriteDepth(gbuffer_pass->depthRT, 0, GfxRenderPassLoadOp::Load);
+        },
+        [&](const ForwardPassData& data, IGfxCommandList* pCommandList)
+        {
+            for (size_t i = 0; i < m_forwardPassBatchs.size(); ++i)
+            {
+                World* world = Engine::GetInstance()->GetWorld();
+                Camera* camera = world->GetCamera();
+
+                m_forwardPassBatchs[i](pCommandList, this, camera);
+            }
+            m_forwardPassBatchs.clear();
+        });
 
 
     auto tonemap_pass = m_pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
         {
-            data.hdrRT = builder.Read(cluster_shading_pass->hdrRT, GfxResourceState::ShaderResourceNonPS);
+            data.hdrRT = builder.Read(forward_pass->hdrRT, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;

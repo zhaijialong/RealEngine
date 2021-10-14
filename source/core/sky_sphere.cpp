@@ -10,7 +10,7 @@ bool SkySphere::Create()
 
 	int latitudeBands = 50;
 	int longitudeBands = 50;
-	float radius = 1000.0f;
+	float radius = 3000.0f;
 
 	for (int latNumber = 0; latNumber <= latitudeBands; latNumber++)
 	{
@@ -79,12 +79,11 @@ void SkySphere::Tick(float delta_time)
 void SkySphere::Render(Renderer* pRenderer)
 {
 	RenderFunc bassPassBatch = std::bind(&SkySphere::RenderSky, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-	pRenderer->AddBasePassBatch(bassPassBatch);
+	pRenderer->AddForwardPassBatch(bassPassBatch);
 }
 
 void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera)
 {
-	return;
 	GPU_EVENT(pCommandList, "SkySphere");
 
 	pCommandList->SetPipelineState(m_pPSO);

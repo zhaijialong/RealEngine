@@ -60,7 +60,8 @@ public:
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 
     void AddShadowPassBatch(const ShadowRenderFunc& func) { m_shadowPassBatchs.push_back(func); }
-    void AddBasePassBatch(const RenderFunc& func) { m_basePassBatchs.push_back(func); }
+    void AddGBufferPassBatch(const RenderFunc& func) { m_gbufferPassBatchs.push_back(func); }
+    void AddForwardPassBatch(const RenderFunc& func) { m_forwardPassBatchs.push_back(func); }
 
 private:
     void CreateCommonResources();
@@ -133,5 +134,6 @@ private:
     lsignal::connection m_resizeConnection;
 
     std::vector<ShadowRenderFunc> m_shadowPassBatchs;
-    std::vector<RenderFunc> m_basePassBatchs;
+    std::vector<RenderFunc> m_gbufferPassBatchs;
+    std::vector<RenderFunc> m_forwardPassBatchs;
 };
