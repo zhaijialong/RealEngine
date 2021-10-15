@@ -18,7 +18,7 @@ struct VSOutput
 #if NORMAL_TEXTURE
     float3 tangent : TANGENT;
 #endif
-    float3 worldPos : TEXCOORD1;
+    //float3 worldPos : TEXCOORD1;
 };
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
@@ -34,7 +34,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     output.pos = mul(ModelCB.mtxWVP, pos);
     output.uv = uvBuffer[vertex_id];
     output.normal = mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz;
-    output.worldPos = mul(ModelCB.mtxWorld, pos).xyz;
+    //output.worldPos = mul(ModelCB.mtxWorld, pos).xyz;
     
 #if NORMAL_TEXTURE
     output.tangent = mul(ModelCB.mtxWorld, float4(tangentBuffer[vertex_id], 0.0f)).xyz;

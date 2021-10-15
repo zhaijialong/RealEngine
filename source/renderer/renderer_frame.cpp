@@ -73,7 +73,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             data.albedoRT = builder.WriteColor(0, data.albedoRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.normalRT = builder.WriteColor(1, data.normalRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.emissiveRT = builder.WriteColor(2, data.emissiveRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
-            data.depthRT = builder.WriteDepth(data.depthRT, 0, GfxRenderPassLoadOp::Clear);
+            data.depthRT = builder.WriteDepth(data.depthRT, 0, GfxRenderPassLoadOp::Clear, GfxRenderPassLoadOp::Clear);
         },
         [&](const GBufferPassData& data, IGfxCommandList* pCommandList)
         {
@@ -147,7 +147,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         [&](ForwardPassData& data, RenderGraphBuilder& builder)
         {
             data.hdrRT = builder.WriteColor(0, cluster_shading_pass->hdrRT, 0, GfxRenderPassLoadOp::Load);
-            data.depthRT = builder.WriteDepth(gbuffer_pass->depthRT, 0, GfxRenderPassLoadOp::Load);
+            data.depthRT = builder.WriteDepth(gbuffer_pass->depthRT, 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
         },
         [&](const ForwardPassData& data, IGfxCommandList* pCommandList)
         {

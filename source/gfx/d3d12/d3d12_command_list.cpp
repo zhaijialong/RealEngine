@@ -228,7 +228,7 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 	{
 		if (render_pass.color[i].texture == nullptr)
 		{
-			break;
+			continue;
 		}
 
 		if (width == 0)

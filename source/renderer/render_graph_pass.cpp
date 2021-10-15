@@ -27,7 +27,7 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
         GfxResourceState old_state = GfxResourceState::Present;
         GfxResourceState new_state = edge->GetUsage();
 
-        if (resource_outgoing.size() > 1)
+        if (resource_outgoing.size() > 1) //todo : should merge states if possible, eg. shader resource ps + shader resource non-ps -> shader resource all
         {
             //resource_outgoing should be sorted
             for (int i = resource_outgoing.size() - 1; i >= 0; --i)
