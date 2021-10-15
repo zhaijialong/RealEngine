@@ -20,19 +20,39 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
         RenderGraphResource* resource = resource_node->GetResource();
 
         std::vector<DAGEdge*> resource_incoming = graph.GetIncomingEdges(resource_node);
-        RE_ASSERT(resource_incoming.size() <= 1); //应该只有1个或者0个pass输出到这个RT
+        std::vector<DAGEdge*> resource_outgoing = graph.GetOutgoingEdges(resource_node);
+        RE_ASSERT(resource_incoming.size() <= 1);
+        RE_ASSERT(resource_outgoing.size() >= 1);
 
-        GfxResourceState old_state;
+        GfxResourceState old_state = GfxResourceState::Present;
         GfxResourceState new_state = edge->GetUsage();
 
-        if (resource_incoming.empty())
+        if (resource_outgoing.size() > 1)
         {
-            RE_ASSERT(resource_node->GetVersion() == 0);
-            old_state = resource->GetInitialState();
+            //resource_outgoing should be sorted
+            for (int i = resource_outgoing.size() - 1; i >= 0; --i)
+            {
+                if (resource_outgoing[i]->GetToNode() < this->GetId())
+                {
+                    old_state = ((RenderGraphEdge*)resource_outgoing[i])->GetUsage();
+                    break;
+                }
+            }
         }
-        else
+
+        if (old_state == GfxResourceState::Present)
         {
-            old_state = ((RenderGraphEdge*)resource_incoming[0])->GetUsage();
+            RE_ASSERT(resource_outgoing[0]->GetToNode() == this->GetId());
+
+            if (resource_incoming.empty())
+            {
+                RE_ASSERT(resource_node->GetVersion() == 0);
+                old_state = resource->GetInitialState();
+            }
+            else
+            {
+                old_state = ((RenderGraphEdge*)resource_incoming[0])->GetUsage();
+            }
         }
 
         if (old_state != new_state)
