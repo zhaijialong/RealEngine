@@ -5,7 +5,7 @@ my toy engine, mainly for rendering expariment and learning
 ## planned features
 
 * render graph(~~barriers~~, resource aliasing, async compute)
-* GTAO
+* ~~GTAO~~
 * SSR
 * SSGI
 * clustered shading

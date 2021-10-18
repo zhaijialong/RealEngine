@@ -187,6 +187,9 @@
     <ClCompile Include="source\renderer\post_processing\cas.cpp">
       <Filter>source\renderer\post_processing</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\lighting\gtao.cpp">
+      <Filter>source\renderer\lighting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -458,6 +461,9 @@
     </ClInclude>
     <ClInclude Include="shaders\ffx_cas.h">
       <Filter>shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\lighting\gtao.h">
+      <Filter>source\renderer\lighting</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
