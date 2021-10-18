@@ -128,8 +128,10 @@
     <ClCompile Include="source\renderer\lighting\clustered_shading.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
+    <ClCompile Include="source\renderer\post_processing\cas.cpp" />
     <ClCompile Include="source\renderer\post_processing\fxaa.cpp" />
     <ClCompile Include="source\renderer\post_processing\post_processor.cpp" />
+    <ClCompile Include="source\renderer\post_processing\taa.cpp" />
     <ClCompile Include="source\renderer\post_processing\tonemapper.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
     <ClCompile Include="source\renderer\renderer_frame.cpp" />
@@ -168,6 +170,7 @@
     <ClInclude Include="external\tinyxml2\tinyxml2.h" />
     <ClInclude Include="external\xxHash\xxhash.h" />
     <ClInclude Include="shaders\ffx_a.h" />
+    <ClInclude Include="shaders\ffx_cas.h" />
     <ClInclude Include="shaders\ffx_lpm.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
     <ClInclude Include="source\core\camera.h" />
@@ -207,8 +210,10 @@
     <ClInclude Include="source\renderer\lighting\clustered_shading.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
+    <ClInclude Include="source\renderer\post_processing\cas.h" />
     <ClInclude Include="source\renderer\post_processing\fxaa.h" />
     <ClInclude Include="source\renderer\post_processing\post_processor.h" />
+    <ClInclude Include="source\renderer\post_processing\taa.h" />
     <ClInclude Include="source\renderer\post_processing\tonemapper.h" />
     <ClInclude Include="source\renderer\renderer.h" />
     <ClInclude Include="source\renderer\render_graph.h" />
@@ -251,6 +256,10 @@
     <None Include="source\renderer\render_graph.inl" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="shaders\cas.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="shaders\clustered_shading.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

@@ -181,6 +181,12 @@
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp">
       <Filter>source\renderer\lighting</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\post_processing\taa.cpp">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\post_processing\cas.cpp">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -444,6 +450,15 @@
     <ClInclude Include="source\renderer\lighting\lighting_processor.h">
       <Filter>source\renderer\lighting</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\post_processing\taa.h">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\post_processing\cas.h">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\ffx_cas.h">
+      <Filter>shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -552,6 +567,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\clustered_shading.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\cas.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

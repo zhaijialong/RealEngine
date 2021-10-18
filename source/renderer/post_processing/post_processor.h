@@ -1,7 +1,9 @@
 #pragma once
 
+#include "taa.h"
 #include "tonemapper.h"
 #include "fxaa.h"
+#include "cas.h"
 
 struct PostProcessInput
 {
@@ -17,6 +19,8 @@ public:
     RenderGraphHandle Process(RenderGraph* pRenderGraph, const PostProcessInput& input, uint32_t width, uint32_t height);
 
 private:
+    std::unique_ptr<TAA> m_pTAA;
     std::unique_ptr<Tonemapper> m_pToneMapper;
     std::unique_ptr<FXAA> m_pFXAA;
+    std::unique_ptr<CAS> m_pCAS;
 };
