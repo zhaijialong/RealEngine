@@ -30,7 +30,7 @@ static TextureIO io;
 
 AH3 CasLoadH(ASW2 p)
 {
-    return InputTexture.Load(ASU3(p, 0)).rgb;
+    return io.InputTexture.Load(ASU3(p, 0)).rgb;
 }
 
 // Lets you transform input from the load into a linear color space between 0 and 1. See ffx_cas.h
@@ -74,14 +74,14 @@ void main(uint3 LocalThreadId : SV_GroupThreadID, uint3 WorkGroupId : SV_GroupID
     
     CasFilterH(cR, cG, cB, gxy, const0, const1, sharpenOnly);
     CasDepack(c0, c1, cR, cG, cB);
-    OutputTexture[ASU2(gxy)] = AF4(c0);
-    OutputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(c1);
+    io.OutputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c0.xyz), 1);
+    io.OutputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(LinearToSrgb(c1.xyz), 1);
     gxy.y += 8u;
     
     CasFilterH(cR, cG, cB, gxy, const0, const1, sharpenOnly);
     CasDepack(c0, c1, cR, cG, cB);
-    OutputTexture[ASU2(gxy)] = AF4(c0);
-    OutputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(c1);
+    io.OutputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c0.xyz), 1);
+    io.OutputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(LinearToSrgb(c1.xyz), 1);
     
 #else
     
