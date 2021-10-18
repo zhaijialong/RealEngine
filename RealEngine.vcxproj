@@ -103,16 +103,9 @@
     <ClCompile Include="external\simpleini\ConvertUTF.c" />
     <ClCompile Include="external\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="external\xxHash\xxhash.c" />
-    <ClCompile Include="source\core\camera.cpp" />
-    <ClCompile Include="source\core\directional_light.cpp" />
-    <ClCompile Include="source\core\editor.cpp" />
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\gui.cpp" />
-    <ClCompile Include="source\core\i_light.cpp" />
-    <ClCompile Include="source\core\i_visible_object.cpp" />
-    <ClCompile Include="source\core\model.cpp" />
-    <ClCompile Include="source\core\sky_sphere.cpp" />
-    <ClCompile Include="source\core\world.cpp" />
+    <ClCompile Include="source\editor\editor.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_descriptor.cpp" />
@@ -153,6 +146,13 @@
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
     <ClCompile Include="source\renderer\texture_loader.cpp" />
     <ClCompile Include="source\windows\main.cpp" />
+    <ClCompile Include="source\world\camera.cpp" />
+    <ClCompile Include="source\world\directional_light.cpp" />
+    <ClCompile Include="source\world\i_light.cpp" />
+    <ClCompile Include="source\world\i_visible_object.cpp" />
+    <ClCompile Include="source\world\model.cpp" />
+    <ClCompile Include="source\world\sky_sphere.cpp" />
+    <ClCompile Include="source\world\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h" />
@@ -174,16 +174,9 @@
     <ClInclude Include="shaders\ffx_cas.h" />
     <ClInclude Include="shaders\ffx_lpm.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
-    <ClInclude Include="source\core\camera.h" />
-    <ClInclude Include="source\core\directional_light.h" />
-    <ClInclude Include="source\core\editor.h" />
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\gui.h" />
-    <ClInclude Include="source\core\i_light.h" />
-    <ClInclude Include="source\core\i_visible_object.h" />
-    <ClInclude Include="source\core\model.h" />
-    <ClInclude Include="source\core\sky_sphere.h" />
-    <ClInclude Include="source\core\world.h" />
+    <ClInclude Include="source\editor\editor.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_descriptor.h" />
@@ -246,6 +239,13 @@
     <ClInclude Include="source\utils\string.h" />
     <ClInclude Include="source\utils\system.h" />
     <ClInclude Include="source\windows\resource.h" />
+    <ClInclude Include="source\world\camera.h" />
+    <ClInclude Include="source\world\directional_light.h" />
+    <ClInclude Include="source\world\i_light.h" />
+    <ClInclude Include="source\world\i_visible_object.h" />
+    <ClInclude Include="source\world\model.h" />
+    <ClInclude Include="source\world\sky_sphere.h" />
+    <ClInclude Include="source\world\world.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis" />

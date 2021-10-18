@@ -1,6 +1,8 @@
 #pragma once
 
-#include "world.h"
+#include "gui.h"
+#include "world/world.h"
+#include "editor/editor.h"
 #include "renderer/renderer.h"
 #include "lsignal/lsignal.h"
 #include "simpleini/SimpleIni.h"
@@ -15,6 +17,7 @@ public:
     void Tick();
 
     World* GetWorld() const { return m_pWorld.get(); }
+    GUI* GetGUI() const { return m_pGUI.get(); }
     Renderer* GetRenderer() const { return m_pRenderer.get(); }
 
     void* GetWindowHandle() const { return m_windowHandle; }
@@ -31,6 +34,8 @@ private:
 private:
     std::unique_ptr<Renderer> m_pRenderer;
     std::unique_ptr<World> m_pWorld;
+    std::unique_ptr<GUI> m_pGUI;
+    std::unique_ptr<Editor> m_pEditor;
 
     uint64_t m_lastFrameTime = 0;
 

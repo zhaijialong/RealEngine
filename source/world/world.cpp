@@ -1,5 +1,5 @@
 #include "world.h"
-#include "engine.h"
+#include "core/engine.h"
 #include "model.h"
 #include "sky_sphere.h"
 #include "directional_light.h"
@@ -9,11 +9,7 @@
 
 World::World()
 {
-    m_pGUI = std::make_unique<GUI>();
-    m_pGUI->Init();
-
     m_pCamera = std::make_unique<Camera>();
-    m_pEditor = std::make_unique<Editor>();
 }
 
 void World::LoadScene(const std::string& file)
@@ -55,8 +51,6 @@ void World::Tick(float delta_time)
 {
     CPU_EVENT("Tick", "World::Tick");
 
-    m_pGUI->Tick();
-    m_pEditor->Tick();
     m_pCamera->Tick(delta_time);
 
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)

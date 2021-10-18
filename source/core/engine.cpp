@@ -26,6 +26,11 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
     m_pWorld = std::make_unique<World>();
     m_pWorld->LoadScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
 
+    m_pGUI = std::make_unique<GUI>();
+    m_pGUI->Init();
+
+    m_pEditor = std::make_unique<Editor>();
+
     Camera* camera = m_pWorld->GetCamera();
     camera->SetPerpective((float)window_width / window_height,
         (float)m_configIni.GetDoubleValue("Camera", "Fov"),
@@ -48,6 +53,8 @@ void Engine::Tick()
 
     float frame_time = (float)stm_sec(stm_laptime(&m_lastFrameTime));
 
+    m_pGUI->Tick();
+    m_pEditor->Tick();
     m_pWorld->Tick(frame_time);
 
     m_pRenderer->RenderFrame();

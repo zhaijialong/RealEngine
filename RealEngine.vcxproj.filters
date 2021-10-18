@@ -13,9 +13,6 @@
     <ClCompile Include="source\renderer\renderer.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="source\core\world.cpp">
-      <Filter>source\core</Filter>
-    </ClCompile>
     <ClCompile Include="source\gfx\d3d12\d3d12_device.cpp">
       <Filter>source\gfx\d3d12</Filter>
     </ClCompile>
@@ -58,9 +55,6 @@
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp">
       <Filter>source\gfx\d3d12</Filter>
     </ClCompile>
-    <ClCompile Include="source\core\camera.cpp">
-      <Filter>source\core</Filter>
-    </ClCompile>
     <ClCompile Include="external\imgui\imgui.cpp">
       <Filter>external\imgui</Filter>
     </ClCompile>
@@ -88,32 +82,14 @@
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="source\core\model.cpp">
-      <Filter>source\core</Filter>
-    </ClCompile>
     <ClCompile Include="external\tinyxml2\tinyxml2.cpp">
       <Filter>external\tinyxml2</Filter>
-    </ClCompile>
-    <ClCompile Include="source\core\editor.cpp">
-      <Filter>source\core</Filter>
     </ClCompile>
     <ClCompile Include="external\ImFileDialog\ImFileDialog.cpp">
       <Filter>external\ImFileDialog</Filter>
     </ClCompile>
-    <ClCompile Include="source\core\sky_sphere.cpp">
-      <Filter>source\core</Filter>
-    </ClCompile>
     <ClCompile Include="external\ImGuizmo\ImGuizmo.cpp">
       <Filter>external\ImGuizmo</Filter>
-    </ClCompile>
-    <ClCompile Include="source\core\directional_light.cpp">
-      <Filter>source\core</Filter>
-    </ClCompile>
-    <ClCompile Include="source\core\i_visible_object.cpp">
-      <Filter>source\core</Filter>
-    </ClCompile>
-    <ClCompile Include="source\core\i_light.cpp">
-      <Filter>source\core</Filter>
     </ClCompile>
     <ClCompile Include="source\renderer\render_graph.cpp">
       <Filter>source\renderer</Filter>
@@ -190,6 +166,30 @@
     <ClCompile Include="source\renderer\lighting\gtao.cpp">
       <Filter>source\renderer\lighting</Filter>
     </ClCompile>
+    <ClCompile Include="source\world\camera.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\directional_light.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\i_light.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\i_visible_object.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\model.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\sky_sphere.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\world.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\editor\editor.cpp">
+      <Filter>source\editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -246,9 +246,6 @@
     <ClInclude Include="source\renderer\renderer.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="source\core\world.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
     <ClInclude Include="source\gfx\d3d12\d3d12_device.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
@@ -297,9 +294,6 @@
     <ClInclude Include="source\gfx\d3d12\pix_runtime.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
-    <ClInclude Include="source\core\camera.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
     <ClInclude Include="external\imgui\imconfig.h">
       <Filter>external\imgui</Filter>
     </ClInclude>
@@ -333,17 +327,8 @@
     <ClInclude Include="source\renderer\staging_buffer_allocator.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="source\core\model.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\i_visible_object.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
     <ClInclude Include="external\tinyxml2\tinyxml2.h">
       <Filter>external\tinyxml2</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\editor.h">
-      <Filter>source\core</Filter>
     </ClInclude>
     <ClInclude Include="external\ImFileDialog\ImFileDialog.h">
       <Filter>external\ImFileDialog</Filter>
@@ -351,17 +336,8 @@
     <ClInclude Include="source\utils\string.h">
       <Filter>source\utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\core\sky_sphere.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
     <ClInclude Include="external\ImGuizmo\ImGuizmo.h">
       <Filter>external\ImGuizmo</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\i_light.h">
-      <Filter>source\core</Filter>
-    </ClInclude>
-    <ClInclude Include="source\core\directional_light.h">
-      <Filter>source\core</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\render_graph.h">
       <Filter>source\renderer</Filter>
@@ -465,6 +441,30 @@
     <ClInclude Include="source\renderer\lighting\gtao.h">
       <Filter>source\renderer\lighting</Filter>
     </ClInclude>
+    <ClInclude Include="source\world\camera.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\directional_light.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\i_light.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\i_visible_object.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\model.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\sky_sphere.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\world.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\editor\editor.h">
+      <Filter>source\editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -526,6 +526,12 @@
     </Filter>
     <Filter Include="source\renderer\lighting">
       <UniqueIdentifier>{37cf8b8e-14d3-42da-b1cb-27191be7c0c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\editor">
+      <UniqueIdentifier>{85cbd3f1-1340-4502-b5bd-7ff65409ecab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\world">
+      <UniqueIdentifier>{4375e657-3548-47f8-a364-046016057f48}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

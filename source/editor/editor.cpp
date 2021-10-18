@@ -1,5 +1,5 @@
 #include "editor.h"
-#include "engine.h"
+#include "core/engine.h"
 #include "utils/assert.h"
 #include "utils/system.h"
 #include "imgui/imgui.h"
@@ -174,7 +174,7 @@ void Editor::DrawToolBar()
 
     ImGui::SameLine(0.0f, 3.0f);
     ImGui::SetNextItemWidth(100.0f);
-    ImGui::SliderFloat("##CameraSpeed", &camera_speed, 1.0f, 200.0f);
+    ImGui::SliderFloat("##CameraSpeed", &camera_speed, 1.0f, 200.0f, "%.0f");
     camera->SetMoveSpeed(camera_speed);
 
     ImGui::SameLine(0.0f, 20.0f);
@@ -183,7 +183,7 @@ void Editor::DrawToolBar()
 
     ImGui::SameLine(0.0f, 3.0f);
     ImGui::SetNextItemWidth(100.0f);
-    ImGui::SliderFloat("##CameraFOV", &fov, 5.0f, 135.0f);
+    ImGui::SliderFloat("##CameraFOV", &fov, 5.0f, 135.0f, "%.0f");
     camera->SetFov(fov);
 
     ImGui::End();

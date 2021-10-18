@@ -166,7 +166,7 @@ void Renderer::Render()
         pCommandList->SetPipelineState(m_pCopyPSO);
         pCommandList->Draw(3);
 
-        GUI* pGUI = Engine::GetInstance()->GetWorld()->GetGUI();
+        GUI* pGUI = Engine::GetInstance()->GetGUI();
         pGUI->Render(pCommandList);
 
         pCommandList->EndRenderPass();
