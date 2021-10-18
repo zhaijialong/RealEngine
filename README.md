@@ -12,8 +12,8 @@ my toy engine, mainly for rendering expariment and learning
 * volume cloud
 * volume fog
 * ~~LPM~~
-* TAA
-* CAS
+* ~~TAA~~
+* ~~CAS~~
 * sparse texture
 * sparse shadowmap
 * water/ocean
