@@ -9,9 +9,8 @@
 #include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
-#include "tonemapper.h"
-#include "fxaa.h"
-#include "clustered_shading.h"
+#include "lighting/lighting_processor.h"
+#include "post_processing/post_processor.h"
 #include "lsignal/lsignal.h"
 
 const static int MAX_INFLIGHT_FRAMES = 3;
@@ -80,6 +79,7 @@ private:
     std::unique_ptr<RenderGraph> m_pRenderGraph;
     uint32_t m_nWindowWidth;
     uint32_t m_nWindowHeight;
+    lsignal::connection m_resizeConnection;
 
     std::unique_ptr<IGfxFence> m_pFrameFence;
     uint64_t m_nCurrentFrameFenceValue = 0;
@@ -125,13 +125,10 @@ private:
     std::unique_ptr<Texture2D> m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;
 
-    std::unique_ptr<ClusteredShading> m_pClusteredShading;
-    std::unique_ptr<Tonemapper> m_pToneMapper;
-    std::unique_ptr<FXAA> m_pFXAA;
-
     IGfxPipelineState* m_pCopyPSO = nullptr;
 
-    lsignal::connection m_resizeConnection;
+    std::unique_ptr<LightingProcessor> m_pLightingProcessor;
+    std::unique_ptr<PostProcessor> m_pPostProcessor;
 
     std::vector<ShadowRenderFunc> m_shadowPassBatchs;
     std::vector<RenderFunc> m_gbufferPassBatchs;

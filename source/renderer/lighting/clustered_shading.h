@@ -1,16 +1,16 @@
 #pragma once
 
-#include "render_graph.h"
+#include "../render_graph.h"
 
 struct ClusterShadingPassData
 {
-    RenderGraphHandle albedoRT;
-    RenderGraphHandle normalRT;
-    RenderGraphHandle emissiveRT;
-    RenderGraphHandle depthRT;
-    RenderGraphHandle shadowRT;
+    RenderGraphHandle inAlbedoRT;
+    RenderGraphHandle inNormalRT;
+    RenderGraphHandle inEmissiveRT;
+    RenderGraphHandle inDepthRT;
+    RenderGraphHandle inShadowRT;
 
-    RenderGraphHandle hdrRT;
+    RenderGraphHandle outHdrRT;
 };
 
 class ClusteredShading

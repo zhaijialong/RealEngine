@@ -18,7 +18,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
 {
     struct DepthPassData
     {
-        RenderGraphHandle depthRT;
+        RenderGraphHandle outDepthRT;
     };
 
     auto shadow_pass = m_pRenderGraph->AddPass<DepthPassData>("Shadow Pass",
@@ -29,8 +29,8 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             desc.format = GfxFormat::D16;
             desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
 
-            data.depthRT = builder.Create<RenderGraphTexture>(desc, "ShadowMap");
-            data.depthRT = builder.WriteDepth(data.depthRT, 0, GfxRenderPassLoadOp::Clear, 1.0f);
+            data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "ShadowMap");
+            data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, 1.0f);
         },
         [&](const DepthPassData& data, IGfxCommandList* pCommandList)
         {
@@ -46,10 +46,10 @@ RenderGraphHandle Renderer::BuildRenderGraph()
 
     struct GBufferPassData
     {
-        RenderGraphHandle albedoRT; //srgb : albedo(xyz) + AO(a) 
-        RenderGraphHandle normalRT; //rgb10a2 : normal(xy) + roughness(z)
-        RenderGraphHandle emissiveRT; //srgb : emissive(xyz) + metalness(a)
-        RenderGraphHandle depthRT;
+        RenderGraphHandle outAlbedoRT; //srgb : albedo(xyz) + AO(a) 
+        RenderGraphHandle outNormalRT; //rgb10a2 : normal(xy) + roughness(z)
+        RenderGraphHandle outEmissiveRT; //srgb : emissive(xyz) + metalness(a)
+        RenderGraphHandle outDepthRT;
     };
 
     auto gbuffer_pass = m_pRenderGraph->AddPass<GBufferPassData>("GBuffer Pass",
@@ -60,20 +60,20 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             desc.height = m_nWindowHeight;
             desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
             desc.format = GfxFormat::RGBA8SRGB;
-            data.albedoRT = builder.Create<RenderGraphTexture>(desc, "Albedo RT");
-            data.emissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
+            data.outAlbedoRT = builder.Create<RenderGraphTexture>(desc, "Albedo RT");
+            data.outEmissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
 
             desc.format = GfxFormat::RGB10A2UNORM;
-            data.normalRT = builder.Create<RenderGraphTexture>(desc, "Normal RT");
+            data.outNormalRT = builder.Create<RenderGraphTexture>(desc, "Normal RT");
 
             desc.format = GfxFormat::D32FS8;
             desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
-            data.depthRT = builder.Create<RenderGraphTexture>(desc, "SceneDepth");
+            data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "SceneDepth RT");
 
-            data.albedoRT = builder.WriteColor(0, data.albedoRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
-            data.normalRT = builder.WriteColor(1, data.normalRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
-            data.emissiveRT = builder.WriteColor(2, data.emissiveRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
-            data.depthRT = builder.WriteDepth(data.depthRT, 0, GfxRenderPassLoadOp::Clear, GfxRenderPassLoadOp::Clear);
+            data.outAlbedoRT = builder.WriteColor(0, data.outAlbedoRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
+            data.outNormalRT = builder.WriteColor(1, data.outNormalRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
+            data.outEmissiveRT = builder.WriteColor(2, data.outEmissiveRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
+            data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, GfxRenderPassLoadOp::Clear);
         },
         [&](const GBufferPassData& data, IGfxCommandList* pCommandList)
         {
@@ -113,41 +113,26 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             m_gbufferPassBatchs.clear();
         });
 
-    auto cluster_shading_pass = m_pRenderGraph->AddPass<ClusterShadingPassData>("ClusterShading",
-        [&](ClusterShadingPassData& data, RenderGraphBuilder& builder)
-        {
-            data.albedoRT = builder.Read(gbuffer_pass->albedoRT, GfxResourceState::ShaderResourceNonPS);
-            data.normalRT = builder.Read(gbuffer_pass->normalRT, GfxResourceState::ShaderResourceNonPS);
-            data.emissiveRT = builder.Read(gbuffer_pass->emissiveRT, GfxResourceState::ShaderResourceNonPS);
-            data.depthRT = builder.Read(gbuffer_pass->depthRT, GfxResourceState::ShaderResourceNonPS);
-            data.shadowRT = builder.Read(shadow_pass->depthRT, GfxResourceState::ShaderResourceNonPS);
+    LightingProcessInput lightInput;
+    lightInput.albedoRT = gbuffer_pass->outAlbedoRT;
+    lightInput.normalRT = gbuffer_pass->outNormalRT;
+    lightInput.emissiveRT = gbuffer_pass->outEmissiveRT;
+    lightInput.depthRT = gbuffer_pass->outDepthRT;
+    lightInput.shadowRT = shadow_pass->outDepthRT;
 
-            RenderGraphTexture::Desc desc;
-            desc.width = m_nWindowWidth;
-            desc.height = m_nWindowHeight;
-            desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
-            data.hdrRT = builder.Create<RenderGraphTexture>(desc, "SceneColor");
-
-            data.hdrRT = builder.Write(data.hdrRT, GfxResourceState::UnorderedAccess);
-        },
-        [&](const ClusterShadingPassData& data, IGfxCommandList* pCommandList)
-        {
-            m_pClusteredShading->Draw(pCommandList, data, m_nWindowWidth, m_nWindowHeight);
-        }
-        );
+    RenderGraphHandle lightRT = m_pLightingProcessor->Process(m_pRenderGraph.get(), lightInput, m_nWindowWidth, m_nWindowHeight);
 
     struct ForwardPassData
     {
-        RenderGraphHandle hdrRT;
-        RenderGraphHandle depthRT;
+        RenderGraphHandle outSceneColorRT;
+        RenderGraphHandle outSceneDepthRT;
     };
 
     auto forward_pass = m_pRenderGraph->AddPass<ForwardPassData>("Forward Pass",
         [&](ForwardPassData& data, RenderGraphBuilder& builder)
         {
-            data.hdrRT = builder.WriteColor(0, cluster_shading_pass->hdrRT, 0, GfxRenderPassLoadOp::Load);
-            data.depthRT = builder.WriteDepth(gbuffer_pass->depthRT, 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
+            data.outSceneColorRT = builder.WriteColor(0, lightRT, 0, GfxRenderPassLoadOp::Load);
+            data.outSceneDepthRT = builder.WriteDepth(gbuffer_pass->outDepthRT, 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
         },
         [&](const ForwardPassData& data, IGfxCommandList* pCommandList)
         {
@@ -162,48 +147,11 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         });
 
 
-    auto tonemap_pass = m_pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
-        [&](TonemapPassData& data, RenderGraphBuilder& builder)
-        {
-            data.hdrRT = builder.Read(forward_pass->hdrRT, GfxResourceState::ShaderResourceNonPS);
+    PostProcessInput ppInput;
+    ppInput.sceneColorRT = forward_pass->outSceneColorRT;
+    ppInput.sceneDepthRT = forward_pass->outSceneDepthRT;
 
-            RenderGraphTexture::Desc desc;
-            desc.width = m_nWindowWidth;
-            desc.height = m_nWindowHeight;
-            desc.format = GfxFormat::RGBA8SRGB;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
-            data.ldrRT = builder.Create<RenderGraphTexture>(desc, "ToneMapping Output");
-            data.ldrRT = builder.Write(data.ldrRT, GfxResourceState::UnorderedAccess);
-        },
-        [&](const TonemapPassData& data, IGfxCommandList* pCommandList)
-        {
-            RenderGraphTexture* sceneColorRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.hdrRT);
-            RenderGraphTexture* ldrRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.ldrRT);
+    RenderGraphHandle output = m_pPostProcessor->Process(m_pRenderGraph.get(), ppInput, m_nWindowWidth, m_nWindowHeight);
 
-            m_pToneMapper->Draw(pCommandList, sceneColorRT->GetSRV(), ldrRT->GetUAV(), m_nWindowWidth, m_nWindowHeight);
-        });
-
-
-    auto fxaa_pass = m_pRenderGraph->AddPass<FXAAPassData>("FXAA",
-        [&](FXAAPassData& data, RenderGraphBuilder& builder)
-        {
-            data.ldrRT = builder.Read(tonemap_pass->ldrRT, GfxResourceState::ShaderResourceNonPS);
-
-            RenderGraphTexture::Desc desc;
-            desc.width = m_nWindowWidth;
-            desc.height = m_nWindowHeight;
-            desc.format = GfxFormat::RGBA8SRGB;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
-            data.outputRT = builder.Create<RenderGraphTexture>(desc, "FXAA Output");
-            data.outputRT = builder.Write(data.outputRT, GfxResourceState::UnorderedAccess);
-        },
-        [&](const FXAAPassData& data, IGfxCommandList* pCommandList)
-        {
-            RenderGraphTexture* ldrRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.ldrRT);
-            RenderGraphTexture* outRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.outputRT);
-
-            m_pFXAA->Draw(pCommandList, ldrRT->GetSRV(), outRT->GetUAV(), m_nWindowWidth, m_nWindowHeight);
-        });
-
-    return fxaa_pass->outputRT;
+    return output;
 }

@@ -1,5 +1,5 @@
 #include "tonemapper.h"
-#include "renderer.h"
+#include "../renderer.h"
 
 // LPM
 #define A_CPU 1

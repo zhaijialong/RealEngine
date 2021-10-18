@@ -1,5 +1,5 @@
 #include "clustered_shading.h"
-#include "renderer.h"
+#include "../renderer.h"
 #include "core/engine.h"
 
 float2 DepthlinearizationParams(const float4x4& ProjMatrix)
@@ -57,12 +57,12 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, const ClusterShadingP
 {
 	RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
 
-	RenderGraphTexture* albedoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.albedoRT);
-	RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalRT);
-	RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.emissiveRT);
-	RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthRT);
-	RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.shadowRT);
-	RenderGraphTexture* hdrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.hdrRT);
+	RenderGraphTexture* albedoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inAlbedoRT);
+	RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inNormalRT);
+	RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inEmissiveRT);
+	RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inDepthRT);
+	RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inShadowRT);
+	RenderGraphTexture* hdrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outHdrRT);
 
 	pCommandList->SetPipelineState(m_pPSO);
 

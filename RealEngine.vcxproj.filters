@@ -106,9 +106,6 @@
     <ClCompile Include="external\ImGuizmo\ImGuizmo.cpp">
       <Filter>external\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\tonemapper.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="source\core\directional_light.cpp">
       <Filter>source\core</Filter>
     </ClCompile>
@@ -119,9 +116,6 @@
       <Filter>source\core</Filter>
     </ClCompile>
     <ClCompile Include="source\renderer\render_graph.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="source\renderer\post_processor.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
     <ClCompile Include="source\renderer\resource\texture_2d.cpp">
@@ -151,9 +145,6 @@
     <ClCompile Include="source\renderer\texture_loader.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\fxaa.cpp">
-      <Filter>source\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
@@ -175,8 +166,20 @@
     <ClCompile Include="source\windows\main.cpp">
       <Filter>source\windows</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\clustered_shading.cpp">
-      <Filter>source\renderer</Filter>
+    <ClCompile Include="source\renderer\lighting\clustered_shading.cpp">
+      <Filter>source\renderer\lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\post_processing\fxaa.cpp">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\post_processing\tonemapper.cpp">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\post_processing\post_processor.cpp">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\lighting\lighting_processor.cpp">
+      <Filter>source\renderer\lighting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -345,9 +348,6 @@
     <ClInclude Include="external\ImGuizmo\ImGuizmo.h">
       <Filter>external\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\tonemapper.h">
-      <Filter>source\renderer</Filter>
-    </ClInclude>
     <ClInclude Include="source\core\i_light.h">
       <Filter>source\core</Filter>
     </ClInclude>
@@ -368,9 +368,6 @@
     </ClInclude>
     <ClInclude Include="source\utils\system.h">
       <Filter>source\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="source\renderer\post_processor.h">
-      <Filter>source\renderer</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\resource\texture_2d.h">
       <Filter>source\renderer\resource</Filter>
@@ -397,9 +394,6 @@
       <Filter>source\renderer\resource</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\texture_loader.h">
-      <Filter>source\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="source\renderer\fxaa.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
     <ClInclude Include="shaders\fxaa.hlsli">
@@ -435,8 +429,20 @@
     <ClInclude Include="shaders\ffx_lpm.h">
       <Filter>shaders</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\clustered_shading.h">
-      <Filter>source\renderer</Filter>
+    <ClInclude Include="source\renderer\lighting\clustered_shading.h">
+      <Filter>source\renderer\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\post_processing\fxaa.h">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\post_processing\tonemapper.h">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\post_processing\post_processor.h">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\lighting\lighting_processor.h">
+      <Filter>source\renderer\lighting</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -493,6 +499,12 @@
     </Filter>
     <Filter Include="source\windows">
       <UniqueIdentifier>{a8c7dadd-4b19-4c53-b88b-ab9ded644368}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\renderer\post_processing">
+      <UniqueIdentifier>{55ffff25-603c-4070-b5d0-ce164c63fcc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\renderer\lighting">
+      <UniqueIdentifier>{37cf8b8e-14d3-42da-b1cb-27191be7c0c9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

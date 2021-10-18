@@ -1,11 +1,11 @@
 #pragma once
 
-#include "render_graph.h"
+#include "../render_graph.h"
 
 struct FXAAPassData
 {
-    RenderGraphHandle ldrRT;
-    RenderGraphHandle outputRT;
+    RenderGraphHandle inRT;
+    RenderGraphHandle outRT;
 };
 
 class FXAA

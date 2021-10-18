@@ -1,5 +1,5 @@
 #include "fxaa.h"
-#include "renderer.h"
+#include "../renderer.h"
 
 FXAA::FXAA(Renderer* pRenderer)
 {

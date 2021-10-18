@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_graph.h"
+#include "../render_graph.h"
 
 enum DisplayMode
 {
@@ -21,8 +21,8 @@ enum ColorSpace
 
 struct TonemapPassData
 {
-    RenderGraphHandle hdrRT;
-    RenderGraphHandle ldrRT;
+    RenderGraphHandle inHdrRT;
+    RenderGraphHandle outLdrRT;
 };
 
 class Tonemapper

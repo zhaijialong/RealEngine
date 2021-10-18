@@ -124,11 +124,13 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp" />
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
-    <ClCompile Include="source\renderer\clustered_shading.cpp" />
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp" />
-    <ClCompile Include="source\renderer\fxaa.cpp" />
+    <ClCompile Include="source\renderer\lighting\clustered_shading.cpp" />
+    <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
-    <ClCompile Include="source\renderer\post_processor.cpp" />
+    <ClCompile Include="source\renderer\post_processing\fxaa.cpp" />
+    <ClCompile Include="source\renderer\post_processing\post_processor.cpp" />
+    <ClCompile Include="source\renderer\post_processing\tonemapper.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
     <ClCompile Include="source\renderer\renderer_frame.cpp" />
     <ClCompile Include="source\renderer\render_graph.cpp" />
@@ -147,7 +149,6 @@
     <ClCompile Include="source\renderer\shader_compiler.cpp" />
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
     <ClCompile Include="source\renderer\texture_loader.cpp" />
-    <ClCompile Include="source\renderer\tonemapper.cpp" />
     <ClCompile Include="source\windows\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -202,11 +203,13 @@
     <ClInclude Include="source\gfx\i_gfx_shader.h" />
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
-    <ClInclude Include="source\renderer\clustered_shading.h" />
     <ClInclude Include="source\renderer\directed_acyclic_graph.h" />
-    <ClInclude Include="source\renderer\fxaa.h" />
+    <ClInclude Include="source\renderer\lighting\clustered_shading.h" />
+    <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
-    <ClInclude Include="source\renderer\post_processor.h" />
+    <ClInclude Include="source\renderer\post_processing\fxaa.h" />
+    <ClInclude Include="source\renderer\post_processing\post_processor.h" />
+    <ClInclude Include="source\renderer\post_processing\tonemapper.h" />
     <ClInclude Include="source\renderer\renderer.h" />
     <ClInclude Include="source\renderer\render_graph.h" />
     <ClInclude Include="source\renderer\render_graph_blackboard.h" />
@@ -227,7 +230,6 @@
     <ClInclude Include="source\renderer\shader_compiler.h" />
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
     <ClInclude Include="source\renderer\texture_loader.h" />
-    <ClInclude Include="source\renderer\tonemapper.h" />
     <ClInclude Include="source\utils\assert.h" />
     <ClInclude Include="source\utils\linear_allocator.h" />
     <ClInclude Include="source\utils\log.h" />

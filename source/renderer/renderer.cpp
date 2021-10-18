@@ -57,6 +57,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     CreateCommonResources();
 
     m_pRenderGraph.reset(new RenderGraph(this));
+    m_pLightingProcessor.reset(new LightingProcessor(this));
+    m_pPostProcessor.reset(new PostProcessor(this));
 }
 
 void Renderer::RenderFrame()
@@ -266,10 +268,6 @@ void Renderer::CreateCommonResources()
 
     desc.max_anisotropy = 16.0f;
     m_pAniso16xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso16xSampler"));
-
-    m_pClusteredShading.reset(new ClusteredShading(this));
-    m_pToneMapper.reset(new Tonemapper(this, DISPLAYMODE_SDR, ColorSpace_REC709));
-    m_pFXAA.reset(new FXAA(this));
     
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
     m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
