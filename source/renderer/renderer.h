@@ -49,9 +49,8 @@ public:
     IndexBuffer* CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
 
-    Texture2D* CreateTexture2D(const std::string& file, bool srgb = true);
+    Texture2D* CreateTexture2D(const std::string& file, bool srgb = true, bool cached = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
-    Texture2D* CreateTexture2D(void* window, float width_ratio, float height_ratio, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
 
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
@@ -122,8 +121,10 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pLinearClampSampler;
     std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
 
-    std::unique_ptr<Texture2D> m_pBrdfTexture;
+    Texture2D* m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;
+
+    std::unordered_map<std::string, std::unique_ptr<Texture2D>> m_cachedTextures;
 
     IGfxPipelineState* m_pCopyPSO = nullptr;
 

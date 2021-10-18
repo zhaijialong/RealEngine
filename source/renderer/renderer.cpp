@@ -270,7 +270,7 @@ void Renderer::CreateCommonResources()
     m_pAniso16xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso16xSampler"));
     
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
-    m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
+    m_pBrdfTexture = CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false);
     m_pEnvTexture.reset(CreateTextureCube(asset_path + "textures/output_pmrem.dds"));
 
     GfxGraphicsPipelineDesc psoDesc;
@@ -327,8 +327,17 @@ StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, 
     return buffer;
 }
 
-Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
+Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb, bool cached)
 {
+    if (cached)
+    {
+        auto iter = m_cachedTextures.find(file);
+        if (iter != m_cachedTextures.end())
+        {
+            return iter->second.get();
+        }
+    }
+
     TextureLoader loader;
     if (!loader.Load(file, srgb))
     {
@@ -344,6 +353,11 @@ Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
 
     UploadTexture(texture->GetTexture(), loader.GetData());
 
+    if (cached)
+    {
+        m_cachedTextures.insert(std::make_pair(file, std::unique_ptr<Texture2D>(texture)));
+    }
+
     return texture;
 }
 
@@ -351,17 +365,6 @@ Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, uint32_t l
 {
     Texture2D* texture = new Texture2D(name);
     if (!texture->Create(width, height, levels, format, flags))
-    {
-        delete texture;
-        return nullptr;
-    }
-    return texture;
-}
-
-Texture2D* Renderer::CreateTexture2D(void* window, float width_ratio, float height_ratio, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name)
-{
-    Texture2D* texture = new Texture2D(name);
-    if (!texture->Create(window, width_ratio, height_ratio, format, flags))
     {
         delete texture;
         return nullptr;

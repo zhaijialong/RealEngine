@@ -198,22 +198,11 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
 
 Texture2D* Model::LoadTexture(const std::string& file, bool srgb)
 {
-    auto iter = m_textures.find(file);
-    if (iter != m_textures.end())
-    {
-        return iter->second.get();
-    }
-
     size_t last_slash = m_file.find_last_of('/');
     std::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     Texture2D* texture = pRenderer->CreateTexture2D(path + file, srgb);
-
-    if (texture != nullptr)
-    {
-        m_textures.insert(std::make_pair(file, std::unique_ptr<Texture2D>(texture)));
-    }
 
     return texture;
 }

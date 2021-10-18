@@ -68,5 +68,4 @@ private:
     std::string m_file;
 
 	std::unique_ptr<Node> m_pRootNode;
-    std::unordered_map<std::string, std::unique_ptr<Texture2D>> m_textures;
 };
