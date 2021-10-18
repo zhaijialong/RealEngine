@@ -30,7 +30,7 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
         if (resource_outgoing.size() > 1) //todo : should merge states if possible, eg. shader resource ps + shader resource non-ps -> shader resource all
         {
             //resource_outgoing should be sorted
-            for (int i = resource_outgoing.size() - 1; i >= 0; --i)
+            for (int i = (int)resource_outgoing.size() - 1; i >= 0; --i)
             {
                 if (resource_outgoing[i]->GetToNode() < this->GetId())
                 {

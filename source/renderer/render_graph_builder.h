@@ -22,16 +22,26 @@ public:
 
     RenderGraphHandle Read(const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource = 0)
     {
-        RE_ASSERT(GFX_ALL_SUB_RESOURCE != subresource); //RG目前不支持GFX_ALL_SUB_RESOURCE
+        RE_ASSERT(usage == GfxResourceState::ShaderResourceNonPS ||
+            usage == GfxResourceState::ShaderResourcePS ||
+            usage == GfxResourceState::ShaderResourceAll ||
+            usage == GfxResourceState::IndirectArg ||
+            usage == GfxResourceState::CopySrc ||
+            usage == GfxResourceState::ResolveSrc);
+
+        RE_ASSERT(GFX_ALL_SUB_RESOURCE != subresource); //RG doesn't support GFX_ALL_SUB_RESOURCE currently
+
         return m_pGraph->Read(m_pPass, input, usage, subresource);
     }
 
     RenderGraphHandle Write(const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource = 0)
     {
-        //use WriteColor/WriteDepth
-        RE_ASSERT(usage != GfxResourceState::RenderTarget && usage != GfxResourceState::DepthStencil && usage != GfxResourceState::DepthStencilReadOnly);
+        RE_ASSERT(usage == GfxResourceState::UnorderedAccess ||
+            usage == GfxResourceState::CopyDst ||
+            usage == GfxResourceState::ResolveDst);
 
-        RE_ASSERT(GFX_ALL_SUB_RESOURCE != subresource); //RG目前不支持GFX_ALL_SUB_RESOURCE
+        RE_ASSERT(GFX_ALL_SUB_RESOURCE != subresource); //RG doesn't support GFX_ALL_SUB_RESOURCE currently
+
         return m_pGraph->Write(m_pPass, input, usage, subresource);
     }
 
