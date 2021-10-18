@@ -1211,20 +1211,20 @@
 //                                                          HLSL HALF
 //==============================================================================================================================
  #ifdef A_HALF
-  #define AH1 min16float
-  #define AH2 min16float2
-  #define AH3 min16float3
-  #define AH4 min16float4
+  #define AH1 float16_t
+  #define AH2 float16_t2
+  #define AH3 float16_t3
+  #define AH4 float16_t4
 //------------------------------------------------------------------------------------------------------------------------------
-  #define AW1 min16uint
-  #define AW2 min16uint2
-  #define AW3 min16uint3
-  #define AW4 min16uint4
+  #define AW1 uint16_t
+  #define AW2 uint16_t2
+  #define AW3 uint16_t3
+  #define AW4 uint16_t4
 //------------------------------------------------------------------------------------------------------------------------------
-  #define ASW1 min16int
-  #define ASW2 min16int2
-  #define ASW3 min16int3
-  #define ASW4 min16int4
+  #define ASW1 int16_t
+  #define ASW2 int16_t2
+  #define ASW3 int16_t3
+  #define ASW4 int16_t4
 //==============================================================================================================================
   // Need to use manual unpack to get optimal execution (don't use packed types in buffers directly).
   // Unpack requires this pattern: https://gpuopen.com/first-steps-implementing-fp16/

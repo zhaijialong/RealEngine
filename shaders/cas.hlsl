@@ -30,7 +30,7 @@ static TextureIO io;
 
 AH3 CasLoadH(ASW2 p)
 {
-    return io.InputTexture.Load(ASU3(p, 0)).rgb;
+    return (AH3)io.InputTexture.Load(ASU3(p, 0)).rgb;
 }
 
 // Lets you transform input from the load into a linear color space between 0 and 1. See ffx_cas.h
