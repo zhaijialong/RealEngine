@@ -1,0 +1,7 @@
+<scene>
+    <model file="model/metal_rough_ball/MetalRoughSpheres.gltf" rotation="180.0,0.0,0.0" />
+    <model file="model/DamagedHelmet/DamagedHelmet.gltf" position="0.0,0.0,-5.0" rotation="180.0,0.0,0.0"/>
+    <skysphere />
+    <camera position="-4.653,6.803,-11.623" rotation="25.899,16.599,0.0" />
+    <light type="directional" primary="true" rotation="-45.000,45.000,0.000"/>
+</scene>

@@ -57,6 +57,8 @@ GBufferOutput ps_main(VSOutput input)
     float4 albedo = float4(MaterialCB.albedo.xyz, 1.0);
     float metallic = MaterialCB.metallic;
     float roughness = MaterialCB.roughness;
+    float ao = 1.0;
+    float3 emissive = float3(0.0, 0.0, 0.0);
 
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
     
@@ -93,10 +95,20 @@ GBufferOutput ps_main(VSOutput input)
     N = normalize(normal.x * T + normal.y * B + normal.z * N);
 #endif
     
+#if EMISSIVE_TEXTURE
+    Texture2D emissiveTexture = ResourceDescriptorHeap[MaterialCB.emissiveTexture];
+	emissive = emissiveTexture.Sample(linearSampler, input.uv).xyz * MaterialCB.emissive;
+#endif
+    
+#if AO_TEXTURE
+    Texture2D aoTexture = ResourceDescriptorHeap[MaterialCB.aoTexture];
+	ao = aoTexture.Sample(linearSampler, input.uv).x;
+#endif
+    
     GBufferOutput output;
-    output.albedoRT = float4(albedo.xyz, 1.0); //todo : ao
+    output.albedoRT = float4(albedo.xyz, ao);
     output.normalRT = float4(OctNormalEncode(N), roughness, 0.0);
-    output.emissiveRT = float4(float3(0.0, 0.0, 0.0), metallic); //todo : emissive
+    output.emissiveRT = float4(emissive, metallic);
     
     return output;
 }

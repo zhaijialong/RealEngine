@@ -9,13 +9,17 @@ struct ModelConstant
 
 struct MaterialConstant
 {
-    uint linearSampler;
     uint albedoTexture;
     uint metallicRoughnessTexture;
     uint normalTexture;
+    uint emissiveTexture;
     
+    uint aoTexture;    
     float3 albedo;
+    
+    float3 emissive;
     float metallic;
+
     float roughness;
     float alphaCutoff;
 };

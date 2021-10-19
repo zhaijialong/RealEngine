@@ -76,6 +76,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float4 emissive = emissiveRT.Load(pos);
     
     float3 N = OctNormalDecode(normal.xy);
+    float ao = albedo.w;
     float roughness = normal.z;
     float metallic = emissive.w;
     
@@ -107,7 +108,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float2 PreintegratedGF = brdfTexture.Sample(pointSampler, float2(NdotV, roughness)).xy;
     float3 indirect_specular = filtered_env * (specular * PreintegratedGF.x + PreintegratedGF.y);
     
-    float3 radiance = direct_light + indirect_diffuse + indirect_specular;
+    float3 radiance = emissive.xyz + direct_light + indirect_diffuse * ao + indirect_specular;
     
     RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_hdrRT];    
     outTexture[dispatchThreadID.xy] = float4(radiance, 1.0);

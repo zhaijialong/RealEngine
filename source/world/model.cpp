@@ -153,6 +153,9 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         }
         if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
 
+        if (material->emissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
+        if (material->aoTexture) defines.push_back("AO_TEXTURE=1");
+
         GfxGraphicsPipelineDesc psoDesc;
         psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
         psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
@@ -179,11 +182,13 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         pCommandList->SetGraphicsConstants(0, vertexCB, sizeof(vertexCB));
 
         MaterialConstant materialCB;
-        materialCB.linearSampler = pRenderer->GetLinearSampler()->GetHeapIndex();
         materialCB.albedoTexture = material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         materialCB.metallicRoughnessTexture = material->metallicRoughnessTexture ? material->metallicRoughnessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         materialCB.normalTexture = material->normalTexture ? material->normalTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        materialCB.emissiveTexture = material->emissiveTexture ? material->emissiveTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        materialCB.aoTexture = material->aoTexture ? material->aoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         materialCB.albedo = material->albedoColor;
+        materialCB.emissive = material->emissiveColor;
         materialCB.metallic = material->metallic;
         materialCB.roughness = material->roughness;
         materialCB.alphaCutoff = material->alphaCutoff;
@@ -305,7 +310,18 @@ Model::Material* Model::LoadMaterial(const cgltf_material* gltf_material)
         material->normalTexture = LoadTexture(gltf_material->normal_texture.texture->image->uri, false);
     }
 
+    if (gltf_material->emissive_texture.texture)
+    {
+        material->emissiveTexture = LoadTexture(gltf_material->emissive_texture.texture->image->uri, true);
+    }
+
+    if (gltf_material->occlusion_texture.texture)
+    {
+        material->aoTexture = LoadTexture(gltf_material->occlusion_texture.texture->image->uri, false);
+    }
+
     material->albedoColor = float3(gltf_material->pbr_metallic_roughness.base_color_factor);
+    material->emissiveColor = float3(gltf_material->emissive_factor);
     material->metallic = gltf_material->pbr_metallic_roughness.metallic_factor;
     material->roughness = gltf_material->pbr_metallic_roughness.roughness_factor;
     material->alphaCutoff = gltf_material->alpha_cutoff;

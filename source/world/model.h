@@ -17,8 +17,11 @@ class Model : public IVisibleObject
 		Texture2D* albedoTexture = nullptr;
 		Texture2D* metallicRoughnessTexture = nullptr;
 		Texture2D* normalTexture = nullptr;
+		Texture2D* emissiveTexture = nullptr;
+		Texture2D* aoTexture = nullptr;
 
 		float3 albedoColor;
+		float3 emissiveColor;
 		float metallic;
 		float roughness;
 		float alphaCutoff;
