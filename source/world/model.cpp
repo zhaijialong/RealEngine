@@ -279,7 +279,7 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
             mesh->normalBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") normal", true));
             break;
         case cgltf_attribute_type_tangent:
-            mesh->tangentBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") tangent", true));
+            mesh->tangentBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") tangent", false));
             break;
         default:
             break;
