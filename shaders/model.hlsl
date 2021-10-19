@@ -58,7 +58,7 @@ GBufferOutput ps_main(VSOutput input)
     float metallic = MaterialCB.metallic;
     float roughness = MaterialCB.roughness;
     float ao = 1.0;
-    float3 emissive = float3(0.0, 0.0, 0.0);
+    float3 emissive = MaterialCB.emissive;
 
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
     
@@ -97,7 +97,7 @@ GBufferOutput ps_main(VSOutput input)
     
 #if EMISSIVE_TEXTURE
     Texture2D emissiveTexture = ResourceDescriptorHeap[MaterialCB.emissiveTexture];
-	emissive = emissiveTexture.Sample(linearSampler, input.uv).xyz * MaterialCB.emissive;
+	emissive *= emissiveTexture.Sample(linearSampler, input.uv).xyz;
 #endif
     
 #if AO_TEXTURE
