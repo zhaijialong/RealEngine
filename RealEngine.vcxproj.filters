@@ -190,6 +190,15 @@
     <ClCompile Include="source\editor\editor.cpp">
       <Filter>source\editor</Filter>
     </ClCompile>
+    <ClCompile Include="source\world\gltf_loader.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\static_mesh.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\skeletal_mesh.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -464,6 +473,15 @@
     </ClInclude>
     <ClInclude Include="source\editor\editor.h">
       <Filter>source\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\gltf_loader.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\static_mesh.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\skeletal_mesh.h">
+      <Filter>source\world</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

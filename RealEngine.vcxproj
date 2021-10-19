@@ -148,10 +148,13 @@
     <ClCompile Include="source\windows\main.cpp" />
     <ClCompile Include="source\world\camera.cpp" />
     <ClCompile Include="source\world\directional_light.cpp" />
+    <ClCompile Include="source\world\gltf_loader.cpp" />
     <ClCompile Include="source\world\i_light.cpp" />
     <ClCompile Include="source\world\i_visible_object.cpp" />
     <ClCompile Include="source\world\model.cpp" />
+    <ClCompile Include="source\world\skeletal_mesh.cpp" />
     <ClCompile Include="source\world\sky_sphere.cpp" />
+    <ClCompile Include="source\world\static_mesh.cpp" />
     <ClCompile Include="source\world\world.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -241,10 +244,13 @@
     <ClInclude Include="source\windows\resource.h" />
     <ClInclude Include="source\world\camera.h" />
     <ClInclude Include="source\world\directional_light.h" />
+    <ClInclude Include="source\world\gltf_loader.h" />
     <ClInclude Include="source\world\i_light.h" />
     <ClInclude Include="source\world\i_visible_object.h" />
     <ClInclude Include="source\world\model.h" />
+    <ClInclude Include="source\world\skeletal_mesh.h" />
     <ClInclude Include="source\world\sky_sphere.h" />
+    <ClInclude Include="source\world\static_mesh.h" />
     <ClInclude Include="source\world\world.h" />
   </ItemGroup>
   <ItemGroup>
