@@ -141,7 +141,16 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
 
         std::vector<std::string> defines;
         if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
-        if (material->metallicRoughnessTexture) defines.push_back("METALLIC_ROUGHNESS_TEXTURE=1");
+        if (material->metallicRoughnessTexture)
+        {
+            defines.push_back("METALLIC_ROUGHNESS_TEXTURE=1");
+
+            if (material->aoTexture == material->metallicRoughnessTexture)
+            {
+                defines.push_back("AO_METALLIC_ROUGHNESS_TEXTURE=1");
+            }
+        }
+
         if (material->normalTexture)
         {
             defines.push_back("NORMAL_TEXTURE=1");
@@ -151,8 +160,8 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
                 defines.push_back("RG_NORMAL_TEXTURE=1");
             }
         }
-        if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
 
+        if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
         if (material->emissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
         if (material->aoTexture) defines.push_back("AO_TEXTURE=1");
 

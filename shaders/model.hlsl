@@ -76,6 +76,9 @@ GBufferOutput ps_main(VSOutput input)
     float4 metallicRoughness = metallicRoughnessTexture.Sample(linearSampler, input.uv);
     metallic *= metallicRoughness.b;
     roughness *= metallicRoughness.g;
+#if AO_METALLIC_ROUGHNESS_TEXTURE
+    ao = metallicRoughness.r;
+#endif    
 #endif
 
 #if NORMAL_TEXTURE
@@ -100,7 +103,7 @@ GBufferOutput ps_main(VSOutput input)
 	emissive *= emissiveTexture.Sample(linearSampler, input.uv).xyz;
 #endif
     
-#if AO_TEXTURE
+#if AO_TEXTURE && !AO_METALLIC_ROUGHNESS_TEXTURE
     Texture2D aoTexture = ResourceDescriptorHeap[MaterialCB.aoTexture];
 	ao = aoTexture.Sample(linearSampler, input.uv).x;
 #endif

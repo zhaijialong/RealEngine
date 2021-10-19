@@ -177,6 +177,8 @@
     <ClInclude Include="shaders\ffx_cas.h" />
     <ClInclude Include="shaders\ffx_lpm.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
+    <ClInclude Include="shaders\IntelTAA.h" />
+    <ClInclude Include="shaders\XeGTAO.h" />
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\gui.h" />
     <ClInclude Include="source\editor\editor.h" />
@@ -260,7 +262,9 @@
     <None Include="shaders\atmosphere.hlsli" />
     <None Include="shaders\common.hlsli" />
     <None Include="shaders\global_constants.hlsli" />
+    <None Include="shaders\IntelTAA.hlsli" />
     <None Include="shaders\model_constants.hlsli" />
+    <None Include="shaders\XeGTAO.hlsli" />
     <None Include="source\renderer\render_graph.inl" />
   </ItemGroup>
   <ItemGroup>
