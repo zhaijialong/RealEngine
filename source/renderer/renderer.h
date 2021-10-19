@@ -31,11 +31,10 @@ public:
     void RenderFrame();
     void WaitGpuFinished();
 
-    uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
-    ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
     uint32_t GetBackbufferWidth() const { return m_pSwapchain->GetDesc().width; }
     uint32_t GetBackbufferHeight() const { return m_pSwapchain->GetDesc().height; }
-
+    uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
+    ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
     RenderGraph* GetRenderGraph() { return m_pRenderGraph.get(); }
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
@@ -48,10 +47,8 @@ public:
 
     IndexBuffer* CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
-
     Texture2D* CreateTexture2D(const std::string& file, bool srgb = true, bool cached = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
-
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
     void UploadTexture(IGfxTexture* texture, void* data);
@@ -74,8 +71,10 @@ private:
 private:
     std::unique_ptr<IGfxDevice> m_pDevice;
     std::unique_ptr<IGfxSwapchain> m_pSwapchain;
-
     std::unique_ptr<RenderGraph> m_pRenderGraph;
+    std::unique_ptr<ShaderCompiler> m_pShaderCompiler;
+    std::unique_ptr<ShaderCache> m_pShaderCache;
+    std::unique_ptr<PipelineStateCache> m_pPipelineCache;
     uint32_t m_nWindowWidth;
     uint32_t m_nWindowHeight;
     lsignal::connection m_resizeConnection;
@@ -106,10 +105,6 @@ private:
         StagingBuffer staging_buffer;
     };
     std::vector<BufferUpload> m_pendingBufferUpload;
-
-    std::unique_ptr<ShaderCompiler> m_pShaderCompiler;
-    std::unique_ptr<ShaderCache> m_pShaderCache;
-    std::unique_ptr<PipelineStateCache> m_pPipelineCache;
 
     std::unique_ptr<IGfxDescriptor> m_pAniso2xSampler;
     std::unique_ptr<IGfxDescriptor> m_pAniso4xSampler;

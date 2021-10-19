@@ -85,7 +85,10 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
 
         GfxGraphicsPipelineDesc psoDesc;
         psoDesc.vs = pRenderer->GetShader("model_shadow.hlsl", "vs_main", "vs_6_6", defines);
-        //psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
+        if (material->albedoTexture && material->alphaTest)
+        {
+            psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
+        }
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = true;
         psoDesc.rasterizer_state.depth_bias = 5.0f;

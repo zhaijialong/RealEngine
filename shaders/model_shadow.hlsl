@@ -1,5 +1,6 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
+#include "global_constants.hlsli"
 
 cbuffer CB : register(b0)
 {
@@ -32,4 +33,15 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 #endif
     
     return output;
+}
+
+void ps_main(VSOutput input)
+{
+#if ALBEDO_TEXTURE && ALPHA_TEST
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
+    Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
+	float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
+    
+    clip(albedo.a - MaterialCB.alphaCutoff);
+#endif
 }
