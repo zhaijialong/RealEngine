@@ -60,8 +60,8 @@ public:
 	virtual void Render(Renderer* pRenderer) override;
 
 private:
-	void RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld);
-	void RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera, Node* pNode, const float4x4& parentWorld);
+	void RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld);
+	void RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld);
 
 	Texture2D* LoadTexture(const std::string& file, bool srgb);
 	Node* LoadNode(const cgltf_node* gltf_node);

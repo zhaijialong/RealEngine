@@ -78,11 +78,11 @@ void SkySphere::Tick(float delta_time)
 
 void SkySphere::Render(Renderer* pRenderer)
 {
-	RenderFunc bassPassBatch = std::bind(&SkySphere::RenderSky, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+	RenderFunc bassPassBatch = std::bind(&SkySphere::RenderSky, this, std::placeholders::_1, std::placeholders::_2);
 	pRenderer->AddForwardPassBatch(bassPassBatch);
 }
 
-void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera)
+void SkySphere::RenderSky(IGfxCommandList* pCommandList, const float4x4& mtxVP)
 {
 	GPU_EVENT(pCommandList, "SkySphere");
 
@@ -96,6 +96,8 @@ void SkySphere::RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Ca
 		uint posBuffer;
 		float3 cameraPos;
 	};
+
+	Camera* pCamera = Engine::GetInstance()->GetWorld()->GetCamera();
 
 	float4x4 mtxWorld = translation_matrix(pCamera->GetPosition());
 

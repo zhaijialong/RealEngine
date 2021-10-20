@@ -199,6 +199,15 @@
     <ClCompile Include="source\world\skeletal_mesh.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
+    <ClCompile Include="source\world\mesh_material.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\skeleton.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\world\animation.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -488,6 +497,15 @@
     </ClInclude>
     <ClInclude Include="shaders\XeGTAO.h">
       <Filter>shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\mesh_material.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\skeleton.h">
+      <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\animation.h">
+      <Filter>source\world</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

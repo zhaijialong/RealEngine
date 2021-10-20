@@ -12,7 +12,7 @@ public:
     virtual void Render(Renderer* pRenderer) override;
 
 private:
-    void RenderSky(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera);
+    void RenderSky(IGfxCommandList* pCommandList, const float4x4& mtxVP);
 
 private:
     IGfxPipelineState* m_pPSO = nullptr;

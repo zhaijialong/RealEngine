@@ -18,8 +18,7 @@ const static int MAX_INFLIGHT_FRAMES = 3;
 class Camera;
 class Renderer;
 
-using RenderFunc = std::function<void(IGfxCommandList*, Renderer*, Camera*)>;
-using ShadowRenderFunc = std::function<void(IGfxCommandList*, Renderer*, const float4x4&)>;
+using RenderFunc = std::function<void(IGfxCommandList*, const float4x4&)>;
 
 class Renderer
 {
@@ -54,7 +53,7 @@ public:
     void UploadTexture(IGfxTexture* texture, void* data);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 
-    void AddShadowPassBatch(const ShadowRenderFunc& func) { m_shadowPassBatchs.push_back(func); }
+    void AddShadowPassBatch(const RenderFunc& func) { m_shadowPassBatchs.push_back(func); }
     void AddGBufferPassBatch(const RenderFunc& func) { m_gbufferPassBatchs.push_back(func); }
     void AddForwardPassBatch(const RenderFunc& func) { m_forwardPassBatchs.push_back(func); }
 
@@ -126,7 +125,7 @@ private:
     std::unique_ptr<LightingProcessor> m_pLightingProcessor;
     std::unique_ptr<PostProcessor> m_pPostProcessor;
 
-    std::vector<ShadowRenderFunc> m_shadowPassBatchs;
+    std::vector<RenderFunc> m_shadowPassBatchs;
     std::vector<RenderFunc> m_gbufferPassBatchs;
     std::vector<RenderFunc> m_forwardPassBatchs;
 };

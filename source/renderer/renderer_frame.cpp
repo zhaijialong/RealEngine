@@ -39,7 +39,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
 
             for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
             {
-                m_shadowPassBatchs[i](pCommandList, this, mtxVP);
+                m_shadowPassBatchs[i](pCommandList, mtxVP);
             }
             m_shadowPassBatchs.clear();
         });
@@ -108,7 +108,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
 
             for (size_t i = 0; i < m_gbufferPassBatchs.size(); ++i)
             {
-                m_gbufferPassBatchs[i](pCommandList, this, camera);
+                m_gbufferPassBatchs[i](pCommandList, camera->GetViewProjectionMatrix());
             }
             m_gbufferPassBatchs.clear();
         });
@@ -141,7 +141,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
                 World* world = Engine::GetInstance()->GetWorld();
                 Camera* camera = world->GetCamera();
 
-                m_forwardPassBatchs[i](pCommandList, this, camera);
+                m_forwardPassBatchs[i](pCommandList, camera->GetViewProjectionMatrix());
             }
             m_forwardPassBatchs.clear();
         });

@@ -52,14 +52,14 @@ void Model::Render(Renderer* pRenderer)
     float4x4 S = scaling_matrix(m_scale);
     float4x4 mtxWorld = mul(T, mul(R, S));
 
-    RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, m_pRootNode.get(), mtxWorld);
+    RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get(), mtxWorld);
     pRenderer->AddGBufferPassBatch(bassPassBatch);
 
-    ShadowRenderFunc shadowPassBatch = std::bind(&Model::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, m_pRootNode.get(), mtxWorld);
+    RenderFunc shadowPassBatch = std::bind(&Model::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get(), mtxWorld);
     pRenderer->AddShadowPassBatch(shadowPassBatch);
 }
 
-void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld)
+void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld)
 {
     float4x4 mtxWorld = mul(parentWorld, pNode->localToParentMatrix);
     float4x4 mtxWVP = mul(mtxVP, mtxWorld);
@@ -87,7 +87,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
             mesh->posBuffer->GetSRV()->GetHeapIndex(),
             mesh->uvBuffer->GetSRV()->GetHeapIndex(),
             material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
-            pRenderer->GetLinearSampler()->GetHeapIndex()
+            GFX_INVALID_RESOURCE
         };
         pCommandList->SetGraphicsConstants(0, vertexCB, sizeof(vertexCB));
 
@@ -96,14 +96,14 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
     {
-        RenderShadowPass(pCommandList, pRenderer, mtxVP, pNode->childNodes[i].get(), mtxWorld);
+        RenderShadowPass(pCommandList, mtxVP, pNode->childNodes[i].get(), mtxWorld);
     }
 }
 
-void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, Camera* pCamera, Node* pNode, const float4x4& parentWorld)
+void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld)
 {
     float4x4 mtxWorld = mul(parentWorld, pNode->localToParentMatrix);
-    float4x4 mtxWVP = mul(pCamera->GetViewProjectionMatrix(), mtxWorld);
+    float4x4 mtxWVP = mul(mtxVP, mtxWorld);
 
     ModelConstant modelCB;
     modelCB.mtxWVP = mtxWVP;
@@ -151,7 +151,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
     {
-        RenderBassPass(pCommandList, pRenderer, pCamera, pNode->childNodes[i].get(), mtxWorld);
+        RenderBassPass(pCommandList, mtxVP, pNode->childNodes[i].get(), mtxWorld);
     }
 }
 

@@ -7,7 +7,7 @@ cbuffer CB : register(b0)
     uint c_posBuffer;
     uint c_uvBuffer;
     uint c_albedoTexture;
-    uint c_linearSampler;
+    uint _padding;
 };
 
 struct VSOutput
