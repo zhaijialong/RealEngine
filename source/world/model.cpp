@@ -79,26 +79,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, Renderer* pRenderer,
         std::string event_name = m_file + " " + mesh->name;
         GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
 
-        std::vector<std::string> defines;
-        if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
-        if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
-
-        GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = pRenderer->GetShader("model_shadow.hlsl", "vs_main", "vs_6_6", defines);
-        if (material->albedoTexture && material->alphaTest)
-        {
-            psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
-        }
-        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-        psoDesc.rasterizer_state.front_ccw = true;
-        psoDesc.rasterizer_state.depth_bias = 5.0f;
-        psoDesc.rasterizer_state.depth_slope_scale = 1.0f;
-        psoDesc.depthstencil_state.depth_test = true;
-        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::LessEqual;
-        psoDesc.depthstencil_format = GfxFormat::D16;
-
-        IGfxPipelineState* pPSO = pRenderer->GetPipelineState(psoDesc, "model shadow PSO");
-        pCommandList->SetPipelineState(pPSO);
+        pCommandList->SetPipelineState(mesh->shadowPSO);
         pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
 
         uint32_t vertexCB[4] =
@@ -139,46 +120,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, Renderer* pRenderer, C
         std::string event_name = m_file + " " + mesh->name;
         GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
 
-        std::vector<std::string> defines;
-        if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
-        if (material->metallicRoughnessTexture)
-        {
-            defines.push_back("METALLIC_ROUGHNESS_TEXTURE=1");
-
-            if (material->aoTexture == material->metallicRoughnessTexture)
-            {
-                defines.push_back("AO_METALLIC_ROUGHNESS_TEXTURE=1");
-            }
-        }
-
-        if (material->normalTexture)
-        {
-            defines.push_back("NORMAL_TEXTURE=1");
-
-            if (material->normalTexture->GetTexture()->GetDesc().format == GfxFormat::BC5UNORM)
-            {
-                defines.push_back("RG_NORMAL_TEXTURE=1");
-            }
-        }
-
-        if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
-        if (material->emissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
-        if (material->aoTexture) defines.push_back("AO_TEXTURE=1");
-
-        GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
-        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
-        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-        psoDesc.rasterizer_state.front_ccw = true;
-        psoDesc.depthstencil_state.depth_test = true;
-        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-        psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
-        psoDesc.rt_format[1] = GfxFormat::RGB10A2UNORM;
-        psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
-        psoDesc.depthstencil_format = GfxFormat::D32FS8;
-
-        IGfxPipelineState* pPSO = pRenderer->GetPipelineState(psoDesc, "model PSO");
-        pCommandList->SetPipelineState(pPSO);
+        pCommandList->SetPipelineState(mesh->PSO);
         pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
 
         uint32_t vertexCB[4] = 
@@ -294,6 +236,10 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
             break;
         }
     }
+
+    mesh->PSO = GetPSO(mesh->material.get());
+    mesh->shadowPSO = GetShadowPSO(mesh->material.get());
+
     return mesh;
 }
 
@@ -359,9 +305,7 @@ StructuredBuffer* Model::LoadVertexBuffer(const cgltf_accessor* accessor, const 
 
     uint32_t stride = (uint32_t)accessor->stride;
     uint32_t size = stride * (uint32_t)accessor->count;
-
-    void* data = RE_ALLOC(size);
-    memcpy(data, (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset, size);
+    void* data = (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset;
 
     //convert right-hand to left-hand
     if (convertToLH)
@@ -377,4 +321,74 @@ StructuredBuffer* Model::LoadVertexBuffer(const cgltf_accessor* accessor, const 
     StructuredBuffer* buffer = pRenderer->CreateStructuredBuffer(data, stride, (uint32_t)accessor->count, name);
 
     return buffer;
+}
+
+IGfxPipelineState* Model::GetPSO(Material* material)
+{
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    std::vector<std::string> defines;
+    if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+    if (material->metallicRoughnessTexture)
+    {
+        defines.push_back("METALLIC_ROUGHNESS_TEXTURE=1");
+
+        if (material->aoTexture == material->metallicRoughnessTexture)
+        {
+            defines.push_back("AO_METALLIC_ROUGHNESS_TEXTURE=1");
+        }
+    }
+
+    if (material->normalTexture)
+    {
+        defines.push_back("NORMAL_TEXTURE=1");
+
+        if (material->normalTexture->GetTexture()->GetDesc().format == GfxFormat::BC5UNORM)
+        {
+            defines.push_back("RG_NORMAL_TEXTURE=1");
+        }
+    }
+
+    if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
+    if (material->emissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
+    if (material->aoTexture) defines.push_back("AO_TEXTURE=1");
+
+    GfxGraphicsPipelineDesc psoDesc;
+    psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
+    psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
+    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+    psoDesc.rasterizer_state.front_ccw = true;
+    psoDesc.depthstencil_state.depth_test = true;
+    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+    psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
+    psoDesc.rt_format[1] = GfxFormat::RGB10A2UNORM;
+    psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
+    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+
+    return pRenderer->GetPipelineState(psoDesc, "model PSO");
+}
+
+IGfxPipelineState* Model::GetShadowPSO(Material* material)
+{
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    std::vector<std::string> defines;
+    if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+    if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
+
+    GfxGraphicsPipelineDesc psoDesc;
+    psoDesc.vs = pRenderer->GetShader("model_shadow.hlsl", "vs_main", "vs_6_6", defines);
+    if (material->albedoTexture && material->alphaTest)
+    {
+        psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
+    }
+    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+    psoDesc.rasterizer_state.front_ccw = true;
+    psoDesc.rasterizer_state.depth_bias = 5.0f;
+    psoDesc.rasterizer_state.depth_slope_scale = 1.0f;
+    psoDesc.depthstencil_state.depth_test = true;
+    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::LessEqual;
+    psoDesc.depthstencil_format = GfxFormat::D16;
+
+    return pRenderer->GetPipelineState(psoDesc, "model shadow PSO");
 }

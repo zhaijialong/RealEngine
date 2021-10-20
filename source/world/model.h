@@ -33,6 +33,9 @@ class Model : public IVisibleObject
 		std::string name;
 		std::unique_ptr<Material> material;
 
+		IGfxPipelineState* PSO = nullptr;
+		IGfxPipelineState* shadowPSO = nullptr;
+
 		std::unique_ptr<IndexBuffer> indexBuffer;
 
 		std::unique_ptr<StructuredBuffer> posBuffer;
@@ -66,6 +69,9 @@ private:
 	Material* LoadMaterial(const cgltf_material* gltf_material);
 	IndexBuffer* LoadIndexBuffer(const cgltf_accessor* accessor, const std::string& name);
 	StructuredBuffer* LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& name, bool convertToLH);
+
+	IGfxPipelineState* GetPSO(Material* material);
+	IGfxPipelineState* GetShadowPSO(Material* material);
 
 private:
     std::string m_file;
