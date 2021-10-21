@@ -58,11 +58,8 @@ bool ShaderCompiler::Compile(const std::string& source, const std::string& file,
 
 #ifdef _DEBUG
     arguments.push_back(L"-Zi");
+    arguments.push_back(L"-Qembed_debug");
     arguments.push_back(L"-O0");
-
-    //TODO
-    // L"-Fo", L"myshader.bin",
-    // L"-Fd", L"myshader.pdb",
 #endif
 
     CComPtr<IDxcResult> pResults;

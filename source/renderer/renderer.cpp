@@ -327,6 +327,23 @@ StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, 
     return buffer;
 }
 
+RawBuffer* Renderer::CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type)
+{
+    RawBuffer* buffer = new RawBuffer(name);
+    if (!buffer->Create(size, memory_type))
+    {
+        delete buffer;
+        return nullptr;
+    }
+
+    if (data)
+    {
+        UploadBuffer(buffer->GetBuffer(), data, size);
+    }
+
+    return buffer;
+}
+
 Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb, bool cached)
 {
     if (cached)

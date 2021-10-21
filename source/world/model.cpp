@@ -34,34 +34,161 @@ bool Model::Create()
 
     cgltf_load_buffers(&options, data, file.c_str());
 
-    RE_ASSERT(data->scenes_count == 1 && data->scene->nodes_count == 1);
-    m_pRootNode.reset(LoadNode(data->scene->nodes[0]));
+    RE_ASSERT(data->scenes_count == 1 && data->scenes[0].nodes_count == 1);
+    m_pRootNode.reset(LoadNode(data->scenes[0].nodes[0]));
+
+    if (data->animations_count > 0)
+    {
+        m_pAnimation.reset(LoadAnimation(&data->animations[0]));
+        LoadSkin(&data->skins[0]);
+    }
 
     cgltf_free(data);
+    m_nodeMapping.clear();
     return true;
 }
 
 void Model::Tick(float delta_time)
 {
-}
+    if (m_pAnimation != nullptr)
+    {
+        m_currentAnimTime += delta_time;
+        if (m_currentAnimTime > m_pAnimation->timeDuration)
+        {
+            m_currentAnimTime = m_currentAnimTime - m_pAnimation->timeDuration;
+        }
 
-void Model::Render(Renderer* pRenderer)
-{
+        for (size_t i = 0; i < m_pAnimation->channels.size(); ++i)
+        {
+            const AnimationChannel& channel = m_pAnimation->channels[i];
+            PlayAnimationChannel(channel);
+        }
+    }
+
     float4x4 T = translation_matrix(m_pos);
     float4x4 R = rotation_matrix(rotation_quat(m_rotation));
     float4x4 S = scaling_matrix(m_scale);
     float4x4 mtxWorld = mul(T, mul(R, S));
+    UpdateMatrix(m_pRootNode.get(), mtxWorld);
 
-    RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get(), mtxWorld);
+    if (!m_boneList.empty())
+    {
+        m_boneMatrices.resize(m_boneList.size());
+
+        const float4x4 inverse_model = inverse(m_pRootNode->localToParentMatrix);
+
+        for (size_t i = 0; i < m_boneList.size(); ++i)
+        {
+            m_boneMatrices[i] = mul(inverse_model, mul(m_boneList[i]->worldMatrix, m_inverseBindMatrices[i]));
+        }
+
+
+        void* data = m_pBoneMatrixBuffer->GetBuffer()->GetCpuAddress();
+        uint32_t size = sizeof(float4x4) * (uint32_t)m_boneMatrices.size();
+
+        m_boneMatrixBufferOffset += size;
+        if (m_boneMatrixBufferOffset >= m_pBoneMatrixBuffer->GetBuffer()->GetDesc().size)
+        {
+            m_boneMatrixBufferOffset = 0;
+        }
+
+        memcpy((char*)data + m_boneMatrixBufferOffset, m_boneMatrices.data(), size);        
+    }
+}
+
+void Model::UpdateMatrix(Node* node, const float4x4& parentWorld)
+{
+    if (node->isBone)
+    {
+        float4x4 T = translation_matrix(node->animPose.translation);
+        float4x4 R = rotation_matrix(node->animPose.rotation);
+        float4x4 S = scaling_matrix(node->animPose.scale);
+        float4x4 poseMatrix = RightHandToLeftHand(mul(T, mul(R, S)));
+        node->worldMatrix = mul(parentWorld, poseMatrix);
+    }
+    else
+    {
+        node->worldMatrix = mul(parentWorld, node->localToParentMatrix);
+    }
+
+    for (size_t i = 0; i < node->childNodes.size(); ++i)
+    {
+        UpdateMatrix(node->childNodes[i].get(), node->worldMatrix);
+    }
+}
+
+void Model::PlayAnimationChannel(const AnimationChannel& channel)
+{
+    std::pair<float, float4> lower_frame;
+    std::pair<float, float4> upper_frame;
+
+    bool found = false;
+    for (size_t frame = 0; frame < channel.keyframes.size() - 1; ++frame)
+    {
+        if (channel.keyframes[frame].first <= m_currentAnimTime &&
+            channel.keyframes[frame + 1].first >= m_currentAnimTime)
+        {
+            lower_frame = channel.keyframes[frame];
+            upper_frame = channel.keyframes[frame + 1];
+            found = true;
+            break;
+        }
+    }
+
+    float interpolation_value;
+    if (found)
+    {
+        interpolation_value = (m_currentAnimTime - lower_frame.first) / (upper_frame.first - lower_frame.first);
+    }
+    else
+    {
+        lower_frame = upper_frame = channel.keyframes[0];
+        interpolation_value = 0.0f;
+    }
+
+    switch (channel.interpolation)
+    {
+    case AnimationInterpolation::Linear:
+    case AnimationInterpolation::Step:
+    case AnimationInterpolation::CubicSpline:
+        //todo step, cubicspline
+        LinearInterpolate(channel, interpolation_value, lower_frame.second, upper_frame.second);
+        break;
+    default:
+        break;
+    }
+}
+
+void Model::LinearInterpolate(const AnimationChannel& channel, float interpolation_value, const float4& lower, const float4& upper)
+{
+    switch (channel.mode)
+    {
+    case AnimationChannelMode::Translation:
+        channel.targetNode->animPose.translation = lerp(lower.xyz(), upper.xyz(), interpolation_value);
+        break;
+    case AnimationChannelMode::Rotation:
+        channel.targetNode->animPose.rotation = slerp(lower, upper, interpolation_value);
+        break;
+    case AnimationChannelMode::Scale:
+        channel.targetNode->animPose.scale = lerp(lower.xyz(), upper.xyz(), interpolation_value);
+        break;
+    default:
+        break;
+    }
+}
+
+void Model::Render(Renderer* pRenderer)
+{
+    RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
     pRenderer->AddGBufferPassBatch(bassPassBatch);
 
-    RenderFunc shadowPassBatch = std::bind(&Model::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get(), mtxWorld);
+    RenderFunc shadowPassBatch = std::bind(&Model::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
     pRenderer->AddShadowPassBatch(shadowPassBatch);
 }
 
-void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld)
+void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode)
 {
-    float4x4 mtxWorld = mul(parentWorld, pNode->localToParentMatrix);
+    float4x4 mtxWorld = pNode->worldMatrix;
     float4x4 mtxWVP = mul(mtxVP, mtxWorld);
 
     ModelConstant modelCB;
@@ -79,13 +206,18 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxV
         std::string event_name = m_file + " " + mesh->name;
         GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
 
+        if (mesh->shadowPSO == nullptr)
+        {
+            mesh->shadowPSO = GetShadowPSO(mesh->material.get());
+        }
+
         pCommandList->SetPipelineState(mesh->shadowPSO);
         pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
 
         uint32_t vertexCB[4] =
         {
             mesh->posBuffer->GetSRV()->GetHeapIndex(),
-            mesh->uvBuffer->GetSRV()->GetHeapIndex(),
+            mesh->uvBuffer ? mesh->uvBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
             material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
             GFX_INVALID_RESOURCE
         };
@@ -96,21 +228,19 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxV
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
     {
-        RenderShadowPass(pCommandList, mtxVP, pNode->childNodes[i].get(), mtxWorld);
+        RenderShadowPass(pCommandList, mtxVP, pNode->childNodes[i].get());
     }
 }
 
-void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode, const float4x4& parentWorld)
+void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode)
 {
-    float4x4 mtxWorld = mul(parentWorld, pNode->localToParentMatrix);
+    float4x4 mtxWorld = pNode->worldMatrix;
     float4x4 mtxWVP = mul(mtxVP, mtxWorld);
 
     ModelConstant modelCB;
     modelCB.mtxWVP = mtxWVP;
     modelCB.mtxWorld = mtxWorld;
     modelCB.mtxNormal = transpose(inverse(mtxWorld));
-
-    pCommandList->SetGraphicsConstants(1, &modelCB, sizeof(modelCB));
 
     for (size_t i = 0; i < pNode->meshes.size(); ++i)
     {
@@ -120,17 +250,23 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
         std::string event_name = m_file + " " + mesh->name;
         GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
 
+        if (mesh->PSO == nullptr)
+        {
+            mesh->PSO = GetPSO(mesh->material.get());
+        }
+
         pCommandList->SetPipelineState(mesh->PSO);
         pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
 
-        uint32_t vertexCB[4] = 
-        { 
-            mesh->posBuffer->GetSRV()->GetHeapIndex(),
-            mesh->uvBuffer->GetSRV()->GetHeapIndex(),
-            mesh->normalBuffer->GetSRV()->GetHeapIndex(),
-            mesh->tangentBuffer ? mesh->tangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE
-        };
-        pCommandList->SetGraphicsConstants(0, vertexCB, sizeof(vertexCB));
+        modelCB.posBuffer = mesh->posBuffer->GetSRV()->GetHeapIndex();
+        modelCB.uvBuffer = mesh->uvBuffer ? mesh->uvBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        modelCB.normalBuffer = mesh->normalBuffer ? mesh->normalBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        modelCB.tangentBuffer = mesh->tangentBuffer ? mesh->tangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        modelCB.boneIDBuffer = mesh->boneIDBuffer ? mesh->boneIDBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        modelCB.boneWeightBuffer = mesh->boneWeightBuffer ? mesh->boneWeightBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        modelCB.boneMatrixBuffer = m_pBoneMatrixBuffer ? m_pBoneMatrixBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        modelCB.boneMatrixBufferOffset = m_boneMatrixBufferOffset;
+        pCommandList->SetGraphicsConstants(1, &modelCB, sizeof(modelCB));
 
         MaterialConstant materialCB;
         materialCB.albedoTexture = material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
@@ -143,7 +279,6 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
         materialCB.metallic = material->metallic;
         materialCB.roughness = material->roughness;
         materialCB.alphaCutoff = material->alphaCutoff;
-
         pCommandList->SetGraphicsConstants(2, &materialCB, sizeof(materialCB));
 
         pCommandList->DrawIndexed(mesh->indexBuffer->GetIndexCount());
@@ -151,7 +286,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
 
     for (size_t i = 0; i < pNode->childNodes.size(); ++i)
     {
-        RenderBassPass(pCommandList, mtxVP, pNode->childNodes[i].get(), mtxWorld);
+        RenderBassPass(pCommandList, mtxVP, pNode->childNodes[i].get());
     }
 }
 
@@ -176,15 +311,16 @@ Model::Node* Model::LoadNode(const cgltf_node* gltf_node)
     if (gltf_node->has_matrix)
     {
         node->localToParentMatrix = float4x4(gltf_node->matrix);
-        node->localToParentMatrix.w.z *= -1.0f;
     }
     else
     {
-        float4x4 T = translation_matrix(float3(gltf_node->translation[0], gltf_node->translation[1], -gltf_node->translation[2]));
+        float4x4 T = translation_matrix(float3(gltf_node->translation));
         float4x4 R = rotation_matrix(float4(gltf_node->rotation));
         float4x4 S = scaling_matrix(float3(gltf_node->scale));
         node->localToParentMatrix = mul(T, mul(R, S));
     }
+
+    node->localToParentMatrix = RightHandToLeftHand(node->localToParentMatrix);
 
     if (gltf_node->mesh != nullptr)
     {
@@ -200,6 +336,9 @@ Model::Node* Model::LoadNode(const cgltf_node* gltf_node)
         Node* child = LoadNode(gltf_node->children[i]);
         node->childNodes.push_back(std::unique_ptr<Node>(child));
     }
+
+    RE_ASSERT(m_nodeMapping.find(gltf_node) == m_nodeMapping.end());
+    m_nodeMapping.insert(std::make_pair(gltf_node, node));
 
     return node;
 }
@@ -232,45 +371,61 @@ Model::Mesh* Model::LoadMesh(const cgltf_primitive* gltf_primitive, const std::s
         case cgltf_attribute_type_tangent:
             mesh->tangentBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") tangent", false));
             break;
+        case cgltf_attribute_type_joints:
+            mesh->boneIDBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") boneID", false));
+            break;
+        case cgltf_attribute_type_weights:
+            mesh->boneWeightBuffer.reset(LoadVertexBuffer(gltf_primitive->attributes[i].data, "model(" + m_file + " " + mesh->name + ") boneWeight", false));
+            break;
         default:
             break;
         }
     }
 
-    mesh->PSO = GetPSO(mesh->material.get());
-    mesh->shadowPSO = GetShadowPSO(mesh->material.get());
-
     return mesh;
+}
+
+inline bool TextureExists(const cgltf_texture_view& texture_view)
+{
+    if (texture_view.texture && texture_view.texture->image->uri)
+    {
+        return true;
+    }
+    return false;
 }
 
 Model::Material* Model::LoadMaterial(const cgltf_material* gltf_material)
 {
-    RE_ASSERT(gltf_material->has_pbr_metallic_roughness);
-
     Material* material = new Material;
+    if (gltf_material == nullptr)
+    {
+        return material;
+    }
+
+    RE_ASSERT(gltf_material->has_pbr_metallic_roughness);
     material->name = gltf_material->name != nullptr ? gltf_material->name : "";
 
-    if (gltf_material->pbr_metallic_roughness.base_color_texture.texture)
+    if (TextureExists(gltf_material->pbr_metallic_roughness.base_color_texture))
     {
         material->albedoTexture = LoadTexture(gltf_material->pbr_metallic_roughness.base_color_texture.texture->image->uri, true);
     }
 
-    if (gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture)
+    if (TextureExists(gltf_material->pbr_metallic_roughness.metallic_roughness_texture))
     {
         material->metallicRoughnessTexture = LoadTexture(gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture->image->uri, false);
     }
 
-    if (gltf_material->normal_texture.texture)
+    if (TextureExists(gltf_material->normal_texture))
     {
         material->normalTexture = LoadTexture(gltf_material->normal_texture.texture->image->uri, false);
     }
 
-    if (gltf_material->emissive_texture.texture)
+    if (TextureExists(gltf_material->emissive_texture))
     {
         material->emissiveTexture = LoadTexture(gltf_material->emissive_texture.texture->image->uri, true);
     }
 
-    if (gltf_material->occlusion_texture.texture)
+    if (TextureExists(gltf_material->occlusion_texture))
     {
         material->aoTexture = LoadTexture(gltf_material->occlusion_texture.texture->image->uri, false);
     }
@@ -301,7 +456,8 @@ IndexBuffer* Model::LoadIndexBuffer(const cgltf_accessor* accessor, const std::s
 
 StructuredBuffer* Model::LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& name, bool convertToLH)
 {
-    RE_ASSERT(accessor->component_type == cgltf_component_type_r_32f);
+    RE_ASSERT(accessor->component_type == cgltf_component_type_r_32f ||
+        accessor->component_type == cgltf_component_type_r_16u); //bone id
 
     uint32_t stride = (uint32_t)accessor->stride;
     uint32_t size = stride * (uint32_t)accessor->count;
@@ -321,6 +477,121 @@ StructuredBuffer* Model::LoadVertexBuffer(const cgltf_accessor* accessor, const 
     StructuredBuffer* buffer = pRenderer->CreateStructuredBuffer(data, stride, (uint32_t)accessor->count, name);
 
     return buffer;
+}
+
+Model::Animation* Model::LoadAnimation(const cgltf_animation* gltf_animation)
+{
+    Animation* animation = new Animation;
+
+    animation->channels.resize(gltf_animation->channels_count);
+    for (cgltf_size i = 0; i < gltf_animation->channels_count; ++i)
+    {
+        LoadAnimationChannel(&gltf_animation->channels[i], animation->channels[i]);
+    }
+
+    for (size_t i = 0; i < animation->channels.size(); ++i)
+    {
+        for (size_t j = 0; j < animation->channels[i].keyframes.size(); ++j)
+        {
+            animation->timeDuration = max(animation->channels[i].keyframes[j].first, animation->timeDuration);
+        }
+    }
+
+    return animation;
+}
+
+void Model::LoadAnimationChannel(const cgltf_animation_channel* gltf_channel, AnimationChannel& channel)
+{
+    auto iter = m_nodeMapping.find(gltf_channel->target_node);
+    RE_ASSERT(iter != m_nodeMapping.end());
+    channel.targetNode = iter->second;
+
+    switch (gltf_channel->target_path)
+    {
+    case cgltf_animation_path_type_translation:
+        channel.mode = AnimationChannelMode::Translation;
+        break;
+    case cgltf_animation_path_type_rotation:
+        channel.mode = AnimationChannelMode::Rotation;
+        break;
+    case cgltf_animation_path_type_scale:
+        channel.mode = AnimationChannelMode::Scale;
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
+    }
+
+    const cgltf_animation_sampler* sampler = gltf_channel->sampler;
+
+    switch (sampler->interpolation)
+    {
+    case cgltf_interpolation_type_linear:
+        channel.interpolation = AnimationInterpolation::Linear;
+        break;
+    case cgltf_interpolation_type_step:
+        channel.interpolation = AnimationInterpolation::Step;
+        break;
+    case cgltf_interpolation_type_cubic_spline:
+        channel.interpolation = AnimationInterpolation::CubicSpline;
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
+    }
+
+    cgltf_accessor* time_accessor = sampler->input;
+    cgltf_accessor* value_accessor = sampler->output;
+    RE_ASSERT(time_accessor->count == value_accessor->count);
+
+    cgltf_size keyframe_num = time_accessor->count;
+    channel.keyframes.reserve(keyframe_num);
+
+    char* time_data = (char*)time_accessor->buffer_view->buffer->data + time_accessor->buffer_view->offset + time_accessor->offset;
+    char* value_data = (char*)value_accessor->buffer_view->buffer->data + value_accessor->buffer_view->offset + value_accessor->offset;
+
+    for (cgltf_size i = 0; i < keyframe_num; ++i)
+    {
+        float time;
+        float4 value;
+
+        memcpy(&time, time_data + time_accessor->stride * i, time_accessor->stride);
+        memcpy(&value, value_data + value_accessor->stride * i, value_accessor->stride);
+
+        channel.keyframes.push_back(std::make_pair(time, value));
+    }
+}
+
+void Model::LoadSkin(const cgltf_skin* skin)
+{
+    const cgltf_accessor* accessor = skin->inverse_bind_matrices;
+    uint32_t stride = (uint32_t)accessor->stride;
+    uint32_t size = stride * (uint32_t)accessor->count;
+    void* data = (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset;
+
+    m_inverseBindMatrices.resize(accessor->count);
+    memcpy(m_inverseBindMatrices.data(), data, size);
+
+    for (size_t i = 0; i < m_inverseBindMatrices.size(); ++i)
+    {
+        m_inverseBindMatrices[i] = RightHandToLeftHand(m_inverseBindMatrices[i]);
+    }
+
+    m_boneList.reserve(skin->joints_count);
+    for (cgltf_size i = 0; i < skin->joints_count; ++i)
+    {
+        auto iter = m_nodeMapping.find(skin->joints[i]);
+        RE_ASSERT(iter != m_nodeMapping.end());
+
+        iter->second->isBone = true;
+        m_boneList.push_back(iter->second);
+    }
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    m_pBoneMatrixBuffer.reset(pRenderer->CreateRawBuffer(nullptr, sizeof(float4x4) * (uint32_t)m_boneList.size() * MAX_INFLIGHT_FRAMES,
+        "Model::m_pBoneMatrixBuffer", GfxMemoryType::CpuToGpu));
+
+    m_boneMatrixBufferOffset = sizeof(float4x4) * (uint32_t)m_boneList.size() * MAX_INFLIGHT_FRAMES;
 }
 
 IGfxPipelineState* Model::GetPSO(Material* material)
@@ -352,6 +623,7 @@ IGfxPipelineState* Model::GetPSO(Material* material)
     if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
     if (material->emissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
     if (material->aoTexture) defines.push_back("AO_TEXTURE=1");
+    if (m_pAnimation) defines.push_back("SKELETAL_ANIMATION=1");
 
     GfxGraphicsPipelineDesc psoDesc;
     psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);

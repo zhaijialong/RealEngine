@@ -2,14 +2,6 @@
 #include "model_constants.hlsli"
 #include "global_constants.hlsli"
 
-cbuffer VertexCB : register(b0)
-{
-    uint c_posBuffer;
-    uint c_uvBuffer;
-    uint c_normalBuffer;
-    uint c_tangentBuffer;
-};
-
 struct VSOutput
 {
     float4 pos : SV_POSITION;
@@ -18,23 +10,47 @@ struct VSOutput
 #if NORMAL_TEXTURE
     float3 tangent : TANGENT;
 #endif
-    //float3 worldPos : TEXCOORD1;
 };
+
+void SkeletalAnimation(inout float4 pos, uint vid) //todo : normal,tangent
+{
+    StructuredBuffer<uint16_t4> boneIDBuffer = ResourceDescriptorHeap[ModelCB.boneIDBuffer];
+    StructuredBuffer<float4> boneWeightBuffer = ResourceDescriptorHeap[ModelCB.boneWeightBuffer];
+    
+    uint16_t4 boneID = boneIDBuffer[vid];
+    float4 boneWeight = boneWeightBuffer[vid];
+    
+    ByteAddressBuffer boneMatrixBuffer = ResourceDescriptorHeap[ModelCB.boneMatrixBuffer];
+    float4x4 boneMatrix0 = boneMatrixBuffer.Load<float4x4>(ModelCB.boneMatrixBufferOffset + sizeof(float4x4) * boneID.x);
+    float4x4 boneMatrix1 = boneMatrixBuffer.Load<float4x4>(ModelCB.boneMatrixBufferOffset + sizeof(float4x4) * boneID.y);
+    float4x4 boneMatrix2 = boneMatrixBuffer.Load<float4x4>(ModelCB.boneMatrixBufferOffset + sizeof(float4x4) * boneID.z);
+    float4x4 boneMatrix3 = boneMatrixBuffer.Load<float4x4>(ModelCB.boneMatrixBufferOffset + sizeof(float4x4) * boneID.w);
+    
+    pos = mul(boneMatrix0, pos) * boneWeight.x +
+        mul(boneMatrix1, pos) * boneWeight.y +
+        mul(boneMatrix2, pos) * boneWeight.z +
+        mul(boneMatrix3, pos) * boneWeight.w;
+    
+    pos.w = 1.0;
+}
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {
-    StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[c_posBuffer];
-    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[c_uvBuffer];
-    StructuredBuffer<float3> normalBuffer = ResourceDescriptorHeap[c_normalBuffer];
-    StructuredBuffer<float3> tangentBuffer = ResourceDescriptorHeap[c_tangentBuffer];
+    StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[ModelCB.posBuffer];
+    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[ModelCB.uvBuffer];
+    StructuredBuffer<float3> normalBuffer = ResourceDescriptorHeap[ModelCB.normalBuffer];
+    StructuredBuffer<float3> tangentBuffer = ResourceDescriptorHeap[ModelCB.tangentBuffer];
     
     float4 pos = float4(posBuffer[vertex_id], 1.0);
     
+#if SKELETAL_ANIMATION
+    SkeletalAnimation(pos, vertex_id);
+#endif
+
     VSOutput output;
     output.pos = mul(ModelCB.mtxWVP, pos);
     output.uv = uvBuffer[vertex_id];
     output.normal = mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz;
-    //output.worldPos = mul(ModelCB.mtxWorld, pos).xyz;
     
 #if NORMAL_TEXTURE
     output.tangent = mul(ModelCB.mtxWorld, float4(tangentBuffer[vertex_id], 0.0f)).xyz;
