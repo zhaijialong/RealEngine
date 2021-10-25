@@ -54,11 +54,3 @@ inline float4x4 ortho_matrix(float l, float r, float b, float t, float n, float 
 	//https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-d3dxmatrixorthooffcenterlh
 	return { {2 / (r - l), 0, 0, 0}, {0, 2 / (t - b), 0, 0}, {0, 0, 1 / (f - n), 0}, {(l + r) / (l - r), (t + b) / (b - t), n / (n - f), 1} };
 }
-
-inline float4x4 RightHandToLeftHand(const float4x4& matrix)
-{
-	return float4x4(float4(matrix.x.x, matrix.x.y, -matrix.x.z, matrix.x.w),
-		float4(matrix.y.x, matrix.y.y, -matrix.y.z, matrix.y.w),
-		float4(-matrix.z.x, -matrix.z.y, matrix.z.z, -matrix.z.w),
-		matrix.w);
-}

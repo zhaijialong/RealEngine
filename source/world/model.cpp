@@ -8,6 +8,14 @@
 
 #include "model_constants.hlsli"
 
+inline float4x4 RightHandToLeftHand(const float4x4& matrix)
+{
+    return float4x4(float4(matrix.x.x, matrix.x.y, -matrix.x.z, matrix.x.w),
+        float4(matrix.y.x, matrix.y.y, -matrix.y.z, matrix.y.w),
+        float4(-matrix.z.x, -matrix.z.y, matrix.z.z, -matrix.z.w),
+        matrix.w);
+}
+
 void Model::Load(tinyxml2::XMLElement* element)
 {
     IVisibleObject::Load(element);
