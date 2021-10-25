@@ -27,12 +27,14 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
         GfxResourceState old_state = GfxResourceState::Present;
         GfxResourceState new_state = edge->GetUsage();
 
+        //try to find previous state from last pass which used this resource
         if (resource_outgoing.size() > 1) //todo : should merge states if possible, eg. shader resource ps + shader resource non-ps -> shader resource all
         {
             //resource_outgoing should be sorted
             for (int i = (int)resource_outgoing.size() - 1; i >= 0; --i)
             {
-                if (resource_outgoing[i]->GetToNode() < this->GetId())
+                DAGNodeID pass_id = resource_outgoing[i]->GetToNode();
+                if (pass_id < this->GetId() && !graph.GetNode(pass_id)->IsCulled())
                 {
                     old_state = ((RenderGraphEdge*)resource_outgoing[i])->GetUsage();
                     break;
@@ -40,10 +42,9 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
             }
         }
 
+        //if not found, get the state from the pass which output the resource
         if (old_state == GfxResourceState::Present)
         {
-            RE_ASSERT(resource_outgoing[0]->GetToNode() == this->GetId());
-
             if (resource_incoming.empty())
             {
                 RE_ASSERT(resource_node->GetVersion() == 0);
