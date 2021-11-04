@@ -2,6 +2,7 @@
 
 PostProcessor::PostProcessor(Renderer* pRenderer)
 {
+    m_pTAA.reset(new TAA(pRenderer));
     m_pFXAA.reset(new FXAA(pRenderer));
     m_pToneMapper.reset(new Tonemapper(pRenderer, DISPLAYMODE_SDR, ColorSpace_REC709));
     m_pCAS.reset(new CAS(pRenderer));
@@ -9,10 +10,46 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
 
 RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostProcessInput& input, uint32_t width, uint32_t height)
 {
+    auto taa_pass = pRenderGraph->AddPass<TAAPassData>("TAA",
+        [&](TAAPassData& data, RenderGraphBuilder& builder)
+        {
+            data.inputRT = builder.Read(input.sceneColorRT, GfxResourceState::ShaderResourceNonPS);
+            data.velocityRT = builder.Read(input.velocityRT, GfxResourceState::ShaderResourceNonPS);
+
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::RGBA16F;
+            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            data.outputRT = builder.Create<RenderGraphTexture>(desc, "TAA Output");
+            data.outputRT = builder.Write(data.outputRT, GfxResourceState::UnorderedAccess);
+        },
+        [=](const TAAPassData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* inputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRT);
+            RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputRT);
+
+            m_pTAA->Draw(pCommandList, inputRT->GetSRV(), outputRT->GetUAV(), width, height);
+        });
+
+    auto taa_copy_pass = pRenderGraph->AddPass<TAACopyPassData>("TAA copy history",
+        [&](TAACopyPassData& data, RenderGraphBuilder& builder)
+        {
+            builder.MakeTarget();
+
+            data.inputRT = builder.Read(taa_pass->outputRT, GfxResourceState::CopySrc);
+        },
+        [=](const TAACopyPassData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* inputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRT);
+
+            m_pTAA->CopyHistory(pCommandList, inputRT->GetTexture());
+        });
+
     auto tonemap_pass = pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
         {
-            data.inHdrRT = builder.Read(input.sceneColorRT, GfxResourceState::ShaderResourceNonPS);
+            data.inHdrRT = builder.Read(taa_pass->outputRT, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -30,7 +67,7 @@ RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostPr
             m_pToneMapper->Draw(pCommandList, hdrRT->GetSRV(), ldrRT->GetUAV(), width, height);
         });
 
-
+    /*
     auto fxaa_pass = pRenderGraph->AddPass<FXAAPassData>("FXAA",
         [&](FXAAPassData& data, RenderGraphBuilder& builder)
         {
@@ -51,11 +88,11 @@ RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostPr
 
             m_pFXAA->Draw(pCommandList, inRT->GetSRV(), outRT->GetUAV(), width, height);
         });
-
+*/
     auto cas_pass = pRenderGraph->AddPass<CASPassData>("CAS",
         [&](CASPassData& data, RenderGraphBuilder& builder)
         {
-            data.inRT = builder.Read(fxaa_pass->outRT, GfxResourceState::ShaderResourceNonPS);
+            data.inRT = builder.Read(tonemap_pass->outLdrRT, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;

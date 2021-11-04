@@ -9,6 +9,7 @@ struct PostProcessInput
 {
     RenderGraphHandle sceneColorRT;
     RenderGraphHandle sceneDepthRT;
+    RenderGraphHandle velocityRT;
 };
 
 class PostProcessor

@@ -34,9 +34,11 @@ public:
 	float GetFov() const { return m_fov; }
 	void SetFov(float fov);
 
+	void EnableJitter(bool value) { m_bEnableJitter = value; };
 	void Tick(float delta_time);
 
 private:
+	void UpdateJitter();
 	void UpdateMatrix();
 	void OnWindowResize(void* window, uint32_t width, uint32_t height);
 
@@ -56,4 +58,8 @@ private:
 	float m_moveSpeed = 10.0f;
 
 	lsignal::connection m_resizeConnection;
+
+	bool m_bEnableJitter = false;
+	float2 m_prevJitter{ 0.0f, 0.0f };
+	float2 m_jitter{ 0.0f, 0.0f };
 };

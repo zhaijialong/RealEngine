@@ -147,9 +147,34 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         });
 
 
+    struct VelocityPassData
+    {
+        RenderGraphHandle outVelocityRT;
+        RenderGraphHandle outSceneDepthRT;
+    };
+
+    auto velocity_pass = m_pRenderGraph->AddPass<VelocityPassData>("Velocity Pass",
+        [&](VelocityPassData& data, RenderGraphBuilder& builder)
+        {
+            RenderGraphTexture::Desc desc;
+            desc.width = m_nWindowWidth;
+            desc.height = m_nWindowHeight;
+            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
+            desc.format = GfxFormat::RGBA16UNORM;
+            data.outVelocityRT = builder.Create<RenderGraphTexture>(desc, "Velocity RT");
+
+            data.outVelocityRT = builder.WriteColor(0, data.outVelocityRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0));
+            data.outSceneDepthRT = builder.WriteDepth(forward_pass->outSceneDepthRT, 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
+        },
+        [&](const VelocityPassData& data, IGfxCommandList* pCommandList)
+        {
+            //todo
+        });
+
     PostProcessInput ppInput;
     ppInput.sceneColorRT = forward_pass->outSceneColorRT;
-    ppInput.sceneDepthRT = forward_pass->outSceneDepthRT;
+    ppInput.sceneDepthRT = velocity_pass->outSceneDepthRT;
+    ppInput.velocityRT = velocity_pass->outVelocityRT;
 
     RenderGraphHandle output = m_pPostProcessor->Process(m_pRenderGraph.get(), ppInput, m_nWindowWidth, m_nWindowHeight);
 

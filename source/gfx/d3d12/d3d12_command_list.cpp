@@ -149,13 +149,34 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_le
 	src.PlacedFootprint.Footprint.Depth = d;
 	src.PlacedFootprint.Footprint.RowPitch = texture->GetRowPitch(mip_level);// GetFormatRowPitch(desc.format, w);
 
+	FlushPendingBarrier();
+
 	m_pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 }
 
 void D3D12CommandList::CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, IGfxBuffer* src_buffer, uint32_t src_offset, uint32_t size)
 {
+	FlushPendingBarrier();
+
 	m_pCommandList->CopyBufferRegion((ID3D12Resource*)dst_buffer->GetHandle(), dst_offset,
 		(ID3D12Resource*)src_buffer->GetHandle(), src_offset, size);
+}
+
+void D3D12CommandList::CopyTexture(IGfxTexture* dst, IGfxTexture* src)
+{
+	FlushPendingBarrier();
+
+	D3D12_TEXTURE_COPY_LOCATION dst_texture;
+	dst_texture.pResource = (ID3D12Resource*)dst->GetHandle();
+	dst_texture.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	dst_texture.SubresourceIndex = 0;
+
+	D3D12_TEXTURE_COPY_LOCATION src_texture;
+	src_texture.pResource = (ID3D12Resource*)src->GetHandle();
+	src_texture.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	src_texture.SubresourceIndex = 0;
+
+	m_pCommandList->CopyTextureRegion(&dst_texture, 0, 0, 0, &src_texture, nullptr);
 }
 
 void D3D12CommandList::Wait(IGfxFence* fence, uint64_t value)

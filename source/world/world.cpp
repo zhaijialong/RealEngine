@@ -10,6 +10,7 @@
 World::World()
 {
     m_pCamera = std::make_unique<Camera>();
+    m_pCamera->EnableJitter(true);
 }
 
 void World::LoadScene(const std::string& file)
