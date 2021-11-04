@@ -1,5 +1,7 @@
 #pragma once
 
+#include "global_constants.hlsli"
+
 static const float M_PI = 3.141592653f;
 
 float3 DiffuseBRDF(float3 diffuse)
@@ -121,4 +123,19 @@ float3 OctNormalDecode(float2 f)
     float t = saturate(-n.z);
     n.xy += n.xy >= 0.0 ? -t : t;
     return normalize(n);
+}
+
+float GetLinearDepth(float depth)
+{
+    return 1.0f / (depth * CameraCB.linearZParams.x - CameraCB.linearZParams.y);
+}
+
+float3 GetWorldPosition(uint2 screenPos, float depth)
+{
+    float2 screenUV = ((float2) screenPos + 0.5) * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
+    float4 clipPos = float4((screenUV * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
+    float4 worldPos = mul(CameraCB.mtxViewProjectionInverse, clipPos);
+    worldPos.xyz /= worldPos.w;
+    
+    return worldPos.xyz;
 }

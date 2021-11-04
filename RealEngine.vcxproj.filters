@@ -603,6 +603,9 @@
     <None Include="shaders\XeGTAO.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\taa_constants.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">
@@ -633,6 +636,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\taa.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\linearize_depth.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

@@ -1,24 +1,106 @@
-cbuffer CB : register(b1)
+#include "taa_constants.hlsli"
+#include "common.hlsli"
+
+cbuffer genrateVelocityCB : register(b0)
 {
-    uint c_inputTexture;
-    uint c_historyRT;
-    uint c_outTexture;
-    uint c_width;
-    uint c_height;
-}
+    uint c_depthRT;
+    uint c_velocityRT;
+    uint c_outputVelocityRT;
+};
 
 [numthreads(8, 8, 1)]
-void main(uint3 dispatchThreadID : SV_DispatchThreadID)
+void generate_velocity_main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    if (dispatchThreadID.x >= c_width || dispatchThreadID.y >= c_height)
+    int2 pos = dispatchThreadID.xy;
+    
+    Texture2D velocityRT = ResourceDescriptorHeap[c_velocityRT];
+    RWTexture2D<float4> outputRT = ResourceDescriptorHeap[c_outputVelocityRT];
+    
+    float4 velocity = velocityRT[pos];
+    if (any(velocity > float4(0, 0, 0, 0)))
     {
-        return;
+        outputRT[pos] = velocity;
     }
+    else
+    {
+        Texture2D depthRT = ResourceDescriptorHeap[c_depthRT];
+        float depth = depthRT[pos].x;
     
-    Texture2D inputTexture = ResourceDescriptorHeap[c_inputTexture];
-    Texture2D historyTexture = ResourceDescriptorHeap[c_historyRT];
+        float2 screenPos = ((float2) pos + 0.5);
+        float2 screenUV = screenPos * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
+        float4 clipPos = float4((screenUV * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
     
-    RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outTexture];
+        float4 prevClipPos = mul(CameraCB.mtxClipToPrevClipNoJitter, clipPos);
+        prevClipPos.xyz /= prevClipPos.w;
+        float2 prevScreenUV = prevClipPos.xy * float2(0.5, -0.5) + 0.5;
+        float2 prevScreenPos = prevScreenUV * float2(SceneCB.viewWidth, SceneCB.viewHeight);
     
-    outputTexture[dispatchThreadID.xy] = lerp(inputTexture[dispatchThreadID.xy], historyTexture[dispatchThreadID.xy], 0.95);
+        float2 motion = prevScreenPos.xy - screenPos.xy;
+        
+        float linearZ = GetLinearDepth(depth);
+        float prevLinearZ = GetLinearDepth(prevClipPos.z);
+        
+        // reduce 16bit precision issues - push the older frame ever so slightly into foreground
+        prevLinearZ *= 0.999;
+        
+        float deltaZ = prevLinearZ - linearZ;
+        
+        outputRT[pos] = float4(motion, deltaZ, 0);
+    }
+}
+
+float3 Tonemap_ACES(float3 x)
+{
+    // Narkowicz 2015, "ACES Filmic Tone Mapping Curve"
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return (x * (a * x + b)) / (x * (c * x + d) + e);
+}
+
+float3 InverseTonemap_ACES(float3 x)
+{
+    // Narkowicz 2015, "ACES Filmic Tone Mapping Curve"
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return (-d * x + b - sqrt(-1.0127 * x * x + 1.3702 * x + 0.0009)) / (2.0 * (c * x - a));
+}
+
+#include "IntelTAA.hlsli"
+
+[numthreads(INTEL_TAA_NUM_THREADS_X, INTEL_TAA_NUM_THREADS_Y, 1)]
+void main(uint3 inDispatchIdx : SV_DispatchThreadID, uint3 inGroupID : SV_GroupID, uint3 inGroupThreadID : SV_GroupThreadID)
+{
+    TAAParams params;
+    params.CBData = taaCB.consts;
+    params.VelocityBuffer = ResourceDescriptorHeap[taaCB.velocityRT];
+    params.ColourTexture = ResourceDescriptorHeap[taaCB.colorRT];
+    params.HistoryTexture = ResourceDescriptorHeap[taaCB.historyRT];
+    params.DepthBuffer = ResourceDescriptorHeap[taaCB.depthRT];
+    params.PrvDepthBuffer = ResourceDescriptorHeap[taaCB.prevDepthRT];
+    params.OutTexture = ResourceDescriptorHeap[taaCB.outTexture];
+    params.MinMagLinearMipPointClamp = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    params.MinMagMipPointClamp = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+
+    IntelTAA(inDispatchIdx, inGroupID, inGroupThreadID, params);
+}
+
+cbuffer applyCB : register(b0)
+{
+    uint c_inputRT;
+    uint c_outputRT;
+};
+
+[numthreads(8, 8, 1)]
+void apply_main(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    Texture2D inputTexture = ResourceDescriptorHeap[c_inputRT];
+    RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_outputRT];
+    
+    outTexture[dispatchThreadID.xy] = fp16_t4(TAAInverseTonemap(inputTexture[dispatchThreadID.xy].rgb), 1);
 }

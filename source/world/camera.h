@@ -3,6 +3,8 @@
 #include "utils/math.h"
 #include "lsignal/lsignal.h"
 
+class IGfxCommandList;
+
 class Camera
 {
 public:
@@ -18,8 +20,10 @@ public:
 	const float3& GetRotation() const { return m_rotation; }
 
 	const float4x4& GetViewMatrix() const { return m_view; }
-	const float4x4& GetProjectionMatrix() const { return m_projection; }
-	const float4x4& GetViewProjectionMatrix() const { return m_viewProjection; }
+	const float4x4& GetProjectionMatrix() const { return m_projectionJitter; }
+	const float4x4& GetViewProjectionMatrix() const { return m_viewProjectionJitter; }
+
+	const float4x4& GetNonJitterProjectionMatrix() const { return m_projection; }
 
 	float3 GetLeft() const { return -m_world[0].xyz(); }
 	float3 GetRight() const { return m_world[0].xyz(); }
@@ -35,7 +39,12 @@ public:
 	void SetFov(float fov);
 
 	void EnableJitter(bool value) { m_bEnableJitter = value; };
+	float2 GetJitter() const { return m_jitter; }
+	float2 GetPrevJitter() const { return m_prevJitter; }
+
 	void Tick(float delta_time);
+
+	void SetupCameraCB(IGfxCommandList* pCommandList);
 
 private:
 	void UpdateJitter();
@@ -50,6 +59,10 @@ private:
 	float4x4 m_view;
 	float4x4 m_projection;
 	float4x4 m_viewProjection;
+	float4x4 m_prevViewProjection;
+
+	float4x4 m_projectionJitter;
+	float4x4 m_viewProjectionJitter;
 
 	float m_aspectRatio = 0.0f;
 	float m_fov = 0.0f;

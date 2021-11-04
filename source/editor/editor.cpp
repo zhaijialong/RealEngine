@@ -223,7 +223,7 @@ void Editor::DrawGizmo()
 
     Camera* pCamera = Engine::GetInstance()->GetWorld()->GetCamera();
     float4x4 view = pCamera->GetViewMatrix();
-    float4x4 proj = pCamera->GetProjectionMatrix();
+    float4x4 proj = pCamera->GetNonJitterProjectionMatrix();
 
     ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, operation, ImGuizmo::WORLD, (float*)&mtxWorld);
 

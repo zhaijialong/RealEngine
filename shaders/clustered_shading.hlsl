@@ -1,5 +1,4 @@
 #include "common.hlsli"
-#include "global_constants.hlsli"
 
 cbuffer CB0 : register(b0)
 {
@@ -18,20 +17,8 @@ cbuffer CB1 : register(b1)
     
     uint c_shadowRT;
     uint c_hdrRT;
-    float2 c_zparams;
-    
-    float4x4 c_mtxInvViewProj;
+    uint2 _padding;
 };
-
-float3 GetWorldPosition(uint2 pos, float depth)
-{
-    float2 uv = ((float2)pos + 0.5) * float2(c_invWidth, c_invHeight);
-    float4 clipPos = float4((uv * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
-    float4 worldPos = mul(c_mtxInvViewProj, clipPos);
-    worldPos.xyz /= worldPos.w;
-    
-    return worldPos.xyz;
-}
 
 float Shadow(float3 worldPos, float3 worldNormal, float4x4 mtxLightVP, Texture2D shadowRT, SamplerComparisonState shadowSampler)
 {
@@ -61,7 +48,6 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     Texture2D depthRT = ResourceDescriptorHeap[c_depthRT];
     float depth = depthRT.Load(pos).x;
-    //float linear_depth = 1.0f / (depth * c_zparams.x - c_zparams.y);
     if(depth == 0.0)
     {
         return;

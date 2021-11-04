@@ -81,10 +81,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             Camera* camera = world->GetCamera();
             ILight* light = world->GetPrimaryLight();
 
-            CameraConstant cameraCB;
-            cameraCB.cameraPos = camera->GetPosition();
-            pCommandList->SetGraphicsConstants(3, &cameraCB, sizeof(cameraCB));
-            pCommandList->SetComputeConstants(3, &cameraCB, sizeof(cameraCB));
+            camera->SetupCameraCB(pCommandList);
 
             SceneConstant sceneCB;
             sceneCB.lightDir = light->GetLightDirection();
@@ -92,6 +89,10 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
             sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
             sceneCB.mtxLightVP = GetLightVP(light);
+            sceneCB.viewWidth = m_nWindowWidth;
+            sceneCB.viewHeight = m_nWindowHeight;
+            sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
+            sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
             sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
             sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
             sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
@@ -146,7 +147,6 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             m_forwardPassBatchs.clear();
         });
 
-
     struct VelocityPassData
     {
         RenderGraphHandle outVelocityRT;
@@ -160,7 +160,7 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
             desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
-            desc.format = GfxFormat::RGBA16UNORM;
+            desc.format = GfxFormat::RGBA16F;
             data.outVelocityRT = builder.Create<RenderGraphTexture>(desc, "Velocity RT");
 
             data.outVelocityRT = builder.WriteColor(0, data.outVelocityRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0));
@@ -171,12 +171,81 @@ RenderGraphHandle Renderer::BuildRenderGraph()
             //todo
         });
 
+
+    struct LinearizeDepthPassData
+    {
+        RenderGraphHandle inputDepthRT;
+        RenderGraphHandle outputLinearDepthRT;
+    };
+
+    auto linearize_depth_pass = m_pRenderGraph->AddPass<LinearizeDepthPassData>("Linearize Depth",
+        [&](LinearizeDepthPassData& data, RenderGraphBuilder& builder)
+        {
+            RenderGraphTexture::Desc desc;
+            desc.width = m_nWindowWidth;
+            desc.height = m_nWindowHeight;
+            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.format = GfxFormat::R32F;
+            data.outputLinearDepthRT = builder.Create<RenderGraphTexture>(desc, "LinearDepth RT");
+
+            data.inputDepthRT = builder.Read(velocity_pass->outSceneDepthRT, GfxResourceState::ShaderResourceNonPS);
+            data.outputLinearDepthRT = builder.Write(data.outputLinearDepthRT, GfxResourceState::UnorderedAccess);
+        },
+        [&](const LinearizeDepthPassData& data, IGfxCommandList* pCommandList)
+        {
+            static IGfxPipelineState* pPSO = nullptr;
+            if (pPSO == nullptr)
+            {
+                GfxComputePipelineDesc psoDesc;
+                psoDesc.cs = GetShader("linearize_depth.hlsl", "main", "cs_6_6", {});
+                pPSO = GetPipelineState(psoDesc, "LinearizeDepth PSO");
+            }
+
+            pCommandList->SetPipelineState(pPSO);
+
+            RenderGraphTexture* inputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.inputDepthRT);
+            RenderGraphTexture* outputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.outputLinearDepthRT);
+            uint32_t cb[4] = { inputRT->GetSRV()->GetHeapIndex(), outputRT->GetUAV()->GetHeapIndex(), 0, 0 };
+            pCommandList->SetComputeConstants(0, cb, sizeof(cb));
+
+            pCommandList->Dispatch((m_nWindowWidth + 7) / 8, (m_nWindowHeight + 7) / 8, 1);
+        });
+
     PostProcessInput ppInput;
     ppInput.sceneColorRT = forward_pass->outSceneColorRT;
     ppInput.sceneDepthRT = velocity_pass->outSceneDepthRT;
+    ppInput.linearDepthRT = linearize_depth_pass->outputLinearDepthRT;
     ppInput.velocityRT = velocity_pass->outVelocityRT;
 
     RenderGraphHandle output = m_pPostProcessor->Process(m_pRenderGraph.get(), ppInput, m_nWindowWidth, m_nWindowHeight);
+
+    struct CopyPassData
+    {
+        RenderGraphHandle srcTexture;
+    };
+
+    m_pRenderGraph->AddPass<CopyPassData>("Copy Depth",
+        [&](CopyPassData& data, RenderGraphBuilder& builder)
+        {
+            data.srcTexture = builder.Read(linearize_depth_pass->outputLinearDepthRT, GfxResourceState::CopySrc);
+            builder.MakeTarget();
+        },
+        [&](const CopyPassData& data, IGfxCommandList* pCommandList)
+        {
+            if (m_pPrevLinearDepthTexture == nullptr ||
+                m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nWindowWidth ||
+                m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nWindowHeight)
+            {
+                m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::R32F, GfxTextureUsageShaderResource, "Prev LinearDepth"));
+            }
+
+            RenderGraphTexture* srcTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcTexture);
+
+            pCommandList->ResourceBarrier(m_pPrevLinearDepthTexture->GetTexture(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::CopyDst);
+            pCommandList->CopyTexture(m_pPrevLinearDepthTexture->GetTexture(), srcTexture->GetTexture());
+            pCommandList->ResourceBarrier(m_pPrevLinearDepthTexture->GetTexture(), 0, GfxResourceState::CopyDst, GfxResourceState::ShaderResourceNonPS);
+
+        });
 
     return output;
 }

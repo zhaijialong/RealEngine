@@ -1,6 +1,5 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
-#include "global_constants.hlsli"
 
 struct VSOutput
 {

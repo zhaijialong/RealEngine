@@ -1,6 +1,50 @@
 #include "camera.h"
 #include "core/engine.h"
 #include "imgui/imgui.h"
+#include "global_constants.hlsli"
+
+
+float2 DepthlinearizationParams(const float4x4& ProjMatrix)
+{
+	// The perspective depth projection comes from the the following projection matrix:
+	//
+	// | 1  0  0  0 |
+	// | 0  1  0  0 |
+	// | 0  0  A  1 |
+	// | 0  0  B  0 |
+	//
+	// Z' = (Z * A + B) / Z
+	// Z' = A + B / Z
+	//
+	// So to get Z from Z' is just:
+	// Z = B / (Z' - A)
+	//
+	// Note a reversed Z projection matrix will have A=0.
+	//
+	// Done in shader as:
+	// Z = 1 / (Z' * C1 - C2)   --- Where C1 = 1/B, C2 = A/B
+	//
+
+	float DepthMul = ProjMatrix[2][2];
+	float DepthAdd = ProjMatrix[3][2];
+
+	if (DepthAdd == 0.f)
+	{
+		// Avoid dividing by 0 in this case
+		DepthAdd = 0.00000001f;
+	}
+
+	float SubtractValue = DepthMul / DepthAdd;
+
+	// Subtract a tiny number to avoid divide by 0 errors in the shader when a very far distance is decided from the depth buffer.
+	// This fixes fog not being applied to the black background in the editor.
+	SubtractValue -= 0.00000001f;
+
+	return float2(
+		1.0f / DepthAdd,
+		SubtractValue
+	);
+}
 
 Camera::Camera() : 
 	m_resizeConnection({})
@@ -93,6 +137,31 @@ void Camera::Tick(float delta_time)
 	UpdateMatrix();
 }
 
+void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
+{
+	CameraConstant cameraCB;
+	cameraCB.cameraPos = GetPosition();
+	cameraCB.nearZ = m_znear;
+	cameraCB.farZ = m_zfar;
+	cameraCB.linearZParams = DepthlinearizationParams(m_projection);
+	cameraCB.jitter = m_jitter;
+	cameraCB.prevJitter = m_prevJitter;
+	
+	cameraCB.mtxView = m_view;
+	cameraCB.mtxViewInverse = inverse(m_view);
+	cameraCB.mtxProjection = m_projectionJitter;
+	cameraCB.mtxProjectionInverse = inverse(m_projectionJitter);
+	cameraCB.mtxViewProjection = m_viewProjectionJitter;
+	cameraCB.mtxViewProjectionInverse = inverse(m_viewProjectionJitter);
+
+	cameraCB.mtxViewProjectionNoJitter = m_viewProjection;
+	cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
+	cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
+
+	pCommandList->SetGraphicsConstants(3, &cameraCB, sizeof(cameraCB));
+	pCommandList->SetComputeConstants(3, &cameraCB, sizeof(cameraCB));
+}
+
 void Camera::UpdateJitter()
 {
 	if (m_bEnableJitter)
@@ -125,6 +194,8 @@ void Camera::UpdateJitter()
 
 void Camera::UpdateMatrix()
 {
+	m_prevViewProjection = m_viewProjection;
+
 	m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(m_rotation)));
 	m_view = inverse(m_world);
 	m_viewProjection = mul(m_projection, m_view);
@@ -135,7 +206,14 @@ void Camera::UpdateMatrix()
 		uint32_t height = Engine::GetInstance()->GetRenderer()->GetBackbufferHeight();
 
 		float4x4 mtxJitter = translation_matrix(float3(2.0f * m_jitter.x / (float)width, -2.0f * m_jitter.y / (float)height, 0.0f));
-		m_viewProjection = mul(mtxJitter, m_viewProjection);
+
+		m_projectionJitter = mul(mtxJitter, m_projection);
+		m_viewProjectionJitter = mul(m_projectionJitter, m_view);
+	}
+	else
+	{
+		m_projectionJitter = m_projection;
+		m_viewProjectionJitter = m_viewProjection;
 	}
 }
 
