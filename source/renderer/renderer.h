@@ -52,7 +52,6 @@ public:
     RawBuffer* CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     Texture2D* CreateTexture2D(const std::string& file, bool srgb = true, bool cached = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
-    RWTexture2D* CreateRWTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
     void UploadTexture(IGfxTexture* texture, void* data);

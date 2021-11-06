@@ -58,20 +58,6 @@ RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostPr
             m_pTAA->Draw(pCommandList, inputRT->GetSRV(), velocityRT->GetSRV(), linearDepthRT->GetSRV(), outputRT->GetUAV(), width, height);
         });
 
-    auto taa_copy_pass = pRenderGraph->AddPass<TAACopyPassData>("TAA copy history",
-        [&](TAACopyPassData& data, RenderGraphBuilder& builder)
-        {
-            builder.MakeTarget();
-
-            data.inputRT = builder.Read(taa_pass->outputRT, GfxResourceState::CopySrc);
-        },
-        [=](const TAACopyPassData& data, IGfxCommandList* pCommandList)
-        {
-            RenderGraphTexture* inputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRT);
-
-            m_pTAA->CopyHistory(pCommandList, inputRT->GetTexture());
-        });
-
     auto taa_apply_pass = pRenderGraph->AddPass<TAAApplyPassData>("TAA apply",
         [&](TAAApplyPassData& data, RenderGraphBuilder& builder)
         {

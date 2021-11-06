@@ -389,11 +389,6 @@ Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, uint32_t l
     return texture;
 }
 
-RWTexture2D* Renderer::CreateRWTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, const std::string& name)
-{
-    return nullptr;
-}
-
 TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
 {
     TextureLoader loader;

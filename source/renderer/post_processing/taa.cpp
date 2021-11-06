@@ -38,7 +38,11 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
 		m_pHistoryColor->GetTexture()->GetDesc().width != width ||
 		m_pHistoryColor->GetTexture()->GetDesc().height != height)
 	{
-		m_pHistoryColor.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageShaderResource, "TAA::m_pHistoryColor"));
+		m_pHistoryColor.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource, "TAA HistoryTexture"));
+	}
+	else
+	{
+		pCommandList->ResourceBarrier(m_pHistoryColor->GetTexture(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
 	}
 
 	pCommandList->SetPipelineState(m_pPSO);
@@ -75,18 +79,12 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
 	pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void TAA::CopyHistory(IGfxCommandList* pCommandList, IGfxTexture* texture)
-{
-	pCommandList->ResourceBarrier(m_pHistoryColor->GetTexture(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::CopyDst);
-	pCommandList->CopyTexture(m_pHistoryColor->GetTexture(), texture);
-	pCommandList->ResourceBarrier(m_pHistoryColor->GetTexture(), 0, GfxResourceState::CopyDst, GfxResourceState::ShaderResourceNonPS);
-}
-
 void TAA::Apply(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
+	pCommandList->ResourceBarrier(m_pHistoryColor->GetTexture(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
 	pCommandList->SetPipelineState(m_pApplyPSO);
 
-	uint32_t cb[4] = { input->GetHeapIndex(), output->GetHeapIndex(), 0, 0 };
+	uint32_t cb[4] = { input->GetHeapIndex(), output->GetHeapIndex(), m_pHistoryColor->GetUAV()->GetHeapIndex(), 0 };
 	pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
 	pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);

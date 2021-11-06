@@ -94,6 +94,7 @@ cbuffer applyCB : register(b0)
 {
     uint c_inputRT;
     uint c_outputRT;
+    uint c_historyRT;
 };
 
 [numthreads(8, 8, 1)]
@@ -101,6 +102,10 @@ void apply_main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D inputTexture = ResourceDescriptorHeap[c_inputRT];
     RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_outputRT];
+    RWTexture2D<float4> historyTexture = ResourceDescriptorHeap[c_historyRT];
     
-    outTexture[dispatchThreadID.xy] = fp16_t4(TAAInverseTonemap(inputTexture[dispatchThreadID.xy].rgb), 1);
+    float4 taaColor = inputTexture[dispatchThreadID.xy];
+    
+    outTexture[dispatchThreadID.xy] = float4(TAAInverseTonemap(taaColor.rgb), 1);
+    historyTexture[dispatchThreadID.xy] = taaColor;
 }
