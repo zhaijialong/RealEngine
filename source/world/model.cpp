@@ -106,6 +106,8 @@ void Model::Tick(float delta_time)
 
 void Model::UpdateMatrix(Node* node, const float4x4& parentWorld)
 {
+    node->prevWorldMatrix = node->worldMatrix;
+
     if (node->isBone)
     {
         float4x4 T = translation_matrix(node->animPose.translation);
@@ -204,7 +206,7 @@ void Model::Render(Renderer* pRenderer)
     if (m_pAnimation != nullptr)
     {
         RenderFunc velocityPassBatch = std::bind(&Model::RenderVelocityPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
-        pRenderer->AddForwardPassBatch(velocityPassBatch);
+        pRenderer->AddVelocityPassBatch(velocityPassBatch);
     }
 }
 
@@ -221,7 +223,10 @@ void Model::AddComputeBuffer(Node* pNode)
         if (mesh->animPosBuffer == nullptr)
         {
             mesh->animPosBuffer.reset(pRenderer->CreateStructuredBuffer(nullptr, bufferDesc.stride, vertex_count, mesh->name + " anim pos", GfxMemoryType::GpuOnly, true));
+            mesh->prevAnimPosBuffer.reset(pRenderer->CreateStructuredBuffer(nullptr, bufferDesc.stride, vertex_count, mesh->name + " anim pos", GfxMemoryType::GpuOnly, true));
         }
+
+        std::swap(mesh->animPosBuffer, mesh->prevAnimPosBuffer);
 
         pRenderer->AddComputeBuffer(mesh->animPosBuffer->GetBuffer());
     }
@@ -304,14 +309,22 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxV
         pCommandList->SetPipelineState(mesh->shadowPSO);
         pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
 
-        uint32_t vertexCB[4] =
+        struct CB0
+        {
+            uint c_posBuffer;
+            uint c_uvBuffer;
+            uint c_albedoTexture;
+            float c_alphaCutoff;
+        };
+
+        CB0 cb =
         {
             mesh->animPSO ? mesh->animPosBuffer->GetSRV()->GetHeapIndex() : mesh->posBuffer->GetSRV()->GetHeapIndex(),
             mesh->uvBuffer ? mesh->uvBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
             material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
-            GFX_INVALID_RESOURCE
+            material->alphaCutoff
         };
-        pCommandList->SetGraphicsConstants(0, vertexCB, sizeof(vertexCB));
+        pCommandList->SetGraphicsConstants(0, &cb, sizeof(cb));
 
         pCommandList->DrawIndexed(mesh->indexBuffer->GetIndexCount());
     }
@@ -385,6 +398,56 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
 
 void Model::RenderVelocityPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode)
 {
+    float4x4 mtxWorld = pNode->worldMatrix;
+    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+
+    for (size_t i = 0; i < pNode->meshes.size(); ++i)
+    {
+        Mesh* mesh = pNode->meshes[i].get();
+        Material* material = mesh->material.get();
+
+        std::string event_name = m_file + " " + mesh->name;
+        GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
+
+        if (mesh->velocityPSO == nullptr)
+        {
+            mesh->velocityPSO = GetVelocityPSO(mesh->material.get());
+        }
+
+        pCommandList->SetPipelineState(mesh->velocityPSO);
+        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
+
+        struct CB
+        {
+            uint posBuffer;
+            uint prevPosBuffer;
+            uint albedoTexture;
+            float alphaCutoff;
+
+            float4x4 mtxWVP;
+            float4x4 mtxWVPNoJitter;
+            float4x4 mtxPrevWVPNoJitter;
+        };
+
+        CB cb;
+        cb.posBuffer = mesh->animPosBuffer ? mesh->animPosBuffer->GetSRV()->GetHeapIndex() : mesh->posBuffer->GetSRV()->GetHeapIndex();
+        cb.prevPosBuffer = mesh->prevAnimPosBuffer ? mesh->prevAnimPosBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        cb.albedoTexture = material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+        cb.alphaCutoff = material->alphaCutoff;
+        cb.mtxWVP = mul(mtxVP, mtxWorld);
+        cb.mtxWVPNoJitter = mul(camera->GetNonJitterViewProjectionMatrix(), mtxWorld);
+        cb.mtxPrevWVPNoJitter = mul(camera->GetNonJitterPrevViewProjectionMatrix(), pNode->prevWorldMatrix);
+
+        pCommandList->SetGraphicsConstants(1, &cb, sizeof(cb));
+
+
+        pCommandList->DrawIndexed(mesh->indexBuffer->GetIndexCount());
+    }
+
+    for (size_t i = 0; i < pNode->childNodes.size(); ++i)
+    {
+        RenderVelocityPass(pCommandList, mtxVP, pNode->childNodes[i].get());
+    }
 }
 
 Texture2D* Model::LoadTexture(const std::string& file, bool srgb)
@@ -766,13 +829,13 @@ IGfxPipelineState* Model::GetVelocityPSO(Material* material)
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
     std::vector<std::string> defines;
-    defines.push_back("OUTPUT_VELOCITY=1");
+    if (m_pAnimation) defines.push_back("ANIME_POS=1");
     if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
     if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
 
     GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
-    psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
+    psoDesc.vs = pRenderer->GetShader("model_velocity.hlsl", "vs_main", "vs_6_6", defines);
+    psoDesc.ps = pRenderer->GetShader("model_velocity.hlsl", "ps_main", "ps_6_6", defines);
     psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
     psoDesc.rasterizer_state.front_ccw = true;
     psoDesc.depthstencil_state.depth_write = false;

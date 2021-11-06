@@ -24,6 +24,8 @@ public:
 	const float4x4& GetViewProjectionMatrix() const { return m_viewProjectionJitter; }
 
 	const float4x4& GetNonJitterProjectionMatrix() const { return m_projection; }
+	const float4x4& GetNonJitterViewProjectionMatrix() const { return m_viewProjection; }
+	const float4x4& GetNonJitterPrevViewProjectionMatrix() const { return m_prevViewProjection; }
 
 	float3 GetLeft() const { return -m_world[0].xyz(); }
 	float3 GetRight() const { return m_world[0].xyz(); }

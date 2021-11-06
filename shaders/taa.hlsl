@@ -17,7 +17,7 @@ void generate_velocity_main(uint3 dispatchThreadID : SV_DispatchThreadID)
     RWTexture2D<float4> outputRT = ResourceDescriptorHeap[c_outputVelocityRT];
     
     float4 velocity = velocityRT[pos];
-    if (any(velocity > float4(0, 0, 0, 0)))
+    if (any(abs(velocity) > float4(0, 0, 0, 0)))
     {
         outputRT[pos] = velocity;
     }

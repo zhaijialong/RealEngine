@@ -6,7 +6,7 @@ cbuffer CB : register(b0)
     uint c_posBuffer;
     uint c_uvBuffer;
     uint c_albedoTexture;
-    uint _padding;
+    float c_alphaCutoff;
 };
 
 struct VSOutput
@@ -38,9 +38,9 @@ void ps_main(VSOutput input)
 {
 #if ALBEDO_TEXTURE && ALPHA_TEST
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
-    Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
+    Texture2D albedoTexture = ResourceDescriptorHeap[c_albedoTexture];
 	float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
     
-    clip(albedo.a - MaterialCB.alphaCutoff);
+    clip(albedo.a - c_alphaCutoff);
 #endif
 }

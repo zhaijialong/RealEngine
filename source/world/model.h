@@ -70,6 +70,7 @@ class Model : public IVisibleObject
 		std::string name;
 		float4x4 localToParentMatrix;
 		float4x4 worldMatrix;
+		float4x4 prevWorldMatrix;
 		std::vector<std::unique_ptr<Mesh>> meshes;
 		std::vector<std::unique_ptr<Node>> childNodes;
 

@@ -129,6 +129,28 @@ void Renderer::UploadResources()
     pCommandList->Wait(m_pUploadFence.get(), m_nCurrentUploadFenceValue);
 }
 
+void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
+{
+    GPU_EVENT(pCommandList, "ComputePasses");
+
+    for (size_t i = 0; i < m_computeBuffers.size(); ++i)
+    {
+        pCommandList->ResourceBarrier(m_computeBuffers[i], 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
+    }
+
+    for (size_t i = 0; i < m_computePassBatchs.size(); ++i)
+    {
+        m_computePassBatchs[i](pCommandList);
+    }
+    m_computePassBatchs.clear();
+
+    for (size_t i = 0; i < m_computeBuffers.size(); ++i)
+    {
+        pCommandList->ResourceBarrier(m_computeBuffers[i], 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
+    }
+    m_computeBuffers.clear();
+}
+
 void Renderer::Render()
 {
     CPU_EVENT("Render", "Renderer::Render");
@@ -142,24 +164,7 @@ void Renderer::Render()
 
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
-    {
-        for (size_t i = 0; i < m_computeBuffers.size(); ++i)
-        {
-            pCommandList->ResourceBarrier(m_computeBuffers[i], 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
-        }
-
-        for (size_t i = 0; i < m_computePassBatchs.size(); ++i)
-        {
-            m_computePassBatchs[i](pCommandList);
-        }
-        m_computePassBatchs.clear();
-
-        for (size_t i = 0; i < m_computeBuffers.size(); ++i)
-        {
-            pCommandList->ResourceBarrier(m_computeBuffers[i], 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
-        }
-        m_computeBuffers.clear();
-    }
+    FlushComputePass(pCommandList);
 
     m_pRenderGraph->Clear();
     RenderGraphHandle outputHandle = BuildRenderGraph();
