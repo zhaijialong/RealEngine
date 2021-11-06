@@ -17,7 +17,7 @@ void generate_velocity_main(uint3 dispatchThreadID : SV_DispatchThreadID)
     RWTexture2D<float4> outputRT = ResourceDescriptorHeap[c_outputVelocityRT];
     
     float4 velocity = velocityRT[pos];
-    if (any(abs(velocity) > float4(0, 0, 0, 0)))
+    if (abs(velocity.x) > 0.001 || abs(velocity.y) > 0.001)
     {
         outputRT[pos] = velocity;
     }
@@ -26,19 +26,17 @@ void generate_velocity_main(uint3 dispatchThreadID : SV_DispatchThreadID)
         Texture2D depthRT = ResourceDescriptorHeap[c_depthRT];
         float depth = depthRT[pos].x;
     
-        float2 screenPos = ((float2) pos + 0.5);
-        float2 screenUV = screenPos * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
-        float4 clipPos = float4((screenUV * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
+        float2 screenPos = ((float2)pos + 0.5);
+        float4 clipPos = float4(GetNdcPosition(screenPos), depth, 1.0);
     
         float4 prevClipPos = mul(CameraCB.mtxClipToPrevClipNoJitter, clipPos);
-        prevClipPos.xyz /= prevClipPos.w;
-        float2 prevScreenUV = prevClipPos.xy * float2(0.5, -0.5) + 0.5;
-        float2 prevScreenPos = prevScreenUV * float2(SceneCB.viewWidth, SceneCB.viewHeight);
+        float3 prevNdcPos = GetNdcPos(prevClipPos);
+        float2 prevScreenPos = GetScreenPosition(prevNdcPos.xy);
     
         float2 motion = prevScreenPos.xy - screenPos.xy;
         
         float linearZ = GetLinearDepth(depth);
-        float prevLinearZ = GetLinearDepth(prevClipPos.z);
+        float prevLinearZ = GetLinearDepth(prevNdcPos.z);
         
         // reduce 16bit precision issues - push the older frame ever so slightly into foreground
         prevLinearZ *= 0.999;

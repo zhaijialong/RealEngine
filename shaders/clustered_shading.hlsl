@@ -24,7 +24,7 @@ float Shadow(float3 worldPos, float3 worldNormal, float4x4 mtxLightVP, Texture2D
 {
     float4 shadowPos = mul(mtxLightVP, float4(worldPos + worldNormal * 0.001, 1.0));
     shadowPos /= shadowPos.w;
-    shadowPos.xy = shadowPos.xy * float2(0.5, -0.5) + 0.5;
+    shadowPos.xy = GetScreenUV(shadowPos.xy);
     
     const float halfTexel = 0.5 / 4096;
     float visibility = shadowRT.SampleCmpLevelZero(shadowSampler, shadowPos.xy + float2(halfTexel, halfTexel), shadowPos.z).x;

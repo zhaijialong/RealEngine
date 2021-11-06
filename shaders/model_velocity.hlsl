@@ -1,4 +1,4 @@
-#include "global_constants.hlsli"
+#include "common.hlsli"
 
 cbuffer CB : register(b1)
 {
@@ -51,13 +51,11 @@ float4 ps_main(VSOutput input) : SV_TARGET0
     clip(albedo.a - c_alphaCutoff);
 #endif
     
-    float2 clipPos = input.clipPos.xy / input.clipPos.w;
-    float2 screenUV = clipPos.xy * float2(0.5, -0.5) + 0.5;
-    float2 screenPos = screenUV * float2(SceneCB.viewWidth, SceneCB.viewHeight);
+    float2 ndcPos = input.clipPos.xy / input.clipPos.w;
+    float2 screenPos = GetScreenPosition(ndcPos);
     
-    float2 prevClipPos = input.prevClipPos.xy / input.prevClipPos.w;
-    float2 prevScreenUV = prevClipPos.xy * float2(0.5, -0.5) + 0.5;
-    float2 prevScreenPos = prevScreenUV * float2(SceneCB.viewWidth, SceneCB.viewHeight);
+    float2 prevNdcPos = input.prevClipPos.xy / input.prevClipPos.w;
+    float2 prevScreenPos = GetScreenPosition(prevNdcPos);
     
     float2 motion = prevScreenPos.xy - screenPos.xy;
     
@@ -65,5 +63,5 @@ float4 ps_main(VSOutput input) : SV_TARGET0
     float prevLinearZ = input.prevClipPos.w;    
     float deltaZ = prevLinearZ - linearZ;
     
-    return float4(motion, deltaZ, 1);
+    return float4(motion, deltaZ, 0);
 }
