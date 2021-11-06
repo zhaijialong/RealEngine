@@ -142,10 +142,27 @@ void Renderer::Render()
 
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
+    {
+        for (size_t i = 0; i < m_computeBuffers.size(); ++i)
+        {
+            pCommandList->ResourceBarrier(m_computeBuffers[i], 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
+        }
+
+        for (size_t i = 0; i < m_computePassBatchs.size(); ++i)
+        {
+            m_computePassBatchs[i](pCommandList);
+        }
+        m_computePassBatchs.clear();
+
+        for (size_t i = 0; i < m_computeBuffers.size(); ++i)
+        {
+            pCommandList->ResourceBarrier(m_computeBuffers[i], 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
+        }
+        m_computeBuffers.clear();
+    }
+
     m_pRenderGraph->Clear();
-
     RenderGraphHandle outputHandle = BuildRenderGraph();
-
     m_pRenderGraph->Present(outputHandle);
     m_pRenderGraph->Compile();
     m_pRenderGraph->Execute(pCommandList);
@@ -310,10 +327,10 @@ IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t stride, uint32_t i
     return buffer;
 }
 
-StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type)
+StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type, bool uav)
 {
     StructuredBuffer* buffer = new StructuredBuffer(name);
-    if (!buffer->Create(stride, element_count, memory_type))
+    if (!buffer->Create(stride, element_count, memory_type, uav))
     {
         delete buffer;
         return nullptr;

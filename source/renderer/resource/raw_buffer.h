@@ -19,9 +19,3 @@ protected:
     std::unique_ptr<IGfxBuffer> m_pBuffer;
     std::unique_ptr<IGfxDescriptor> m_pSRV;
 };
-
-class RWRawBuffer : public RawBuffer
-{
-private:
-    std::unique_ptr<IGfxDescriptor> m_pUAV;
-};

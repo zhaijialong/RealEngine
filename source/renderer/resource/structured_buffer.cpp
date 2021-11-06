@@ -7,7 +7,7 @@ StructuredBuffer::StructuredBuffer(const std::string& name)
     m_name = name;
 }
 
-bool StructuredBuffer::Create(uint32_t stride, uint32_t element_count, GfxMemoryType memory_type)
+bool StructuredBuffer::Create(uint32_t stride, uint32_t element_count, GfxMemoryType memory_type, bool uav)
 {
 	Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 	IGfxDevice* pDevice = pRenderer->GetDevice();
@@ -18,6 +18,11 @@ bool StructuredBuffer::Create(uint32_t stride, uint32_t element_count, GfxMemory
 	desc.format = GfxFormat::Unknown;
 	desc.memory_type = memory_type;
 	desc.usage = GfxBufferUsageStructuredBuffer;
+
+	if (uav)
+	{
+		desc.usage |= GfxBufferUsageUnorderedAccess;
+	}
 
 	m_pBuffer.reset(pDevice->CreateBuffer(desc, m_name));
 	if (m_pBuffer == nullptr)
@@ -32,6 +37,18 @@ bool StructuredBuffer::Create(uint32_t stride, uint32_t element_count, GfxMemory
 	if (m_pSRV == nullptr)
 	{
 		return false;
+	}
+
+	if (uav)
+	{
+		GfxUnorderedAccessViewDesc uavDesc;
+		uavDesc.type = GfxUnorderedAccessViewType::StructuredBuffer;
+		uavDesc.buffer.size = stride * element_count;
+		m_pUAV.reset(pDevice->CreateUnorderedAccessView(m_pBuffer.get(), uavDesc, m_name));
+		if (m_pUAV == nullptr)
+		{
+			return false;
+		}
 	}
 
 	return true;

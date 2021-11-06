@@ -38,6 +38,7 @@ class Model : public IVisibleObject
 
 		IGfxPipelineState* PSO = nullptr;
 		IGfxPipelineState* shadowPSO = nullptr;
+		IGfxPipelineState* velocityPSO = nullptr;
 
 		std::unique_ptr<IndexBuffer> indexBuffer;
 
@@ -47,6 +48,14 @@ class Model : public IVisibleObject
 		std::unique_ptr<StructuredBuffer> tangentBuffer;
 		std::unique_ptr<StructuredBuffer> boneIDBuffer;
 		std::unique_ptr<StructuredBuffer> boneWeightBuffer;
+
+		IGfxPipelineState* animPSO = nullptr;
+
+		std::unique_ptr<StructuredBuffer> animPosBuffer;
+        std::unique_ptr<StructuredBuffer> animNormalBuffer;
+		std::unique_ptr<StructuredBuffer> animTangenetBuffer;
+
+		std::unique_ptr<StructuredBuffer> prevAnimPosBuffer;
 	};
 
 	struct AnimationPose
@@ -104,8 +113,11 @@ public:
 	virtual void Render(Renderer* pRenderer) override;
 
 private:
+	void AddComputeBuffer(Node* pNode);
+	void ComputeAnimation(IGfxCommandList* pCommandList, Node* pNode);
 	void RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode);
 	void RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode);
+	void RenderVelocityPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode);
 
 	Texture2D* LoadTexture(const std::string& file, bool srgb);
 	Node* LoadNode(const cgltf_node* gltf_node);
@@ -123,6 +135,7 @@ private:
 
 	IGfxPipelineState* GetPSO(Material* material);
 	IGfxPipelineState* GetShadowPSO(Material* material);
+	IGfxPipelineState* GetVelocityPSO(Material* material);
 
 private:
     std::string m_file;
@@ -136,5 +149,6 @@ private:
 	std::vector<float4x4> m_boneMatrices;
 	std::unique_ptr<RawBuffer> m_pBoneMatrixBuffer;
 	uint32_t m_boneMatrixBufferOffset = 0;
+	uint32_t m_prevBoneMatrixBufferOffset = 0;
 	float m_currentAnimTime = 0.0f;
 };

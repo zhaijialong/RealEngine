@@ -19,6 +19,7 @@ const static int MAX_INFLIGHT_FRAMES = 3;
 class Camera;
 class Renderer;
 
+using ComputeFunc = std::function<void(IGfxCommandList*)>;
 using RenderFunc = std::function<void(IGfxCommandList*, const float4x4&)>;
 
 class Renderer
@@ -48,7 +49,7 @@ public:
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
 
     IndexBuffer* CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
-    StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
+    StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
     RawBuffer* CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     Texture2D* CreateTexture2D(const std::string& file, bool srgb = true, bool cached = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
@@ -57,9 +58,13 @@ public:
     void UploadTexture(IGfxTexture* texture, void* data);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 
+    void AddComputePass(const ComputeFunc& func) { m_computePassBatchs.push_back(func); }
+    void AddComputeBuffer(IGfxBuffer* buffer) { m_computeBuffers.push_back(buffer); }
+
     void AddShadowPassBatch(const RenderFunc& func) { m_shadowPassBatchs.push_back(func); }
     void AddGBufferPassBatch(const RenderFunc& func) { m_gbufferPassBatchs.push_back(func); }
     void AddForwardPassBatch(const RenderFunc& func) { m_forwardPassBatchs.push_back(func); }
+    void AddVelocityPassBatch(const RenderFunc& func) { m_velocityPassBatchs.push_back(func); }
 
 private:
     void CreateCommonResources();
@@ -131,7 +136,11 @@ private:
     std::unique_ptr<LightingProcessor> m_pLightingProcessor;
     std::unique_ptr<PostProcessor> m_pPostProcessor;
 
+    std::vector<ComputeFunc> m_computePassBatchs;
+    std::vector<IGfxBuffer*> m_computeBuffers;
+
     std::vector<RenderFunc> m_shadowPassBatchs;
     std::vector<RenderFunc> m_gbufferPassBatchs;
     std::vector<RenderFunc> m_forwardPassBatchs;
+    std::vector<RenderFunc> m_velocityPassBatchs;
 };

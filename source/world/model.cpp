@@ -187,11 +187,93 @@ void Model::LinearInterpolate(const AnimationChannel& channel, float interpolati
 
 void Model::Render(Renderer* pRenderer)
 {
+    if (m_pAnimation != nullptr)
+    {
+        ComputeFunc computePass = std::bind(&Model::ComputeAnimation, this, std::placeholders::_1, m_pRootNode.get());
+        pRenderer->AddComputePass(computePass);
+
+        AddComputeBuffer(m_pRootNode.get());
+    }
+
     RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
     pRenderer->AddGBufferPassBatch(bassPassBatch);
 
     RenderFunc shadowPassBatch = std::bind(&Model::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
     pRenderer->AddShadowPassBatch(shadowPassBatch);
+
+    if (m_pAnimation != nullptr)
+    {
+        RenderFunc velocityPassBatch = std::bind(&Model::RenderVelocityPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
+        pRenderer->AddForwardPassBatch(velocityPassBatch);
+    }
+}
+
+void Model::AddComputeBuffer(Node* pNode)
+{
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    for (size_t i = 0; i < pNode->meshes.size(); ++i)
+    {
+        Mesh* mesh = pNode->meshes[i].get();
+        const GfxBufferDesc& bufferDesc = mesh->posBuffer->GetBuffer()->GetDesc();
+        uint32_t vertex_count = bufferDesc.size / bufferDesc.stride;
+
+        if (mesh->animPosBuffer == nullptr)
+        {
+            mesh->animPosBuffer.reset(pRenderer->CreateStructuredBuffer(nullptr, bufferDesc.stride, vertex_count, mesh->name + " anim pos", GfxMemoryType::GpuOnly, true));
+        }
+
+        pRenderer->AddComputeBuffer(mesh->animPosBuffer->GetBuffer());
+    }
+
+    for (size_t i = 0; i < pNode->childNodes.size(); ++i)
+    {
+        AddComputeBuffer(pNode->childNodes[i].get());
+    }
+}
+
+void Model::ComputeAnimation(IGfxCommandList* pCommandList, Node* pNode)
+{
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    for (size_t i = 0; i < pNode->meshes.size(); ++i)
+    {
+        Mesh* mesh = pNode->meshes[i].get();
+
+        std::string event_name = m_file + " " + mesh->name;
+        GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
+
+        if (mesh->animPSO == nullptr)
+        {
+            GfxComputePipelineDesc desc;
+            desc.cs = pRenderer->GetShader("compute_animation.hlsl", "skeletal_anim_main", "cs_6_6", {});
+            mesh->animPSO = pRenderer->GetPipelineState(desc, "Model anim PSO");
+        }
+
+        const GfxBufferDesc& bufferDesc = mesh->posBuffer->GetBuffer()->GetDesc();
+        uint32_t vertex_count = bufferDesc.size / bufferDesc.stride;
+
+        pCommandList->SetPipelineState(mesh->animPSO);
+
+        uint32_t cb[8] = { 
+            mesh->posBuffer->GetSRV()->GetHeapIndex(),
+            mesh->animPosBuffer->GetUAV()->GetHeapIndex(), 
+            0, 
+            0,
+            mesh->boneIDBuffer->GetSRV()->GetHeapIndex(),
+            mesh->boneWeightBuffer->GetSRV()->GetHeapIndex(),
+            m_pBoneMatrixBuffer->GetSRV()->GetHeapIndex(),
+            m_boneMatrixBufferOffset,
+        };
+        pCommandList->SetComputeConstants(1, cb, sizeof(cb));
+
+        pCommandList->Dispatch((vertex_count + 63) / 64, 1, 1);
+    }
+
+    for (size_t i = 0; i < pNode->childNodes.size(); ++i)
+    {
+        ComputeAnimation(pCommandList, pNode->childNodes[i].get());
+    }
 }
 
 void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode)
@@ -224,7 +306,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxV
 
         uint32_t vertexCB[4] =
         {
-            mesh->posBuffer->GetSRV()->GetHeapIndex(),
+            mesh->animPSO ? mesh->animPosBuffer->GetSRV()->GetHeapIndex() : mesh->posBuffer->GetSRV()->GetHeapIndex(),
             mesh->uvBuffer ? mesh->uvBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
             material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
             GFX_INVALID_RESOURCE
@@ -266,14 +348,17 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
         pCommandList->SetPipelineState(mesh->PSO);
         pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
 
-        modelCB.posBuffer = mesh->posBuffer->GetSRV()->GetHeapIndex();
+        if (mesh->animPSO != nullptr)
+        {
+            modelCB.posBuffer = mesh->animPosBuffer->GetSRV()->GetHeapIndex();
+        }
+        else
+        {
+            modelCB.posBuffer = mesh->posBuffer->GetSRV()->GetHeapIndex();
+        }
         modelCB.uvBuffer = mesh->uvBuffer ? mesh->uvBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         modelCB.normalBuffer = mesh->normalBuffer ? mesh->normalBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         modelCB.tangentBuffer = mesh->tangentBuffer ? mesh->tangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-        modelCB.boneIDBuffer = mesh->boneIDBuffer ? mesh->boneIDBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-        modelCB.boneWeightBuffer = mesh->boneWeightBuffer ? mesh->boneWeightBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-        modelCB.boneMatrixBuffer = m_pBoneMatrixBuffer ? m_pBoneMatrixBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-        modelCB.boneMatrixBufferOffset = m_boneMatrixBufferOffset;
         pCommandList->SetGraphicsConstants(1, &modelCB, sizeof(modelCB));
 
         MaterialConstant materialCB;
@@ -296,6 +381,10 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
     {
         RenderBassPass(pCommandList, mtxVP, pNode->childNodes[i].get());
     }
+}
+
+void Model::RenderVelocityPass(IGfxCommandList* pCommandList, const float4x4& mtxVP, Node* pNode)
+{
 }
 
 Texture2D* Model::LoadTexture(const std::string& file, bool srgb)
@@ -631,7 +720,6 @@ IGfxPipelineState* Model::GetPSO(Material* material)
     if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
     if (material->emissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
     if (material->aoTexture) defines.push_back("AO_TEXTURE=1");
-    if (m_pAnimation) defines.push_back("SKELETAL_ANIMATION=1");
 
     GfxGraphicsPipelineDesc psoDesc;
     psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
@@ -648,7 +736,7 @@ IGfxPipelineState* Model::GetPSO(Material* material)
     return pRenderer->GetPipelineState(psoDesc, "model PSO");
 }
 
-IGfxPipelineState* Model::GetShadowPSO(Material* material)
+IGfxPipelineState* Model::GetShadowPSO(Material* material) //todo : merge with model.hlsl
 {
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
@@ -671,4 +759,27 @@ IGfxPipelineState* Model::GetShadowPSO(Material* material)
     psoDesc.depthstencil_format = GfxFormat::D16;
 
     return pRenderer->GetPipelineState(psoDesc, "model shadow PSO");
+}
+
+IGfxPipelineState* Model::GetVelocityPSO(Material* material)
+{
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    std::vector<std::string> defines;
+    defines.push_back("OUTPUT_VELOCITY=1");
+    if (material->albedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+    if (material->alphaTest) defines.push_back("ALPHA_TEST=1");
+
+    GfxGraphicsPipelineDesc psoDesc;
+    psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
+    psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
+    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+    psoDesc.rasterizer_state.front_ccw = true;
+    psoDesc.depthstencil_state.depth_write = false;
+    psoDesc.depthstencil_state.depth_test = true;
+    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+    psoDesc.rt_format[0] = GfxFormat::RGBA16F;
+    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+
+    return pRenderer->GetPipelineState(psoDesc, "model velocity PSO");
 }

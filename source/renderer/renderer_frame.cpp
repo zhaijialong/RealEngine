@@ -168,7 +168,14 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         },
         [&](const VelocityPassData& data, IGfxCommandList* pCommandList)
         {
-            //todo
+            for (size_t i = 0; i < m_velocityPassBatchs.size(); ++i)
+            {
+                World* world = Engine::GetInstance()->GetWorld();
+                Camera* camera = world->GetCamera();
+
+                m_velocityPassBatchs[i](pCommandList, camera->GetViewProjectionMatrix());
+            }
+            m_velocityPassBatchs.clear();
         });
 
 

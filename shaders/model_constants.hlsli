@@ -5,12 +5,7 @@ struct ModelConstant
     uint posBuffer;
     uint uvBuffer;
     uint normalBuffer;
-    uint tangentBuffer;
-    
-    uint boneIDBuffer;
-    uint boneWeightBuffer;
-    uint boneMatrixBuffer;
-    uint boneMatrixBufferOffset;
+    uint tangentBuffer;    
     
     float4x4 mtxWVP;
     float4x4 mtxWorld;
