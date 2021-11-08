@@ -20,6 +20,7 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, const ClusterShadingP
 	RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inEmissiveRT);
 	RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inDepthRT);
 	RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inShadowRT);
+	RenderGraphTexture* gtaoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inAOTermRT);
 	RenderGraphTexture* hdrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outHdrRT);
 
 	pCommandList->SetPipelineState(m_pPSO);
@@ -43,8 +44,9 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, const ClusterShadingP
 		uint depthRT;
 
 		uint shadowRT;
+		uint gtaoRT;
 		uint hdrRT;
-		uint2 _padding;
+		uint _padding;
 	};
 
 	CB1 cb1;
@@ -53,6 +55,7 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, const ClusterShadingP
 	cb1.emissiveRT = emissiveRT->GetSRV()->GetHeapIndex();
 	cb1.depthRT = depthRT->GetSRV()->GetHeapIndex();
 	cb1.shadowRT = shadowRT->GetSRV()->GetHeapIndex();
+	cb1.gtaoRT = gtaoRT->GetSRV()->GetHeapIndex();
 	cb1.hdrRT = hdrRT->GetUAV()->GetHeapIndex();
 
 	pCommandList->SetComputeConstants(1, &cb1, sizeof(cb1));

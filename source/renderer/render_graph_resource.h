@@ -55,6 +55,13 @@ public:
     IGfxTexture* GetTexture() const { return m_pTexture; }
     IGfxDescriptor* GetSRV() { return m_allocator.GetDescriptor(m_pTexture, GfxShaderResourceViewDesc()); }
     IGfxDescriptor* GetUAV() { return m_allocator.GetDescriptor(m_pTexture, GfxUnorderedAccessViewDesc()); }
+    IGfxDescriptor* GetUAV(uint32_t mip, uint32_t slice)
+    {
+        GfxUnorderedAccessViewDesc desc;
+        desc.texture.mip_slice = mip;
+        desc.texture.array_slice = slice;
+        return m_allocator.GetDescriptor(m_pTexture, desc);
+    }
 
     virtual void Realize() override
     {

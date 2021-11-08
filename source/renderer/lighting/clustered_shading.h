@@ -9,6 +9,7 @@ struct ClusterShadingPassData
     RenderGraphHandle inEmissiveRT;
     RenderGraphHandle inDepthRT;
     RenderGraphHandle inShadowRT;
+    RenderGraphHandle inAOTermRT;
 
     RenderGraphHandle outHdrRT;
 };
