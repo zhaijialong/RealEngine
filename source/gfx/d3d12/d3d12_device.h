@@ -109,6 +109,8 @@ private:
 	void DoDeferredDeletion(bool force_delete = false);
 	void CreateRootSignature();
 
+	void CreateIndirectCommandSignatures();
+
 private:
 	GfxDeviceDesc m_desc;
 
@@ -120,6 +122,10 @@ private:
 	ID3D12CommandQueue* m_pComputeQueue = nullptr;
 	ID3D12CommandQueue* m_pCopyQueue = nullptr;
 	ID3D12RootSignature* m_pRootSignature = nullptr;
+
+	ID3D12CommandSignature* m_pDrawSignature = nullptr;
+	ID3D12CommandSignature* m_pDrawIndexedSignature = nullptr;
+	ID3D12CommandSignature* m_pDispatchSignature = nullptr;
 
 	D3D12MA::Allocator* m_pResourceAllocator = nullptr;
 

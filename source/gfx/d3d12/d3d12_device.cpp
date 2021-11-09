@@ -331,6 +331,7 @@ bool D3D12Device::Init()
     m_pSamplerAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, "Sampler Heap");
 
 	CreateRootSignature();
+	CreateIndirectCommandSignatures();
 
 	pix::Init();
 
@@ -541,6 +542,36 @@ void D3D12Device::CreateRootSignature()
 	SAFE_RELEASE(error);
 
 	m_pRootSignature->SetName(L"D3D12Device::m_pRootSignature");
+}
+
+void D3D12Device::CreateIndirectCommandSignatures()
+{
+	D3D12_INDIRECT_ARGUMENT_DESC drawDesc = {};
+	drawDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+
+	D3D12_INDIRECT_ARGUMENT_DESC drawIndexedDesc = {};
+	drawIndexedDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+
+	D3D12_INDIRECT_ARGUMENT_DESC dispatchDesc = {};
+	dispatchDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
+
+	D3D12_COMMAND_SIGNATURE_DESC desc = {};
+	desc.NumArgumentDescs = 1;
+
+	desc.ByteStride = sizeof(D3D12_DRAW_ARGUMENTS);
+	desc.pArgumentDescs = &drawDesc;
+	HRESULT hr = m_pDevice->CreateCommandSignature(&desc, nullptr, IID_PPV_ARGS(&m_pDrawSignature));
+	RE_ASSERT(SUCCEEDED(hr));
+
+	desc.ByteStride = sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+	desc.pArgumentDescs = &drawIndexedDesc;
+	hr = m_pDevice->CreateCommandSignature(&desc, nullptr, IID_PPV_ARGS(&m_pDrawIndexedSignature));
+	RE_ASSERT(SUCCEEDED(hr));
+
+	desc.ByteStride = sizeof(D3D12_DISPATCH_ARGUMENTS);
+	desc.pArgumentDescs = &dispatchDesc;
+	hr = m_pDevice->CreateCommandSignature(&desc, nullptr, IID_PPV_ARGS(&m_pDispatchSignature));
+	RE_ASSERT(SUCCEEDED(hr));
 }
 
 D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count, const std::string& name)
