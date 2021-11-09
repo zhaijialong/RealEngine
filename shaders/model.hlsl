@@ -8,6 +8,7 @@ struct VSOutput
     float3 normal : NORMAL;
 #if NORMAL_TEXTURE
     float3 tangent : TANGENT;
+    float3 bitangent : BITANGENT;
 #endif
 };
 
@@ -16,17 +17,19 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[ModelCB.posBuffer];
     StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[ModelCB.uvBuffer];
     StructuredBuffer<float3> normalBuffer = ResourceDescriptorHeap[ModelCB.normalBuffer];
-    StructuredBuffer<float3> tangentBuffer = ResourceDescriptorHeap[ModelCB.tangentBuffer];
+    StructuredBuffer<float4> tangentBuffer = ResourceDescriptorHeap[ModelCB.tangentBuffer];
     
     float4 pos = float4(posBuffer[vertex_id], 1.0);
 
     VSOutput output;
     output.pos = mul(ModelCB.mtxWVP, pos);
     output.uv = uvBuffer[vertex_id];
-    output.normal = mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz;
+    output.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);
     
 #if NORMAL_TEXTURE
-    output.tangent = mul(ModelCB.mtxWorld, float4(tangentBuffer[vertex_id], 0.0f)).xyz;
+    float4 tangent = tangentBuffer[vertex_id];
+    output.tangent = normalize(mul(ModelCB.mtxNormal, float4(tangent.xyz, 0.0f)).xyz);
+    output.bitangent = normalize(cross(output.normal, output.tangent) * tangent.w);
 #endif
     
     return output;
@@ -41,7 +44,7 @@ struct GBufferOutput
 
 GBufferOutput ps_main(VSOutput input)
 {
-    float3 N = normalize(input.normal);
+    float3 N = input.normal;
 
     float4 albedo = float4(MaterialCB.albedo.xyz, 1.0);
     float metallic = MaterialCB.metallic;
@@ -71,8 +74,8 @@ GBufferOutput ps_main(VSOutput input)
 #endif
 
 #if NORMAL_TEXTURE
-    float3 T = normalize(input.tangent);
-    float3 B = normalize(cross(T, N));
+    float3 T = input.tangent;
+    float3 B = input.bitangent;
 
     Texture2D normalTexture = ResourceDescriptorHeap[MaterialCB.normalTexture];
     float3 normal = normalTexture.Sample(linearSampler, input.uv).xyz;
