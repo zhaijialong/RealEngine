@@ -82,6 +82,9 @@ public:
 	ID3D12DescriptorHeap* GetResourceDescriptorHeap() const { return m_pResDescriptorAllocator->GetHeap(); }
 	ID3D12DescriptorHeap* GetSamplerDescriptorHeap() const { return m_pSamplerAllocator->GetHeap(); }
 	ID3D12RootSignature* GetRootSignature() const { return m_pRootSignature; }
+	ID3D12CommandSignature* GetDrawSignature() const { return m_pDrawSignature; }
+	ID3D12CommandSignature* GetDrawIndexedSignature() const { return m_pDrawIndexedSignature; }
+	ID3D12CommandSignature* GetDispatchSignature() const { return m_pDispatchSignature; }
 
 	D3D12_GPU_VIRTUAL_ADDRESS AllocateConstantBuffer(void* data, size_t data_size);
 

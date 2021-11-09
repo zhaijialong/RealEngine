@@ -416,6 +416,26 @@ void D3D12CommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, 
 	m_pCommandList->Dispatch(group_count_x, group_count_y, group_count_z);
 }
 
+void D3D12CommandList::DrawIndirect(IGfxBuffer* buffer, uint32_t offset)
+{
+	ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetDrawSignature();
+	m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
+}
+
+void D3D12CommandList::DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset)
+{
+	ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetDrawIndexedSignature();
+	m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
+}
+
+void D3D12CommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
+{
+	FlushPendingBarrier();
+
+	ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetDispatchSignature();
+	m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
+}
+
 void D3D12CommandList::FlushPendingBarrier()
 {
 	if (!m_pendingBarriers.empty())
