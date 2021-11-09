@@ -62,7 +62,10 @@ D3D12Device::~D3D12Device()
 	m_pDSVAllocator.reset();
 	m_pResDescriptorAllocator.reset();
 	m_pSamplerAllocator.reset();
-
+	
+	SAFE_RELEASE(m_pDrawSignature);
+	SAFE_RELEASE(m_pDrawIndexedSignature);
+	SAFE_RELEASE(m_pDispatchSignature);
 	SAFE_RELEASE(m_pRootSignature);
 	SAFE_RELEASE(m_pResourceAllocator);
 	SAFE_RELEASE(m_pGraphicsQueue);
@@ -562,16 +565,19 @@ void D3D12Device::CreateIndirectCommandSignatures()
 	desc.pArgumentDescs = &drawDesc;
 	HRESULT hr = m_pDevice->CreateCommandSignature(&desc, nullptr, IID_PPV_ARGS(&m_pDrawSignature));
 	RE_ASSERT(SUCCEEDED(hr));
+	m_pDrawSignature->SetName(L"D3D12Device::m_pDrawSignature");
 
 	desc.ByteStride = sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
 	desc.pArgumentDescs = &drawIndexedDesc;
 	hr = m_pDevice->CreateCommandSignature(&desc, nullptr, IID_PPV_ARGS(&m_pDrawIndexedSignature));
 	RE_ASSERT(SUCCEEDED(hr));
+	m_pDrawIndexedSignature->SetName(L"D3D12Device::m_pDrawIndexedSignature");
 
 	desc.ByteStride = sizeof(D3D12_DISPATCH_ARGUMENTS);
 	desc.pArgumentDescs = &dispatchDesc;
 	hr = m_pDevice->CreateCommandSignature(&desc, nullptr, IID_PPV_ARGS(&m_pDispatchSignature));
 	RE_ASSERT(SUCCEEDED(hr));
+	m_pDispatchSignature->SetName(L"D3D12Device::m_pDispatchSignature");
 }
 
 D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count, const std::string& name)
