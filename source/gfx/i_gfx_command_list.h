@@ -23,6 +23,7 @@ public:
 
 	virtual void CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* buffer, uint32_t offset) = 0;
 	virtual void CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, IGfxBuffer* src_buffer, uint32_t src_offset, uint32_t size) = 0;
+	virtual void WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data) = 0;
 	virtual void CopyTexture(IGfxTexture* dst, IGfxTexture* src) = 0;
 
 	virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) = 0;

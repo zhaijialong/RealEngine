@@ -24,7 +24,7 @@ void RenderGraph::Clear()
     m_allocator.Reset();
     m_resourceAllocator.Reset();
 
-    m_pOutputResource = nullptr;
+    m_outputResources.clear();
 }
 
 void RenderGraph::Compile()
@@ -92,19 +92,25 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList)
         pass->Execute(*this, pCommandList);
     }
 
-    if (m_pOutputResource)
+    for (size_t i = 0; i < m_outputResources.size(); ++i)
     {
-        pCommandList->ResourceBarrier(m_pOutputResource->GetResource(), GFX_ALL_SUB_RESOURCE, m_pOutputResource->GetFinalState(), GfxResourceState::ShaderResourcePS);
-        m_pOutputResource->SetFinalState(GfxResourceState::ShaderResourcePS);
+        const PresentTarget& target = m_outputResources[i];
+
+        pCommandList->ResourceBarrier(target.resource->GetResource(), 0, target.resource->GetFinalState(), target.state);
+        target.resource->SetFinalState(target.state);
     }
+    m_outputResources.clear();
 }
 
-void RenderGraph::Present(const RenderGraphHandle& handle)
+void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filnal_state)
 {
     RenderGraphResourceNode* node = m_resourceNodes[handle.node];
     node->MakeTarget();
 
-    m_pOutputResource = GetResource(handle);
+    PresentTarget target;
+    target.resource = GetResource(handle);
+    target.state = filnal_state;
+    m_outputResources.push_back(target);
 }
 
 RenderGraphResource* RenderGraph::GetResource(const RenderGraphHandle& handle)

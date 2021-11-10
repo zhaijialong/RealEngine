@@ -2,6 +2,7 @@
 #include "texture_loader.h"
 #include "core/engine.h"
 #include "utils/profiler.h"
+#include "global_constants.hlsli"
 
 Renderer::Renderer() : m_resizeConnection({})
 {
@@ -59,6 +60,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_pRenderGraph.reset(new RenderGraph(this));
     m_pLightingProcessor.reset(new LightingProcessor(this));
     m_pPostProcessor.reset(new PostProcessor(this));
+    m_pGpuDebugLine.reset(new GpuDebugLine(this));
 }
 
 void Renderer::RenderFrame()
@@ -151,6 +153,54 @@ void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
     m_computeBuffers.clear();
 }
 
+
+//temp test code
+inline float4x4 GetLightVP(ILight* light)
+{
+    float3 light_dir = light->GetLightDirection();
+    float3 eye = light_dir * 100.0f;
+    float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
+    float4x4 mtxProj = ortho_matrix(-50.0f, 50.0f, -50.0f, 50.0f, 0.1f, 500.0f);
+    float4x4 mtxVP = mul(mtxProj, mtxView);
+    return mtxVP;
+}
+
+void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
+{
+    World* world = Engine::GetInstance()->GetWorld();
+    Camera* camera = world->GetCamera();
+    ILight* light = world->GetPrimaryLight();
+
+    camera->SetupCameraCB(pCommandList);
+
+    SceneConstant sceneCB;
+    sceneCB.lightDir = light->GetLightDirection();
+    //sceneCB.shadowRT = shadowMapRT->GetSRV()->GetHeapIndex();
+    sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
+    sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
+    sceneCB.mtxLightVP = GetLightVP(light);
+    sceneCB.viewWidth = m_nWindowWidth;
+    sceneCB.viewHeight = m_nWindowHeight;
+    sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
+    sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
+    sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
+    sceneCB.debugLineVertexBufferSRV = m_pGpuDebugLine->GetVertexBufferSRV()->GetHeapIndex();
+    sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
+    sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
+    sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
+    sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
+    sceneCB.linearClampSampler = m_pLinearClampSampler->GetHeapIndex();
+    sceneCB.aniso2xSampler = m_pAniso2xSampler->GetHeapIndex();
+    sceneCB.aniso4xSampler = m_pAniso4xSampler->GetHeapIndex();
+    sceneCB.aniso8xSampler = m_pAniso8xSampler->GetHeapIndex();
+    sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
+    sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
+    sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
+
+    pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
+    pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
+}
+
 void Renderer::Render()
 {
     CPU_EVENT("Render", "Renderer::Render");
@@ -164,36 +214,52 @@ void Renderer::Render()
 
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
+    m_pGpuDebugLine->Clear(pCommandList);
     FlushComputePass(pCommandList);
+    SetupGlobalConstants(pCommandList);
 
     m_pRenderGraph->Clear();
-    RenderGraphHandle outputHandle = BuildRenderGraph();
-    m_pRenderGraph->Present(outputHandle);
+    
+    RenderGraphHandle outputColorHandle, outputDepthHandle;
+    BuildRenderGraph(outputColorHandle, outputDepthHandle);
+
     m_pRenderGraph->Compile();
     m_pRenderGraph->Execute(pCommandList);
 
     {
-        GPU_EVENT(pCommandList, "GUI Pass");
+        GPU_EVENT(pCommandList, "Backbuffer Pass");
 
         pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
+        m_pGpuDebugLine->BarrierForDraw(pCommandList);
+
+        RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(outputDepthHandle);
 
         GfxRenderPassDesc render_pass;
         render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
         render_pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
+        render_pass.depth.texture = depthRT->GetTexture();
+        render_pass.depth.store_op = GfxRenderPassStoreOp::DontCare;
+        render_pass.depth.stencil_store_op = GfxRenderPassStoreOp::DontCare;
         pCommandList->BeginRenderPass(render_pass);
 
-        RenderGraphTexture* outputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(outputHandle);
-        uint32_t constants[4] = { outputRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex(), 0, 0 };
-        pCommandList->SetGraphicsConstants(0, constants, sizeof(constants));
-        pCommandList->SetPipelineState(m_pCopyPSO);
-        pCommandList->Draw(3);
-
-        GUI* pGUI = Engine::GetInstance()->GetGUI();
-        pGUI->Render(pCommandList);
+        CopyToBackbuffer(pCommandList, outputColorHandle);
+        m_pGpuDebugLine->Draw(pCommandList);
+        Engine::GetInstance()->GetGUI()->Render(pCommandList);
 
         pCommandList->EndRenderPass();
         pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
     }
+}
+
+void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRT)
+{
+    GPU_EVENT(pCommandList, "CopyToBackbuffer");
+
+    RenderGraphTexture* inputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(colorRT);
+    uint32_t constants[4] = { inputRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex(), 0, 0 };
+    pCommandList->SetGraphicsConstants(0, constants, sizeof(constants));
+    pCommandList->SetPipelineState(m_pCopyPSO);
+    pCommandList->Draw(3);
 }
 
 void Renderer::EndFrame()
@@ -349,10 +415,10 @@ StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, 
     return buffer;
 }
 
-RawBuffer* Renderer::CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type)
+RawBuffer* Renderer::CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type, bool uav)
 {
     RawBuffer* buffer = new RawBuffer(name);
-    if (!buffer->Create(size, memory_type))
+    if (!buffer->Create(size, memory_type, uav))
     {
         delete buffer;
         return nullptr;

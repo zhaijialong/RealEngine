@@ -30,7 +30,7 @@ public:
 protected:
     std::string m_name;
 
-    DAGNodeID m_firstPass = 0;
+    DAGNodeID m_firstPass = UINT32_MAX;
     DAGNodeID m_lastPass = 0;
     GfxResourceState m_lastState = GfxResourceState::Common;
 };

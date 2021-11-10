@@ -5,6 +5,7 @@
 #include "pipeline_cache.h"
 #include "staging_buffer_allocator.h"
 #include "render_graph.h"
+#include "gpu_debug_line.h"
 #include "resource/texture_2d.h"
 #include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
@@ -50,7 +51,7 @@ public:
 
     IndexBuffer* CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
-    RawBuffer* CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
+    RawBuffer* CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
     Texture2D* CreateTexture2D(const std::string& file, bool srgb = true, bool cached = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
@@ -73,10 +74,12 @@ private:
     void BeginFrame();
     void UploadResources();
     void Render();
-    RenderGraphHandle BuildRenderGraph();
+    void BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth);
     void EndFrame();
 
     void FlushComputePass(IGfxCommandList* pCommandList);
+    void SetupGlobalConstants(IGfxCommandList* pCommandList);
+    void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRT);
 
 private:
     std::unique_ptr<IGfxDevice> m_pDevice;
@@ -137,6 +140,7 @@ private:
 
     std::unique_ptr<LightingProcessor> m_pLightingProcessor;
     std::unique_ptr<PostProcessor> m_pPostProcessor;
+    std::unique_ptr<GpuDebugLine> m_pGpuDebugLine;
 
     std::vector<ComputeFunc> m_computePassBatchs;
     std::vector<IGfxBuffer*> m_computeBuffers;

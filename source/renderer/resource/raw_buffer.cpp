@@ -7,7 +7,7 @@ RawBuffer::RawBuffer(const std::string& name)
     m_name = name;
 }
 
-bool RawBuffer::Create(uint32_t size, GfxMemoryType memory_type)
+bool RawBuffer::Create(uint32_t size, GfxMemoryType memory_type, bool uav)
 {
 	Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 	IGfxDevice* pDevice = pRenderer->GetDevice();
@@ -20,6 +20,11 @@ bool RawBuffer::Create(uint32_t size, GfxMemoryType memory_type)
 	desc.format = GfxFormat::R32F;
 	desc.memory_type = memory_type;
 	desc.usage = GfxBufferUsageRawBuffer;
+
+	if (uav)
+	{
+		desc.usage |= GfxBufferUsageUnorderedAccess;
+	}
 
 	m_pBuffer.reset(pDevice->CreateBuffer(desc, m_name));
 	if (m_pBuffer == nullptr)
@@ -34,6 +39,18 @@ bool RawBuffer::Create(uint32_t size, GfxMemoryType memory_type)
 	if (m_pSRV == nullptr)
 	{
 		return false;
+	}
+
+	if (uav)
+	{
+		GfxUnorderedAccessViewDesc uavDesc;
+		uavDesc.type = GfxUnorderedAccessViewType::RawBuffer;
+		uavDesc.buffer.size = size;
+		m_pUAV.reset(pDevice->CreateUnorderedAccessView(m_pBuffer.get(), uavDesc, m_name));
+		if (m_pUAV == nullptr)
+		{
+			return false;
+		}
 	}
 
 	return true;

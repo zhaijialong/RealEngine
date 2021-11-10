@@ -163,3 +163,21 @@ float2 GetNdcPosition(float2 screenPos)
     float2 screenUV = screenPos * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
     return (screenUV * 2.0 - 1.0) * float2(1.0, -1.0);
 }
+
+float4 RGBA8UnormToFloat4(uint packed)
+{
+    float4 unpacked;
+    unpacked.x = (float)(packed & 0x000000ff) / 255.0;
+    unpacked.y = (float)(((packed >> 8) & 0x000000ff)) / 255.0;
+    unpacked.z = (float)(((packed >> 16) & 0x000000ff)) / 255.0;
+    unpacked.w = (float)(packed >> 24) / 255.0;
+    return unpacked;
+}
+
+uint Float4ToRGBA8Unorm(float4 input)
+{
+    return ((uint(input.x * 255.0 + 0.5)) |
+            (uint(input.y * 255.0 + 0.5) << 8) |
+            (uint(input.z * 255.0 + 0.5) << 16) |
+            (uint(input.w * 255.0 + 0.5) << 24));
+}

@@ -162,6 +162,17 @@ void D3D12CommandList::CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, I
 		(ID3D12Resource*)src_buffer->GetHandle(), src_offset, size);
 }
 
+void D3D12CommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
+{
+	FlushPendingBarrier();
+
+	D3D12_WRITEBUFFERIMMEDIATE_PARAMETER parameter;
+	parameter.Dest = buffer->GetGpuAddress() + offset;
+	parameter.Value = data;
+
+	m_pCommandList->WriteBufferImmediate(1, &parameter, nullptr);
+}
+
 void D3D12CommandList::CopyTexture(IGfxTexture* dst, IGfxTexture* src)
 {
 	FlushPendingBarrier();

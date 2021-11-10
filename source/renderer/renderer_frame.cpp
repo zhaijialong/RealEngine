@@ -1,9 +1,8 @@
 #include "renderer.h"
 #include "core/engine.h"
-#include "global_constants.hlsli"
 
 
-//test code
+//temp test code
 inline float4x4 GetLightVP(ILight* light)
 {
     float3 light_dir = light->GetLightDirection();
@@ -14,7 +13,7 @@ inline float4x4 GetLightVP(ILight* light)
     return mtxVP;
 }
 
-RenderGraphHandle Renderer::BuildRenderGraph()
+void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
 {
     struct DepthPassData
     {
@@ -79,33 +78,6 @@ RenderGraphHandle Renderer::BuildRenderGraph()
         {
             World* world = Engine::GetInstance()->GetWorld();
             Camera* camera = world->GetCamera();
-            ILight* light = world->GetPrimaryLight();
-
-            camera->SetupCameraCB(pCommandList);
-
-            SceneConstant sceneCB;
-            sceneCB.lightDir = light->GetLightDirection();
-            //sceneCB.shadowRT = shadowMapRT->GetSRV()->GetHeapIndex();
-            sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
-            sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
-            sceneCB.mtxLightVP = GetLightVP(light);
-            sceneCB.viewWidth = m_nWindowWidth;
-            sceneCB.viewHeight = m_nWindowHeight;
-            sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
-            sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
-            sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
-            sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
-            sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
-            sceneCB.linearClampSampler = m_pLinearClampSampler->GetHeapIndex();
-            sceneCB.aniso2xSampler = m_pAniso2xSampler->GetHeapIndex();
-            sceneCB.aniso4xSampler = m_pAniso4xSampler->GetHeapIndex();
-            sceneCB.aniso8xSampler = m_pAniso8xSampler->GetHeapIndex();
-            sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
-            sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
-            sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
-
-            pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
-            pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
 
             for (size_t i = 0; i < m_gbufferPassBatchs.size(); ++i)
             {
@@ -254,5 +226,9 @@ RenderGraphHandle Renderer::BuildRenderGraph()
 
         });
 
-    return output;
+    outColor = output;
+    outDepth = ppInput.sceneDepthRT;
+
+    m_pRenderGraph->Present(outColor, GfxResourceState::ShaderResourcePS);
+    m_pRenderGraph->Present(outDepth, GfxResourceState::DepthStencilReadOnly);
 }

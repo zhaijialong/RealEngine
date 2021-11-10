@@ -544,3 +544,27 @@ struct GfxSamplerDesc
 	float max_lod = FLT_MAX;
 	float border_color[4] = {};
 };
+
+struct GfxDrawCommand
+{
+	uint32_t vertex_count; //per instance
+	uint32_t instance_count;
+	uint32_t start_vertex;
+	uint32_t start_instance;
+};
+
+struct GfxDrawIndexedCommand
+{
+	uint32_t index_count; //per instance
+	uint32_t instance_count;
+	uint32_t start_index;
+	uint32_t base_vertex;
+	uint32_t start_instance;
+};
+
+struct GfxDispatchCommand
+{
+	uint32_t group_count_x;
+	uint32_t group_count_y;
+	uint32_t group_count_z;
+};

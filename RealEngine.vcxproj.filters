@@ -208,6 +208,9 @@
     <ClCompile Include="source\world\animation.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\gpu_debug_line.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -507,6 +510,9 @@
     <ClInclude Include="source\world\animation.h">
       <Filter>source\world</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\gpu_debug_line.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -606,6 +612,9 @@
     <None Include="shaders\taa_constants.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\debug.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">
@@ -648,6 +657,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\gtao.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\debug_line.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

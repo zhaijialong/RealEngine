@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -118,6 +118,7 @@
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp" />
+    <ClCompile Include="source\renderer\gpu_debug_line.cpp" />
     <ClCompile Include="source\renderer\lighting\clustered_shading.cpp" />
     <ClCompile Include="source\renderer\lighting\gtao.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
     <ClInclude Include="source\renderer\directed_acyclic_graph.h" />
+    <ClInclude Include="source\renderer\gpu_debug_line.h" />
     <ClInclude Include="source\renderer\lighting\clustered_shading.h" />
     <ClInclude Include="source\renderer\lighting\gtao.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
@@ -268,6 +270,7 @@
     <None Include="shaders\atmosphere.hlsli" />
     <None Include="shaders\common.hlsli" />
     <None Include="shaders\global_constants.hlsli" />
+    <None Include="shaders\debug.hlsli" />
     <None Include="shaders\IntelTAA.hlsli" />
     <None Include="shaders\model_constants.hlsli" />
     <None Include="shaders\taa_constants.hlsli" />
@@ -292,6 +295,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="shaders\copy.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\debug_line.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

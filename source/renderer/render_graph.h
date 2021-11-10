@@ -23,7 +23,8 @@ public:
     void Compile();
     void Execute(IGfxCommandList* pCommandList);
 
-    void Present(const RenderGraphHandle& handle);
+    void Present(const RenderGraphHandle& handle, GfxResourceState filnal_state);
+
     RenderGraphResource* GetResource(const RenderGraphHandle& handle);
     const DirectedAcyclicGraph& GetDAG() const { return m_graph; }
 
@@ -62,7 +63,12 @@ private:
     };
     std::vector<ObjFinalizer>  m_objFinalizer;
 
-    RenderGraphResource* m_pOutputResource = nullptr;
+    struct PresentTarget
+    {
+        RenderGraphResource* resource;
+        GfxResourceState state;
+    };
+    std::vector<PresentTarget> m_outputResources;
 };
 
 #include "render_graph.inl"
