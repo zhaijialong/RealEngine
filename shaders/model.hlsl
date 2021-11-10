@@ -1,5 +1,6 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
+#include "debug.hlsli"
 
 struct VSOutput
 {
@@ -24,12 +25,18 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     VSOutput output;
     output.pos = mul(ModelCB.mtxWVP, pos);
     output.uv = uvBuffer[vertex_id];
-    output.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);
+    output.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);    
+    
+    //float3 worldPos = mul(ModelCB.mtxWorld, pos).xyz;
+    //DrawDebugLine(worldPos, worldPos + output.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE
     float4 tangent = tangentBuffer[vertex_id];
     output.tangent = normalize(mul(ModelCB.mtxNormal, float4(tangent.xyz, 0.0f)).xyz);
-    output.bitangent = normalize(cross(output.normal, output.tangent) * tangent.w);
+    output.bitangent = normalize(cross(output.normal, output.tangent) * tangent.w);    
+    
+    //DrawDebugLine(worldPos, worldPos + output.tangent * 0.05, float3(1, 0, 0));
+    //DrawDebugLine(worldPos, worldPos + output.bitangent * 0.05, float3(0, 1, 0));
 #endif
     
     return output;

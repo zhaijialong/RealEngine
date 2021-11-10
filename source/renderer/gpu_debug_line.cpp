@@ -10,7 +10,7 @@ GpuDebugLine::GpuDebugLine(Renderer* pRenderer)
     GfxGraphicsPipelineDesc psoDesc;
     psoDesc.vs = pRenderer->GetShader("debug_line.hlsl", "vs_main", "vs_6_6", {});
     psoDesc.ps = pRenderer->GetShader("debug_line.hlsl", "ps_main", "ps_6_6", {});
-    psoDesc.rasterizer_state.line_aa = true;
+    //psoDesc.rasterizer_state.line_aa = true;
     psoDesc.depthstencil_state.depth_test = true;
     psoDesc.depthstencil_state.depth_func = GfxCompareFunc::Greater;
     psoDesc.depthstencil_state.depth_write = false;

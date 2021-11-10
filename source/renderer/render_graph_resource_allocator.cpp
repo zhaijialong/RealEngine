@@ -57,7 +57,7 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(const GfxTextureDesc&
         initial_state = GfxResourceState::RenderTarget;
     }
 
-    return m_pDevice->CreateTexture(desc, name);
+    return m_pDevice->CreateTexture(desc, "RGTexture " + name);
 }
 
 void RenderGraphResourceAllocator::Free(IGfxTexture* texture, GfxResourceState state)
