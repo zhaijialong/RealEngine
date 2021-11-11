@@ -203,7 +203,7 @@ void Model::Render(Renderer* pRenderer)
     RenderFunc shadowPassBatch = std::bind(&Model::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
     pRenderer->AddShadowPassBatch(shadowPassBatch);
 
-    if (m_pAnimation != nullptr)
+    if (m_pAnimation != nullptr) //todo : moved models (by gizmo or something else)
     {
         RenderFunc velocityPassBatch = std::bind(&Model::RenderVelocityPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
         pRenderer->AddVelocityPassBatch(velocityPassBatch);
@@ -421,8 +421,11 @@ void Model::RenderVelocityPass(IGfxCommandList* pCommandList, const float4x4& mt
         {
             uint posBuffer;
             uint prevPosBuffer;
+            uint uvBuffer;
             uint albedoTexture;
+
             float alphaCutoff;
+            float3 _padding;
 
             float4x4 mtxWVP;
             float4x4 mtxWVPNoJitter;
@@ -431,6 +434,7 @@ void Model::RenderVelocityPass(IGfxCommandList* pCommandList, const float4x4& mt
 
         CB cb;
         cb.posBuffer = mesh->animPosBuffer ? mesh->animPosBuffer->GetSRV()->GetHeapIndex() : mesh->posBuffer->GetSRV()->GetHeapIndex();
+        cb.uvBuffer = mesh->uvBuffer ? mesh->uvBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         cb.prevPosBuffer = mesh->prevAnimPosBuffer ? mesh->prevAnimPosBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         cb.albedoTexture = material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         cb.alphaCutoff = material->alphaCutoff;

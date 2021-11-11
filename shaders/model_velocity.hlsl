@@ -4,8 +4,11 @@ cbuffer CB : register(b1)
 {
     uint c_posBuffer;
     uint c_prevPosBuffer;
+    uint c_uvBuffer;
     uint c_albedoTexture;
+    
     float c_alphaCutoff;
+    float3 _padding;
 
     float4x4 c_mtxWVP;
     float4x4 c_mtxWVPNoJitter;
@@ -15,6 +18,7 @@ cbuffer CB : register(b1)
 struct VSOutput
 {
     float4 pos : SV_POSITION;
+    float2 uv : TEXCOORD;
     
     float4 clipPos : CLIP_POSITION0;
     float4 prevClipPos : CLIP_POSITION1;
@@ -23,11 +27,13 @@ struct VSOutput
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {
     StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[c_posBuffer];
+    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[c_uvBuffer];
     
     float4 pos = float4(posBuffer[vertex_id], 1.0);
 
     VSOutput output;
     output.pos = mul(c_mtxWVP, pos);
+    output.uv = uvBuffer[vertex_id];
     
     float4 prevPos = pos;
 #if ANIME_POS
