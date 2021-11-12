@@ -48,6 +48,7 @@ public:
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearRepeatSampler.get(); }
 
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
+    RenderGraphHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
 
     IndexBuffer* CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
@@ -79,6 +80,7 @@ private:
 
     void FlushComputePass(IGfxCommandList* pCommandList);
     void SetupGlobalConstants(IGfxCommandList* pCommandList);
+    void ImportPrevFrameTextures();
     void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRT);
 
 private:
@@ -133,6 +135,7 @@ private:
     std::unique_ptr<TextureCube> m_pEnvTexture;
 
     std::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
+    RenderGraphHandle m_prevLinearDepthHandle;
 
     std::unordered_map<std::string, std::unique_ptr<Texture2D>> m_cachedTextures;
 

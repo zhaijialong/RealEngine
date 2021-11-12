@@ -201,29 +201,22 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     struct CopyPassData
     {
         RenderGraphHandle srcTexture;
+        RenderGraphHandle dstTexture;
     };
 
     m_pRenderGraph->AddPass<CopyPassData>("Copy Depth",
         [&](CopyPassData& data, RenderGraphBuilder& builder)
         {
             data.srcTexture = builder.Read(linearize_depth_pass->outputLinearDepthRT, GfxResourceState::CopySrc);
+            data.dstTexture = builder.Write(m_prevLinearDepthHandle, GfxResourceState::CopyDst);
+
             builder.MakeTarget();
         },
         [&](const CopyPassData& data, IGfxCommandList* pCommandList)
         {
-            if (m_pPrevLinearDepthTexture == nullptr ||
-                m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nWindowWidth ||
-                m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nWindowHeight)
-            {
-                m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::R32F, GfxTextureUsageShaderResource, "Prev LinearDepth"));
-            }
-
             RenderGraphTexture* srcTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcTexture);
 
-            pCommandList->ResourceBarrier(m_pPrevLinearDepthTexture->GetTexture(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::CopyDst);
             pCommandList->CopyTexture(m_pPrevLinearDepthTexture->GetTexture(), srcTexture->GetTexture());
-            pCommandList->ResourceBarrier(m_pPrevLinearDepthTexture->GetTexture(), 0, GfxResourceState::CopyDst, GfxResourceState::ShaderResourceNonPS);
-
         });
 
     outColor = output;

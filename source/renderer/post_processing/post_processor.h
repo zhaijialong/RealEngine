@@ -21,6 +21,8 @@ public:
     RenderGraphHandle Process(RenderGraph* pRenderGraph, const PostProcessInput& input, uint32_t width, uint32_t height);
 
 private:
+    Renderer* m_pRenderer = nullptr;
+
     std::unique_ptr<TAA> m_pTAA;
     std::unique_ptr<Tonemapper> m_pToneMapper;
     std::unique_ptr<FXAA> m_pFXAA;

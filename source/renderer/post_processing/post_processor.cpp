@@ -1,7 +1,10 @@
 #include "post_processor.h"
+#include "../renderer.h"
 
 PostProcessor::PostProcessor(Renderer* pRenderer)
 {
+    m_pRenderer = pRenderer;
+
     m_pTAA.reset(new TAA(pRenderer));
     m_pToneMapper.reset(new Tonemapper(pRenderer, DISPLAYMODE_SDR, ColorSpace_REC709));
     m_pFXAA.reset(new FXAA(pRenderer));
@@ -42,6 +45,7 @@ RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostPr
             data.historyRT = builder.Read(historyRT, GfxResourceState::ShaderResourceNonPS);
             data.velocityRT = builder.Read(taa_velocity_pass->outputMotionVectorRT, GfxResourceState::ShaderResourceNonPS);
             data.linearDepthRT = builder.Read(input.linearDepthRT, GfxResourceState::ShaderResourceNonPS);
+            data.prevLinearDepthRT = builder.Read(m_pRenderer->GetPrevLinearDepthHandle(), GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;

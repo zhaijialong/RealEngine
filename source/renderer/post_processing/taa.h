@@ -16,6 +16,7 @@ struct TAAPassData
     RenderGraphHandle historyRT;
     RenderGraphHandle velocityRT;
     RenderGraphHandle linearDepthRT;
+    RenderGraphHandle prevLinearDepthRT;
     RenderGraphHandle outputRT;
 };
 

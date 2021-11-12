@@ -201,6 +201,18 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
 }
 
+void Renderer::ImportPrevFrameTextures()
+{
+    if (m_pPrevLinearDepthTexture == nullptr ||
+        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nWindowWidth ||
+        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nWindowHeight)
+    {
+        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::R32F, GfxTextureUsageShaderResource, "Prev LinearDepth"));
+    }
+
+    m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), GfxResourceState::CopyDst);
+}
+
 void Renderer::Render()
 {
     CPU_EVENT("Render", "Renderer::Render");
@@ -220,6 +232,8 @@ void Renderer::Render()
 
     m_pRenderGraph->Clear();
     
+    ImportPrevFrameTextures();
+
     RenderGraphHandle outputColorHandle, outputDepthHandle;
     BuildRenderGraph(outputColorHandle, outputDepthHandle);
 
