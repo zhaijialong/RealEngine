@@ -40,6 +40,8 @@ private:
     template<typename Resource>
     RenderGraphHandle Create(const typename Resource::Desc& desc, const char* name);
 
+    RenderGraphHandle Import(IGfxTexture* texture, GfxResourceState state);
+
     RenderGraphHandle Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
     RenderGraphHandle Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
 

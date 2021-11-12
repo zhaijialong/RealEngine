@@ -36,7 +36,10 @@ RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostPr
     auto taa_pass = pRenderGraph->AddPass<TAAPassData>("TAA",
         [&](TAAPassData& data, RenderGraphBuilder& builder)
         {
+            RenderGraphHandle historyRT = builder.Import(m_pTAA->GetHistoryRT(width, height), GfxResourceState::UnorderedAccess);
+
             data.inputRT = builder.Read(input.sceneColorRT, GfxResourceState::ShaderResourceNonPS);
+            data.historyRT = builder.Read(historyRT, GfxResourceState::ShaderResourceNonPS);
             data.velocityRT = builder.Read(taa_velocity_pass->outputMotionVectorRT, GfxResourceState::ShaderResourceNonPS);
             data.linearDepthRT = builder.Read(input.linearDepthRT, GfxResourceState::ShaderResourceNonPS);
 
@@ -70,6 +73,8 @@ RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostPr
             desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
             data.outputRT = builder.Create<RenderGraphTexture>(desc, "TAA Final");
             data.outputRT = builder.Write(data.outputRT, GfxResourceState::UnorderedAccess);
+
+            data.outputHistoryRT = builder.Write(taa_pass->historyRT, GfxResourceState::UnorderedAccess);
         },
         [=](const TAAApplyPassData& data, IGfxCommandList* pCommandList)
         {

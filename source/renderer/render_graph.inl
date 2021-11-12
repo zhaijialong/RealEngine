@@ -132,7 +132,7 @@ inline T* RenderGraph::AllocatePOD(ArgsT&&... arguments)
 template<typename Data, typename Setup, typename Exec>
 inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup& setup, const Exec& execute)
 {
-    auto* pass = Allocate<RenderGraphPass<Data>>(name, m_graph, execute);
+    auto pass = Allocate<RenderGraphPass<Data>>(name, m_graph, execute);
 
     RenderGraphBuilder builder(this, pass);
     setup(pass->GetData(), builder);
@@ -145,8 +145,8 @@ inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup
 template<typename Resource>
 inline RenderGraphHandle RenderGraph::Create(const typename Resource::Desc& desc, const char* name)
 {
-    auto* resource = Allocate<Resource>(m_resourceAllocator, name, desc);
-    auto* node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
+    auto resource = Allocate<Resource>(m_resourceAllocator, name, desc);
+    auto node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
 
     RenderGraphHandle handle;
     handle.index = (uint16_t)m_resources.size();

@@ -13,26 +13,25 @@ struct TAAVelocityPassData
 struct TAAPassData
 {
     RenderGraphHandle inputRT;
+    RenderGraphHandle historyRT;
     RenderGraphHandle velocityRT;
     RenderGraphHandle linearDepthRT;
     RenderGraphHandle outputRT;
-};
-
-struct TAACopyPassData
-{
-    RenderGraphHandle inputRT;
 };
 
 struct TAAApplyPassData
 {
     RenderGraphHandle inputRT;
     RenderGraphHandle outputRT;
+    RenderGraphHandle outputHistoryRT;
 };
 
 class TAA
 {
 public:
     TAA(Renderer* pRenderer);
+
+    IGfxTexture* GetHistoryRT(uint32_t width, uint32_t height);
 
     void GenerateMotionVector(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* output, uint32_t width, uint32_t height);
     void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* velocity, IGfxDescriptor* linearDepth, IGfxDescriptor* output, uint32_t width, uint32_t height);

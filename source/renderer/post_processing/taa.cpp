@@ -22,6 +22,18 @@ TAA::TAA(Renderer* pRenderer)
 	m_pMotionVectorPSO = pRenderer->GetPipelineState(psoDesc, "TAA motion vector PSO");
 }
 
+IGfxTexture* TAA::GetHistoryRT(uint32_t width, uint32_t height)
+{
+	if (m_pHistoryColor == nullptr ||
+		m_pHistoryColor->GetTexture()->GetDesc().width != width ||
+		m_pHistoryColor->GetTexture()->GetDesc().height != height)
+	{
+		m_pHistoryColor.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource, "TAA HistoryTexture"));
+	}
+
+	return m_pHistoryColor->GetTexture();
+}
+
 void TAA::GenerateMotionVector(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
 	pCommandList->SetPipelineState(m_pMotionVectorPSO);
@@ -34,17 +46,6 @@ void TAA::GenerateMotionVector(IGfxCommandList* pCommandList, IGfxDescriptor* de
 
 void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* velocity, IGfxDescriptor* linearDepth, IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
-	if (m_pHistoryColor == nullptr ||
-		m_pHistoryColor->GetTexture()->GetDesc().width != width ||
-		m_pHistoryColor->GetTexture()->GetDesc().height != height)
-	{
-		m_pHistoryColor.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource, "TAA HistoryTexture"));
-	}
-	else
-	{
-		pCommandList->ResourceBarrier(m_pHistoryColor->GetTexture(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
-	}
-
 	pCommandList->SetPipelineState(m_pPSO);
 
 	Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
@@ -81,7 +82,6 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
 
 void TAA::Apply(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
-	pCommandList->ResourceBarrier(m_pHistoryColor->GetTexture(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
 	pCommandList->SetPipelineState(m_pApplyPSO);
 
 	uint32_t cb[4] = { input->GetHeapIndex(), output->GetHeapIndex(), m_pHistoryColor->GetUAV()->GetHeapIndex(), 0 };

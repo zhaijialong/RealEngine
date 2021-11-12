@@ -56,6 +56,10 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(const GfxTextureDesc&
     {
         initial_state = GfxResourceState::RenderTarget;
     }
+    else if (desc.usage & GfxTextureUsageUnorderedAccess)
+    {
+        initial_state = GfxResourceState::UnorderedAccess;
+    }
 
     return m_pDevice->CreateTexture(desc, "RGTexture " + name);
 }

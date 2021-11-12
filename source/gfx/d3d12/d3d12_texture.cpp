@@ -108,6 +108,10 @@ bool D3D12Texture::Create()
 	{
 		initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	}
+	else if (m_desc.usage & GfxTextureUsageUnorderedAccess)
+	{
+		initial_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+	}
 	else
 	{
 		initial_state = D3D12_RESOURCE_STATE_COMMON;

@@ -20,6 +20,11 @@ public:
         return m_pGraph->Create<Resource>(desc, name);
     }
 
+    RenderGraphHandle Import(IGfxTexture* texture, GfxResourceState state)
+    {
+        return m_pGraph->Import(texture, state);
+    }
+
     RenderGraphHandle Read(const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource = 0)
     {
         RE_ASSERT(usage == GfxResourceState::ShaderResourceNonPS ||

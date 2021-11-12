@@ -33,6 +33,8 @@ protected:
     DAGNodeID m_firstPass = UINT32_MAX;
     DAGNodeID m_lastPass = 0;
     GfxResourceState m_lastState = GfxResourceState::Common;
+
+    bool m_bImported = false;
 };
 
 class RenderGraphTexture : public RenderGraphResource
@@ -47,9 +49,22 @@ public:
         m_desc = desc;
     }
 
+    RenderGraphTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state) :
+        RenderGraphResource(texture->GetName()),
+        m_allocator(allocator)
+    {
+        m_desc = texture->GetDesc();
+        m_pTexture = texture;
+        m_initialState = state;
+        m_bImported = true;
+    }
+
     ~RenderGraphTexture()
     {
-        m_allocator.Free(m_pTexture, m_lastState);
+        if (!m_bImported)
+        {
+            m_allocator.Free(m_pTexture, m_lastState);
+        }
     }
 
     IGfxTexture* GetTexture() const { return m_pTexture; }
@@ -65,7 +80,10 @@ public:
 
     virtual void Realize() override
     {
-        m_pTexture = m_allocator.AllocateTexture(m_desc, m_name, m_initialState);
+        if (!m_bImported)
+        {
+            m_pTexture = m_allocator.AllocateTexture(m_desc, m_name, m_initialState);
+        }
     }
 
     virtual IGfxResource* GetResource() override { return m_pTexture; }

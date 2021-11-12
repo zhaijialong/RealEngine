@@ -123,6 +123,21 @@ bool RenderGraph::Export(const std::string& file)
     return m_graph.ExportGraphviz(file.c_str());
 }
 
+RenderGraphHandle RenderGraph::Import(IGfxTexture* texture, GfxResourceState state)
+{
+    auto resource = Allocate<RenderGraphTexture>(m_resourceAllocator, texture, state);
+    auto node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
+
+    RenderGraphHandle handle;
+    handle.index = (uint16_t)m_resources.size();
+    handle.node = (uint16_t)m_resourceNodes.size();
+
+    m_resources.push_back(resource);
+    m_resourceNodes.push_back(node);
+
+    return handle;
+}
+
 RenderGraphHandle RenderGraph::Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource)
 {
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
