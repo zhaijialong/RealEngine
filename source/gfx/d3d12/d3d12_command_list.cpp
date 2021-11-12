@@ -447,6 +447,17 @@ void D3D12CommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
 	m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
 }
 
+#if MICROPROFILE_GPU_TIMERS
+MicroProfileThreadLogGpu* D3D12CommandList::GetProfileLog() const
+{
+#if MICROPROFILE_GPU_TIMERS_D3D12
+    return m_pProfileLog;
+#else
+    return nullptr;
+#endif
+}
+#endif
+
 void D3D12CommandList::FlushPendingBarrier()
 {
 	if (!m_pendingBarriers.empty())

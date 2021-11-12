@@ -49,5 +49,7 @@ public:
 	virtual void DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset) = 0;
 	virtual void DispatchIndirect(IGfxBuffer* buffer, uint32_t offset) = 0;
 
+#if MICROPROFILE_GPU_TIMERS
 	virtual struct MicroProfileThreadLogGpu* GetProfileLog() const = 0;
+#endif
 };

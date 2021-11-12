@@ -53,8 +53,8 @@ public:
 	virtual void DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset) override;
 	virtual void DispatchIndirect(IGfxBuffer* buffer, uint32_t offset) override;
 
-#if MICROPROFILE_GPU_TIMERS_D3D12
-	virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override { return m_pProfileLog; }
+#if MICROPROFILE_GPU_TIMERS
+	virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;
 #endif
 
 private:

@@ -26,6 +26,7 @@ class CpuEvent
 public:
     CpuEvent(const char* group, const char* name)
     {
+#if MICROPROFILE_ENABLED
         static const uint32_t EVENT_COLOR[] =
         {
             MP_LIGHTCYAN4,
@@ -44,12 +45,15 @@ public:
         uint32_t color = EVENT_COLOR[XXH32(name, strlen(name), 0) % color_count];
 
         MicroProfileToken token = MicroProfileGetToken(group, name, color, MicroProfileTokenTypeCpu);
-        MICROPROFILE_ENTER_TOKEN(token);
+        MicroProfileEnter(token);
+#endif
     }
 
     ~CpuEvent()
     {
-        MICROPROFILE_LEAVE();
+#if MICROPROFILE_ENABLED
+        MicroProfileLeave();
+#endif
     }
 };
 

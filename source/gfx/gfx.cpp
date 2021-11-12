@@ -24,6 +24,7 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
 MPRenderEvent::MPRenderEvent(IGfxCommandList* pCommandList, const std::string& event_name) :
     m_pCommandList(pCommandList)
 {
+#if MICROPROFILE_GPU_TIMERS
     static const uint32_t EVENT_COLOR[] =
     {
         MP_LIGHTCYAN4,
@@ -43,12 +44,15 @@ MPRenderEvent::MPRenderEvent(IGfxCommandList* pCommandList, const std::string& e
 
     MicroProfileToken token = MicroProfileGetToken("GPU", event_name.c_str(), color, MicroProfileTokenTypeGpu);
 
-    MICROPROFILE_GPU_ENTER_TOKEN_L(pCommandList->GetProfileLog(), token);
+    MicroProfileEnterGpu(token, pCommandList->GetProfileLog());
+#endif
 }
 
 MPRenderEvent::~MPRenderEvent()
 {
-    MICROPROFILE_GPU_LEAVE_L(m_pCommandList->GetProfileLog());
+#if MICROPROFILE_GPU_TIMERS
+    MicroProfileLeaveGpu(m_pCommandList->GetProfileLog());
+#endif
 }
 
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width)
