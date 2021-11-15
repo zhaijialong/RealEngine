@@ -153,9 +153,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float4 emissive = emissiveRT.Load(pos);
     
     float3 N = OctNormalDecode(normal.xyz);
-    float ao = albedo.w;
+    float metallic = albedo.w;
     float roughness = normal.w;
-    float metallic = emissive.w;
+    float ao = emissive.w;
     
     float3 worldPos = GetWorldPosition(pos.xy, depth);
     float3 V = normalize(CameraCB.cameraPos - worldPos);

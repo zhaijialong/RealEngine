@@ -108,9 +108,9 @@ GBufferOutput ps_main(VSOutput input)
 #endif
     
     GBufferOutput output;
-    output.albedoRT = float4(albedo.xyz, ao);
+    output.albedoRT = float4(albedo.xyz, metallic);
     output.normalRT = float4(OctNormalEncode(N), roughness);
-    output.emissiveRT = float4(emissive, metallic);
+    output.emissiveRT = float4(emissive, ao);
     
     return output;
 }

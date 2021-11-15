@@ -45,9 +45,9 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
 
     struct GBufferPassData
     {
-        RenderGraphHandle outAlbedoRT; //srgb : albedo(xyz) + AO(a) 
+        RenderGraphHandle outAlbedoRT; //srgb : albedo(xyz) + metalness(a)
         RenderGraphHandle outNormalRT; //rgba8norm : normal(xyz) + roughness(a)
-        RenderGraphHandle outEmissiveRT; //srgb : emissive(xyz) + metalness(a)
+        RenderGraphHandle outEmissiveRT; //srgb : emissive(xyz) + AO(a) 
         RenderGraphHandle outDepthRT;
     };
 
