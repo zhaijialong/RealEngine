@@ -100,26 +100,37 @@ float3 SrgbToLinear(float3 Color)
     return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
 }
 
-
-float2 OctWrap(float2 v)
+//pack float2[0,1] in rgb8unorm, each float is 12 bits
+float3 EncodeRGB8Unorm(float2 v)
 {
-    return (1.0 - abs(v.yx)) * (v.xy >= 0.0 ? 1.0 : -1.0);
+    uint2 int12 = (uint2)round(v * 4095);
+    uint3 int8 = uint3(int12.x & 0xFF, int12.y & 0xFF, ((int12.x >> 4) & 0xF0) | ((int12.y >> 8) & 0xF));
+    return int8 / 255.0;
+}
+
+float2 DecodeRGB8Unorm(float3 v)
+{
+    uint3 int8 = (uint3)round(v * 255.0);
+    uint2 int12 = uint2(int8.x | ((int8.z & 0xF0) << 4), int8.y | ((int8.z & 0xF) << 8));
+    return int12 / 4095.0;
 }
  
-float2 OctNormalEncode(float3 n)
+float3 OctNormalEncode(float3 n)
 {
     n /= (abs(n.x) + abs(n.y) + abs(n.z));
-    n.xy = n.z >= 0.0 ? n.xy : OctWrap(n.xy);
+    n.xy = n.z >= 0.0 ? n.xy : (1.0 - abs(n.yx)) * (n.xy >= 0.0 ? 1.0 : -1.0);
+
     n.xy = n.xy * 0.5 + 0.5;
-    return n.xy;
+    return EncodeRGB8Unorm(n.xy);
 }
  
-float3 OctNormalDecode(float2 f)
+// https://twitter.com/Stubbesaurus/status/937994790553227264
+float3 OctNormalDecode(float3 f)
 {
-    f = f * 2.0 - 1.0;
+    float2 e = DecodeRGB8Unorm(f);
+    e = e * 2.0 - 1.0;
  
-    // https://twitter.com/Stubbesaurus/status/937994790553227264
-    float3 n = float3(f.x, f.y, 1.0 - abs(f.x) - abs(f.y));
+    float3 n = float3(e.x, e.y, 1.0 - abs(e.x) - abs(e.y));
     float t = saturate(-n.z);
     n.xy += n.xy >= 0.0 ? -t : t;
     return normalize(n);

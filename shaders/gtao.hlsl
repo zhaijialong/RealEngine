@@ -55,7 +55,7 @@ lpfloat2 SpatioTemporalNoise(uint2 pixCoord, uint temporalIndex)    // without T
 lpfloat3 LoadNormal(int2 pos)
 {
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
-    float3 normal = OctNormalDecode(normalRT.Load(int3(pos, 0)).xy);
+    float3 normal = OctNormalDecode(normalRT.Load(int3(pos, 0)).xyz);
     
     normal = mul(CameraCB.mtxView, float4(normal, 0.0)).xyz;
 

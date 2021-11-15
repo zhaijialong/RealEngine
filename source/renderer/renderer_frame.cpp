@@ -46,7 +46,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     struct GBufferPassData
     {
         RenderGraphHandle outAlbedoRT; //srgb : albedo(xyz) + AO(a) 
-        RenderGraphHandle outNormalRT; //rgb10a2 : normal(xy) + roughness(z)
+        RenderGraphHandle outNormalRT; //rgba8norm : normal(xyz) + roughness(a)
         RenderGraphHandle outEmissiveRT; //srgb : emissive(xyz) + metalness(a)
         RenderGraphHandle outDepthRT;
     };
@@ -62,7 +62,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             data.outAlbedoRT = builder.Create<RenderGraphTexture>(desc, "Albedo RT");
             data.outEmissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
 
-            desc.format = GfxFormat::RGB10A2UNORM;
+            desc.format = GfxFormat::RGBA8UNORM;
             data.outNormalRT = builder.Create<RenderGraphTexture>(desc, "Normal RT");
 
             desc.format = GfxFormat::D32FS8;

@@ -796,7 +796,7 @@ IGfxPipelineState* Model::GetPSO(Material* material)
     psoDesc.depthstencil_state.depth_test = true;
     psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
     psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
-    psoDesc.rt_format[1] = GfxFormat::RGB10A2UNORM;
+    psoDesc.rt_format[1] = GfxFormat::RGBA8UNORM;
     psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
     psoDesc.depthstencil_format = GfxFormat::D32FS8;
 
