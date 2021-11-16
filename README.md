@@ -14,6 +14,9 @@ my toy engine, mainly for rendering expariment and learning
 * ~~LPM~~
 * ~~TAA~~
 * ~~CAS~~
+* RTX
+* variable rate shading
+* sampler feedback
 * sparse texture
 * sparse shadowmap
 * water/ocean
