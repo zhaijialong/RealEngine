@@ -7,6 +7,7 @@
 #include "d3d12_shader.h"
 #include "d3d12_pipeline_state.h"
 #include "d3d12_descriptor.h"
+#include "d3d12_heap.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 #include "pix_runtime.h"
 #include "utils/log.h"
@@ -99,10 +100,32 @@ IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, const std::stri
 	return pBuffer;
 }
 
+IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, IGfxHeap* heap, uint32_t offset, const std::string& name)
+{
+	D3D12Buffer* pBuffer = new D3D12Buffer(this, desc, name);
+	if (!pBuffer->Create((D3D12Heap*)heap, offset))
+	{
+		delete pBuffer;
+		return nullptr;
+	}
+	return pBuffer;
+}
+
 IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, const std::string& name)
 {
 	D3D12Texture* pTexture = new D3D12Texture(this, desc, name);
 	if (!pTexture->Create())
+	{
+		delete pTexture;
+		return nullptr;
+	}
+	return pTexture;
+}
+
+IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, IGfxHeap* heap, uint32_t offset, const std::string& name)
+{
+	D3D12Texture* pTexture = new D3D12Texture(this, desc, name);
+	if (!pTexture->Create((D3D12Heap*)heap, offset))
 	{
 		delete pTexture;
 		return nullptr;
@@ -119,6 +142,17 @@ IGfxFence* D3D12Device::CreateFence(const std::string& name)
 		return nullptr;
 	}
 	return pFence;
+}
+
+IGfxHeap* D3D12Device::CreateHeap(const GfxHeapDesc& desc, const std::string& name)
+{
+	D3D12Heap* pHeap = new D3D12Heap(this, desc, name);
+	if (!pHeap->Create())
+	{
+		delete pHeap;
+		return nullptr;
+	}
+	return pHeap;
 }
 
 IGfxSwapchain* D3D12Device::CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name)

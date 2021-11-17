@@ -57,11 +57,14 @@ public:
 	virtual uint64_t GetFrameID() const override { return m_nFrameID; }
 	virtual void* GetHandle() const override { return m_pDevice; }
 
-	virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, const std::string& name) override;
-	virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, const std::string& name) override;
-	virtual IGfxFence* CreateFence(const std::string& name) override;
 	virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name) override;
 	virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const std::string& name) override;
+	virtual IGfxFence* CreateFence(const std::string& name) override;
+	virtual IGfxHeap* CreateHeap(const GfxHeapDesc& desc, const std::string& name) override;
+	virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, const std::string& name) override;
+	virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, IGfxHeap* heap, uint32_t offset, const std::string& name) override;
+	virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, const std::string& name) override;
+	virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, IGfxHeap* heap, uint32_t offset, const std::string& name) override;
 	virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name) override;
 	virtual IGfxPipelineState* CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name) override;
 	virtual IGfxPipelineState* CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name) override;

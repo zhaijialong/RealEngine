@@ -4,6 +4,7 @@
 #include "../i_gfx_buffer.h"
 
 class D3D12Device;
+class D3D12Heap;
 
 namespace D3D12MA
 {
@@ -21,7 +22,7 @@ public:
 	virtual uint64_t GetGpuAddress() override;
 	virtual uint32_t GetRequiredStagingBufferSize() const override;
 
-	bool Create();
+	bool Create(D3D12Heap* heap = nullptr, uint32_t offset = 0);
 
 private:
 	ID3D12Resource* m_pBuffer = nullptr;

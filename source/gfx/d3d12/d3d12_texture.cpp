@@ -1,5 +1,6 @@
 #include "d3d12_texture.h"
 #include "d3d12_device.h"
+#include "d3d12_heap.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 #include "utils/assert.h"
 
@@ -87,15 +88,11 @@ D3D12Texture::~D3D12Texture()
 	}
 }
 
-bool D3D12Texture::Create()
+bool D3D12Texture::Create(D3D12Heap* heap, uint32_t offset)
 {
 	ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
 
 	D3D12MA::Allocator* pAllocator = ((D3D12Device*)m_pDevice)->GetResourceAllocator();
-
-	D3D12MA::ALLOCATION_DESC allocationDesc = {};
-	allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
-	allocationDesc.Flags = m_desc.alloc_type == GfxAllocationType::Committed ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
 
 	D3D12_RESOURCE_DESC resourceDesc = d3d12_resource_desc(m_desc);
 
@@ -117,8 +114,26 @@ bool D3D12Texture::Create()
 		initial_state = D3D12_RESOURCE_STATE_COMMON;
 	}
 
-	HRESULT hr = pAllocator->CreateResource(&allocationDesc, &resourceDesc,
-		initial_state, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pTexture));
+	HRESULT hr;
+	
+	if (heap != nullptr)
+	{
+		RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Placed);
+		RE_ASSERT(m_desc.memory_type == heap->GetDesc().memory_type);
+
+		hr = pAllocator->CreateAliasingResource((D3D12MA::Allocation*)heap->GetHandle(), offset,
+			&resourceDesc, initial_state, nullptr, IID_PPV_ARGS(&m_pTexture));
+	}
+	else
+	{
+		D3D12MA::ALLOCATION_DESC allocationDesc = {};
+		allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
+		allocationDesc.Flags = m_desc.alloc_type == GfxAllocationType::Committed ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
+
+		hr = pAllocator->CreateResource(&allocationDesc, 
+			&resourceDesc, initial_state, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pTexture));
+	}
+
 	if (FAILED(hr))
 	{
 		return false;
@@ -126,7 +141,10 @@ bool D3D12Texture::Create()
 
 	std::wstring name_wstr = string_to_wstring(m_name);
 	m_pTexture->SetName(name_wstr.c_str());
-	m_pAllocation->SetName(name_wstr.c_str());
+	if (m_pAllocation)
+	{
+		m_pAllocation->SetName(name_wstr.c_str());
+	}
 
 	return true;
 }

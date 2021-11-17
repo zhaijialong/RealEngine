@@ -10,6 +10,7 @@
 #include "i_gfx_pipeline_state.h"
 #include "i_gfx_swapchain.h"
 #include "i_gfx_descriptor.h"
+#include "i_gfx_heap.h"
 
 IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc);
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width);
