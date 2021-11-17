@@ -211,6 +211,9 @@
     <ClCompile Include="source\renderer\gpu_debug_line.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\d3d12_heap.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -512,6 +515,12 @@
     </ClInclude>
     <ClInclude Include="source\renderer\gpu_debug_line.h">
       <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\i_gfx_heap.h">
+      <Filter>source\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\d3d12_heap.h">
+      <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
