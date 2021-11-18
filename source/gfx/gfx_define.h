@@ -89,6 +89,7 @@ enum class GfxAllocationType
 {
 	Committed,
 	Placed,
+	Sparse,
 	//todo : SubAllocatedBuffer,
 };
 
