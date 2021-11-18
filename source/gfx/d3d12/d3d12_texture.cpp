@@ -124,6 +124,11 @@ bool D3D12Texture::Create(D3D12Heap* heap, uint32_t offset)
 		hr = pAllocator->CreateAliasingResource((D3D12MA::Allocation*)heap->GetHandle(), offset,
 			&resourceDesc, initial_state, nullptr, IID_PPV_ARGS(&m_pTexture));
 	}
+	else if (m_desc.alloc_type == GfxAllocationType::Sparse)
+	{
+		ID3D12Device* device = (ID3D12Device*)m_pDevice->GetHandle();
+		hr = device->CreateReservedResource(&resourceDesc, initial_state, nullptr, IID_PPV_ARGS(&m_pTexture));
+	}
 	else
 	{
 		D3D12MA::ALLOCATION_DESC allocationDesc = {};
