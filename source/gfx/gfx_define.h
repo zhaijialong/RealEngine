@@ -588,13 +588,13 @@ struct GfxTileMapping
 	GfxTileMappingType type;
 
 	uint32_t subresource;
-	uint32_t x;
+	uint32_t x; //in tiles
 	uint32_t y;
 	uint32_t z;
 
 	uint32_t tile_count;
 	bool use_box;
-	uint32_t width; //in tiles, not texels
+	uint32_t width; //in tiles
 	uint32_t height;
 	uint32_t depth;
 
@@ -614,7 +614,7 @@ struct GfxTilingDesc
 
 struct GfxSubresourceTilingDesc
 {
-	uint32_t width; //in tiles, not texels
+	uint32_t width; //in tiles
 	uint32_t height;
 	uint32_t depth;
 	uint32_t tile_offset;
