@@ -13,6 +13,11 @@ static inline D3D12_RESOURCE_DESC d3d12_resource_desc(const GfxTextureDesc& desc
 	resourceDesc.Format = dxgi_format(desc.format);
 	resourceDesc.SampleDesc.Count = 1;
 
+	if (desc.alloc_type == GfxAllocationType::Sparse)
+	{
+		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
+	}
+
 	if (desc.usage & GfxTextureUsageRenderTarget)
 	{
 		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
@@ -261,4 +266,46 @@ uint32_t D3D12Texture::GetRowPitch(uint32_t mip_level) const
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
 	pDevice->GetCopyableFootprints(&desc, mip_level, 1, 0, &footprint, nullptr, nullptr, nullptr);
 	return footprint.Footprint.RowPitch;
+}
+
+GfxTilingDesc D3D12Texture::GetTilingDesc() const
+{
+	RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Sparse);
+
+	ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
+
+	UINT tile_count;
+	D3D12_PACKED_MIP_INFO packedMipInfo;
+	D3D12_TILE_SHAPE tileShape;
+	pDevice->GetResourceTiling(m_pTexture, &tile_count, &packedMipInfo, &tileShape, nullptr, 0, nullptr);
+
+	GfxTilingDesc info;
+	info.tile_count = tile_count;
+	info.standard_mips = packedMipInfo.NumStandardMips;
+	info.tile_width = tileShape.WidthInTexels;
+	info.tile_height = tileShape.HeightInTexels;
+	info.tile_depth = tileShape.DepthInTexels;
+	info.packed_mips = packedMipInfo.NumPackedMips;
+	info.packed_mip_tiles = packedMipInfo.NumTilesForPackedMips;
+
+	return info;
+}
+
+GfxSubresourceTilingDesc D3D12Texture::GetTilingDesc(uint32_t subresource) const
+{
+	RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Sparse);
+
+	ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
+
+	uint32_t subresource_count = 1;
+	D3D12_SUBRESOURCE_TILING tiling;
+	pDevice->GetResourceTiling(m_pTexture, nullptr, nullptr, nullptr, &subresource_count, subresource, &tiling);
+
+	GfxSubresourceTilingDesc info;
+	info.width = tiling.WidthInTiles;
+	info.height = tiling.HeightInTiles;
+	info.depth = tiling.DepthInTiles;
+	info.tile_offset = tiling.StartTileIndexInOverallResource;
+
+	return info;
 }

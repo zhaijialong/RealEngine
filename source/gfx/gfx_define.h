@@ -576,3 +576,42 @@ struct GfxDispatchCommand
 	uint32_t group_count_y;
 	uint32_t group_count_z;
 };
+
+enum class GfxTileMappingType
+{
+	Map,
+	Unmap,
+};
+
+struct GfxTileRegion
+{
+	uint32_t subresource;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	uint32_t tile_count;
+	bool use_box;
+	uint32_t width; //in tiles, not texels
+	uint32_t height;
+	uint32_t depth;
+};
+
+struct GfxTilingDesc
+{
+	uint32_t tile_count;
+	uint32_t standard_mips;
+	uint32_t tile_width;
+	uint32_t tile_height;
+	uint32_t tile_depth;
+	uint32_t packed_mips;
+	uint32_t packed_mip_tiles;
+};
+
+struct GfxSubresourceTilingDesc
+{
+	uint32_t width; //in tiles, not texels
+	uint32_t height;
+	uint32_t depth;
+	uint32_t tile_offset;
+};

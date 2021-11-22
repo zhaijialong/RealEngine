@@ -5,6 +5,7 @@
 class IGfxFence;
 class IGfxBuffer;
 class IGfxTexture;
+class IGfxHeap;
 class IGfxPipelineState;
 
 class IGfxCommandList : public IGfxResource
@@ -25,6 +26,7 @@ public:
 	virtual void CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, IGfxBuffer* src_buffer, uint32_t src_offset, uint32_t size) = 0;
 	virtual void WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data) = 0;
 	virtual void CopyTexture(IGfxTexture* dst, IGfxTexture* src) = 0;
+	virtual void UpdateTileMapping(GfxTileMappingType type, IGfxTexture* texture, const GfxTileRegion& tile_region, IGfxHeap* heap, uint32_t tile_offset, uint32_t tile_count) = 0;
 
 	virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) = 0;
 	virtual void UavBarrier(IGfxResource* resource) = 0;

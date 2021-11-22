@@ -190,6 +190,36 @@ void D3D12CommandList::CopyTexture(IGfxTexture* dst, IGfxTexture* src)
 	m_pCommandList->CopyTextureRegion(&dst_texture, 0, 0, 0, &src_texture, nullptr);
 }
 
+void D3D12CommandList::UpdateTileMapping(GfxTileMappingType type, IGfxTexture* texture, const GfxTileRegion& tile_region, IGfxHeap* heap, uint32_t tile_offset, uint32_t tile_count)
+{
+	D3D12_TILED_RESOURCE_COORDINATE coordinate;
+	coordinate.Subresource = tile_region.subresource;
+	coordinate.X = tile_region.x;
+	coordinate.Y = tile_region.y;
+	coordinate.Z = tile_region.z;
+
+	D3D12_TILE_REGION_SIZE size;
+	size.UseBox = tile_region.use_box;
+	size.NumTiles = tile_region.tile_count;
+	size.Width = tile_region.width;
+	size.Height = tile_region.height;
+	size.Depth = tile_region.depth;
+
+	D3D12_TILE_RANGE_FLAGS flags = type == GfxTileMappingType::Map ? D3D12_TILE_RANGE_FLAG_NONE : D3D12_TILE_RANGE_FLAG_NULL;
+
+	m_pCommandQueue->UpdateTileMappings(
+		(ID3D12Resource*)texture->GetHandle(),
+		1,
+		&coordinate,
+		&size,
+		(ID3D12Heap*)heap->GetHandle(),
+		1,
+		&flags,
+		&tile_offset,
+		&tile_count,
+		D3D12_TILE_MAPPING_FLAG_NONE);
+}
+
 void D3D12CommandList::Wait(IGfxFence* fence, uint64_t value)
 {
 	m_pCommandQueue->Wait((ID3D12Fence*)fence->GetHandle(), value);

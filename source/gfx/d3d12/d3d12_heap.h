@@ -15,7 +15,7 @@ public:
     D3D12Heap(D3D12Device* pDevice, const GfxHeapDesc& desc, const std::string& name);
     ~D3D12Heap();
 
-    virtual void* GetHandle() const override { return m_pAllocation; }
+    virtual void* GetHandle() const override;
 
     bool Create();
 

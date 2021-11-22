@@ -29,6 +29,7 @@ public:
 	virtual void CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, IGfxBuffer* src_buffer, uint32_t src_offset, uint32_t size) override;
 	virtual void WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data) override;
 	virtual void CopyTexture(IGfxTexture* dst, IGfxTexture* src) override;
+	virtual void UpdateTileMapping(GfxTileMappingType type, IGfxTexture* texture, const GfxTileRegion& tile_region, IGfxHeap* heap, uint32_t tile_offset, uint32_t tile_count) override;
 
 	virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) override;
 	virtual void UavBarrier(IGfxResource* resource) override;

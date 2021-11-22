@@ -20,6 +20,8 @@ public:
 	virtual void* GetHandle() const override { return m_pTexture; }
 	virtual uint32_t GetRequiredStagingBufferSize() const override;
 	virtual uint32_t GetRowPitch(uint32_t mip_level) const override;
+	virtual GfxTilingDesc GetTilingDesc() const override;
+	virtual GfxSubresourceTilingDesc GetTilingDesc(uint32_t subresource) const override;
 
 	bool Create(D3D12Heap* heap = nullptr, uint32_t offset = 0);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(uint32_t mip_slice, uint32_t array_slice);

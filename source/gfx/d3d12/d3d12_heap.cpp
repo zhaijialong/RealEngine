@@ -15,11 +15,18 @@ D3D12Heap::~D3D12Heap()
     pDevice->Delete(m_pAllocation);
 }
 
+void* D3D12Heap::GetHandle() const
+{
+    return m_pAllocation->GetHeap();
+}
+
 bool D3D12Heap::Create()
 {
+    RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Committed);
+
     D3D12MA::ALLOCATION_DESC allocationDesc = {};
     allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
-    allocationDesc.Flags = m_desc.alloc_type == GfxAllocationType::Committed ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
+    allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_COMMITTED;
 
     D3D12_RESOURCE_ALLOCATION_INFO allocationInfo = {};
     allocationInfo.SizeInBytes = m_desc.size;
