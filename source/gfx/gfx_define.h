@@ -583,8 +583,10 @@ enum class GfxTileMappingType
 	Unmap,
 };
 
-struct GfxTileRegion
+struct GfxTileMapping
 {
+	GfxTileMappingType type;
+
 	uint32_t subresource;
 	uint32_t x;
 	uint32_t y;
@@ -595,6 +597,8 @@ struct GfxTileRegion
 	uint32_t width; //in tiles, not texels
 	uint32_t height;
 	uint32_t depth;
+
+	uint32_t heap_offset; //in tiles
 };
 
 struct GfxTilingDesc

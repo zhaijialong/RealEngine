@@ -190,33 +190,60 @@ void D3D12CommandList::CopyTexture(IGfxTexture* dst, IGfxTexture* src)
 	m_pCommandList->CopyTextureRegion(&dst_texture, 0, 0, 0, &src_texture, nullptr);
 }
 
-void D3D12CommandList::UpdateTileMapping(GfxTileMappingType type, IGfxTexture* texture, const GfxTileRegion& tile_region, IGfxHeap* heap, uint32_t tile_offset, uint32_t tile_count)
+void D3D12CommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
 {
-	D3D12_TILED_RESOURCE_COORDINATE coordinate;
-	coordinate.Subresource = tile_region.subresource;
-	coordinate.X = tile_region.x;
-	coordinate.Y = tile_region.y;
-	coordinate.Z = tile_region.z;
+	std::vector<D3D12_TILED_RESOURCE_COORDINATE> coordinates;
+	std::vector<D3D12_TILE_REGION_SIZE> sizes;
+	std::vector<D3D12_TILE_RANGE_FLAGS> flags;
+	std::vector<UINT> heapTileOffsets;
+	std::vector<UINT> tileCounts;
 
-	D3D12_TILE_REGION_SIZE size;
-	size.UseBox = tile_region.use_box;
-	size.NumTiles = tile_region.tile_count;
-	size.Width = tile_region.width;
-	size.Height = tile_region.height;
-	size.Depth = tile_region.depth;
+	coordinates.reserve(mapping_count);
+	sizes.reserve(mapping_count);
+	flags.reserve(mapping_count);
+	heapTileOffsets.reserve(mapping_count);
+	tileCounts.reserve(mapping_count);
 
-	D3D12_TILE_RANGE_FLAGS flags = type == GfxTileMappingType::Map ? D3D12_TILE_RANGE_FLAG_NONE : D3D12_TILE_RANGE_FLAG_NULL;
+	for (uint32_t i = 0; i < mapping_count; ++i)
+	{
+		D3D12_TILED_RESOURCE_COORDINATE coordinate;
+		coordinate.Subresource = mappings[i].subresource;
+		coordinate.X = mappings[i].x;
+		coordinate.Y = mappings[i].y;
+		coordinate.Z = mappings[i].z;
+
+		if (mappings[i].use_box)
+		{
+			RE_ASSERT(mappings[i].tile_count == mappings[i].width * mappings[i].height * mappings[i].depth);
+		}
+
+		D3D12_TILE_REGION_SIZE size;
+		size.UseBox = mappings[i].use_box;
+		size.NumTiles = mappings[i].tile_count;
+		size.Width = mappings[i].width;
+		size.Height = mappings[i].height;
+		size.Depth = mappings[i].depth;
+
+		D3D12_TILE_RANGE_FLAGS flag = mappings[i].type == GfxTileMappingType::Map ? D3D12_TILE_RANGE_FLAG_NONE : D3D12_TILE_RANGE_FLAG_NULL;
+		UINT tile_count = size.NumTiles;
+
+		coordinates.push_back(coordinate);
+		sizes.push_back(size);
+		flags.push_back(flag);
+		heapTileOffsets.push_back(mappings[i].heap_offset);
+		tileCounts.push_back(tile_count);
+	}
 
 	m_pCommandQueue->UpdateTileMappings(
 		(ID3D12Resource*)texture->GetHandle(),
-		1,
-		&coordinate,
-		&size,
+		mapping_count,
+		coordinates.data(),
+		sizes.data(),
 		(ID3D12Heap*)heap->GetHandle(),
-		1,
-		&flags,
-		&tile_offset,
-		&tile_count,
+		mapping_count,
+		flags.data(),
+		heapTileOffsets.data(),
+		tileCounts.data(),
 		D3D12_TILE_MAPPING_FLAG_NONE);
 }
 
