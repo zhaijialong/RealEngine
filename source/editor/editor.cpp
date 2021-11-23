@@ -225,6 +225,7 @@ void Editor::DrawGizmo()
     float4x4 view = pCamera->GetViewMatrix();
     float4x4 proj = pCamera->GetNonJitterProjectionMatrix();
 
+    ImGuizmo::AllowAxisFlip(false);
     ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, operation, ImGuizmo::WORLD, (float*)&mtxWorld);
 
     ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&pos, (float*)&rotation, (float*)&scale);
