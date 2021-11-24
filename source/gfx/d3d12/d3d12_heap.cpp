@@ -22,8 +22,6 @@ void* D3D12Heap::GetHandle() const
 
 bool D3D12Heap::Create()
 {
-    RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Committed);
-
     D3D12MA::ALLOCATION_DESC allocationDesc = {};
     allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
     allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_COMMITTED;

@@ -74,6 +74,7 @@ public:
 	virtual IGfxDescriptor* CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name) override;
 	virtual IGfxDescriptor* CreateSampler(const GfxSamplerDesc& desc, const std::string& name) override;
 
+	virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
 	virtual bool DumpMemoryStats(const std::string& file) override;
 
 	bool Init();

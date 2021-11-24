@@ -503,3 +503,68 @@ inline D3D12_TEXTURE_ADDRESS_MODE d3d12_address_mode(GfxSamplerAddressMode mode)
 		return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	}
 }
+
+inline D3D12_RESOURCE_DESC d3d12_resource_desc(const GfxTextureDesc& desc)
+{
+	D3D12_RESOURCE_DESC resourceDesc = {};
+	resourceDesc.Width = desc.width;
+	resourceDesc.Height = desc.height;
+	resourceDesc.MipLevels = desc.mip_levels;
+	resourceDesc.Format = dxgi_format(desc.format);
+	resourceDesc.SampleDesc.Count = 1;
+
+	if (desc.alloc_type == GfxAllocationType::Sparse)
+	{
+		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
+	}
+
+	if (desc.usage & GfxTextureUsageRenderTarget)
+	{
+		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	}
+
+	if (desc.usage & GfxTextureUsageDepthStencil)
+	{
+		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	}
+
+	if (desc.usage & GfxTextureUsageUnorderedAccess)
+	{
+		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
+
+	if (!(desc.usage & GfxTextureUsageShaderResource))
+	{
+		resourceDesc.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+	}
+
+	switch (desc.type)
+	{
+	case GfxTextureType::Texture2D:
+		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		resourceDesc.DepthOrArraySize = 1;
+		break;
+	case GfxTextureType::Texture2DArray:
+		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		resourceDesc.DepthOrArraySize = desc.array_size;
+		break;
+	case GfxTextureType::Texture3D:
+		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+		resourceDesc.DepthOrArraySize = desc.depth;
+		break;
+	case GfxTextureType::TextureCube:
+		RE_ASSERT(desc.array_size == 6);
+		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		resourceDesc.DepthOrArraySize = 6;
+		break;
+	case GfxTextureType::TextureCubeArray:
+		RE_ASSERT(desc.array_size % 6 == 0);
+		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		resourceDesc.DepthOrArraySize = desc.array_size;
+		break;
+	default:
+		break;
+	}
+
+	return resourceDesc;
+}

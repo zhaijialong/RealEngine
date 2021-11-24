@@ -204,7 +204,6 @@ struct GfxHeapDesc
 {
 	uint32_t size = 1;
 	GfxMemoryType memory_type = GfxMemoryType::GpuOnly;
-	GfxAllocationType alloc_type = GfxAllocationType::Placed;
 };
 
 struct GfxBufferDesc

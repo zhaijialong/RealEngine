@@ -42,5 +42,6 @@ public:
 	virtual IGfxDescriptor* CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name) = 0;
 	virtual IGfxDescriptor* CreateSampler(const GfxSamplerDesc& desc, const std::string& name) = 0;
 
+	virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) = 0;
 	virtual bool DumpMemoryStats(const std::string& file) = 0;
 };

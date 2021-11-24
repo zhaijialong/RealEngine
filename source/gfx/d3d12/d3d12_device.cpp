@@ -254,6 +254,14 @@ IGfxDescriptor* D3D12Device::CreateSampler(const GfxSamplerDesc& desc, const std
 	return pSampler;
 }
 
+uint32_t D3D12Device::GetAllocationSize(const GfxTextureDesc& desc)
+{
+	D3D12_RESOURCE_DESC resourceDesc = d3d12_resource_desc(desc);
+	D3D12_RESOURCE_ALLOCATION_INFO info = m_pDevice->GetResourceAllocationInfo(0, 1, &resourceDesc);
+
+	return (uint32_t)info.SizeInBytes;
+}
+
 bool D3D12Device::DumpMemoryStats(const std::string& file)
 {
 	FILE* f = nullptr;
