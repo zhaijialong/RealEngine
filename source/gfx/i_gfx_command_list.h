@@ -13,6 +13,7 @@ class IGfxCommandList : public IGfxResource
 public:
 	virtual ~IGfxCommandList() {}
 
+	virtual void ResetAllocator() = 0;
 	virtual void Begin() = 0;
 	virtual void End() = 0;
 	virtual void Wait(IGfxFence* fence, uint64_t value) = 0;

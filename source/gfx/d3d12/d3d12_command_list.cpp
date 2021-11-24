@@ -76,11 +76,14 @@ bool D3D12CommandList::Create()
 	return true;
 }
 
+void D3D12CommandList::ResetAllocator()
+{
+	m_pCommandAllocator->Reset();
+}
+
 void D3D12CommandList::Begin()
 {
 	m_pCurrentPSO = nullptr;
-
-	m_pCommandAllocator->Reset();
 	m_pCommandList->Reset(m_pCommandAllocator, nullptr);
 
 	if (m_queueType == GfxCommandQueue::Graphics || m_queueType == GfxCommandQueue::Compute)
@@ -112,6 +115,30 @@ void D3D12CommandList::End()
 	FlushPendingBarrier();
 
 	m_pCommandList->Close();
+}
+
+void D3D12CommandList::Wait(IGfxFence* fence, uint64_t value)
+{
+	m_pCommandQueue->Wait((ID3D12Fence*)fence->GetHandle(), value);
+}
+
+void D3D12CommandList::Signal(IGfxFence* fence, uint64_t value)
+{
+	m_pCommandQueue->Signal((ID3D12Fence*)fence->GetHandle(), value);
+}
+
+void D3D12CommandList::Submit()
+{
+	ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
+	m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
+
+#if MICROPROFILE_GPU_TIMERS_D3D12	
+	if (m_nProfileQueue != -1)
+	{
+		MicroProfileGpuSubmit(m_nProfileQueue, MicroProfileGpuEnd(m_pProfileLog));
+		MicroProfileThreadLogGpuFree(m_pProfileLog);
+	}
+#endif
 }
 
 void D3D12CommandList::BeginEvent(const std::string& event_name)
@@ -246,30 +273,6 @@ void D3D12CommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, 
 		heapTileOffsets.data(),
 		tileCounts.data(),
 		D3D12_TILE_MAPPING_FLAG_NONE);
-}
-
-void D3D12CommandList::Wait(IGfxFence* fence, uint64_t value)
-{
-	m_pCommandQueue->Wait((ID3D12Fence*)fence->GetHandle(), value);
-}
-
-void D3D12CommandList::Signal(IGfxFence* fence, uint64_t value)
-{
-	m_pCommandQueue->Signal((ID3D12Fence*)fence->GetHandle(), value);
-}
-
-void D3D12CommandList::Submit()
-{
-	ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
-	m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
-
-#if MICROPROFILE_GPU_TIMERS_D3D12	
-	if (m_nProfileQueue != -1)
-	{
-		MicroProfileGpuSubmit(m_nProfileQueue, MicroProfileGpuEnd(m_pProfileLog));
-		MicroProfileThreadLogGpuFree(m_pProfileLog);
-	}
-#endif
 }
 
 void D3D12CommandList::ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state)

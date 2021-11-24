@@ -16,6 +16,7 @@ public:
 
 	virtual void* GetHandle() const override { return m_pCommandList; }
 
+	virtual void ResetAllocator() override;
 	virtual void Begin() override;
 	virtual void End() override;
 	virtual void Wait(IGfxFence* fence, uint64_t value) override;

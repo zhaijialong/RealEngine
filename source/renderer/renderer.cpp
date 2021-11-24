@@ -45,6 +45,12 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
 
+    for (int i = 0; i < MAX_INFLIGHT_FRAMES; ++i)
+    {
+        std::string name = "Renderer::m_pComputeCommandLists[" + std::to_string(i) + "]";
+        m_pComputeCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Compute, name));
+    }
+
     m_pUploadFence.reset(m_pDevice->CreateFence("Renderer::m_pUploadFence"));
 
     for (int i = 0; i < MAX_INFLIGHT_FRAMES; ++i)
@@ -85,6 +91,7 @@ void Renderer::BeginFrame()
     m_pDevice->BeginFrame();
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
+    pCommandList->ResetAllocator();
     pCommandList->Begin();
 }
 

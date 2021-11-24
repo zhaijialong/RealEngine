@@ -98,6 +98,7 @@ private:
     uint64_t m_nCurrentFrameFenceValue = 0;
     uint64_t m_nFrameFenceValue[MAX_INFLIGHT_FRAMES] = {};
     std::unique_ptr<IGfxCommandList> m_pCommandLists[MAX_INFLIGHT_FRAMES];
+    std::unique_ptr<IGfxCommandList> m_pComputeCommandLists[MAX_INFLIGHT_FRAMES];
 
     std::unique_ptr<IGfxFence> m_pUploadFence;
     uint64_t m_nCurrentUploadFenceValue = 0;

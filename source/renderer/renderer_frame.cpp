@@ -15,34 +15,6 @@ inline float4x4 GetLightVP(ILight* light)
 
 void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
 {
-    struct DepthPassData
-    {
-        RenderGraphHandle outDepthRT;
-    };
-
-    auto shadow_pass = m_pRenderGraph->AddPass<DepthPassData>("Shadow Pass",
-        [](DepthPassData& data, RenderGraphBuilder& builder)
-        {
-            RenderGraphTexture::Desc desc;
-            desc.width = desc.height = 4096;
-            desc.format = GfxFormat::D16;
-            desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
-
-            data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "ShadowMap");
-            data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, 1.0f);
-        },
-        [&](const DepthPassData& data, IGfxCommandList* pCommandList)
-        {
-            ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
-            float4x4 mtxVP = GetLightVP(light);
-
-            for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
-            {
-                m_shadowPassBatchs[i](pCommandList, mtxVP);
-            }
-            m_shadowPassBatchs.clear();
-        });
-
     struct GBufferPassData
     {
         RenderGraphHandle outAlbedoRT; //srgb : albedo(xyz) + metalness(a)
@@ -84,6 +56,34 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
                 m_gbufferPassBatchs[i](pCommandList, camera->GetViewProjectionMatrix());
             }
             m_gbufferPassBatchs.clear();
+        });
+
+    struct DepthPassData
+    {
+        RenderGraphHandle outDepthRT;
+    };
+
+    auto shadow_pass = m_pRenderGraph->AddPass<DepthPassData>("Shadow Pass",
+        [](DepthPassData& data, RenderGraphBuilder& builder)
+        {
+            RenderGraphTexture::Desc desc;
+            desc.width = desc.height = 4096;
+            desc.format = GfxFormat::D16;
+            desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
+
+            data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "ShadowMap");
+            data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, 1.0f);
+        },
+        [&](const DepthPassData& data, IGfxCommandList* pCommandList)
+        {
+            ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
+            float4x4 mtxVP = GetLightVP(light);
+
+            for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
+            {
+                m_shadowPassBatchs[i](pCommandList, mtxVP);
+            }
+            m_shadowPassBatchs.clear();
         });
 
     LightingProcessInput lightInput;

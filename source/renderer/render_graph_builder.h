@@ -13,6 +13,7 @@ public:
     }
 
     void MakeTarget() { m_pPass->MakeTarget(); }
+    void EnableAsyncCompute() { m_pPass->EnableAsyncCompute(); }
 
     template<typename Resource>
     RenderGraphHandle Create(const typename Resource::Desc& desc, const char* name)
