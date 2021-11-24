@@ -40,6 +40,13 @@ protected:
     };
     std::vector<ResourceBarrier> m_resourceBarriers;
 
+    struct AliasBarrier
+    {
+        IGfxResource* before;
+        IGfxResource* after;
+    };
+    std::vector<AliasBarrier> m_aliasBarriers;
+
     RenderGraphEdgeColorAttchment* m_pColorRT[8] = {};
     RenderGraphEdgeDepthAttchment* m_pDepthRT = nullptr;
 };

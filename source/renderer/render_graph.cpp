@@ -33,16 +33,15 @@ void RenderGraph::Compile()
 
     m_graph.Cull();
 
-    //allocate resources (todo : aliasing)
     for (size_t i = 0; i < m_resourceNodes.size(); ++i)
     {
         RenderGraphResourceNode* node = m_resourceNodes[i];
-        RenderGraphResource* resource = node->GetResource();
-
         if (node->IsCulled())
         {
             continue;
         }
+
+        RenderGraphResource* resource = node->GetResource();
 
         std::vector<DAGEdge*> outgoing_edge = m_graph.GetOutgoingEdges(node);
         for (size_t i = 0; i < outgoing_edge.size(); ++i)
@@ -50,15 +49,29 @@ void RenderGraph::Compile()
             RenderGraphEdge* edge = (RenderGraphEdge*)outgoing_edge[i];
             RenderGraphPassBase* pass = (RenderGraphPassBase*)m_graph.GetNode(edge->GetToNode());
 
-            if (pass->IsCulled())
+            if (!pass->IsCulled())
             {
-                continue;
+                resource->Resolve(edge, pass);
             }
-
-            resource->Resolve(edge, pass);
         }
 
-        if (node->GetVersion() == 0)
+        std::vector<DAGEdge*> imcoming_edge = m_graph.GetIncomingEdges(node);
+        for (size_t i = 0; i < imcoming_edge.size(); ++i)
+        {
+            RenderGraphEdge* edge = (RenderGraphEdge*)imcoming_edge[i];
+            RenderGraphPassBase* pass = (RenderGraphPassBase*)m_graph.GetNode(edge->GetToNode());
+
+            if (!pass->IsCulled())
+            {
+                resource->Resolve(edge, pass);
+            }
+        }
+    }
+
+    for (size_t i = 0; i < m_resources.size(); ++i)
+    {
+        RenderGraphResource* resource = m_resources[i];
+        if (resource->IsUsed())
         {
             resource->Realize();
         }
@@ -67,12 +80,10 @@ void RenderGraph::Compile()
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
         RenderGraphPassBase* pass = m_passes[i];
-        if (pass->IsCulled())
+        if (!pass->IsCulled())
         {
-            continue;
+            pass->Resolve(m_graph);
         }
-
-        pass->Resolve(m_graph);
     }
 }
 

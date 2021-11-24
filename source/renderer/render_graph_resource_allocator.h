@@ -4,31 +4,63 @@
 
 class RenderGraphResourceAllocator
 {
-public:
-    RenderGraphResourceAllocator(IGfxDevice* pDevice);
-    ~RenderGraphResourceAllocator();
-
-    void Reset();
-
-    IGfxTexture* AllocateTexture(const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state);
-    void Free(IGfxTexture* texture, GfxResourceState state);
-
-    IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc);
-    IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc);
-
-private:
-    void DeleteDescriptor(IGfxResource* resource);
-
-private:
-    IGfxDevice* m_pDevice;
-
-    struct FreeTexture
+    struct LifetimeRange
     {
-        uint64_t lastUsedFrame;
-        GfxResourceState lastUsedState;
-        IGfxTexture* texture;
+        uint32_t firstPass = UINT32_MAX;
+        uint32_t lastPass = 0;
+
+        void Reset() { firstPass = UINT32_MAX; lastPass = 0; }
+        bool IsUsed() const { return firstPass != UINT32_MAX; }
+        bool IsOverlapping(const LifetimeRange& other) const 
+        { 
+            if (IsUsed())
+            {
+                return firstPass <= other.lastPass && lastPass >= other.firstPass;
+            }
+            else
+            {
+                return false;
+            }
+        }
     };
-    std::vector<FreeTexture> m_freeTextures;
+
+    struct AliasedTexture
+    {
+        IGfxTexture* texture;
+        LifetimeRange lifetime;
+        uint64_t lastUsedFrame = 0;
+        GfxResourceState lastUsedState = GfxResourceState::Present;
+    };
+
+    struct Heap
+    {
+        IGfxHeap* heap;
+        std::vector<AliasedTexture> textures;
+
+        bool IsOverlapping(const LifetimeRange& lifetime) const
+        {
+            for (size_t i = 0; i < textures.size(); ++i)
+            {
+                if (textures[i].lifetime.IsOverlapping(lifetime))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool Contains(IGfxTexture* texture) const
+        {
+            for (size_t i = 0; i < textures.size(); ++i)
+            {
+                if (textures[i].texture == texture)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
 
     struct SRVDescriptor
     {
@@ -36,7 +68,6 @@ private:
         IGfxDescriptor* descriptor;
         GfxShaderResourceViewDesc desc;
     };
-    std::vector<SRVDescriptor> m_allocatedSRVs;
 
     struct UAVDescriptor
     {
@@ -44,5 +75,30 @@ private:
         IGfxDescriptor* descriptor;
         GfxUnorderedAccessViewDesc desc;
     };
+
+public:
+    RenderGraphResourceAllocator(IGfxDevice* pDevice);
+    ~RenderGraphResourceAllocator();
+
+    void Reset();
+
+    IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state);
+    void Free(IGfxTexture* texture, GfxResourceState state);
+
+    IGfxTexture* GetAliasedPrevResource(IGfxTexture* texture, uint32_t firstPass);
+
+    IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc);
+    IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc);
+
+private:
+    void CheckHeapUsage(Heap& heap);
+    void DeleteDescriptor(IGfxResource* resource);
+
+private:
+    IGfxDevice* m_pDevice;
+
+    std::vector<Heap> m_allocatedHeaps;
+
+    std::vector<SRVDescriptor> m_allocatedSRVs;
     std::vector<UAVDescriptor> m_allocatedUAVs;
 };

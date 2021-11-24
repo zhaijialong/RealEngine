@@ -17,6 +17,11 @@ D3D12Heap::~D3D12Heap()
 
 void* D3D12Heap::GetHandle() const
 {
+    return m_pAllocation;
+}
+
+ID3D12Heap* D3D12Heap::GetHeap() const
+{
     return m_pAllocation->GetHeap();
 }
 

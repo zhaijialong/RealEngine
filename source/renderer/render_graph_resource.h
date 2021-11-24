@@ -21,11 +21,17 @@ public:
     virtual GfxResourceState GetInitialState() = 0;
 
     const char* GetName() const { return m_name.c_str(); }
+    DAGNodeID GetFirstPassID() const { return m_firstPass; }
+    DAGNodeID GetLastPassID() const { return m_lastPass; }
 
     void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass);
+    bool IsUsed() const { return m_firstPass != UINT32_MAX; }
+    bool IsImported() const { return m_bImported; }
 
     GfxResourceState GetFinalState() const { return m_lastState; }
     void SetFinalState(GfxResourceState state) { m_lastState = state; }
+
+    virtual IGfxResource* GetAliasedPrevResource() = 0;
 
 protected:
     std::string m_name;
@@ -82,12 +88,17 @@ public:
     {
         if (!m_bImported)
         {
-            m_pTexture = m_allocator.AllocateTexture(m_desc, m_name, m_initialState);
+            m_pTexture = m_allocator.AllocateTexture(m_firstPass, m_lastPass, m_desc, m_name, m_initialState);
         }
     }
 
     virtual IGfxResource* GetResource() override { return m_pTexture; }
     virtual GfxResourceState GetInitialState() override { return m_initialState; }
+
+    virtual IGfxResource* GetAliasedPrevResource() override
+    {
+        return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass);
+    }
 
 private:
     Desc m_desc;

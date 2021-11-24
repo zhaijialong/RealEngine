@@ -3,6 +3,7 @@
 
 void RenderGraphResource::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
 {
+    //todo : for resources used in async compute, we should extend its lifetime range
     if (pass->GetId() <= m_firstPass)
     {
         m_firstPass = pass->GetId();

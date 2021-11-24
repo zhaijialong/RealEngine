@@ -4,6 +4,7 @@
 #include "d3d12_texture.h"
 #include "d3d12_buffer.h"
 #include "d3d12_pipeline_state.h"
+#include "d3d12_heap.h"
 #include "pix_runtime.h"
 #include "../gfx.h"
 #include "utils/assert.h"
@@ -239,7 +240,7 @@ void D3D12CommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, 
 		mapping_count,
 		coordinates.data(),
 		sizes.data(),
-		(ID3D12Heap*)heap->GetHandle(),
+		((D3D12Heap*)heap)->GetHeap(),
 		mapping_count,
 		flags.data(),
 		heapTileOffsets.data(),
@@ -296,8 +297,8 @@ void D3D12CommandList::AliasingBarrier(IGfxResource* resource_before, IGfxResour
 {
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
-	barrier.Aliasing.pResourceBefore = (ID3D12Resource*)resource_before;
-	barrier.Aliasing.pResourceAfter = (ID3D12Resource*)resource_after;
+	barrier.Aliasing.pResourceBefore = (ID3D12Resource*)resource_before->GetHandle();
+	barrier.Aliasing.pResourceAfter = (ID3D12Resource*)resource_after->GetHandle();
 
 	m_pendingBarriers.push_back(barrier);
 }

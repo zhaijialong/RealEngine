@@ -58,14 +58,25 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
 
         if (old_state != new_state)
         {
-            //TODO : uav/aliasing barrier
+            //TODO : uav barrier
             ResourceBarrier barrier;
-            barrier.resource = resource_node->GetResource();
+            barrier.resource = resource;
             barrier.sub_resource = edge->GetSubresource();
             barrier.old_state = old_state;
             barrier.new_state = new_state;
 
             m_resourceBarriers.push_back(barrier);
+        }
+
+        if (!resource->IsImported() && resource->GetFirstPassID() == this->GetId())
+        {
+            IGfxResource* aliased_resource = resource->GetAliasedPrevResource();
+            if (aliased_resource)
+            {
+                AliasBarrier barrier = { aliased_resource, resource->GetResource() };
+
+                m_aliasBarriers.push_back(barrier);
+            }
         }
     }
 
@@ -105,6 +116,11 @@ void RenderGraphPassBase::Execute(const RenderGraph& graph, IGfxCommandList* pCo
 
 void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pCommandList)
 {
+    for (size_t i = 0; i < m_aliasBarriers.size(); ++i)
+    {
+        pCommandList->AliasingBarrier(m_aliasBarriers[i].before, m_aliasBarriers[i].after);
+    }
+
     for (size_t i = 0; i < m_resourceBarriers.size(); ++i)
     {
         const ResourceBarrier& barrier = m_resourceBarriers[i];

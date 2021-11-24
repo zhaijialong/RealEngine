@@ -1,5 +1,6 @@
 #pragma once
 
+#include "d3d12_header.h"
 #include "../i_gfx_heap.h"
 
 class D3D12Device;
@@ -16,6 +17,7 @@ public:
     ~D3D12Heap();
 
     virtual void* GetHandle() const override;
+    ID3D12Heap* GetHeap() const;
 
     bool Create();
 
