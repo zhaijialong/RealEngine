@@ -232,7 +232,7 @@ struct GfxTextureDesc
 
 inline bool operator==(const GfxTextureDesc& lhs, const GfxTextureDesc& rhs)
 {
-	return lhs.width == lhs.width &&
+	return lhs.width == rhs.width &&
 		lhs.height == rhs.height &&
 		lhs.depth == rhs.depth &&
 		lhs.mip_levels == rhs.mip_levels &&
