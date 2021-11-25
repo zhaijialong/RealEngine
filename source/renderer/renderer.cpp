@@ -93,6 +93,9 @@ void Renderer::BeginFrame()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->ResetAllocator();
     pCommandList->Begin();
+
+    IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
+    pComputeCommandList->ResetAllocator();
 }
 
 void Renderer::UploadResources()
@@ -226,7 +229,7 @@ void Renderer::Render()
 
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
-    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+    IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
 
     std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
     GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
@@ -245,7 +248,7 @@ void Renderer::Render()
     BuildRenderGraph(outputColorHandle, outputDepthHandle);
 
     m_pRenderGraph->Compile();
-    m_pRenderGraph->Execute(pCommandList);
+    m_pRenderGraph->Execute(pCommandList, pComputeCommandList);
 
     {
         GPU_EVENT(pCommandList, "Backbuffer Pass");

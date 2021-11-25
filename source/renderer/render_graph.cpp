@@ -5,6 +5,8 @@
 RenderGraph::RenderGraph(Renderer* pRenderer) :
     m_resourceAllocator(pRenderer->GetDevice())
 {
+    IGfxDevice* device = pRenderer->GetDevice();
+    m_pAsyncComputeFence.reset(device->CreateFence("RenderGraph::m_pAsyncComputeFence"));
 }
 
 void RenderGraph::Clear()
@@ -87,7 +89,7 @@ void RenderGraph::Compile()
     }
 }
 
-void RenderGraph::Execute(IGfxCommandList* pCommandList)
+void RenderGraph::Execute(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList)
 {
     CPU_EVENT("Render", "RenderGraph::Execute");
     GPU_EVENT(pCommandList, "RenderGraph");

@@ -21,7 +21,7 @@ public:
 
     void Clear();
     void Compile();
-    void Execute(IGfxCommandList* pCommandList);
+    void Execute(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
 
     void Present(const RenderGraphHandle& handle, GfxResourceState filnal_state);
 
@@ -53,6 +53,9 @@ private:
     RenderGraphResourceAllocator m_resourceAllocator;
     DirectedAcyclicGraph m_graph;
     RenderGraphBlackboard m_blackboard;
+
+    std::unique_ptr<IGfxFence> m_pAsyncComputeFence;
+    uint64_t m_nAsyncComputeFenceValue = 0;
 
     std::vector<RenderGraphPassBase*> m_passes;
     std::vector<RenderGraphResource*> m_resources;
