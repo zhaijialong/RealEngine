@@ -13,10 +13,10 @@ float3 D_GGX(float3 N, float3 H, float a)
 {
     float a2 = a * a;
     float NdotH = saturate(dot(N, H));
-	
+    
     float denom = (NdotH * NdotH * (a2 - 1.0) + 1.0);
     denom = /*M_PI */denom * denom;
-	
+    
     return a2 * rcp(denom);
 }
 

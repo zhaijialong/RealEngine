@@ -4,8 +4,8 @@
 
 namespace pix
 {
-	void Init();
+    void Init();
 
-	void BeginEvent(ID3D12GraphicsCommandList* pCommandList, const char* event);
-	void EndEvent(ID3D12GraphicsCommandList* pCommandList);
+    void BeginEvent(ID3D12GraphicsCommandList* pCommandList, const char* event);
+    void EndEvent(ID3D12GraphicsCommandList* pCommandList);
 };

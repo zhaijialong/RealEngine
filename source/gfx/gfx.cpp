@@ -6,19 +6,19 @@
 
 IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
 {
-	IGfxDevice* pDevice = nullptr;
+    IGfxDevice* pDevice = nullptr;
 
-	switch (desc.backend)
-	{
-	case GfxRenderBackend::D3D12:
-		pDevice = new D3D12Device(desc);
-		((D3D12Device*)pDevice)->Init();
-		break;
-	default:
-		break;
-	}
-	
-	return pDevice;
+    switch (desc.backend)
+    {
+    case GfxRenderBackend::D3D12:
+        pDevice = new D3D12Device(desc);
+        ((D3D12Device*)pDevice)->Init();
+        break;
+    default:
+        break;
+    }
+    
+    return pDevice;
 }
 
 MPRenderEvent::MPRenderEvent(IGfxCommandList* pCommandList, const std::string& event_name) :

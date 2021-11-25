@@ -63,7 +63,7 @@ GBufferOutput ps_main(VSOutput input)
     
 #if ALBEDO_TEXTURE
     Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
-	albedo *= albedoTexture.Sample(linearSampler, input.uv);
+    albedo *= albedoTexture.Sample(linearSampler, input.uv);
 #endif
     
 #if ALPHA_TEST
@@ -99,12 +99,12 @@ GBufferOutput ps_main(VSOutput input)
     
 #if EMISSIVE_TEXTURE
     Texture2D emissiveTexture = ResourceDescriptorHeap[MaterialCB.emissiveTexture];
-	emissive *= emissiveTexture.Sample(linearSampler, input.uv).xyz;
+    emissive *= emissiveTexture.Sample(linearSampler, input.uv).xyz;
 #endif
     
 #if AO_TEXTURE && !AO_METALLIC_ROUGHNESS_TEXTURE
     Texture2D aoTexture = ResourceDescriptorHeap[MaterialCB.aoTexture];
-	ao = aoTexture.Sample(linearSampler, input.uv).x;
+    ao = aoTexture.Sample(linearSampler, input.uv).x;
 #endif
     
     GBufferOutput output;

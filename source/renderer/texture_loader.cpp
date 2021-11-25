@@ -182,7 +182,7 @@ bool TextureLoader::Load(const std::string& file, bool srgb)
 
 bool TextureLoader::LoadDDS(bool srgb)
 {
-	uint8_t* data = m_fileData.data();
+    uint8_t* data = m_fileData.data();
 
     ddspp::Descriptor desc;
     ddspp::Result result = ddspp::decode_header((unsigned char*)data, desc);

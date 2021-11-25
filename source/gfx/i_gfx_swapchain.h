@@ -7,14 +7,14 @@ class IGfxTexture;
 class IGfxSwapchain : public IGfxResource
 {
 public:
-	virtual ~IGfxSwapchain() {}
+    virtual ~IGfxSwapchain() {}
 
-	virtual bool Present() = 0;
-	virtual bool Resize(uint32_t width, uint32_t height) = 0;
-	virtual IGfxTexture* GetBackBuffer() const = 0;
+    virtual bool Present() = 0;
+    virtual bool Resize(uint32_t width, uint32_t height) = 0;
+    virtual IGfxTexture* GetBackBuffer() const = 0;
 
-	const GfxSwapchainDesc& GetDesc() const { return m_desc; }
+    const GfxSwapchainDesc& GetDesc() const { return m_desc; }
 
 protected:
-	GfxSwapchainDesc m_desc = {};
+    GfxSwapchainDesc m_desc = {};
 };

@@ -315,10 +315,10 @@ Tonemapper::Tonemapper(Renderer* pRenderer, DisplayMode display_mode, ColorSpace
 
 void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* pLdrUAV, uint32_t width, uint32_t height)
 {
-	pCommandList->SetPipelineState(m_pPSO);
+    pCommandList->SetPipelineState(m_pPSO);
 
-	uint32_t resourceCB[4] = { pHdrSRV->GetHeapIndex(), pLdrUAV->GetHeapIndex(), width, height };
-	pCommandList->SetComputeConstants(0, resourceCB, sizeof(resourceCB));
+    uint32_t resourceCB[4] = { pHdrSRV->GetHeapIndex(), pLdrUAV->GetHeapIndex(), width, height };
+    pCommandList->SetComputeConstants(0, resourceCB, sizeof(resourceCB));
 
     struct LPMConsts {
         uint32_t shoulder;
@@ -355,29 +355,29 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IG
 
 void Tonemapper::SetLPMConfig(bool con, bool soft, bool con2, bool clip, bool scaleOnly)
 {
-	m_con = con;
-	m_soft = soft;
-	m_con2 = con2;
-	m_clip = clip;
-	m_scaleOnly = scaleOnly;
+    m_con = con;
+    m_soft = soft;
+    m_con2 = con2;
+    m_clip = clip;
+    m_scaleOnly = scaleOnly;
 }
 
 void Tonemapper::SetLPMColors(float xyRedW[2], float xyGreenW[2], float xyBlueW[2], float xyWhiteW[2], float xyRedO[2], float xyGreenO[2], float xyBlueO[2], float xyWhiteO[2], float xyRedC[2], float xyGreenC[2], float xyBlueC[2], float xyWhiteC[2], float scaleC)
 {
-	m_xyRedW[0] = xyRedW[0]; m_xyRedW[1] = xyRedW[1];
-	m_xyGreenW[0] = xyGreenW[0]; m_xyGreenW[1] = xyGreenW[1];
-	m_xyBlueW[0] = xyBlueW[0]; m_xyBlueW[1] = xyBlueW[1];
-	m_xyWhiteW[0] = xyWhiteW[0]; m_xyWhiteW[1] = xyWhiteW[1];
+    m_xyRedW[0] = xyRedW[0]; m_xyRedW[1] = xyRedW[1];
+    m_xyGreenW[0] = xyGreenW[0]; m_xyGreenW[1] = xyGreenW[1];
+    m_xyBlueW[0] = xyBlueW[0]; m_xyBlueW[1] = xyBlueW[1];
+    m_xyWhiteW[0] = xyWhiteW[0]; m_xyWhiteW[1] = xyWhiteW[1];
 
-	m_xyRedO[0] = xyRedO[0]; m_xyRedO[1] = xyRedO[1];
-	m_xyGreenO[0] = xyGreenO[0]; m_xyGreenO[1] = xyGreenO[1];
-	m_xyBlueO[0] = xyBlueO[0]; m_xyBlueO[1] = xyBlueO[1];
-	m_xyWhiteO[0] = xyWhiteO[0]; m_xyWhiteO[1] = xyWhiteO[1];
+    m_xyRedO[0] = xyRedO[0]; m_xyRedO[1] = xyRedO[1];
+    m_xyGreenO[0] = xyGreenO[0]; m_xyGreenO[1] = xyGreenO[1];
+    m_xyBlueO[0] = xyBlueO[0]; m_xyBlueO[1] = xyBlueO[1];
+    m_xyWhiteO[0] = xyWhiteO[0]; m_xyWhiteO[1] = xyWhiteO[1];
 
-	m_xyRedC[0] = xyRedC[0]; m_xyRedC[1] = xyRedC[1];
-	m_xyGreenC[0] = xyGreenC[0]; m_xyGreenC[1] = xyGreenC[1];
-	m_xyBlueC[0] = xyBlueC[0]; m_xyBlueC[1] = xyBlueC[1];
-	m_xyWhiteC[0] = xyWhiteC[0]; m_xyWhiteC[1] = xyWhiteC[1];
+    m_xyRedC[0] = xyRedC[0]; m_xyRedC[1] = xyRedC[1];
+    m_xyGreenC[0] = xyGreenC[0]; m_xyGreenC[1] = xyGreenC[1];
+    m_xyBlueC[0] = xyBlueC[0]; m_xyBlueC[1] = xyBlueC[1];
+    m_xyWhiteC[0] = xyWhiteC[0]; m_xyWhiteC[1] = xyWhiteC[1];
 
-	m_scaleC = scaleC;
+    m_scaleC = scaleC;
 }

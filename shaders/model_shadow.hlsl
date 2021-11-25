@@ -39,7 +39,7 @@ void ps_main(VSOutput input)
 #if ALBEDO_TEXTURE && ALPHA_TEST
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
     Texture2D albedoTexture = ResourceDescriptorHeap[c_albedoTexture];
-	float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
+    float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
     
     clip(albedo.a - c_alphaCutoff);
 #endif
