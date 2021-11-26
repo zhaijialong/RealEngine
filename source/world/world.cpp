@@ -1,11 +1,12 @@
 #include "world.h"
 #include "core/engine.h"
-#include "model.h"
+#include "gltf_loader.h"
 #include "sky_sphere.h"
 #include "directional_light.h"
 #include "utils/assert.h"
 #include "utils/string.h"
 #include "utils/profiler.h"
+#include "tinyxml2/tinyxml2.h"
 
 World::World()
 {
@@ -78,15 +79,7 @@ IVisibleObject* World::GetSelectedObject() const
 {
     //todo : implements mouse pick
 
-    for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
-    {
-        if (dynamic_cast<Model*>(iter->get()) != nullptr)
-        {
-            return iter->get();
-        }
-    }
-
-    return nullptr;
+    return m_objects.begin()->get();
 }
 
 ILight* World::GetPrimaryLight() const
@@ -102,40 +95,53 @@ void World::ClearScene()
     m_pPrimaryLight = nullptr;
 }
 
+inline float3 str_to_float3(const std::string& str)
+{
+    std::vector<float> v;
+    v.reserve(3);
+    string_to_float_array(str, v);
+    return float3(v[0], v[1], v[2]);
+}
+
+inline void LoadVisibleObject(tinyxml2::XMLElement* element, IVisibleObject* object)
+{
+    const tinyxml2::XMLAttribute* position = element->FindAttribute("position");
+    if (position)
+    {
+        object->SetPosition(str_to_float3(position->Value()));
+    }
+
+    const tinyxml2::XMLAttribute* rotation = element->FindAttribute("rotation");
+    if (rotation)
+    {
+        object->SetRotation(str_to_float3(rotation->Value()));
+    }
+
+    const tinyxml2::XMLAttribute* scale = element->FindAttribute("scale");
+    if (scale)
+    {
+        object->SetScale(str_to_float3(scale->Value()));
+    }
+}
+
 void World::CreateVisibleObject(tinyxml2::XMLElement* element)
 {
     if (strcmp(element->Value(), "light") == 0)
     {
         CreateLight(element);
-        return;
     }
     else if (strcmp(element->Value(), "camera") == 0)
     {
         CreateCamera(element);
-        return;
     }
-
-    IVisibleObject* object = nullptr;
-
-    if (strcmp(element->Value(), "model") == 0)
+    else if (strcmp(element->Value(), "model") == 0)
     {
-        object = new Model();
+        CreateModel(element);
     }
     else if(strcmp(element->Value(), "skysphere") == 0)
     {
-        object = new SkySphere();
+        CreateSky(element);
     }
-
-    RE_ASSERT(object != nullptr);
-    object->Load(element);
-
-    if (!object->Create())
-    {
-        delete object;
-        return;
-    }
-
-    AddObject(object);
 }
 
 void World::CreateLight(tinyxml2::XMLElement* element)
@@ -155,7 +161,7 @@ void World::CreateLight(tinyxml2::XMLElement* element)
         RE_ASSERT(false);
     }
 
-    light->Load(element);
+    LoadVisibleObject(element, light);
 
     if (!light->Create())
     {
@@ -177,16 +183,34 @@ void World::CreateCamera(tinyxml2::XMLElement* element)
     const tinyxml2::XMLAttribute* position = element->FindAttribute("position");
     if (position)
     {
-        std::vector<float> v;
-        string_to_float_array(position->Value(), v);
-        m_pCamera->SetPosition(vector_to_float3(v));
+        m_pCamera->SetPosition(str_to_float3(position->Value()));
     }
 
     const tinyxml2::XMLAttribute* rotation = element->FindAttribute("rotation");
     if (rotation)
     {
-        std::vector<float> v;
-        string_to_float_array(rotation->Value(), v);
-        m_pCamera->SetRotation(vector_to_float3(v));
+        m_pCamera->SetRotation(str_to_float3(rotation->Value()));
     }
+}
+
+void World::CreateModel(tinyxml2::XMLElement* element)
+{
+    GLTFLoader loader(this, element);
+    loader.Load();
+}
+
+void World::CreateSky(tinyxml2::XMLElement* element)
+{
+    IVisibleObject* object = new SkySphere();
+    RE_ASSERT(object != nullptr);
+
+    LoadVisibleObject(element, object);
+
+    if (!object->Create())
+    {
+        delete object;
+        return;
+    }
+
+    AddObject(object);
 }

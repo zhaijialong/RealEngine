@@ -4,6 +4,11 @@
 #include "i_light.h"
 #include <memory>
 
+namespace tinyxml2
+{
+    class XMLElement;
+}
+
 class World
 {
 public:
@@ -28,6 +33,8 @@ private:
     void CreateVisibleObject(tinyxml2::XMLElement* element);
     void CreateLight(tinyxml2::XMLElement* element);
     void CreateCamera(tinyxml2::XMLElement* element);
+    void CreateModel(tinyxml2::XMLElement* element);
+    void CreateSky(tinyxml2::XMLElement* element);
 
 private:
     std::unique_ptr<Camera> m_pCamera;

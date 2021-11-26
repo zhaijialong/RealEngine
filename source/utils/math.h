@@ -1,7 +1,6 @@
 #pragma once
 
 #include "linalg/linalg.h"
-#include <vector>
 
 using namespace linalg;
 using namespace linalg::aliases;
@@ -20,11 +19,6 @@ inline T radian_to_degree(T radian)
 {
     const float PI = 3.141592653f;
     return radian * 180.0f / PI;
-}
-
-inline float3 vector_to_float3(const std::vector<float>& v)
-{
-    return float3(v[0], v[1], v[2]);
 }
 
 inline float4 rotation_quat(const float3& euler_angles) //pitch-yaw-roll order, in degrees

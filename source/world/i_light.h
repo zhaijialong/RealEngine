@@ -5,9 +5,6 @@
 class ILight : public IVisibleObject
 {
 public:
-    virtual void Load(tinyxml2::XMLElement* element) override;
-    virtual void Store(tinyxml2::XMLElement* element) override;
-
     float3 GetLightDirection() const { return m_lightDir; }
 
     float3 GetLightColor() const { return m_lightColor; }

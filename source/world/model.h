@@ -107,8 +107,6 @@ class Model : public IVisibleObject
     };
 
 public:
-    virtual void Load(tinyxml2::XMLElement* element) override;
-    virtual void Store(tinyxml2::XMLElement* element) override;
     virtual bool Create() override;
     virtual void Tick(float delta_time) override;
     virtual void Render(Renderer* pRenderer) override;

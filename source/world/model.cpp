@@ -2,12 +2,11 @@
 #include "core/engine.h"
 #include "utils/assert.h"
 #include "utils/memory.h"
-
-#define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
 
 #include "model_constants.hlsli"
 
+/*
 void Model::Load(tinyxml2::XMLElement* element)
 {
     IVisibleObject::Load(element);
@@ -19,7 +18,7 @@ void Model::Store(tinyxml2::XMLElement* element)
 {
     IVisibleObject::Store(element);
 }
-
+*/
 bool Model::Create()
 {
     std::string file = Engine::GetInstance()->GetAssetPath() + m_file;

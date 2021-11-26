@@ -172,12 +172,6 @@
     <ClCompile Include="source\world\directional_light.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
-    <ClCompile Include="source\world\i_light.cpp">
-      <Filter>source\world</Filter>
-    </ClCompile>
-    <ClCompile Include="source\world\i_visible_object.cpp">
-      <Filter>source\world</Filter>
-    </ClCompile>
     <ClCompile Include="source\world\model.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
