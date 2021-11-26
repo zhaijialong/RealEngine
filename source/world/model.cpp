@@ -8,14 +8,6 @@
 
 #include "model_constants.hlsli"
 
-inline float4x4 RightHandToLeftHand(const float4x4& matrix)
-{
-    return float4x4(float4(matrix.x.x, matrix.x.y, -matrix.x.z, matrix.x.w),
-        float4(matrix.y.x, matrix.y.y, -matrix.y.z, matrix.y.w),
-        float4(-matrix.z.x, -matrix.z.y, matrix.z.z, -matrix.z.w),
-        matrix.w);
-}
-
 void Model::Load(tinyxml2::XMLElement* element)
 {
     IVisibleObject::Load(element);
@@ -42,7 +34,7 @@ bool Model::Create()
 
     cgltf_load_buffers(&options, data, file.c_str());
 
-    RE_ASSERT(data->scenes_count == 1 && data->scenes[0].nodes_count == 1);
+    //RE_ASSERT(data->scenes_count == 1 && data->scenes[0].nodes_count == 1);
     m_pRootNode.reset(LoadNode(data->scenes[0].nodes[0]));
 
     if (data->animations_count > 0)
@@ -113,7 +105,7 @@ void Model::UpdateMatrix(Node* node, const float4x4& parentWorld)
         float4x4 T = translation_matrix(node->animPose.translation);
         float4x4 R = rotation_matrix(node->animPose.rotation);
         float4x4 S = scaling_matrix(node->animPose.scale);
-        float4x4 poseMatrix = RightHandToLeftHand(mul(T, mul(R, S)));
+        float4x4 poseMatrix = mul(T, mul(R, S));
         node->worldMatrix = mul(parentWorld, poseMatrix);
     }
     else
@@ -175,9 +167,14 @@ void Model::LinearInterpolate(const AnimationChannel& channel, float interpolati
     {
     case AnimationChannelMode::Translation:
         channel.targetNode->animPose.translation = lerp(lower.xyz(), upper.xyz(), interpolation_value);
+        channel.targetNode->animPose.translation.z *= -1; //right-hand to left-hand
         break;
     case AnimationChannelMode::Rotation:
         channel.targetNode->animPose.rotation = slerp(lower, upper, interpolation_value);
+
+        //right-hand to left-hand
+        channel.targetNode->animPose.rotation.z *= -1;
+        channel.targetNode->animPose.rotation.w *= -1;
         break;
     case AnimationChannelMode::Scale:
         channel.targetNode->animPose.scale = lerp(lower.xyz(), upper.xyz(), interpolation_value);
@@ -472,19 +469,31 @@ Model::Node* Model::LoadNode(const cgltf_node* gltf_node)
     Node* node = new Node;
     node->name = gltf_node->name != nullptr ? gltf_node->name : "";
 
+    float3 translation;
+    float4 rotation;
+    float3 scale;
+
     if (gltf_node->has_matrix)
     {
-        node->localToParentMatrix = float4x4(gltf_node->matrix);
+        float4x4 matrix = float4x4(gltf_node->matrix);
+        decompose(matrix, translation, rotation, scale);
     }
     else
     {
-        float4x4 T = translation_matrix(float3(gltf_node->translation));
-        float4x4 R = rotation_matrix(float4(gltf_node->rotation));
-        float4x4 S = scaling_matrix(float3(gltf_node->scale));
-        node->localToParentMatrix = mul(T, mul(R, S));
+        translation = float3(gltf_node->translation);
+        rotation = float4(gltf_node->rotation);
+        scale = float3(gltf_node->scale);
     }
 
-    node->localToParentMatrix = RightHandToLeftHand(node->localToParentMatrix);
+    //right-hand to left-hand
+    translation.z *= -1;
+    rotation.z *= -1;
+    rotation.w *= -1;
+
+    float4x4 T = translation_matrix(translation);
+    float4x4 R = rotation_matrix(rotation);
+    float4x4 S = scaling_matrix(scale);
+    node->localToParentMatrix = mul(T, mul(R, S));
 
     if (gltf_node->mesh != nullptr)
     {
@@ -738,7 +747,20 @@ void Model::LoadSkin(const cgltf_skin* skin)
 
     for (size_t i = 0; i < m_inverseBindMatrices.size(); ++i)
     {
-        m_inverseBindMatrices[i] = RightHandToLeftHand(m_inverseBindMatrices[i]);
+        float3 translation;
+        float4 rotation;
+        float3 scale;
+        decompose(m_inverseBindMatrices[i], translation, rotation, scale);
+
+        //right-hand to left-hand
+        translation.z *= -1;
+        rotation.z *= -1;
+        rotation.w *= -1;
+
+        float4x4 T = translation_matrix(translation);
+        float4x4 R = rotation_matrix(rotation);
+        float4x4 S = scaling_matrix(scale);
+        m_inverseBindMatrices[i] = mul(T, mul(R, S));
     }
 
     m_boneList.reserve(skin->joints_count);
