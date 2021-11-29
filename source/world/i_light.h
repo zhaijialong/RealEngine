@@ -5,6 +5,8 @@
 class ILight : public IVisibleObject
 {
 public:
+    virtual float4x4 GetShadowMatrix() const = 0;
+
     float3 GetLightDirection() const { return m_lightDir; }
 
     float3 GetLightColor() const { return m_lightColor; }

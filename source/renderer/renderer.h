@@ -17,11 +17,12 @@
 
 const static int MAX_INFLIGHT_FRAMES = 3;
 
+class ILight;
 class Camera;
-class Renderer;
 
 using ComputeFunc = std::function<void(IGfxCommandList*)>;
-using RenderFunc = std::function<void(IGfxCommandList*, const float4x4&)>;
+using ShadowFunc = std::function<void(IGfxCommandList*, const ILight*)>;
+using RenderFunc = std::function<void(IGfxCommandList*, const Camera*)>;
 
 class Renderer
 {
@@ -63,7 +64,7 @@ public:
     void AddComputePass(const ComputeFunc& func) { m_computePassBatchs.push_back(func); }
     void AddComputeBuffer(IGfxBuffer* buffer) { m_computeBuffers.push_back(buffer); }
 
-    void AddShadowPassBatch(const RenderFunc& func) { m_shadowPassBatchs.push_back(func); }
+    void AddShadowPassBatch(const ShadowFunc& func) { m_shadowPassBatchs.push_back(func); }
     void AddGBufferPassBatch(const RenderFunc& func) { m_gbufferPassBatchs.push_back(func); }
     void AddForwardPassBatch(const RenderFunc& func) { m_forwardPassBatchs.push_back(func); }
     void AddVelocityPassBatch(const RenderFunc& func) { m_velocityPassBatchs.push_back(func); }
@@ -149,7 +150,7 @@ private:
     std::vector<ComputeFunc> m_computePassBatchs;
     std::vector<IGfxBuffer*> m_computeBuffers;
 
-    std::vector<RenderFunc> m_shadowPassBatchs;
+    std::vector<ShadowFunc> m_shadowPassBatchs;
     std::vector<RenderFunc> m_gbufferPassBatchs;
     std::vector<RenderFunc> m_forwardPassBatchs;
     std::vector<RenderFunc> m_velocityPassBatchs;

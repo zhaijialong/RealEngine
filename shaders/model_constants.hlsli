@@ -7,9 +7,12 @@ struct ModelConstant
     uint normalBuffer;
     uint tangentBuffer;    
     
-    float4x4 mtxWVP;
+    uint prevPosBuffer;
+    uint3 _padding;
+    
     float4x4 mtxWorld;
     float4x4 mtxNormal;
+    float4x4 mtxPrevWorld;
 };
 
 struct MaterialConstant

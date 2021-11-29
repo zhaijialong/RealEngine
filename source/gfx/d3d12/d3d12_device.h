@@ -90,7 +90,7 @@ public:
     ID3D12CommandSignature* GetDrawIndexedSignature() const { return m_pDrawIndexedSignature; }
     ID3D12CommandSignature* GetDispatchSignature() const { return m_pDispatchSignature; }
 
-    D3D12_GPU_VIRTUAL_ADDRESS AllocateConstantBuffer(void* data, size_t data_size);
+    D3D12_GPU_VIRTUAL_ADDRESS AllocateConstantBuffer(const void* data, size_t data_size);
 
     void FlushDeferredDeletions();
     void Delete(IUnknown* object);

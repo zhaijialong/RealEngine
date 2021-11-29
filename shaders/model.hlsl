@@ -21,13 +21,13 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     StructuredBuffer<float4> tangentBuffer = ResourceDescriptorHeap[ModelCB.tangentBuffer];
     
     float4 pos = float4(posBuffer[vertex_id], 1.0);
+    float4 worldPos = mul(ModelCB.mtxWorld, pos);
 
     VSOutput output;
-    output.pos = mul(ModelCB.mtxWVP, pos);
+    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
     output.uv = uvBuffer[vertex_id];
     output.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);    
     
-    //float3 worldPos = mul(ModelCB.mtxWorld, pos).xyz;
     //DrawDebugLine(worldPos, worldPos + output.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE

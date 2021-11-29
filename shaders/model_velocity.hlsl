@@ -1,24 +1,12 @@
 #include "common.hlsli"
-
-cbuffer CB : register(b1)
-{
-    uint c_posBuffer;
-    uint c_prevPosBuffer;
-    uint c_uvBuffer;
-    uint c_albedoTexture;
-    
-    float c_alphaCutoff;
-    float3 _padding;
-
-    float4x4 c_mtxWVP;
-    float4x4 c_mtxWVPNoJitter;
-    float4x4 c_mtxPrevWVPNoJitter;
-};
+#include "model_constants.hlsli"
 
 struct VSOutput
 {
     float4 pos : SV_POSITION;
+#if ALBEDO_TEXTURE && ALPHA_TEST
     float2 uv : TEXCOORD;
+#endif
     
     float4 clipPos : CLIP_POSITION0;
     float4 prevClipPos : CLIP_POSITION1;
@@ -26,23 +14,29 @@ struct VSOutput
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {
-    StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[c_posBuffer];
-    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[c_uvBuffer];
+    StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[ModelCB.posBuffer];
+    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[ModelCB.uvBuffer];
     
     float4 pos = float4(posBuffer[vertex_id], 1.0);
+    float4 worldPos = mul(ModelCB.mtxWorld, pos);
 
     VSOutput output;
-    output.pos = mul(c_mtxWVP, pos);
+    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
+    
+#if ALBEDO_TEXTURE && ALPHA_TEST
     output.uv = uvBuffer[vertex_id];
-    
-    float4 prevPos = pos;
-#if ANIME_POS
-    StructuredBuffer<float3> prevPosBuffer = ResourceDescriptorHeap[c_prevPosBuffer];
-    prevPos = float4(prevPosBuffer[vertex_id], 1.0);
 #endif
+
+#if ANIME_POS
+    StructuredBuffer<float3> prevPosBuffer = ResourceDescriptorHeap[ModelCB.prevPosBuffer];
+    float4 prevPos = float4(prevPosBuffer[vertex_id], 1.0);
+#else
+    float4 prevPos = pos;
+#endif
+    float4 prevWorldPos = mul(ModelCB.mtxPrevWorld, prevPos);
     
-    output.clipPos = mul(c_mtxWVPNoJitter, pos);
-    output.prevClipPos = mul(c_mtxPrevWVPNoJitter, prevPos);
+    output.clipPos = mul(CameraCB.mtxViewProjectionNoJitter, worldPos);
+    output.prevClipPos = mul(CameraCB.mtxPrevViewProjectionNoJitter, prevWorldPos);
     
     return output;
 }
@@ -51,10 +45,10 @@ float4 ps_main(VSOutput input) : SV_TARGET0
 {    
 #if ALBEDO_TEXTURE && ALPHA_TEST
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
-    Texture2D albedoTexture = ResourceDescriptorHeap[c_albedoTexture];
+    Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
     float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
     
-    clip(albedo.a - c_alphaCutoff);
+    clip(albedo.a - MaterialCB.alphaCutoff);
 #endif
     
     float2 ndcPos = input.clipPos.xy / input.clipPos.w;

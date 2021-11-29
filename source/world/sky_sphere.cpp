@@ -82,7 +82,7 @@ void SkySphere::Render(Renderer* pRenderer)
     pRenderer->AddForwardPassBatch(bassPassBatch);
 }
 
-void SkySphere::RenderSky(IGfxCommandList* pCommandList, const float4x4& mtxVP)
+void SkySphere::RenderSky(IGfxCommandList* pCommandList, const Camera* pCamera)
 {
     GPU_EVENT(pCommandList, "SkySphere");
 
@@ -96,8 +96,6 @@ void SkySphere::RenderSky(IGfxCommandList* pCommandList, const float4x4& mtxVP)
         uint posBuffer;
         float3 cameraPos;
     };
-
-    Camera* pCamera = Engine::GetInstance()->GetWorld()->GetCamera();
 
     float4x4 mtxWorld = translation_matrix(pCamera->GetPosition());
 

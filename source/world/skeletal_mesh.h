@@ -1,8 +1,8 @@
 #pragma once
 
-#include "static_mesh.h"
+#include "i_visible_object.h"
 
-class SkeletalMesh : public StaticMesh
+class SkeletalMesh : public IVisibleObject
 {
 
 };

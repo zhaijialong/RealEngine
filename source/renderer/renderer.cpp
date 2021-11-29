@@ -163,18 +163,6 @@ void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
     m_computeBuffers.clear();
 }
 
-
-//temp test code
-inline float4x4 GetLightVP(ILight* light)
-{
-    float3 light_dir = light->GetLightDirection();
-    float3 eye = light_dir * 100.0f;
-    float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
-    float4x4 mtxProj = ortho_matrix(-50.0f, 50.0f, -50.0f, 50.0f, 0.1f, 500.0f);
-    float4x4 mtxVP = mul(mtxProj, mtxView);
-    return mtxVP;
-}
-
 void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 {
     World* world = Engine::GetInstance()->GetWorld();
@@ -188,7 +176,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     //sceneCB.shadowRT = shadowMapRT->GetSRV()->GetHeapIndex();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
     sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
-    sceneCB.mtxLightVP = GetLightVP(light);
+    sceneCB.mtxLightVP = light->GetShadowMatrix();
     sceneCB.viewWidth = m_nWindowWidth;
     sceneCB.viewHeight = m_nWindowHeight;
     sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;

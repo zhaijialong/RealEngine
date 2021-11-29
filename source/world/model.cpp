@@ -193,6 +193,7 @@ void Model::Render(Renderer* pRenderer)
         AddComputeBuffer(m_pRootNode.get());
     }
 
+    /*
     RenderFunc bassPassBatch = std::bind(&Model::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
     pRenderer->AddGBufferPassBatch(bassPassBatch);
 
@@ -203,7 +204,7 @@ void Model::Render(Renderer* pRenderer)
     {
         RenderFunc velocityPassBatch = std::bind(&Model::RenderVelocityPass, this, std::placeholders::_1, std::placeholders::_2, m_pRootNode.get());
         pRenderer->AddVelocityPassBatch(velocityPassBatch);
-    }
+    }*/
 }
 
 void Model::AddComputeBuffer(Node* pNode)
@@ -283,7 +284,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxV
     float4x4 mtxWVP = mul(mtxVP, mtxWorld);
 
     ModelConstant modelCB;
-    modelCB.mtxWVP = mtxWVP;
+    //modelCB.mtxWVP = mtxWVP;
     modelCB.mtxWorld = mtxWorld;
     modelCB.mtxNormal = transpose(inverse(mtxWorld));
 
@@ -337,7 +338,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
     float4x4 mtxWVP = mul(mtxVP, mtxWorld);
 
     ModelConstant modelCB;
-    modelCB.mtxWVP = mtxWVP;
+    //modelCB.mtxWVP = mtxWVP;
     modelCB.mtxWorld = mtxWorld;
     modelCB.mtxNormal = transpose(inverse(mtxWorld));
 

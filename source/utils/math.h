@@ -79,3 +79,14 @@ inline void decompose(const float4x4& matrix, float3& translation, float4& rotat
 
     rotation = rotation_quat(rotation_angles);
 }
+
+inline bool nearly_equal(float a, float b)
+{
+    return std::abs(a - b) < FLT_EPSILON;
+}
+
+template<class T>
+inline bool nearly_equal(const T& a, const T& b)
+{
+    return nearly_equal(a.x, b.x) && nearly_equal(a.y, b.y) && nearly_equal(a.z, b.z) && nearly_equal(a.w, b.w);
+}

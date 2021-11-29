@@ -1,12 +1,9 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
 
-cbuffer CB : register(b0)
+cbuffer ProjectionCB : register(b3)
 {
-    uint c_posBuffer;
-    uint c_uvBuffer;
-    uint c_albedoTexture;
-    float c_alphaCutoff;
+    float4x4 c_mtxShadowViewProjection;
 };
 
 struct VSOutput
@@ -19,13 +16,14 @@ struct VSOutput
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {
-    StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[c_posBuffer];
-    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[c_uvBuffer];
+    StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[ModelCB.posBuffer];
+    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[ModelCB.uvBuffer];
     
     float4 pos = float4(posBuffer[vertex_id], 1.0);
+    float4 worldPos = mul(ModelCB.mtxWorld, pos);
     
     VSOutput output;
-    output.pos = mul(ModelCB.mtxWVP, pos);
+    output.pos = mul(c_mtxShadowViewProjection, worldPos);
 
 #if ALBEDO_TEXTURE && ALPHA_TEST
     output.uv = uvBuffer[vertex_id];
@@ -38,9 +36,9 @@ void ps_main(VSOutput input)
 {
 #if ALBEDO_TEXTURE && ALPHA_TEST
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
-    Texture2D albedoTexture = ResourceDescriptorHeap[c_albedoTexture];
+    Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
     float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
     
-    clip(albedo.a - c_alphaCutoff);
+    clip(albedo.a - MaterialCB.alphaCutoff);
 #endif
 }

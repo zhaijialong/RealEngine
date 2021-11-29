@@ -392,7 +392,7 @@ bool D3D12Device::Init()
     return true;
 }
 
-D3D12_GPU_VIRTUAL_ADDRESS D3D12Device::AllocateConstantBuffer(void* data, size_t data_size)
+D3D12_GPU_VIRTUAL_ADDRESS D3D12Device::AllocateConstantBuffer(const void* data, size_t data_size)
 {
     void* cpu_address;
     uint64_t gpu_address;

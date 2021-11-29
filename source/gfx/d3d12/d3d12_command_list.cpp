@@ -437,7 +437,7 @@ void D3D12CommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, ui
     m_pCommandList->RSSetScissorRects(1, &rect);
 }
 
-void D3D12CommandList::SetGraphicsConstants(uint32_t slot, void* data, size_t data_size)
+void D3D12CommandList::SetGraphicsConstants(uint32_t slot, const void* data, size_t data_size)
 {
     RE_ASSERT((slot == 0 && data_size == 16) || (slot >= 1 && slot <= 4));
 
@@ -454,7 +454,7 @@ void D3D12CommandList::SetGraphicsConstants(uint32_t slot, void* data, size_t da
     }
 }
 
-void D3D12CommandList::SetComputeConstants(uint32_t slot, void* data, size_t data_size)
+void D3D12CommandList::SetComputeConstants(uint32_t slot, const void* data, size_t data_size)
 {
     RE_ASSERT((slot == 0 && data_size == 16) || (slot >= 1 && slot <= 4));
 

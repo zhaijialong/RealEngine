@@ -1,18 +1,6 @@
 #include "renderer.h"
 #include "core/engine.h"
 
-
-//temp test code
-inline float4x4 GetLightVP(ILight* light)
-{
-    float3 light_dir = light->GetLightDirection();
-    float3 eye = light_dir * 100.0f;
-    float4x4 mtxView = lookat_matrix(eye, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
-    float4x4 mtxProj = ortho_matrix(-50.0f, 50.0f, -50.0f, 50.0f, 0.1f, 500.0f);
-    float4x4 mtxVP = mul(mtxProj, mtxView);
-    return mtxVP;
-}
-
 void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
 {
     struct GBufferPassData
@@ -49,11 +37,10 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
         [&](const GBufferPassData& data, IGfxCommandList* pCommandList)
         {
             World* world = Engine::GetInstance()->GetWorld();
-            Camera* camera = world->GetCamera();
 
             for (size_t i = 0; i < m_gbufferPassBatchs.size(); ++i)
             {
-                m_gbufferPassBatchs[i](pCommandList, camera->GetViewProjectionMatrix());
+                m_gbufferPassBatchs[i](pCommandList, world->GetCamera());
             }
             m_gbufferPassBatchs.clear();
         });
@@ -76,14 +63,20 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
         },
         [&](const DepthPassData& data, IGfxCommandList* pCommandList)
         {
-            ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
-            float4x4 mtxVP = GetLightVP(light);
+            World* world = Engine::GetInstance()->GetWorld();
+            Camera* camera = world->GetCamera();
+            ILight* light = world->GetPrimaryLight();
+
+            float4x4 mtxShadowViewProjection = light->GetShadowMatrix();
+            pCommandList->SetGraphicsConstants(3, &mtxShadowViewProjection, sizeof(float4x4));
 
             for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
             {
-                m_shadowPassBatchs[i](pCommandList, mtxVP);
+                m_shadowPassBatchs[i](pCommandList, light);
             }
             m_shadowPassBatchs.clear();
+
+            camera->SetupCameraCB(pCommandList);
         });
 
     LightingProcessInput lightInput;
@@ -112,9 +105,8 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             for (size_t i = 0; i < m_forwardPassBatchs.size(); ++i)
             {
                 World* world = Engine::GetInstance()->GetWorld();
-                Camera* camera = world->GetCamera();
 
-                m_forwardPassBatchs[i](pCommandList, camera->GetViewProjectionMatrix());
+                m_forwardPassBatchs[i](pCommandList, world->GetCamera());
             }
             m_forwardPassBatchs.clear();
         });
@@ -143,9 +135,8 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             for (size_t i = 0; i < m_velocityPassBatchs.size(); ++i)
             {
                 World* world = Engine::GetInstance()->GetWorld();
-                Camera* camera = world->GetCamera();
 
-                m_velocityPassBatchs[i](pCommandList, camera->GetViewProjectionMatrix());
+                m_velocityPassBatchs[i](pCommandList, world->GetCamera());
             }
             m_velocityPassBatchs.clear();
         });
