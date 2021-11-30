@@ -208,6 +208,51 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_heap.cpp">
       <Filter>source\gfx\d3d12</Filter>
     </ClCompile>
+    <ClCompile Include="external\meshoptimizer\indexgenerator.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\overdrawanalyzer.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\overdrawoptimizer.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\simplifier.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\spatialorder.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\stripifier.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\vcacheanalyzer.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\vcacheoptimizer.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\vertexcodec.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\vertexfilter.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\vfetchanalyzer.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\vfetchoptimizer.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\allocator.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\clusterizer.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="external\meshoptimizer\indexcodec.cpp">
+      <Filter>external\meshoptimizer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -516,6 +561,9 @@
     <ClInclude Include="source\gfx\d3d12\d3d12_heap.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
+    <ClInclude Include="external\meshoptimizer\meshoptimizer.h">
+      <Filter>external\meshoptimizer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -583,6 +631,9 @@
     </Filter>
     <Filter Include="source\world">
       <UniqueIdentifier>{4375e657-3548-47f8-a364-046016057f48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\meshoptimizer">
+      <UniqueIdentifier>{e1b745d4-095e-41a0-b03a-009acca0aae4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
