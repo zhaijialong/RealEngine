@@ -49,5 +49,5 @@ float4 ps_main(VSOutput input) : SV_TARGET0
     clip(albedo.a - MaterialCB.alphaCutoff);
 #endif
     
-    return float4(1, 1, 0, 1);
+    return float4(0.6, 0.4, 0, 1);
 }
