@@ -367,7 +367,7 @@ bool D3D12Device::Init()
     for (uint32_t i = 0; i < CB_ALLOCATOR_COUNT; ++i)
     {
         std::string name = "CB Allocator " + std::to_string(i);
-        m_pConstantBufferAllocators[i] = std::make_unique<D3D12ConstantBufferAllocator>(this, 4 * 1024 * 1024, name);
+        m_pConstantBufferAllocators[i] = std::make_unique<D3D12ConstantBufferAllocator>(this, 8 * 1024 * 1024, name);
     }
 
     m_pRTVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 512, "RTV Heap");
@@ -383,7 +383,7 @@ bool D3D12Device::Init()
 #if MICROPROFILE_GPU_TIMERS_D3D12
     m_nProfileGraphicsQueue = MicroProfileInitGpuQueue("GPU Graphics Queue");
     m_nProfileComputeQueue = MicroProfileInitGpuQueue("GPU Compute Queue");
-    //m_nProfileCopyQueue = MicroProfileInitGpuQueue("GPU Copy Queue");  //microprofile���ڲ���֧��copy queue��timestamp
+    //m_nProfileCopyQueue = MicroProfileInitGpuQueue("GPU Copy Queue");
 
     MicroProfileGpuInitD3D12(m_pDevice, 1, (void**)&m_pGraphicsQueue);
     MicroProfileSetCurrentNodeD3D12(0);
