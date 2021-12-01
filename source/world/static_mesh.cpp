@@ -41,6 +41,12 @@ void StaticMesh::Render(Renderer* pRenderer)
     RenderFunc bassPassBatch = std::bind(&StaticMesh::RenderBassPass, this, std::placeholders::_1, std::placeholders::_2);
     pRenderer->AddGBufferPassBatch(bassPassBatch);
 
+    if (m_nID == pRenderer->GetMouseHitObjectID())
+    {
+        RenderFunc outlinePassBatch = std::bind(&StaticMesh::RenderOutlinePass, this, std::placeholders::_1, std::placeholders::_2);
+        pRenderer->AddForwardPassBatch(outlinePassBatch);
+    }
+
     ShadowFunc shadowPassBatch = std::bind(&StaticMesh::RenderShadowPass, this, std::placeholders::_1, std::placeholders::_2);
     pRenderer->AddShadowPassBatch(shadowPassBatch);
 
@@ -58,6 +64,12 @@ void StaticMesh::RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCa
 {
     GPU_EVENT_DEBUG(pCommandList, m_name);
     Draw(pCommandList, m_pMaterial->GetPSO());
+}
+
+void StaticMesh::RenderOutlinePass(IGfxCommandList* pCommandList, const Camera* pCamera)
+{
+    GPU_EVENT_DEBUG(pCommandList, m_name);
+    Draw(pCommandList, m_pMaterial->GetOutlinePSO());
 }
 
 void StaticMesh::RenderShadowPass(IGfxCommandList* pCommandList, const ILight* pLight)

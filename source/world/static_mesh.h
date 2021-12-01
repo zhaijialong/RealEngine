@@ -17,6 +17,7 @@ public:
 
 private:
     void RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera);
+    void RenderOutlinePass(IGfxCommandList* pCommandList, const Camera* pCamera);
     void RenderShadowPass(IGfxCommandList* pCommandList, const ILight* pLight);
     void RenderVelocityPass(IGfxCommandList* pCommandList, const Camera* pCamera);
     void RenderIDPass(IGfxCommandList* pCommandList, const Camera* pCamera);
