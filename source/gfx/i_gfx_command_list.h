@@ -48,10 +48,12 @@ public:
     virtual void Draw(uint32_t vertex_count, uint32_t instance_count = 1) = 0;
     virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t index_offset = 0) = 0;
     virtual void Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z) = 0;
+    virtual void DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z) = 0;
 
     virtual void DrawIndirect(IGfxBuffer* buffer, uint32_t offset) = 0;
     virtual void DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset) = 0;
     virtual void DispatchIndirect(IGfxBuffer* buffer, uint32_t offset) = 0;
+    virtual void DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset) = 0;
 
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const = 0;

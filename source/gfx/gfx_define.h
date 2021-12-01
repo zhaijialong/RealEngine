@@ -90,7 +90,6 @@ enum class GfxAllocationType
     Committed,
     Placed,
     Sparse,
-    //todo : SubAllocatedBuffer,
 };
 
 enum GfxBufferUsageBit
@@ -439,7 +438,6 @@ enum class GfxPipelineType
     Graphics,
     MeshShading,
     Compute,
-    Raytracing,
 };
 
 class IGfxShader;

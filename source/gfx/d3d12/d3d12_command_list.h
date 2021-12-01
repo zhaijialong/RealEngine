@@ -51,10 +51,12 @@ public:
     virtual void Draw(uint32_t vertex_count, uint32_t instance_count = 1) override;
     virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t index_offset = 0) override;
     virtual void Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z) override;
+    virtual void DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z) override;
 
     virtual void DrawIndirect(IGfxBuffer* buffer, uint32_t offset) override;
     virtual void DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset) override;
     virtual void DispatchIndirect(IGfxBuffer* buffer, uint32_t offset) override;
+    virtual void DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset) override;
 
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;
@@ -67,7 +69,7 @@ private:
     GfxCommandQueue m_queueType;
     ID3D12CommandQueue* m_pCommandQueue = nullptr;
     ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
-    ID3D12GraphicsCommandList4* m_pCommandList = nullptr;
+    ID3D12GraphicsCommandList6* m_pCommandList = nullptr;
 
     IGfxPipelineState* m_pCurrentPSO = nullptr;
 
