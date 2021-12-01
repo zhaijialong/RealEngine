@@ -82,6 +82,9 @@ public:
 
     void Reset();
 
+    IGfxTexture* AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state);
+    void FreeNonOverlappingTexture(IGfxTexture* texture, GfxResourceState state);
+
     IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state);
     void Free(IGfxTexture* texture, GfxResourceState state);
 
@@ -98,6 +101,14 @@ private:
     IGfxDevice* m_pDevice;
 
     std::vector<Heap> m_allocatedHeaps;
+
+    struct NonOverlappingTexture
+    {
+        IGfxTexture* texture;
+        GfxResourceState lastUsedState;
+        uint64_t lastUsedFrame;
+    };
+    std::vector<NonOverlappingTexture> m_freeOverlappingTextures;
 
     std::vector<SRVDescriptor> m_allocatedSRVs;
     std::vector<UAVDescriptor> m_allocatedUAVs;

@@ -31,6 +31,11 @@ public:
     GfxResourceState GetFinalState() const { return m_lastState; }
     void SetFinalState(GfxResourceState state) { m_lastState = state; }
 
+    bool IsOutput() const { return m_bOutput; }
+    void SetOutput(bool value) { m_bOutput = value; }
+
+    bool IsOverlapping() const { return !IsImported() && !IsOutput(); }
+
     virtual IGfxResource* GetAliasedPrevResource() = 0;
 
 protected:
@@ -41,6 +46,7 @@ protected:
     GfxResourceState m_lastState = GfxResourceState::Common;
 
     bool m_bImported = false;
+    bool m_bOutput = false;
 };
 
 class RenderGraphTexture : public RenderGraphResource
@@ -69,7 +75,14 @@ public:
     {
         if (!m_bImported)
         {
-            m_allocator.Free(m_pTexture, m_lastState);
+            if (m_bOutput)
+            {
+                m_allocator.FreeNonOverlappingTexture(m_pTexture, m_lastState);
+            }
+            else
+            {
+                m_allocator.Free(m_pTexture, m_lastState);
+            }
         }
     }
 
@@ -88,7 +101,14 @@ public:
     {
         if (!m_bImported)
         {
-            m_pTexture = m_allocator.AllocateTexture(m_firstPass, m_lastPass, m_desc, m_name, m_initialState);
+            if (m_bOutput)
+            {
+                m_pTexture = m_allocator.AllocateNonOverlappingTexture(m_desc, m_name, m_initialState);
+            }
+            else
+            {
+                m_pTexture = m_allocator.AllocateTexture(m_firstPass, m_lastPass, m_desc, m_name, m_initialState);
+            }
         }
     }
 

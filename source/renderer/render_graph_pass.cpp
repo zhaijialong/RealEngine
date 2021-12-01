@@ -68,7 +68,7 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
             m_resourceBarriers.push_back(barrier);
         }
 
-        if (!resource->IsImported() && resource->GetFirstPassID() == this->GetId())
+        if (resource->IsOverlapping() && resource->GetFirstPassID() == this->GetId())
         {
             IGfxResource* aliased_resource = resource->GetAliasedPrevResource();
             if (aliased_resource)

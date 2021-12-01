@@ -117,11 +117,14 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList, IGfxCommandList* pCompu
 
 void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filnal_state)
 {
+    RenderGraphResource* resource = GetResource(handle);
+    resource->SetOutput(true);
+
     RenderGraphResourceNode* node = m_resourceNodes[handle.node];
     node->MakeTarget();
 
     PresentTarget target;
-    target.resource = GetResource(handle);
+    target.resource = resource;
     target.state = filnal_state;
     m_outputResources.push_back(target);
 }

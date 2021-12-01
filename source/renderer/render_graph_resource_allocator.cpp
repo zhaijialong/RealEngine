@@ -20,6 +20,12 @@ RenderGraphResourceAllocator::~RenderGraphResourceAllocator()
 
         delete heap.heap;
     }
+
+    for (auto iter = m_freeOverlappingTextures.begin(); iter != m_freeOverlappingTextures.end(); ++iter)
+    {
+        DeleteDescriptor(iter->texture);
+        delete iter->texture;
+    }
 }
 
 void RenderGraphResourceAllocator::Reset()
@@ -33,6 +39,22 @@ void RenderGraphResourceAllocator::Reset()
         {
             delete heap.heap;
             iter = m_allocatedHeaps.erase(iter);
+        }
+        else
+        {
+            ++iter;
+        }
+    }
+
+    uint64_t current_frame = m_pDevice->GetFrameID();
+
+    for (auto iter = m_freeOverlappingTextures.begin(); iter != m_freeOverlappingTextures.end(); )
+    {
+        if (current_frame - iter->lastUsedFrame > 30)
+        {
+            DeleteDescriptor(iter->texture);
+            delete iter->texture;
+            iter = m_freeOverlappingTextures.erase(iter);
         }
         else
         {
@@ -180,6 +202,42 @@ IGfxTexture* RenderGraphResourceAllocator::GetAliasedPrevResource(IGfxTexture* t
 
     RE_ASSERT(false);
     return nullptr;
+}
+
+IGfxTexture* RenderGraphResourceAllocator::AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state)
+{
+    for (auto iter = m_freeOverlappingTextures.begin(); iter != m_freeOverlappingTextures.end(); ++iter)
+    {
+        IGfxTexture* texture = iter->texture;
+        if (texture->GetDesc() == desc)
+        {
+            initial_state = iter->lastUsedState;
+            m_freeOverlappingTextures.erase(iter);
+            return texture;
+        }
+    }
+    if (IsDepthFormat(desc.format))
+    {
+        initial_state = GfxResourceState::DepthStencil;
+    }
+    else if (desc.usage & GfxTextureUsageRenderTarget)
+    {
+        initial_state = GfxResourceState::RenderTarget;
+    }
+    else if (desc.usage & GfxTextureUsageUnorderedAccess)
+    {
+        initial_state = GfxResourceState::UnorderedAccess;
+    }
+
+    return m_pDevice->CreateTexture(desc, "RGTexture " + name);
+}
+
+void RenderGraphResourceAllocator::FreeNonOverlappingTexture(IGfxTexture* texture, GfxResourceState state)
+{
+    if (texture != nullptr)
+    {
+        m_freeOverlappingTextures.push_back({ texture, state, m_pDevice->GetFrameID() });
+    }
 }
 
 IGfxDescriptor* RenderGraphResourceAllocator::GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc)
