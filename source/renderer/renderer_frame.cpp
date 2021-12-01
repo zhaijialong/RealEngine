@@ -188,6 +188,77 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     ppInput.velocityRT = velocity_pass->outVelocityRT;
 
     RenderGraphHandle output = m_pPostProcessor->Process(m_pRenderGraph.get(), ppInput, m_nWindowWidth, m_nWindowHeight);
+    RenderGraphHandle outputDepth = ppInput.sceneDepthRT;
+
+    if (m_bEnableObjectIDRendering)
+    {
+        struct IDPassData
+        {
+            RenderGraphHandle idTexture;
+            RenderGraphHandle sceneDepthTexture;
+        };
+
+        auto id_pass = m_pRenderGraph->AddPass<IDPassData>("Object ID Pass",
+            [&](IDPassData& data, RenderGraphBuilder& builder)
+            {
+                RenderGraphTexture::Desc desc;
+                desc.width = m_nWindowWidth;
+                desc.height = m_nWindowHeight;
+                desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
+                desc.format = GfxFormat::R32UI;
+                data.idTexture = builder.Create<RenderGraphTexture>(desc, "Object ID");
+
+                data.idTexture = builder.WriteColor(0, data.idTexture, 0, GfxRenderPassLoadOp::Clear, float4(1000000, 0, 0, 0));
+                data.sceneDepthTexture = builder.WriteDepth(ppInput.sceneDepthRT, 0, GfxRenderPassLoadOp::Load);
+            },
+            [&](const IDPassData& data, IGfxCommandList* pCommandList)
+            {
+                World* world = Engine::GetInstance()->GetWorld();
+
+                for (size_t i = 0; i < m_idPassBatchs.size(); ++i)
+                {
+                    m_idPassBatchs[i](pCommandList, world->GetCamera());
+                }
+                m_idPassBatchs.clear();
+            });
+
+        outputDepth = id_pass->sceneDepthTexture;
+
+
+        struct CopyIDPassData
+        {
+            RenderGraphHandle srcTexture;
+        };
+
+        m_pRenderGraph->AddPass<CopyIDPassData>("Copy ID to Readback Buffer",
+            [&](CopyIDPassData& data, RenderGraphBuilder& builder)
+            {
+                data.srcTexture = builder.Read(id_pass->idTexture, GfxResourceState::CopySrc);
+
+                builder.MakeTarget();
+            },
+            [&](const CopyIDPassData& data, IGfxCommandList* pCommandList)
+            {
+                RenderGraphTexture* srcTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcTexture);
+
+                uint32_t size = m_pDevice->GetAllocationSize(srcTexture->GetTexture()->GetDesc());
+                if (m_pObjectIDBuffer == nullptr || m_pObjectIDBuffer->GetDesc().size < size)
+                {
+                    GfxBufferDesc desc;
+                    desc.size = size;
+                    desc.memory_type = GfxMemoryType::GpuToCpu;
+                    m_pObjectIDBuffer.reset(m_pDevice->CreateBuffer(desc, "Renderer::m_pObjectIDBuffer"));
+
+                    m_nObjectIDRowPitch = srcTexture->GetTexture()->GetRowPitch(0);
+                }
+
+                pCommandList->CopyTextureToBuffer(m_pObjectIDBuffer.get(), srcTexture->GetTexture(), 0, 0);
+            });
+    }
+    else
+    {
+        m_idPassBatchs.clear();
+    }
 
     struct CopyPassData
     {
@@ -207,11 +278,11 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
         {
             RenderGraphTexture* srcTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcTexture);
 
-            pCommandList->CopyTexture(m_pPrevLinearDepthTexture->GetTexture(), srcTexture->GetTexture());
+            pCommandList->CopyTexture(m_pPrevLinearDepthTexture->GetTexture(), 0, 0, srcTexture->GetTexture(), 0, 0);
         });
 
     outColor = output;
-    outDepth = ppInput.sceneDepthRT;
+    outDepth = outputDepth;
 
     m_pRenderGraph->Present(outColor, GfxResourceState::ShaderResourcePS);
     m_pRenderGraph->Present(outDepth, GfxResourceState::DepthStencilReadOnly);

@@ -23,10 +23,11 @@ public:
     virtual void BeginEvent(const std::string& event_name) = 0;
     virtual void EndEvent() = 0;
 
-    virtual void CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* buffer, uint32_t offset) = 0;
-    virtual void CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, IGfxBuffer* src_buffer, uint32_t src_offset, uint32_t size) = 0;
+    virtual void CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset) = 0;
+    virtual void CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice) = 0;
+    virtual void CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size) = 0;
+    virtual void CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array) = 0;
     virtual void WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data) = 0;
-    virtual void CopyTexture(IGfxTexture* dst, IGfxTexture* src) = 0;
     virtual void UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings) = 0;
 
     virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) = 0;

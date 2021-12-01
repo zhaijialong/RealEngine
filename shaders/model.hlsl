@@ -28,15 +28,15 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     output.uv = uvBuffer[vertex_id];
     output.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);    
     
-    //DrawDebugLine(worldPos, worldPos + output.normal * 0.05, float3(0, 0, 1));
+    //DrawDebugLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE
     float4 tangent = tangentBuffer[vertex_id];
     output.tangent = normalize(mul(ModelCB.mtxNormal, float4(tangent.xyz, 0.0f)).xyz);
     output.bitangent = normalize(cross(output.normal, output.tangent) * tangent.w);    
     
-    //DrawDebugLine(worldPos, worldPos + output.tangent * 0.05, float3(1, 0, 0));
-    //DrawDebugLine(worldPos, worldPos + output.bitangent * 0.05, float3(0, 1, 0));
+    //DrawDebugLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));
+    //DrawDebugLine(worldPos.xyz, worldPos.xyz + output.bitangent * 0.05, float3(0, 1, 0));
 #endif
     
     return output;

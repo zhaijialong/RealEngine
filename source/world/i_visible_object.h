@@ -21,7 +21,10 @@ public:
     float3 GetScale() const { return m_scale; }
     void SetScale(const float3& scale) { m_scale = scale; }
 
+    void SetID(uint32_t id) { m_nID = id; }
+
 protected:
+    uint32_t m_nID = 0;
     float3 m_pos = { 0.0f, 0.0f, 0.0f };
     float3 m_rotation = { 0.0f, 0.0f, 0.0f }; //in degrees
     float3 m_scale = { 1.0f, 1.0f, 1.0f };

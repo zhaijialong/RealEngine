@@ -151,15 +151,11 @@ void D3D12CommandList::EndEvent()
     pix::EndEvent(m_pCommandList);
 }
 
-void D3D12CommandList::CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* buffer, uint32_t offset)
+void D3D12CommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)
 {
-    const GfxTextureDesc& desc = texture->GetDesc();
-    uint32_t subresource = array_slice * desc.mip_levels + mip_level;
+    FlushPendingBarrier();
 
-    D3D12_TEXTURE_COPY_LOCATION dst = {};
-    dst.pResource = (ID3D12Resource*)texture->GetHandle();
-    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    dst.SubresourceIndex = subresource;
+    const GfxTextureDesc& desc = dst_texture->GetDesc();
 
     uint32_t min_width = GetFormatBlockWidth(desc.format);
     uint32_t min_height = GetFormatBlockHeight(desc.format);
@@ -167,27 +163,76 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_le
     uint32_t h = max(desc.height >> mip_level, min_height);
     uint32_t d = max(desc.depth >> mip_level, 1);
 
+    D3D12_TEXTURE_COPY_LOCATION dst = {};
+    dst.pResource = (ID3D12Resource*)dst_texture->GetHandle();
+    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst.SubresourceIndex = CalcSubresource(desc, mip_level, array_slice);
+
     D3D12_TEXTURE_COPY_LOCATION src = {};
-    src.pResource = (ID3D12Resource*)buffer->GetHandle();
+    src.pResource = (ID3D12Resource*)src_buffer->GetHandle();
     src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     src.PlacedFootprint.Offset = offset;
     src.PlacedFootprint.Footprint.Format = dxgi_format(desc.format);
     src.PlacedFootprint.Footprint.Width = w;
     src.PlacedFootprint.Footprint.Height = h;
     src.PlacedFootprint.Footprint.Depth = d;
-    src.PlacedFootprint.Footprint.RowPitch = texture->GetRowPitch(mip_level);// GetFormatRowPitch(desc.format, w);
-
-    FlushPendingBarrier();
+    src.PlacedFootprint.Footprint.RowPitch = dst_texture->GetRowPitch(mip_level);
 
     m_pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 }
 
-void D3D12CommandList::CopyBuffer(IGfxBuffer* dst_buffer, uint32_t dst_offset, IGfxBuffer* src_buffer, uint32_t src_offset, uint32_t size)
+void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
 {
     FlushPendingBarrier();
 
-    m_pCommandList->CopyBufferRegion((ID3D12Resource*)dst_buffer->GetHandle(), dst_offset,
-        (ID3D12Resource*)src_buffer->GetHandle(), src_offset, size);
+    GfxTextureDesc desc = src_texture->GetDesc();
+
+    uint32_t min_width = GetFormatBlockWidth(desc.format);
+    uint32_t min_height = GetFormatBlockHeight(desc.format);
+    uint32_t w = max(desc.width >> mip_level, min_width);
+    uint32_t h = max(desc.height >> mip_level, min_height);
+    uint32_t d = max(desc.depth >> mip_level, 1);
+
+    D3D12_TEXTURE_COPY_LOCATION dst = {};
+    dst.pResource = (ID3D12Resource*)dst_buffer->GetHandle();
+    dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    dst.PlacedFootprint.Footprint.Format = dxgi_format(desc.format);
+    dst.PlacedFootprint.Footprint.Width = max(desc.width >> mip_level, 1);
+    dst.PlacedFootprint.Footprint.Height = max(desc.height >> mip_level, 1);
+    dst.PlacedFootprint.Footprint.Depth = max(desc.depth >> mip_level, 1);
+    dst.PlacedFootprint.Footprint.RowPitch = src_texture->GetRowPitch(mip_level);
+
+    D3D12_TEXTURE_COPY_LOCATION src;
+    src.pResource = (ID3D12Resource*)src_texture->GetHandle();
+    src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    src.SubresourceIndex = CalcSubresource(desc, mip_level, array_slice);
+
+    m_pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+}
+
+void D3D12CommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size)
+{
+    FlushPendingBarrier();
+
+    m_pCommandList->CopyBufferRegion((ID3D12Resource*)dst->GetHandle(), dst_offset,
+        (ID3D12Resource*)src->GetHandle(), src_offset, size);
+}
+
+void D3D12CommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array)
+{
+    FlushPendingBarrier();
+
+    D3D12_TEXTURE_COPY_LOCATION dst_texture;
+    dst_texture.pResource = (ID3D12Resource*)dst->GetHandle();
+    dst_texture.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst_texture.SubresourceIndex = CalcSubresource(dst->GetDesc(), dst_mip, dst_array);
+
+    D3D12_TEXTURE_COPY_LOCATION src_texture;
+    src_texture.pResource = (ID3D12Resource*)src->GetHandle();
+    src_texture.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    src_texture.SubresourceIndex = CalcSubresource(src->GetDesc(), src_mip, src_array);
+
+    m_pCommandList->CopyTextureRegion(&dst_texture, 0, 0, 0, &src_texture, nullptr);
 }
 
 void D3D12CommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
@@ -199,23 +244,6 @@ void D3D12CommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t
     parameter.Value = data;
 
     m_pCommandList->WriteBufferImmediate(1, &parameter, nullptr);
-}
-
-void D3D12CommandList::CopyTexture(IGfxTexture* dst, IGfxTexture* src)
-{
-    FlushPendingBarrier();
-
-    D3D12_TEXTURE_COPY_LOCATION dst_texture;
-    dst_texture.pResource = (ID3D12Resource*)dst->GetHandle();
-    dst_texture.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    dst_texture.SubresourceIndex = 0;
-
-    D3D12_TEXTURE_COPY_LOCATION src_texture;
-    src_texture.pResource = (ID3D12Resource*)src->GetHandle();
-    src_texture.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    src_texture.SubresourceIndex = 0;
-
-    m_pCommandList->CopyTextureRegion(&dst_texture, 0, 0, 0, &src_texture, nullptr);
 }
 
 void D3D12CommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)

@@ -49,6 +49,9 @@ void StaticMesh::Render(Renderer* pRenderer)
         RenderFunc velocityPassBatch = std::bind(&StaticMesh::RenderVelocityPass, this, std::placeholders::_1, std::placeholders::_2);
         pRenderer->AddVelocityPassBatch(velocityPassBatch);
     }
+
+    RenderFunc idPassBatch = std::bind(&StaticMesh::RenderIDPass, this, std::placeholders::_1, std::placeholders::_2);
+    pRenderer->AddObjectIDPassBatch(idPassBatch);
 }
 
 void StaticMesh::RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera)
@@ -67,6 +70,16 @@ void StaticMesh::RenderVelocityPass(IGfxCommandList* pCommandList, const Camera*
 {
     GPU_EVENT_DEBUG(pCommandList, m_name);
     Draw(pCommandList, m_pMaterial->GetVelocityPSO());
+}
+
+void StaticMesh::RenderIDPass(IGfxCommandList* pCommandList, const Camera* pCamera)
+{
+    GPU_EVENT_DEBUG(pCommandList, m_name);
+
+    uint32_t root_consts[4] = { m_nID, 0, 0, 0 };
+    pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
+
+    Draw(pCommandList, m_pMaterial->GetIDPSO());
 }
 
 void StaticMesh::Draw(IGfxCommandList* pCommandList, IGfxPipelineState* pso)

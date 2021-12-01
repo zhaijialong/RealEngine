@@ -716,6 +716,9 @@
     <FxCompile Include="shaders\debug_line.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\model_id.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">

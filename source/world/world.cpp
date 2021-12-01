@@ -40,6 +40,8 @@ void World::SaveScene(const std::string& file)
 void World::AddObject(IVisibleObject* object)
 {
     RE_ASSERT(object != nullptr);
+
+    object->SetID((uint32_t)m_objects.size());
     m_objects.push_back(std::unique_ptr<IVisibleObject>(object));
 }
 
@@ -75,11 +77,14 @@ void World::Tick(float delta_time)
     }
 }
 
-IVisibleObject* World::GetSelectedObject() const
+IVisibleObject* World::GetVisibleObject(uint32_t index) const
 {
-    //todo : implements mouse pick
+    if (index >= m_objects.size())
+    {
+        return nullptr;
+    }
 
-    return m_objects.begin()->get();
+    return m_objects[index].get();
 }
 
 ILight* World::GetPrimaryLight() const

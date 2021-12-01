@@ -10,6 +10,7 @@ public:
     IGfxPipelineState* GetPSO();
     IGfxPipelineState* GetShadowPSO();
     IGfxPipelineState* GetVelocityPSO();
+    IGfxPipelineState* GetIDPSO();
 
     void UpdateConstants();
     const MaterialConstant* GetConstants() const { return &m_materialCB; }

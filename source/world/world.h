@@ -24,7 +24,7 @@ public:
 
     void Tick(float delta_time);
 
-    IVisibleObject* GetSelectedObject() const;
+    IVisibleObject* GetVisibleObject(uint32_t index) const;
     ILight* GetPrimaryLight() const;
 
 private:
@@ -39,8 +39,8 @@ private:
 private:
     std::unique_ptr<Camera> m_pCamera;
 
-    std::list<std::unique_ptr<IVisibleObject>> m_objects;
-    std::list<std::unique_ptr<ILight>> m_lights;
+    std::vector<std::unique_ptr<IVisibleObject>> m_objects;
+    std::vector<std::unique_ptr<ILight>> m_lights;
 
     ILight* m_pPrimaryLight = nullptr;
 };

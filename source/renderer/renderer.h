@@ -58,6 +58,9 @@ public:
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
+    void RequestMouseHitTest(uint32_t x, uint32_t y);
+    uint32_t GetMouseHitObjectID() const { return m_nMouseHitObjectID; }
+
     void UploadTexture(IGfxTexture* texture, void* data);
     void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
 
@@ -68,6 +71,7 @@ public:
     void AddGBufferPassBatch(const RenderFunc& func) { m_gbufferPassBatchs.push_back(func); }
     void AddForwardPassBatch(const RenderFunc& func) { m_forwardPassBatchs.push_back(func); }
     void AddVelocityPassBatch(const RenderFunc& func) { m_velocityPassBatchs.push_back(func); }
+    void AddObjectIDPassBatch(const RenderFunc& func) { m_idPassBatchs.push_back(func); }
 
 private:
     void CreateCommonResources();
@@ -82,7 +86,9 @@ private:
     void FlushComputePass(IGfxCommandList* pCommandList);
     void SetupGlobalConstants(IGfxCommandList* pCommandList);
     void ImportPrevFrameTextures();
-    void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRT);
+    void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle);
+    void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle);
+    void MouseHitTest();
 
 private:
     std::unique_ptr<IGfxDevice> m_pDevice;
@@ -139,6 +145,13 @@ private:
     std::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
     RenderGraphHandle m_prevLinearDepthHandle;
 
+    bool m_bEnableObjectIDRendering = false;
+    uint32_t m_nMouseX = 0;
+    uint32_t m_nMouseY = 0;
+    uint32_t m_nMouseHitObjectID = UINT32_MAX;
+    std::unique_ptr<IGfxBuffer> m_pObjectIDBuffer;
+    uint32_t m_nObjectIDRowPitch = 0;
+
     std::unordered_map<std::string, std::unique_ptr<Texture2D>> m_cachedTextures;
 
     IGfxPipelineState* m_pCopyPSO = nullptr;
@@ -154,4 +167,5 @@ private:
     std::vector<RenderFunc> m_gbufferPassBatchs;
     std::vector<RenderFunc> m_forwardPassBatchs;
     std::vector<RenderFunc> m_velocityPassBatchs;
+    std::vector<RenderFunc> m_idPassBatchs;
 };

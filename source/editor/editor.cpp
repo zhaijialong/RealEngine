@@ -44,6 +44,15 @@ void Editor::Tick()
 {
     FlushPendingTextureDeletions();
 
+    ImGuiIO& io = ImGui::GetIO();
+    if (!io.WantCaptureMouse && io.MouseClicked[0])
+    {
+        ImVec2 mousePos = io.MouseClickedPos[0];
+
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+        pRenderer->RequestMouseHitTest((uint32_t)mousePos.x, (uint32_t)mousePos.y);
+    }
+
     DrawMenu();
     DrawToolBar();
     DrawGizmo();
@@ -191,7 +200,10 @@ void Editor::DrawToolBar()
 
 void Editor::DrawGizmo()
 {
-    IVisibleObject* pSelectedObject = Engine::GetInstance()->GetWorld()->GetSelectedObject();
+    World* world = Engine::GetInstance()->GetWorld();
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    IVisibleObject* pSelectedObject = world->GetVisibleObject(pRenderer->GetMouseHitObjectID());
     if (pSelectedObject == nullptr)
     {
         return;
@@ -221,7 +233,7 @@ void Editor::DrawGizmo()
         break;
     }
 
-    Camera* pCamera = Engine::GetInstance()->GetWorld()->GetCamera();
+    Camera* pCamera = world->GetCamera();
     float4x4 view = pCamera->GetViewMatrix();
     float4x4 proj = pCamera->GetNonJitterProjectionMatrix();
 

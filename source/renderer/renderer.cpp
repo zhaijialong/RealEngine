@@ -77,6 +77,8 @@ void Renderer::RenderFrame()
     UploadResources();
     Render();
     EndFrame();
+
+    MouseHitTest();
 }
 
 void Renderer::BeginFrame()
@@ -238,36 +240,39 @@ void Renderer::Render()
     m_pRenderGraph->Compile();
     m_pRenderGraph->Execute(pCommandList, pComputeCommandList);
 
-    {
-        GPU_EVENT(pCommandList, "Backbuffer Pass");
-
-        pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
-        m_pGpuDebugLine->BarrierForDraw(pCommandList);
-
-        RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(outputDepthHandle);
-
-        GfxRenderPassDesc render_pass;
-        render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
-        render_pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
-        render_pass.depth.texture = depthRT->GetTexture();
-        render_pass.depth.store_op = GfxRenderPassStoreOp::DontCare;
-        render_pass.depth.stencil_store_op = GfxRenderPassStoreOp::DontCare;
-        pCommandList->BeginRenderPass(render_pass);
-
-        CopyToBackbuffer(pCommandList, outputColorHandle);
-        m_pGpuDebugLine->Draw(pCommandList);
-        Engine::GetInstance()->GetGUI()->Render(pCommandList);
-
-        pCommandList->EndRenderPass();
-        pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
-    }
+    RenderBackbufferPass(pCommandList, outputColorHandle, outputDepthHandle);
 }
 
-void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRT)
+void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle)
+{
+    GPU_EVENT(pCommandList, "Backbuffer Pass");
+
+    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
+    m_pGpuDebugLine->BarrierForDraw(pCommandList);
+
+    RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(depthRTHandle);
+
+    GfxRenderPassDesc render_pass;
+    render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
+    render_pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
+    render_pass.depth.texture = depthRT->GetTexture();
+    render_pass.depth.store_op = GfxRenderPassStoreOp::DontCare;
+    render_pass.depth.stencil_store_op = GfxRenderPassStoreOp::DontCare;
+    pCommandList->BeginRenderPass(render_pass);
+
+    CopyToBackbuffer(pCommandList, colorRTHandle);
+    m_pGpuDebugLine->Draw(pCommandList);
+    Engine::GetInstance()->GetGUI()->Render(pCommandList);
+
+    pCommandList->EndRenderPass();
+    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
+}
+
+void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle)
 {
     GPU_EVENT(pCommandList, "CopyToBackbuffer");
 
-    RenderGraphTexture* inputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(colorRT);
+    RenderGraphTexture* inputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(colorRTHandle);
     uint32_t constants[4] = { inputRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex(), 0, 0 };
     pCommandList->SetGraphicsConstants(0, constants, sizeof(constants));
     pCommandList->SetPipelineState(m_pCopyPSO);
@@ -300,6 +305,27 @@ void Renderer::EndFrame()
 void Renderer::WaitGpuFinished()
 {
     m_pFrameFence->Wait(m_nCurrentFrameFenceValue);
+}
+
+void Renderer::RequestMouseHitTest(uint32_t x, uint32_t y)
+{
+    m_nMouseX = x;
+    m_nMouseY = y;
+    m_bEnableObjectIDRendering = true;
+}
+
+void Renderer::MouseHitTest()
+{
+    if (m_bEnableObjectIDRendering)
+    {
+        WaitGpuFinished();
+
+        uint8_t* data = (uint8_t*)m_pObjectIDBuffer->GetCpuAddress();
+        uint32_t data_offset = m_nObjectIDRowPitch * m_nMouseY + m_nMouseX * sizeof(uint32_t);
+        memcpy(&m_nMouseHitObjectID, data + data_offset, sizeof(uint32_t));
+
+        m_bEnableObjectIDRendering = false;
+    }
 }
 
 IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines)

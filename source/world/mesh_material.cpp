@@ -94,6 +94,28 @@ IGfxPipelineState* MeshMaterial::GetVelocityPSO()
     return pRenderer->GetPipelineState(psoDesc, "model velocity PSO");
 }
 
+IGfxPipelineState* MeshMaterial::GetIDPSO()
+{
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    std::vector<std::string> defines;
+    if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+    if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
+
+    GfxGraphicsPipelineDesc psoDesc;
+    psoDesc.vs = pRenderer->GetShader("model_id.hlsl", "vs_main", "vs_6_6", defines);
+    psoDesc.ps = pRenderer->GetShader("model_id.hlsl", "ps_main", "ps_6_6", defines);
+    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+    psoDesc.rasterizer_state.front_ccw = true;
+    psoDesc.depthstencil_state.depth_write = false;
+    psoDesc.depthstencil_state.depth_test = true;
+    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+    psoDesc.rt_format[0] = GfxFormat::R32UI;
+    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+
+    return pRenderer->GetPipelineState(psoDesc, "model ID PSO");
+}
+
 void MeshMaterial::UpdateConstants()
 {
     m_materialCB.albedoTexture = m_pAlbedoTexture ? m_pAlbedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
