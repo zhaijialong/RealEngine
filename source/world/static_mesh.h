@@ -24,6 +24,7 @@ private:
 
     void UpdateConstants();
     void Draw(IGfxCommandList* pCommandList, IGfxPipelineState* pso);
+    void Dispatch(IGfxCommandList* pCommandList, IGfxPipelineState* pso);
 
 private:
     std::string m_name;
@@ -34,6 +35,11 @@ private:
     std::unique_ptr<StructuredBuffer> m_pUVBuffer;
     std::unique_ptr<StructuredBuffer> m_pNormalBuffer;
     std::unique_ptr<StructuredBuffer> m_pTangentBuffer;
+
+    uint32_t m_nMeshletCount = 0;
+    std::unique_ptr<StructuredBuffer> m_pMeshletBuffer;
+    std::unique_ptr<StructuredBuffer> m_pMeshletVerticesBuffer;
+    std::unique_ptr<StructuredBuffer> m_pMeshletIndicesBuffer;
 
     ModelConstant m_modelCB = {};
 

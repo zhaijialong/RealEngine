@@ -35,6 +35,25 @@ namespace std
             return hash;
         }
     };
+
+    template <>
+    struct hash<GfxMeshShadingPipelineDesc>
+    {
+        size_t operator()(const GfxMeshShadingPipelineDesc& desc) const
+        {
+            uint64_t ms_hash = desc.ms->GetHash();
+            uint64_t as_hash = desc.as ? desc.as->GetHash() : 0;
+            uint64_t ps_hash = desc.ps ? desc.ps->GetHash() : 0;
+
+            const size_t state_offset = offsetof(GfxMeshShadingPipelineDesc, rasterizer_state);
+            uint64_t state_hash = XXH3_64bits((char*)&desc + state_offset, sizeof(GfxGraphicsPipelineDesc) - state_offset);
+
+            uint64_t hash = hash_combine_64(hash_combine_64(hash_combine_64(ms_hash, as_hash), ps_hash), state_hash);
+
+            static_assert(sizeof(size_t) == sizeof(uint64_t), "only supports 64 bits platforms");
+            return hash;
+        }
+    };
 }
 
 class Renderer;
@@ -45,10 +64,12 @@ public:
     PipelineStateCache(Renderer* pRenderer);
 
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
+    IGfxPipelineState* GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name);
     IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name);
 
 private:
     Renderer* m_pRenderer;
     std::unordered_map<GfxGraphicsPipelineDesc, std::unique_ptr<IGfxPipelineState>> m_cachedGraphicsPSO;
+    std::unordered_map<GfxMeshShadingPipelineDesc, std::unique_ptr<IGfxPipelineState>> m_cachedMeshShadingPSO;
     std::unordered_map<uint64_t, std::unique_ptr<IGfxPipelineState>> m_cachedComputePSO;
 };

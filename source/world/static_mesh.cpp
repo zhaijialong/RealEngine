@@ -70,6 +70,8 @@ void StaticMesh::RenderOutlinePass(IGfxCommandList* pCommandList, const Camera* 
 {
     GPU_EVENT_DEBUG(pCommandList, m_name);
     Draw(pCommandList, m_pMaterial->GetOutlinePSO());
+
+    //Dispatch(pCommandList, m_pMaterial->GetMeshletPSO());
 }
 
 void StaticMesh::RenderShadowPass(IGfxCommandList* pCommandList, const ILight* pLight)
@@ -101,4 +103,20 @@ void StaticMesh::Draw(IGfxCommandList* pCommandList, IGfxPipelineState* pso)
     pCommandList->SetGraphicsConstants(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
     pCommandList->SetIndexBuffer(m_pIndexBuffer->GetBuffer());
     pCommandList->DrawIndexed(m_pIndexBuffer->GetIndexCount());
+}
+
+void StaticMesh::Dispatch(IGfxCommandList* pCommandList, IGfxPipelineState* pso)
+{
+    uint32_t root_consts[4] = { 
+        m_pMeshletBuffer->GetSRV()->GetHeapIndex(), 
+        m_pMeshletVerticesBuffer->GetSRV()->GetHeapIndex(), 
+        m_pMeshletIndicesBuffer->GetSRV()->GetHeapIndex(), 
+        0 
+    };
+
+    pCommandList->SetPipelineState(pso);
+    pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
+    pCommandList->SetGraphicsConstants(1, &m_modelCB, sizeof(ModelConstant));
+    pCommandList->SetGraphicsConstants(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
+    pCommandList->DispatchMesh(m_nMeshletCount, 1, 1);
 }

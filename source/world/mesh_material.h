@@ -13,6 +13,8 @@ public:
     IGfxPipelineState* GetIDPSO();
     IGfxPipelineState* GetOutlinePSO();
 
+    IGfxPipelineState* GetMeshletPSO();
+
     void UpdateConstants();
     const MaterialConstant* GetConstants() const { return &m_materialCB; }
 

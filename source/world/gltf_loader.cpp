@@ -2,8 +2,9 @@
 #include "static_mesh.h"
 #include "mesh_material.h"
 #include "core/engine.h"
-#include "tinyxml2/tinyxml2.h"
 #include "utils/string.h"
+#include "tinyxml2/tinyxml2.h"
+#include "meshoptimizer/meshoptimizer.h"
 
 #define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
@@ -202,32 +203,16 @@ MeshMaterial* GLTFLoader::LoadMaterial(cgltf_material* gltf_material)
     return material;
 }
 
-IndexBuffer* LoadIndexBuffer(const cgltf_accessor* accessor, const std::string& name)
+meshopt_Stream LoadBufferStream(const cgltf_accessor* accessor, bool convertToLH, size_t& count)
 {
-    RE_ASSERT(accessor->component_type == cgltf_component_type_r_16u || accessor->component_type == cgltf_component_type_r_32u);
-
     uint32_t stride = (uint32_t)accessor->stride;
-    uint32_t index_count = (uint32_t)accessor->count;
-    void* data = (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset;
-
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    IndexBuffer* buffer = pRenderer->CreateIndexBuffer(data, stride, index_count, name);
-
-    return buffer;
-}
-
-StructuredBuffer* LoadVertexBuffer(const cgltf_accessor* accessor, const std::string& name, bool convertToLH)
-{
-    RE_ASSERT(accessor->component_type == cgltf_component_type_r_32f ||
-        accessor->component_type == cgltf_component_type_r_16u); //bone id
-
-    uint32_t stride = (uint32_t)accessor->stride;
-    uint32_t size = stride * (uint32_t)accessor->count;
     void* data = (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset;
 
     //convert right-hand to left-hand
     if (convertToLH)
     {
+        RE_ASSERT(stride >= sizeof(float3));
+
         for (uint32_t i = 0; i < (uint32_t)accessor->count; ++i)
         {
             float3* v = (float3*)data + i;
@@ -235,10 +220,14 @@ StructuredBuffer* LoadVertexBuffer(const cgltf_accessor* accessor, const std::st
         }
     }
 
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    StructuredBuffer* buffer = pRenderer->CreateStructuredBuffer(data, stride, (uint32_t)accessor->count, name);
+    meshopt_Stream stream;
+    stream.data = data;
+    stream.size = stride;
+    stream.stride = stride;
 
-    return buffer;
+    count = accessor->count;
+
+    return stream;
 }
 
 StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& name)
@@ -246,39 +235,122 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     StaticMesh* mesh = new StaticMesh(m_file + " " + name);
     mesh->m_pMaterial.reset(LoadMaterial(primitive->material));
 
-    mesh->m_pIndexBuffer.reset(LoadIndexBuffer(primitive->indices, "model(" + m_file + " " + name + ") IB"));
+    size_t index_count;
+    meshopt_Stream indices = LoadBufferStream(primitive->indices, false, index_count);
+
+    size_t vertex_count;
+    std::vector<meshopt_Stream> vertex_streams;
+    std::vector<cgltf_attribute_type> vertex_types;
 
     for (cgltf_size i = 0; i < primitive->attributes_count; ++i)
     {
         switch (primitive->attributes[i].type)
         {
         case cgltf_attribute_type_position:
-            mesh->m_pPosBuffer.reset(LoadVertexBuffer(primitive->attributes[i].data, "model(" + m_file + " " + name + ") pos", true));
+            vertex_streams.push_back(LoadBufferStream(primitive->attributes[i].data, true, vertex_count));
+            vertex_types.push_back(primitive->attributes[i].type);
             break;
         case cgltf_attribute_type_texcoord:
             if (primitive->attributes[i].index == 0)
             {
-                mesh->m_pUVBuffer.reset(LoadVertexBuffer(primitive->attributes[i].data, "model(" + m_file + " " + name + ") UV", false));
+                vertex_streams.push_back(LoadBufferStream(primitive->attributes[i].data, false, vertex_count));
+                vertex_types.push_back(primitive->attributes[i].type);
             }
             break;
         case cgltf_attribute_type_normal:
-            mesh->m_pNormalBuffer.reset(LoadVertexBuffer(primitive->attributes[i].data, "model(" + m_file + " " + name + ") normal", true));
+            vertex_streams.push_back(LoadBufferStream(primitive->attributes[i].data, true, vertex_count));
+            vertex_types.push_back(primitive->attributes[i].type);
             break;
         case cgltf_attribute_type_tangent:
-            mesh->m_pTangentBuffer.reset(LoadVertexBuffer(primitive->attributes[i].data, "model(" + m_file + " " + name + ") tangent", false));
+            vertex_streams.push_back(LoadBufferStream(primitive->attributes[i].data, false, vertex_count));
+            vertex_types.push_back(primitive->attributes[i].type);
             break;
-        /*
-        case cgltf_attribute_type_joints:
-            mesh->boneIDBuffer.reset(LoadVertexBuffer(primitive->attributes[i].data, "model(" + m_file + " " + name + ") boneID", false));
+        }
+    }
+
+    std::vector<unsigned int> remap(index_count);
+
+    void* remapped_indices = RE_ALLOC(indices.stride * index_count);
+    std::vector<void*> remapped_vertices;
+
+    size_t remapped_vertex_count;
+    if (indices.stride == 4)
+    {
+        remapped_vertex_count = meshopt_generateVertexRemapMulti(&remap[0], (const unsigned int*)indices.data, index_count, vertex_count, vertex_streams.data(), vertex_streams.size());
+
+        meshopt_remapIndexBuffer((unsigned int*)remapped_indices, (const unsigned int*)indices.data, index_count, &remap[0]);
+    }
+    else
+    {
+        remapped_vertex_count = meshopt_generateVertexRemapMulti(&remap[0], (const unsigned short*)indices.data, index_count, vertex_count, vertex_streams.data(), vertex_streams.size());
+
+        meshopt_remapIndexBuffer((unsigned short*)remapped_indices, (const unsigned short*)indices.data, index_count, &remap[0]);
+    }
+
+    for (size_t i = 0; i < vertex_streams.size(); ++i)
+    {
+        void* vertices = RE_ALLOC(vertex_streams[i].stride * remapped_vertex_count);
+
+        meshopt_remapVertexBuffer(vertices, vertex_streams[i].data, vertex_count, vertex_streams[i].stride, &remap[0]);
+
+        remapped_vertices.push_back(vertices);
+    }
+
+    size_t max_vertices = 64;
+    size_t max_triangles = 124;
+    size_t max_meshlets = meshopt_buildMeshletsBound(index_count, max_vertices, max_triangles);
+
+    std::vector<meshopt_Meshlet> meshlets(max_meshlets);
+    std::vector<unsigned int> meshlet_vertices(max_meshlets * max_vertices);
+    std::vector<unsigned char> meshlet_triangles(max_meshlets * max_triangles);
+
+    size_t meshlet_count;
+    
+    if (indices.stride == 4)
+    {
+        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(), (const unsigned int*)remapped_indices, index_count,
+            (const float*)remapped_vertices[1], remapped_vertex_count, 12, max_vertices, max_triangles, 0.0);
+    }
+    else
+    {
+        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(), (const unsigned short*)remapped_indices, index_count,
+            (const float*)remapped_vertices[1], remapped_vertex_count, 12, max_vertices, max_triangles, 0.0);
+    }
+
+    std::vector<unsigned short> meshlet_triangles_int;
+    for (size_t i = 0; i < meshlet_triangles.size(); ++i)
+    {
+        meshlet_triangles_int.push_back(meshlet_triangles[i]);
+    }
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    mesh->m_pIndexBuffer.reset(pRenderer->CreateIndexBuffer(remapped_indices, (uint32_t)indices.stride, (uint32_t)index_count, "model(" + m_file + " " + name + ") IB"));
+
+    for (size_t i = 0; i < vertex_types.size(); ++i)
+    {
+        switch (vertex_types[i])
+        {
+        case cgltf_attribute_type_position:
+            mesh->m_pPosBuffer.reset(pRenderer->CreateStructuredBuffer(remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count, "model(" + m_file + " " + name + ") pos"));
             break;
-        case cgltf_attribute_type_weights:
-            mesh->boneWeightBuffer.reset(LoadVertexBuffer(primitive->attributes[i].data, "model(" + m_file + " " + name + ") boneWeight", false));
+        case cgltf_attribute_type_texcoord:
+            mesh->m_pUVBuffer.reset(pRenderer->CreateStructuredBuffer(remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count, "model(" + m_file + " " + name + ") UV"));
             break;
-        */
+        case cgltf_attribute_type_normal:
+            mesh->m_pNormalBuffer.reset(pRenderer->CreateStructuredBuffer(remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count, "model(" + m_file + " " + name + ") normal"));
+            break;
+        case cgltf_attribute_type_tangent:
+            mesh->m_pTangentBuffer.reset(pRenderer->CreateStructuredBuffer(remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count, "model(" + m_file + " " + name + ") tangent"));
+            break;
         default:
             break;
         }
     }
+
+    mesh->m_nMeshletCount = meshlet_count;
+    mesh->m_pMeshletBuffer.reset(pRenderer->CreateStructuredBuffer(meshlets.data(), sizeof(meshopt_Meshlet), meshlet_count, "model(" + m_file + " " + name + ") meshlet"));
+    mesh->m_pMeshletVerticesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_vertices.data(), sizeof(unsigned int), meshlet_count * max_vertices, "model(" + m_file + " " + name + ") meshlet vertices"));
+    mesh->m_pMeshletIndicesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_triangles_int.data(), sizeof(unsigned short), meshlet_count * max_triangles, "model(" + m_file + " " + name + ") meshlet indices"));
 
     m_pWorld->AddObject(mesh);
     return mesh;

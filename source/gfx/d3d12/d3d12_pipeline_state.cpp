@@ -120,8 +120,13 @@ bool D3D12MeshShadingPipelineState::Create()
     {
         psoDesc.AS = ((D3D12Shader*)m_desc.as)->GetByteCode();
     }
+    
     psoDesc.MS = ((D3D12Shader*)m_desc.ms)->GetByteCode();
-    psoDesc.PS = ((D3D12Shader*)m_desc.ps)->GetByteCode();
+
+    if (m_desc.ps)
+    {
+        psoDesc.PS = ((D3D12Shader*)m_desc.ps)->GetByteCode();
+    }
 
     psoDesc.RasterizerState = d3d12_rasterizer_desc(m_desc.rasterizer_state);
     psoDesc.DepthStencilState = d3d12_depth_stencil_desc(m_desc.depthstencil_state);

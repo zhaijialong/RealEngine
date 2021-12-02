@@ -138,6 +138,23 @@ IGfxPipelineState* MeshMaterial::GetOutlinePSO()
     return pRenderer->GetPipelineState(psoDesc, "model outline PSO");
 }
 
+IGfxPipelineState* MeshMaterial::GetMeshletPSO()
+{
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    GfxMeshShadingPipelineDesc psoDesc;
+    psoDesc.ms = pRenderer->GetShader("meshlet.hlsl", "main_ms", "ms_6_6", {});
+    psoDesc.ps = pRenderer->GetShader("meshlet.hlsl", "main_ps", "ps_6_6", {});
+    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+    psoDesc.rasterizer_state.front_ccw = true;
+    psoDesc.depthstencil_state.depth_test = true;
+    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+    psoDesc.rt_format[0] = GfxFormat::RGBA16F;
+    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+
+    return pRenderer->GetPipelineState(psoDesc, "model meshlet PSO");
+}
+
 void MeshMaterial::UpdateConstants()
 {
     m_materialCB.albedoTexture = m_pAlbedoTexture ? m_pAlbedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
