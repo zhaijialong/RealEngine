@@ -101,12 +101,11 @@ void GTAO::Denoise(IGfxCommandList* pCommandList, const GTAODenoisePassData& dat
     RenderGraphTexture* inputEdge = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputEdge);
     RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputAOTerm);
 
-    uint32_t cb[4] =
+    uint32_t cb[3] =
     {
         inputAO->GetSRV()->GetHeapIndex(),
         inputEdge->GetSRV()->GetHeapIndex(),
-        outputRT->GetUAV()->GetHeapIndex(),
-        0
+        outputRT->GetUAV()->GetHeapIndex()
     };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 

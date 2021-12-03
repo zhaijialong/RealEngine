@@ -273,7 +273,7 @@ void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle
     GPU_EVENT(pCommandList, "CopyToBackbuffer");
 
     RenderGraphTexture* inputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(colorRTHandle);
-    uint32_t constants[4] = { inputRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex(), 0, 0 };
+    uint32_t constants[2] = { inputRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex() };
     pCommandList->SetGraphicsConstants(0, constants, sizeof(constants));
     pCommandList->SetPipelineState(m_pCopyPSO);
     pCommandList->Draw(3);

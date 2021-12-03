@@ -307,7 +307,7 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
 
     size_t max_vertices = 64;
     size_t max_triangles = 124;
-    const float cone_weight = 0.0f;
+    const float cone_weight = 0.5f;
     size_t max_meshlets = meshopt_buildMeshletsBound(index_count, max_vertices, max_triangles);
 
     std::vector<meshopt_Meshlet> meshlets(max_meshlets);
@@ -317,19 +317,58 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     size_t meshlet_count;    
     if (indices.stride == 4)
     {
-        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(), (const unsigned int*)remapped_indices, index_count,
-            (const float*)pos_vertices, remapped_vertex_count, pos_stride, max_vertices, max_triangles, cone_weight);
+        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(),
+            (const unsigned int*)remapped_indices, index_count,
+            (const float*)pos_vertices, remapped_vertex_count, pos_stride, 
+            max_vertices, max_triangles, cone_weight);
     }
     else
     {
-        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(), (const unsigned short*)remapped_indices, index_count,
-            (const float*)pos_vertices, remapped_vertex_count, pos_stride, max_vertices, max_triangles, cone_weight);
+        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(), 
+            (const unsigned short*)remapped_indices, index_count,
+            (const float*)pos_vertices, remapped_vertex_count, pos_stride,
+            max_vertices, max_triangles, cone_weight);
     }
 
-    std::vector<unsigned short> meshlet_triangles_int;
+    const meshopt_Meshlet& last = meshlets[meshlet_count - 1];
+    meshlet_vertices.resize(last.vertex_offset + last.vertex_count);
+    meshlet_triangles.resize(last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3));
+    meshlets.resize(meshlet_count);
+
+    std::vector<unsigned short> meshlet_triangles16;
     for (size_t i = 0; i < meshlet_triangles.size(); ++i)
     {
-        meshlet_triangles_int.push_back(meshlet_triangles[i]);
+        meshlet_triangles16.push_back(meshlet_triangles[i]);
+    }
+
+    struct MeshletBound
+    {
+        float3 center;
+        float radius;
+
+        float3 coneApex;
+        float coneCutoff;
+
+        float3 coneAxis;
+        float _padding;
+    };
+    std::vector<MeshletBound> meshlet_bounds(meshlet_count);
+
+    for (size_t i = 0; i < meshlet_count; ++i)
+    {
+        const meshopt_Meshlet& m = meshlets[i];
+
+        meshopt_Bounds meshoptBounds = meshopt_computeMeshletBounds(&meshlet_vertices[m.vertex_offset], &meshlet_triangles[m.triangle_offset],
+            m.triangle_count, (const float*)pos_vertices, remapped_vertex_count, pos_stride);
+
+        MeshletBound bound = {};
+        bound.center = float3(meshoptBounds.center);
+        bound.radius = meshoptBounds.radius;
+        bound.coneApex = float3(meshoptBounds.cone_apex);
+        bound.coneAxis = float3(meshoptBounds.cone_axis);
+        bound.coneCutoff = meshoptBounds.cone_cutoff;
+        
+        meshlet_bounds[i] = bound;
     }
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
@@ -357,9 +396,10 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     }
 
     mesh->m_nMeshletCount = meshlet_count;
-    mesh->m_pMeshletBuffer.reset(pRenderer->CreateStructuredBuffer(meshlets.data(), sizeof(meshopt_Meshlet), meshlet_count, "model(" + m_file + " " + name + ") meshlet"));
-    mesh->m_pMeshletVerticesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_vertices.data(), sizeof(unsigned int), meshlet_count * max_vertices, "model(" + m_file + " " + name + ") meshlet vertices"));
-    mesh->m_pMeshletIndicesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_triangles_int.data(), sizeof(unsigned short), meshlet_count * max_triangles * 3, "model(" + m_file + " " + name + ") meshlet indices"));
+    mesh->m_pMeshletBuffer.reset(pRenderer->CreateStructuredBuffer(meshlets.data(), sizeof(meshopt_Meshlet), meshlets.size(), "model(" + m_file + " " + name + ") meshlet"));
+    mesh->m_pMeshletBoundsBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_bounds.data(), sizeof(MeshletBound), meshlet_bounds.size(), "model(" + m_file + " " + name + ") meshlet bounds"));
+    mesh->m_pMeshletVerticesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_vertices.data(), sizeof(unsigned int), meshlet_vertices.size(), "model(" + m_file + " " + name + ") meshlet vertices"));
+    mesh->m_pMeshletIndicesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_triangles16.data(), sizeof(unsigned short), meshlet_triangles16.size(), "model(" + m_file + " " + name + ") meshlet indices"));
 
     m_pWorld->AddObject(mesh);
 

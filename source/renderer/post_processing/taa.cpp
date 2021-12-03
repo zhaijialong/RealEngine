@@ -38,7 +38,7 @@ void TAA::GenerateMotionVector(IGfxCommandList* pCommandList, IGfxDescriptor* de
 {
     pCommandList->SetPipelineState(m_pMotionVectorPSO);
 
-    uint32_t cb[4] = { depth->GetHeapIndex(), velocity->GetHeapIndex(), output->GetHeapIndex(), 0 };
+    uint32_t cb[3] = { depth->GetHeapIndex(), velocity->GetHeapIndex(), output->GetHeapIndex() };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
@@ -84,7 +84,7 @@ void TAA::Apply(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescri
 {
     pCommandList->SetPipelineState(m_pApplyPSO);
 
-    uint32_t cb[4] = { input->GetHeapIndex(), output->GetHeapIndex(), m_pHistoryColor->GetUAV()->GetHeapIndex(), 0 };
+    uint32_t cb[3] = { input->GetHeapIndex(), output->GetHeapIndex(), m_pHistoryColor->GetUAV()->GetHeapIndex() };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);

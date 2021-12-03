@@ -143,6 +143,7 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
     GfxMeshShadingPipelineDesc psoDesc;
+    psoDesc.as = pRenderer->GetShader("meshlet.hlsl", "main_as", "as_6_6", {});
     psoDesc.ms = pRenderer->GetShader("meshlet.hlsl", "main_ms", "ms_6_6", {});
     psoDesc.ps = pRenderer->GetShader("meshlet.hlsl", "main_ps", "ps_6_6", {});
     psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;

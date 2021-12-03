@@ -38,6 +38,7 @@ private:
 
     uint32_t m_nMeshletCount = 0;
     std::unique_ptr<StructuredBuffer> m_pMeshletBuffer;
+    std::unique_ptr<StructuredBuffer> m_pMeshletBoundsBuffer;
     std::unique_ptr<StructuredBuffer> m_pMeshletVerticesBuffer;
     std::unique_ptr<StructuredBuffer> m_pMeshletIndicesBuffer;
 

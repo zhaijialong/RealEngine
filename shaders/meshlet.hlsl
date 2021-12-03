@@ -3,6 +3,8 @@
 
 cbuffer RootConstants : register(b0)
 {
+    uint c_meshletCount;
+    uint c_meshletBoundsBuffer;
     uint c_meshletBuffer;
     uint c_meshletVerticesBuffer;
     uint c_meshletIndicesBuffer;
@@ -17,6 +19,49 @@ struct Meshlet
     unsigned int triangleCount;
 };
 
+struct MeshletBound
+{
+    float3 center;
+    float radius;
+    
+    float3 coneApex;
+    float coneCutoff;
+    
+    float3 coneAxis;
+    float _padding;
+};
+
+struct Payload
+{
+    uint meshletIndices[32];
+};
+
+groupshared Payload s_Payload;
+
+[numthreads(32, 1, 1)]
+void main_as(uint dispatchThreadID : SV_DispatchThreadID)
+{
+    bool visible = false;
+    uint meshletIndex = dispatchThreadID;
+    
+    if (meshletIndex < c_meshletCount)
+    {
+        StructuredBuffer<MeshletBound> meshletBuffer = ResourceDescriptorHeap[c_meshletBoundsBuffer];
+        MeshletBound meshletBound = meshletBuffer[meshletIndex];
+        
+        visible = true;
+    }
+    
+    if (visible)
+    {
+        uint index = WavePrefixCountBits(visible);
+        s_Payload.meshletIndices[index] = meshletIndex;
+    }
+
+    uint visibleMeshletCount = WaveActiveCountBits(visible);
+    DispatchMesh(visibleMeshletCount, 1, 1, s_Payload);
+}
+
 struct VertexOut
 {
     float4 pos : SV_POSITION;
@@ -29,11 +74,18 @@ struct VertexOut
 void main_ms(
     uint groupThreadID : SV_GroupThreadID,
     uint groupID : SV_GroupID,
+    in payload Payload payload,
     out indices uint3 tris[124],
     out vertices VertexOut verts[64])
 {
+    uint meshletIndex = payload.meshletIndices[groupID];
+    if(meshletIndex >= c_meshletCount)
+    {
+        return;
+    }
+    
     StructuredBuffer<Meshlet> meshletBuffer = ResourceDescriptorHeap[c_meshletBuffer];
-    Meshlet meshlet = meshletBuffer[groupID];
+    Meshlet meshlet = meshletBuffer[meshletIndex];
     
     SetMeshOutputCounts(meshlet.vertexCount, meshlet.triangleCount);
     
@@ -62,7 +114,7 @@ void main_ms(
         VertexOut v;
         v.pos = mul(CameraCB.mtxViewProjection, worldPos);
         v.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);
-        v.meshlet = groupID;
+        v.meshlet = meshletIndex;
         
         verts[groupThreadID] = v;
     }

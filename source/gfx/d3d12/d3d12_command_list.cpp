@@ -467,11 +467,12 @@ void D3D12CommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, ui
 
 void D3D12CommandList::SetGraphicsConstants(uint32_t slot, const void* data, size_t data_size)
 {
-    RE_ASSERT((slot == 0 && data_size == 16) || (slot >= 1 && slot <= 4));
+    RE_ASSERT((slot == 0 && data_size <= sizeof(int32_t) * 5) || (slot >= 1 && slot <= 4));
 
     if (slot == 0)
     {
-        m_pCommandList->SetGraphicsRoot32BitConstants(0, 4, data, 0);
+        uint32_t consts_count = (uint32_t)data_size / sizeof(uint32_t);
+        m_pCommandList->SetGraphicsRoot32BitConstants(0, consts_count, data, 0);
     }
     else
     {
@@ -484,11 +485,12 @@ void D3D12CommandList::SetGraphicsConstants(uint32_t slot, const void* data, siz
 
 void D3D12CommandList::SetComputeConstants(uint32_t slot, const void* data, size_t data_size)
 {
-    RE_ASSERT((slot == 0 && data_size == 16) || (slot >= 1 && slot <= 4));
+    RE_ASSERT((slot == 0 && data_size <= sizeof(int32_t) * 5) || (slot >= 1 && slot <= 4));
 
     if (slot == 0)
     {
-        m_pCommandList->SetComputeRoot32BitConstants(0, 4, data, 0);
+        uint32_t consts_count = (uint32_t)data_size / sizeof(uint32_t);
+        m_pCommandList->SetComputeRoot32BitConstants(0, consts_count, data, 0);
     }
     else
     {

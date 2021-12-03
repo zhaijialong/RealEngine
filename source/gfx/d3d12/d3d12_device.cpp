@@ -562,10 +562,10 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
 void D3D12Device::CreateRootSignature()
 {
     //AMD : Try to stay below 13 DWORDs https://gpuopen.com/performance/
-    //4 root constants + 4 root CBVs == 12 DWORDs, everything else is bindless
+    //5 root constants + 4 root CBVs == 13 DWORDs, everything else is bindless
 
     CD3DX12_ROOT_PARAMETER1 root_parameters[5] = {};
-    root_parameters[0].InitAsConstants(4, 0);
+    root_parameters[0].InitAsConstants(5, 0);
     root_parameters[1].InitAsConstantBufferView(1);
     root_parameters[2].InitAsConstantBufferView(2);
     root_parameters[3].InitAsConstantBufferView(3);

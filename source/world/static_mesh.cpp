@@ -63,9 +63,9 @@ void StaticMesh::Render(Renderer* pRenderer)
 void StaticMesh::RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera)
 {
     GPU_EVENT_DEBUG(pCommandList, m_name);
-    Draw(pCommandList, m_pMaterial->GetPSO());
+    //Draw(pCommandList, m_pMaterial->GetPSO());
 
-    //Dispatch(pCommandList, m_pMaterial->GetMeshletPSO());
+    Dispatch(pCommandList, m_pMaterial->GetMeshletPSO());
 }
 
 void StaticMesh::RenderOutlinePass(IGfxCommandList* pCommandList, const Camera* pCamera)
@@ -90,7 +90,7 @@ void StaticMesh::RenderIDPass(IGfxCommandList* pCommandList, const Camera* pCame
 {
     GPU_EVENT_DEBUG(pCommandList, m_name);
 
-    uint32_t root_consts[4] = { m_nID, 0, 0, 0 };
+    uint32_t root_consts[1] = { m_nID };
     pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
 
     Draw(pCommandList, m_pMaterial->GetIDPSO());
@@ -107,16 +107,18 @@ void StaticMesh::Draw(IGfxCommandList* pCommandList, IGfxPipelineState* pso)
 
 void StaticMesh::Dispatch(IGfxCommandList* pCommandList, IGfxPipelineState* pso)
 {
-    uint32_t root_consts[4] = { 
+    uint32_t root_consts[5] = { 
+        m_nMeshletCount,
+        m_pMeshletBoundsBuffer->GetSRV()->GetHeapIndex(),
         m_pMeshletBuffer->GetSRV()->GetHeapIndex(), 
         m_pMeshletVerticesBuffer->GetSRV()->GetHeapIndex(), 
         m_pMeshletIndicesBuffer->GetSRV()->GetHeapIndex(), 
-        0 
     };
 
     pCommandList->SetPipelineState(pso);
     pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
     pCommandList->SetGraphicsConstants(1, &m_modelCB, sizeof(ModelConstant));
     pCommandList->SetGraphicsConstants(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
-    pCommandList->DispatchMesh(m_nMeshletCount, 1, 1);
+
+    pCommandList->DispatchMesh((m_nMeshletCount + 31 ) / 32, 1, 1);
 }
