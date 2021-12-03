@@ -20,6 +20,7 @@ struct Meshlet
 struct VertexOut
 {
     float4 pos : SV_POSITION;
+    float3 normal : NORMAL;
     uint meshlet : COLOR;
 };
 
@@ -53,12 +54,14 @@ void main_ms(
         uint vertex_id = meshletVerticesBuffer[meshlet.vertexOffset + groupThreadID];
         
         StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[ModelCB.posBuffer];
+        StructuredBuffer<float3> normalBuffer = ResourceDescriptorHeap[ModelCB.normalBuffer];
         
         float4 pos = float4(posBuffer[vertex_id], 1.0);
         float4 worldPos = mul(ModelCB.mtxWorld, pos);
         
         VertexOut v;
         v.pos = mul(CameraCB.mtxViewProjection, worldPos);
+        v.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);
         v.meshlet = groupID;
         
         verts[groupThreadID] = v;
@@ -77,10 +80,22 @@ uint hash(uint a)
     return a;
 }
 
-float4 main_ps(VertexOut input) : SV_Target
+struct GBufferOutput
+{
+    float4 albedoRT : SV_TARGET0;
+    float4 normalRT : SV_TARGET1;
+    float4 emissiveRT : SV_TARGET2;
+};
+
+GBufferOutput main_ps(VertexOut input)
 {
     uint mhash = hash(input.meshlet);
     float3 color = float3(float(mhash & 255), float((mhash >> 8) & 255), float((mhash >> 16) & 255)) / 255.0;
     
-    return float4(color, 1);
+    GBufferOutput output;
+    output.albedoRT = float4(color, 0);
+    output.normalRT = float4(OctNormalEncode(input.normal), 1);
+    output.emissiveRT = float4(0, 0, 0, 1);
+    
+    return output;
 }

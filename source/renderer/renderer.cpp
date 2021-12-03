@@ -424,7 +424,7 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
     }
 }
 
-IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type)
+IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type)
 {
     IndexBuffer* buffer = new IndexBuffer(name);
     if (!buffer->Create(stride, index_count, memory_type))
@@ -441,7 +441,7 @@ IndexBuffer* Renderer::CreateIndexBuffer(void* data, uint32_t stride, uint32_t i
     return buffer;
 }
 
-StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type, bool uav)
+StructuredBuffer* Renderer::CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type, bool uav)
 {
     StructuredBuffer* buffer = new StructuredBuffer(name);
     if (!buffer->Create(stride, element_count, memory_type, uav))
@@ -458,7 +458,7 @@ StructuredBuffer* Renderer::CreateStructuredBuffer(void* data, uint32_t stride, 
     return buffer;
 }
 
-RawBuffer* Renderer::CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type, bool uav)
+RawBuffer* Renderer::CreateRawBuffer(const void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type, bool uav)
 {
     RawBuffer* buffer = new RawBuffer(name);
     if (!buffer->Create(size, memory_type, uav))
@@ -559,7 +559,7 @@ inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, u
     }
 }
 
-void Renderer::UploadTexture(IGfxTexture* texture, void* data)
+void Renderer::UploadTexture(IGfxTexture* texture, const void* data)
 {
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
@@ -608,7 +608,7 @@ void Renderer::UploadTexture(IGfxTexture* texture, void* data)
     }
 }
 
-void Renderer::UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size)
+void Renderer::UploadBuffer(IGfxBuffer* buffer, const void* data, uint32_t data_size)
 {
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();

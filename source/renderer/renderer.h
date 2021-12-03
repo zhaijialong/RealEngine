@@ -52,9 +52,9 @@ public:
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
     RenderGraphHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
 
-    IndexBuffer* CreateIndexBuffer(void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
-    StructuredBuffer* CreateStructuredBuffer(void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
-    RawBuffer* CreateRawBuffer(void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
+    IndexBuffer* CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
+    StructuredBuffer* CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
+    RawBuffer* CreateRawBuffer(const void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
     Texture2D* CreateTexture2D(const std::string& file, bool srgb = true, bool cached = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
@@ -62,8 +62,8 @@ public:
     void RequestMouseHitTest(uint32_t x, uint32_t y);
     uint32_t GetMouseHitObjectID() const { return m_nMouseHitObjectID; }
 
-    void UploadTexture(IGfxTexture* texture, void* data);
-    void UploadBuffer(IGfxBuffer* buffer, void* data, uint32_t data_size);
+    void UploadTexture(IGfxTexture* texture, const void* data);
+    void UploadBuffer(IGfxBuffer* buffer, const void* data, uint32_t data_size);
 
     void AddComputePass(const ComputeFunc& func) { m_computePassBatchs.push_back(func); }
     void AddComputeBuffer(IGfxBuffer* buffer) { m_computeBuffers.push_back(buffer); }
