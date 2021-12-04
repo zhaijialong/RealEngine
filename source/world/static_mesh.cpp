@@ -63,9 +63,9 @@ void StaticMesh::Render(Renderer* pRenderer)
 void StaticMesh::RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera)
 {
     GPU_EVENT_DEBUG(pCommandList, m_name);
-    //Draw(pCommandList, m_pMaterial->GetPSO());
+    Draw(pCommandList, m_pMaterial->GetPSO());
 
-    Dispatch(pCommandList, m_pMaterial->GetMeshletPSO());
+    //Dispatch(pCommandList, m_pMaterial->GetMeshletPSO());
 }
 
 void StaticMesh::RenderOutlinePass(IGfxCommandList* pCommandList, const Camera* pCamera)

@@ -44,6 +44,8 @@ public:
     float2 GetJitter() const { return m_jitter; }
     float2 GetPrevJitter() const { return m_prevJitter; }
 
+    bool FrustumCull(float3 center, float radius) const;
+
     void Tick(float delta_time);
 
     void SetupCameraCB(IGfxCommandList* pCommandList);
@@ -51,6 +53,7 @@ public:
 private:
     void UpdateJitter();
     void UpdateMatrix();
+    void UpdateFrustumPlanes();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
 
 private:
@@ -77,4 +80,6 @@ private:
     bool m_bEnableJitter = false;
     float2 m_prevJitter{ 0.0f, 0.0f };
     float2 m_jitter{ 0.0f, 0.0f };
+
+    float4 m_frustumPlanes[6];
 };

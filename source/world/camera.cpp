@@ -68,25 +68,16 @@ void Camera::SetPerpective(float aspectRatio, float yfov, float znear, float zfa
     m_zfar = zfar;
 
     m_projection = perspective_matrix(degree_to_randian(yfov), aspectRatio, zfar, znear, pos_z, zero_to_one);
-    UpdateMatrix();
 }
 
 void Camera::SetPosition(const float3& pos)
 {
-    if (m_pos != pos)
-    {
-        m_pos = pos;
-        UpdateMatrix();
-    }
+    m_pos = pos;
 }
 
 void Camera::SetRotation(const float3& rotation)
 {
-    if (m_rotation != rotation)
-    {
-        m_rotation = rotation;
-        UpdateMatrix();
-    }
+    m_rotation = rotation;
 }
 
 void Camera::SetFov(float fov)
@@ -135,6 +126,7 @@ void Camera::Tick(float delta_time)
 
     UpdateJitter();
     UpdateMatrix();
+    UpdateFrustumPlanes();
 }
 
 void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
@@ -157,6 +149,12 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
     cameraCB.mtxViewProjectionNoJitter = m_viewProjection;
     cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
     cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
+
+    cameraCB.culling.viewPos = GetPosition();
+    for (int i = 0; i < 6; ++i)
+    {
+        cameraCB.culling.planes[i] = m_frustumPlanes[i];
+    }
 
     pCommandList->SetGraphicsConstants(3, &cameraCB, sizeof(cameraCB));
     pCommandList->SetComputeConstants(3, &cameraCB, sizeof(cameraCB));
@@ -217,9 +215,71 @@ void Camera::UpdateMatrix()
     }
 }
 
+void Camera::UpdateFrustumPlanes()
+{
+    // https://www.gamedevs.org/uploads/fast-extraction-viewing-frustum-planes-from-world-view-projection-matrix.pdf
+    
+    const float4x4& matrix = m_viewProjectionJitter;
+
+    // Left clipping plane
+    m_frustumPlanes[0].x = matrix[0][3] + matrix[0][0];
+    m_frustumPlanes[0].y = matrix[1][3] + matrix[1][0];
+    m_frustumPlanes[0].z = matrix[2][3] + matrix[2][0];
+    m_frustumPlanes[0].w = matrix[3][3] + matrix[3][0];
+    m_frustumPlanes[0] = normalize_plane(m_frustumPlanes[0]);
+
+    // Right clipping plane
+    m_frustumPlanes[1].x = matrix[0][3] - matrix[0][0];
+    m_frustumPlanes[1].y = matrix[1][3] - matrix[1][0];
+    m_frustumPlanes[1].z = matrix[2][3] - matrix[2][0];
+    m_frustumPlanes[1].w = matrix[3][3] - matrix[3][0];
+    m_frustumPlanes[1] = normalize_plane(m_frustumPlanes[1]);
+
+    // Top clipping plane
+    m_frustumPlanes[2].x = matrix[0][3] - matrix[0][1];
+    m_frustumPlanes[2].y = matrix[1][3] - matrix[1][1];
+    m_frustumPlanes[2].z = matrix[2][3] - matrix[2][1];
+    m_frustumPlanes[2].w = matrix[3][3] - matrix[3][1];
+    m_frustumPlanes[2] = normalize_plane(m_frustumPlanes[2]);
+
+    // Bottom clipping plane
+    m_frustumPlanes[3].x = matrix[0][3] + matrix[0][1];
+    m_frustumPlanes[3].y = matrix[1][3] + matrix[1][1];
+    m_frustumPlanes[3].z = matrix[2][3] + matrix[2][1];
+    m_frustumPlanes[3].w = matrix[3][3] + matrix[3][1];
+    m_frustumPlanes[3] = normalize_plane(m_frustumPlanes[3]);
+
+    // Near clipping plane
+    m_frustumPlanes[4].x = matrix[0][2];
+    m_frustumPlanes[4].y = matrix[1][2];
+    m_frustumPlanes[4].z = matrix[2][2];
+    m_frustumPlanes[4].w = matrix[3][2];
+    m_frustumPlanes[4] = normalize_plane(m_frustumPlanes[4]);
+
+    // Far clipping plane
+    m_frustumPlanes[5].x = matrix[0][3] - matrix[0][2];
+    m_frustumPlanes[5].y = matrix[1][3] - matrix[1][2];
+    m_frustumPlanes[5].z = matrix[2][3] - matrix[2][2];
+    m_frustumPlanes[5].w = matrix[3][3] - matrix[3][2];
+    m_frustumPlanes[5] = normalize_plane(m_frustumPlanes[5]);
+}
+
 void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
 {
     m_aspectRatio = (float)width / height;
 
     SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
+}
+
+bool Camera::FrustumCull(float3 center, float radius) const
+{
+    for (int i = 0; i < 6; i++)
+    {
+        if (dot(center, m_frustumPlanes[i].xyz()) + m_frustumPlanes[i].w + radius < 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }

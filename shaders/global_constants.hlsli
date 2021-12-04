@@ -34,6 +34,14 @@ struct SceneConstant
     uint brdfTexture;
 };
 
+struct CullingData
+{
+    float3 viewPos;
+    float _padding;
+    
+    float4 planes[6];
+};
+
 struct CameraConstant
 {
     float3 cameraPos;
@@ -56,6 +64,8 @@ struct CameraConstant
     float4x4 mtxViewProjectionNoJitter;
     float4x4 mtxPrevViewProjectionNoJitter;
     float4x4 mtxClipToPrevClipNoJitter;
+    
+    CullingData culling;
 };
 
 #ifndef __cplusplus

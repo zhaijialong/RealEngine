@@ -90,3 +90,9 @@ inline bool nearly_equal(const T& a, const T& b)
 {
     return nearly_equal(a.x, b.x) && nearly_equal(a.y, b.y) && nearly_equal(a.z, b.z) && nearly_equal(a.w, b.w);
 }
+
+inline float4 normalize_plane(const float4& plane)
+{
+    float length = std::sqrt(plane.x * plane.x + plane.y * plane.y + plane.z * plane.z);
+    return plane * (1.0f / length);
+}
