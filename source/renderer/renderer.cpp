@@ -227,8 +227,12 @@ void Renderer::Render()
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
     m_pGpuDebugLine->Clear(pCommandList);
-    FlushComputePass(pCommandList);
     SetupGlobalConstants(pCommandList);
+    FlushComputePass(pCommandList);
+
+    World* world = Engine::GetInstance()->GetWorld();
+    Camera* camera = world->GetCamera();
+    camera->DrawViewFrustum(pCommandList);
 
     m_pRenderGraph->Clear();
     

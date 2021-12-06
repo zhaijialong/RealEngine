@@ -2,6 +2,7 @@
 
 #include "utils/math.h"
 #include "lsignal/lsignal.h"
+#include "global_constants.hlsli"
 
 class IGfxCommandList;
 
@@ -44,16 +45,18 @@ public:
     float2 GetJitter() const { return m_jitter; }
     float2 GetPrevJitter() const { return m_prevJitter; }
 
+    void LockViewFrustum(bool value) { m_bFrustumLocked = value; }
+    void UpdateFrustumPlanes(const float4x4& matrix);
     const float4* GetFrustumPlanes() const { return m_frustumPlanes; }
 
     void Tick(float delta_time);
 
     void SetupCameraCB(IGfxCommandList* pCommandList);
+    void DrawViewFrustum(IGfxCommandList* pCommandList);
 
 private:
     void UpdateJitter();
     void UpdateMatrix();
-    void UpdateFrustumPlanes();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
 
 private:
@@ -69,6 +72,8 @@ private:
     float4x4 m_projectionJitter;
     float4x4 m_viewProjectionJitter;
 
+    CameraConstant m_cameraCB;
+
     float m_aspectRatio = 0.0f;
     float m_fov = 0.0f;
     float m_znear = 0.0f;
@@ -81,5 +86,6 @@ private:
     float2 m_prevJitter{ 0.0f, 0.0f };
     float2 m_jitter{ 0.0f, 0.0f };
 
+    bool m_bFrustumLocked = false;
     float4 m_frustumPlanes[6];
 };

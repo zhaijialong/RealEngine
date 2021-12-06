@@ -1,8 +1,6 @@
 #include "camera.h"
 #include "core/engine.h"
 #include "imgui/imgui.h"
-#include "global_constants.hlsli"
-
 
 float2 DepthlinearizationParams(const float4x4& ProjMatrix)
 {
@@ -126,38 +124,44 @@ void Camera::Tick(float delta_time)
 
     UpdateJitter();
     UpdateMatrix();
-    UpdateFrustumPlanes();
+
+    if (!m_bFrustumLocked)
+    {
+        UpdateFrustumPlanes(m_viewProjectionJitter);
+    }
 }
 
 void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
 {
-    CameraConstant cameraCB;
-    cameraCB.cameraPos = GetPosition();
-    cameraCB.nearZ = m_znear;
-    cameraCB.farZ = m_zfar;
-    cameraCB.linearZParams = DepthlinearizationParams(m_projection);
-    cameraCB.jitter = m_jitter;
-    cameraCB.prevJitter = m_prevJitter;
+    m_cameraCB.cameraPos = GetPosition();
+    m_cameraCB.nearZ = m_znear;
+    m_cameraCB.farZ = m_zfar;
+    m_cameraCB.linearZParams = DepthlinearizationParams(m_projection);
+    m_cameraCB.jitter = m_jitter;
+    m_cameraCB.prevJitter = m_prevJitter;
     
-    cameraCB.mtxView = m_view;
-    cameraCB.mtxViewInverse = inverse(m_view);
-    cameraCB.mtxProjection = m_projectionJitter;
-    cameraCB.mtxProjectionInverse = inverse(m_projectionJitter);
-    cameraCB.mtxViewProjection = m_viewProjectionJitter;
-    cameraCB.mtxViewProjectionInverse = inverse(m_viewProjectionJitter);
+    m_cameraCB.mtxView = m_view;
+    m_cameraCB.mtxViewInverse = inverse(m_view);
+    m_cameraCB.mtxProjection = m_projectionJitter;
+    m_cameraCB.mtxProjectionInverse = inverse(m_projectionJitter);
+    m_cameraCB.mtxViewProjection = m_viewProjectionJitter;
+    m_cameraCB.mtxViewProjectionInverse = inverse(m_viewProjectionJitter);
 
-    cameraCB.mtxViewProjectionNoJitter = m_viewProjection;
-    cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
-    cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
+    m_cameraCB.mtxViewProjectionNoJitter = m_viewProjection;
+    m_cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
+    m_cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
 
-    cameraCB.culling.viewPos = GetPosition();
-    for (int i = 0; i < 6; ++i)
+    if (!m_bFrustumLocked)
     {
-        cameraCB.culling.planes[i] = m_frustumPlanes[i];
+        m_cameraCB.culling.viewPos = GetPosition();
+        for (int i = 0; i < 6; ++i)
+        {
+            m_cameraCB.culling.planes[i] = m_frustumPlanes[i];
+        }
     }
 
-    pCommandList->SetGraphicsConstants(3, &cameraCB, sizeof(cameraCB));
-    pCommandList->SetComputeConstants(3, &cameraCB, sizeof(cameraCB));
+    pCommandList->SetGraphicsConstants(3, &m_cameraCB, sizeof(CameraConstant));
+    pCommandList->SetComputeConstants(3, &m_cameraCB, sizeof(CameraConstant));
 }
 
 void Camera::UpdateJitter()
@@ -215,11 +219,9 @@ void Camera::UpdateMatrix()
     }
 }
 
-void Camera::UpdateFrustumPlanes()
+void Camera::UpdateFrustumPlanes(const float4x4& matrix)
 {
     // https://www.gamedevs.org/uploads/fast-extraction-viewing-frustum-planes-from-world-view-projection-matrix.pdf
-    
-    const float4x4& matrix = m_viewProjectionJitter;
 
     // Left clipping plane
     m_frustumPlanes[0].x = matrix[0][3] + matrix[0][0];
@@ -249,14 +251,14 @@ void Camera::UpdateFrustumPlanes()
     m_frustumPlanes[3].w = matrix[3][3] + matrix[3][1];
     m_frustumPlanes[3] = normalize_plane(m_frustumPlanes[3]);
 
-    // Near clipping plane
+    // far clipping plane (reversed depth)
     m_frustumPlanes[4].x = matrix[0][2];
     m_frustumPlanes[4].y = matrix[1][2];
     m_frustumPlanes[4].z = matrix[2][2];
     m_frustumPlanes[4].w = matrix[3][2];
     m_frustumPlanes[4] = normalize_plane(m_frustumPlanes[4]);
 
-    // Far clipping plane
+    // near clipping plane (reversed depth)
     m_frustumPlanes[5].x = matrix[0][3] - matrix[0][2];
     m_frustumPlanes[5].y = matrix[1][3] - matrix[1][2];
     m_frustumPlanes[5].z = matrix[2][3] - matrix[2][2];
@@ -269,4 +271,23 @@ void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
     m_aspectRatio = (float)width / height;
 
     SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
+}
+
+void Camera::DrawViewFrustum(IGfxCommandList* pCommandList)
+{
+    if (!m_bFrustumLocked)
+    {
+        return;
+    }
+
+    GPU_EVENT(pCommandList, "Camera::DrawViewFrustum");
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    GfxComputePipelineDesc psoDesc;
+    psoDesc.cs = pRenderer->GetShader("view_frustum.hlsl", "main", "cs_6_6", {});
+    IGfxPipelineState* pso = pRenderer->GetPipelineState(psoDesc, "ViewFrustum PSO");
+
+    pCommandList->SetPipelineState(pso);
+    pCommandList->Dispatch(1, 1, 1);
 }
