@@ -1,9 +1,9 @@
-#include "gpu_debug_line.h"
+#include "gpu_driven_debug_line.h"
 #include "renderer.h"
 
 #define MAX_VERTEX_COUNT (1024 * 1024)
 
-GpuDebugLine::GpuDebugLine(Renderer* pRenderer)
+GpuDrivenDebugLine::GpuDrivenDebugLine(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
@@ -17,17 +17,17 @@ GpuDebugLine::GpuDebugLine(Renderer* pRenderer)
     psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
     psoDesc.depthstencil_format = GfxFormat::D32FS8;
     psoDesc.primitive_type = GfxPrimitiveType::LineList;
-    m_pPSO = pRenderer->GetPipelineState(psoDesc, "GpuDebugLine::m_pPSO");
+    m_pPSO = pRenderer->GetPipelineState(psoDesc, "GpuDrivenDebugLine::m_pPSO");
 
     GfxDrawCommand command = {};
     command.instance_count = 1;
-    m_pDrawArugumentsBuffer.reset(pRenderer->CreateRawBuffer(&command, sizeof(GfxDrawCommand), "GpuDebugLine::m_pDrawArugumentsBuffer", GfxMemoryType::GpuOnly, true));
+    m_pDrawArugumentsBuffer.reset(pRenderer->CreateRawBuffer(&command, sizeof(GfxDrawCommand), "GpuDrivenDebugLine::m_pDrawArugumentsBuffer", GfxMemoryType::GpuOnly, true));
 
     const uint32_t lineVertexStride = 16; //float3 pos + uint color
-    m_pLineVertexBuffer.reset(pRenderer->CreateStructuredBuffer(nullptr, 16, MAX_VERTEX_COUNT, "GpuDebugLine::m_pLineVertexBuffer", GfxMemoryType::GpuOnly, true));
+    m_pLineVertexBuffer.reset(pRenderer->CreateStructuredBuffer(nullptr, 16, MAX_VERTEX_COUNT, "GpuDrivenDebugLine::m_pLineVertexBuffer", GfxMemoryType::GpuOnly, true));
 }
 
-void GpuDebugLine::Clear(IGfxCommandList* pCommandList)
+void GpuDrivenDebugLine::Clear(IGfxCommandList* pCommandList)
 {
     pCommandList->ResourceBarrier(m_pDrawArugumentsBuffer->GetBuffer(), 0, GfxResourceState::IndirectArg, GfxResourceState::CopyDst);
 
@@ -38,15 +38,15 @@ void GpuDebugLine::Clear(IGfxCommandList* pCommandList)
     pCommandList->ResourceBarrier(m_pLineVertexBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
 }
 
-void GpuDebugLine::BarrierForDraw(IGfxCommandList* pCommandList)
+void GpuDrivenDebugLine::BarrierForDraw(IGfxCommandList* pCommandList)
 {
     pCommandList->ResourceBarrier(m_pDrawArugumentsBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::IndirectArg);
     pCommandList->ResourceBarrier(m_pLineVertexBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
 }
 
-void GpuDebugLine::Draw(IGfxCommandList* pCommandList)
+void GpuDrivenDebugLine::Draw(IGfxCommandList* pCommandList)
 {
-    GPU_EVENT(pCommandList, "GpuDebugLine");
+    GPU_EVENT(pCommandList, "GpuDrivenDebugLine");
 
     pCommandList->SetPipelineState(m_pPSO);
     pCommandList->DrawIndirect(m_pDrawArugumentsBuffer->GetBuffer(), 0);

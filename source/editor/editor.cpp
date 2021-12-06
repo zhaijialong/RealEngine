@@ -213,9 +213,27 @@ void Editor::DrawToolBar()
         float4x4 view = camera->GetViewMatrix();
         float4x4 proj = camera->GetNonJitterProjectionMatrix();
 
-        ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, ImGuizmo::ROTATE, ImGuizmo::WORLD, (float*)&mtxWorld);
+        ImGuizmo::OPERATION operation;
+        switch (m_selectEditMode)
+        {
+        case Editor::SelectEditMode::Translate:
+            operation = ImGuizmo::TRANSLATE;
+            break;
+        case Editor::SelectEditMode::Rotate:
+            operation = ImGuizmo::ROTATE;
+            break;
+        case Editor::SelectEditMode::Scale:
+            operation = ImGuizmo::SCALE;
+            break;
+        default:
+            RE_ASSERT(false);
+            break;
+        }
+        ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, operation, ImGuizmo::WORLD, (float*)&mtxWorld);
 
         ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&m_lockedViewPos, (float*)&m_lockedViewRotation, (float*)&scale);
+
+        camera->SetFrustumViewPosition(m_lockedViewPos);
 
         float4x4 mtxViewFrustum = mul(camera->GetProjectionMatrix(), inverse(mtxWorld));
         camera->UpdateFrustumPlanes(mtxViewFrustum);

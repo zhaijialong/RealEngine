@@ -359,11 +359,19 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
         float3 center;
         float radius;
 
-        float3 coneApex;
-        float coneCutoff;
+        union
+        {
+            //axis + cutoff, rgba8snorm
+            struct
+            {
+                int8_t axis_x;
+                int8_t axis_y;
+                int8_t axis_z;
+                int8_t cutoff;
+            };
+            uint32_t cone; 
+        };
 
-        float3 coneAxis;
-        float _padding;
     };
     std::vector<MeshletBound> meshlet_bounds(meshlet_count);
 
@@ -374,12 +382,13 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
         meshopt_Bounds meshoptBounds = meshopt_computeMeshletBounds(&meshlet_vertices[m.vertex_offset], &meshlet_triangles[m.triangle_offset],
             m.triangle_count, (const float*)pos_vertices, remapped_vertex_count, pos_stride);
 
-        MeshletBound bound = {};
+        MeshletBound bound;
         bound.center = float3(meshoptBounds.center);
         bound.radius = meshoptBounds.radius;
-        bound.coneApex = float3(meshoptBounds.cone_apex);
-        bound.coneAxis = float3(meshoptBounds.cone_axis);
-        bound.coneCutoff = meshoptBounds.cone_cutoff;
+        bound.axis_x = meshoptBounds.cone_axis_s8[0];
+        bound.axis_y = meshoptBounds.cone_axis_s8[1];
+        bound.axis_z = meshoptBounds.cone_axis_s8[2];
+        bound.cutoff = meshoptBounds.cone_cutoff_s8;
         
         meshlet_bounds[i] = bound;
     }

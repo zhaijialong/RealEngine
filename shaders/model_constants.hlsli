@@ -8,7 +8,8 @@ struct ModelConstant
     uint tangentBuffer;    
     
     uint prevPosBuffer;
-    uint3 _padding;
+    uint2 _padding;
+    float scale;
     
     float3 center;
     float radius;

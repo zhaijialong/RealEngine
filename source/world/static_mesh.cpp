@@ -32,8 +32,9 @@ void StaticMesh::UpdateConstants()
     m_modelCB.normalBuffer = m_pNormalBuffer ? m_pNormalBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_modelCB.tangentBuffer = m_pTangentBuffer ? m_pTangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
 
+    m_modelCB.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
     m_modelCB.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
-    m_modelCB.radius = m_radius * max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
+    m_modelCB.radius = m_radius * m_modelCB.scale;
 
     m_modelCB.mtxWorld = m_mtxWorld;
     m_modelCB.mtxNormal = transpose(inverse(m_mtxWorld));
@@ -75,9 +76,9 @@ bool StaticMesh::FrustumCull(const float4* planes, uint32_t plane_count)
 void StaticMesh::RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera)
 {
     GPU_EVENT_DEBUG(pCommandList, m_name);
-    Draw(pCommandList, m_pMaterial->GetPSO());
+    //Draw(pCommandList, m_pMaterial->GetPSO());
 
-    //Dispatch(pCommandList, m_pMaterial->GetMeshletPSO());
+    Dispatch(pCommandList, m_pMaterial->GetMeshletPSO());
 }
 
 void StaticMesh::RenderOutlinePass(IGfxCommandList* pCommandList, const Camera* pCamera)

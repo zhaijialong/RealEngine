@@ -46,6 +46,7 @@ public:
     float2 GetPrevJitter() const { return m_prevJitter; }
 
     void LockViewFrustum(bool value) { m_bFrustumLocked = value; }
+    void SetFrustumViewPosition(const float3& pos) { m_frustumViewPos = pos; }
     void UpdateFrustumPlanes(const float4x4& matrix);
     const float4* GetFrustumPlanes() const { return m_frustumPlanes; }
 
@@ -88,4 +89,5 @@ private:
 
     bool m_bFrustumLocked = false;
     float4 m_frustumPlanes[6];
+    float3 m_frustumViewPos;
 };

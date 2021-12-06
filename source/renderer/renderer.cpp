@@ -66,7 +66,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_pRenderGraph.reset(new RenderGraph(this));
     m_pLightingProcessor.reset(new LightingProcessor(this));
     m_pPostProcessor.reset(new PostProcessor(this));
-    m_pGpuDebugLine.reset(new GpuDebugLine(this));
+    m_pGpuDebugLine.reset(new GpuDrivenDebugLine(this));
 }
 
 void Renderer::RenderFrame()

@@ -6,10 +6,10 @@
 
 class Renderer;
 
-class GpuDebugLine
+class GpuDrivenDebugLine
 {
 public:
-    GpuDebugLine(Renderer* pRenderer);
+    GpuDrivenDebugLine(Renderer* pRenderer);
 
     void Clear(IGfxCommandList* pCommandList);
     void BarrierForDraw(IGfxCommandList* pCommandList);

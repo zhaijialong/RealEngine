@@ -202,7 +202,7 @@
     <ClCompile Include="source\world\animation.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
-    <ClCompile Include="source\renderer\gpu_debug_line.cpp">
+    <ClCompile Include="source\renderer\gpu_driven_debug_line.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
     <ClCompile Include="source\gfx\d3d12\d3d12_heap.cpp">
@@ -255,6 +255,9 @@
     </ClCompile>
     <ClCompile Include="source\world\meshlet_generator.cpp">
       <Filter>source\world</Filter>
+    </ClCompile>
+    <ClCompile Include="source\renderer\gpu_driven_stats.cpp">
+      <Filter>source\renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -555,7 +558,7 @@
     <ClInclude Include="source\world\animation.h">
       <Filter>source\world</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\gpu_debug_line.h">
+    <ClInclude Include="source\renderer\gpu_driven_debug_line.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
     <ClInclude Include="source\gfx\i_gfx_heap.h">
@@ -569,6 +572,9 @@
     </ClInclude>
     <ClInclude Include="source\world\meshlet_generator.h">
       <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\gpu_driven_stats.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

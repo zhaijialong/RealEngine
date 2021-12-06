@@ -14,7 +14,7 @@ my toy engine, mainly for rendering expariment and learning
 * ~~LPM~~
 * ~~TAA~~
 * ~~CAS~~
-* meshlet
+* ~~meshlet~~
 * RTX
 * variable rate shading
 * sampler feedback

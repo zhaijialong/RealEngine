@@ -25,11 +25,7 @@ struct MeshletBound
     float3 center;
     float radius;
     
-    float3 coneApex;
-    float coneCutoff;
-    
-    float3 coneAxis;
-    float _padding;
+    uint cone; //axis + cutoff, rgba8snorm
 };
 
 struct Payload
@@ -40,11 +36,9 @@ struct Payload
 groupshared Payload s_Payload;
 
 bool Cull(MeshletBound meshletBound)
-{
-    float scale = max(max(length(ModelCB.mtxWorld[0].xyz), length(ModelCB.mtxWorld[1].xyz)), length(ModelCB.mtxWorld[2].xyz));
-            
+{            
     float3 center = mul(ModelCB.mtxWorld, float4(meshletBound.center, 1.0)).xyz;
-    float radius = meshletBound.radius * scale;
+    float radius = meshletBound.radius * ModelCB.scale;
     
     for (uint i = 0; i < 6; ++i)
     {
@@ -54,27 +48,20 @@ bool Cull(MeshletBound meshletBound)
         }
     }
     
-    /*
-    float3 apex = mul(ModelCB.mtxWorld, float4(meshletBound.coneApex, 1.0)).xyz;
-    float3 axis = normalize(mul(ModelCB.mtxWorld, float4(meshletBound.coneAxis, 0.0)).xyz);
+    int16_t4 cone = unpack_s8s16((int8_t4_packed)meshletBound.cone);
+    float3 axis = cone.xyz / 127.0;
+    float cutoff = cone.w / 127.0;
     
-    float3 cameraPos = CameraCB.culling.viewPos;
+    axis = normalize(mul(ModelCB.mtxWorld, float4(axis, 0.0)).xyz);
+    float3 view = center - CameraCB.culling.viewPos;
     
-    if (dot(normalize(apex - cameraPos), axis) <= meshletBound.coneCutoff)
+    if (dot(view, -axis) >= cutoff * length(view) + radius)
     {
-        return false;
-    }*/
-    
-    /*
-    float3 center = mul(ModelCB.mtxWorld, float4(meshletBound.center, 1.0)).xyz;
-    float radius = meshletBound.radius;
-    
-    if (dot(center - CameraCB.culling.viewPos, axis) >= meshletBound.coneCutoff * length(center - CameraCB.culling.viewPos) + radius)
-    {
+        //DrawDebugSphere(center, radius, float3(1, 0, 0));
         return false;
     }
-    */
     
+    //DrawDebugSphere(center, radius, float3(0, 1, 0));
     return true;
 }
 
@@ -86,20 +73,10 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
     
     if (meshletIndex < c_meshletCount)
     {
-        StructuredBuffer<MeshletBound> meshletBuffer = ResourceDescriptorHeap[c_meshletBoundsBuffer];
-        MeshletBound meshletBound = meshletBuffer[meshletIndex];
+        StructuredBuffer<MeshletBound> meshletBoundBuffer = ResourceDescriptorHeap[c_meshletBoundsBuffer];
+        MeshletBound meshletBound = meshletBoundBuffer[meshletIndex];
         
         visible = Cull(meshletBound);
-        
-        if(visible)
-        {
-            float scale = max(max(length(ModelCB.mtxWorld[0].xyz), length(ModelCB.mtxWorld[1].xyz)), length(ModelCB.mtxWorld[2].xyz));
-            
-            float3 center = mul(ModelCB.mtxWorld, float4(meshletBound.center, 1.0)).xyz;
-            float radius = meshletBound.radius * scale;
-            
-            //DrawDebugSphere(center, radius, float3(1, 0, 0));
-        }
     }
     
     if (visible)
