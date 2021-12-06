@@ -151,13 +151,10 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
     m_cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
     m_cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
 
-    if (!m_bFrustumLocked)
+    m_cameraCB.culling.viewPos = GetPosition();
+    for (int i = 0; i < 6; ++i)
     {
-        m_cameraCB.culling.viewPos = GetPosition();
-        for (int i = 0; i < 6; ++i)
-        {
-            m_cameraCB.culling.planes[i] = m_frustumPlanes[i];
-        }
+        m_cameraCB.culling.planes[i] = m_frustumPlanes[i];
     }
 
     pCommandList->SetGraphicsConstants(3, &m_cameraCB, sizeof(CameraConstant));

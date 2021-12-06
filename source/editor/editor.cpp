@@ -195,6 +195,32 @@ void Editor::DrawToolBar()
     ImGui::SliderFloat("##CameraFOV", &fov, 5.0f, 135.0f, "%.0f");
     camera->SetFov(fov);
 
+    ImGui::SameLine(0.0f, 20.0f);
+    if (ImGui::Checkbox("View Frustum Locked", &m_bViewFrustumLocked))
+    {
+        camera->LockViewFrustum(m_bViewFrustumLocked);
+
+        m_lockedViewPos = camera->GetPosition();
+        m_lockedViewRotation = camera->GetRotation();
+    }
+
+    if (m_bViewFrustumLocked)
+    {
+        float3 scale = float3(1.0f, 1.0f, 1.0f);
+        float4x4 mtxWorld;
+        ImGuizmo::RecomposeMatrixFromComponents((const float*)&m_lockedViewPos, (const float*)&m_lockedViewRotation, (const float*)&scale, (float*)&mtxWorld);
+
+        float4x4 view = camera->GetViewMatrix();
+        float4x4 proj = camera->GetNonJitterProjectionMatrix();
+
+        ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, ImGuizmo::ROTATE, ImGuizmo::WORLD, (float*)&mtxWorld);
+
+        ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&m_lockedViewPos, (float*)&m_lockedViewRotation, (float*)&scale);
+
+        float4x4 mtxViewFrustum = mul(camera->GetProjectionMatrix(), inverse(mtxWorld));
+        camera->UpdateFrustumPlanes(mtxViewFrustum);
+    }
+
     ImGui::End();
 }
 

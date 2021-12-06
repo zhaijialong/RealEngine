@@ -43,4 +43,8 @@ private:
     std::unique_ptr<Texture2D> m_pTranslateIcon;
     std::unique_ptr<Texture2D> m_pRotateIcon;
     std::unique_ptr<Texture2D> m_pScaleIcon;
+
+    bool m_bViewFrustumLocked = false;
+    float3 m_lockedViewPos;
+    float3 m_lockedViewRotation;
 };
