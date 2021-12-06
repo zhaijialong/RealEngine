@@ -25,3 +25,63 @@ void DrawDebugLine(float3 start, float3 end, float3 color)
     p.position = end;
     vertexBuffer[vertex_count + 1] = p;
 }
+
+void DrawDebugTriangle(float3 p0, float3 p1, float3 p2, float3 color)
+{
+    DrawDebugLine(p0, p1, color);
+    DrawDebugLine(p1, p2, color);
+    DrawDebugLine(p2, p0, color);
+}
+
+void DrawDebugBox(float3 min, float3 max, float3 color)
+{
+    float3 p0 = float3(min.x, min.y, min.z);
+    float3 p1 = float3(max.x, min.y, min.z);
+    float3 p2 = float3(max.x, max.y, min.z);
+    float3 p3 = float3(min.x, max.y, min.z);
+    float3 p4 = float3(min.x, min.y, max.z);
+    float3 p5 = float3(max.x, min.y, max.z);
+    float3 p6 = float3(max.x, max.y, max.z);
+    float3 p7 = float3(min.x, max.y, max.z);
+
+    DrawDebugLine(p0, p1, color);
+    DrawDebugLine(p1, p2, color);
+    DrawDebugLine(p2, p3, color);
+    DrawDebugLine(p3, p0, color);
+
+    DrawDebugLine(p4, p5, color);
+    DrawDebugLine(p5, p6, color);
+    DrawDebugLine(p6, p7, color);
+    DrawDebugLine(p7, p4, color);
+    
+    DrawDebugLine(p0, p4, color);
+    DrawDebugLine(p1, p5, color);
+    DrawDebugLine(p2, p6, color);
+    DrawDebugLine(p3, p7, color);
+}
+
+static const uint DEBUG_SPHERE_M = 10; //latitude (horizontal)
+static const uint DEBUG_SPHERE_N = 10; //longitude (vertical)
+
+float3 DebugSpherePosition(uint m, uint n, float radius)
+{
+    float x = sin(M_PI * m / DEBUG_SPHERE_M) * cos(2 * M_PI * n / DEBUG_SPHERE_N);
+    float y = sin(M_PI * m / DEBUG_SPHERE_M) * sin(2 * M_PI * n / DEBUG_SPHERE_N);
+    float z = cos(M_PI * m / DEBUG_SPHERE_M);
+    return float3(x, y, z) * radius;
+}
+
+void DrawDebugSphere(float3 center, float radius, float3 color)
+{
+    for (uint m = 0; m < DEBUG_SPHERE_M; ++m)
+    {
+        for (uint n = 0; n < DEBUG_SPHERE_N; ++n)
+        {
+            float3 p0 = DebugSpherePosition(m, n, radius);
+            float3 p1 = DebugSpherePosition(min(m + 1, DEBUG_SPHERE_M), n, radius);
+            float3 p2 = DebugSpherePosition(m, min(n + 1, DEBUG_SPHERE_N), radius);
+            
+            DrawDebugTriangle(p0, p1, p2, color);
+        }
+    }
+}
