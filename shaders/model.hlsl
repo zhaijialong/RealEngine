@@ -14,7 +14,7 @@ struct VSOutput
 };
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
-{
+{    
     StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[ModelCB.posBuffer];
     StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[ModelCB.uvBuffer];
     StructuredBuffer<float3> normalBuffer = ResourceDescriptorHeap[ModelCB.normalBuffer];
@@ -27,6 +27,11 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);
     output.uv = uvBuffer[vertex_id];
     output.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);    
+    
+    if (vertex_id == 0)
+    {
+        //DrawDebugSphere(ModelCB.center, ModelCB.radius, float3(1, 0, 0));
+    }
     
     //DrawDebugLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
     

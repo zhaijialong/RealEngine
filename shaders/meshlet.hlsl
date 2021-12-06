@@ -1,5 +1,6 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
+#include "debug.hlsli"
 
 cbuffer RootConstants : register(b0)
 {
@@ -38,6 +39,45 @@ struct Payload
 
 groupshared Payload s_Payload;
 
+bool Cull(MeshletBound meshletBound)
+{
+    float scale = max(max(length(ModelCB.mtxWorld[0].xyz), length(ModelCB.mtxWorld[1].xyz)), length(ModelCB.mtxWorld[2].xyz));
+            
+    float3 center = mul(ModelCB.mtxWorld, float4(meshletBound.center, 1.0)).xyz;
+    float radius = meshletBound.radius * scale;
+    
+    for (uint i = 0; i < 6; ++i)
+    {
+        if (dot(center, CameraCB.culling.planes[i].xyz) + CameraCB.culling.planes[i].w + radius < 0)
+        {
+            return false;
+        }
+    }
+    
+    /*
+    float3 apex = mul(ModelCB.mtxWorld, float4(meshletBound.coneApex, 1.0)).xyz;
+    float3 axis = normalize(mul(ModelCB.mtxWorld, float4(meshletBound.coneAxis, 0.0)).xyz);
+    
+    float3 cameraPos = CameraCB.culling.viewPos;
+    
+    if (dot(normalize(apex - cameraPos), axis) <= meshletBound.coneCutoff)
+    {
+        return false;
+    }*/
+    
+    /*
+    float3 center = mul(ModelCB.mtxWorld, float4(meshletBound.center, 1.0)).xyz;
+    float radius = meshletBound.radius;
+    
+    if (dot(center - CameraCB.culling.viewPos, axis) >= meshletBound.coneCutoff * length(center - CameraCB.culling.viewPos) + radius)
+    {
+        return false;
+    }
+    */
+    
+    return true;
+}
+
 [numthreads(32, 1, 1)]
 void main_as(uint dispatchThreadID : SV_DispatchThreadID)
 {
@@ -49,7 +89,17 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
         StructuredBuffer<MeshletBound> meshletBuffer = ResourceDescriptorHeap[c_meshletBoundsBuffer];
         MeshletBound meshletBound = meshletBuffer[meshletIndex];
         
-        visible = true;
+        visible = Cull(meshletBound);
+        
+        if(visible)
+        {
+            float scale = max(max(length(ModelCB.mtxWorld[0].xyz), length(ModelCB.mtxWorld[1].xyz)), length(ModelCB.mtxWorld[2].xyz));
+            
+            float3 center = mul(ModelCB.mtxWorld, float4(meshletBound.center, 1.0)).xyz;
+            float radius = meshletBound.radius * scale;
+            
+            //DrawDebugSphere(center, radius, float3(1, 0, 0));
+        }
     }
     
     if (visible)
