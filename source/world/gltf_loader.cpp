@@ -249,6 +249,19 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
         case cgltf_attribute_type_position:
             vertex_streams.push_back(LoadBufferStream(primitive->attributes[i].data, true, vertex_count));
             vertex_types.push_back(primitive->attributes[i].type);
+            {
+                float3 min = float3(primitive->attributes[i].data->min);
+                min.z = -min.z;
+
+                float3 max = float3(primitive->attributes[i].data->max);
+                max.z = -max.z;
+
+                float3 center = (min + max) / 2;
+                float radius = length(max - min) / 2;
+
+                mesh->m_center = center;
+                mesh->m_radius = radius;
+            }
             break;
         case cgltf_attribute_type_texcoord:
             if (primitive->attributes[i].index == 0)

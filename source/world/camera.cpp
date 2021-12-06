@@ -270,16 +270,3 @@ void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
 
     SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
 }
-
-bool Camera::FrustumCull(float3 center, float radius) const
-{
-    for (int i = 0; i < 6; i++)
-    {
-        if (dot(center, m_frustumPlanes[i].xyz()) + m_frustumPlanes[i].w + radius < 0)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}

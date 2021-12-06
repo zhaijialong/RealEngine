@@ -27,13 +27,17 @@ void StaticMesh::Tick(float delta_time)
 
 void StaticMesh::UpdateConstants()
 {
-    m_modelCB.mtxWorld = m_mtxWorld;
-    m_modelCB.mtxNormal = transpose(inverse(m_mtxWorld));
-    m_modelCB.mtxPrevWorld = m_mtxPrevWorld;
     m_modelCB.posBuffer = m_pPosBuffer->GetSRV()->GetHeapIndex();
     m_modelCB.uvBuffer = m_pUVBuffer ? m_pUVBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_modelCB.normalBuffer = m_pNormalBuffer ? m_pNormalBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_modelCB.tangentBuffer = m_pTangentBuffer ? m_pTangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+
+    m_modelCB.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
+    m_modelCB.radius = m_radius * max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
+
+    m_modelCB.mtxWorld = m_mtxWorld;
+    m_modelCB.mtxNormal = transpose(inverse(m_mtxWorld));
+    m_modelCB.mtxPrevWorld = m_mtxPrevWorld;
 }
 
 void StaticMesh::Render(Renderer* pRenderer)
@@ -58,6 +62,14 @@ void StaticMesh::Render(Renderer* pRenderer)
 
     RenderFunc idPassBatch = std::bind(&StaticMesh::RenderIDPass, this, std::placeholders::_1, std::placeholders::_2);
     pRenderer->AddObjectIDPassBatch(idPassBatch);
+}
+
+bool StaticMesh::FrustumCull(const float4* planes, uint32_t plane_count)
+{
+    float3 center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
+    float radius = m_radius * max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
+
+    return ::FrustumCull(planes, plane_count, center, radius);
 }
 
 void StaticMesh::RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera)

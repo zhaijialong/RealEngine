@@ -10,6 +10,9 @@ struct ModelConstant
     uint prevPosBuffer;
     uint3 _padding;
     
+    float3 center;
+    float radius;
+    
     float4x4 mtxWorld;
     float4x4 mtxNormal;
     float4x4 mtxPrevWorld;

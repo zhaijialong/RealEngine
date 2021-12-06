@@ -6,6 +6,7 @@
 #include "utils/assert.h"
 #include "utils/string.h"
 #include "utils/profiler.h"
+#include "utils/log.h"
 #include "tinyxml2/tinyxml2.h"
 
 World::World()
@@ -57,9 +58,19 @@ void World::Tick(float delta_time)
 
     m_pCamera->Tick(delta_time);
 
+    std::vector<IVisibleObject*> visibleObjects;
+    const float4* planes = m_pCamera->GetFrustumPlanes();
+
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
     {
-        (*iter)->Tick(delta_time);
+        IVisibleObject* object = (*iter).get();
+
+        object->Tick(delta_time);
+
+        if (object->FrustumCull(planes, 6))
+        {
+            visibleObjects.push_back(object);
+        }
     }
 
     for (auto iter = m_lights.begin(); iter != m_lights.end(); ++iter)
@@ -67,11 +78,9 @@ void World::Tick(float delta_time)
         (*iter)->Tick(delta_time);
     }
 
-    //todo : culling, ...
-
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+    for (auto iter = visibleObjects.begin(); iter != visibleObjects.end(); ++iter)
     {
         (*iter)->Render(pRenderer);
     }

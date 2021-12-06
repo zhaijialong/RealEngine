@@ -44,7 +44,7 @@ public:
     float2 GetJitter() const { return m_jitter; }
     float2 GetPrevJitter() const { return m_prevJitter; }
 
-    bool FrustumCull(float3 center, float radius) const;
+    const float4* GetFrustumPlanes() const { return m_frustumPlanes; }
 
     void Tick(float delta_time);
 

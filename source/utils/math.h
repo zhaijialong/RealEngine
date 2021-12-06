@@ -96,3 +96,16 @@ inline float4 normalize_plane(const float4& plane)
     float length = std::sqrt(plane.x * plane.x + plane.y * plane.y + plane.z * plane.z);
     return plane * (1.0f / length);
 }
+
+inline bool FrustumCull(const float4* planes, uint32_t plane_count, float3 center, float radius)
+{
+    for (uint32_t i = 0; i < plane_count; i++)
+    {
+        if (dot(center, planes[i].xyz()) + planes[i].w + radius < 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

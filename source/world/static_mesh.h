@@ -14,6 +14,7 @@ public:
     virtual bool Create() override;
     virtual void Tick(float delta_time) override;
     virtual void Render(Renderer* pRenderer) override;
+    virtual bool FrustumCull(const float4* planes, uint32_t plane_count) override;
 
 private:
     void RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera);
@@ -46,4 +47,7 @@ private:
 
     float4x4 m_mtxWorld;
     float4x4 m_mtxPrevWorld;
+
+    float3 m_center = { 0.0f, 0.0f, 0.0f };
+    float m_radius = 0.0f;
 };

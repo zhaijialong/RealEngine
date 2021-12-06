@@ -61,14 +61,14 @@ void DrawDebugBox(float3 min, float3 max, float3 color)
 }
 
 static const uint DEBUG_SPHERE_M = 10; //latitude (horizontal)
-static const uint DEBUG_SPHERE_N = 10; //longitude (vertical)
+static const uint DEBUG_SPHERE_N = 20; //longitude (vertical)
 
-float3 DebugSpherePosition(uint m, uint n, float radius)
+float3 DebugSpherePosition(uint m, uint n, float3 center, float radius)
 {
     float x = sin(M_PI * m / DEBUG_SPHERE_M) * cos(2 * M_PI * n / DEBUG_SPHERE_N);
-    float y = sin(M_PI * m / DEBUG_SPHERE_M) * sin(2 * M_PI * n / DEBUG_SPHERE_N);
-    float z = cos(M_PI * m / DEBUG_SPHERE_M);
-    return float3(x, y, z) * radius;
+    float z = sin(M_PI * m / DEBUG_SPHERE_M) * sin(2 * M_PI * n / DEBUG_SPHERE_N);
+    float y = cos(M_PI * m / DEBUG_SPHERE_M);
+    return center + float3(x, y, z) * radius;
 }
 
 void DrawDebugSphere(float3 center, float radius, float3 color)
@@ -77,9 +77,9 @@ void DrawDebugSphere(float3 center, float radius, float3 color)
     {
         for (uint n = 0; n < DEBUG_SPHERE_N; ++n)
         {
-            float3 p0 = DebugSpherePosition(m, n, radius);
-            float3 p1 = DebugSpherePosition(min(m + 1, DEBUG_SPHERE_M), n, radius);
-            float3 p2 = DebugSpherePosition(m, min(n + 1, DEBUG_SPHERE_N), radius);
+            float3 p0 = DebugSpherePosition(m, n, center, radius);
+            float3 p1 = DebugSpherePosition(min(m + 1, DEBUG_SPHERE_M), n, center, radius);
+            float3 p2 = DebugSpherePosition(m, min(n + 1, DEBUG_SPHERE_N), center, radius);
             
             DrawDebugTriangle(p0, p1, p2, color);
         }
