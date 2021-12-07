@@ -26,7 +26,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     VSOutput output;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);
     output.uv = uvBuffer[vertex_id];
-    output.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);    
+    output.normal = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(normalBuffer[vertex_id], 0.0f)).xyz);
     
     if (vertex_id == 0)
     {
@@ -37,7 +37,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     
 #if NORMAL_TEXTURE
     float4 tangent = tangentBuffer[vertex_id];
-    output.tangent = normalize(mul(ModelCB.mtxNormal, float4(tangent.xyz, 0.0f)).xyz);
+    output.tangent = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
     output.bitangent = normalize(cross(output.normal, output.tangent) * tangent.w);    
     
     //DrawDebugLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));

@@ -286,7 +286,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxV
     ModelConstant modelCB;
     //modelCB.mtxWVP = mtxWVP;
     modelCB.mtxWorld = mtxWorld;
-    modelCB.mtxNormal = transpose(inverse(mtxWorld));
+    modelCB.mtxWorldInverseTranspose = transpose(inverse(mtxWorld));
 
     pCommandList->SetGraphicsConstants(1, &modelCB, sizeof(modelCB));
 
@@ -340,7 +340,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
     ModelConstant modelCB;
     //modelCB.mtxWVP = mtxWVP;
     modelCB.mtxWorld = mtxWorld;
-    modelCB.mtxNormal = transpose(inverse(mtxWorld));
+    modelCB.mtxWorldInverseTranspose = transpose(inverse(mtxWorld));
 
     for (size_t i = 0; i < pNode->meshes.size(); ++i)
     {

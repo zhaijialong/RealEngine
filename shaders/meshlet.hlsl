@@ -13,11 +13,11 @@ cbuffer RootConstants : register(b0)
 
 struct Meshlet
 {
-    unsigned int vertexOffset;
-    unsigned int triangleOffset;
+    uint vertexOffset;
+    uint triangleOffset;
 
-    unsigned int vertexCount;
-    unsigned int triangleCount;
+    uint vertexCount;
+    uint triangleCount;
 };
 
 struct MeshletBound
@@ -36,7 +36,8 @@ struct Payload
 groupshared Payload s_Payload;
 
 bool Cull(MeshletBound meshletBound)
-{            
+{
+    // 1. frustum culling
     float3 center = mul(ModelCB.mtxWorld, float4(meshletBound.center, 1.0)).xyz;
     float radius = meshletBound.radius * ModelCB.scale;
     
@@ -48,6 +49,7 @@ bool Cull(MeshletBound meshletBound)
         }
     }
     
+    // 2. backface culling
     int16_t4 cone = unpack_s8s16((int8_t4_packed)meshletBound.cone);
     float3 axis = cone.xyz / 127.0;
     float cutoff = cone.w / 127.0;
@@ -60,6 +62,8 @@ bool Cull(MeshletBound meshletBound)
         //DrawDebugSphere(center, radius, float3(1, 0, 0));
         return false;
     }
+    
+    // 3. occlusion culling(todo)
     
     //DrawDebugSphere(center, radius, float3(0, 1, 0));
     return true;
@@ -102,8 +106,8 @@ void main_ms(
     uint groupThreadID : SV_GroupThreadID,
     uint groupID : SV_GroupID,
     in payload Payload payload,
-    out indices uint3 tris[124],
-    out vertices VertexOut verts[64])
+    out indices uint3 indices[124],
+    out vertices VertexOut vertices[64])
 {
     uint meshletIndex = payload.meshletIndices[groupID];
     if(meshletIndex >= c_meshletCount)
@@ -119,12 +123,12 @@ void main_ms(
     if(groupThreadID < meshlet.triangleCount)
     {
         StructuredBuffer<uint16_t> meshletIndicesBuffer = ResourceDescriptorHeap[c_meshletIndicesBuffer];
-        uint3 tri = uint3(
+        uint3 index = uint3(
             meshletIndicesBuffer[meshlet.triangleOffset + groupThreadID * 3],
             meshletIndicesBuffer[meshlet.triangleOffset + groupThreadID * 3 + 1],
             meshletIndicesBuffer[meshlet.triangleOffset + groupThreadID * 3 + 2]);
         
-        tris[groupThreadID] = tri;
+        indices[groupThreadID] = index;
     }
     
     if(groupThreadID < meshlet.vertexCount)
@@ -138,12 +142,12 @@ void main_ms(
         float4 pos = float4(posBuffer[vertex_id], 1.0);
         float4 worldPos = mul(ModelCB.mtxWorld, pos);
         
-        VertexOut v;
-        v.pos = mul(CameraCB.mtxViewProjection, worldPos);
-        v.normal = normalize(mul(ModelCB.mtxNormal, float4(normalBuffer[vertex_id], 0.0f)).xyz);
-        v.meshlet = meshletIndex;
+        VertexOut vertex;
+        vertex.pos = mul(CameraCB.mtxViewProjection, worldPos);
+        vertex.normal = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(normalBuffer[vertex_id], 0.0f)).xyz);
+        vertex.meshlet = meshletIndex;
         
-        verts[groupThreadID] = v;
+        vertices[groupThreadID] = vertex;
     }
 }
 

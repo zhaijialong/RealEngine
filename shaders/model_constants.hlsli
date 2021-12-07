@@ -15,7 +15,7 @@ struct ModelConstant
     float radius;
     
     float4x4 mtxWorld;
-    float4x4 mtxNormal;
+    float4x4 mtxWorldInverseTranspose;
     float4x4 mtxPrevWorld;
 };
 

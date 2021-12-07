@@ -19,7 +19,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     float3 normal = normalBuffer[vertex_id];
 
     float4 worldPos = mul(ModelCB.mtxWorld, pos);
-    float3 worldNormal = mul(ModelCB.mtxNormal, float4(normal, 0.0)).xyz;
+    float3 worldNormal = mul(ModelCB.mtxWorldInverseTranspose, float4(normal, 0.0)).xyz;
     
     VSOutput output;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);

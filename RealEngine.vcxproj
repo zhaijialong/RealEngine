@@ -168,7 +168,6 @@
     <ClCompile Include="source\world\camera.cpp" />
     <ClCompile Include="source\world\directional_light.cpp" />
     <ClCompile Include="source\world\gltf_loader.cpp" />
-    <ClCompile Include="source\world\meshlet_generator.cpp" />
     <ClCompile Include="source\world\mesh_material.cpp" />
     <ClCompile Include="source\world\model.cpp" />
     <ClCompile Include="source\world\skeletal_mesh.cpp" />
@@ -275,7 +274,6 @@
     <ClInclude Include="source\world\gltf_loader.h" />
     <ClInclude Include="source\world\i_light.h" />
     <ClInclude Include="source\world\i_visible_object.h" />
-    <ClInclude Include="source\world\meshlet_generator.h" />
     <ClInclude Include="source\world\mesh_material.h" />
     <ClInclude Include="source\world\model.h" />
     <ClInclude Include="source\world\skeletal_mesh.h" />

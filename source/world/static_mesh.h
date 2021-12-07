@@ -14,7 +14,7 @@ public:
     virtual bool Create() override;
     virtual void Tick(float delta_time) override;
     virtual void Render(Renderer* pRenderer) override;
-    virtual bool FrustumCull(const float4* planes, uint32_t plane_count) override;
+    virtual bool FrustumCull(const float4* planes, uint32_t plane_count) const override;
 
 private:
     void RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera);

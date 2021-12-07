@@ -253,9 +253,6 @@
     <ClCompile Include="external\meshoptimizer\indexcodec.cpp">
       <Filter>external\meshoptimizer</Filter>
     </ClCompile>
-    <ClCompile Include="source\world\meshlet_generator.cpp">
-      <Filter>source\world</Filter>
-    </ClCompile>
     <ClCompile Include="source\renderer\gpu_driven_stats.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
@@ -569,9 +566,6 @@
     </ClInclude>
     <ClInclude Include="external\meshoptimizer\meshoptimizer.h">
       <Filter>external\meshoptimizer</Filter>
-    </ClInclude>
-    <ClInclude Include="source\world\meshlet_generator.h">
-      <Filter>source\world</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\gpu_driven_stats.h">
       <Filter>source\renderer</Filter>

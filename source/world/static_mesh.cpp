@@ -37,7 +37,7 @@ void StaticMesh::UpdateConstants()
     m_modelCB.radius = m_radius * m_modelCB.scale;
 
     m_modelCB.mtxWorld = m_mtxWorld;
-    m_modelCB.mtxNormal = transpose(inverse(m_mtxWorld));
+    m_modelCB.mtxWorldInverseTranspose = transpose(inverse(m_mtxWorld));
     m_modelCB.mtxPrevWorld = m_mtxPrevWorld;
 }
 
@@ -65,7 +65,7 @@ void StaticMesh::Render(Renderer* pRenderer)
     pRenderer->AddObjectIDPassBatch(idPassBatch);
 }
 
-bool StaticMesh::FrustumCull(const float4* planes, uint32_t plane_count)
+bool StaticMesh::FrustumCull(const float4* planes, uint32_t plane_count) const
 {
     float3 center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
     float radius = m_radius * max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));

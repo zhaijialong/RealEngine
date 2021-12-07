@@ -26,18 +26,16 @@ void main()
     
     float3 v1 = IntersectPlanes(left, top, far);
     float3 v2 = IntersectPlanes(left, top, near);
-    DrawDebugLine(v1, v2, color);
-    
     float3 v3 = IntersectPlanes(right, top, far);
     float3 v4 = IntersectPlanes(right, top, near);
-    DrawDebugLine(v3, v4, color);
-
     float3 v5 = IntersectPlanes(right, bottom, far);
     float3 v6 = IntersectPlanes(right, bottom, near);
-    DrawDebugLine(v5, v6, color);
-    
     float3 v7 = IntersectPlanes(left, bottom, far);
     float3 v8 = IntersectPlanes(left, bottom, near);
+
+    DrawDebugLine(v1, v2, color);
+    DrawDebugLine(v3, v4, color);
+    DrawDebugLine(v5, v6, color);
     DrawDebugLine(v7, v8, color);
     
     /*

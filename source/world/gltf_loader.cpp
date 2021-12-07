@@ -417,11 +417,11 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
         }
     }
 
-    mesh->m_nMeshletCount = meshlet_count;
-    mesh->m_pMeshletBuffer.reset(pRenderer->CreateStructuredBuffer(meshlets.data(), sizeof(meshopt_Meshlet), meshlets.size(), "model(" + m_file + " " + name + ") meshlet"));
-    mesh->m_pMeshletBoundsBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_bounds.data(), sizeof(MeshletBound), meshlet_bounds.size(), "model(" + m_file + " " + name + ") meshlet bounds"));
-    mesh->m_pMeshletVerticesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_vertices.data(), sizeof(unsigned int), meshlet_vertices.size(), "model(" + m_file + " " + name + ") meshlet vertices"));
-    mesh->m_pMeshletIndicesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_triangles16.data(), sizeof(unsigned short), meshlet_triangles16.size(), "model(" + m_file + " " + name + ") meshlet indices"));
+    mesh->m_nMeshletCount = (uint32_t)meshlet_count;
+    mesh->m_pMeshletBuffer.reset(pRenderer->CreateStructuredBuffer(meshlets.data(), sizeof(meshopt_Meshlet), (uint32_t)meshlets.size(), "model(" + m_file + " " + name + ") meshlet"));
+    mesh->m_pMeshletBoundsBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_bounds.data(), sizeof(MeshletBound), (uint32_t)meshlet_bounds.size(), "model(" + m_file + " " + name + ") meshlet bounds"));
+    mesh->m_pMeshletVerticesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_vertices.data(), sizeof(unsigned int), (uint32_t)meshlet_vertices.size(), "model(" + m_file + " " + name + ") meshlet vertices"));
+    mesh->m_pMeshletIndicesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_triangles16.data(), sizeof(unsigned short), (uint32_t)meshlet_triangles16.size(), "model(" + m_file + " " + name + ") meshlet indices"));
 
     m_pWorld->AddObject(mesh);
 
