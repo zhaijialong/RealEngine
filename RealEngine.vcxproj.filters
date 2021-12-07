@@ -641,10 +641,16 @@
     <Filter Include="external\meshoptimizer">
       <UniqueIdentifier>{e1b745d4-095e-41a0-b03a-009acca0aae4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="external\hlslpp">
+      <UniqueIdentifier>{d0c234be-3ee4-4b99-8075-01959be799ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis">
       <Filter>external\d3d12ma</Filter>
+    </Natvis>
+    <Natvis Include="external\hlslpp\hlsl++.natvis">
+      <Filter>external\hlslpp</Filter>
     </Natvis>
   </ItemGroup>
   <ItemGroup>

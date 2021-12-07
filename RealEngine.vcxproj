@@ -284,6 +284,7 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis" />
+    <Natvis Include="external\hlslpp\hlsl++.natvis" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\atmosphere.hlsli" />
