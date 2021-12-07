@@ -423,6 +423,7 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     mesh->m_pMeshletVerticesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_vertices.data(), sizeof(unsigned int), (uint32_t)meshlet_vertices.size(), "model(" + m_file + " " + name + ") meshlet vertices"));
     mesh->m_pMeshletIndicesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_triangles16.data(), sizeof(unsigned short), (uint32_t)meshlet_triangles16.size(), "model(" + m_file + " " + name + ") meshlet indices"));
 
+    mesh->Create();
     m_pWorld->AddObject(mesh);
 
     RE_FREE(remapped_indices);

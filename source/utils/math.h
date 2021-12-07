@@ -1,11 +1,58 @@
 #pragma once
 
 #include "linalg/linalg.h"
+#include "hlslpp/hlsl++.h"
 
 using namespace linalg;
 using namespace linalg::aliases;
 
 using uint = uint32_t;
+
+#define ENABLE_HLSLPP 1
+
+inline hlslpp::float4 to_hlslpp(const float4& v)
+{
+    return hlslpp::float4(v.x, v.y, v.z, v.w);
+}
+
+inline hlslpp::float4x4 to_hlslpp(const float4x4& m)
+{
+    return hlslpp::float4x4(to_hlslpp(m[0]), to_hlslpp(m[1]), to_hlslpp(m[2]), to_hlslpp(m[3]));
+}
+
+inline float4x4 mul(const float4x4& a, const float4x4& b)
+{
+#if ENABLE_HLSLPP
+    hlslpp::float4x4 a1 = to_hlslpp(a);
+    hlslpp::float4x4 b1 = to_hlslpp(b);
+
+    return float4x4(mul(b1, a1).f32_128_0);
+#else
+    return mul<float, 4>(a, b);
+#endif
+}
+
+inline float4 mul(const float4x4& a, const float4& b)
+{
+#if ENABLE_HLSLPP
+    hlslpp::float4x4 a1 = to_hlslpp(a);
+    hlslpp::float4 b1 = to_hlslpp(b);
+
+    return float4(hlslpp::mul(b1, a1).f32);
+#else
+    return mul<float, 4>(a, b);
+#endif
+}
+
+inline float4x4 inverse(const float4x4& m)
+{
+#if ENABLE_HLSLPP
+    hlslpp::float4x4 m1 = to_hlslpp(m);
+    return float4x4(hlslpp::inverse(m1).f32_128_0);
+#else
+    return inverse<float, 4>(m);
+#endif
+}
 
 template<class T>
 inline T degree_to_randian(T degree)

@@ -9,6 +9,11 @@ StaticMesh::StaticMesh(const std::string& name)
 
 bool StaticMesh::Create()
 {
+    m_modelCB.posBuffer = m_pPosBuffer->GetSRV()->GetHeapIndex();
+    m_modelCB.uvBuffer = m_pUVBuffer ? m_pUVBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    m_modelCB.normalBuffer = m_pNormalBuffer ? m_pNormalBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    m_modelCB.tangentBuffer = m_pTangentBuffer ? m_pTangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+
     return true;
 }
 
@@ -27,11 +32,6 @@ void StaticMesh::Tick(float delta_time)
 
 void StaticMesh::UpdateConstants()
 {
-    m_modelCB.posBuffer = m_pPosBuffer->GetSRV()->GetHeapIndex();
-    m_modelCB.uvBuffer = m_pUVBuffer ? m_pUVBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_modelCB.normalBuffer = m_pNormalBuffer ? m_pNormalBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_modelCB.tangentBuffer = m_pTangentBuffer ? m_pTangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-
     m_modelCB.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
     m_modelCB.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
     m_modelCB.radius = m_radius * m_modelCB.scale;
