@@ -381,7 +381,7 @@ void Renderer::CreateCommonResources()
     desc.address_u = GfxSamplerAddressMode::ClampToEdge;
     desc.address_v = GfxSamplerAddressMode::ClampToEdge;
     desc.address_w = GfxSamplerAddressMode::ClampToEdge;
-    desc.enable_compare = true;
+    desc.reduction_mode = GfxSamplerReductionMode::Compare;
     desc.compare_func = GfxCompareFunc::LessEqual;
     m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
 

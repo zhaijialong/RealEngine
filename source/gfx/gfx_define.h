@@ -532,19 +532,27 @@ enum class GfxSamplerAddressMode
     ClampToBorder,
 };
 
+enum class GfxSamplerReductionMode
+{
+    Standard,
+    Compare,
+    Min,
+    Max,
+};
+
 struct GfxSamplerDesc
 {
     GfxFilter min_filter = GfxFilter::Point;
     GfxFilter mag_filter = GfxFilter::Point;
     GfxFilter mip_filter = GfxFilter::Point;
+    GfxSamplerReductionMode reduction_mode = GfxSamplerReductionMode::Standard;
     GfxSamplerAddressMode address_u = GfxSamplerAddressMode::Repeat;
     GfxSamplerAddressMode address_v = GfxSamplerAddressMode::Repeat;
     GfxSamplerAddressMode address_w = GfxSamplerAddressMode::Repeat;
-    float mip_bias = 0.0f;
+    GfxCompareFunc compare_func = GfxCompareFunc::Always;
     bool enable_anisotropy = false;
     float max_anisotropy = 1.0f;
-    bool enable_compare = false;
-    GfxCompareFunc compare_func = GfxCompareFunc::Always;
+    float mip_bias = 0.0f;
     float min_lod = 0.0f;
     float max_lod = FLT_MAX;
     float border_color[4] = {};

@@ -456,6 +456,23 @@ inline D3D_PRIMITIVE_TOPOLOGY d3d12_primitive_topology(GfxPrimitiveType primitiv
     }
 }
 
+inline D3D12_FILTER_REDUCTION_TYPE d3d12_filter_reduction_type(GfxSamplerReductionMode mode)
+{
+    switch (mode)
+    {
+    case GfxSamplerReductionMode::Standard:
+        return D3D12_FILTER_REDUCTION_TYPE_STANDARD;
+    case GfxSamplerReductionMode::Compare:
+        return D3D12_FILTER_REDUCTION_TYPE_COMPARISON;
+    case GfxSamplerReductionMode::Min:
+        return D3D12_FILTER_REDUCTION_TYPE_MINIMUM;
+    case GfxSamplerReductionMode::Max:
+        return D3D12_FILTER_REDUCTION_TYPE_MAXIMUM;
+    default:
+        return D3D12_FILTER_REDUCTION_TYPE_STANDARD;
+    }
+}
+
 inline D3D12_FILTER_TYPE d3d12_filter_type(GfxFilter filter)
 {
     switch (filter)
@@ -471,7 +488,7 @@ inline D3D12_FILTER_TYPE d3d12_filter_type(GfxFilter filter)
 
 inline D3D12_FILTER d3d12_filter(const GfxSamplerDesc& desc)
 {
-    D3D12_FILTER_REDUCTION_TYPE reduction = desc.enable_compare ? D3D12_FILTER_REDUCTION_TYPE_COMPARISON : D3D12_FILTER_REDUCTION_TYPE_STANDARD;
+    D3D12_FILTER_REDUCTION_TYPE reduction = d3d12_filter_reduction_type(desc.reduction_mode);
 
     if (desc.enable_anisotropy)
     {
