@@ -3,159 +3,183 @@
 
 IGfxPipelineState* MeshMaterial::GetPSO()
 {
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-
-    std::vector<std::string> defines;
-    if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
-    if (m_pMetallicRoughnessTexture)
+    if (m_pPSO == nullptr)
     {
-        defines.push_back("METALLIC_ROUGHNESS_TEXTURE=1");
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-        if (m_pAOTexture == m_pMetallicRoughnessTexture)
+        std::vector<std::string> defines;
+        if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_pMetallicRoughnessTexture)
         {
-            defines.push_back("AO_METALLIC_ROUGHNESS_TEXTURE=1");
+            defines.push_back("METALLIC_ROUGHNESS_TEXTURE=1");
+
+            if (m_pAOTexture == m_pMetallicRoughnessTexture)
+            {
+                defines.push_back("AO_METALLIC_ROUGHNESS_TEXTURE=1");
+            }
         }
-    }
 
-    if (m_pNormalTexture)
-    {
-        defines.push_back("NORMAL_TEXTURE=1");
-
-        if (m_pNormalTexture->GetTexture()->GetDesc().format == GfxFormat::BC5UNORM)
+        if (m_pNormalTexture)
         {
-            defines.push_back("RG_NORMAL_TEXTURE=1");
+            defines.push_back("NORMAL_TEXTURE=1");
+
+            if (m_pNormalTexture->GetTexture()->GetDesc().format == GfxFormat::BC5UNORM)
+            {
+                defines.push_back("RG_NORMAL_TEXTURE=1");
+            }
         }
+
+        if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
+        if (m_pEmissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
+        if (m_pAOTexture) defines.push_back("AO_TEXTURE=1");
+
+        GfxGraphicsPipelineDesc psoDesc;
+        psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
+        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.depthstencil_state.depth_test = true;
+        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+        psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
+        psoDesc.rt_format[1] = GfxFormat::RGBA8UNORM;
+        psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
+        psoDesc.depthstencil_format = GfxFormat::D32FS8;
+
+        m_pPSO = pRenderer->GetPipelineState(psoDesc, "model PSO");
     }
-
-    if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
-    if (m_pEmissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
-    if (m_pAOTexture) defines.push_back("AO_TEXTURE=1");
-
-    GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
-    psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
-    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-    psoDesc.rasterizer_state.front_ccw = true;
-    psoDesc.depthstencil_state.depth_test = true;
-    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-    psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
-    psoDesc.rt_format[1] = GfxFormat::RGBA8UNORM;
-    psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
-    psoDesc.depthstencil_format = GfxFormat::D32FS8;
-
-    return pRenderer->GetPipelineState(psoDesc, "model PSO");
+    return m_pPSO;
 }
 
 IGfxPipelineState* MeshMaterial::GetShadowPSO()
 {
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-
-    std::vector<std::string> defines;
-    if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
-    if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
-
-    GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("model_shadow.hlsl", "vs_main", "vs_6_6", defines);
-    if (m_pAlbedoTexture && m_bAlphaTest)
+    if (m_pShadowPSO == nullptr)
     {
-        psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
-    }
-    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-    psoDesc.rasterizer_state.front_ccw = true;
-    psoDesc.rasterizer_state.depth_bias = 5.0f;
-    psoDesc.rasterizer_state.depth_slope_scale = 1.0f;
-    psoDesc.depthstencil_state.depth_test = true;
-    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::LessEqual;
-    psoDesc.depthstencil_format = GfxFormat::D16;
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    return pRenderer->GetPipelineState(psoDesc, "model shadow PSO");
+        std::vector<std::string> defines;
+        if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
+
+        GfxGraphicsPipelineDesc psoDesc;
+        psoDesc.vs = pRenderer->GetShader("model_shadow.hlsl", "vs_main", "vs_6_6", defines);
+        if (m_pAlbedoTexture && m_bAlphaTest)
+        {
+            psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
+        }
+        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.rasterizer_state.depth_bias = 5.0f;
+        psoDesc.rasterizer_state.depth_slope_scale = 1.0f;
+        psoDesc.depthstencil_state.depth_test = true;
+        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::LessEqual;
+        psoDesc.depthstencil_format = GfxFormat::D16;
+
+        m_pShadowPSO = pRenderer->GetPipelineState(psoDesc, "model shadow PSO");
+    }
+    return m_pShadowPSO;
 }
 
 IGfxPipelineState* MeshMaterial::GetVelocityPSO()
 {
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    if (m_pVelocityPSO == nullptr)
+    {
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    std::vector<std::string> defines;
-    if (m_bSkeletalAnim) defines.push_back("ANIME_POS=1");
-    if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
-    if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
+        std::vector<std::string> defines;
+        if (m_bSkeletalAnim) defines.push_back("ANIME_POS=1");
+        if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
-    GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("model_velocity.hlsl", "vs_main", "vs_6_6", defines);
-    psoDesc.ps = pRenderer->GetShader("model_velocity.hlsl", "ps_main", "ps_6_6", defines);
-    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-    psoDesc.rasterizer_state.front_ccw = true;
-    psoDesc.depthstencil_state.depth_write = false;
-    psoDesc.depthstencil_state.depth_test = true;
-    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-    psoDesc.rt_format[0] = GfxFormat::RGBA16F;
-    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        GfxGraphicsPipelineDesc psoDesc;
+        psoDesc.vs = pRenderer->GetShader("model_velocity.hlsl", "vs_main", "vs_6_6", defines);
+        psoDesc.ps = pRenderer->GetShader("model_velocity.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.depthstencil_state.depth_write = false;
+        psoDesc.depthstencil_state.depth_test = true;
+        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+        psoDesc.rt_format[0] = GfxFormat::RGBA16F;
+        psoDesc.depthstencil_format = GfxFormat::D32FS8;
 
-    return pRenderer->GetPipelineState(psoDesc, "model velocity PSO");
+        m_pVelocityPSO = pRenderer->GetPipelineState(psoDesc, "model velocity PSO");
+    }
+    return m_pVelocityPSO;
 }
 
 IGfxPipelineState* MeshMaterial::GetIDPSO()
 {
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    if (m_pIDPSO == nullptr)
+    {
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    std::vector<std::string> defines;
-    if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
-    if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
+        std::vector<std::string> defines;
+        if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
-    GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("model_id.hlsl", "vs_main", "vs_6_6", defines);
-    psoDesc.ps = pRenderer->GetShader("model_id.hlsl", "ps_main", "ps_6_6", defines);
-    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-    psoDesc.rasterizer_state.front_ccw = true;
-    psoDesc.depthstencil_state.depth_write = false;
-    psoDesc.depthstencil_state.depth_test = true;
-    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-    psoDesc.rt_format[0] = GfxFormat::R32UI;
-    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        GfxGraphicsPipelineDesc psoDesc;
+        psoDesc.vs = pRenderer->GetShader("model_id.hlsl", "vs_main", "vs_6_6", defines);
+        psoDesc.ps = pRenderer->GetShader("model_id.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.depthstencil_state.depth_write = false;
+        psoDesc.depthstencil_state.depth_test = true;
+        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+        psoDesc.rt_format[0] = GfxFormat::R32UI;
+        psoDesc.depthstencil_format = GfxFormat::D32FS8;
 
-    return pRenderer->GetPipelineState(psoDesc, "model ID PSO");
+        m_pIDPSO = pRenderer->GetPipelineState(psoDesc, "model ID PSO");
+    }
+    return m_pIDPSO;
 }
 
 IGfxPipelineState* MeshMaterial::GetOutlinePSO()
 {
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    if (m_pOutlinePSO == nullptr)
+    {
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    std::vector<std::string> defines;
-    if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
-    if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
+        std::vector<std::string> defines;
+        if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
-    GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("model_outline.hlsl", "vs_main", "vs_6_6", defines);
-    psoDesc.ps = pRenderer->GetShader("model_outline.hlsl", "ps_main", "ps_6_6", defines);
-    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Front;
-    psoDesc.rasterizer_state.front_ccw = true;
-    psoDesc.depthstencil_state.depth_write = true;
-    psoDesc.depthstencil_state.depth_test = true;
-    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-    psoDesc.rt_format[0] = GfxFormat::RGBA16F;
-    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        GfxGraphicsPipelineDesc psoDesc;
+        psoDesc.vs = pRenderer->GetShader("model_outline.hlsl", "vs_main", "vs_6_6", defines);
+        psoDesc.ps = pRenderer->GetShader("model_outline.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Front;
+        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.depthstencil_state.depth_write = true;
+        psoDesc.depthstencil_state.depth_test = true;
+        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+        psoDesc.rt_format[0] = GfxFormat::RGBA16F;
+        psoDesc.depthstencil_format = GfxFormat::D32FS8;
 
-    return pRenderer->GetPipelineState(psoDesc, "model outline PSO");
+        m_pOutlinePSO = pRenderer->GetPipelineState(psoDesc, "model outline PSO");
+    }
+    return m_pOutlinePSO;
 }
 
 IGfxPipelineState* MeshMaterial::GetMeshletPSO()
 {
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    if (m_pMeshletPSO == nullptr)
+    {
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    GfxMeshShadingPipelineDesc psoDesc;
-    psoDesc.as = pRenderer->GetShader("meshlet.hlsl", "main_as", "as_6_6", {});
-    psoDesc.ms = pRenderer->GetShader("meshlet.hlsl", "main_ms", "ms_6_6", {});
-    psoDesc.ps = pRenderer->GetShader("meshlet.hlsl", "main_ps", "ps_6_6", {});
-    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-    psoDesc.rasterizer_state.front_ccw = true;
-    psoDesc.depthstencil_state.depth_test = true;
-    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-    psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
-    psoDesc.rt_format[1] = GfxFormat::RGBA8UNORM;
-    psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
-    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        GfxMeshShadingPipelineDesc psoDesc;
+        psoDesc.as = pRenderer->GetShader("meshlet.hlsl", "main_as", "as_6_6", {});
+        psoDesc.ms = pRenderer->GetShader("meshlet.hlsl", "main_ms", "ms_6_6", {});
+        psoDesc.ps = pRenderer->GetShader("meshlet.hlsl", "main_ps", "ps_6_6", {});
+        psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.depthstencil_state.depth_test = true;
+        psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+        psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
+        psoDesc.rt_format[1] = GfxFormat::RGBA8UNORM;
+        psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
+        psoDesc.depthstencil_format = GfxFormat::D32FS8;
 
-    return pRenderer->GetPipelineState(psoDesc, "model meshlet PSO");
+        m_pMeshletPSO = pRenderer->GetPipelineState(psoDesc, "model meshlet PSO");
+    }
+    return m_pMeshletPSO;
 }
 
 void MeshMaterial::UpdateConstants()

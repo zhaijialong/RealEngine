@@ -22,6 +22,14 @@ private:
     std::string m_name;
     MaterialConstant m_materialCB = {};
 
+    IGfxPipelineState* m_pPSO = nullptr;
+    IGfxPipelineState* m_pShadowPSO = nullptr;
+    IGfxPipelineState* m_pVelocityPSO = nullptr;
+    IGfxPipelineState* m_pIDPSO = nullptr;
+    IGfxPipelineState* m_pOutlinePSO = nullptr;
+
+    IGfxPipelineState* m_pMeshletPSO = nullptr;
+
     Texture2D* m_pAlbedoTexture = nullptr;
     Texture2D* m_pMetallicRoughnessTexture = nullptr;
     Texture2D* m_pNormalTexture = nullptr;
