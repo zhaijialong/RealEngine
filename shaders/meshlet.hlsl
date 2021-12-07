@@ -59,13 +59,13 @@ bool Cull(MeshletBound meshletBound)
     
     if (dot(view, -axis) >= cutoff * length(view) + radius)
     {
-        //DrawDebugSphere(center, radius, float3(1, 0, 0));
+        //debug::DrawSphere(center, radius, float3(1, 0, 0));
         return false;
     }
     
     // 3. occlusion culling(todo)
     
-    //DrawDebugSphere(center, radius, float3(0, 1, 0));
+    //debug::DrawSphere(center, radius, float3(0, 1, 0));
     return true;
 }
 

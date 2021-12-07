@@ -30,18 +30,18 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     
     if (vertex_id == 0)
     {
-        //DrawDebugSphere(ModelCB.center, ModelCB.radius, float3(1, 0, 0));
+        //debug::DrawSphere(ModelCB.center, ModelCB.radius, float3(1, 0, 0));
     }
     
-    //DrawDebugLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
+    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE
     float4 tangent = tangentBuffer[vertex_id];
     output.tangent = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
     output.bitangent = normalize(cross(output.normal, output.tangent) * tangent.w);    
     
-    //DrawDebugLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));
-    //DrawDebugLine(worldPos.xyz, worldPos.xyz + output.bitangent * 0.05, float3(0, 1, 0));
+    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));
+    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.bitangent * 0.05, float3(0, 1, 0));
 #endif
     
     return output;

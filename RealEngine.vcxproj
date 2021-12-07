@@ -135,6 +135,7 @@
     <ClCompile Include="source\gfx\gfx.cpp" />
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp" />
     <ClCompile Include="source\renderer\gpu_driven_debug_line.cpp" />
+    <ClCompile Include="source\renderer\gpu_driven_debug_print.cpp" />
     <ClCompile Include="source\renderer\gpu_driven_stats.cpp" />
     <ClCompile Include="source\renderer\lighting\clustered_shading.cpp" />
     <ClCompile Include="source\renderer\lighting\gtao.cpp" />
@@ -229,6 +230,7 @@
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
     <ClInclude Include="source\renderer\directed_acyclic_graph.h" />
     <ClInclude Include="source\renderer\gpu_driven_debug_line.h" />
+    <ClInclude Include="source\renderer\gpu_driven_debug_print.h" />
     <ClInclude Include="source\renderer\gpu_driven_stats.h" />
     <ClInclude Include="source\renderer\lighting\clustered_shading.h" />
     <ClInclude Include="source\renderer\lighting\gtao.h" />

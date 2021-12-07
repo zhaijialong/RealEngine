@@ -33,20 +33,20 @@ void main()
     float3 v7 = IntersectPlanes(left, bottom, far);
     float3 v8 = IntersectPlanes(left, bottom, near);
 
-    DrawDebugLine(v1, v2, color);
-    DrawDebugLine(v3, v4, color);
-    DrawDebugLine(v5, v6, color);
-    DrawDebugLine(v7, v8, color);
+    debug::DrawLine(v1, v2, color);
+    debug::DrawLine(v3, v4, color);
+    debug::DrawLine(v5, v6, color);
+    debug::DrawLine(v7, v8, color);
     
     /*
-    DrawDebugLine(v1, v3, color);
-    DrawDebugLine(v3, v5, color);
-    DrawDebugLine(v5, v7, color);
-    DrawDebugLine(v7, v1, color);
+    debug::DrawLine(v1, v3, color);
+    debug::DrawLine(v3, v5, color);
+    debug::DrawLine(v5, v7, color);
+    debug::DrawLine(v7, v1, color);
     */
     
-    DrawDebugLine(v2, v4, color);
-    DrawDebugLine(v4, v6, color);
-    DrawDebugLine(v6, v8, color);
-    DrawDebugLine(v8, v2, color);
+    debug::DrawLine(v2, v4, color);
+    debug::DrawLine(v4, v6, color);
+    debug::DrawLine(v6, v8, color);
+    debug::DrawLine(v8, v2, color);
 }

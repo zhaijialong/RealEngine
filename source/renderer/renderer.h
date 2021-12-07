@@ -6,6 +6,7 @@
 #include "staging_buffer_allocator.h"
 #include "render_graph.h"
 #include "gpu_driven_debug_line.h"
+#include "gpu_driven_debug_print.h"
 #include "gpu_driven_stats.h"
 #include "resource/texture_2d.h"
 #include "resource/texture_cube.h"
@@ -160,7 +161,9 @@ private:
 
     std::unique_ptr<LightingProcessor> m_pLightingProcessor;
     std::unique_ptr<PostProcessor> m_pPostProcessor;
+
     std::unique_ptr<GpuDrivenDebugLine> m_pGpuDebugLine;
+    std::unique_ptr<GpuDrivenDebugPrint> m_pGpuDebugPrint;
     std::unique_ptr<GpuDrivenStats> m_pGpuStats;
 
     std::vector<ComputeFunc> m_computePassBatchs;
