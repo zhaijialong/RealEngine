@@ -349,6 +349,7 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     meshlets.resize(meshlet_count);
 
     std::vector<unsigned short> meshlet_triangles16;
+    meshlet_triangles16.reserve(meshlet_triangles.size());
     for (size_t i = 0; i < meshlet_triangles.size(); ++i)
     {
         meshlet_triangles16.push_back(meshlet_triangles[i]);

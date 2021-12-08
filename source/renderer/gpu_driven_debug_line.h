@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gfx/gfx.h"
 #include "resource/raw_buffer.h"
 #include "resource/structured_buffer.h"
 

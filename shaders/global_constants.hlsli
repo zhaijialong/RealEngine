@@ -15,10 +15,15 @@ struct SceneConstant
     float rcpViewWidth;
     float rcpViewHeight;
     
+    uint debugLineDrawCommandUAV;
     uint debugLineVertexBufferUAV;
     uint debugLineVertexBufferSRV;
-    uint debugLineDrawCommandUAV;
     uint _padding;
+    
+    uint debugTextCounterBufferUAV;
+    uint debugTextBufferUAV;
+    uint debugFontCharBufferSRV;
+    uint _padding1;
     
     uint pointRepeatSampler;
     uint pointClampSampler;

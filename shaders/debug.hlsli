@@ -87,4 +87,172 @@ namespace debug
             }
         }
     }
+    
+    struct Text
+    {
+        float2 screenPosition;
+        uint text;
+    };
+    
+    //packed version of stbtt_bakedchar
+    struct BakedChar
+    {
+        uint bbox; //uint8_t x0, y0, x1, y1; // coordinates of bbox in bitmap
+        float xoff;
+        float yoff;
+        float xadvance;
+    };
+    
+    void PrintChar(inout float2 screenPos, uint text)
+    {
+        RWByteAddressBuffer counterBuffer = ResourceDescriptorHeap[SceneCB.debugTextCounterBufferUAV];
+        RWStructuredBuffer<Text> textBuffer = ResourceDescriptorHeap[SceneCB.debugTextBufferUAV];
+        StructuredBuffer<BakedChar> bakedCharBuffer = ResourceDescriptorHeap[SceneCB.debugFontCharBufferSRV];
+
+        uint text_count;
+        counterBuffer.InterlockedAdd(0, 1, text_count);
+        
+        textBuffer[text_count].screenPosition = screenPos;
+        textBuffer[text_count].text = text;
+        
+        screenPos.x += bakedCharBuffer[text].xadvance;
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
+        PrintChar(screenPos, c6);
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
+        PrintChar(screenPos, c6);PrintChar(screenPos, c7);
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
+        PrintChar(screenPos, c6);PrintChar(screenPos, c7);PrintChar(screenPos, c8);
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8, uint c9)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
+        PrintChar(screenPos, c6);PrintChar(screenPos, c7);PrintChar(screenPos, c8);PrintChar(screenPos, c9);
+    }
+    
+    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8, uint c9, uint c10)
+    {
+        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
+        PrintChar(screenPos, c6);PrintChar(screenPos, c7);PrintChar(screenPos, c8);PrintChar(screenPos, c9);PrintChar(screenPos, c10);
+    }
+    
+    uint GetDigitChar(uint number) //0-9
+    {
+        return clamp(number, 0, 9) + '0';
+    }
+    
+    void PrintInt(inout float2 screenPos, int number)
+    {
+        if (number < 0)
+        {
+            PrintChar(screenPos, '-');
+            number = -number;
+        }
+        
+        uint length = number == 0 ? 1 : log10(number) + 1;        
+        uint divisor = round(pow(10, length - 1));
+     
+        for (uint i = 0; i < length; ++i)
+        {
+            uint digit = number / divisor;
+            PrintChar(screenPos, GetDigitChar(digit));
+
+            number = number - digit * divisor;
+            divisor /= 10;
+        }
+    }
+    
+    void PrintFloat(inout float2 screenPos, float number)
+    {
+        if(isinf(number))
+        {
+            PrintString(screenPos, 'I', 'N', 'F');
+        }
+        else if(isnan(number))
+        {
+            PrintString(screenPos, 'N', 'A', 'N');
+        }
+        else
+        {            
+            PrintInt(screenPos, (int)number);
+            PrintChar(screenPos, '.');
+            
+            uint frac_value = frac(number) * 100000;
+            PrintInt(screenPos, frac_value);
+        }
+    }
+    
+    void PrintInt(inout float2 screenPos, int2 value)
+    {
+        PrintInt(screenPos, value.x);
+        PrintChar(screenPos, ',');
+        PrintInt(screenPos, value.y);
+    }
+    
+    void PrintInt(inout float2 screenPos, int3 value)
+    {
+        PrintInt(screenPos, value.xy);
+        PrintChar(screenPos, ',');
+        PrintInt(screenPos, value.z);
+    }
+    
+    void PrintInt(inout float2 screenPos, int4 value)
+    {
+        PrintInt(screenPos, value.xyz);
+        PrintChar(screenPos, ',');
+        PrintInt(screenPos, value.w);
+    }
+    
+    void PrintFloat(inout float2 screenPos, float2 value)
+    {
+        PrintFloat(screenPos, value.x);
+        PrintChar(screenPos, ',');
+        PrintFloat(screenPos, value.y);
+    }
+    
+    void PrintFloat(inout float2 screenPos, float3 value)
+    {
+        PrintFloat(screenPos, value.xy);
+        PrintChar(screenPos, ',');
+        PrintFloat(screenPos, value.z);
+    }
+    
+    void PrintFloat(inout float2 screenPos, float4 value)
+    {
+        PrintFloat(screenPos, value.xyz);
+        PrintChar(screenPos, ',');
+        PrintFloat(screenPos, value.w);
+    }
 }

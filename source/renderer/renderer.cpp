@@ -67,6 +67,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_pLightingProcessor.reset(new LightingProcessor(this));
     m_pPostProcessor.reset(new PostProcessor(this));
     m_pGpuDebugLine.reset(new GpuDrivenDebugLine(this));
+    m_pGpuDebugPrint.reset(new GpuDrivenDebugPrint(this));
 }
 
 void Renderer::RenderFrame()
@@ -184,8 +185,11 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
     sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
     sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
-    sceneCB.debugLineVertexBufferSRV = m_pGpuDebugLine->GetVertexBufferSRV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
+    sceneCB.debugLineVertexBufferSRV = m_pGpuDebugLine->GetVertexBufferSRV()->GetHeapIndex();
+    sceneCB.debugTextCounterBufferUAV = m_pGpuDebugPrint->GetTextCounterBufferUAV()->GetHeapIndex();
+    sceneCB.debugTextBufferUAV = m_pGpuDebugPrint->GetTextBufferUAV()->GetHeapIndex();
+    sceneCB.debugFontCharBufferSRV = m_pGpuDebugPrint->GetFontCharBufferSRV()->GetHeapIndex();
     sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
     sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
     sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
@@ -227,6 +231,8 @@ void Renderer::Render()
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
     m_pGpuDebugLine->Clear(pCommandList);
+    m_pGpuDebugPrint->Clear(pCommandList);
+
     SetupGlobalConstants(pCommandList);
     FlushComputePass(pCommandList);
 
@@ -251,6 +257,8 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHa
 {
     GPU_EVENT(pCommandList, "Backbuffer Pass");
 
+    m_pGpuDebugPrint->PrepareForDraw(pCommandList);
+
     pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
     m_pGpuDebugLine->BarrierForDraw(pCommandList);
 
@@ -266,6 +274,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHa
 
     CopyToBackbuffer(pCommandList, colorRTHandle);
     m_pGpuDebugLine->Draw(pCommandList);
+    m_pGpuDebugPrint->Draw(pCommandList);
     Engine::GetInstance()->GetGUI()->Render(pCommandList);
 
     pCommandList->EndRenderPass();

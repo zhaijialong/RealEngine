@@ -14,7 +14,7 @@ GpuDrivenDebugLine::GpuDrivenDebugLine(Renderer* pRenderer)
     psoDesc.depthstencil_state.depth_test = true;
     psoDesc.depthstencil_state.depth_func = GfxCompareFunc::Greater;
     psoDesc.depthstencil_state.depth_write = false;
-    psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
+    psoDesc.rt_format[0] = pRenderer->GetSwapchain()->GetBackBuffer()->GetDesc().format;
     psoDesc.depthstencil_format = GfxFormat::D32FS8;
     psoDesc.primitive_type = GfxPrimitiveType::LineList;
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "GpuDrivenDebugLine::m_pPSO");
@@ -29,6 +29,8 @@ GpuDrivenDebugLine::GpuDrivenDebugLine(Renderer* pRenderer)
 
 void GpuDrivenDebugLine::Clear(IGfxCommandList* pCommandList)
 {
+    GPU_EVENT(pCommandList, "GpuDrivenDebugLine clear");
+
     pCommandList->ResourceBarrier(m_pDrawArugumentsBuffer->GetBuffer(), 0, GfxResourceState::IndirectArg, GfxResourceState::CopyDst);
 
     //reset vertex_count to 0
