@@ -120,52 +120,56 @@ namespace debug
     
     void PrintString(inout float2 screenPos, uint c1, uint c2)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);
+        PrintChar(screenPos, c1);
+        PrintChar(screenPos, c2);
     }
     
     void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);
+        PrintString(screenPos, c1, c2);
+        PrintChar(screenPos, c3);
     }
     
     void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);
+        PrintString(screenPos, c1, c2, c3);
+        PrintChar(screenPos, c4);
     }
     
     void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
+        PrintString(screenPos, c1, c2, c3, c4);
+        PrintChar(screenPos, c5);
     }
     
     void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
+        PrintString(screenPos, c1, c2, c3, c4, c5);
         PrintChar(screenPos, c6);
     }
     
     void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
-        PrintChar(screenPos, c6);PrintChar(screenPos, c7);
+        PrintString(screenPos, c1, c2, c3, c4, c5, c6);
+        PrintChar(screenPos, c7);
     }
     
     void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
-        PrintChar(screenPos, c6);PrintChar(screenPos, c7);PrintChar(screenPos, c8);
+        PrintString(screenPos, c1, c2, c3, c4, c5, c6, c7);
+        PrintChar(screenPos, c8);
     }
     
     void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8, uint c9)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
-        PrintChar(screenPos, c6);PrintChar(screenPos, c7);PrintChar(screenPos, c8);PrintChar(screenPos, c9);
+        PrintString(screenPos, c1, c2, c3, c4, c5, c6, c7, c8);
+        PrintChar(screenPos, c9);
     }
     
     void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8, uint c9, uint c10)
     {
-        PrintChar(screenPos, c1);PrintChar(screenPos, c2);PrintChar(screenPos, c3);PrintChar(screenPos, c4);PrintChar(screenPos, c5);
-        PrintChar(screenPos, c6);PrintChar(screenPos, c7);PrintChar(screenPos, c8);PrintChar(screenPos, c9);PrintChar(screenPos, c10);
+        PrintString(screenPos, c1, c2, c3, c4, c5, c6, c7, c8, c9);
+        PrintChar(screenPos, c10);
     }
     
     uint GetDigitChar(uint number) //0-9

@@ -79,7 +79,8 @@ half3 LinearToSrgb(half3 lin)
 half3 SrgbToLinear(half3 Color)
 {
     Color = max(6.10352e-5, Color);
-    return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
+    //return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
+    return lerp(Color * (1.0 / 12.92), pow(Color * (1.0 / 1.055) + 0.0521327, 2.4), Color > 0.04045);
 }
 
 float LinearToSrgbChannel(float lin)
@@ -97,7 +98,8 @@ float3 LinearToSrgb(float3 lin)
 float3 SrgbToLinear(float3 Color)
 {
     Color = max(6.10352e-5, Color);
-    return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
+//    return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
+    return lerp(Color * (1.0 / 12.92), pow(Color * (1.0 / 1.055) + 0.0521327, 2.4), Color > 0.04045);
 }
 
 //pack float2[0,1] in rgb8unorm, each float is 12 bits
@@ -118,8 +120,9 @@ float2 DecodeRGB8Unorm(float3 v)
 float3 OctNormalEncode(float3 n)
 {
     n /= (abs(n.x) + abs(n.y) + abs(n.z));
-    n.xy = n.z >= 0.0 ? n.xy : (1.0 - abs(n.yx)) * (n.xy >= 0.0 ? 1.0 : -1.0);
-
+    //n.xy = n.z >= 0.0 ? n.xy : (1.0 - abs(n.yx)) * (n.xy >= 0.0 ? 1.0 : -1.0);
+    n.xy = n.z >= 0.0 ? n.xy : (1.0 - abs(n.yx)) * lerp(-1.0, 1.0, n.xy >= 0.0);
+    
     n.xy = n.xy * 0.5 + 0.5;
     return EncodeRGB8Unorm(n.xy);
 }
@@ -132,7 +135,8 @@ float3 OctNormalDecode(float3 f)
  
     float3 n = float3(e.x, e.y, 1.0 - abs(e.x) - abs(e.y));
     float t = saturate(-n.z);
-    n.xy += n.xy >= 0.0 ? -t : t;
+    //n.xy += n.xy >= 0.0 ? -t : t;
+    n.xy += lerp(t, -t, n.xy >= 0.0);
     return normalize(n);
 }
 

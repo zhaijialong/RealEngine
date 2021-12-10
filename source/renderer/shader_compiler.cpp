@@ -54,6 +54,7 @@ bool ShaderCompiler::Compile(const std::string& source, const std::string& file,
         arguments.push_back(L"-D"); arguments.push_back(wstrDefines[i].c_str());
     }
 
+    arguments.push_back(L"-HV 2021");
     arguments.push_back(L"-enable-16bit-types");
 
 #ifdef _DEBUG

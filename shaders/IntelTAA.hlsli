@@ -391,7 +391,9 @@ fp16_t3 ClipToAABB( fp16_t3 inHistoryColour, fp16_t3 inCurrentColour, fp32_t3 in
     const fp32_t3 intersection = ( ( inBBCentre - sign( direction ) * inBBExtents ) - inHistoryColour ) / direction;
 
     // clip unexpected T values
-    const fp32_t3 possibleT = intersection >= 0.0f.xxx ? intersection : VARIANCE_INTERSECTION_MAX_T + 1.f;
+    //const fp32_t3 possibleT = intersection >= 0.0f.xxx ? intersection : VARIANCE_INTERSECTION_MAX_T + 1.f;
+    const fp32_t3 possibleT = lerp(VARIANCE_INTERSECTION_MAX_T + 1.f, intersection, intersection > 0.0f.xxx); // modified for hlsl 2021
+    
     const fp32_t t = min( VARIANCE_INTERSECTION_MAX_T, min( possibleT.x, min( possibleT.y, possibleT.z ) ) );
 
     // final history colour
