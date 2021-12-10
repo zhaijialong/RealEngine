@@ -63,42 +63,25 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 diffuse, float3 specular, float
     return (diffuse_brdf + specular_brdf) * NdotL;
 }
 
-
-half LinearToSrgbChannel(half lin)
+template<typename T>
+T LinearToSrgbChannel(T lin)
 {
     if (lin < 0.00313067)
         return lin * 12.92;
     return pow(lin, (1.0 / 2.4)) * 1.055 - 0.055;
 }
 
-half3 LinearToSrgb(half3 lin)
+template<typename T>
+T LinearToSrgb(T lin)
 {
-    return half3(LinearToSrgbChannel(lin.r), LinearToSrgbChannel(lin.g), LinearToSrgbChannel(lin.b));
+    return T(LinearToSrgbChannel(lin.r), LinearToSrgbChannel(lin.g), LinearToSrgbChannel(lin.b));
 }
 
-half3 SrgbToLinear(half3 Color)
+template<typename T>
+T SrgbToLinear(T Color)
 {
     Color = max(6.10352e-5, Color);
     //return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
-    return lerp(Color * (1.0 / 12.92), pow(Color * (1.0 / 1.055) + 0.0521327, 2.4), Color > 0.04045);
-}
-
-float LinearToSrgbChannel(float lin)
-{
-    if (lin < 0.00313067)
-        return lin * 12.92;
-    return pow(lin, (1.0 / 2.4)) * 1.055 - 0.055;
-}
-
-float3 LinearToSrgb(float3 lin)
-{
-    return float3(LinearToSrgbChannel(lin.r), LinearToSrgbChannel(lin.g), LinearToSrgbChannel(lin.b));
-}
-
-float3 SrgbToLinear(float3 Color)
-{
-    Color = max(6.10352e-5, Color);
-//    return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
     return lerp(Color * (1.0 / 12.92), pow(Color * (1.0 / 1.055) + 0.0521327, 2.4), Color > 0.04045);
 }
 
