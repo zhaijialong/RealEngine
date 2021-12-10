@@ -17,7 +17,7 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
-extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 4; }
+extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 700; }
 extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
 static IDXGIAdapter1* FindAdapter(IDXGIFactory4* pDXGIFactory, D3D_FEATURE_LEVEL minimumFeatureLevel)
@@ -81,7 +81,7 @@ D3D12Device::~D3D12Device()
     m_pDevice->QueryInterface(IID_PPV_ARGS(&pDebugDevice));
     if (pDebugDevice)
     {
-        pDebugDevice->ReportLiveDeviceObjects(D3D12_RLDO_SUMMARY | D3D12_RLDO_DETAIL);
+        pDebugDevice->ReportLiveDeviceObjects(D3D12_RLDO_SUMMARY | D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
         pDebugDevice->Release();
     }
 #endif
