@@ -92,6 +92,7 @@ namespace debug
     {
         float2 screenPosition;
         uint text;
+        uint color;
     };
     
     //packed version of stbtt_bakedchar
@@ -103,7 +104,7 @@ namespace debug
         float xadvance;
     };
     
-    void PrintChar(inout float2 screenPos, uint text)
+    void PrintChar(inout float2 screenPos, float3 color, uint text)
     {
         RWByteAddressBuffer counterBuffer = ResourceDescriptorHeap[SceneCB.debugTextCounterBufferUAV];
         RWStructuredBuffer<Text> textBuffer = ResourceDescriptorHeap[SceneCB.debugTextBufferUAV];
@@ -114,62 +115,63 @@ namespace debug
         
         textBuffer[text_count].screenPosition = screenPos;
         textBuffer[text_count].text = text;
+        textBuffer[text_count].color = Float4ToRGBA8Unorm(float4(color, 1.0));
         
         screenPos.x += bakedCharBuffer[text].xadvance;
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2)
     {
-        PrintChar(screenPos, c1);
-        PrintChar(screenPos, c2);
+        PrintChar(screenPos, color, c1);
+        PrintChar(screenPos, color, c2);
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2, uint c3)
     {
-        PrintString(screenPos, c1, c2);
-        PrintChar(screenPos, c3);
+        PrintString(screenPos, color, c1, c2);
+        PrintChar(screenPos, color, c3);
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2, uint c3, uint c4)
     {
-        PrintString(screenPos, c1, c2, c3);
-        PrintChar(screenPos, c4);
+        PrintString(screenPos, color, c1, c2, c3);
+        PrintChar(screenPos, color, c4);
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2, uint c3, uint c4, uint c5)
     {
-        PrintString(screenPos, c1, c2, c3, c4);
-        PrintChar(screenPos, c5);
+        PrintString(screenPos, color, c1, c2, c3, c4);
+        PrintChar(screenPos, color, c5);
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6)
     {
-        PrintString(screenPos, c1, c2, c3, c4, c5);
-        PrintChar(screenPos, c6);
+        PrintString(screenPos, color, c1, c2, c3, c4, c5);
+        PrintChar(screenPos, color, c6);
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7)
     {
-        PrintString(screenPos, c1, c2, c3, c4, c5, c6);
-        PrintChar(screenPos, c7);
+        PrintString(screenPos, color, c1, c2, c3, c4, c5, c6);
+        PrintChar(screenPos, color, c7);
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8)
     {
-        PrintString(screenPos, c1, c2, c3, c4, c5, c6, c7);
-        PrintChar(screenPos, c8);
+        PrintString(screenPos, color, c1, c2, c3, c4, c5, c6, c7);
+        PrintChar(screenPos, color, c8);
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8, uint c9)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8, uint c9)
     {
-        PrintString(screenPos, c1, c2, c3, c4, c5, c6, c7, c8);
-        PrintChar(screenPos, c9);
+        PrintString(screenPos, color, c1, c2, c3, c4, c5, c6, c7, c8);
+        PrintChar(screenPos, color, c9);
     }
     
-    void PrintString(inout float2 screenPos, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8, uint c9, uint c10)
+    void PrintString(inout float2 screenPos, float3 color, uint c1, uint c2, uint c3, uint c4, uint c5, uint c6, uint c7, uint c8, uint c9, uint c10)
     {
-        PrintString(screenPos, c1, c2, c3, c4, c5, c6, c7, c8, c9);
-        PrintChar(screenPos, c10);
+        PrintString(screenPos, color, c1, c2, c3, c4, c5, c6, c7, c8, c9);
+        PrintChar(screenPos, color, c10);
     }
     
     uint GetDigitChar(uint number) //0-9
@@ -177,11 +179,11 @@ namespace debug
         return clamp(number, 0, 9) + '0';
     }
     
-    void PrintInt(inout float2 screenPos, int number)
+    void PrintInt(inout float2 screenPos, float3 color, int number)
     {
         if (number < 0)
         {
-            PrintChar(screenPos, '-');
+            PrintChar(screenPos, color, '-');
             number = -number;
         }
         
@@ -191,72 +193,72 @@ namespace debug
         for (uint i = 0; i < length; ++i)
         {
             uint digit = number / divisor;
-            PrintChar(screenPos, GetDigitChar(digit));
+            PrintChar(screenPos, color, GetDigitChar(digit));
 
             number = number - digit * divisor;
             divisor /= 10;
         }
     }
     
-    void PrintFloat(inout float2 screenPos, float number)
+    void PrintFloat(inout float2 screenPos, float3 color, float number)
     {
         if(isinf(number))
         {
-            PrintString(screenPos, 'I', 'N', 'F');
+            PrintString(screenPos, color, 'I', 'N', 'F');
         }
         else if(isnan(number))
         {
-            PrintString(screenPos, 'N', 'A', 'N');
+            PrintString(screenPos, color, 'N', 'A', 'N');
         }
         else
         {            
-            PrintInt(screenPos, (int)number);
-            PrintChar(screenPos, '.');
+            PrintInt(screenPos, color, (int) number);
+            PrintChar(screenPos, color, '.');
             
             uint frac_value = frac(number) * 100000;
-            PrintInt(screenPos, frac_value);
+            PrintInt(screenPos, color, frac_value);
         }
     }
     
-    void PrintInt(inout float2 screenPos, int2 value)
+    void PrintInt(inout float2 screenPos, float3 color, int2 value)
     {
-        PrintInt(screenPos, value.x);
-        PrintChar(screenPos, ',');
-        PrintInt(screenPos, value.y);
+        PrintInt(screenPos, color, value.x);
+        PrintChar(screenPos, color, ',');
+        PrintInt(screenPos, color, value.y);
     }
     
-    void PrintInt(inout float2 screenPos, int3 value)
+    void PrintInt(inout float2 screenPos, float3 color, int3 value)
     {
-        PrintInt(screenPos, value.xy);
-        PrintChar(screenPos, ',');
-        PrintInt(screenPos, value.z);
+        PrintInt(screenPos, color, value.xy);
+        PrintChar(screenPos, color, ',');
+        PrintInt(screenPos, color, value.z);
     }
     
-    void PrintInt(inout float2 screenPos, int4 value)
+    void PrintInt(inout float2 screenPos, float3 color, int4 value)
     {
-        PrintInt(screenPos, value.xyz);
-        PrintChar(screenPos, ',');
-        PrintInt(screenPos, value.w);
+        PrintInt(screenPos, color, value.xyz);
+        PrintChar(screenPos, color, ',');
+        PrintInt(screenPos, color, value.w);
     }
     
-    void PrintFloat(inout float2 screenPos, float2 value)
+    void PrintFloat(inout float2 screenPos, float3 color, float2 value)
     {
-        PrintFloat(screenPos, value.x);
-        PrintChar(screenPos, ',');
-        PrintFloat(screenPos, value.y);
+        PrintFloat(screenPos, color, value.x);
+        PrintChar(screenPos, color, ',');
+        PrintFloat(screenPos, color, value.y);
     }
     
-    void PrintFloat(inout float2 screenPos, float3 value)
+    void PrintFloat(inout float2 screenPos, float3 color, float3 value)
     {
-        PrintFloat(screenPos, value.xy);
-        PrintChar(screenPos, ',');
-        PrintFloat(screenPos, value.z);
+        PrintFloat(screenPos, color, value.xy);
+        PrintChar(screenPos, color, ',');
+        PrintFloat(screenPos, color, value.z);
     }
     
-    void PrintFloat(inout float2 screenPos, float4 value)
+    void PrintFloat(inout float2 screenPos, float3 color, float4 value)
     {
-        PrintFloat(screenPos, value.xyz);
-        PrintChar(screenPos, ',');
-        PrintFloat(screenPos, value.w);
+        PrintFloat(screenPos, color, value.xyz);
+        PrintChar(screenPos, color, ',');
+        PrintFloat(screenPos, color, value.w);
     }
 }

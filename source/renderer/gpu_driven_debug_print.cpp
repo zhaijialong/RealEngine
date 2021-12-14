@@ -28,7 +28,7 @@ GpuDrivenDebugPrint::GpuDrivenDebugPrint(Renderer* pRenderer)
 
     uint32_t count = 0;
     m_pTextCounterBuffer.reset(pRenderer->CreateRawBuffer(&count, sizeof(count), "GpuDrivenDebugPrint::m_pTextCounterBuffer", GfxMemoryType::GpuOnly, true));
-    m_pTextBuffer.reset(pRenderer->CreateStructuredBuffer(nullptr, 12, MAX_TEXT_COUNT, "GpuDrivenDebugPrint::m_pTextBuffer", GfxMemoryType::GpuOnly, true));
+    m_pTextBuffer.reset(pRenderer->CreateStructuredBuffer(nullptr, 16, MAX_TEXT_COUNT, "GpuDrivenDebugPrint::m_pTextBuffer", GfxMemoryType::GpuOnly, true));
 
     GfxDispatchCommand command = { 0, 1, 1 };
     m_pDrawArugumentsBuffer.reset(pRenderer->CreateRawBuffer(&command, sizeof(command), "GpuDrivenDebugPrint::m_pDrawArugumentsBuffer", GfxMemoryType::GpuOnly, true));

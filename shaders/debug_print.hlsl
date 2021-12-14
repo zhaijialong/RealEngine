@@ -29,6 +29,7 @@ struct VertexOut
 {
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD;
+    float3 color : COLOR;
 };
 
 #define MAX_VERTEX_COUNT (MS_GROUP_THRED_COUNT * 4)
@@ -92,6 +93,13 @@ void main_ms(
     vertices[v2].uv = float2(s1, t0);
     vertices[v3].uv = float2(s1, t1);
     
+    float3 color = RGBA8UnormToFloat4(text.color).xyz;
+    
+    vertices[v0].color = color;
+    vertices[v1].color = color;
+    vertices[v2].color = color;
+    vertices[v3].color = color;
+    
     indices[primitive0] = uint3(groupIndex * 4, groupIndex * 4 + 1, groupIndex * 4 + 2);
     indices[primitive1] = uint3(groupIndex * 4 + 1, groupIndex * 4 + 2, groupIndex * 4 + 3);
 }
@@ -101,5 +109,5 @@ float4 main_ps(VertexOut input) : SV_Target
     Texture2D<float> fontTexture = ResourceDescriptorHeap[c_fontTexture];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
     
-    return fontTexture.SampleLevel(linearSampler, input.uv, 0).xxxx;
+    return float4(input.color, fontTexture.SampleLevel(linearSampler, input.uv, 0).x);
 }
