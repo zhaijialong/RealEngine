@@ -11,7 +11,7 @@ public:
     GpuDrivenDebugLine(Renderer* pRenderer);
 
     void Clear(IGfxCommandList* pCommandList);
-    void BarrierForDraw(IGfxCommandList* pCommandList);
+    void PrepareForDraw(IGfxCommandList* pCommandList);
     void Draw(IGfxCommandList* pCommandList);
 
     IGfxDescriptor* GetVertexBufferSRV() const { return m_pLineVertexBuffer->GetSRV(); }

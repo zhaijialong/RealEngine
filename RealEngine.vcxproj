@@ -295,6 +295,7 @@
     <None Include="shaders\debug.hlsli" />
     <None Include="shaders\IntelTAA.hlsli" />
     <None Include="shaders\model_constants.hlsli" />
+    <None Include="shaders\stats.hlsli" />
     <None Include="shaders\taa_constants.hlsli" />
     <None Include="shaders\XeGTAO.hlsli" />
     <None Include="source\renderer\render_graph.inl" />
@@ -385,6 +386,10 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\stats.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

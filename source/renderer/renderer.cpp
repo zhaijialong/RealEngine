@@ -191,6 +191,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.debugTextCounterBufferUAV = m_pGpuDebugPrint->GetTextCounterBufferUAV()->GetHeapIndex();
     sceneCB.debugTextBufferUAV = m_pGpuDebugPrint->GetTextBufferUAV()->GetHeapIndex();
     sceneCB.debugFontCharBufferSRV = m_pGpuDebugPrint->GetFontCharBufferSRV()->GetHeapIndex();
+    sceneCB.statsBufferUAV = m_pGpuStats->GetStatsBufferUAV()->GetHeapIndex();
     sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
     sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
     sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
@@ -233,6 +234,7 @@ void Renderer::Render()
 
     m_pGpuDebugLine->Clear(pCommandList);
     m_pGpuDebugPrint->Clear(pCommandList);
+    m_pGpuStats->Clear(pCommandList);
 
     SetupGlobalConstants(pCommandList);
     FlushComputePass(pCommandList);
@@ -258,10 +260,11 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHa
 {
     GPU_EVENT(pCommandList, "Backbuffer Pass");
 
+    m_pGpuStats->Draw(pCommandList);
     m_pGpuDebugPrint->PrepareForDraw(pCommandList);
+    m_pGpuDebugLine->PrepareForDraw(pCommandList);
 
     pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
-    m_pGpuDebugLine->BarrierForDraw(pCommandList);
 
     RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(depthRTHandle);
 

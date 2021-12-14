@@ -40,7 +40,7 @@ void GpuDrivenDebugLine::Clear(IGfxCommandList* pCommandList)
     pCommandList->ResourceBarrier(m_pLineVertexBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
 }
 
-void GpuDrivenDebugLine::BarrierForDraw(IGfxCommandList* pCommandList)
+void GpuDrivenDebugLine::PrepareForDraw(IGfxCommandList* pCommandList)
 {
     pCommandList->ResourceBarrier(m_pDrawArugumentsBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::IndirectArg);
     pCommandList->ResourceBarrier(m_pLineVertexBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);

@@ -23,7 +23,7 @@ struct SceneConstant
     uint debugTextCounterBufferUAV;
     uint debugTextBufferUAV;
     uint debugFontCharBufferSRV;
-    uint _padding1;
+    uint statsBufferUAV;
     
     uint pointRepeatSampler;
     uint pointClampSampler;

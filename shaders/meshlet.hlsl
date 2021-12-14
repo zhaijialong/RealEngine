@@ -1,6 +1,7 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
 #include "debug.hlsli"
+#include "stats.hlsli"
 
 cbuffer RootConstants : register(b0)
 {
@@ -45,6 +46,7 @@ bool Cull(MeshletBound meshletBound)
     {
         if (dot(center, CameraCB.culling.planes[i].xyz) + CameraCB.culling.planes[i].w + radius < 0)
         {
+            stats(STATS_FRUSTUM_CULLED_MESHLET, 1);
             return false;
         }
     }
@@ -59,7 +61,7 @@ bool Cull(MeshletBound meshletBound)
     
     if (dot(view, -axis) >= cutoff * length(view) + radius)
     {
-        //debug::DrawSphere(center, radius, float3(1, 0, 0));
+        stats(STATS_BACKFACE_CULLED_MESHLET, 1);
         return false;
     }
     
