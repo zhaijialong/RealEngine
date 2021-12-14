@@ -31,12 +31,6 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
 
     m_pEditor = std::make_unique<Editor>();
 
-    Camera* camera = m_pWorld->GetCamera();
-    camera->SetPerpective((float)window_width / window_height,
-        (float)m_configIni.GetDoubleValue("Camera", "Fov"),
-        (float)m_configIni.GetDoubleValue("Camera", "ZNear"),
-        (float)m_configIni.GetDoubleValue("Camera", "ZFar"));
-
     stm_setup();
 }
 

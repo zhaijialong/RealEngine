@@ -205,6 +205,15 @@ void World::CreateCamera(tinyxml2::XMLElement* element)
     {
         m_pCamera->SetRotation(str_to_float3(rotation->Value()));
     }
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    uint32_t window_width = pRenderer->GetBackbufferWidth();
+    uint32_t window_height = pRenderer->GetBackbufferHeight();
+
+    m_pCamera->SetPerpective((float)window_width / window_height,
+        element->FindAttribute("fov")->FloatValue(),
+        element->FindAttribute("znear")->FloatValue(),
+        element->FindAttribute("zfar")->FloatValue());
 }
 
 void World::CreateModel(tinyxml2::XMLElement* element)
