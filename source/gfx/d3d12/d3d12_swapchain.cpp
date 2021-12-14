@@ -25,7 +25,7 @@ D3D12Swapchain::~D3D12Swapchain()
 bool D3D12Swapchain::Present()
 {
     UINT interval, flags;
-    if (m_desc.enable_vsync)
+    if (m_bEnableVsync)
     {
         interval = 1;
         flags = 0;

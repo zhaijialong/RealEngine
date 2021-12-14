@@ -21,7 +21,7 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
     LoadEngineConfig();
 
     m_pRenderer = std::make_unique<Renderer>();
-    m_pRenderer->CreateDevice(window_handle, window_width, window_height, m_configIni.GetBoolValue("RealEngine", "VSync"));
+    m_pRenderer->CreateDevice(window_handle, window_width, window_height);
 
     m_pWorld = std::make_unique<World>();
     m_pWorld->LoadScene(m_assetPath + m_configIni.GetValue("World", "Scene"));

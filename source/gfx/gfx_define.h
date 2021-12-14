@@ -196,7 +196,6 @@ struct GfxSwapchainDesc
     uint32_t height = 1;
     uint32_t backbuffer_count = 3;
     GfxFormat backbuffer_format = GfxFormat::RGBA8SRGB;
-    bool enable_vsync = true;
 };
 
 struct GfxHeapDesc

@@ -239,6 +239,13 @@ void Editor::DrawToolBar()
         camera->UpdateFrustumPlanes(mtxViewFrustum);
     }
 
+    ImGui::SameLine(0.0f, 20.0f);
+    if (ImGui::Checkbox("VSync", &m_bVsync))
+    {
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+        pRenderer->GetSwapchain()->SetVSyncEnabled(m_bVsync);
+    }
+
     ImGui::End();
 }
 

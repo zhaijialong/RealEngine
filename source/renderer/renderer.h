@@ -33,7 +33,7 @@ public:
     Renderer();
     ~Renderer();
 
-    void CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height, bool enable_vsync);
+    void CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height);
     void RenderFrame();
     void WaitGpuFinished();
 

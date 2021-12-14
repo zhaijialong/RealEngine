@@ -21,7 +21,7 @@ Renderer::~Renderer()
     Engine::GetInstance()->WindowResizeSignal.disconnect(m_resizeConnection);
 }
 
-void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height, bool enable_vsync)
+void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height)
 {
     m_nWindowWidth = window_width;
     m_nWindowHeight = window_height;
@@ -34,7 +34,6 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     swapchainDesc.window_handle = window_handle;
     swapchainDesc.width = window_width;
     swapchainDesc.height = window_height;
-    swapchainDesc.enable_vsync = enable_vsync;
     m_pSwapchain.reset(m_pDevice->CreateSwapchain(swapchainDesc, "Renderer::m_pSwapchain"));
 
     m_pFrameFence.reset(m_pDevice->CreateFence("Renderer::m_pFrameFence"));

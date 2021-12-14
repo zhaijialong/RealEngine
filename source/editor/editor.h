@@ -47,4 +47,6 @@ private:
     bool m_bViewFrustumLocked = false;
     float3 m_lockedViewPos;
     float3 m_lockedViewRotation;
+
+    bool m_bVsync = true;
 };
