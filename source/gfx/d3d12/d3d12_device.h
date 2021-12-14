@@ -78,7 +78,7 @@ public:
     virtual bool DumpMemoryStats(const std::string& file) override;
 
     bool Init();
-    IDXGIFactory4* GetDxgiFactory4() const { return m_pDxgiFactory; }
+    IDXGIFactory5* GetDxgiFactory() const { return m_pDxgiFactory; }
     ID3D12CommandQueue* GetGraphicsQueue() const { return m_pGraphicsQueue; }
     ID3D12CommandQueue* GetComputeQueue() const { return m_pComputeQueue; }
     ID3D12CommandQueue* GetCopyQueue() const { return m_pCopyQueue; }
@@ -122,7 +122,7 @@ private:
 private:
     GfxDeviceDesc m_desc;
 
-    IDXGIFactory4* m_pDxgiFactory = nullptr;
+    IDXGIFactory5* m_pDxgiFactory = nullptr;
     IDXGIAdapter1* m_pDxgiAdapter = nullptr;
 
     ID3D12Device2* m_pDevice = nullptr;

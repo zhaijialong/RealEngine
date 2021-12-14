@@ -25,6 +25,8 @@ private:
 private:
     IDXGISwapChain3* m_pSwapChain = nullptr;
 
+    bool m_bSupportTearing = false;
+    bool m_bWindowMode = true;
     uint32_t m_nCurrentBackBuffer = 0;
     std::vector<IGfxTexture*> m_backBuffers;
 };

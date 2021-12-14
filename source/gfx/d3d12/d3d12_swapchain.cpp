@@ -24,7 +24,19 @@ D3D12Swapchain::~D3D12Swapchain()
 
 bool D3D12Swapchain::Present()
 {
-    HRESULT hr = m_pSwapChain->Present(m_desc.enable_vsync ? 1 : 0, 0);
+    UINT interval, flags;
+    if (m_desc.enable_vsync)
+    {
+        interval = 1;
+        flags = 0;
+    }
+    else
+    {
+        interval = 0;
+        flags = m_bSupportTearing && m_bWindowMode ? DXGI_PRESENT_ALLOW_TEARING : 0;
+    }
+
+    HRESULT hr = m_pSwapChain->Present(interval, flags);
 
     m_nCurrentBackBuffer = (m_nCurrentBackBuffer + 1) % m_desc.backbuffer_count;
 
@@ -58,6 +70,10 @@ bool D3D12Swapchain::Resize(uint32_t width, uint32_t height)
         return false;
     }
 
+    BOOL fullscreenState;
+    m_pSwapChain->GetFullscreenState(&fullscreenState, nullptr);
+    m_bWindowMode = !fullscreenState;
+
     return CreateTextures();
 }
 
@@ -69,6 +85,11 @@ IGfxTexture* D3D12Swapchain::GetBackBuffer() const
 bool D3D12Swapchain::Create()
 {
     D3D12Device* pDevice = (D3D12Device*)m_pDevice;
+    IDXGIFactory5* pFactory = pDevice->GetDxgiFactory();
+
+    BOOL allowTearing = FALSE;
+    pFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+    m_bSupportTearing = allowTearing;
 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     swapChainDesc.BufferCount = m_desc.backbuffer_count;
@@ -78,8 +99,8 @@ bool D3D12Swapchain::Create()
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.SampleDesc.Count = 1;
+    swapChainDesc.Flags = allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
-    IDXGIFactory4* pFactory = pDevice->GetDxgiFactory4();
     IDXGISwapChain1* pSwapChain = NULL;
     HRESULT hr = pFactory->CreateSwapChainForHwnd(
         pDevice->GetGraphicsQueue(), // Swap chain needs the queue so that it can force a flush on it.
