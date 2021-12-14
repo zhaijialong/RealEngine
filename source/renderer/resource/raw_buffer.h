@@ -7,7 +7,6 @@ class RawBuffer
 {
 public:
     RawBuffer(const std::string& name);
-    virtual ~RawBuffer() {}
 
     bool Create(uint32_t size, GfxMemoryType memory_type, bool uav);
 

@@ -112,6 +112,7 @@ bool D3D12ShaderResourceView::Create()
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
         srvDesc.Buffer.FirstElement = m_desc.buffer.offset / bufferDesc.stride;
         srvDesc.Buffer.NumElements = m_desc.buffer.size / bufferDesc.stride;
+        break;
     }
     case GfxShaderResourceViewType::RawBuffer:
     {

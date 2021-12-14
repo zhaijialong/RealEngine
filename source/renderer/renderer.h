@@ -13,6 +13,7 @@
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
 #include "resource/raw_buffer.h"
+#include "resource/typed_buffer.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "lsignal/lsignal.h"
@@ -56,7 +57,9 @@ public:
 
     IndexBuffer* CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
+    TypedBuffer* CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
     RawBuffer* CreateRawBuffer(const void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
+
     Texture2D* CreateTexture2D(const std::string& file, bool srgb = true, bool cached = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);

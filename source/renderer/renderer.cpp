@@ -68,6 +68,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_pPostProcessor.reset(new PostProcessor(this));
     m_pGpuDebugLine.reset(new GpuDrivenDebugLine(this));
     m_pGpuDebugPrint.reset(new GpuDrivenDebugPrint(this));
+    m_pGpuStats.reset(new GpuDrivenStats(this));
 }
 
 void Renderer::RenderFrame()
@@ -466,6 +467,23 @@ StructuredBuffer* Renderer::CreateStructuredBuffer(const void* data, uint32_t st
     if (data)
     {
         UploadBuffer(buffer->GetBuffer(), data, stride * element_count);
+    }
+
+    return buffer;
+}
+
+TypedBuffer* Renderer::CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const std::string& name, GfxMemoryType memory_type, bool uav)
+{
+    TypedBuffer* buffer = new TypedBuffer(name);
+    if (!buffer->Create(format, element_count, memory_type, uav))
+    {
+        delete buffer;
+        return nullptr;
+    }
+
+    if (data)
+    {
+        UploadBuffer(buffer->GetBuffer(), data, GetFormatRowPitch(format, 1) * element_count);
     }
 
     return buffer;

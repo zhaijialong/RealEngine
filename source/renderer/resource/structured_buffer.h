@@ -7,7 +7,6 @@ class StructuredBuffer
 {
 public:
     StructuredBuffer(const std::string& name);
-    virtual ~StructuredBuffer() {}
 
     bool Create(uint32_t stride, uint32_t element_count, GfxMemoryType memory_type, bool uav);
 
