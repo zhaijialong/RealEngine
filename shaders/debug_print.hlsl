@@ -39,6 +39,7 @@ struct VertexOut
 [outputtopology("triangle")]
 void main_ms(
     uint3 dispatchThreadID : SV_DispatchThreadID,
+    uint groupID : SV_GroupID,
     uint groupIndex : SV_GroupIndex,
     out indices uint3 indices[MAX_PRIMITIVE_COUNT],
     out vertices VertexOut vertices[MAX_VERTEX_COUNT])
@@ -46,7 +47,11 @@ void main_ms(
     ByteAddressBuffer debugTextCounterBuffer = ResourceDescriptorHeap[c_debugTextCounterBufferSRV];
     uint text_count = debugTextCounterBuffer.Load(0);
  
+#if 0
     uint text_index = dispatchThreadID.x;
+#else
+    uint text_index = groupID * MS_GROUP_THRED_COUNT + groupIndex;
+#endif
     bool valid_text = text_index < text_count;
     
     uint valid_text_count = WaveActiveCountBits(valid_text);
