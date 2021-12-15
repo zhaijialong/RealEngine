@@ -46,7 +46,7 @@ void GpuDrivenDebugPrint::Clear(IGfxCommandList* pCommandList)
     pCommandList->WriteBuffer(m_pTextCounterBuffer->GetBuffer(), 0, 0);
 
     pCommandList->ResourceBarrier(m_pTextCounterBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
-    pCommandList->ResourceBarrier(m_pTextBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourcePS, GfxResourceState::UnorderedAccess);
+    pCommandList->ResourceBarrier(m_pTextBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
 }
 
 void GpuDrivenDebugPrint::PrepareForDraw(IGfxCommandList* pCommandList)
@@ -63,7 +63,7 @@ void GpuDrivenDebugPrint::PrepareForDraw(IGfxCommandList* pCommandList)
     pCommandList->Dispatch(1, 1, 1);
 
     pCommandList->ResourceBarrier(m_pDrawArugumentsBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::IndirectArg);
-    pCommandList->ResourceBarrier(m_pTextBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourcePS);
+    pCommandList->ResourceBarrier(m_pTextBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
 }
 
 void GpuDrivenDebugPrint::Draw(IGfxCommandList* pCommandList)
@@ -75,7 +75,14 @@ void GpuDrivenDebugPrint::Draw(IGfxCommandList* pCommandList)
     uint32_t root_consts[4] = { 0 , m_pTextCounterBuffer->GetSRV()->GetHeapIndex(), m_pTextBuffer->GetSRV()->GetHeapIndex(), m_pFontTexture->GetSRV()->GetHeapIndex() };
     pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
 
-    pCommandList->DispatchMeshIndirect(m_pDrawArugumentsBuffer->GetBuffer(), 0);
+    if (m_pRenderer->GetDevice()->GetVendor() == GfxVendor::AMD)
+    {
+        pCommandList->DispatchMesh(100, 1, 1); //todo : rx6600 crashes if indirect dispatchmesh used
+    }
+    else
+    {
+        pCommandList->DispatchMeshIndirect(m_pDrawArugumentsBuffer->GetBuffer(), 0);
+    }
 }
 
 void GpuDrivenDebugPrint::CreateFontTexture()
