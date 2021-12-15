@@ -623,3 +623,10 @@ struct GfxSubresourceTilingDesc
     uint32_t depth;
     uint32_t tile_offset;
 };
+
+enum class GfxVendor
+{
+    AMD,
+    Nvidia,
+    Intel,
+};

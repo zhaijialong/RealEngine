@@ -56,6 +56,7 @@ public:
     virtual void EndFrame() override;
     virtual uint64_t GetFrameID() const override { return m_nFrameID; }
     virtual void* GetHandle() const override { return m_pDevice; }
+    virtual GfxVendor GetVendor() const override { return m_vendor; }
 
     virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name) override;
     virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const std::string& name) override;
@@ -121,6 +122,7 @@ private:
 
 private:
     GfxDeviceDesc m_desc;
+    GfxVendor m_vendor;
 
     IDXGIFactory5* m_pDxgiFactory = nullptr;
     IDXGIAdapter1* m_pDxgiAdapter = nullptr;

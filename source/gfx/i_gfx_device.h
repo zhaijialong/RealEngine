@@ -24,6 +24,7 @@ public:
     virtual void EndFrame() = 0;
     virtual uint64_t GetFrameID() const = 0;
     virtual void* GetHandle() const = 0;
+    virtual GfxVendor GetVendor() const = 0;
 
     virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name) = 0;
     virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const std::string& name) = 0;

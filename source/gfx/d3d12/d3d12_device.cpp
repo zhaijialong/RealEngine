@@ -29,12 +29,8 @@ static IDXGIAdapter1* FindAdapter(IDXGIFactory4* pDXGIFactory, D3D_FEATURE_LEVEL
         DXGI_ADAPTER_DESC1 desc;
         pDXGIAdapter->GetDesc1(&desc);
 
-        if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-        {
-            continue;
-        }
-
-        if (SUCCEEDED(D3D12CreateDevice(pDXGIAdapter, minimumFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+        if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) &&
+            SUCCEEDED(D3D12CreateDevice(pDXGIAdapter, minimumFeatureLevel, _uuidof(ID3D12Device), nullptr)))
         {
             break;
         }
@@ -330,6 +326,24 @@ bool D3D12Device::Init()
     if (m_pDxgiAdapter == nullptr)
     {
         return false;
+    }
+
+    DXGI_ADAPTER_DESC adapterDesc;
+    m_pDxgiAdapter->GetDesc(&adapterDesc);
+    switch (adapterDesc.VendorId)
+    {
+    case 0x1002:
+        m_vendor = GfxVendor::AMD;
+        break;
+    case 0x10DE:
+        m_vendor = GfxVendor::Nvidia;
+        break;
+    case 0x8086:
+        m_vendor = GfxVendor::Intel;
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
     }
     
     if (FAILED(D3D12CreateDevice(m_pDxgiAdapter, minimumFeatureLevel, IID_PPV_ARGS(&m_pDevice))))
