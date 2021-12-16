@@ -35,6 +35,8 @@ struct SceneConstant
     uint aniso8xSampler;
     uint aniso16xSampler;
     
+    uint minReductionSampler;
+    uint maxReductionSampler;
     uint envTexture;
     uint brdfTexture;
 };
@@ -69,6 +71,8 @@ struct CameraConstant
     float4x4 mtxViewProjectionNoJitter;
     float4x4 mtxPrevViewProjectionNoJitter;
     float4x4 mtxClipToPrevClipNoJitter;
+    
+    float4x4 mtxPrevViewProjectionInverse;
     
     CullingData culling;
 };

@@ -137,6 +137,7 @@
     <ClCompile Include="source\renderer\gpu_driven_debug_line.cpp" />
     <ClCompile Include="source\renderer\gpu_driven_debug_print.cpp" />
     <ClCompile Include="source\renderer\gpu_driven_stats.cpp" />
+    <ClCompile Include="source\renderer\hzb_occlusion_culling.cpp" />
     <ClCompile Include="source\renderer\lighting\clustered_shading.cpp" />
     <ClCompile Include="source\renderer\lighting\gtao.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
@@ -232,6 +233,7 @@
     <ClInclude Include="source\renderer\gpu_driven_debug_line.h" />
     <ClInclude Include="source\renderer\gpu_driven_debug_print.h" />
     <ClInclude Include="source\renderer\gpu_driven_stats.h" />
+    <ClInclude Include="source\renderer\hzb_occlusion_culling.h" />
     <ClInclude Include="source\renderer\lighting\clustered_shading.h" />
     <ClInclude Include="source\renderer\lighting\gtao.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
@@ -338,6 +340,14 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\hzb.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\hzb_reprojection.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

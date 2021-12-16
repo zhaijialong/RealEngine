@@ -73,6 +73,8 @@ private:
     float4x4 m_projectionJitter;
     float4x4 m_viewProjectionJitter;
 
+    float4x4 m_prevViewProjectionJitter;
+
     CameraConstant m_cameraCB;
 
     float m_aspectRatio = 0.0f;

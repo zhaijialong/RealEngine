@@ -63,6 +63,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     CreateCommonResources();
 
     m_pRenderGraph.reset(new RenderGraph(this));
+    m_pHZBOcclusionCulling.reset(new HZBOcclusionCulling(this));
     m_pLightingProcessor.reset(new LightingProcessor(this));
     m_pPostProcessor.reset(new PostProcessor(this));
     m_pGpuDebugLine.reset(new GpuDrivenDebugLine(this));
@@ -191,6 +192,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.debugTextBufferUAV = m_pGpuDebugPrint->GetTextBufferUAV()->GetHeapIndex();
     sceneCB.debugFontCharBufferSRV = m_pGpuDebugPrint->GetFontCharBufferSRV()->GetHeapIndex();
     sceneCB.statsBufferUAV = m_pGpuStats->GetStatsBufferUAV()->GetHeapIndex();
+    sceneCB.minReductionSampler = m_pMinReductionSampler->GetHeapIndex();
+    sceneCB.maxReductionSampler = m_pMaxReductionSampler->GetHeapIndex();
     sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
     sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
     sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
@@ -389,16 +392,6 @@ void Renderer::CreateCommonResources()
 
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;
-    desc.mip_filter = GfxFilter::Point;
-    desc.address_u = GfxSamplerAddressMode::ClampToEdge;
-    desc.address_v = GfxSamplerAddressMode::ClampToEdge;
-    desc.address_w = GfxSamplerAddressMode::ClampToEdge;
-    desc.reduction_mode = GfxSamplerReductionMode::Compare;
-    desc.compare_func = GfxCompareFunc::LessEqual;
-    m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
-
-    desc.min_filter = GfxFilter::Linear;
-    desc.mag_filter = GfxFilter::Linear;
     desc.mip_filter = GfxFilter::Linear;
     desc.address_u = GfxSamplerAddressMode::Repeat;
     desc.address_v = GfxSamplerAddressMode::Repeat;
@@ -415,7 +408,26 @@ void Renderer::CreateCommonResources()
 
     desc.max_anisotropy = 16.0f;
     m_pAniso16xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso16xSampler"));
-    
+
+    desc.enable_anisotropy = false;
+    desc.max_anisotropy = 1.0f;
+
+    desc.min_filter = GfxFilter::Linear;
+    desc.mag_filter = GfxFilter::Linear;
+    desc.mip_filter = GfxFilter::Point;
+    desc.address_u = GfxSamplerAddressMode::ClampToEdge;
+    desc.address_v = GfxSamplerAddressMode::ClampToEdge;
+    desc.address_w = GfxSamplerAddressMode::ClampToEdge;
+    desc.reduction_mode = GfxSamplerReductionMode::Min;
+    m_pMinReductionSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pMinReductionSampler"));
+
+    desc.reduction_mode = GfxSamplerReductionMode::Max;
+    m_pMaxReductionSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pMaxReductionSampler"));
+
+    desc.reduction_mode = GfxSamplerReductionMode::Compare;
+    desc.compare_func = GfxCompareFunc::LessEqual;
+    m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
+
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
     m_pBrdfTexture = CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false);
     m_pEnvTexture.reset(CreateTextureCube(asset_path + "textures/output_pmrem.dds"));

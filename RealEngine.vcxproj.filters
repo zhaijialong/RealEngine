@@ -259,6 +259,9 @@
     <ClCompile Include="source\renderer\gpu_driven_debug_print.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\hzb_occlusion_culling.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -576,6 +579,9 @@
     <ClInclude Include="source\renderer\gpu_driven_debug_print.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\hzb_occlusion_culling.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -753,6 +759,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\stats.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\hzb.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\hzb_reprojection.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

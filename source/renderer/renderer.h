@@ -14,6 +14,7 @@
 #include "resource/structured_buffer.h"
 #include "resource/raw_buffer.h"
 #include "resource/typed_buffer.h"
+#include "hzb_occlusion_culling.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "lsignal/lsignal.h"
@@ -144,6 +145,8 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pLinearRepeatSampler;
     std::unique_ptr<IGfxDescriptor> m_pLinearClampSampler;
     std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
+    std::unique_ptr<IGfxDescriptor> m_pMinReductionSampler;
+    std::unique_ptr<IGfxDescriptor> m_pMaxReductionSampler;
 
     Texture2D* m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;
@@ -162,6 +165,7 @@ private:
 
     IGfxPipelineState* m_pCopyPSO = nullptr;
 
+    std::unique_ptr<HZBOcclusionCulling> m_pHZBOcclusionCulling;
     std::unique_ptr<LightingProcessor> m_pLightingProcessor;
     std::unique_ptr<PostProcessor> m_pPostProcessor;
 
