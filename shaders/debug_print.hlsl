@@ -1,7 +1,7 @@
 #include "common.hlsli"
 #include "debug.hlsli"
 
-#define MS_GROUP_THRED_COUNT (32)
+#define GROUP_SIZE (32)
 
 cbuffer RootConstants : register(b0)
 {
@@ -18,7 +18,7 @@ void build_command()
     RWByteAddressBuffer drawCommandBuffer = ResourceDescriptorHeap[c_drawCommandBufferUAV];
 
     uint text_count = debugTextCounterBuffer.Load(0);
-    uint group_count = (text_count + MS_GROUP_THRED_COUNT - 1) / MS_GROUP_THRED_COUNT;
+    uint group_count = (text_count + GROUP_SIZE - 1) / GROUP_SIZE;
     
     drawCommandBuffer.Store3(0, uint3(group_count, 1, 1));
 }
@@ -32,10 +32,10 @@ struct VertexOut
     float3 color : COLOR;
 };
 
-#define MAX_VERTEX_COUNT (MS_GROUP_THRED_COUNT * 4)
-#define MAX_PRIMITIVE_COUNT (MS_GROUP_THRED_COUNT * 2)
+#define MAX_VERTEX_COUNT (GROUP_SIZE * 4)
+#define MAX_PRIMITIVE_COUNT (GROUP_SIZE * 2)
 
-[numthreads(MS_GROUP_THRED_COUNT, 1, 1)]
+[numthreads(GROUP_SIZE, 1, 1)]
 [outputtopology("triangle")]
 void main_ms(
     uint3 dispatchThreadID : SV_DispatchThreadID,
@@ -48,9 +48,9 @@ void main_ms(
     uint text_count = debugTextCounterBuffer.Load(0);
  
 #if 0
-    uint text_index = dispatchThreadID.x;
+    uint text_index = dispatchThreadID.x; //amd crashes
 #else
-    uint text_index = groupID * MS_GROUP_THRED_COUNT + groupIndex;
+    uint text_index = groupID * GROUP_SIZE + groupIndex;
 #endif
     bool valid_text = text_index < text_count;
     
@@ -74,7 +74,7 @@ void main_ms(
         uint primitive1 = groupIndex * 2 + 1;
         
         float2 pos = text.screenPosition;
-        uint16_t4 charBox = unpack_u8u16((uint8_t4_packed) backedChar.bbox);
+        uint16_t4 charBox = unpack_u8u16((uint8_t4_packed)backedChar.bbox);
         
         //basically gpu version of stbtt_GetBakedQuad
         int round_x = floor((pos.x + backedChar.xoff) + 0.5f);
