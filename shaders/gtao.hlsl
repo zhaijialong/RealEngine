@@ -65,10 +65,10 @@ lpfloat3 LoadNormal(int2 pos)
 [numthreads(XE_GTAO_NUMTHREADS_X, XE_GTAO_NUMTHREADS_Y, 1)]
 void gtao_main(const uint2 pixCoord : SV_DispatchThreadID)
 {
-    Texture2D<float> srcWorkingDepth = ResourceDescriptorHeap[c_srcWorkingDepth];
+    Texture2D<lpfloat> srcWorkingDepth = ResourceDescriptorHeap[c_srcWorkingDepth];
     SamplerState samplerPointClamp = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     RWTexture2D<uint> outWorkingAOTerm = ResourceDescriptorHeap[c_outWorkingAOTerm];
-    RWTexture2D<float> outWorkingEdges = ResourceDescriptorHeap[c_outWorkingEdges];
+    RWTexture2D<unorm float> outWorkingEdges = ResourceDescriptorHeap[c_outWorkingEdges];
     
     XeGTAO_MainPass(pixCoord, 3, 3, SpatioTemporalNoise(pixCoord, gtaoCB.NoiseIndex), LoadNormal(pixCoord), gtaoCB, srcWorkingDepth, samplerPointClamp, outWorkingAOTerm, outWorkingEdges);
 }
@@ -84,7 +84,7 @@ cbuffer denoiseCB : register(b0)
 void gtao_denoise(const uint2 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D<uint> srcWorkingAOTerm = ResourceDescriptorHeap[c_srcWorkingAOTerm];
-    Texture2D<float> srcWorkingEdges = ResourceDescriptorHeap[c_srcWorkingEdges];
+    Texture2D<lpfloat> srcWorkingEdges = ResourceDescriptorHeap[c_srcWorkingEdges];
     SamplerState samplerPointClamp = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     RWTexture2D<uint> outFinalAOTerm = ResourceDescriptorHeap[c_outFinalAOTerm];
     
