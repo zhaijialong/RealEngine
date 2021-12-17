@@ -33,8 +33,9 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
             //resource_outgoing should be sorted
             for (int i = (int)resource_outgoing.size() - 1; i >= 0; --i)
             {
+                uint32_t subresource = ((RenderGraphEdge*)resource_outgoing[i])->GetSubresource();
                 DAGNodeID pass_id = resource_outgoing[i]->GetToNode();
-                if (pass_id < this->GetId() && !graph.GetNode(pass_id)->IsCulled())
+                if (subresource == edge->GetSubresource() && pass_id < this->GetId() && !graph.GetNode(pass_id)->IsCulled())
                 {
                     old_state = ((RenderGraphEdge*)resource_outgoing[i])->GetUsage();
                     break;
