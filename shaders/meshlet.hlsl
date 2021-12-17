@@ -131,6 +131,8 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
         Meshlet meshlet = meshletBuffer[meshletIndex];
         
         visible = Cull(meshlet);
+        
+        stats(visible ? STATS_RENDERED_TRIANGLE : STATS_CULLED_TRIANGLE, meshlet.triangleCount);
     }
     
     if (visible)

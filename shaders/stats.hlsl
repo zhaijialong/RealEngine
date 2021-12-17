@@ -30,4 +30,16 @@ void main()
     debug::PrintString(screenPos, color, 'c', 'u', 'l', 'l', 'e', 'd', ' ');
     debug::PrintString(screenPos, color, 'm', 'e', 's', 'h', 'l', 'e', 't', 's', ':', ' ');
     debug::PrintInt(screenPos, color, statsBuffer[STATS_OCCLUSION_CULLED_MESHLET]);
+    
+    screenPos = float2(100, 160);
+    debug::PrintString(screenPos, color, 'c', 'u', 'l', 'l', 'e', 'd', ' ');
+    debug::PrintString(screenPos, color, 't', 'r', 'i', 'a', 'n', 'g', 'l', 'e', 's');
+    debug::PrintString(screenPos, color, ':', ' ');
+    debug::PrintInt(screenPos, color, statsBuffer[STATS_CULLED_TRIANGLE]);
+    
+    screenPos = float2(100, 180);
+    debug::PrintString(screenPos, color, 'r', 'e', 'n', 'd', 'e', 'r', 'e', 'd', ' ');
+    debug::PrintString(screenPos, color, 't', 'r', 'i', 'a', 'n', 'g', 'l', 'e', 's');
+    debug::PrintString(screenPos, color, ':', ' ');
+    debug::PrintInt(screenPos, color, statsBuffer[STATS_RENDERED_TRIANGLE]);
 }
