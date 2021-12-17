@@ -582,6 +582,9 @@
     <ClInclude Include="source\renderer\hzb_occlusion_culling.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\ffx_spd.h">
+      <Filter>shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">

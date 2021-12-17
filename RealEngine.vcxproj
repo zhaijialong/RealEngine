@@ -198,6 +198,7 @@
     <ClInclude Include="shaders\ffx_a.h" />
     <ClInclude Include="shaders\ffx_cas.h" />
     <ClInclude Include="shaders\ffx_lpm.h" />
+    <ClInclude Include="shaders\ffx_spd.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
     <ClInclude Include="shaders\IntelTAA.h" />
     <ClInclude Include="shaders\XeGTAO.h" />

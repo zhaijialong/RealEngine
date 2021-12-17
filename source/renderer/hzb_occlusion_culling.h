@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render_graph.h"
+#include "resource/typed_buffer.h"
 
 class Renderer;
 
@@ -11,15 +12,17 @@ public:
 
     void GenerateHZB(RenderGraph* graph);
 
-    RenderGraphHandle GetHZB() const { return m_hzb; }
-    //uint32_t GetHZBMipCount() const;
-    //RenderGraphHandle GetHZBMip(uint32_t mip) const;
+    uint32_t GetHZBMipCount() const { return m_nHZBMipCount; }
+    RenderGraphHandle GetHZBMip(uint32_t mip) const;
 
 private:
     void CalcHZBSize();
 
     void ReprojectDepth(IGfxCommandList* pCommandList, IGfxDescriptor* prevLinearDepthSRV, IGfxDescriptor* reprojectedDepthUAV);
     void DilateDepth(IGfxCommandList* pCommandList, IGfxDescriptor* reprojectedDepthSRV, IGfxDescriptor* hzbMip0UAV);
+    void BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture);
+
+    void ResetCounterBuffer(IGfxCommandList* pCommandList);
 
 private:
     Renderer* m_pRenderer = nullptr;
@@ -31,6 +34,8 @@ private:
     uint32_t m_nHZBMipCount = 0;
     uint2 m_hzbSize;
 
-    //RenderGraphHandle m_hzbMips[10];
-    RenderGraphHandle m_hzb;
+    static const uint32_t MAX_HZB_MIP_COUNT = 13; //spd limits
+    RenderGraphHandle m_hzbMips[MAX_HZB_MIP_COUNT] = {};
+
+    std::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
 };
