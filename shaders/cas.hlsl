@@ -8,14 +8,6 @@ cbuffer cb : register(b1)
     uint4 const1;
 };
 
-struct TextureIO
-{
-    Texture2D InputTexture;
-    RWTexture2D<float4> OutputTexture;
-};
-
-static TextureIO io;
-
 #define A_GPU 1
 #define A_HLSL 1
 
@@ -30,7 +22,8 @@ static TextureIO io;
 
 AH3 CasLoadH(ASW2 p)
 {
-    return (AH3)io.InputTexture.Load(ASU3(p, 0)).rgb;
+    Texture2D inputTexture = ResourceDescriptorHeap[c_input];
+    return (AH3)inputTexture.Load(ASU3(p, 0)).rgb;
 }
 
 // Lets you transform input from the load into a linear color space between 0 and 1. See ffx_cas.h
@@ -41,7 +34,8 @@ void CasInputH(inout AH2 r, inout AH2 g, inout AH2 b) {}
 
 AF3 CasLoad(ASU2 p)
 {
-    return io.InputTexture.Load(int3(p, 0)).rgb;
+    Texture2D inputTexture = ResourceDescriptorHeap[c_input];
+    return inputTexture.Load(int3(p, 0)).rgb;
 }
 
 // Lets you transform input from the load into a linear color space between 0 and 1. See ffx_cas.h
@@ -62,9 +56,7 @@ void main(uint3 LocalThreadId : SV_GroupThreadID, uint3 WorkGroupId : SV_GroupID
     AU2 gxy = ARmp8x8(LocalThreadId.x) + AU2(WorkGroupId.x << 4u, WorkGroupId.y << 4u);
 
     bool sharpenOnly = true;
-    
-    io.InputTexture = ResourceDescriptorHeap[c_input];
-    io.OutputTexture = ResourceDescriptorHeap[c_output];
+    RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_output];
     
 #if CAS_FP16
     
@@ -74,14 +66,14 @@ void main(uint3 LocalThreadId : SV_GroupThreadID, uint3 WorkGroupId : SV_GroupID
     
     CasFilterH(cR, cG, cB, gxy, const0, const1, sharpenOnly);
     CasDepack(c0, c1, cR, cG, cB);
-    io.OutputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c0.xyz), 1);
-    io.OutputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(LinearToSrgb(c1.xyz), 1);
+    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c0.xyz), 1);
+    outputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(LinearToSrgb(c1.xyz), 1);
     gxy.y += 8u;
     
     CasFilterH(cR, cG, cB, gxy, const0, const1, sharpenOnly);
     CasDepack(c0, c1, cR, cG, cB);
-    io.OutputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c0.xyz), 1);
-    io.OutputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(LinearToSrgb(c1.xyz), 1);
+    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c0.xyz), 1);
+    outputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(LinearToSrgb(c1.xyz), 1);
     
 #else
     
@@ -89,19 +81,19 @@ void main(uint3 LocalThreadId : SV_GroupThreadID, uint3 WorkGroupId : SV_GroupID
     AF3 c;
     
     CasFilter(c.r, c.g, c.b, gxy, const0, const1, sharpenOnly);
-    io.OutputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
+    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
     gxy.x += 8u;
     
     CasFilter(c.r, c.g, c.b, gxy, const0, const1, sharpenOnly);
-    io.OutputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
+    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
     gxy.y += 8u;
     
     CasFilter(c.r, c.g, c.b, gxy, const0, const1, sharpenOnly);
-    io.OutputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
+    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
     gxy.x -= 8u;
     
     CasFilter(c.r, c.g, c.b, gxy, const0, const1, sharpenOnly);
-    io.OutputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
+    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
     
 #endif
 }
