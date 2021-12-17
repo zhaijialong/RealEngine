@@ -55,7 +55,6 @@ public:
 
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
     RenderGraphHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
-    IGfxDescriptor* GetReprojectedHZB() const;
 
     IndexBuffer* CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);

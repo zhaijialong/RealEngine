@@ -175,6 +175,9 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
     camera->SetupCameraCB(pCommandList);
 
+    RenderGraphHandle hzbHandle = m_pHZBOcclusionCulling->GetHZBMip(0);
+    RenderGraphTexture* hzbTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(hzbHandle);
+
     SceneConstant sceneCB;
     sceneCB.lightDir = light->GetLightDirection();
     //sceneCB.shadowRT = shadowMapRT->GetSRV()->GetHeapIndex();
@@ -185,6 +188,9 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.viewHeight = m_nWindowHeight;
     sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
     sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
+    sceneCB.reprojectedHZBSRV = hzbTexture->GetSRV()->GetHeapIndex();
+    sceneCB.reprojectedHZBWidth = m_pHZBOcclusionCulling->GetHZBWidth();
+    sceneCB.reprojectedHZBHeight = m_pHZBOcclusionCulling->GetHZBHeight();
     sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferSRV = m_pGpuDebugLine->GetVertexBufferSRV()->GetHeapIndex();
@@ -234,6 +240,15 @@ void Renderer::Render()
 
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
+    m_pRenderGraph->Clear();
+    
+    ImportPrevFrameTextures();
+
+    RenderGraphHandle outputColorHandle, outputDepthHandle;
+    BuildRenderGraph(outputColorHandle, outputDepthHandle);
+
+    m_pRenderGraph->Compile();
+
     m_pGpuDebugLine->Clear(pCommandList);
     m_pGpuDebugPrint->Clear(pCommandList);
     m_pGpuStats->Clear(pCommandList);
@@ -245,14 +260,6 @@ void Renderer::Render()
     Camera* camera = world->GetCamera();
     camera->DrawViewFrustum(pCommandList);
 
-    m_pRenderGraph->Clear();
-    
-    ImportPrevFrameTextures();
-
-    RenderGraphHandle outputColorHandle, outputDepthHandle;
-    BuildRenderGraph(outputColorHandle, outputDepthHandle);
-
-    m_pRenderGraph->Compile();
     m_pRenderGraph->Execute(pCommandList, pComputeCommandList);
 
     RenderBackbufferPass(pCommandList, outputColorHandle, outputDepthHandle);
@@ -450,13 +457,6 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
         m_nWindowWidth = width;
         m_nWindowHeight = height;
     }
-}
-
-IGfxDescriptor* Renderer::GetReprojectedHZB() const
-{
-    RenderGraphHandle hzbHandle = m_pHZBOcclusionCulling->GetHZBMip(0);
-    RenderGraphTexture* hzbTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(hzbHandle);
-    return hzbTexture->GetSRV();
 }
 
 IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type)

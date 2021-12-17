@@ -13,6 +13,8 @@ public:
     void GenerateHZB(RenderGraph* graph);
 
     uint32_t GetHZBMipCount() const { return m_nHZBMipCount; }
+    uint32_t GetHZBWidth() const { return m_hzbSize.x; };
+    uint32_t GetHZBHeight() const { return m_hzbSize.y; }
     RenderGraphHandle GetHZBMip(uint32_t mip) const;
 
 private:

@@ -7,7 +7,6 @@ cbuffer RootConstants : register(b0)
 {
     uint c_meshletCount;
     uint c_meshletBuffer;
-    uint c_hzbTextureSRV;
     uint c_meshletVerticesBuffer;
     uint c_meshletIndicesBuffer;
 };
@@ -64,15 +63,11 @@ bool OcclusionCull(float3 center, float radius)
     float4 aabb;
     if (ProjectSphere(center, radius, CameraCB.nearZ, CameraCB.mtxProjection[0][0], CameraCB.mtxProjection[1][1], aabb))
     {
-        Texture2D<float> hzbTexture = ResourceDescriptorHeap[c_hzbTextureSRV];
+        Texture2D<float> hzbTexture = ResourceDescriptorHeap[SceneCB.reprojectedHZBSRV];
         SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
         
-        float texture_width;
-        float texture_height;
-        hzbTexture.GetDimensions(texture_width, texture_height);
-        
-        float width = (aabb.z - aabb.x) * texture_width;
-        float height = (aabb.w - aabb.y) * texture_height;
+        float width = (aabb.z - aabb.x) * SceneCB.reprojectedHZBWidth;
+        float height = (aabb.w - aabb.y) * SceneCB.reprojectedHZBHeight;
         float level = ceil(log2(max(width, height)));
         
         float depth = hzbTexture.SampleLevel(minReductionSampler, (aabb.xy + aabb.zw) * 0.5, level).x;
