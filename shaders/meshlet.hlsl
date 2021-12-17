@@ -33,6 +33,58 @@ struct Payload
 
 groupshared Payload s_Payload;
 
+// 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere. Michael Mara, Morgan McGuire. 2013
+bool ProjectSphere(float3 center, float radius, float znear, float P00, float P11, out float4 aabb)
+{
+    if (center.z < radius + znear)
+    {
+        return false;
+    }
+
+    float2 cx = -center.xz;
+    float2 vx = float2(sqrt(dot(cx, cx) - radius * radius), radius);
+    float2 minx = mul(cx, float2x2(float2(vx.x, vx.y), float2(-vx.y, vx.x)));
+    float2 maxx = mul(cx, float2x2(float2(vx.x, -vx.y), float2(vx.y, vx.x)));
+
+    float2 cy = -center.yz;
+    float2 vy = float2(sqrt(dot(cy, cy) - radius * radius), radius);
+    float2 miny = mul(cy, float2x2(float2(vy.x, vy.y), float2(-vy.y, vy.x)));
+    float2 maxy = mul(cy, float2x2(float2(vy.x, -vy.y), float2(vy.y, vy.x)));
+
+    aabb = float4(minx.x / minx.y * P00, miny.x / miny.y * P11, maxx.x / maxx.y * P00, maxy.x / maxy.y * P11);
+    aabb = aabb.xwzy * float4(0.5f, -0.5f, 0.5f, -0.5f) + 0.5f; // clip space -> uv space
+
+    return true;
+}
+
+bool OcclusionCull(float3 center, float radius)
+{
+    center = mul(CameraCB.mtxView, float4(center, 1.0)).xyz;
+    
+    float4 aabb;
+    if (ProjectSphere(center, radius, CameraCB.nearZ, CameraCB.mtxProjection[0][0], CameraCB.mtxProjection[1][1], aabb))
+    {
+        Texture2D<float> hzbTexture = ResourceDescriptorHeap[c_hzbTextureSRV];
+        SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
+        
+        float texture_width;
+        float texture_height;
+        hzbTexture.GetDimensions(texture_width, texture_height);
+        
+        float width = (aabb.z - aabb.x) * texture_width;
+        float height = (aabb.w - aabb.y) * texture_height;
+        float level = ceil(log2(max(width, height)));
+        
+        float depth = hzbTexture.SampleLevel(minReductionSampler, (aabb.xy + aabb.zw) * 0.5, level).x;
+        float depthSphere = GetNdcDepth(center.z - radius);
+
+        bool visible = depthSphere > depth;
+        return !visible;
+    }
+    
+    return false;
+}
+
 bool Cull(Meshlet meshlet)
 {
     // 1. frustum culling
@@ -62,9 +114,13 @@ bool Cull(Meshlet meshlet)
         return false;
     }
     
-    // 3. occlusion culling(todo)
-    
-    //debug::DrawSphere(center, radius, float3(0, 1, 0));
+    // 3. occlusion culling
+    if(OcclusionCull(center, radius))
+    {
+        stats(STATS_OCCLUSION_CULLED_MESHLET, 1);
+        return false;
+    }
+
     return true;
 }
 
