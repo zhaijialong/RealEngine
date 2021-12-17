@@ -6,27 +6,24 @@
 cbuffer RootConstants : register(b0)
 {
     uint c_meshletCount;
-    uint c_meshletBoundsBuffer;
     uint c_meshletBuffer;
+    uint c_hzbTextureSRV;
     uint c_meshletVerticesBuffer;
     uint c_meshletIndicesBuffer;
 };
 
 struct Meshlet
 {
-    uint vertexOffset;
-    uint triangleOffset;
-
-    uint vertexCount;
-    uint triangleCount;
-};
-
-struct MeshletBound
-{
     float3 center;
     float radius;
     
     uint cone; //axis + cutoff, rgba8snorm
+    
+    uint vertexCount;
+    uint triangleCount;
+    
+    uint vertexOffset;
+    uint triangleOffset;
 };
 
 struct Payload
@@ -36,11 +33,11 @@ struct Payload
 
 groupshared Payload s_Payload;
 
-bool Cull(MeshletBound meshletBound)
+bool Cull(Meshlet meshlet)
 {
     // 1. frustum culling
-    float3 center = mul(ModelCB.mtxWorld, float4(meshletBound.center, 1.0)).xyz;
-    float radius = meshletBound.radius * ModelCB.scale;
+    float3 center = mul(ModelCB.mtxWorld, float4(meshlet.center, 1.0)).xyz;
+    float radius = meshlet.radius * ModelCB.scale;
     
     for (uint i = 0; i < 6; ++i)
     {
@@ -52,7 +49,7 @@ bool Cull(MeshletBound meshletBound)
     }
     
     // 2. backface culling
-    int16_t4 cone = unpack_s8s16((int8_t4_packed)meshletBound.cone);
+    int16_t4 cone = unpack_s8s16((int8_t4_packed)meshlet.cone);
     float3 axis = cone.xyz / 127.0;
     float cutoff = cone.w / 127.0;
     
@@ -79,10 +76,10 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
     
     if (meshletIndex < c_meshletCount)
     {
-        StructuredBuffer<MeshletBound> meshletBoundBuffer = ResourceDescriptorHeap[c_meshletBoundsBuffer];
-        MeshletBound meshletBound = meshletBoundBuffer[meshletIndex];
+        StructuredBuffer<Meshlet> meshletBuffer = ResourceDescriptorHeap[c_meshletBuffer];
+        Meshlet meshlet = meshletBuffer[meshletIndex];
         
-        visible = Cull(meshletBound);
+        visible = Cull(meshlet);
     }
     
     if (visible)

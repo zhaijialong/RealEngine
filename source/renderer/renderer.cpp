@@ -452,6 +452,13 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
     }
 }
 
+IGfxDescriptor* Renderer::GetReprojectedHZB() const
+{
+    RenderGraphHandle hzbHandle = m_pHZBOcclusionCulling->GetHZBMip(0);
+    RenderGraphTexture* hzbTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(hzbHandle);
+    return hzbTexture->GetSRV();
+}
+
 IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type)
 {
     IndexBuffer* buffer = new IndexBuffer(name);

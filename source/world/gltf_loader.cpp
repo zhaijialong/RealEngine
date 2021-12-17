@@ -373,6 +373,11 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
             uint32_t cone; 
         };
 
+        uint vertexCount;
+        uint triangleCount;
+
+        uint vertexOffset;
+        uint triangleOffset;
     };
     std::vector<MeshletBound> meshlet_bounds(meshlet_count);
 
@@ -390,6 +395,10 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
         bound.axis_y = meshoptBounds.cone_axis_s8[1];
         bound.axis_z = meshoptBounds.cone_axis_s8[2];
         bound.cutoff = meshoptBounds.cone_cutoff_s8;
+        bound.vertexCount = m.vertex_count;
+        bound.triangleCount = m.triangle_count;
+        bound.vertexOffset = m.vertex_offset;
+        bound.triangleOffset = m.triangle_offset;
         
         meshlet_bounds[i] = bound;
     }
@@ -419,8 +428,7 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     }
 
     mesh->m_nMeshletCount = (uint32_t)meshlet_count;
-    mesh->m_pMeshletBuffer.reset(pRenderer->CreateStructuredBuffer(meshlets.data(), sizeof(meshopt_Meshlet), (uint32_t)meshlets.size(), "model(" + m_file + " " + name + ") meshlet"));
-    mesh->m_pMeshletBoundsBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_bounds.data(), sizeof(MeshletBound), (uint32_t)meshlet_bounds.size(), "model(" + m_file + " " + name + ") meshlet bounds"));
+    mesh->m_pMeshletBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_bounds.data(), sizeof(MeshletBound), (uint32_t)meshlet_bounds.size(), "model(" + m_file + " " + name + ") meshlet"));
     mesh->m_pMeshletVerticesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_vertices.data(), sizeof(unsigned int), (uint32_t)meshlet_vertices.size(), "model(" + m_file + " " + name + ") meshlet vertices"));
     mesh->m_pMeshletIndicesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_triangles16.data(), sizeof(unsigned short), (uint32_t)meshlet_triangles16.size(), "model(" + m_file + " " + name + ") meshlet indices"));
 

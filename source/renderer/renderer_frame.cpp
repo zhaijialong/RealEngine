@@ -3,8 +3,15 @@
 
 void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
 {
+    m_pHZBOcclusionCulling->GenerateHZB(m_pRenderGraph.get());
+
     struct GBufferPassData
     {
+        RenderGraphHandle reprojectedHZB;
+
+        //todo : support gltf_specular_glossness
+        //diffuse + ao, normal + roughness, specular(a : reversed), emissve(r11g11b10)
+
         RenderGraphHandle outAlbedoRT; //srgb : albedo(xyz) + metalness(a)
         RenderGraphHandle outNormalRT; //rgba8norm : normal(xyz) + roughness(a)
         RenderGraphHandle outEmissiveRT; //srgb : emissive(xyz) + AO(a) 
@@ -33,6 +40,11 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             data.outNormalRT = builder.WriteColor(1, data.outNormalRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.outEmissiveRT = builder.WriteColor(2, data.outEmissiveRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, GfxRenderPassLoadOp::Clear);
+
+            for (uint32_t i = 0; i < m_pHZBOcclusionCulling->GetHZBMipCount(); ++i)
+            {
+                data.reprojectedHZB = builder.Read(m_pHZBOcclusionCulling->GetHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+            }
         },
         [&](const GBufferPassData& data, IGfxCommandList* pCommandList)
         {
