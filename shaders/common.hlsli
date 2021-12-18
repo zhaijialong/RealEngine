@@ -182,3 +182,63 @@ uint Float4ToRGBA8Unorm(float4 input)
     
     return (uint)pack_u8(unpacked);
 }
+
+uint Hash(uint a)
+{
+    a = (a + 0x7ed55d16) + (a << 12);
+    a = (a ^ 0xc761c23c) ^ (a >> 19);
+    a = (a + 0x165667b1) + (a << 5);
+    a = (a + 0xd3a2646c) ^ (a << 9);
+    a = (a + 0xfd7046c5) + (a << 3);
+    a = (a ^ 0xb55a4f09) ^ (a >> 16);
+    return a;
+}
+
+
+// 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere. Michael Mara, Morgan McGuire. 2013
+bool ProjectSphere(float3 center, float radius, float znear, float P00, float P11, out float4 aabb)
+{
+    if (center.z < radius + znear)
+    {
+        return false;
+    }
+
+    float2 cx = -center.xz;
+    float2 vx = float2(sqrt(dot(cx, cx) - radius * radius), radius);
+    float2 minx = mul(cx, float2x2(float2(vx.x, vx.y), float2(-vx.y, vx.x)));
+    float2 maxx = mul(cx, float2x2(float2(vx.x, -vx.y), float2(vx.y, vx.x)));
+
+    float2 cy = -center.yz;
+    float2 vy = float2(sqrt(dot(cy, cy) - radius * radius), radius);
+    float2 miny = mul(cy, float2x2(float2(vy.x, vy.y), float2(-vy.y, vy.x)));
+    float2 maxy = mul(cy, float2x2(float2(vy.x, -vy.y), float2(vy.y, vy.x)));
+
+    aabb = float4(minx.x / minx.y * P00, miny.x / miny.y * P11, maxx.x / maxx.y * P00, maxy.x / maxy.y * P11);
+    aabb = aabb.xwzy * float4(0.5f, -0.5f, 0.5f, -0.5f) + 0.5f; // clip space -> uv space
+
+    return true;
+}
+
+bool OcclusionCull(Texture2D<float> hzbTexture, uint2 hzbSize, float3 center, float radius)
+{
+    center = mul(CameraCB.mtxView, float4(center, 1.0)).xyz;
+    
+    bool visible = true;
+
+    float4 aabb;
+    if (ProjectSphere(center, radius, CameraCB.nearZ, CameraCB.mtxProjection[0][0], CameraCB.mtxProjection[1][1], aabb))
+    {
+        SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
+        
+        float width = (aabb.z - aabb.x) * hzbSize.x;
+        float height = (aabb.w - aabb.y) * hzbSize.y;
+        float level = ceil(log2(max(width, height)));
+        
+        float depth = hzbTexture.SampleLevel(minReductionSampler, (aabb.xy + aabb.zw) * 0.5, level).x;
+        float depthSphere = GetNdcDepth(center.z - radius);
+
+        visible = depthSphere > depth; //reversed depth
+    }
+    
+    return visible;
+}

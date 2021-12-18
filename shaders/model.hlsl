@@ -1,50 +1,10 @@
-#include "common.hlsli"
-#include "model_constants.hlsli"
+#include "model.hlsli"
 #include "debug.hlsli"
 
-struct VSOutput
+VertexOut vs_main(uint vertex_id : SV_VertexID)
 {
-    float4 pos : SV_POSITION;
-    float2 uv : TEXCOORD;
-    float3 normal : NORMAL;
-#if NORMAL_TEXTURE
-    float3 tangent : TANGENT;
-    float3 bitangent : BITANGENT;
-#endif
-};
-
-VSOutput vs_main(uint vertex_id : SV_VertexID)
-{    
-    StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[ModelCB.posBuffer];
-    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[ModelCB.uvBuffer];
-    StructuredBuffer<float3> normalBuffer = ResourceDescriptorHeap[ModelCB.normalBuffer];
-    StructuredBuffer<float4> tangentBuffer = ResourceDescriptorHeap[ModelCB.tangentBuffer];
-    
-    float4 pos = float4(posBuffer[vertex_id], 1.0);
-    float4 worldPos = mul(ModelCB.mtxWorld, pos);
-
-    VSOutput output;
-    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
-    output.uv = uvBuffer[vertex_id];
-    output.normal = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(normalBuffer[vertex_id], 0.0f)).xyz);
-    
-    if (vertex_id == 0)
-    {
-        //debug::DrawSphere(ModelCB.center, ModelCB.radius, float3(1, 0, 0));
-    }
-    
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
-    
-#if NORMAL_TEXTURE
-    float4 tangent = tangentBuffer[vertex_id];
-    output.tangent = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
-    output.bitangent = normalize(cross(output.normal, output.tangent) * tangent.w);    
-    
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.bitangent * 0.05, float3(0, 1, 0));
-#endif
-    
-    return output;
+    VertexOut v = GetVertex(vertex_id);
+    return v;
 }
 
 struct GBufferOutput
@@ -54,7 +14,7 @@ struct GBufferOutput
     float4 emissiveRT : SV_TARGET2;
 };
 
-GBufferOutput ps_main(VSOutput input)
+GBufferOutput ps_main(VertexOut input)
 {
     float3 N = input.normal;
 
@@ -110,6 +70,16 @@ GBufferOutput ps_main(VSOutput input)
 #if AO_TEXTURE && !AO_METALLIC_ROUGHNESS_TEXTURE
     Texture2D aoTexture = ResourceDescriptorHeap[MaterialCB.aoTexture];
     ao = aoTexture.Sample(linearSampler, input.uv).x;
+#endif
+    
+#define DEBUG_MESHLET 0
+#if DEBUG_MESHLET
+    uint mhash = Hash(input.meshlet);
+    albedo.xyz = float3(float(mhash & 255), float((mhash >> 8) & 255), float((mhash >> 16) & 255)) / 255.0;
+    
+    metallic = 0.0;
+    roughness = 1.0;
+    emissive = float3(0.0, 0.0, 0.0);
 #endif
     
     GBufferOutput output;

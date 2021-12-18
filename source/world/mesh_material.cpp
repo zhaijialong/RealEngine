@@ -164,10 +164,36 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
     {
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
+        std::vector<std::string> defines;
+        if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_pMetallicRoughnessTexture)
+        {
+            defines.push_back("METALLIC_ROUGHNESS_TEXTURE=1");
+
+            if (m_pAOTexture == m_pMetallicRoughnessTexture)
+            {
+                defines.push_back("AO_METALLIC_ROUGHNESS_TEXTURE=1");
+            }
+        }
+
+        if (m_pNormalTexture)
+        {
+            defines.push_back("NORMAL_TEXTURE=1");
+
+            if (m_pNormalTexture->GetTexture()->GetDesc().format == GfxFormat::BC5UNORM)
+            {
+                defines.push_back("RG_NORMAL_TEXTURE=1");
+            }
+        }
+
+        if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
+        if (m_pEmissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
+        if (m_pAOTexture) defines.push_back("AO_TEXTURE=1");
+
         GfxMeshShadingPipelineDesc psoDesc;
         psoDesc.as = pRenderer->GetShader("meshlet.hlsl", "main_as", "as_6_6", {});
-        psoDesc.ms = pRenderer->GetShader("meshlet.hlsl", "main_ms", "ms_6_6", {});
-        psoDesc.ps = pRenderer->GetShader("meshlet.hlsl", "main_ps", "ps_6_6", {});
+        psoDesc.ms = pRenderer->GetShader("meshlet.hlsl", "main_ms", "ms_6_6", defines);
+        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = true;
         psoDesc.depthstencil_state.depth_test = true;

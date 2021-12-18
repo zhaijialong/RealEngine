@@ -699,6 +699,9 @@
     <None Include="shaders\stats.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\model.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">
