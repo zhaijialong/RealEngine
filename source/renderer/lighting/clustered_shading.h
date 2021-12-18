@@ -4,7 +4,8 @@
 
 struct ClusterShadingPassData
 {
-    RenderGraphHandle inAlbedoRT;
+    RenderGraphHandle inDiffuseRT;
+    RenderGraphHandle inSpecularRT;
     RenderGraphHandle inNormalRT;
     RenderGraphHandle inEmissiveRT;
     RenderGraphHandle inDepthRT;

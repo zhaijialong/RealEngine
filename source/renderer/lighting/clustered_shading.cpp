@@ -15,7 +15,8 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, const ClusterShadingP
 {
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
 
-    RenderGraphTexture* albedoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inAlbedoRT);
+    RenderGraphTexture* diffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inDiffuseRT);
+    RenderGraphTexture* specularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inSpecularRT);
     RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inNormalRT);
     RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inEmissiveRT);
     RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inDepthRT);
@@ -38,19 +39,20 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, const ClusterShadingP
 
     struct CB1
     {
-        uint albedoRT;
+        uint diffuseRT;
+        uint specularRT;
         uint normalRT;
         uint emissiveRT;
-        uint depthRT;
 
+        uint depthRT;
         uint shadowRT;
         uint gtaoRT;
         uint hdrRT;
-        uint _padding;
     };
 
     CB1 cb1;
-    cb1.albedoRT = albedoRT->GetSRV()->GetHeapIndex();
+    cb1.diffuseRT = diffuseRT->GetSRV()->GetHeapIndex();
+    cb1.specularRT = specularRT->GetSRV()->GetHeapIndex();
     cb1.normalRT = normalRT->GetSRV()->GetHeapIndex();
     cb1.emissiveRT = emissiveRT->GetSRV()->GetHeapIndex();
     cb1.depthRT = depthRT->GetSRV()->GetHeapIndex();

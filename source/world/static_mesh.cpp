@@ -78,6 +78,8 @@ void StaticMesh::RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCa
     GPU_EVENT_DEBUG(pCommandList, m_name);
     //Draw(pCommandList, m_pMaterial->GetPSO());
 
+    //AS is not good for small objects, lots of "DispatchMesh(1, 1, 1)" is 10x slower than VS
+    //should implement some sort of Merging & Compact on GPU (aka. GPU-Driven rendering)
     Dispatch(pCommandList, m_pMaterial->GetMeshletPSO());
 }
 

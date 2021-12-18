@@ -5,7 +5,8 @@
 
 struct LightingProcessInput
 {
-    RenderGraphHandle albedoRT;
+    RenderGraphHandle diffuseRT;
+    RenderGraphHandle specularRT;
     RenderGraphHandle normalRT;
     RenderGraphHandle emissiveRT;
     RenderGraphHandle depthRT;

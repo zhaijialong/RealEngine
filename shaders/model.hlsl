@@ -9,9 +9,10 @@ VertexOut vs_main(uint vertex_id : SV_VertexID)
 
 struct GBufferOutput
 {
-    float4 albedoRT : SV_TARGET0;
-    float4 normalRT : SV_TARGET1;
-    float4 emissiveRT : SV_TARGET2;
+    float4 diffuseRT : SV_TARGET0;
+    float4 specularRT : SV_TARGET1;
+    float4 normalRT : SV_TARGET2;
+    float3 emissiveRT : SV_TARGET3;
 };
 
 GBufferOutput ps_main(VertexOut input)
@@ -44,6 +45,9 @@ GBufferOutput ps_main(VertexOut input)
     ao = metallicRoughness.r;
 #endif    
 #endif
+    
+    float3 diffuse = albedo.xyz * (1.0 - metallic);
+    float3 specular = lerp(0.04, albedo.xyz, metallic);
 
 #if NORMAL_TEXTURE
     float3 T = input.tangent;
@@ -83,9 +87,10 @@ GBufferOutput ps_main(VertexOut input)
 #endif
     
     GBufferOutput output;
-    output.albedoRT = float4(albedo.xyz, metallic);
+    output.diffuseRT = float4(diffuse, ao);
+    output.specularRT = float4(specular, 0);
     output.normalRT = float4(OctNormalEncode(N), roughness);
-    output.emissiveRT = float4(emissive, ao);
+    output.emissiveRT = emissive;
     
     return output;
 }

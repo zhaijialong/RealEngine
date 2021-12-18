@@ -10,15 +10,15 @@ cbuffer CB0 : register(b0)
 
 cbuffer CB1 : register(b1)
 {
-    uint c_albedoRT;
+    uint c_diffuseRT;
+    uint c_specularRT;
     uint c_normalRT;
     uint c_emissiveRT;
-    uint c_depthRT;
     
+    uint c_depthRT;
     uint c_shadowRT;
     uint c_gtaoRT;
     uint c_hdrRT;
-    uint _padding;
 };
 
 float Shadow(float3 worldPos, float3 worldNormal, float4x4 mtxLightVP, Texture2D shadowRT, SamplerComparisonState shadowSampler)
@@ -144,30 +144,28 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         return;
     }
     
-    Texture2D albedoRT = ResourceDescriptorHeap[c_albedoRT];
+    Texture2D diffuseRT = ResourceDescriptorHeap[c_diffuseRT];
+    Texture2D specularRT = ResourceDescriptorHeap[c_specularRT];
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     Texture2D emissiveRT = ResourceDescriptorHeap[c_emissiveRT];
     
-    float4 albedo = albedoRT.Load(pos);
+    float4 diffuse = diffuseRT.Load(pos);
+    float3 specular = specularRT.Load(pos).xyz;
     float4 normal = normalRT.Load(pos);
-    float4 emissive = emissiveRT.Load(pos);
+    float3 emissive = emissiveRT.Load(pos).xyz;
     
     float3 N = OctNormalDecode(normal.xyz);
-    float metallic = albedo.w;
     float roughness = normal.w;
-    float ao = emissive.w;
+    float ao = diffuse.w;
     
     float3 worldPos = GetWorldPosition(pos.xy, depth);
     float3 V = normalize(CameraCB.cameraPos - worldPos);
-
-    float3 diffuse = albedo.xyz * (1.0 - metallic);
-    float3 specular = lerp(0.04, albedo.xyz, metallic);
     
     Texture2D shadowRT = ResourceDescriptorHeap[c_shadowRT];
     SamplerComparisonState shadowSampler = SamplerDescriptorHeap[SceneCB.shadowSampler];
     
     float visibility = Shadow(worldPos, N, SceneCB.mtxLightVP, shadowRT, shadowSampler);
-    float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor;
+    float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse.xyz, specular, roughness) * visibility * SceneCB.lightColor;
     
     Texture2D<uint> gtaoRT = ResourceDescriptorHeap[c_gtaoRT];
     
@@ -177,7 +175,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     ao = min(ao, gtao);
     
-    float3 indirect_diffuse = diffuse * float3(0.15, 0.15, 0.2);
+    float3 indirect_diffuse = diffuse.xyz * float3(0.15, 0.15, 0.2);
 
     TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
     Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.brdfTexture];

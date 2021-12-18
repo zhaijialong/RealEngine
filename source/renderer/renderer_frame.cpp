@@ -9,12 +9,10 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     {
         RenderGraphHandle reprojectedHZB;
 
-        //todo : support gltf_specular_glossness
-        //diffuse + ao, normal + roughness, specular(a : reversed), emissve(r11g11b10)
-
-        RenderGraphHandle outAlbedoRT; //srgb : albedo(xyz) + metalness(a)
+        RenderGraphHandle outDiffuseRT; //srgb : diffuse(xyz) + ao(a)
+        RenderGraphHandle outSpecularRT; //srgb : specular(xyz), a: not used
         RenderGraphHandle outNormalRT; //rgba8norm : normal(xyz) + roughness(a)
-        RenderGraphHandle outEmissiveRT; //srgb : emissive(xyz) + AO(a) 
+        RenderGraphHandle outEmissiveRT; //r11g11b10 : emissive
         RenderGraphHandle outDepthRT;
     };
 
@@ -26,19 +24,23 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             desc.height = m_nWindowHeight;
             desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
             desc.format = GfxFormat::RGBA8SRGB;
-            data.outAlbedoRT = builder.Create<RenderGraphTexture>(desc, "Albedo RT");
-            data.outEmissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
+            data.outDiffuseRT = builder.Create<RenderGraphTexture>(desc, "Diffuse RT");
+            data.outSpecularRT = builder.Create<RenderGraphTexture>(desc, "Specular RT");
 
             desc.format = GfxFormat::RGBA8UNORM;
             data.outNormalRT = builder.Create<RenderGraphTexture>(desc, "Normal RT");
+
+            desc.format = GfxFormat::R11G11B10F;
+            data.outEmissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
 
             desc.format = GfxFormat::D32FS8;
             desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
             data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "SceneDepth RT");
 
-            data.outAlbedoRT = builder.WriteColor(0, data.outAlbedoRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
-            data.outNormalRT = builder.WriteColor(1, data.outNormalRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
-            data.outEmissiveRT = builder.WriteColor(2, data.outEmissiveRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
+            data.outDiffuseRT = builder.WriteColor(0, data.outDiffuseRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
+            data.outSpecularRT = builder.WriteColor(1, data.outSpecularRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
+            data.outNormalRT = builder.WriteColor(2, data.outNormalRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
+            data.outEmissiveRT = builder.WriteColor(3, data.outEmissiveRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, GfxRenderPassLoadOp::Clear);
 
             for (uint32_t i = 0; i < m_pHZBOcclusionCulling->GetHZBMipCount(); ++i)
@@ -92,7 +94,8 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
         });
 
     LightingProcessInput lightInput;
-    lightInput.albedoRT = gbuffer_pass->outAlbedoRT;
+    lightInput.diffuseRT = gbuffer_pass->outDiffuseRT;
+    lightInput.specularRT = gbuffer_pass->outSpecularRT;
     lightInput.normalRT = gbuffer_pass->outNormalRT;
     lightInput.emissiveRT = gbuffer_pass->outEmissiveRT;
     lightInput.depthRT = gbuffer_pass->outDepthRT;

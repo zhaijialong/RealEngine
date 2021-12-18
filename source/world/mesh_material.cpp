@@ -41,8 +41,9 @@ IGfxPipelineState* MeshMaterial::GetPSO()
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
         psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
-        psoDesc.rt_format[1] = GfxFormat::RGBA8UNORM;
-        psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
+        psoDesc.rt_format[1] = GfxFormat::RGBA8SRGB;
+        psoDesc.rt_format[2] = GfxFormat::RGBA8UNORM;
+        psoDesc.rt_format[3] = GfxFormat::R11G11B10F;
         psoDesc.depthstencil_format = GfxFormat::D32FS8;
 
         m_pPSO = pRenderer->GetPipelineState(psoDesc, "model PSO");
@@ -199,8 +200,9 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
         psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
-        psoDesc.rt_format[1] = GfxFormat::RGBA8UNORM;
-        psoDesc.rt_format[2] = GfxFormat::RGBA8SRGB;
+        psoDesc.rt_format[1] = GfxFormat::RGBA8SRGB;
+        psoDesc.rt_format[2] = GfxFormat::RGBA8UNORM;
+        psoDesc.rt_format[3] = GfxFormat::R11G11B10F;
         psoDesc.depthstencil_format = GfxFormat::D32FS8;
 
         m_pMeshletPSO = pRenderer->GetPipelineState(psoDesc, "model meshlet PSO");

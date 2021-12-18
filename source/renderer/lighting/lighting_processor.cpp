@@ -82,7 +82,8 @@ RenderGraphHandle LightingProcessor::Process(RenderGraph* pRenderGraph, const Li
     auto cluster_shading_pass = pRenderGraph->AddPass<ClusterShadingPassData>("ClusterShading",
         [&](ClusterShadingPassData& data, RenderGraphBuilder& builder)
         {
-            data.inAlbedoRT = builder.Read(input.albedoRT, GfxResourceState::ShaderResourceNonPS);
+            data.inDiffuseRT = builder.Read(input.diffuseRT, GfxResourceState::ShaderResourceNonPS);
+            data.inSpecularRT = builder.Read(input.specularRT, GfxResourceState::ShaderResourceNonPS);
             data.inNormalRT = builder.Read(input.normalRT, GfxResourceState::ShaderResourceNonPS);
             data.inEmissiveRT = builder.Read(input.emissiveRT, GfxResourceState::ShaderResourceNonPS);
             data.inDepthRT = builder.Read(input.depthRT, GfxResourceState::ShaderResourceNonPS);
