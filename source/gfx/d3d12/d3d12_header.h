@@ -114,6 +114,8 @@ inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false, bool ua
         return uav ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
     case GfxFormat::RGB10A2UNORM:
         return DXGI_FORMAT_R10G10B10A2_UNORM;
+    case GfxFormat::R11G11B10F:
+        return DXGI_FORMAT_R11G11B10_FLOAT;
     case GfxFormat::RG32F:
         return DXGI_FORMAT_R32G32_FLOAT;
     case GfxFormat::RG32UI:
