@@ -1,5 +1,4 @@
-#include "common.hlsli"
-#include "model_constants.hlsli"
+#include "model.hlsli"
 
 cbuffer RootConstants : register(b0)
 {
@@ -9,7 +8,7 @@ cbuffer RootConstants : register(b0)
 struct VSOutput
 {
     float4 pos : SV_POSITION;
-#if ALBEDO_TEXTURE && ALPHA_TEST
+#if ALPHA_TEST
     float2 uv : TEXCOORD;
 #endif
 };
@@ -25,7 +24,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     VSOutput output;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);
 
-#if ALBEDO_TEXTURE && ALPHA_TEST
+#if ALPHA_TEST
     output.uv = uvBuffer[vertex_id];
 #endif
     
@@ -34,12 +33,8 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 
 uint ps_main(VSOutput input) : SV_TARGET0
 {
-#if ALBEDO_TEXTURE && ALPHA_TEST
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
-    Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
-    float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
-    
-    clip(albedo.a - MaterialCB.alphaCutoff);
+#if ALPHA_TEST
+    AlphaTest(input.uv);
 #endif
     
     return c_ObjectID;

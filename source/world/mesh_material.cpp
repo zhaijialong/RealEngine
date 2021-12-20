@@ -65,6 +65,7 @@ IGfxPipelineState* MeshMaterial::GetShadowPSO()
 
         std::vector<std::string> defines;
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
         GfxGraphicsPipelineDesc psoDesc;
@@ -95,6 +96,7 @@ IGfxPipelineState* MeshMaterial::GetVelocityPSO()
         std::vector<std::string> defines;
         if (m_bSkeletalAnim) defines.push_back("ANIME_POS=1");
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
         GfxGraphicsPipelineDesc psoDesc;
@@ -121,6 +123,7 @@ IGfxPipelineState* MeshMaterial::GetIDPSO()
 
         std::vector<std::string> defines;
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
         GfxGraphicsPipelineDesc psoDesc;
@@ -147,6 +150,7 @@ IGfxPipelineState* MeshMaterial::GetOutlinePSO()
 
         std::vector<std::string> defines;
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
+        if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
         GfxGraphicsPipelineDesc psoDesc;
