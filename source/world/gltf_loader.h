@@ -10,6 +10,7 @@ class Texture2D;
 struct cgltf_node;
 struct cgltf_primitive;
 struct cgltf_material;
+struct cgltf_texture_view;
 
 namespace tinyxml2 
 {
@@ -27,7 +28,7 @@ private:
     void LoadNode(cgltf_node* node, const float4x4& mtxParentToWorld);
     StaticMesh* LoadMesh(cgltf_primitive* primitive, const std::string& name);
     MeshMaterial* LoadMaterial(cgltf_material* gltf_material);
-    Texture2D* LoadTexture(const std::string& file, bool srgb);
+    Texture2D* LoadTexture(const cgltf_texture_view& texture_view, bool srgb);
 
 private:
     World* m_pWorld = nullptr;

@@ -140,23 +140,18 @@ void GLTFLoader::LoadNode(cgltf_node* node, const float4x4& mtxParentToWorld)
     }
 }
 
-
-inline bool TextureExists(const cgltf_texture_view& texture_view)
+Texture2D* GLTFLoader::LoadTexture(const cgltf_texture_view& texture_view, bool srgb)
 {
-    if (texture_view.texture && texture_view.texture->image->uri)
+    if (texture_view.texture == nullptr || texture_view.texture->image->uri == nullptr)
     {
-        return true;
+        return nullptr;
     }
-    return false;
-}
 
-Texture2D* GLTFLoader::LoadTexture(const std::string& file, bool srgb)
-{
     size_t last_slash = m_file.find_last_of('/');
     std::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    Texture2D* texture = pRenderer->CreateTexture2D(path + file, srgb);
+    Texture2D* texture = pRenderer->CreateTexture2D(path + texture_view.texture->image->uri, srgb);
 
     return texture;
 }
@@ -174,17 +169,8 @@ MeshMaterial* GLTFLoader::LoadMaterial(cgltf_material* gltf_material)
     if (gltf_material->has_pbr_metallic_roughness)
     {
         material->m_bPbrMetallicRoughness = true;
-
-        if (TextureExists(gltf_material->pbr_metallic_roughness.base_color_texture))
-        {
-            material->m_pAlbedoTexture = LoadTexture(gltf_material->pbr_metallic_roughness.base_color_texture.texture->image->uri, true);
-        }
-
-        if (TextureExists(gltf_material->pbr_metallic_roughness.metallic_roughness_texture))
-        {
-            material->m_pMetallicRoughnessTexture = LoadTexture(gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture->image->uri, false);
-        }
-
+        material->m_pAlbedoTexture = LoadTexture(gltf_material->pbr_metallic_roughness.base_color_texture, true);
+        material->m_pMetallicRoughnessTexture = LoadTexture(gltf_material->pbr_metallic_roughness.metallic_roughness_texture, false);
         material->m_albedoColor = float3(gltf_material->pbr_metallic_roughness.base_color_factor);
         material->m_metallic = gltf_material->pbr_metallic_roughness.metallic_factor;
         material->m_roughness = gltf_material->pbr_metallic_roughness.roughness_factor;
@@ -192,40 +178,21 @@ MeshMaterial* GLTFLoader::LoadMaterial(cgltf_material* gltf_material)
     else if (gltf_material->has_pbr_specular_glossiness)
     {
         material->m_bPbrSpecularGlossiness = true;
-
-        if (TextureExists(gltf_material->pbr_specular_glossiness.diffuse_texture))
-        {
-            material->m_pDiffuseTexture = LoadTexture(gltf_material->pbr_specular_glossiness.diffuse_texture.texture->image->uri, true);
-        }
-
-        if (TextureExists(gltf_material->pbr_specular_glossiness.specular_glossiness_texture))
-        {
-            material->m_pSpecularGlossinessTexture = LoadTexture(gltf_material->pbr_specular_glossiness.specular_glossiness_texture.texture->image->uri, true);
-        }
-
+        material->m_pDiffuseTexture = LoadTexture(gltf_material->pbr_specular_glossiness.diffuse_texture, true);
+        material->m_pSpecularGlossinessTexture = LoadTexture(gltf_material->pbr_specular_glossiness.specular_glossiness_texture, true);
         material->m_diffuseColor = float3(gltf_material->pbr_specular_glossiness.diffuse_factor);
         material->m_specularColor = float3(gltf_material->pbr_specular_glossiness.specular_factor);
         material->m_glossiness = gltf_material->pbr_specular_glossiness.glossiness_factor;
     }
 
-    if (TextureExists(gltf_material->normal_texture))
-    {
-        material->m_pNormalTexture = LoadTexture(gltf_material->normal_texture.texture->image->uri, false);
-    }
-
-    if (TextureExists(gltf_material->emissive_texture))
-    {
-        material->m_pEmissiveTexture = LoadTexture(gltf_material->emissive_texture.texture->image->uri, true);
-    }
-
-    if (TextureExists(gltf_material->occlusion_texture))
-    {
-        material->m_pAOTexture = LoadTexture(gltf_material->occlusion_texture.texture->image->uri, false);
-    }
+    material->m_pNormalTexture = LoadTexture(gltf_material->normal_texture, false);
+    material->m_pEmissiveTexture = LoadTexture(gltf_material->emissive_texture, true);
+    material->m_pAOTexture = LoadTexture(gltf_material->occlusion_texture, false);
 
     material->m_emissiveColor = float3(gltf_material->emissive_factor);
     material->m_alphaCutoff = gltf_material->alpha_cutoff;
     material->m_bAlphaTest = gltf_material->alpha_mode == cgltf_alpha_mode_mask;
+    material->m_bDoubleSided = gltf_material->double_sided;
 
     return material;
 }

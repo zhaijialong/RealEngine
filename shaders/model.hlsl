@@ -91,7 +91,7 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(VertexOut input)
     return pbrSpecularGlossiness;
 }
 
-float3 GetMaterialNormal(VertexOut input)
+float3 GetMaterialNormal(VertexOut input, bool isFrontFace)
 {
     float3 N = input.normal;
     
@@ -112,6 +112,10 @@ float3 GetMaterialNormal(VertexOut input)
     #endif
 
     N = normalize(normal.x * T + normal.y * B + normal.z * N);
+#endif
+    
+#if DOUBLE_SIDED
+    N *= isFrontFace ? 1.0 : -1.0;
 #endif
     
     return N;
@@ -141,11 +145,11 @@ float3 GetMaterialEmissive(VertexOut input)
 }
 
 
-GBufferOutput ps_main(VertexOut input)
+GBufferOutput ps_main(VertexOut input, bool isFrontFace : SV_IsFrontFace)
 {
     PbrMetallicRoughness pbrMetallicRoughness = GetMaterialMetallicRoughness(input);
     PbrSpecularGlossiness pbrSpecularGlossiness = GetMaterialSpecularGlossiness(input);
-    float3 N = GetMaterialNormal(input);
+    float3 N = GetMaterialNormal(input, isFrontFace);
     float ao = GetMaterialAO(input);
     float3 emissive = GetMaterialEmissive(input);
     

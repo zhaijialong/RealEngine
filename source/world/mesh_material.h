@@ -53,6 +53,7 @@ private:
 
     bool m_bSkeletalAnim = false;
     bool m_bFrontFaceCCW = true;
+    bool m_bDoubleSided = false;
     bool m_bPbrSpecularGlossiness = false;
     bool m_bPbrMetallicRoughness = false;
 };
