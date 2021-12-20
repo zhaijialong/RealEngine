@@ -113,6 +113,9 @@ void GLTFLoader::LoadNode(cgltf_node* node, const float4x4& mtxParentToWorld)
 
     float4x4 mtxLocalToWorld = mul(mtxParentToWorld, mtxLocalToParent);
 
+    //gltf 2.0 spec : If the determinant is a positive value, the winding order triangle faces is counterclockwise; in the opposite case, the winding order is clockwise.
+    bool bFrontFaceCCW = determinant(mtxLocalToWorld) > 0.0f;
+
     float3 position;
     float3 rotation;
     float3 scale;
@@ -124,6 +127,7 @@ void GLTFLoader::LoadNode(cgltf_node* node, const float4x4& mtxParentToWorld)
         {
             StaticMesh* mesh = LoadMesh(&node->mesh->primitives[i], node->mesh->name ? node->mesh->name : "");
 
+            mesh->m_pMaterial->m_bFrontFaceCCW = bFrontFaceCCW;
             mesh->SetPosition(position);
             mesh->SetRotation(rotation);
             mesh->SetScale(scale);
@@ -165,17 +169,43 @@ MeshMaterial* GLTFLoader::LoadMaterial(cgltf_material* gltf_material)
         return material;
     }
 
-    RE_ASSERT(gltf_material->has_pbr_metallic_roughness);
     material->m_name = gltf_material->name != nullptr ? gltf_material->name : "";
 
-    if (TextureExists(gltf_material->pbr_metallic_roughness.base_color_texture))
+    if (gltf_material->has_pbr_metallic_roughness)
     {
-        material->m_pAlbedoTexture = LoadTexture(gltf_material->pbr_metallic_roughness.base_color_texture.texture->image->uri, true);
-    }
+        material->m_bPbrMetallicRoughness = true;
 
-    if (TextureExists(gltf_material->pbr_metallic_roughness.metallic_roughness_texture))
+        if (TextureExists(gltf_material->pbr_metallic_roughness.base_color_texture))
+        {
+            material->m_pAlbedoTexture = LoadTexture(gltf_material->pbr_metallic_roughness.base_color_texture.texture->image->uri, true);
+        }
+
+        if (TextureExists(gltf_material->pbr_metallic_roughness.metallic_roughness_texture))
+        {
+            material->m_pMetallicRoughnessTexture = LoadTexture(gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture->image->uri, false);
+        }
+
+        material->m_albedoColor = float3(gltf_material->pbr_metallic_roughness.base_color_factor);
+        material->m_metallic = gltf_material->pbr_metallic_roughness.metallic_factor;
+        material->m_roughness = gltf_material->pbr_metallic_roughness.roughness_factor;
+    }
+    else if (gltf_material->has_pbr_specular_glossiness)
     {
-        material->m_pMetallicRoughnessTexture = LoadTexture(gltf_material->pbr_metallic_roughness.metallic_roughness_texture.texture->image->uri, false);
+        material->m_bPbrSpecularGlossiness = true;
+
+        if (TextureExists(gltf_material->pbr_specular_glossiness.diffuse_texture))
+        {
+            material->m_pDiffuseTexture = LoadTexture(gltf_material->pbr_specular_glossiness.diffuse_texture.texture->image->uri, true);
+        }
+
+        if (TextureExists(gltf_material->pbr_specular_glossiness.specular_glossiness_texture))
+        {
+            material->m_pSpecularGlossinessTexture = LoadTexture(gltf_material->pbr_specular_glossiness.specular_glossiness_texture.texture->image->uri, true);
+        }
+
+        material->m_diffuseColor = float3(gltf_material->pbr_specular_glossiness.diffuse_factor);
+        material->m_specularColor = float3(gltf_material->pbr_specular_glossiness.specular_factor);
+        material->m_glossiness = gltf_material->pbr_specular_glossiness.glossiness_factor;
     }
 
     if (TextureExists(gltf_material->normal_texture))
@@ -193,10 +223,7 @@ MeshMaterial* GLTFLoader::LoadMaterial(cgltf_material* gltf_material)
         material->m_pAOTexture = LoadTexture(gltf_material->occlusion_texture.texture->image->uri, false);
     }
 
-    material->m_albedoColor = float3(gltf_material->pbr_metallic_roughness.base_color_factor);
     material->m_emissiveColor = float3(gltf_material->emissive_factor);
-    material->m_metallic = gltf_material->pbr_metallic_roughness.metallic_factor;
-    material->m_roughness = gltf_material->pbr_metallic_roughness.roughness_factor;
     material->m_alphaCutoff = gltf_material->alpha_cutoff;
     material->m_bAlphaTest = gltf_material->alpha_mode == cgltf_alpha_mode_mask;
 
@@ -287,17 +314,24 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     std::vector<void*> remapped_vertices;
 
     size_t remapped_vertex_count;
-    if (indices.stride == 4)
+
+    switch (indices.stride)
     {
+    case 4:
         remapped_vertex_count = meshopt_generateVertexRemapMulti(&remap[0], (const unsigned int*)indices.data, index_count, vertex_count, vertex_streams.data(), vertex_streams.size());
-
         meshopt_remapIndexBuffer((unsigned int*)remapped_indices, (const unsigned int*)indices.data, index_count, &remap[0]);
-    }
-    else
-    {
+        break;
+    case 2:
         remapped_vertex_count = meshopt_generateVertexRemapMulti(&remap[0], (const unsigned short*)indices.data, index_count, vertex_count, vertex_streams.data(), vertex_streams.size());
-
         meshopt_remapIndexBuffer((unsigned short*)remapped_indices, (const unsigned short*)indices.data, index_count, &remap[0]);
+        break;
+    case 1:
+        remapped_vertex_count = meshopt_generateVertexRemapMulti(&remap[0], (const unsigned char*)indices.data, index_count, vertex_count, vertex_streams.data(), vertex_streams.size());
+        meshopt_remapIndexBuffer((unsigned char*)remapped_indices, (const unsigned char*)indices.data, index_count, &remap[0]);
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
     }
 
     void* pos_vertices = nullptr;
@@ -327,20 +361,30 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     std::vector<unsigned int> meshlet_vertices(max_meshlets * max_vertices);
     std::vector<unsigned char> meshlet_triangles(max_meshlets * max_triangles * 3);
 
-    size_t meshlet_count;    
-    if (indices.stride == 4)
+    size_t meshlet_count;
+    switch (indices.stride)
     {
+    case 4:
         meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(),
             (const unsigned int*)remapped_indices, index_count,
-            (const float*)pos_vertices, remapped_vertex_count, pos_stride, 
+            (const float*)pos_vertices, remapped_vertex_count, pos_stride,
             max_vertices, max_triangles, cone_weight);
-    }
-    else
-    {
-        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(), 
+        break;
+    case 2:
+        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(),
             (const unsigned short*)remapped_indices, index_count,
             (const float*)pos_vertices, remapped_vertex_count, pos_stride,
             max_vertices, max_triangles, cone_weight);
+        break;
+    case 1:
+        meshlet_count = meshopt_buildMeshlets(meshlets.data(), meshlet_vertices.data(), meshlet_triangles.data(),
+            (const unsigned char*)remapped_indices, index_count,
+            (const float*)pos_vertices, remapped_vertex_count, pos_stride,
+            max_vertices, max_triangles, cone_weight);
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
     }
 
     const meshopt_Meshlet& last = meshlets[meshlet_count - 1];

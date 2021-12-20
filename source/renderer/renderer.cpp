@@ -461,6 +461,19 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
 
 IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type)
 {
+    std::vector<uint16_t> u16IB;
+    if (stride == 1)
+    {
+        u16IB.resize(index_count);
+        for (uint32_t i = 0; i < index_count; ++i)
+        {
+            u16IB[i] = ((const char*)data)[i];
+        }
+
+        stride = 2;
+        data = u16IB.data();
+    }
+
     IndexBuffer* buffer = new IndexBuffer(name);
     if (!buffer->Create(stride, index_count, memory_type))
     {

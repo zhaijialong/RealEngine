@@ -26,14 +26,21 @@ struct MaterialConstant
     uint normalTexture;
     uint emissiveTexture;
     
-    uint aoTexture;    
+    uint aoTexture;
     float3 albedo;
     
-    float3 emissive;
     float metallic;
-
     float roughness;
+    float glossiness;
     float alphaCutoff;
+    
+    uint diffuseTexture;
+    float3 diffuse;
+    
+    uint specularGlossinessTexture;
+    float3 specular;
+    
+    float3 emissive;
 };
 
 #ifndef __cplusplus

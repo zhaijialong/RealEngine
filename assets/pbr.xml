@@ -1,6 +1,5 @@
 <scene>
-    <model file="model/metal_rough_ball/MetalRoughSpheres.gltf" position="8.0,0.0,5.0" />
-    <model file="model/RiggedSimple.gltf" />
+    <model file="model/MetalRoughSpheres/MetalRoughSpheres.gltf" position="8.0,0.0,5.0" />
     <model file="model/DamagedHelmet/DamagedHelmet.gltf" position="0.0,0.0,-5.0" />
     <model file="model/SciFiHelmet/SciFiHelmet.gltf" position="5.0,0.0,-5.0"/>
     <skysphere />

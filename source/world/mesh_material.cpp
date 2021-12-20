@@ -8,6 +8,7 @@ IGfxPipelineState* MeshMaterial::GetPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
+        if (m_bPbrMetallicRoughness) defines.push_back("PBR_METALLIC_ROUGHNESS=1");
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
         if (m_pMetallicRoughnessTexture)
         {
@@ -18,6 +19,10 @@ IGfxPipelineState* MeshMaterial::GetPSO()
                 defines.push_back("AO_METALLIC_ROUGHNESS_TEXTURE=1");
             }
         }
+
+        if (m_bPbrSpecularGlossiness) defines.push_back("PBR_SPECULAR_GLOSSINESS=1");
+        if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
+        if (m_pSpecularGlossinessTexture) defines.push_back("SPECULAR_GLOSSINESS_TEXTURE=1");
 
         if (m_pNormalTexture)
         {
@@ -37,7 +42,7 @@ IGfxPipelineState* MeshMaterial::GetPSO()
         psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
         psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
         psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
@@ -68,7 +73,7 @@ IGfxPipelineState* MeshMaterial::GetShadowPSO()
             psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
         }
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.rasterizer_state.depth_bias = 5.0f;
         psoDesc.rasterizer_state.depth_slope_scale = 1.0f;
         psoDesc.depthstencil_state.depth_test = true;
@@ -95,7 +100,7 @@ IGfxPipelineState* MeshMaterial::GetVelocityPSO()
         psoDesc.vs = pRenderer->GetShader("model_velocity.hlsl", "vs_main", "vs_6_6", defines);
         psoDesc.ps = pRenderer->GetShader("model_velocity.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_write = false;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
@@ -121,7 +126,7 @@ IGfxPipelineState* MeshMaterial::GetIDPSO()
         psoDesc.vs = pRenderer->GetShader("model_id.hlsl", "vs_main", "vs_6_6", defines);
         psoDesc.ps = pRenderer->GetShader("model_id.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_write = false;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
@@ -147,7 +152,7 @@ IGfxPipelineState* MeshMaterial::GetOutlinePSO()
         psoDesc.vs = pRenderer->GetShader("model_outline.hlsl", "vs_main", "vs_6_6", defines);
         psoDesc.ps = pRenderer->GetShader("model_outline.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Front;
-        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_write = true;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
@@ -166,6 +171,7 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
+        if (m_bPbrMetallicRoughness) defines.push_back("PBR_METALLIC_ROUGHNESS=1");
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
         if (m_pMetallicRoughnessTexture)
         {
@@ -176,6 +182,10 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
                 defines.push_back("AO_METALLIC_ROUGHNESS_TEXTURE=1");
             }
         }
+        
+        if (m_bPbrSpecularGlossiness) defines.push_back("PBR_SPECULAR_GLOSSINESS=1");
+        if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
+        if (m_pSpecularGlossinessTexture) defines.push_back("SPECULAR_GLOSSINESS_TEXTURE=1");
 
         if (m_pNormalTexture)
         {
@@ -196,7 +206,7 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         psoDesc.ms = pRenderer->GetShader("meshlet.hlsl", "main_ms", "ms_6_6", defines);
         psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
-        psoDesc.rasterizer_state.front_ccw = true;
+        psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
         psoDesc.rt_format[0] = GfxFormat::RGBA8SRGB;
@@ -217,9 +227,14 @@ void MeshMaterial::UpdateConstants()
     m_materialCB.normalTexture = m_pNormalTexture ? m_pNormalTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_materialCB.emissiveTexture = m_pEmissiveTexture ? m_pEmissiveTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_materialCB.aoTexture = m_pAOTexture ? m_pAOTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    m_materialCB.diffuseTexture = m_pDiffuseTexture ? m_pDiffuseTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    m_materialCB.specularGlossinessTexture = m_pSpecularGlossinessTexture ? m_pSpecularGlossinessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_materialCB.albedo = m_albedoColor;
     m_materialCB.emissive = m_emissiveColor;
     m_materialCB.metallic = m_metallic;
     m_materialCB.roughness = m_roughness;
     m_materialCB.alphaCutoff = m_alphaCutoff;
+    m_materialCB.diffuse = m_diffuseColor;
+    m_materialCB.specular = m_specularColor;
+    m_materialCB.glossiness = m_glossiness;
 }
