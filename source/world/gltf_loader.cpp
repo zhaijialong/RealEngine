@@ -200,7 +200,14 @@ MeshMaterial* GLTFLoader::LoadMaterial(cgltf_material* gltf_material)
 meshopt_Stream LoadBufferStream(const cgltf_accessor* accessor, bool convertToLH, size_t& count)
 {
     uint32_t stride = (uint32_t)accessor->stride;
+
+    meshopt_Stream stream;
+    stream.data = RE_ALLOC(stride * accessor->count);
+    stream.size = stride;
+    stream.stride = stride;
+
     void* data = (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset;
+    memcpy((void*)stream.data, data, stride * accessor->count);
 
     //convert right-hand to left-hand
     if (convertToLH)
@@ -209,15 +216,11 @@ meshopt_Stream LoadBufferStream(const cgltf_accessor* accessor, bool convertToLH
 
         for (uint32_t i = 0; i < (uint32_t)accessor->count; ++i)
         {
-            float3* v = (float3*)data + i;
+            float3* v = (float3*)stream.data + i;
             v->z = -v->z;
         }
     }
 
-    meshopt_Stream stream;
-    stream.data = data;
-    stream.size = stride;
-    stream.stride = stride;
 
     count = accessor->count;
 
@@ -445,6 +448,12 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
 
     mesh->Create();
     m_pWorld->AddObject(mesh);
+
+    RE_FREE((void*)indices.data);
+    for (size_t i = 0; i < vertex_streams.size(); ++i)
+    {
+        RE_FREE((void*)vertex_streams[i].data);
+    }
 
     RE_FREE(remapped_indices);
     for (size_t i = 0; i < remapped_vertices.size(); ++i)
