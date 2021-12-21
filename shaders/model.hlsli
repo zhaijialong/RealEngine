@@ -93,7 +93,7 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOut input)
     pbrMetallicRoughness.roughness *= metallicRoughness.g;
     
 #if AO_METALLIC_ROUGHNESS_TEXTURE
-        pbrMetallicRoughness.ao = metallicRoughness.r;
+    pbrMetallicRoughness.ao = metallicRoughness.r;
 #endif    
 #endif //METALLIC_ROUGHNESS_TEXTURE
     
@@ -141,10 +141,10 @@ float3 GetMaterialNormal(VertexOut input, bool isFrontFace)
     float3 normal = normalTexture.Sample(linearSampler, input.uv).xyz;
     
 #if RG_NORMAL_TEXTURE
-        normal.xy = normal.xy * 2.0 - 1.0;
-        normal.z = sqrt(1.0 - normal.x * normal.x - normal.y * normal.y);
+    normal.xy = normal.xy * 2.0 - 1.0;
+    normal.z = sqrt(1.0 - normal.x * normal.x - normal.y * normal.y);
 #else
-        normal = normal * 2.0 - 1.0;
+    normal = normal * 2.0 - 1.0;
 #endif
 
     N = normalize(normal.x * T + normal.y * B + normal.z * N);
