@@ -44,7 +44,8 @@ tested on RX6600(win11, Adrenalin 21.11.3)
         }
     }
     ```
-* SV_IsFrontFace results in GPU hang
-    ```hlsl
-    GBufferOutput ps_main(VertexOut input, bool isFrontFace : SV_IsFrontFace)
+* using `SV_IsFrontFace` in an AS-MS-PS combine results in `DXGI_ERROR_DRIVER_INTERNAL_ERROR` when creating the PSO
+    ```
+    D3D12: Removing Device.
+    D3D12 WARNING: ID3D12Device::RemoveDevice: Device removal has been triggered for the following reason (DXGI_ERROR_DRIVER_INTERNAL_ERROR: There is strong evidence that the driver has performed an undefined operation; but it may be because the application performed an illegal or undefined operation to begin with.). [ EXECUTION WARNING #233: DEVICE_REMOVAL_PROCESS_POSSIBLY_AT_FAULT]
     ```
