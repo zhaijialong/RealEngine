@@ -12,7 +12,7 @@
 *.lai
 *.la
 *.a
-*.lib
+//*.lib
 *.exe
 *.out
 *.app
@@ -33,3 +33,4 @@ debug.log
 bin/rendergraph
 bin/rendergraph.png
 *.aps
+bin/RealEngine.lib
