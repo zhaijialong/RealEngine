@@ -121,6 +121,7 @@
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\gui.cpp" />
     <ClCompile Include="source\editor\editor.cpp" />
+    <ClCompile Include="source\gfx\d3d12\ags.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_descriptor.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\gui.h" />
     <ClInclude Include="source\editor\editor.h" />
+    <ClInclude Include="source\gfx\d3d12\ags.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_descriptor.h" />

@@ -262,6 +262,9 @@
     <ClCompile Include="source\renderer\hzb_occlusion_culling.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\gfx\d3d12\ags.cpp">
+      <Filter>source\gfx\d3d12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -584,6 +587,9 @@
     </ClInclude>
     <ClInclude Include="shaders\ffx_spd.h">
       <Filter>shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gfx\d3d12\ags.h">
+      <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

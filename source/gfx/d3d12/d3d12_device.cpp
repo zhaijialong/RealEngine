@@ -10,6 +10,7 @@
 #include "d3d12_heap.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 #include "pix_runtime.h"
+#include "ags.h"
 #include "utils/log.h"
 #include "utils/assert.h"
 #include "utils/profiler.h"
@@ -75,14 +76,24 @@ D3D12Device::~D3D12Device()
 #if defined(_DEBUG)
     ID3D12DebugDevice* pDebugDevice = NULL;
     m_pDevice->QueryInterface(IID_PPV_ARGS(&pDebugDevice));
+#endif
+
+    if (m_vendor == GfxVendor::AMD)
+    {
+        ags::ReleaseDevice(m_pDevice);
+    }
+    else
+    {
+        SAFE_RELEASE(m_pDevice);
+    }
+
+#if defined(_DEBUG)
     if (pDebugDevice)
     {
         pDebugDevice->ReportLiveDeviceObjects(D3D12_RLDO_SUMMARY | D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
         pDebugDevice->Release();
     }
 #endif
-
-    SAFE_RELEASE(m_pDevice);
 }
 
 
@@ -346,9 +357,19 @@ bool D3D12Device::Init()
         break;
     }
     
-    if (FAILED(D3D12CreateDevice(m_pDxgiAdapter, minimumFeatureLevel, IID_PPV_ARGS(&m_pDevice))))
+    if (m_vendor == GfxVendor::AMD)
     {
-        return false;
+        if (FAILED(ags::CreateDevice(m_pDxgiAdapter, minimumFeatureLevel, IID_PPV_ARGS(&m_pDevice))))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (FAILED(D3D12CreateDevice(m_pDxgiAdapter, minimumFeatureLevel, IID_PPV_ARGS(&m_pDevice))))
+        {
+            return false;
+        }
     }
 
     D3D12_FEATURE_DATA_SHADER_MODEL shaderModel;

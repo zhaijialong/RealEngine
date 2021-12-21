@@ -6,6 +6,7 @@
 #include "d3d12_pipeline_state.h"
 #include "d3d12_heap.h"
 #include "pix_runtime.h"
+#include "ags.h"
 #include "../gfx.h"
 #include "utils/assert.h"
 #include "utils/profiler.h"
@@ -144,11 +145,13 @@ void D3D12CommandList::Submit()
 void D3D12CommandList::BeginEvent(const std::string& event_name)
 {
     pix::BeginEvent(m_pCommandList, event_name.c_str());
+    ags::BeginEvent(m_pCommandList, event_name.c_str());
 }
 
 void D3D12CommandList::EndEvent()
 {
     pix::EndEvent(m_pCommandList);
+    ags::EndEvent(m_pCommandList);
 }
 
 void D3D12CommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)
