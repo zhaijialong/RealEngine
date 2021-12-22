@@ -91,6 +91,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="external\d3d12ma\D3D12MemAlloc.cpp" />
+    <ClCompile Include="external\enkiTS\TaskScheduler.cpp" />
+    <ClCompile Include="external\enkiTS\TaskScheduler_c.cpp" />
     <ClCompile Include="external\ImFileDialog\ImFileDialog.cpp" />
     <ClCompile Include="external\ImGuizmo\ImGuizmo.cpp" />
     <ClCompile Include="external\imgui\imgui.cpp" />
@@ -181,6 +183,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h" />
+    <ClInclude Include="external\enkiTS\LockLessMultiReadPipe.h" />
+    <ClInclude Include="external\enkiTS\TaskScheduler.h" />
+    <ClInclude Include="external\enkiTS\TaskScheduler_c.h" />
     <ClInclude Include="external\ImFileDialog\ImFileDialog.h" />
     <ClInclude Include="external\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="external\imgui\imconfig.h" />
