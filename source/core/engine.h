@@ -7,6 +7,8 @@
 #include "lsignal/lsignal.h"
 #include "simpleini/SimpleIni.h"
 
+namespace enki { class TaskScheduler; }
+
 class Engine
 {
 public:
@@ -19,6 +21,7 @@ public:
     World* GetWorld() const { return m_pWorld.get(); }
     GUI* GetGUI() const { return m_pGUI.get(); }
     Renderer* GetRenderer() const { return m_pRenderer.get(); }
+    enki::TaskScheduler* GetTaskScheduler() const { return m_pTaskScheduler.get(); }
 
     void* GetWindowHandle() const { return m_windowHandle; }
     const std::string& GetWorkPath() const { return m_workPath; }
@@ -37,6 +40,8 @@ private:
     std::unique_ptr<GUI> m_pGUI;
     std::unique_ptr<Editor> m_pEditor;
 
+    std::unique_ptr<class enki::TaskScheduler> m_pTaskScheduler;
+    
     uint64_t m_lastFrameTime = 0;
 
     CSimpleIniA m_configIni;

@@ -1,10 +1,10 @@
 #include "engine.h"
 #include "utils/log.h"
 #include "utils/profiler.h"
+#include "enkiTS/TaskScheduler.h"
 
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
-
 
 Engine* Engine::GetInstance()
 {
@@ -15,6 +15,9 @@ Engine* Engine::GetInstance()
 void Engine::Init(const std::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
     StartProfiler();
+
+    m_pTaskScheduler.reset(new enki::TaskScheduler());
+    m_pTaskScheduler->Initialize();
 
     m_windowHandle = window_handle;
     m_workPath = work_path;
