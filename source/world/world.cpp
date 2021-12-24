@@ -138,6 +138,23 @@ inline void LoadVisibleObject(tinyxml2::XMLElement* element, IVisibleObject* obj
     }
 }
 
+inline void LoadLight(tinyxml2::XMLElement* element, ILight* light)
+{
+    LoadVisibleObject(element, light);
+
+    const tinyxml2::XMLAttribute* intensity = element->FindAttribute("intensity");
+    if (intensity)
+    {
+        light->SetLightIntensity(intensity->FloatValue());
+    }
+
+    const tinyxml2::XMLAttribute* color = element->FindAttribute("color");
+    if (color)
+    {
+        light->SetLightColor(str_to_float3(color->Value()));
+    }
+}
+
 void World::CreateVisibleObject(tinyxml2::XMLElement* element)
 {
     if (strcmp(element->Value(), "light") == 0)
@@ -175,7 +192,7 @@ void World::CreateLight(tinyxml2::XMLElement* element)
         RE_ASSERT(false);
     }
 
-    LoadVisibleObject(element, light);
+    LoadLight(element, light);
 
     if (!light->Create())
     {
