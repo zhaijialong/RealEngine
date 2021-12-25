@@ -7,16 +7,20 @@
 #define STATS_OCCLUSION_CULLED_MESHLET 2
 #define STATS_CULLED_TRIANGLE 3
 #define STATS_RENDERED_TRIANGLE 4
-#define STATS_TYPE_COUNT 5
+
+#define STATS_MAX_TYPE_COUNT 32
 
 
 #ifndef __cplusplus
 
 void stats(uint type, uint count)
 {
-    RWBuffer<uint> statsBuffer = ResourceDescriptorHeap[SceneCB.statsBufferUAV];
+    if (type < STATS_MAX_TYPE_COUNT)
+    {
+        RWBuffer<uint> statsBuffer = ResourceDescriptorHeap[SceneCB.statsBufferUAV];
     
-    InterlockedAdd(statsBuffer[type], count);
+        InterlockedAdd(statsBuffer[type], count);
+    }
 }
 
 #endif

@@ -10,7 +10,7 @@ GpuDrivenStats::GpuDrivenStats(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("stats.hlsl", "main", "cs_6_6", {});
     m_pPSO = pRenderer->GetPipelineState(desc, "GpuDrivenStats::m_pPSO");
 
-    m_pStatsBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, STATS_TYPE_COUNT, "GpuDrivenStats::m_pStatsBuffer", GfxMemoryType::GpuOnly, true));
+    m_pStatsBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, STATS_MAX_TYPE_COUNT, "GpuDrivenStats::m_pStatsBuffer", GfxMemoryType::GpuOnly, true));
 }
 
 void GpuDrivenStats::Clear(IGfxCommandList* pCommandList)
@@ -19,7 +19,7 @@ void GpuDrivenStats::Clear(IGfxCommandList* pCommandList)
 
     pCommandList->ResourceBarrier(m_pStatsBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::CopyDst);
 
-    for (uint32_t i = 0; i < STATS_TYPE_COUNT; ++i)
+    for (uint32_t i = 0; i < STATS_MAX_TYPE_COUNT; ++i)
     {
         pCommandList->WriteBuffer(m_pStatsBuffer->GetBuffer(), sizeof(uint32_t) * i, 0);
     }
