@@ -7,6 +7,9 @@ using namespace linalg;
 using namespace linalg::aliases;
 
 using uint = uint32_t;
+using quaternion = float4;
+
+static const float M_PI = 3.14159265f;
 
 #define ENABLE_HLSLPP 1
 
@@ -68,26 +71,48 @@ inline T radian_to_degree(T radian)
     return radian * 180.0f / PI;
 }
 
-inline float4 rotation_quat(const float3& euler_angles) //pitch-yaw-roll order, in degrees
+inline quaternion rotation_quat(const float3& euler_angles) //pitch-yaw-roll order, in degrees
 {
     float3 radians = degree_to_randian(euler_angles);
 
-    float cx = std::cos(radians.x * 0.5f);
-    float sx = std::sin(radians.x * 0.5f);
-    float cy = std::cos(radians.y * 0.5f);
-    float sy = std::sin(radians.y * 0.5f);
-    float cz = std::cos(radians.z * 0.5f);
-    float sz = std::sin(radians.z * 0.5f);
+    float3 c = cos(radians * 0.5f);
+    float3 s = sin(radians * 0.5f);
 
-    const float4 q
-    {
-        cx * sy * sz + sx * cy * cz,
-        cx * sy * cz - sx * cy * sz,
-        cx * cy * sz - sx * sy * cz,
-        cx * cy * cz + sx * sy * sz
-    };
+    quaternion q;
+    q.w = c.x * c.y * c.z + s.x * s.y * s.z;
+    q.x = s.x * c.y * c.z - c.x * s.y * s.z;
+    q.y = c.x * s.y * c.z + s.x * c.y * s.z;
+    q.z = c.x * c.y * s.z - s.x * s.y * c.z;
 
     return q;
+}
+
+inline float rotation_pitch(const quaternion& q)
+{
+    //return T(atan(T(2) * (q.y * q.z + q.w * q.x), q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z));
+    const float y = 2.0f * (q.y * q.z + q.w * q.x);
+    const float x = q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z;
+    if (y == 0.0f && x == 0.0f) //avoid atan2(0,0) - handle singularity
+    {
+        return radian_to_degree(2.0f * atan2(q.x, q.w));
+    }
+
+    return radian_to_degree(atan2(y, x));
+}
+
+inline float rotation_yaw(const quaternion& q)
+{
+    return radian_to_degree(asin(clamp(-2.0f * (q.x * q.z - q.w * q.y), -1.0f, 1.0f)));
+}
+
+inline float rotation_roll(const quaternion& q)
+{
+    return radian_to_degree(atan2(2.0f * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z));
+}
+
+inline float3 rotation_angles(const quaternion& q)
+{
+    return float3(rotation_pitch(q), rotation_yaw(q), rotation_roll(q));
 }
 
 inline float4x4 ortho_matrix(float l, float r, float b, float t, float n, float f)
@@ -96,7 +121,7 @@ inline float4x4 ortho_matrix(float l, float r, float b, float t, float n, float 
     return { {2 / (r - l), 0, 0, 0}, {0, 2 / (t - b), 0, 0}, {0, 0, 1 / (f - n), 0}, {(l + r) / (l - r), (t + b) / (b - t), n / (n - f), 1} };
 }
 
-inline void decompose(const float4x4& matrix, float3& translation, float3& rotation, float3& scale)
+inline void decompose(const float4x4& matrix, float3& translation, quaternion& rotation, float3& scale)
 {
     translation = matrix[3].xyz();
 
@@ -108,23 +133,16 @@ inline void decompose(const float4x4& matrix, float3& translation, float3& rotat
     scale[1] = length(up);
     scale[2] = length(dir);
 
-    right = normalize(right);
-    up = normalize(up);
-    dir = normalize(dir);
-
-    rotation[0] = atan2f(up[2], dir[2]);
-    rotation[1] = atan2f(-right[2], sqrtf(up[2] * up[2] + dir[2] * dir[2]));
-    rotation[2] = atan2f(right[1], right[0]);
-
-    rotation = radian_to_degree(rotation);
+    float3x3 rotation_mat = float3x3(right / scale[0], up / scale[1], dir / scale[2]);
+    rotation = rotation_quat(rotation_mat);
 }
 
-inline void decompose(const float4x4& matrix, float3& translation, float4& rotation, float3& scale)
+inline void decompose(const float4x4& matrix, float3& translation, float3& rotation, float3& scale)
 {
-    float3 rotation_angles;
-    decompose(matrix, translation, rotation_angles, scale);
+    quaternion q;
+    decompose(matrix, translation, q, scale);
 
-    rotation = rotation_quat(rotation_angles);
+    rotation = rotation_angles(q);
 }
 
 inline bool nearly_equal(float a, float b)
