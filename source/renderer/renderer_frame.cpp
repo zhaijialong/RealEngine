@@ -256,15 +256,14 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             {
                 RenderGraphTexture* srcTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcTexture);
 
-                uint32_t size = m_pDevice->GetAllocationSize(srcTexture->GetTexture()->GetDesc());
+                m_nObjectIDRowPitch = srcTexture->GetTexture()->GetRowPitch(0);
+                uint32_t size = m_nObjectIDRowPitch * srcTexture->GetTexture()->GetDesc().height;
                 if (m_pObjectIDBuffer == nullptr || m_pObjectIDBuffer->GetDesc().size < size)
                 {
                     GfxBufferDesc desc;
                     desc.size = size;
                     desc.memory_type = GfxMemoryType::GpuToCpu;
                     m_pObjectIDBuffer.reset(m_pDevice->CreateBuffer(desc, "Renderer::m_pObjectIDBuffer"));
-
-                    m_nObjectIDRowPitch = srcTexture->GetTexture()->GetRowPitch(0);
                 }
 
                 pCommandList->CopyTextureToBuffer(m_pObjectIDBuffer.get(), srcTexture->GetTexture(), 0, 0);
