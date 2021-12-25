@@ -1,5 +1,15 @@
 #include "renderer.h"
 #include "texture_loader.h"
+#include "shader_compiler.h"
+#include "shader_cache.h"
+#include "pipeline_cache.h"
+#include "gpu_driven_debug_line.h"
+#include "gpu_driven_debug_print.h"
+#include "gpu_driven_stats.h"
+#include "gpu_scene.h"
+#include "hzb_occlusion_culling.h"
+#include "lighting/lighting_processor.h"
+#include "post_processing/post_processor.h"
 #include "core/engine.h"
 #include "utils/profiler.h"
 #include "global_constants.hlsli"
@@ -9,6 +19,7 @@ Renderer::Renderer() : m_resizeConnection({})
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderCache = std::make_unique<ShaderCache>(this);
     m_pPipelineCache = std::make_unique<PipelineStateCache>(this);
+    m_pGpuScene = std::make_unique<GpuScene>(this);
 
     m_resizeConnection = Engine::GetInstance()->WindowResizeSignal.connect(this, &Renderer::OnWindowResize);
 }

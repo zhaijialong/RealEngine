@@ -1,22 +1,13 @@
 #pragma once
 
-#include "shader_compiler.h"
-#include "shader_cache.h"
-#include "pipeline_cache.h"
 #include "staging_buffer_allocator.h"
 #include "render_graph.h"
-#include "gpu_driven_debug_line.h"
-#include "gpu_driven_debug_print.h"
-#include "gpu_driven_stats.h"
 #include "resource/texture_2d.h"
 #include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
 #include "resource/raw_buffer.h"
 #include "resource/typed_buffer.h"
-#include "hzb_occlusion_culling.h"
-#include "lighting/lighting_processor.h"
-#include "post_processing/post_processor.h"
 #include "lsignal/lsignal.h"
 
 const static int MAX_INFLIGHT_FRAMES = 3;
@@ -41,7 +32,7 @@ public:
     uint32_t GetBackbufferWidth() const { return m_pSwapchain->GetDesc().width; }
     uint32_t GetBackbufferHeight() const { return m_pSwapchain->GetDesc().height; }
     uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
-    ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
+    class ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
     RenderGraph* GetRenderGraph() { return m_pRenderGraph.get(); }
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
@@ -101,9 +92,10 @@ private:
     std::unique_ptr<IGfxDevice> m_pDevice;
     std::unique_ptr<IGfxSwapchain> m_pSwapchain;
     std::unique_ptr<RenderGraph> m_pRenderGraph;
-    std::unique_ptr<ShaderCompiler> m_pShaderCompiler;
-    std::unique_ptr<ShaderCache> m_pShaderCache;
-    std::unique_ptr<PipelineStateCache> m_pPipelineCache;
+    std::unique_ptr<class ShaderCompiler> m_pShaderCompiler;
+    std::unique_ptr<class ShaderCache> m_pShaderCache;
+    std::unique_ptr<class PipelineStateCache> m_pPipelineCache;
+    std::unique_ptr<class GpuScene> m_pGpuScene;
     uint32_t m_nWindowWidth;
     uint32_t m_nWindowHeight;
     lsignal::connection m_resizeConnection;
@@ -165,13 +157,13 @@ private:
 
     IGfxPipelineState* m_pCopyPSO = nullptr;
 
-    std::unique_ptr<HZBOcclusionCulling> m_pHZBOcclusionCulling;
-    std::unique_ptr<LightingProcessor> m_pLightingProcessor;
-    std::unique_ptr<PostProcessor> m_pPostProcessor;
+    std::unique_ptr<class HZBOcclusionCulling> m_pHZBOcclusionCulling;
+    std::unique_ptr<class LightingProcessor> m_pLightingProcessor;
+    std::unique_ptr<class PostProcessor> m_pPostProcessor;
 
-    std::unique_ptr<GpuDrivenDebugLine> m_pGpuDebugLine;
-    std::unique_ptr<GpuDrivenDebugPrint> m_pGpuDebugPrint;
-    std::unique_ptr<GpuDrivenStats> m_pGpuStats;
+    std::unique_ptr<class GpuDrivenDebugLine> m_pGpuDebugLine;
+    std::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;
+    std::unique_ptr<class GpuDrivenStats> m_pGpuStats;
 
     std::vector<ComputeFunc> m_computePassBatchs;
     std::vector<IGfxBuffer*> m_computeBuffers;

@@ -1,5 +1,6 @@
 #include "shader_cache.h"
 #include "renderer.h"
+#include "shader_compiler.h"
 #include "core/engine.h"
 #include <fstream>
 

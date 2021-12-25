@@ -1,4 +1,7 @@
 #include "renderer.h"
+#include "hzb_occlusion_culling.h"
+#include "lighting/lighting_processor.h"
+#include "post_processing/post_processor.h"
 #include "core/engine.h"
 
 void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)

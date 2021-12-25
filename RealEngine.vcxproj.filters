@@ -271,6 +271,9 @@
     <ClCompile Include="external\enkiTS\TaskScheduler_c.cpp">
       <Filter>external\enkiTS</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\gpu_scene.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -608,6 +611,9 @@
     </ClInclude>
     <ClInclude Include="source\utils\parallel_for.h">
       <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\gpu_scene.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
