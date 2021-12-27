@@ -146,7 +146,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             data.outVelocityRT = builder.Create<RenderGraphTexture>(desc, "Velocity RT");
 
             data.outVelocityRT = builder.WriteColor(0, data.outVelocityRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0));
-            data.outSceneDepthRT = builder.WriteDepth(forward_pass->outSceneDepthRT, 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
+            data.outSceneDepthRT = builder.ReadDepth(forward_pass->outSceneDepthRT, 0);
         },
         [&](const VelocityPassData& data, IGfxCommandList* pCommandList)
         {
@@ -227,7 +227,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
                 data.idTexture = builder.Create<RenderGraphTexture>(desc, "Object ID");
 
                 data.idTexture = builder.WriteColor(0, data.idTexture, 0, GfxRenderPassLoadOp::Clear, float4(1000000, 0, 0, 0));
-                data.sceneDepthTexture = builder.WriteDepth(ppInput.sceneDepthRT, 0, GfxRenderPassLoadOp::Load);
+                data.sceneDepthTexture = builder.ReadDepth(ppInput.sceneDepthRT, 0);
             },
             [&](const IDPassData& data, IGfxCommandList* pCommandList)
             {

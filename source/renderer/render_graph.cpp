@@ -108,9 +108,11 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList, IGfxCommandList* pCompu
     for (size_t i = 0; i < m_outputResources.size(); ++i)
     {
         const PresentTarget& target = m_outputResources[i];
-
-        pCommandList->ResourceBarrier(target.resource->GetResource(), 0, target.resource->GetFinalState(), target.state);
-        target.resource->SetFinalState(target.state);
+        if (target.resource->GetFinalState() != target.state)
+        {
+            pCommandList->ResourceBarrier(target.resource->GetResource(), 0, target.resource->GetFinalState(), target.state);
+            target.resource->SetFinalState(target.state);
+        }
     }
     m_outputResources.clear();
 }
@@ -203,17 +205,38 @@ RenderGraphHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t co
     return output;
 }
 
-RenderGraphHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource, bool read_only, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil)
+RenderGraphHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil)
 {
     RenderGraphResource* resource = m_resources[input.index];
 
-    GfxResourceState usage = read_only ? GfxResourceState::DepthStencilReadOnly : GfxResourceState::DepthStencil;
+    GfxResourceState usage = GfxResourceState::DepthStencil;
 
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
     AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, input_node, pass, usage, subresource, depth_load_op, stencil_load_op, clear_depth, clear_stencil);
 
     RenderGraphResourceNode* output_node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, input_node->GetVersion() + 1);
     AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, pass, output_node, usage, subresource, depth_load_op, stencil_load_op, clear_depth, clear_stencil);
+
+    RenderGraphHandle output;
+    output.index = input.index;
+    output.node = (uint16_t)m_resourceNodes.size();
+
+    m_resourceNodes.push_back(output_node);
+
+    return output;
+}
+
+RenderGraphHandle RenderGraph::ReadDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource)
+{
+    RenderGraphResource* resource = m_resources[input.index];
+
+    GfxResourceState usage = GfxResourceState::DepthStencilReadOnly;
+
+    RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
+    AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, input_node, pass, usage, subresource, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load, 0.0f, 0);
+
+    RenderGraphResourceNode* output_node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, input_node->GetVersion() + 1);
+    AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, pass, output_node, usage, subresource, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load, 0.0f, 0);
 
     RenderGraphHandle output;
     output.index = input.index;

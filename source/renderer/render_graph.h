@@ -46,7 +46,8 @@ private:
     RenderGraphHandle Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
 
     RenderGraphHandle WriteColor(RenderGraphPassBase* pass, uint32_t color_index, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, const float4& clear_color);
-    RenderGraphHandle WriteDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource, bool read_only, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil);
+    RenderGraphHandle WriteDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil);
+    RenderGraphHandle ReadDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource);
 
 private:
     LinearAllocator m_allocator { 32 * 1024 };

@@ -56,16 +56,20 @@ public:
         return m_pGraph->WriteColor(m_pPass, color_index, input, subresource, load_op, clear_color);
     }
 
-    RenderGraphHandle WriteDepth(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, float clear_depth = 0.0f, bool read_only = false)
+    RenderGraphHandle WriteDepth(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, float clear_depth = 0.0f)
     {
-        return m_pGraph->WriteDepth(m_pPass, input, subresource, read_only, depth_load_op, GfxRenderPassLoadOp::DontCare, clear_depth, 0);
+        return m_pGraph->WriteDepth(m_pPass, input, subresource, depth_load_op, GfxRenderPassLoadOp::DontCare, clear_depth, 0);
     }
 
-    RenderGraphHandle WriteDepth(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth = 0.0f, uint32_t clear_stencil = 0, bool read_only = false)
+    RenderGraphHandle WriteDepth(const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth = 0.0f, uint32_t clear_stencil = 0)
     {
-        return m_pGraph->WriteDepth(m_pPass, input, subresource, read_only, depth_load_op, stencil_load_op, clear_depth, clear_stencil);
+        return m_pGraph->WriteDepth(m_pPass, input, subresource, depth_load_op, stencil_load_op, clear_depth, clear_stencil);
     }
 
+    RenderGraphHandle ReadDepth(const RenderGraphHandle& input, uint32_t subresource)
+    {
+        return m_pGraph->ReadDepth(m_pPass, input, subresource);
+    }
 private:
     RenderGraphBuilder(RenderGraphBuilder const&) = delete;
     RenderGraphBuilder& operator=(RenderGraphBuilder const&) = delete;
