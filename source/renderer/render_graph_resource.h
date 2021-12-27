@@ -3,6 +3,7 @@
 #include "directed_acyclic_graph.h"
 #include "render_graph_resource_allocator.h"
 #include "gfx/gfx.h"
+#include "utils/assert.h"
 
 class RenderGraphEdge;
 class RenderGraphPassBase;
@@ -87,10 +88,11 @@ public:
     }
 
     IGfxTexture* GetTexture() const { return m_pTexture; }
-    IGfxDescriptor* GetSRV() { return m_allocator.GetDescriptor(m_pTexture, GfxShaderResourceViewDesc()); }
-    IGfxDescriptor* GetUAV() { return m_allocator.GetDescriptor(m_pTexture, GfxUnorderedAccessViewDesc()); }
+    IGfxDescriptor* GetSRV() { RE_ASSERT(!IsImported()); return m_allocator.GetDescriptor(m_pTexture, GfxShaderResourceViewDesc()); }
+    IGfxDescriptor* GetUAV() { RE_ASSERT(!IsImported()); return m_allocator.GetDescriptor(m_pTexture, GfxUnorderedAccessViewDesc()); }
     IGfxDescriptor* GetUAV(uint32_t mip, uint32_t slice)
     {
+        RE_ASSERT(!IsImported());
         GfxUnorderedAccessViewDesc desc;
         desc.texture.mip_slice = mip;
         desc.texture.array_slice = slice;

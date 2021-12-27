@@ -47,9 +47,9 @@ void HZBOcclusionCulling::GenerateHZB(RenderGraph* graph)
         },
         [=](const DepthReprojectionData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* prevLinearDepth = (RenderGraphTexture*)graph->GetResource(data.prevLinearDepth);
+            //RenderGraphTexture* prevLinearDepth = (RenderGraphTexture*)graph->GetResource(data.prevLinearDepth);
             RenderGraphTexture* reprojectedDepth = (RenderGraphTexture*)graph->GetResource(data.reprojectedDepth);
-            ReprojectDepth(pCommandList, prevLinearDepth->GetSRV(), reprojectedDepth->GetUAV());
+            ReprojectDepth(pCommandList, m_pRenderer->GetPrevLinearDepthTexture()->GetSRV(), reprojectedDepth->GetUAV());
         });
 
     struct DepthDilationData

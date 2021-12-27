@@ -29,6 +29,7 @@ IGfxTexture* TAA::GetHistoryRT(uint32_t width, uint32_t height)
         m_pHistoryColor->GetTexture()->GetDesc().height != height)
     {
         m_pHistoryColor.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource, "TAA HistoryTexture"));
+        m_bHistoryInvalid = true;
     }
 
     return m_pHistoryColor->GetTexture();
@@ -51,10 +52,17 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
     Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
     float2 jitterDelta = camera->GetPrevJitter() - camera->GetJitter();
 
+    IGfxDescriptor* history = m_pHistoryColor->GetSRV();
+    if (m_bHistoryInvalid)
+    {
+        history = input;
+        m_bHistoryInvalid = false;
+    }
+
     TAAConstant cb = {};
     cb.velocityRT = velocity->GetHeapIndex();
     cb.colorRT = input->GetHeapIndex();
-    cb.historyRT = m_pHistoryColor->GetSRV()->GetHeapIndex();
+    cb.historyRT = history->GetHeapIndex();
     cb.depthRT = linearDepth->GetHeapIndex();
     if (m_pRenderer->GetPrevLinearDepthTexture())
     {
@@ -62,7 +70,7 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
     }
     else
     {
-        cb.prevDepthRT = cb.historyRT;
+        cb.prevDepthRT = cb.depthRT;
     }
     cb.outTexture = output->GetHeapIndex();
     cb.consts.Resolution = { (float)width, (float)height, 1.0f / (float)width, 1.0f / (float)height };

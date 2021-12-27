@@ -45,4 +45,5 @@ private:
     IGfxPipelineState* m_pMotionVectorPSO = nullptr;
 
     std::unique_ptr<Texture2D> m_pHistoryColor;
+    bool m_bHistoryInvalid = true;
 };
