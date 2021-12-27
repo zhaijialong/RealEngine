@@ -48,6 +48,7 @@ bool Cull(Meshlet meshlet)
     }
     
     // 2. backface culling
+#if !DOUBLE_SIDED
     int16_t4 cone = unpack_s8s16((int8_t4_packed)meshlet.cone);
     float3 axis = cone.xyz / 127.0;
     float cutoff = cone.w / 127.0;
@@ -60,6 +61,7 @@ bool Cull(Meshlet meshlet)
         stats(STATS_BACKFACE_CULLED_MESHLET, 1);
         return false;
     }
+#endif
     
     // 3. occlusion culling    
     Texture2D<float> hzbTexture = ResourceDescriptorHeap[SceneCB.reprojectedHZBSRV];
