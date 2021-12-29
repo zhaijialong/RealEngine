@@ -1,27 +1,27 @@
-#include "hzb_occlusion_culling.h"
+#include "hierarchical_depth_buffer.h"
 #include "renderer.h"
 
 #define A_CPU
 #include "ffx_a.h"
 #include "ffx_spd.h"
 
-HZBOcclusionCulling::HZBOcclusionCulling(Renderer* pRenderer) :
+HZB::HZB(Renderer* pRenderer) :
     m_pRenderer(pRenderer)
 {
     GfxComputePipelineDesc desc;
     desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "depth_reprojection", "cs_6_6", {});
-    m_pDepthReprojectionPSO = pRenderer->GetPipelineState(desc, "HZBOcclusionCulling depth reprojection PSO");
+    m_pDepthReprojectionPSO = pRenderer->GetPipelineState(desc, "HZB depth reprojection PSO");
 
     desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "depth_dilation", "cs_6_6", {});
-    m_pDepthDilationPSO = pRenderer->GetPipelineState(desc, "HZBOcclusionCulling depth dilation PSO");
+    m_pDepthDilationPSO = pRenderer->GetPipelineState(desc, "HZB depth dilation PSO");
 
     desc.cs = pRenderer->GetShader("hzb.hlsl", "build_hzb", "cs_6_6", {});
-    m_pDepthMipFilterPSO = pRenderer->GetPipelineState(desc, "HZBOcclusionCulling build HZB PSO");
+    m_pDepthMipFilterPSO = pRenderer->GetPipelineState(desc, "HZB generate mips PSO");
 
-    m_pSPDCounterBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "HZBOcclusionCulling::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
+    m_pSPDCounterBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "HZB::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
 }
 
-void HZBOcclusionCulling::GenerateHZB(RenderGraph* graph)
+void HZB::GenerateHZB(RenderGraph* graph)
 {
     CalcHZBSize();
 
@@ -105,13 +105,13 @@ void HZBOcclusionCulling::GenerateHZB(RenderGraph* graph)
         });
 }
 
-RenderGraphHandle HZBOcclusionCulling::GetHZBMip(uint32_t mip) const
+RenderGraphHandle HZB::GetHZBMip(uint32_t mip) const
 {
     RE_ASSERT(mip < m_nHZBMipCount);
     return m_hzbMips[mip];
 }
 
-void HZBOcclusionCulling::CalcHZBSize()
+void HZB::CalcHZBSize()
 {
     uint32_t mipsX = (uint32_t)std::max(ceilf(log2f((float)m_pRenderer->GetBackbufferWidth())) - 1, 1.0f);
     uint32_t mipsY = (uint32_t)std::max(ceilf(log2f((float)m_pRenderer->GetBackbufferHeight())) - 1, 1.0f);
@@ -123,7 +123,7 @@ void HZBOcclusionCulling::CalcHZBSize()
     m_hzbSize.y = 1 << mipsY;
 }
 
-void HZBOcclusionCulling::ReprojectDepth(IGfxCommandList* pCommandList, IGfxDescriptor* prevLinearDepthSRV, IGfxDescriptor* reprojectedDepthUAV)
+void HZB::ReprojectDepth(IGfxCommandList* pCommandList, IGfxDescriptor* prevLinearDepthSRV, IGfxDescriptor* reprojectedDepthUAV)
 {
     pCommandList->SetPipelineState(m_pDepthReprojectionPSO);
 
@@ -133,7 +133,7 @@ void HZBOcclusionCulling::ReprojectDepth(IGfxCommandList* pCommandList, IGfxDesc
     pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
 }
 
-void HZBOcclusionCulling::DilateDepth(IGfxCommandList* pCommandList, IGfxDescriptor* reprojectedDepthSRV, IGfxDescriptor* hzbMip0UAV)
+void HZB::DilateDepth(IGfxCommandList* pCommandList, IGfxDescriptor* reprojectedDepthSRV, IGfxDescriptor* hzbMip0UAV)
 {
     pCommandList->SetPipelineState(m_pDepthDilationPSO);
 
@@ -143,7 +143,7 @@ void HZBOcclusionCulling::DilateDepth(IGfxCommandList* pCommandList, IGfxDescrip
     pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
 }
 
-void HZBOcclusionCulling::BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture)
+void HZB::BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture)
 {
     ResetCounterBuffer(pCommandList);
 
@@ -193,7 +193,7 @@ void HZBOcclusionCulling::BuildHZB(IGfxCommandList* pCommandList, RenderGraphTex
     pCommandList->Dispatch(dispatchX, dispatchY, dispatchZ);
 }
 
-void HZBOcclusionCulling::ResetCounterBuffer(IGfxCommandList* pCommandList)
+void HZB::ResetCounterBuffer(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "HZB reset counter");
 

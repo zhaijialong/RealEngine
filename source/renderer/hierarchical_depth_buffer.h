@@ -5,12 +5,12 @@
 
 class Renderer;
 
-class HZBOcclusionCulling
+class HZB
 {
 public:
-    HZBOcclusionCulling(Renderer* pRenderer);
+    HZB(Renderer* pRenderer);
 
-    void GenerateHZB(RenderGraph* graph);
+    void GenerateHZB(RenderGraph* graph); //todo : generate for 2nd phase culling
 
     uint32_t GetHZBMipCount() const { return m_nHZBMipCount; }
     uint32_t GetHZBWidth() const { return m_hzbSize.x; };

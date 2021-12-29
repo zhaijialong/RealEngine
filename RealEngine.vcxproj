@@ -141,7 +141,7 @@
     <ClCompile Include="source\renderer\gpu_driven_debug_print.cpp" />
     <ClCompile Include="source\renderer\gpu_driven_stats.cpp" />
     <ClCompile Include="source\renderer\gpu_scene.cpp" />
-    <ClCompile Include="source\renderer\hzb_occlusion_culling.cpp" />
+    <ClCompile Include="source\renderer\hierarchical_depth_buffer.cpp" />
     <ClCompile Include="source\renderer\lighting\clustered_shading.cpp" />
     <ClCompile Include="source\renderer\lighting\gtao.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
@@ -243,7 +243,7 @@
     <ClInclude Include="source\renderer\gpu_driven_debug_print.h" />
     <ClInclude Include="source\renderer\gpu_driven_stats.h" />
     <ClInclude Include="source\renderer\gpu_scene.h" />
-    <ClInclude Include="source\renderer\hzb_occlusion_culling.h" />
+    <ClInclude Include="source\renderer\hierarchical_depth_buffer.h" />
     <ClInclude Include="source\renderer\lighting\clustered_shading.h" />
     <ClInclude Include="source\renderer\lighting\gtao.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />

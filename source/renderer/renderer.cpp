@@ -7,7 +7,7 @@
 #include "gpu_driven_debug_print.h"
 #include "gpu_driven_stats.h"
 #include "gpu_scene.h"
-#include "hzb_occlusion_culling.h"
+#include "hierarchical_depth_buffer.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
@@ -74,7 +74,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     CreateCommonResources();
 
     m_pRenderGraph.reset(new RenderGraph(this));
-    m_pHZBOcclusionCulling.reset(new HZBOcclusionCulling(this));
+    m_pHZB.reset(new HZB(this));
     m_pLightingProcessor.reset(new LightingProcessor(this));
     m_pPostProcessor.reset(new PostProcessor(this));
     m_pGpuDebugLine.reset(new GpuDrivenDebugLine(this));
@@ -186,7 +186,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
     camera->SetupCameraCB(pCommandList);
 
-    RenderGraphHandle hzbHandle = m_pHZBOcclusionCulling->GetHZBMip(0);
+    RenderGraphHandle hzbHandle = m_pHZB->GetHZBMip(0);
     RenderGraphTexture* hzbTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(hzbHandle);
 
     SceneConstant sceneCB;
@@ -200,8 +200,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
     sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
     sceneCB.reprojectedHZBSRV = hzbTexture->GetSRV()->GetHeapIndex();
-    sceneCB.reprojectedHZBWidth = m_pHZBOcclusionCulling->GetHZBWidth();
-    sceneCB.reprojectedHZBHeight = m_pHZBOcclusionCulling->GetHZBHeight();
+    sceneCB.reprojectedHZBWidth = m_pHZB->GetHZBWidth();
+    sceneCB.reprojectedHZBHeight = m_pHZB->GetHZBHeight();
     sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferSRV = m_pGpuDebugLine->GetVertexBufferSRV()->GetHeapIndex();

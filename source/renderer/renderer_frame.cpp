@@ -1,12 +1,12 @@
 #include "renderer.h"
-#include "hzb_occlusion_culling.h"
+#include "hierarchical_depth_buffer.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
 
 void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
 {
-    m_pHZBOcclusionCulling->GenerateHZB(m_pRenderGraph.get());
+    m_pHZB->GenerateHZB(m_pRenderGraph.get());
 
     struct GBufferPassData
     {
@@ -46,9 +46,9 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             data.outEmissiveRT = builder.WriteColor(3, data.outEmissiveRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, GfxRenderPassLoadOp::Clear);
 
-            for (uint32_t i = 0; i < m_pHZBOcclusionCulling->GetHZBMipCount(); ++i)
+            for (uint32_t i = 0; i < m_pHZB->GetHZBMipCount(); ++i)
             {
-                data.reprojectedHZB = builder.Read(m_pHZBOcclusionCulling->GetHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+                data.reprojectedHZB = builder.Read(m_pHZB->GetHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
             }
         },
         [&](const GBufferPassData& data, IGfxCommandList* pCommandList)

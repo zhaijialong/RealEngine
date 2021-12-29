@@ -157,7 +157,7 @@ private:
 
     IGfxPipelineState* m_pCopyPSO = nullptr;
 
-    std::unique_ptr<class HZBOcclusionCulling> m_pHZBOcclusionCulling;
+    std::unique_ptr<class HZB> m_pHZB;
     std::unique_ptr<class LightingProcessor> m_pLightingProcessor;
     std::unique_ptr<class PostProcessor> m_pPostProcessor;
 
