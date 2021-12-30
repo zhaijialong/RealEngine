@@ -125,12 +125,18 @@ float3 OctNormalDecode(float3 f)
 
 float GetLinearDepth(float ndcDepth)
 {
-    return 1.0f / (ndcDepth * CameraCB.linearZParams.x - CameraCB.linearZParams.y);
+    float C1 = CameraCB.linearZParams.x;
+    float C2 = CameraCB.linearZParams.y;
+    
+    return 1.0f / (ndcDepth * C1 - C2);
 }
 
 float GetNdcDepth(float linearDepth)
 {
-    return (rcp(linearDepth) + CameraCB.linearZParams.y) / CameraCB.linearZParams.x;
+    float A = CameraCB.mtxProjection._33;
+    float B = CameraCB.mtxProjection._34;
+    
+    return A + B / linearDepth;
 }
 
 float3 GetWorldPosition(uint2 screenPos, float depth)

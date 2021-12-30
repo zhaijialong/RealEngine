@@ -2,46 +2,26 @@
 #include "core/engine.h"
 #include "imgui/imgui.h"
 
-float2 DepthlinearizationParams(const float4x4& ProjMatrix)
+float2 CalcDepthlinearizationParams(const float4x4& mtxProjection)
 {
-    // The perspective depth projection comes from the the following projection matrix:
-    //
     // | 1  0  0  0 |
     // | 0  1  0  0 |
     // | 0  0  A  1 |
     // | 0  0  B  0 |
-    //
-    // Z' = (Z * A + B) / Z
+
+    // Z' = (Z * A + B) / Z     --- perspective divide
     // Z' = A + B / Z
-    //
-    // So to get Z from Z' is just:
+
     // Z = B / (Z' - A)
-    //
-    // Note a reversed Z projection matrix will have A=0.
-    //
-    // Done in shader as:
-    // Z = 1 / (Z' * C1 - C2)   --- Where C1 = 1/B, C2 = A/B
-    //
+    // Z = 1 / (Z' * C1 - C2)   --- C1 = 1/B, C2 = A/B
 
-    float DepthMul = ProjMatrix[2][2];
-    float DepthAdd = ProjMatrix[3][2];
+    float A = mtxProjection[2][2];
+    float B = max(mtxProjection[3][2], 0.00000001f); //avoid dividing by 0
 
-    if (DepthAdd == 0.f)
-    {
-        // Avoid dividing by 0 in this case
-        DepthAdd = 0.00000001f;
-    }
+    float C1 = 1.0f / B;
+    float C2 = A / B;
 
-    float SubtractValue = DepthMul / DepthAdd;
-
-    // Subtract a tiny number to avoid divide by 0 errors in the shader when a very far distance is decided from the depth buffer.
-    // This fixes fog not being applied to the black background in the editor.
-    SubtractValue -= 0.00000001f;
-
-    return float2(
-        1.0f / DepthAdd,
-        SubtractValue
-    );
+    return float2(C1, C2);
 }
 
 Camera::Camera() : 
@@ -138,7 +118,7 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
     m_cameraCB.cameraPos = GetPosition();
     m_cameraCB.nearZ = m_znear;
     m_cameraCB.farZ = m_zfar;
-    m_cameraCB.linearZParams = DepthlinearizationParams(m_projection);
+    m_cameraCB.linearZParams = CalcDepthlinearizationParams(m_projection);
     m_cameraCB.jitter = m_jitter;
     m_cameraCB.prevJitter = m_prevJitter;
     
