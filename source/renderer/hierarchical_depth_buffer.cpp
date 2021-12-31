@@ -21,7 +21,7 @@ HZB::HZB(Renderer* pRenderer) :
     m_pSPDCounterBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "HZB::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
 }
 
-void HZB::GenerateHZB(RenderGraph* graph)
+void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
 {
     CalcHZBSize();
 
@@ -92,23 +92,25 @@ void HZB::GenerateHZB(RenderGraph* graph)
         {
             data.hzb = builder.Read(dilation_pass->dilatedDepth, GfxResourceState::ShaderResourceNonPS);
 
-            m_hzbMips[0] = data.hzb;
+            m_1stPhaseCullingHZBMips[0] = data.hzb;
             for (uint32_t i = 1; i < m_nHZBMipCount; ++i)
             {
-                m_hzbMips[i] = builder.Write(hzb, GfxResourceState::UnorderedAccess, i);
+                m_1stPhaseCullingHZBMips[i] = builder.Write(hzb, GfxResourceState::UnorderedAccess, i);
             }
         },
         [=](const BuildHZBData& data, IGfxCommandList* pCommandList)
         {
+            ResetCounterBuffer(pCommandList);
+
             RenderGraphTexture* hzb = (RenderGraphTexture*)graph->GetResource(data.hzb);
             BuildHZB(pCommandList, hzb);
         });
 }
 
-RenderGraphHandle HZB::GetHZBMip(uint32_t mip) const
+RenderGraphHandle HZB::Get1stPhaseCullingHZBMip(uint32_t mip) const
 {
     RE_ASSERT(mip < m_nHZBMipCount);
-    return m_hzbMips[mip];
+    return m_1stPhaseCullingHZBMips[mip];
 }
 
 void HZB::CalcHZBSize()
@@ -145,8 +147,6 @@ void HZB::DilateDepth(IGfxCommandList* pCommandList, IGfxDescriptor* reprojected
 
 void HZB::BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture)
 {
-    ResetCounterBuffer(pCommandList);
-
     pCommandList->SetPipelineState(m_pDepthMipFilterPSO);
 
     varAU2(dispatchThreadGroupCountXY);

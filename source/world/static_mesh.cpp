@@ -122,9 +122,10 @@ void StaticMesh::Draw(IGfxCommandList* pCommandList, IGfxPipelineState* pso)
 
 void StaticMesh::Dispatch(IGfxCommandList* pCommandList, IGfxPipelineState* pso)
 {
-    uint32_t root_consts[4] = {
+    uint32_t root_consts[5] = {
         m_nMeshletCount,
         m_pMeshletBuffer->GetSRV()->GetHeapIndex(),
+        1,
         m_pMeshletVerticesBuffer->GetSRV()->GetHeapIndex(), 
         m_pMeshletIndicesBuffer->GetSRV()->GetHeapIndex(), 
     };

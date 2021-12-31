@@ -6,6 +6,7 @@ cbuffer RootConstants : register(b0)
 {
     uint c_meshletCount;
     uint c_meshletBuffer;
+    uint c_bFirstPhase;
     uint c_meshletVerticesBuffer;
     uint c_meshletIndicesBuffer;
 };
@@ -34,38 +35,42 @@ groupshared Payload s_Payload;
 
 bool Cull(Meshlet meshlet)
 {
-    // 1. frustum culling
     float3 center = mul(ModelCB.mtxWorld, float4(meshlet.center, 1.0)).xyz;
     float radius = meshlet.radius * ModelCB.scale;
     
-    for (uint i = 0; i < 6; ++i)
+    if (c_bFirstPhase)
     {
-        if (dot(center, CameraCB.culling.planes[i].xyz) + CameraCB.culling.planes[i].w + radius < 0)
+        // 1. frustum culling
+        for (uint i = 0; i < 6; ++i)
         {
-            stats(STATS_FRUSTUM_CULLED_MESHLET, 1);
+            if (dot(center, CameraCB.culling.planes[i].xyz) + CameraCB.culling.planes[i].w + radius < 0)
+            {
+                stats(STATS_FRUSTUM_CULLED_MESHLET, 1);
+                return false;
+            }
+        }
+    
+#if !DOUBLE_SIDED
+        // 2. backface culling
+        int16_t4 cone = unpack_s8s16((int8_t4_packed)meshlet.cone);
+        float3 axis = cone.xyz / 127.0;
+        float cutoff = cone.w / 127.0;
+    
+        axis = normalize(mul(ModelCB.mtxWorld, float4(axis, 0.0)).xyz);
+        float3 view = center - CameraCB.culling.viewPos;
+    
+        if (dot(view, -axis) >= cutoff * length(view) + radius)
+        {
+            stats(STATS_BACKFACE_CULLED_MESHLET, 1);
             return false;
         }
-    }
-    
-    // 2. backface culling
-#if !DOUBLE_SIDED
-    int16_t4 cone = unpack_s8s16((int8_t4_packed)meshlet.cone);
-    float3 axis = cone.xyz / 127.0;
-    float cutoff = cone.w / 127.0;
-    
-    axis = normalize(mul(ModelCB.mtxWorld, float4(axis, 0.0)).xyz);
-    float3 view = center - CameraCB.culling.viewPos;
-    
-    if (dot(view, -axis) >= cutoff * length(view) + radius)
-    {
-        stats(STATS_BACKFACE_CULLED_MESHLET, 1);
-        return false;
-    }
 #endif
+    }
     
-    // 3. occlusion culling    
-    Texture2D<float> hzbTexture = ResourceDescriptorHeap[SceneCB.reprojectedHZBSRV];
-    uint2 hzbSize = uint2(SceneCB.reprojectedHZBWidth, SceneCB.reprojectedHZBHeight);
+    // 3. occlusion culling
+    uint hzb = c_bFirstPhase ? SceneCB.firstPhaseCullingHZBSRV : SceneCB.secondPhaseCullingHZBSRV;
+    Texture2D<float> hzbTexture = ResourceDescriptorHeap[hzb];
+    uint2 hzbSize = uint2(SceneCB.HZBWidth, SceneCB.HZBHeight);
     
     if (!OcclusionCull(hzbTexture, hzbSize, center, radius))
     {

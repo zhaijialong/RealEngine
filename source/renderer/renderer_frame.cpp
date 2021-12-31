@@ -6,7 +6,7 @@
 
 void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
 {
-    m_pHZB->GenerateHZB(m_pRenderGraph.get());
+    m_pHZB->Generate1stPhaseCullingHZB(m_pRenderGraph.get());
 
     struct GBufferPassData
     {
@@ -48,7 +48,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
 
             for (uint32_t i = 0; i < m_pHZB->GetHZBMipCount(); ++i)
             {
-                data.reprojectedHZB = builder.Read(m_pHZB->GetHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+                data.reprojectedHZB = builder.Read(m_pHZB->Get1stPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
             }
         },
         [&](const GBufferPassData& data, IGfxCommandList* pCommandList)

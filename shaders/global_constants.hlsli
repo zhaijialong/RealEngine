@@ -15,15 +15,15 @@ struct SceneConstant
     float rcpViewWidth;
     float rcpViewHeight;
     
-    uint reprojectedHZBSRV;
-    uint reprojectedHZBWidth;
-    uint reprojectedHZBHeight;
-    uint _padding0;
+    uint HZBWidth;
+    uint HZBHeight;
+    uint firstPhaseCullingHZBSRV;
+    uint secondPhaseCullingHZBSRV;
     
+    uint sceneHZBSRV;
     uint debugLineDrawCommandUAV;
     uint debugLineVertexBufferUAV;
     uint debugLineVertexBufferSRV;
-    uint _padding;
     
     uint debugTextCounterBufferUAV;
     uint debugTextBufferUAV;

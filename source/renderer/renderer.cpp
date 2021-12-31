@@ -186,8 +186,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
     camera->SetupCameraCB(pCommandList);
 
-    RenderGraphHandle hzbHandle = m_pHZB->GetHZBMip(0);
-    RenderGraphTexture* hzbTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(hzbHandle);
+    RenderGraphHandle firstPhaseHZBHandle = m_pHZB->Get1stPhaseCullingHZBMip(0);
+    RenderGraphTexture* firstPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(firstPhaseHZBHandle);
 
     SceneConstant sceneCB;
     sceneCB.lightDir = light->GetLightDirection();
@@ -199,9 +199,9 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.viewHeight = m_nWindowHeight;
     sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
     sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
-    sceneCB.reprojectedHZBSRV = hzbTexture->GetSRV()->GetHeapIndex();
-    sceneCB.reprojectedHZBWidth = m_pHZB->GetHZBWidth();
-    sceneCB.reprojectedHZBHeight = m_pHZB->GetHZBHeight();
+    sceneCB.HZBWidth = m_pHZB->GetHZBWidth();
+    sceneCB.HZBHeight = m_pHZB->GetHZBHeight();
+    sceneCB.firstPhaseCullingHZBSRV = firstPhaseHZBTexture->GetSRV()->GetHeapIndex();
     sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferSRV = m_pGpuDebugLine->GetVertexBufferSRV()->GetHeapIndex();
