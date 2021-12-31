@@ -8,7 +8,8 @@ GUI::GUI()
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    ImGuiIO& io = ImGui::GetIO();
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.BackendRendererName = "imgui_impl_realengine";
@@ -18,6 +19,11 @@ GUI::GUI()
     //ImGui::StyleColorsClassic();
 
     ImGui_ImplWin32_Init(Engine::GetInstance()->GetWindowHandle());
+    ImGui_ImplWin32_EnableDpiAwareness();
+    float dpi_scale = ImGui_ImplWin32_GetDpiScaleForHwnd(Engine::GetInstance()->GetWindowHandle());
+
+    ImGui::GetStyle().ScaleAllSizes(dpi_scale);
+    //io.FontGlobalScale = dpi_scale;
 }
 
 GUI::~GUI()

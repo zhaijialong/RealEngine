@@ -49,8 +49,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_ LPWSTR    lpCmdLine,
     _In_ int       nCmdShow)
 {
-    SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_UNAWARE); //currently we'are DPI unaware
-
     WNDCLASSEX windowClass = { 0 };
     windowClass.cbSize = sizeof(WNDCLASSEX);
     windowClass.style = CS_HREDRAW | CS_VREDRAW;
@@ -61,8 +59,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     windowClass.lpszClassName = L"REWindowClass";
     RegisterClassEx(&windowClass);
 
-    const unsigned int window_width = 1800;
-    const unsigned int window_height = 1000;
+    const unsigned int window_width = 1920;
+    const unsigned int window_height = 1080;
 
     RECT windowRect = { 0, 0, window_width, window_height };
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
