@@ -1,6 +1,7 @@
 #include "gltf_loader.h"
 #include "static_mesh.h"
 #include "mesh_material.h"
+#include "resource_cache.h"
 #include "core/engine.h"
 #include "utils/string.h"
 #include "tinyxml2/tinyxml2.h"
@@ -150,8 +151,7 @@ Texture2D* GLTFLoader::LoadTexture(const cgltf_texture_view& texture_view, bool 
     size_t last_slash = m_file.find_last_of('/');
     std::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
 
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    Texture2D* texture = pRenderer->CreateTexture2D(path + texture_view.texture->image->uri, srgb);
+    Texture2D* texture = ResourceCache::GetInstance()->GetTexture2D(path + texture_view.texture->image->uri, srgb);
 
     return texture;
 }

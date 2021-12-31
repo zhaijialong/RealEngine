@@ -176,6 +176,7 @@
     <ClCompile Include="source\world\gltf_loader.cpp" />
     <ClCompile Include="source\world\mesh_material.cpp" />
     <ClCompile Include="source\world\model.cpp" />
+    <ClCompile Include="source\world\resource_cache.cpp" />
     <ClCompile Include="source\world\skeletal_mesh.cpp" />
     <ClCompile Include="source\world\skeleton.cpp" />
     <ClCompile Include="source\world\sky_sphere.cpp" />
@@ -291,6 +292,7 @@
     <ClInclude Include="source\world\i_visible_object.h" />
     <ClInclude Include="source\world\mesh_material.h" />
     <ClInclude Include="source\world\model.h" />
+    <ClInclude Include="source\world\resource_cache.h" />
     <ClInclude Include="source\world\skeletal_mesh.h" />
     <ClInclude Include="source\world\skeleton.h" />
     <ClInclude Include="source\world\sky_sphere.h" />

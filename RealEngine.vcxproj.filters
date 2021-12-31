@@ -274,6 +274,9 @@
     <ClCompile Include="source\renderer\gpu_scene.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\world\resource_cache.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -614,6 +617,9 @@
     </ClInclude>
     <ClInclude Include="source\renderer\gpu_scene.h">
       <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\world\resource_cache.h">
+      <Filter>source\world</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,18 @@
 #include "mesh_material.h"
+#include "resource_cache.h"
 #include "core/engine.h"
+
+MeshMaterial::~MeshMaterial()
+{
+    ResourceCache* cache = ResourceCache::GetInstance();
+    cache->ReleaseTexture2D(m_pDiffuseTexture);
+    cache->ReleaseTexture2D(m_pSpecularGlossinessTexture);
+    cache->ReleaseTexture2D(m_pAlbedoTexture);
+    cache->ReleaseTexture2D(m_pMetallicRoughnessTexture);
+    cache->ReleaseTexture2D(m_pNormalTexture);
+    cache->ReleaseTexture2D(m_pEmissiveTexture);
+    cache->ReleaseTexture2D(m_pAOTexture);
+}
 
 IGfxPipelineState* MeshMaterial::GetPSO()
 {

@@ -447,7 +447,7 @@ void Renderer::CreateCommonResources()
     m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
 
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
-    m_pBrdfTexture = CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false);
+    m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
     m_pEnvTexture.reset(CreateTextureCube(asset_path + "textures/output_pmrem.dds"));
 
     GfxGraphicsPipelineDesc psoDesc;
@@ -551,17 +551,8 @@ RawBuffer* Renderer::CreateRawBuffer(const void* data, uint32_t size, const std:
     return buffer;
 }
 
-Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb, bool cached)
+Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
 {
-    if (cached)
-    {
-        auto iter = m_cachedTextures.find(file);
-        if (iter != m_cachedTextures.end())
-        {
-            return iter->second.get();
-        }
-    }
-
     TextureLoader loader;
     if (!loader.Load(file, srgb))
     {
@@ -576,11 +567,6 @@ Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb, bool ca
     }
 
     UploadTexture(texture->GetTexture(), loader.GetData());
-
-    if (cached)
-    {
-        m_cachedTextures.insert(std::make_pair(file, std::unique_ptr<Texture2D>(texture)));
-    }
 
     return texture;
 }

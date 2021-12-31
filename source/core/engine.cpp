@@ -39,6 +39,8 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
 
 void Engine::Shut()
 {
+    m_pWorld.reset();
+
     ShutdownProfiler();
 
     //m_pWorld->SaveScene(m_assetPath + m_configIni.GetValue("World", "Scene"));

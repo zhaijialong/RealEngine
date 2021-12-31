@@ -7,6 +7,8 @@ class MeshMaterial
 {
     friend class GLTFLoader;
 public:
+    ~MeshMaterial();
+
     IGfxPipelineState* GetPSO();
     IGfxPipelineState* GetShadowPSO();
     IGfxPipelineState* GetVelocityPSO();

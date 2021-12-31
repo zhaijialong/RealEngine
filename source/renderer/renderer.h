@@ -52,7 +52,7 @@ public:
     TypedBuffer* CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
     RawBuffer* CreateRawBuffer(const void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
 
-    Texture2D* CreateTexture2D(const std::string& file, bool srgb = true, bool cached = true);
+    Texture2D* CreateTexture2D(const std::string& file, bool srgb = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
@@ -140,7 +140,7 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pMinReductionSampler;
     std::unique_ptr<IGfxDescriptor> m_pMaxReductionSampler;
 
-    Texture2D* m_pBrdfTexture;
+    std::unique_ptr<Texture2D> m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;
 
     std::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
@@ -152,8 +152,6 @@ private:
     uint32_t m_nMouseHitObjectID = UINT32_MAX;
     std::unique_ptr<IGfxBuffer> m_pObjectIDBuffer;
     uint32_t m_nObjectIDRowPitch = 0;
-
-    std::unordered_map<std::string, std::unique_ptr<Texture2D>> m_cachedTextures;
 
     IGfxPipelineState* m_pCopyPSO = nullptr;
 

@@ -26,9 +26,9 @@ Editor::Editor()
 
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    m_pTranslateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/translate.png", true, false));
-    m_pRotateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/rotate.png", true, false));
-    m_pScaleIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/scale.png", true, false));
+    m_pTranslateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/translate.png", true));
+    m_pRotateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/rotate.png", true));
+    m_pScaleIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/scale.png", true));
 }
 
 Editor::~Editor()
@@ -320,7 +320,7 @@ void Editor::CreateGpuMemoryStats()
         if (ExecuteCommand(cmd.c_str()) == 0)
         {
             std::string file = path + "d3d12ma.png";
-            m_pGpuMemoryStats.reset(pRenderer->CreateTexture2D(file, true, false));
+            m_pGpuMemoryStats.reset(pRenderer->CreateTexture2D(file, true));
         }
     }
 }
@@ -340,7 +340,7 @@ void Editor::CreateRenderGraph()
         if (ExecuteCommand(cmd.c_str()) == 0)
         {
             std::string png_file = graph_file + ".png";
-            m_pRenderGraph.reset(pRenderer->CreateTexture2D(png_file, true, false));
+            m_pRenderGraph.reset(pRenderer->CreateTexture2D(png_file, true));
         }
     }
 }
