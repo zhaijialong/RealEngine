@@ -20,10 +20,6 @@ GUI::GUI()
 
     ImGui_ImplWin32_Init(Engine::GetInstance()->GetWindowHandle());
     ImGui_ImplWin32_EnableDpiAwareness();
-    float dpi_scale = ImGui_ImplWin32_GetDpiScaleForHwnd(Engine::GetInstance()->GetWindowHandle());
-
-    ImGui::GetStyle().ScaleAllSizes(dpi_scale);
-    //io.FontGlobalScale = dpi_scale;
 }
 
 GUI::~GUI()
@@ -37,10 +33,17 @@ bool GUI::Init()
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     IGfxDevice* pDevice = pRenderer->GetDevice();
 
-    std::string font_file = Engine::GetInstance()->GetAssetPath() + "fonts/DroidSans.ttf";
+    float scaling = ImGui_ImplWin32_GetDpiScaleForHwnd(Engine::GetInstance()->GetWindowHandle());
+    ImGui::GetStyle().ScaleAllSizes(scaling);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontFromFileTTF(font_file.c_str(), 14.0f);
+    io.FontGlobalScale = scaling;
+
+    ImFontConfig fontConfig;
+    fontConfig.OversampleH = fontConfig.OversampleV = 3;
+    
+    std::string font_file = Engine::GetInstance()->GetAssetPath() + "fonts/DroidSans.ttf";
+    io.Fonts->AddFontFromFileTTF(font_file.c_str(), 13.0f, &fontConfig);
 
     unsigned char* pixels;
     int width, height;
