@@ -49,6 +49,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_ LPWSTR    lpCmdLine,
     _In_ int       nCmdShow)
 {
+    ImGui_ImplWin32_EnableDpiAwareness();
+
     WNDCLASSEX windowClass = { 0 };
     windowClass.cbSize = sizeof(WNDCLASSEX);
     windowClass.style = CS_HREDRAW | CS_VREDRAW;

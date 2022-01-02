@@ -19,7 +19,6 @@ GUI::GUI()
     //ImGui::StyleColorsClassic();
 
     ImGui_ImplWin32_Init(Engine::GetInstance()->GetWindowHandle());
-    ImGui_ImplWin32_EnableDpiAwareness();
 }
 
 GUI::~GUI()
