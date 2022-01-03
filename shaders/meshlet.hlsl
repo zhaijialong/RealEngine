@@ -5,10 +5,10 @@
 cbuffer RootConstants : register(b0)
 {
     uint c_meshletCount;
-    uint c_meshletBuffer;
+    uint c_meshletBufferAddress;
     uint c_bFirstPhase;
-    uint c_meshletVerticesBuffer;
-    uint c_meshletIndicesBuffer;
+    uint c_meshletVerticesBufferAddress;
+    uint c_meshletIndicesBufferAddress;
 };
 
 struct Meshlet
@@ -90,8 +90,7 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
     
     if (meshletIndex < c_meshletCount)
     {
-        StructuredBuffer<Meshlet> meshletBuffer = ResourceDescriptorHeap[c_meshletBuffer];
-        Meshlet meshlet = meshletBuffer[meshletIndex];
+        Meshlet meshlet = LoadSceneBuffer<Meshlet>(c_meshletBufferAddress, meshletIndex);
         
         visible = Cull(meshlet);
         
@@ -123,26 +122,23 @@ void main_ms(
         return;
     }
     
-    StructuredBuffer<Meshlet> meshletBuffer = ResourceDescriptorHeap[c_meshletBuffer];
-    Meshlet meshlet = meshletBuffer[meshletIndex];
+    Meshlet meshlet = LoadSceneBuffer<Meshlet>(c_meshletBufferAddress, meshletIndex);
     
     SetMeshOutputCounts(meshlet.vertexCount, meshlet.triangleCount);
     
     if(groupThreadID < meshlet.triangleCount)
     {
-        StructuredBuffer<uint16_t> meshletIndicesBuffer = ResourceDescriptorHeap[c_meshletIndicesBuffer];
         uint3 index = uint3(
-            meshletIndicesBuffer[meshlet.triangleOffset + groupThreadID * 3],
-            meshletIndicesBuffer[meshlet.triangleOffset + groupThreadID * 3 + 1],
-            meshletIndicesBuffer[meshlet.triangleOffset + groupThreadID * 3 + 2]);
-        
+            LoadSceneBuffer<uint16_t>(c_meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3),
+            LoadSceneBuffer<uint16_t>(c_meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 1),
+            LoadSceneBuffer<uint16_t>(c_meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 2));
+
         indices[groupThreadID] = index;
     }
     
     if(groupThreadID < meshlet.vertexCount)
-    {
-        StructuredBuffer<uint> meshletVerticesBuffer = ResourceDescriptorHeap[c_meshletVerticesBuffer];
-        uint vertex_id = meshletVerticesBuffer[meshlet.vertexOffset + groupThreadID];
+    {        
+        uint vertex_id = LoadSceneBuffer<uint>(c_meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
 
         VertexOut v = GetVertex(vertex_id);
         v.meshlet = meshletIndex;

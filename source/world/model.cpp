@@ -304,7 +304,7 @@ void Model::RenderShadowPass(IGfxCommandList* pCommandList, const float4x4& mtxV
         }
 
         pCommandList->SetPipelineState(mesh->shadowPSO);
-        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
+        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer(), 0, mesh->indexBuffer->GetFormat());
 
         struct CB0
         {
@@ -356,8 +356,8 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
         }
 
         pCommandList->SetPipelineState(mesh->PSO);
-        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
-
+        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer(), 0, mesh->indexBuffer->GetFormat());
+        /*
         if (mesh->animPSO != nullptr)
         {
             modelCB.posBuffer = mesh->animPosBuffer->GetSRV()->GetHeapIndex();
@@ -370,7 +370,7 @@ void Model::RenderBassPass(IGfxCommandList* pCommandList, const float4x4& mtxVP,
         modelCB.normalBuffer = mesh->normalBuffer ? mesh->normalBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         modelCB.tangentBuffer = mesh->tangentBuffer ? mesh->tangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         pCommandList->SetGraphicsConstants(1, &modelCB, sizeof(modelCB));
-
+        */
         MaterialConstant materialCB;
         materialCB.albedoTexture = material->albedoTexture ? material->albedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
         materialCB.metallicRoughnessTexture = material->metallicRoughnessTexture ? material->metallicRoughnessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
@@ -412,7 +412,7 @@ void Model::RenderVelocityPass(IGfxCommandList* pCommandList, const float4x4& mt
         }
 
         pCommandList->SetPipelineState(mesh->velocityPSO);
-        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer());
+        pCommandList->SetIndexBuffer(mesh->indexBuffer->GetBuffer(), 0, mesh->indexBuffer->GetFormat());
 
         struct CB
         {

@@ -12,6 +12,7 @@ public:
 
     IGfxBuffer* GetBuffer() const { return m_pBuffer.get(); }
     uint32_t GetIndexCount() const { return m_nIndexCount; }
+    GfxFormat GetFormat() const { return m_pBuffer->GetDesc().format; }
 
 private:
     std::string m_name;

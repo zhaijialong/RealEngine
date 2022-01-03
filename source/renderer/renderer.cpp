@@ -19,7 +19,6 @@ Renderer::Renderer() : m_resizeConnection({})
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderCache = std::make_unique<ShaderCache>(this);
     m_pPipelineCache = std::make_unique<PipelineStateCache>(this);
-    m_pGpuScene = std::make_unique<GpuScene>(this);
 
     m_resizeConnection = Engine::GetInstance()->WindowResizeSignal.connect(this, &Renderer::OnWindowResize);
 }
@@ -74,6 +73,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     CreateCommonResources();
 
     m_pRenderGraph.reset(new RenderGraph(this));
+    m_pGpuScene = std::make_unique<GpuScene>(this);
     m_pHZB.reset(new HZB(this));
     m_pLightingProcessor.reset(new LightingProcessor(this));
     m_pPostProcessor.reset(new PostProcessor(this));
@@ -140,7 +140,7 @@ void Renderer::UploadResources()
         for (size_t i = 0; i < m_pendingBufferUpload.size(); ++i)
         {
             const BufferUpload& upload = m_pendingBufferUpload[i];
-            pUploadCommandList->CopyBuffer(upload.buffer, 0,
+            pUploadCommandList->CopyBuffer(upload.buffer, upload.offset,
                 upload.staging_buffer.buffer, upload.staging_buffer.offset, upload.staging_buffer.size);
         }
         m_pendingBufferUpload.clear();
@@ -190,6 +190,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     RenderGraphTexture* firstPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(firstPhaseHZBHandle);
 
     SceneConstant sceneCB;
+    sceneCB.sceneBufferSRV = m_pGpuScene->GetSceneBufferSRV()->GetHeapIndex();
     sceneCB.lightDir = light->GetLightDirection();
     //sceneCB.shadowRT = shadowMapRT->GetSRV()->GetHeapIndex();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
@@ -494,7 +495,7 @@ IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint
 
     if (data)
     {
-        UploadBuffer(buffer->GetBuffer(), data, stride * index_count);
+        UploadBuffer(buffer->GetBuffer(), 0, data, stride * index_count);
     }
 
     return buffer;
@@ -511,7 +512,7 @@ StructuredBuffer* Renderer::CreateStructuredBuffer(const void* data, uint32_t st
 
     if (data)
     {
-        UploadBuffer(buffer->GetBuffer(), data, stride * element_count);
+        UploadBuffer(buffer->GetBuffer(), 0, data, stride * element_count);
     }
 
     return buffer;
@@ -528,7 +529,7 @@ TypedBuffer* Renderer::CreateTypedBuffer(const void* data, GfxFormat format, uin
 
     if (data)
     {
-        UploadBuffer(buffer->GetBuffer(), data, GetFormatRowPitch(format, 1) * element_count);
+        UploadBuffer(buffer->GetBuffer(), 0, data, GetFormatRowPitch(format, 1) * element_count);
     }
 
     return buffer;
@@ -545,7 +546,7 @@ RawBuffer* Renderer::CreateRawBuffer(const void* data, uint32_t size, const std:
 
     if (data)
     {
-        UploadBuffer(buffer->GetBuffer(), data, size);
+        UploadBuffer(buffer->GetBuffer(), 0, data, size);
     }
 
     return buffer;
@@ -600,6 +601,33 @@ TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
     UploadTexture(texture->GetTexture(), loader.GetData());
 
     return texture;
+}
+
+void Renderer::ClearGpuScene()
+{
+    m_pGpuScene->Clear();
+}
+
+IGfxBuffer* Renderer::GetSceneBuffer() const
+{
+    return m_pGpuScene->GetSceneBuffer();
+}
+
+uint32_t Renderer::AllocateSceneBuffer(void* data, uint32_t size, uint32_t alignment)
+{
+    uint32_t address = m_pGpuScene->Allocate(size, alignment);
+
+    if (data)
+    {
+        UploadBuffer(m_pGpuScene->GetSceneBuffer(), address, data, size);
+    }
+
+    return address;
+}
+
+void Renderer::FreeSceneBuffer(uint32_t address)
+{
+    m_pGpuScene->Free(address);
 }
 
 inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t row_num, uint32_t d)
@@ -670,19 +698,19 @@ void Renderer::UploadTexture(IGfxTexture* texture, const void* data)
     }
 }
 
-void Renderer::UploadBuffer(IGfxBuffer* buffer, const void* data, uint32_t data_size)
+void Renderer::UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size)
 {
     uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
     StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
 
-    uint32_t required_size = buffer->GetRequiredStagingBufferSize();
-    StagingBuffer staging_buffer = pAllocator->Allocate(required_size);
+    StagingBuffer staging_buffer = pAllocator->Allocate(data_size);
 
     char* dst_data = (char*)staging_buffer.buffer->GetCpuAddress() + staging_buffer.offset;
     memcpy(dst_data, data, data_size);
 
     BufferUpload upload;
     upload.buffer = buffer;
+    upload.offset = offset;
     upload.staging_buffer = staging_buffer;
     m_pendingBufferUpload.push_back(upload);
 }

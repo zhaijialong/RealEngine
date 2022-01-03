@@ -2,6 +2,9 @@
 
 struct SceneConstant
 {
+    uint sceneBufferSRV;
+    uint3 _padding0;
+
     float3 lightDir;
     uint shadowRT;
     

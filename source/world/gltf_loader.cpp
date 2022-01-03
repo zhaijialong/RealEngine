@@ -49,6 +49,20 @@ inline void GetTransform(cgltf_node* node, float4x4& matrix)
     matrix = mul(T, mul(R, S));
 }
 
+inline uint32_t GetMeshIndex(cgltf_data* data, cgltf_mesh* mesh)
+{
+    for (cgltf_size i = 0; i < data->meshes_count; ++i)
+    {
+        if (&data->meshes[i] == mesh)
+        {
+            return (uint32_t)i;
+        }
+    }
+
+    RE_ASSERT(false);
+    return 0;
+}
+
 GLTFLoader::GLTFLoader(World* world, tinyxml2::XMLElement* element)
 {
     m_pWorld = world;
@@ -100,14 +114,14 @@ void GLTFLoader::Load()
     {
         for (cgltf_size node = 0; node < data->scenes[i].nodes_count; ++node)
         {
-            LoadNode(data->scenes[i].nodes[node], m_mtxWorld);
+            LoadNode(data, data->scenes[i].nodes[node], m_mtxWorld);
         }
     }
 
     cgltf_free(data);
 }
 
-void GLTFLoader::LoadNode(cgltf_node* node, const float4x4& mtxParentToWorld)
+void GLTFLoader::LoadNode(cgltf_data* data, cgltf_node* node, const float4x4& mtxParentToWorld)
 {
     float4x4 mtxLocalToParent;
     GetTransform(node, mtxLocalToParent);
@@ -124,9 +138,13 @@ void GLTFLoader::LoadNode(cgltf_node* node, const float4x4& mtxParentToWorld)
 
     if (node->mesh)
     {
+        uint32_t mesh_index = GetMeshIndex(data, node->mesh);
+
         for (cgltf_size i = 0; i < node->mesh->primitives_count; i++)
         {
-            StaticMesh* mesh = LoadMesh(&node->mesh->primitives[i], node->mesh->name ? node->mesh->name : "");
+            std::string name = "mesh_" + std::to_string(mesh_index) + "_" + std::to_string(i) + " " + node->mesh->name;
+
+            StaticMesh* mesh = LoadMesh(&node->mesh->primitives[i], name);
 
             mesh->m_pMaterial->m_bFrontFaceCCW = bFrontFaceCCW;
             mesh->SetPosition(position);
@@ -137,7 +155,7 @@ void GLTFLoader::LoadNode(cgltf_node* node, const float4x4& mtxParentToWorld)
 
     for (cgltf_size i = 0; i < node->children_count; ++i)
     {
-        LoadNode(node->children[i], mtxLocalToWorld);
+        LoadNode(data, node->children[i], mtxLocalToWorld);
     }
 }
 
@@ -418,23 +436,43 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     }
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    mesh->m_pIndexBuffer.reset(pRenderer->CreateIndexBuffer(remapped_indices, (uint32_t)indices.stride, (uint32_t)index_count, "model(" + m_file + " " + name + ") IB"));
+    ResourceCache* cache = ResourceCache::GetInstance();
+
+    mesh->m_pRenderer = pRenderer;
+
+    if (indices.stride == 1)
+    {
+        uint16_t* data = (uint16_t*)RE_ALLOC(sizeof(uint16_t) * index_count);
+        for (uint32_t i = 0; i < index_count; ++i)
+        {
+            data[i] = ((const char*)indices.data)[i];
+        }
+
+        indices.stride = 2;
+
+        RE_FREE((void*)indices.data);
+        indices.data = data;
+    }
+
+    mesh->m_indexBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") IB", remapped_indices, (uint32_t)indices.stride * (uint32_t)index_count);
+    mesh->m_indexBufferFormat = indices.stride == 4 ? GfxFormat::R32UI : GfxFormat::R16UI;
+    mesh->m_nIndexCount = (uint32_t)index_count;
 
     for (size_t i = 0; i < vertex_types.size(); ++i)
     {
         switch (vertex_types[i])
         {
         case cgltf_attribute_type_position:
-            mesh->m_pPosBuffer.reset(pRenderer->CreateStructuredBuffer(remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count, "model(" + m_file + " " + name + ") pos"));
+            mesh->m_posBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") pos", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
             break;
         case cgltf_attribute_type_texcoord:
-            mesh->m_pUVBuffer.reset(pRenderer->CreateStructuredBuffer(remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count, "model(" + m_file + " " + name + ") UV"));
+            mesh->m_uvBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") UV", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
             break;
         case cgltf_attribute_type_normal:
-            mesh->m_pNormalBuffer.reset(pRenderer->CreateStructuredBuffer(remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count, "model(" + m_file + " " + name + ") normal"));
+            mesh->m_normalBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") normal", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
             break;
         case cgltf_attribute_type_tangent:
-            mesh->m_pTangentBuffer.reset(pRenderer->CreateStructuredBuffer(remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count, "model(" + m_file + " " + name + ") tangent"));
+            mesh->m_tangentBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") tangent", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
             break;
         default:
             break;
@@ -442,9 +480,9 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     }
 
     mesh->m_nMeshletCount = (uint32_t)meshlet_count;
-    mesh->m_pMeshletBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_bounds.data(), sizeof(MeshletBound), (uint32_t)meshlet_bounds.size(), "model(" + m_file + " " + name + ") meshlet"));
-    mesh->m_pMeshletVerticesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_vertices.data(), sizeof(unsigned int), (uint32_t)meshlet_vertices.size(), "model(" + m_file + " " + name + ") meshlet vertices"));
-    mesh->m_pMeshletIndicesBuffer.reset(pRenderer->CreateStructuredBuffer(meshlet_triangles16.data(), sizeof(unsigned short), (uint32_t)meshlet_triangles16.size(), "model(" + m_file + " " + name + ") meshlet indices"));
+    mesh->m_meshletBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet", meshlet_bounds.data(), sizeof(MeshletBound) * (uint32_t)meshlet_bounds.size());
+    mesh->m_meshletVerticesBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet vertices", meshlet_vertices.data(), sizeof(unsigned int) * (uint32_t)meshlet_vertices.size());
+    mesh->m_meshletIndicesBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet indices", meshlet_triangles16.data(), sizeof(unsigned short) * (uint32_t)meshlet_triangles16.size());
 
     mesh->Create();
     m_pWorld->AddObject(mesh);

@@ -42,7 +42,7 @@ public:
     virtual void SetPipelineState(IGfxPipelineState* state) override;
     virtual void SetStencilReference(uint8_t stencil) override;
     virtual void SetBlendFactor(const float* blend_factor) override;
-    virtual void SetIndexBuffer(IGfxBuffer* buffer) override;
+    virtual void SetIndexBuffer(IGfxBuffer* buffer, uint32_t offset, GfxFormat format) override;
     virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
     virtual void SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
     virtual void SetGraphicsConstants(uint32_t slot, const void* data, size_t data_size) override;

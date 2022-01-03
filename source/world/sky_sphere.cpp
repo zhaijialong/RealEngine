@@ -87,7 +87,7 @@ void SkySphere::RenderSky(IGfxCommandList* pCommandList, const Camera* pCamera)
     GPU_EVENT(pCommandList, "SkySphere");
 
     pCommandList->SetPipelineState(m_pPSO);
-    pCommandList->SetIndexBuffer(m_pIndexBuffer->GetBuffer());
+    pCommandList->SetIndexBuffer(m_pIndexBuffer->GetBuffer(), 0, m_pIndexBuffer->GetFormat());
 
     struct SkySphereConstant
     {

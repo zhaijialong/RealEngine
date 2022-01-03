@@ -248,3 +248,11 @@ bool OcclusionCull(Texture2D<float> hzbTexture, uint2 hzbSize, float3 center, fl
     
     return visible;
 }
+
+
+template<typename T>
+T LoadSceneBuffer(uint bufferAddress, uint element_id)
+{
+    ByteAddressBuffer sceneBuffer = ResourceDescriptorHeap[SceneCB.sceneBufferSRV];
+    return sceneBuffer.Load<T>(bufferAddress + sizeof(T) * element_id);
+}

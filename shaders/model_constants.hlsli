@@ -2,10 +2,10 @@
 
 struct ModelConstant
 {
-    uint posBuffer;
-    uint uvBuffer;
-    uint normalBuffer;
-    uint tangentBuffer;    
+    uint posBufferAddress;
+    uint uvBufferAddress;
+    uint normalBufferAddress;
+    uint tangentBufferAddress;
     
     uint prevPosBuffer;
     uint2 _padding;

@@ -444,12 +444,14 @@ void D3D12CommandList::SetBlendFactor(const float* blend_factor)
     m_pCommandList->OMSetBlendFactor(blend_factor);
 }
 
-void D3D12CommandList::SetIndexBuffer(IGfxBuffer* buffer)
+void D3D12CommandList::SetIndexBuffer(IGfxBuffer* buffer, uint32_t offset, GfxFormat format)
 {
+    RE_ASSERT(format == GfxFormat::R16UI || format == GfxFormat::R32UI);
+
     D3D12_INDEX_BUFFER_VIEW ibv;
-    ibv.BufferLocation = buffer->GetGpuAddress();
-    ibv.SizeInBytes = buffer->GetDesc().size;
-    ibv.Format = dxgi_format(buffer->GetDesc().format);
+    ibv.BufferLocation = buffer->GetGpuAddress() + offset;
+    ibv.SizeInBytes = buffer->GetDesc().size - offset;
+    ibv.Format = dxgi_format(format);
 
     m_pCommandList->IASetIndexBuffer(&ibv);
 }

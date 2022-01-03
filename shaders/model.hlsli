@@ -17,19 +17,17 @@ struct VertexOut
 };
 
 VertexOut GetVertex(uint vertex_id)
-{
-    StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[ModelCB.posBuffer];
-    StructuredBuffer<float2> uvBuffer = ResourceDescriptorHeap[ModelCB.uvBuffer];
-    StructuredBuffer<float3> normalBuffer = ResourceDescriptorHeap[ModelCB.normalBuffer];
-    StructuredBuffer<float4> tangentBuffer = ResourceDescriptorHeap[ModelCB.tangentBuffer];
-    
-    float4 pos = float4(posBuffer[vertex_id], 1.0);
+{    
+    float4 pos = float4(LoadSceneBuffer<float3>(ModelCB.posBufferAddress, vertex_id), 1.0);
+    float2 uv = LoadSceneBuffer<float2>(ModelCB.uvBufferAddress, vertex_id);
+    float3 normal = LoadSceneBuffer<float3>(ModelCB.normalBufferAddress, vertex_id);
+
     float4 worldPos = mul(ModelCB.mtxWorld, pos);
 
     VertexOut v = (VertexOut)0;
     v.pos = mul(CameraCB.mtxViewProjection, worldPos);
-    v.uv = uvBuffer[vertex_id];
-    v.normal = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(normalBuffer[vertex_id], 0.0f)).xyz);
+    v.uv = uv;
+    v.normal = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(normal, 0.0f)).xyz);
     
     if (vertex_id == 0)
     {
@@ -39,7 +37,7 @@ VertexOut GetVertex(uint vertex_id)
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE
-    float4 tangent = tangentBuffer[vertex_id];
+    float4 tangent = LoadSceneBuffer<float4>(ModelCB.tangentBufferAddress, vertex_id);
     v.tangent = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
     v.bitangent = normalize(cross(v.normal, v.tangent) * tangent.w);    
     

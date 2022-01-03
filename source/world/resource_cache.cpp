@@ -52,3 +52,48 @@ void ResourceCache::ReleaseTexture2D(Texture2D* texture)
 
     RE_ASSERT(false);
 }
+
+uint32_t ResourceCache::GetSceneBuffer(const std::string& name, void* data, uint32_t size)
+{
+    auto iter = m_cachedSceneBuffer.find(name);
+    if (iter != m_cachedSceneBuffer.end())
+    {
+        iter->second.refCount++;
+        return iter->second.address;
+    }
+
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    SceneBuffer buffer;
+    buffer.refCount = 1;
+    buffer.address = pRenderer->AllocateSceneBuffer(data, size);
+    m_cachedSceneBuffer.insert(std::make_pair(name, buffer));
+
+    return buffer.address;
+}
+
+void ResourceCache::RelaseSceneBuffer(uint32_t address)
+{
+    if (address == -1)
+    {
+        return;
+    }
+
+    for (auto iter = m_cachedSceneBuffer.begin(); iter != m_cachedSceneBuffer.end(); ++iter)
+    {
+        if (iter->second.address == address)
+        {
+            iter->second.refCount--;
+
+            if (iter->second.refCount == 0)
+            {
+                Engine::GetInstance()->GetRenderer()->FreeSceneBuffer(address);
+                m_cachedSceneBuffer.erase(iter);
+            }
+
+            return;
+        }
+    }
+
+    RE_ASSERT(false);
+}

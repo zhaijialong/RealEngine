@@ -1,5 +1,6 @@
 #include "static_mesh.h"
 #include "mesh_material.h"
+#include "resource_cache.h"
 #include "core/engine.h"
 
 StaticMesh::StaticMesh(const std::string& name)
@@ -7,13 +8,24 @@ StaticMesh::StaticMesh(const std::string& name)
     m_name = name;
 }
 
+StaticMesh::~StaticMesh()
+{
+    ResourceCache* cache = ResourceCache::GetInstance();
+
+    cache->RelaseSceneBuffer(m_posBufferAddress);
+    cache->RelaseSceneBuffer(m_uvBufferAddress);
+    cache->RelaseSceneBuffer(m_normalBufferAddress);
+    cache->RelaseSceneBuffer(m_tangentBufferAddress);
+
+    cache->RelaseSceneBuffer(m_meshletBufferAddress);
+    cache->RelaseSceneBuffer(m_meshletVerticesBufferAddress);
+    cache->RelaseSceneBuffer(m_meshletIndicesBufferAddress);
+
+    cache->RelaseSceneBuffer(m_indexBufferAddress);
+}
+
 bool StaticMesh::Create()
 {
-    m_modelCB.posBuffer = m_pPosBuffer->GetSRV()->GetHeapIndex();
-    m_modelCB.uvBuffer = m_pUVBuffer ? m_pUVBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_modelCB.normalBuffer = m_pNormalBuffer ? m_pNormalBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_modelCB.tangentBuffer = m_pTangentBuffer ? m_pTangentBuffer->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-
     return true;
 }
 
@@ -32,6 +44,11 @@ void StaticMesh::Tick(float delta_time)
 
 void StaticMesh::UpdateConstants()
 {
+    m_modelCB.posBufferAddress = m_posBufferAddress;
+    m_modelCB.uvBufferAddress = m_uvBufferAddress;
+    m_modelCB.normalBufferAddress = m_normalBufferAddress;
+    m_modelCB.tangentBufferAddress = m_tangentBufferAddress;
+
     m_modelCB.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
     m_modelCB.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
     m_modelCB.radius = m_radius * m_modelCB.scale;
@@ -116,18 +133,18 @@ void StaticMesh::Draw(IGfxCommandList* pCommandList, IGfxPipelineState* pso)
     pCommandList->SetPipelineState(pso);
     pCommandList->SetGraphicsConstants(1, &m_modelCB, sizeof(ModelConstant));
     pCommandList->SetGraphicsConstants(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
-    pCommandList->SetIndexBuffer(m_pIndexBuffer->GetBuffer());
-    pCommandList->DrawIndexed(m_pIndexBuffer->GetIndexCount());
+    pCommandList->SetIndexBuffer(m_pRenderer->GetSceneBuffer(), m_indexBufferAddress, m_indexBufferFormat);
+    pCommandList->DrawIndexed(m_nIndexCount);
 }
 
 void StaticMesh::Dispatch(IGfxCommandList* pCommandList, IGfxPipelineState* pso)
 {
     uint32_t root_consts[5] = {
         m_nMeshletCount,
-        m_pMeshletBuffer->GetSRV()->GetHeapIndex(),
+        m_meshletBufferAddress,
         1,
-        m_pMeshletVerticesBuffer->GetSRV()->GetHeapIndex(), 
-        m_pMeshletIndicesBuffer->GetSRV()->GetHeapIndex(), 
+        m_meshletVerticesBufferAddress,
+        m_meshletIndicesBufferAddress
     };
 
     pCommandList->SetPipelineState(pso);

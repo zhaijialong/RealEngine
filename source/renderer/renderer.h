@@ -56,11 +56,16 @@ public:
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
+    void ClearGpuScene();
+    IGfxBuffer* GetSceneBuffer() const;
+    uint32_t AllocateSceneBuffer(void* data, uint32_t size, uint32_t alignment = 4);
+    void FreeSceneBuffer(uint32_t address);
+
     void RequestMouseHitTest(uint32_t x, uint32_t y);
     uint32_t GetMouseHitObjectID() const { return m_nMouseHitObjectID; }
 
     void UploadTexture(IGfxTexture* texture, const void* data);
-    void UploadBuffer(IGfxBuffer* buffer, const void* data, uint32_t data_size);
+    void UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size);
 
     void AddComputePass(const ComputeFunc& func) { m_computePassBatchs.push_back(func); }
     void AddComputeBuffer(IGfxBuffer* buffer) { m_computeBuffers.push_back(buffer); }
@@ -124,6 +129,7 @@ private:
     struct BufferUpload
     {
         IGfxBuffer* buffer;
+        uint32_t offset;
         StagingBuffer staging_buffer;
     };
     std::vector<BufferUpload> m_pendingBufferUpload;

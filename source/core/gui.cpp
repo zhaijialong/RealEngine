@@ -177,7 +177,7 @@ void GUI::SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index)
 
     pCommandList->SetViewport(0, 0, (uint32_t)draw_data->DisplaySize.x, (uint32_t)draw_data->DisplaySize.y);
     pCommandList->SetPipelineState(m_pPSO);
-    pCommandList->SetIndexBuffer(m_pIndexBuffer[frame_index]->GetBuffer());
+    pCommandList->SetIndexBuffer(m_pIndexBuffer[frame_index]->GetBuffer(), 0, m_pIndexBuffer[frame_index]->GetFormat());
 
     float L = draw_data->DisplayPos.x;
     float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
