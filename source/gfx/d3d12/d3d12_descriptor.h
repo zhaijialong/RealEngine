@@ -32,10 +32,15 @@ public:
     virtual uint32_t GetHeapIndex() const override { return m_descriptor.index; }
 
     bool Create();
+    D3D12Descriptor GetShaderVisibleDescriptor() const { return m_descriptor; }
+    D3D12Descriptor GetNonShaderVisibleDescriptor() const { return m_nonShaderVisibleDescriptor; }
+
 private:
     IGfxResource* m_pResource = nullptr;
     GfxUnorderedAccessViewDesc m_desc = {};
     D3D12Descriptor m_descriptor;
+
+    D3D12Descriptor m_nonShaderVisibleDescriptor; //for uav clear
 };
 
 class D3D12ConstantBufferView : public IGfxDescriptor

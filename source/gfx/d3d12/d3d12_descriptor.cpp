@@ -152,6 +152,7 @@ D3D12UnorderedAccessView::D3D12UnorderedAccessView(D3D12Device* pDevice, IGfxRes
 D3D12UnorderedAccessView::~D3D12UnorderedAccessView()
 {
     ((D3D12Device*)m_pDevice)->DeleteResourceDescriptor(m_descriptor);
+    ((D3D12Device*)m_pDevice)->DeleteNonShaderVisibleUAV(m_nonShaderVisibleDescriptor);
 }
 
 bool D3D12UnorderedAccessView::Create()
@@ -246,9 +247,11 @@ bool D3D12UnorderedAccessView::Create()
     }
 
     m_descriptor = ((D3D12Device*)m_pDevice)->AllocateResourceDescriptor();
+    m_nonShaderVisibleDescriptor = ((D3D12Device*)m_pDevice)->AllocateNonShaderVisibleUAV();
 
     ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
     pDevice->CreateUnorderedAccessView((ID3D12Resource*)m_pResource->GetHandle(), nullptr, &uavDesc, m_descriptor.cpu_handle);
+    pDevice->CreateUnorderedAccessView((ID3D12Resource*)m_pResource->GetHandle(), nullptr, &uavDesc, m_nonShaderVisibleDescriptor.cpu_handle);
 
     return true;
 }

@@ -14,7 +14,7 @@ namespace D3D12MA
 class D3D12DescriptorAllocator
 {
 public:
-    D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count, const std::string& name);
+    D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shader_visible, uint32_t descriptor_count, const std::string& name);
     ~D3D12DescriptorAllocator();
 
     D3D12Descriptor Allocate();
@@ -102,11 +102,12 @@ public:
     D3D12Descriptor AllocateDSV();
     D3D12Descriptor AllocateResourceDescriptor();
     D3D12Descriptor AllocateSampler();
+    D3D12Descriptor AllocateNonShaderVisibleUAV();
     void DeleteRTV(const D3D12Descriptor& descriptor);
     void DeleteDSV(const D3D12Descriptor& descriptor);
     void DeleteResourceDescriptor(const D3D12Descriptor& descriptor);
     void DeleteSampler(const D3D12Descriptor& descriptor);
-
+    void DeleteNonShaderVisibleUAV(const D3D12Descriptor& descriptor);
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
     int GetProfileGraphicsQueue() const { return m_nProfileGraphicsQueue; }
@@ -148,6 +149,8 @@ private:
     std::unique_ptr<D3D12DescriptorAllocator> m_pResDescriptorAllocator;
     std::unique_ptr<D3D12DescriptorAllocator> m_pSamplerAllocator;
 
+    std::unique_ptr<D3D12DescriptorAllocator> m_pNonShaderVisibleUavAllocator;
+
     uint64_t m_nFrameID = 0;
 
     struct ObjectDeletion
@@ -173,6 +176,7 @@ private:
     std::queue<DescriptorDeletion> m_dsvDeletionQueue;
     std::queue<DescriptorDeletion> m_resourceDeletionQueue;
     std::queue<DescriptorDeletion> m_samplerDeletionQueue;
+    std::queue<DescriptorDeletion> m_nonShaderVisibleUAVDeletionQueue;
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
     int m_nProfileGraphicsQueue = -1;

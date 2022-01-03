@@ -5,6 +5,7 @@
 #include "d3d12_buffer.h"
 #include "d3d12_pipeline_state.h"
 #include "d3d12_heap.h"
+#include "d3d12_descriptor.h"
 #include "pix_runtime.h"
 #include "ags.h"
 #include "../gfx.h"
@@ -236,6 +237,28 @@ void D3D12CommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t 
     src_texture.SubresourceIndex = CalcSubresource(src->GetDesc(), src_mip, src_array);
 
     m_pCommandList->CopyTextureRegion(&dst_texture, 0, 0, 0, &src_texture, nullptr);
+}
+
+void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
+{
+    FlushPendingBarrier();
+
+    D3D12Descriptor shaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetShaderVisibleDescriptor();
+    D3D12Descriptor nonShaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetNonShaderVisibleDescriptor();
+
+    m_pCommandList->ClearUnorderedAccessViewFloat(shaderVisibleDescriptor.gpu_handle, nonShaderVisibleDescriptor.cpu_handle,
+        (ID3D12Resource*)resource->GetHandle(), clear_value, 0, nullptr);
+}
+
+void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
+{
+    FlushPendingBarrier();
+
+    D3D12Descriptor shaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetShaderVisibleDescriptor();
+    D3D12Descriptor nonShaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetNonShaderVisibleDescriptor();
+
+    m_pCommandList->ClearUnorderedAccessViewUint(shaderVisibleDescriptor.gpu_handle, nonShaderVisibleDescriptor.cpu_handle,
+        (ID3D12Resource*)resource->GetHandle(), clear_value, 0, nullptr);
 }
 
 void D3D12CommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)

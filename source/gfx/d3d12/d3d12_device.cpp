@@ -60,6 +60,7 @@ D3D12Device::~D3D12Device()
     m_pDSVAllocator.reset();
     m_pResDescriptorAllocator.reset();
     m_pSamplerAllocator.reset();
+    m_pNonShaderVisibleUavAllocator.reset();
     
     SAFE_RELEASE(m_pDrawSignature);
     SAFE_RELEASE(m_pDrawIndexedSignature);
@@ -411,10 +412,12 @@ bool D3D12Device::Init()
         m_pConstantBufferAllocators[i] = std::make_unique<D3D12ConstantBufferAllocator>(this, 8 * 1024 * 1024, name);
     }
 
-    m_pRTVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 512, "RTV Heap");
-    m_pDSVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 128, "DSV Heap");
-    m_pResDescriptorAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 65536, "Resource Heap");
-    m_pSamplerAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, "Sampler Heap");
+    m_pRTVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false, 512, "RTV Heap");
+    m_pDSVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, false, 128, "DSV Heap");
+    m_pResDescriptorAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true, 65536, "Resource Heap");
+    m_pSamplerAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true, 32, "Sampler Heap");
+
+    m_pNonShaderVisibleUavAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, false, 1024, "Non shader visible UAV Heap");
 
     CreateRootSignature();
     CreateIndirectCommandSignatures();
@@ -487,6 +490,11 @@ D3D12Descriptor D3D12Device::AllocateSampler()
     return m_pSamplerAllocator->Allocate();
 }
 
+D3D12Descriptor D3D12Device::AllocateNonShaderVisibleUAV()
+{
+    return m_pNonShaderVisibleUavAllocator->Allocate();
+}
+
 void D3D12Device::DeleteRTV(const D3D12Descriptor& descriptor)
 {
     if (!IsNullDescriptor(descriptor))
@@ -516,6 +524,14 @@ void D3D12Device::DeleteSampler(const D3D12Descriptor& descriptor)
     if (!IsNullDescriptor(descriptor))
     {
         m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
+    }
+}
+
+void D3D12Device::DeleteNonShaderVisibleUAV(const D3D12Descriptor& descriptor)
+{
+    if (!IsNullDescriptor(descriptor))
+    {
+        m_nonShaderVisibleUAVDeletionQueue.push({ descriptor, m_nFrameID });
     }
 }
 
@@ -592,6 +608,18 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
         m_pSamplerAllocator->Free(item.descriptor);
         m_samplerDeletionQueue.pop();
     }
+
+    while (!m_nonShaderVisibleUAVDeletionQueue.empty())
+    {
+        auto item = m_nonShaderVisibleUAVDeletionQueue.front();
+        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        {
+            break;
+        }
+
+        m_pNonShaderVisibleUavAllocator->Free(item.descriptor);
+        m_nonShaderVisibleUAVDeletionQueue.pop();
+    }
 }
 
 void D3D12Device::CreateRootSignature()
@@ -663,12 +691,12 @@ void D3D12Device::CreateIndirectCommandSignatures()
     m_pDispatchMeshSignature->SetName(L"D3D12Device::m_pDispatchMeshSignature");
 }
 
-D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t descriptor_count, const std::string& name)
+D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shader_visible, uint32_t descriptor_count, const std::string& name)
 {
     m_descriptorSize = device->GetDescriptorHandleIncrementSize(type);
     m_descirptorCount = descriptor_count;
     m_allocatedCount = 0;
-    m_bShaderVisible = (type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV || type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    m_bShaderVisible = shader_visible;
 
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
     desc.Type = type;

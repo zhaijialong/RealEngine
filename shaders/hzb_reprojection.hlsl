@@ -15,9 +15,6 @@ void depth_reprojection(uint3 dispatchThreadID : SV_DispatchThreadID)
     RWTexture2D<float> reprojectedDepthTexture = ResourceDescriptorHeap[c_reprojectedDepthUAV];
     SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
     
-    //clear
-    reprojectedDepthTexture[dispatchThreadID.xy] = 0.0f;
-    
     float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_depthWidth, c_depthHeight);
     
     float prevLinearDepth = prevLinearDepthTexture.Sample(maxReductionSampler, uv);
