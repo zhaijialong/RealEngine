@@ -1,13 +1,14 @@
 #pragma once
 
-#include "staging_buffer_allocator.h"
 #include "render_graph.h"
+#include "render_batch.h"
 #include "resource/texture_2d.h"
 #include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
 #include "resource/raw_buffer.h"
 #include "resource/typed_buffer.h"
+#include "staging_buffer_allocator.h"
 #include "lsignal/lsignal.h"
 
 const static int MAX_INFLIGHT_FRAMES = 3;
@@ -16,8 +17,6 @@ class ILight;
 class Camera;
 
 using ComputeFunc = std::function<void(IGfxCommandList*)>;
-using ShadowFunc = std::function<void(IGfxCommandList*, const ILight*)>;
-using RenderFunc = std::function<void(IGfxCommandList*, const Camera*)>;
 
 class Renderer
 {
@@ -62,6 +61,7 @@ public:
     void FreeSceneBuffer(uint32_t address);
 
     void RequestMouseHitTest(uint32_t x, uint32_t y);
+    bool IsEnableMouseHitTest() const { return m_bEnableObjectIDRendering; }
     uint32_t GetMouseHitObjectID() const { return m_nMouseHitObjectID; }
 
     void UploadTexture(IGfxTexture* texture, const void* data);
@@ -70,11 +70,11 @@ public:
     void AddComputePass(const ComputeFunc& func) { m_computePassBatchs.push_back(func); }
     void AddComputeBuffer(IGfxBuffer* buffer) { m_computeBuffers.push_back(buffer); }
 
-    void AddShadowPassBatch(const ShadowFunc& func) { m_shadowPassBatchs.push_back(func); }
-    void AddGBufferPassBatch(const RenderFunc& func) { m_gbufferPassBatchs.push_back(func); }
-    void AddForwardPassBatch(const RenderFunc& func) { m_forwardPassBatchs.push_back(func); }
-    void AddVelocityPassBatch(const RenderFunc& func) { m_velocityPassBatchs.push_back(func); }
-    void AddObjectIDPassBatch(const RenderFunc& func) { m_idPassBatchs.push_back(func); }
+    RenderBatch& AddShadowPassBatch() { return m_shadowPassBatchs.emplace_back(*m_cbAllocator); }
+    RenderBatch& AddGBufferPassBatch() { return m_gbufferPassBatchs.emplace_back(*m_cbAllocator); }
+    RenderBatch& AddForwardPassBatch() { return m_forwardPassBatchs.emplace_back(*m_cbAllocator); }
+    RenderBatch& AddVelocityPassBatch() { return m_velocityPassBatchs.emplace_back(*m_cbAllocator); }
+    RenderBatch& AddObjectIDPassBatch() { return m_idPassBatchs.emplace_back(*m_cbAllocator); }
 
 private:
     void CreateCommonResources();
@@ -104,6 +104,8 @@ private:
     uint32_t m_nWindowWidth;
     uint32_t m_nWindowHeight;
     lsignal::connection m_resizeConnection;
+
+    std::unique_ptr<LinearAllocator> m_cbAllocator;
 
     std::unique_ptr<IGfxFence> m_pFrameFence;
     uint64_t m_nCurrentFrameFenceValue = 0;
@@ -172,9 +174,9 @@ private:
     std::vector<ComputeFunc> m_computePassBatchs;
     std::vector<IGfxBuffer*> m_computeBuffers;
 
-    std::vector<ShadowFunc> m_shadowPassBatchs;
-    std::vector<RenderFunc> m_gbufferPassBatchs;
-    std::vector<RenderFunc> m_forwardPassBatchs;
-    std::vector<RenderFunc> m_velocityPassBatchs;
-    std::vector<RenderFunc> m_idPassBatchs;
+    std::vector<RenderBatch> m_shadowPassBatchs;
+    std::vector<RenderBatch> m_gbufferPassBatchs;
+    std::vector<RenderBatch> m_forwardPassBatchs;
+    std::vector<RenderBatch> m_velocityPassBatchs;
+    std::vector<RenderBatch> m_idPassBatchs;
 };

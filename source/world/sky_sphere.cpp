@@ -78,34 +78,14 @@ void SkySphere::Tick(float delta_time)
 
 void SkySphere::Render(Renderer* pRenderer)
 {
-    RenderFunc bassPassBatch = std::bind(&SkySphere::RenderSky, this, std::placeholders::_1, std::placeholders::_2);
-    pRenderer->AddForwardPassBatch(bassPassBatch);
-}
+    RenderBatch& batch = pRenderer->AddForwardPassBatch();
+    batch.label = "SkySphere";
 
-void SkySphere::RenderSky(IGfxCommandList* pCommandList, const Camera* pCamera)
-{
-    GPU_EVENT(pCommandList, "SkySphere");
+    batch.SetPipelineState(m_pPSO);
+    batch.SetIndexBuffer(m_pIndexBuffer->GetBuffer(), 0, m_pIndexBuffer->GetFormat());
 
-    pCommandList->SetPipelineState(m_pPSO);
-    pCommandList->SetIndexBuffer(m_pIndexBuffer->GetBuffer(), 0, m_pIndexBuffer->GetFormat());
+    uint32_t posBuffer = m_pVertexBuffer->GetSRV()->GetHeapIndex();
+    batch.SetConstantBuffer(0, &posBuffer, sizeof(posBuffer));
 
-    struct SkySphereConstant
-    {
-        float4x4 mtxWVP;
-        float4x4 mtxWorld;
-        uint posBuffer;
-        float3 cameraPos;
-    };
-
-    float4x4 mtxWorld = translation_matrix(pCamera->GetPosition());
-
-    SkySphereConstant CB;
-    CB.mtxWVP = mul(pCamera->GetViewProjectionMatrix(), mtxWorld);
-    CB.mtxWorld = mtxWorld;
-    CB.cameraPos = pCamera->GetPosition();
-    CB.posBuffer = m_pVertexBuffer->GetSRV()->GetHeapIndex();
-    
-    pCommandList->SetGraphicsConstants(1, &CB, sizeof(CB));
-
-    pCommandList->DrawIndexed(m_pIndexBuffer->GetIndexCount());
+    batch.DrawIndexed(m_pIndexBuffer->GetIndexCount());
 }

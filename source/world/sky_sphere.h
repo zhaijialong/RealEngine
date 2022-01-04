@@ -10,9 +10,6 @@ public:
     virtual void Render(Renderer* pRenderer) override;
 
 private:
-    void RenderSky(IGfxCommandList* pCommandList, const Camera* pCamera);
-
-private:
     IGfxPipelineState* m_pPSO = nullptr;
 
     std::unique_ptr<IndexBuffer> m_pIndexBuffer;

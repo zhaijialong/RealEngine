@@ -53,11 +53,9 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
         },
         [&](const GBufferPassData& data, IGfxCommandList* pCommandList)
         {
-            World* world = Engine::GetInstance()->GetWorld();
-
             for (size_t i = 0; i < m_gbufferPassBatchs.size(); ++i)
             {
-                m_gbufferPassBatchs[i](pCommandList, world->GetCamera());
+                DrawBatch(pCommandList, m_gbufferPassBatchs[i]);
             }
             m_gbufferPassBatchs.clear();
         });
@@ -89,7 +87,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
 
             for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
             {
-                m_shadowPassBatchs[i](pCommandList, light);
+                DrawBatch(pCommandList, m_shadowPassBatchs[i]);
             }
             m_shadowPassBatchs.clear();
 
@@ -122,9 +120,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
         {
             for (size_t i = 0; i < m_forwardPassBatchs.size(); ++i)
             {
-                World* world = Engine::GetInstance()->GetWorld();
-
-                m_forwardPassBatchs[i](pCommandList, world->GetCamera());
+                DrawBatch(pCommandList, m_forwardPassBatchs[i]);
             }
             m_forwardPassBatchs.clear();
         });
@@ -152,9 +148,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
         {
             for (size_t i = 0; i < m_velocityPassBatchs.size(); ++i)
             {
-                World* world = Engine::GetInstance()->GetWorld();
-
-                m_velocityPassBatchs[i](pCommandList, world->GetCamera());
+                DrawBatch(pCommandList, m_velocityPassBatchs[i]);
             }
             m_velocityPassBatchs.clear();
         });
@@ -235,7 +229,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
 
                 for (size_t i = 0; i < m_idPassBatchs.size(); ++i)
                 {
-                    m_idPassBatchs[i](pCommandList, world->GetCamera());
+                    DrawBatch(pCommandList, m_idPassBatchs[i]);
                 }
                 m_idPassBatchs.clear();
             });

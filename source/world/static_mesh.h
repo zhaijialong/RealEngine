@@ -1,5 +1,6 @@
 #pragma once
 
+#include "renderer/render_batch.h"
 #include "i_visible_object.h"
 #include "model_constants.hlsli"
 
@@ -19,15 +20,9 @@ public:
     virtual bool FrustumCull(const float4* planes, uint32_t plane_count) const override;
 
 private:
-    void RenderBassPass(IGfxCommandList* pCommandList, const Camera* pCamera);
-    void RenderOutlinePass(IGfxCommandList* pCommandList, const Camera* pCamera);
-    void RenderShadowPass(IGfxCommandList* pCommandList, const ILight* pLight);
-    void RenderVelocityPass(IGfxCommandList* pCommandList, const Camera* pCamera);
-    void RenderIDPass(IGfxCommandList* pCommandList, const Camera* pCamera);
-
     void UpdateConstants();
-    void Draw(IGfxCommandList* pCommandList, IGfxPipelineState* pso);
-    void Dispatch(IGfxCommandList* pCommandList, IGfxPipelineState* pso);
+    void Draw(RenderBatch& batch, IGfxPipelineState* pso);
+    void Dispatch(RenderBatch& batch, IGfxPipelineState* pso);
 
 private:
     Renderer* m_pRenderer = nullptr;

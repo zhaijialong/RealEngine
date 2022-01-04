@@ -19,6 +19,7 @@ Renderer::Renderer() : m_resizeConnection({})
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderCache = std::make_unique<ShaderCache>(this);
     m_pPipelineCache = std::make_unique<PipelineStateCache>(this);
+    m_cbAllocator = std::make_unique<LinearAllocator>(8 * 1024 * 1024);
 
     m_resizeConnection = Engine::GetInstance()->WindowResizeSignal.connect(this, &Renderer::OnWindowResize);
 }
@@ -336,6 +337,7 @@ void Renderer::EndFrame()
     pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
 
     m_pStagingBufferAllocator[frame_index]->Reset();
+    m_cbAllocator->Reset();
 
     m_pDevice->EndFrame();
 }

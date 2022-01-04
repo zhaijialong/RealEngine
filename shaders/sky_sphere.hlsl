@@ -3,13 +3,10 @@
 
 struct SkySphereConstant
 {
-    float4x4 mtxWVP;
-    float4x4 mtxWorld;
     uint posBuffer;
-    float3 cameraPos;
 };
 
-ConstantBuffer<SkySphereConstant> SkySphereCB : register(b1);
+ConstantBuffer<SkySphereConstant> SkySphereCB : register(b0);
 
 struct VSOutput
 {
@@ -20,11 +17,11 @@ struct VSOutput
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {
     StructuredBuffer<float3> posBuffer = ResourceDescriptorHeap[SkySphereCB.posBuffer];
-    float4 position = float4(posBuffer[vertex_id], 1.0);
-    
+    float4 worldPos = float4(posBuffer[vertex_id] + CameraCB.cameraPos, 1.0);
+
     VSOutput output;
-    output.pos = mul(SkySphereCB.mtxWVP, position);
-    output.worldPos = mul(SkySphereCB.mtxWorld, position).xyz;
+    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
+    output.worldPos = worldPos.xyz;
 
     output.pos.z = 0.000001;
 
@@ -33,8 +30,8 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 
 float4 ps_main(VSOutput input) : SV_TARGET
 {
-    float3 rayStart = SkySphereCB.cameraPos;
-    float3 rayDir = normalize(input.worldPos - SkySphereCB.cameraPos);
+    float3 rayStart = CameraCB.cameraPos;
+    float3 rayDir = normalize(input.worldPos - CameraCB.cameraPos);
     float rayLength = INFINITY;
 
     bool PlanetShadow = false;
