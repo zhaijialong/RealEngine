@@ -577,6 +577,38 @@ void D3D12CommandList::DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset)
     m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
 }
 
+void D3D12CommandList::MultiDrawIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
+{
+    ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetMultiDrawSignature();
+    m_pCommandList->ExecuteIndirect(signature, max_count, 
+        (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset, 
+        (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+}
+
+void D3D12CommandList::MultiDrawIndexedIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
+{
+    ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetMultiDrawIndexedSignature();
+    m_pCommandList->ExecuteIndirect(signature, max_count,
+        (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset,
+        (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+}
+
+void D3D12CommandList::MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
+{
+    ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetMultiDispatchSignature();
+    m_pCommandList->ExecuteIndirect(signature, max_count,
+        (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset,
+        (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+}
+
+void D3D12CommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
+{
+    ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetMultiDispatchMeshSignature();
+    m_pCommandList->ExecuteIndirect(signature, max_count,
+        (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset,
+        (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+}
+
 #if MICROPROFILE_GPU_TIMERS
 MicroProfileThreadLogGpu* D3D12CommandList::GetProfileLog() const
 {

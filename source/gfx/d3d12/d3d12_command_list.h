@@ -60,6 +60,11 @@ public:
     virtual void DispatchIndirect(IGfxBuffer* buffer, uint32_t offset) override;
     virtual void DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset) override;
 
+    virtual void MultiDrawIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset) override;
+    virtual void MultiDrawIndexedIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset) override;
+    virtual void MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset) override;
+    virtual void MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset) override;
+
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;
 #endif

@@ -91,6 +91,10 @@ public:
     ID3D12CommandSignature* GetDrawIndexedSignature() const { return m_pDrawIndexedSignature; }
     ID3D12CommandSignature* GetDispatchSignature() const { return m_pDispatchSignature; }
     ID3D12CommandSignature* GetDispatchMeshSignature() const { return m_pDispatchMeshSignature; }
+    ID3D12CommandSignature* GetMultiDrawSignature() const { return m_pMultiDrawSignature; }
+    ID3D12CommandSignature* GetMultiDrawIndexedSignature() const { return m_pMultiDrawIndexedSignature; }
+    ID3D12CommandSignature* GetMultiDispatchSignature() const { return m_pMultiDispatchSignature; }
+    ID3D12CommandSignature* GetMultiDispatchMeshSignature() const { return m_pMultiDispatchMeshSignature; }
 
     D3D12_GPU_VIRTUAL_ADDRESS AllocateConstantBuffer(const void* data, size_t data_size);
 
@@ -138,6 +142,10 @@ private:
     ID3D12CommandSignature* m_pDrawIndexedSignature = nullptr;
     ID3D12CommandSignature* m_pDispatchSignature = nullptr;
     ID3D12CommandSignature* m_pDispatchMeshSignature = nullptr;
+    ID3D12CommandSignature* m_pMultiDrawSignature = nullptr;
+    ID3D12CommandSignature* m_pMultiDrawIndexedSignature = nullptr;
+    ID3D12CommandSignature* m_pMultiDispatchSignature = nullptr;
+    ID3D12CommandSignature* m_pMultiDispatchMeshSignature = nullptr;
 
     D3D12MA::Allocator* m_pResourceAllocator = nullptr;
 

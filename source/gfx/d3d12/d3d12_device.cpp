@@ -66,6 +66,10 @@ D3D12Device::~D3D12Device()
     SAFE_RELEASE(m_pDrawIndexedSignature);
     SAFE_RELEASE(m_pDispatchSignature);
     SAFE_RELEASE(m_pDispatchMeshSignature);
+    SAFE_RELEASE(m_pMultiDrawSignature);
+    SAFE_RELEASE(m_pMultiDrawIndexedSignature);
+    SAFE_RELEASE(m_pMultiDispatchSignature);
+    SAFE_RELEASE(m_pMultiDispatchMeshSignature);
     SAFE_RELEASE(m_pRootSignature);
     SAFE_RELEASE(m_pResourceAllocator);
     SAFE_RELEASE(m_pGraphicsQueue);
@@ -689,6 +693,38 @@ void D3D12Device::CreateIndirectCommandSignatures()
     hr = m_pDevice->CreateCommandSignature(&desc, nullptr, IID_PPV_ARGS(&m_pDispatchMeshSignature));
     RE_ASSERT(SUCCEEDED(hr));
     m_pDispatchMeshSignature->SetName(L"D3D12Device::m_pDispatchMeshSignature");
+
+    D3D12_INDIRECT_ARGUMENT_DESC mdiArgumentDesc[2] = {};
+    mdiArgumentDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT; //a uint32 root constant ("gl_DrawID")
+    mdiArgumentDesc[0].Constant.RootParameterIndex = 0;
+    mdiArgumentDesc[0].Constant.Num32BitValuesToSet = 1;
+
+    desc.NumArgumentDescs = 2;
+    desc.pArgumentDescs = mdiArgumentDesc;
+
+    desc.ByteStride = sizeof(uint32_t) + sizeof(D3D12_DRAW_ARGUMENTS);
+    mdiArgumentDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+    hr = m_pDevice->CreateCommandSignature(&desc, m_pRootSignature, IID_PPV_ARGS(&m_pMultiDrawSignature));
+    RE_ASSERT(SUCCEEDED(hr));
+    m_pMultiDrawSignature->SetName(L"D3D12Device::m_pMultiDrawSignature");
+
+    desc.ByteStride = sizeof(uint32_t) + sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+    mdiArgumentDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+    hr = m_pDevice->CreateCommandSignature(&desc, m_pRootSignature, IID_PPV_ARGS(&m_pMultiDrawIndexedSignature));
+    RE_ASSERT(SUCCEEDED(hr));
+    m_pMultiDrawIndexedSignature->SetName(L"D3D12Device::m_pMultiDrawIndexedSignature");
+
+    desc.ByteStride = sizeof(uint32_t) + sizeof(D3D12_DISPATCH_ARGUMENTS);
+    mdiArgumentDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
+    hr = m_pDevice->CreateCommandSignature(&desc, m_pRootSignature, IID_PPV_ARGS(&m_pMultiDispatchSignature));
+    RE_ASSERT(SUCCEEDED(hr));
+    m_pMultiDispatchSignature->SetName(L"D3D12Device::m_pMultiDispatchSignature");
+
+    desc.ByteStride = sizeof(uint32_t) + sizeof(D3D12_DISPATCH_MESH_ARGUMENTS);
+    mdiArgumentDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH;
+    hr = m_pDevice->CreateCommandSignature(&desc, m_pRootSignature, IID_PPV_ARGS(&m_pMultiDispatchMeshSignature));
+    RE_ASSERT(SUCCEEDED(hr));
+    m_pMultiDispatchMeshSignature->SetName(L"D3D12Device::m_pMultiDispatchMeshSignature");
 }
 
 D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shader_visible, uint32_t descriptor_count, const std::string& name)
