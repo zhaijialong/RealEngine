@@ -8,6 +8,7 @@
 #include "gpu_driven_stats.h"
 #include "gpu_scene.h"
 #include "hierarchical_depth_buffer.h"
+#include "base_pass.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
@@ -81,6 +82,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_pGpuDebugLine.reset(new GpuDrivenDebugLine(this));
     m_pGpuDebugPrint.reset(new GpuDrivenDebugPrint(this));
     m_pGpuStats.reset(new GpuDrivenStats(this));
+    m_pBasePass.reset(new BasePass(this));
 }
 
 void Renderer::RenderFrame()
@@ -715,4 +717,9 @@ void Renderer::UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* dat
     upload.offset = offset;
     upload.staging_buffer = staging_buffer;
     m_pendingBufferUpload.push_back(upload);
+}
+
+RenderBatch& Renderer::AddBasePassBatch()
+{
+    return m_pBasePass->AddBatch();
 }

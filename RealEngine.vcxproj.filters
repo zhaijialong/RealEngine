@@ -277,6 +277,9 @@
     <ClCompile Include="source\world\resource_cache.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\base_pass.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -474,9 +477,6 @@
     <ClInclude Include="source\renderer\directed_acyclic_graph.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="source\renderer\render_graph_blackboard.h">
-      <Filter>source\renderer</Filter>
-    </ClInclude>
     <ClInclude Include="source\renderer\render_graph_handle.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
@@ -620,6 +620,12 @@
     </ClInclude>
     <ClInclude Include="source\world\resource_cache.h">
       <Filter>source\world</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\base_pass.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\render_batch.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -810,6 +816,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\hzb_reprojection.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\instance_culling.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

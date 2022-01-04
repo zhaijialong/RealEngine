@@ -70,11 +70,14 @@ public:
     void AddComputePass(const ComputeFunc& func) { m_computePassBatchs.push_back(func); }
     void AddComputeBuffer(IGfxBuffer* buffer) { m_computeBuffers.push_back(buffer); }
 
+    LinearAllocator* GetConstantAllocator() const { return m_cbAllocator.get(); }
+    RenderBatch& AddBasePassBatch();
     RenderBatch& AddShadowPassBatch() { return m_shadowPassBatchs.emplace_back(*m_cbAllocator); }
-    RenderBatch& AddGBufferPassBatch() { return m_gbufferPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddForwardPassBatch() { return m_forwardPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddVelocityPassBatch() { return m_velocityPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddObjectIDPassBatch() { return m_idPassBatchs.emplace_back(*m_cbAllocator); }
+
+    class HZB* GetHZB() const { return m_pHZB.get(); }
 
 private:
     void CreateCommonResources();
@@ -171,11 +174,12 @@ private:
     std::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;
     std::unique_ptr<class GpuDrivenStats> m_pGpuStats;
 
+    std::unique_ptr<class BasePass> m_pBasePass;
+
     std::vector<ComputeFunc> m_computePassBatchs;
     std::vector<IGfxBuffer*> m_computeBuffers;
 
     std::vector<RenderBatch> m_shadowPassBatchs;
-    std::vector<RenderBatch> m_gbufferPassBatchs;
     std::vector<RenderBatch> m_forwardPassBatchs;
     std::vector<RenderBatch> m_velocityPassBatchs;
     std::vector<RenderBatch> m_idPassBatchs;

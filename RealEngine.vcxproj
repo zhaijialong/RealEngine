@@ -136,6 +136,7 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp" />
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
+    <ClCompile Include="source\renderer\base_pass.cpp" />
     <ClCompile Include="source\renderer\directed_acyclic_graph.cpp" />
     <ClCompile Include="source\renderer\gpu_driven_debug_line.cpp" />
     <ClCompile Include="source\renderer\gpu_driven_debug_print.cpp" />
@@ -239,6 +240,7 @@
     <ClInclude Include="source\gfx\i_gfx_shader.h" />
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
+    <ClInclude Include="source\renderer\base_pass.h" />
     <ClInclude Include="source\renderer\directed_acyclic_graph.h" />
     <ClInclude Include="source\renderer\gpu_driven_debug_line.h" />
     <ClInclude Include="source\renderer\gpu_driven_debug_print.h" />
@@ -255,8 +257,8 @@
     <ClInclude Include="source\renderer\post_processing\taa.h" />
     <ClInclude Include="source\renderer\post_processing\tonemapper.h" />
     <ClInclude Include="source\renderer\renderer.h" />
+    <ClInclude Include="source\renderer\render_batch.h" />
     <ClInclude Include="source\renderer\render_graph.h" />
-    <ClInclude Include="source\renderer\render_graph_blackboard.h" />
     <ClInclude Include="source\renderer\render_graph_builder.h" />
     <ClInclude Include="source\renderer\render_graph_handle.h" />
     <ClInclude Include="source\renderer\render_graph_resource.h" />
@@ -368,6 +370,10 @@
     <FxCompile Include="shaders\imgui.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\instance_culling.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

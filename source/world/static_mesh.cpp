@@ -60,7 +60,8 @@ void StaticMesh::UpdateConstants()
 
 void StaticMesh::Render(Renderer* pRenderer)
 {
-    RenderBatch& bassPassBatch = pRenderer->AddGBufferPassBatch();
+    RenderBatch& bassPassBatch = pRenderer->AddBasePassBatch();
+    bassPassBatch.SetBoundingSphere(m_modelCB.center, m_modelCB.radius);
 #if 1
     Dispatch(bassPassBatch, m_pMaterial->GetMeshletPSO());
 #else

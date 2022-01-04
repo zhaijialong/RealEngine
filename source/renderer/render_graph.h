@@ -3,7 +3,6 @@
 #include "render_graph_pass.h"
 #include "render_graph_handle.h"
 #include "render_graph_resource.h"
-#include "render_graph_blackboard.h"
 #include "utils/linear_allocator.h"
 #include "utils/math.h"
 
@@ -53,7 +52,6 @@ private:
     LinearAllocator m_allocator { 32 * 1024 };
     RenderGraphResourceAllocator m_resourceAllocator;
     DirectedAcyclicGraph m_graph;
-    RenderGraphBlackboard m_blackboard;
 
     std::unique_ptr<IGfxFence> m_pAsyncComputeFence;
     uint64_t m_nAsyncComputeFenceValue = 0;

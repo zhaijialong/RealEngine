@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/gfx.h"
+#include "utils/math.h"
 #include "utils/linear_allocator.h"
 
 #define MAX_RENDER_BATCH_CB_COUNT (5)
@@ -37,6 +38,15 @@ struct RenderBatch
             uint32_t dispatch_z;
         };
     };
+
+    float3 center; //world space
+    float radius;
+
+    void SetBoundingSphere(const float3& c, float r)
+    {
+        center = c;
+        radius = r;
+    }
 
     void SetPipelineState(IGfxPipelineState* pPSO)
     {
