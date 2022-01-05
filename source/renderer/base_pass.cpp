@@ -21,11 +21,13 @@ BasePass::BasePass(Renderer* pRenderer)
 RenderBatch& BasePass::AddBatch()
 {
     LinearAllocator* allocator = m_pRenderer->GetConstantAllocator();
-    return m_batchs.emplace_back(*allocator);
+    return m_batches.emplace_back(*allocator);
 }
 
 void BasePass::Render(RenderGraph* pRenderGraph)
 {
+    MergeBatches();
+
     HZB* pHZB = m_pRenderer->GetHZB();
 
     auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("GBuffer Pass",
@@ -62,11 +64,7 @@ void BasePass::Render(RenderGraph* pRenderGraph)
         },
         [&](const BasePassData& data, IGfxCommandList* pCommandList)
         {
-            for (size_t i = 0; i < m_batchs.size(); ++i)
-            {
-                DrawBatch(pCommandList, m_batchs[i]);
-            }
-            m_batchs.clear();
+            FlushBatches(pCommandList);
         });
 
     m_diffuseRT = gbuffer_pass->outDiffuseRT;
@@ -74,4 +72,71 @@ void BasePass::Render(RenderGraph* pRenderGraph)
     m_normalRT = gbuffer_pass->outNormalRT;
     m_emissiveRT = gbuffer_pass->outEmissiveRT;
     m_depthRT = gbuffer_pass->outDepthRT;
+}
+
+void BasePass::MergeBatches()
+{
+    for (size_t i = 0; i < m_batches.size(); ++i)
+    {
+        const RenderBatch& batch = m_batches[i];
+        if (batch.pso->GetType() == GfxPipelineType::MeshShading)
+        {
+            auto iter = m_mergedBatches.find(batch.pso);
+            if (iter != m_mergedBatches.end())
+            {
+                iter->second.meshletCount += batch.meshletCount;
+                iter->second.batches.push_back(batch);
+            }
+            else
+            {
+                MergedBatch mergedBatch;
+                mergedBatch.batches.push_back(batch);
+                mergedBatch.meshletCount = batch.meshletCount;
+                m_mergedBatches.insert(std::make_pair(batch.pso, mergedBatch));
+            }
+        }
+        else
+        {
+            m_nonMergedBatches.push_back(batch);
+        }
+    }
+}
+
+void BasePass::FlushBatches(IGfxCommandList* pCommandList)
+{
+    for (auto iter = m_mergedBatches.begin(); iter != m_mergedBatches.end(); ++iter)
+    {
+        IGfxPipelineState* pso = iter->first;
+        const MergedBatch& batch = iter->second;
+
+        pCommandList->SetPipelineState(pso);
+
+        std::vector<uint2> dataPerMeshlet;
+        dataPerMeshlet.reserve(batch.meshletCount);
+
+        for (size_t i = 0; i < batch.batches.size(); ++i)
+        {
+            uint32_t sceneConstantAddress = batch.batches[i].sceneConstantAddress;
+            for (size_t m = 0; m < batch.batches[i].meshletCount; ++m)
+            {
+                dataPerMeshlet.push_back(uint2(sceneConstantAddress, (uint32_t)m));
+            }
+        }
+
+        uint32_t dataPerMeshletAddress = m_pRenderer->AllocateSceneConstant(dataPerMeshlet.data(), sizeof(uint2) * (uint32_t)dataPerMeshlet.size());
+
+        uint32_t root_consts[2] = {dataPerMeshletAddress, batch.meshletCount};
+        pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
+
+        pCommandList->DispatchMesh((batch.meshletCount + 31) / 32, 1, 1); //hard coded 32 group size for AS
+    }
+
+    for (size_t i = 0; i < m_nonMergedBatches.size(); ++i)
+    {
+        DrawBatch(pCommandList, m_nonMergedBatches[i]);
+    }
+
+    m_batches.clear();
+    m_mergedBatches.clear();
+    m_nonMergedBatches.clear();
 }

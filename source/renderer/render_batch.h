@@ -40,13 +40,9 @@ struct RenderBatch
     };
 
     float3 center; //world space
-    float radius;
-
-    void SetBoundingSphere(const float3& c, float r)
-    {
-        center = c;
-        radius = r;
-    }
+    float radius = 0.0f;
+    uint32_t meshletCount = 0;
+    uint32_t sceneConstantAddress = 0;
 
     void SetPipelineState(IGfxPipelineState* pPSO)
     {

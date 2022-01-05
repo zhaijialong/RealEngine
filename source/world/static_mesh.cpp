@@ -73,7 +73,6 @@ void StaticMesh::UpdateConstants()
 void StaticMesh::Render(Renderer* pRenderer)
 {
     RenderBatch& bassPassBatch = pRenderer->AddBasePassBatch();
-    bassPassBatch.SetBoundingSphere(m_modelCB.center, m_modelCB.radius);
 #if 1
     Dispatch(bassPassBatch, m_pMaterial->GetMeshletPSO());
 #else
@@ -126,10 +125,15 @@ void StaticMesh::Draw(RenderBatch& batch, IGfxPipelineState* pso)
 
 void StaticMesh::Dispatch(RenderBatch& batch, IGfxPipelineState* pso)
 {
-    uint32_t root_consts[1] = { m_sceneConstantAddress };
-
     batch.label = m_name.c_str();
     batch.SetPipelineState(pso);
+    batch.center = m_modelCB.center;
+    batch.radius = m_modelCB.radius;
+    batch.meshletCount = m_nMeshletCount;
+    batch.sceneConstantAddress = m_sceneConstantAddress;
+
+    uint32_t root_consts[1] = { m_sceneConstantAddress };
+
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
     batch.SetConstantBuffer(1, &m_modelCB, sizeof(ModelConstant));
     batch.SetConstantBuffer(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));

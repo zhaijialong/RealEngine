@@ -2,6 +2,18 @@
 #include "debug.hlsli"
 #include "stats.hlsli"
 
+cbuffer _ : register(b0)
+{
+    uint c_dataPerMeshletAddress;
+    uint c_mergedMeshletCount;
+};
+
+uint2 LoadDataPerMeshlet(uint meshlet_index)
+{
+    ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
+    return constantBuffer.Load2(c_dataPerMeshletAddress + sizeof(uint2) * meshlet_index);// .Load<uint2>(c_dataPerMeshletAddress + sizeof(uint2) * meshlet_index);
+}
+
 struct Meshlet
 {
     float3 center;
@@ -18,16 +30,17 @@ struct Meshlet
 
 struct Payload
 {
+    uint sceneConstantAddress[32];
     uint meshletIndices[32];
 };
 
 groupshared Payload s_Payload;
 
 
-bool Cull(Meshlet meshlet)
+bool Cull(Meshlet meshlet, uint sceneConstantAddress)
 {
-    float3 center = mul(GetModelConstant().mtxWorld, float4(meshlet.center, 1.0)).xyz;
-    float radius = meshlet.radius * GetModelConstant().scale;
+    float3 center = mul(GetModelConstant(sceneConstantAddress).mtxWorld, float4(meshlet.center, 1.0)).xyz;
+    float radius = meshlet.radius * GetModelConstant(sceneConstantAddress).scale;
 
     // 1. frustum culling
     for (uint i = 0; i < 6; ++i)
@@ -45,7 +58,7 @@ bool Cull(Meshlet meshlet)
     float3 axis = cone.xyz / 127.0;
     float cutoff = cone.w / 127.0;
     
-    axis = normalize(mul(GetModelConstant().mtxWorld, float4(axis, 0.0)).xyz);
+    axis = normalize(mul(GetModelConstant(sceneConstantAddress).mtxWorld, float4(axis, 0.0)).xyz);
     float3 view = center - CameraCB.culling.viewPos;
     
     if (dot(view, -axis) >= cutoff * length(view) + radius)
@@ -73,13 +86,16 @@ bool Cull(Meshlet meshlet)
 void main_as(uint dispatchThreadID : SV_DispatchThreadID)
 {
     bool visible = false;
-    uint meshletIndex = dispatchThreadID;
+
+    uint2 dataPerMeshlet = LoadDataPerMeshlet(dispatchThreadID);
+    uint sceneConstantAddress = dataPerMeshlet.x;
+    uint meshletIndex = dataPerMeshlet.y;
     
-    if (meshletIndex < GetModelConstant().meshletCount)
+    if (dispatchThreadID < c_mergedMeshletCount)
     {
-        Meshlet meshlet = LoadSceneBuffer<Meshlet>(GetModelConstant().meshletBufferAddress, meshletIndex);
+        Meshlet meshlet = LoadSceneBuffer<Meshlet>(GetModelConstant(sceneConstantAddress).meshletBufferAddress, meshletIndex);
         
-        visible = Cull(meshlet);
+        visible = Cull(meshlet, sceneConstantAddress);
         
         stats(visible ? STATS_RENDERED_TRIANGLE : STATS_CULLED_TRIANGLE, meshlet.triangleCount);
     }
@@ -87,6 +103,7 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
     if (visible)
     {
         uint index = WavePrefixCountBits(visible);
+        s_Payload.sceneConstantAddress[index] = sceneConstantAddress;
         s_Payload.meshletIndices[index] = meshletIndex;
     }
 
@@ -103,29 +120,30 @@ void main_ms(
     out indices uint3 indices[124],
     out vertices VertexOut vertices[64])
 {
+    uint sceneConstantAddress = payload.sceneConstantAddress[groupID];
     uint meshletIndex = payload.meshletIndices[groupID];
-    if(meshletIndex >= GetModelConstant().meshletCount)
+    if(meshletIndex >= GetModelConstant(sceneConstantAddress).meshletCount)
     {
         return;
     }
     
-    Meshlet meshlet = LoadSceneBuffer<Meshlet>(GetModelConstant().meshletBufferAddress, meshletIndex);
+    Meshlet meshlet = LoadSceneBuffer<Meshlet>(GetModelConstant(sceneConstantAddress).meshletBufferAddress, meshletIndex);
     
     SetMeshOutputCounts(meshlet.vertexCount, meshlet.triangleCount);
     
     if(groupThreadID < meshlet.triangleCount)
     {
         uint3 index = uint3(
-            LoadSceneBuffer<uint16_t>(GetModelConstant().meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3),
-            LoadSceneBuffer<uint16_t>(GetModelConstant().meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 1),
-            LoadSceneBuffer<uint16_t>(GetModelConstant().meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 2));
+            LoadSceneBuffer<uint16_t>(GetModelConstant(sceneConstantAddress).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3),
+            LoadSceneBuffer<uint16_t>(GetModelConstant(sceneConstantAddress).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 1),
+            LoadSceneBuffer<uint16_t>(GetModelConstant(sceneConstantAddress).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 2));
 
         indices[groupThreadID] = index;
     }
     
     if(groupThreadID < meshlet.vertexCount)
     {        
-        uint vertex_id = LoadSceneBuffer<uint>(GetModelConstant().meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
+        uint vertex_id = LoadSceneBuffer<uint>(GetModelConstant(sceneConstantAddress).meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
 
         VertexOut v = GetVertex(vertex_id);
         v.meshlet = meshletIndex;

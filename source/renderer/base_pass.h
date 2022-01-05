@@ -2,6 +2,7 @@
 
 #include "render_batch.h"
 #include "render_graph.h"
+#include <map>
 
 class Renderer;
 
@@ -20,8 +21,20 @@ public:
     RenderGraphHandle GetDepthRT() const { return m_depthRT; }
 
 private:
+    void MergeBatches();
+    void FlushBatches(IGfxCommandList* pCommandList);
+
+private:
     Renderer* m_pRenderer;
-    std::vector<RenderBatch> m_batchs;
+    std::vector<RenderBatch> m_batches;
+
+    struct MergedBatch
+    {
+        std::vector<RenderBatch> batches;
+        uint32_t meshletCount;
+    };
+    std::map<IGfxPipelineState*, MergedBatch> m_mergedBatches;
+    std::vector<RenderBatch> m_nonMergedBatches;
 
     RenderGraphHandle m_diffuseRT;
     RenderGraphHandle m_specularRT;

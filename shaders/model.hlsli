@@ -3,6 +3,11 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
 
+ModelConstant GetModelConstant(uint address)
+{
+    return LoadSceneConstantBuffer<ModelInstanceConstant>(address).modelCB;
+}
+
 ModelConstant GetModelConstant()
 {
 #if 1
@@ -86,8 +91,11 @@ struct PbrSpecularGlossiness
 
 Texture2D GetMaterialTexture2D(uint heapIndex)
 {
-    //return ResourceDescriptorHeap[NonUniformResourceIndex(heapIndex)];
+#if NON_UNIFORM_RESOURCE
+    return ResourceDescriptorHeap[NonUniformResourceIndex(heapIndex)];
+#else
     return ResourceDescriptorHeap[heapIndex];
+#endif
 }
 
 SamplerState GetMaterialSampler()
