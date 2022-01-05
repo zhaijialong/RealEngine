@@ -13,9 +13,6 @@
 
 const static int MAX_INFLIGHT_FRAMES = 3;
 
-class ILight;
-class Camera;
-
 using ComputeFunc = std::function<void(IGfxCommandList*)>;
 
 class Renderer

@@ -2,6 +2,17 @@
 #include "renderer.h"
 #include "hierarchical_depth_buffer.h"
 
+struct BasePassData
+{
+    RenderGraphHandle inHZB;
+
+    RenderGraphHandle outDiffuseRT;  //srgb : diffuse(xyz) + ao(a)
+    RenderGraphHandle outSpecularRT; //srgb : specular(xyz), a: not used
+    RenderGraphHandle outNormalRT;   //rgba8norm : normal(xyz) + roughness(a)
+    RenderGraphHandle outEmissiveRT; //r11g11b10 : emissive
+    RenderGraphHandle outDepthRT;
+};
+
 BasePass::BasePass(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
@@ -15,21 +26,10 @@ RenderBatch& BasePass::AddBatch()
 
 void BasePass::Render(RenderGraph* pRenderGraph)
 {
-    struct GBufferPassData
-    {
-        RenderGraphHandle reprojectedHZB;
-
-        RenderGraphHandle outDiffuseRT;  //srgb : diffuse(xyz) + ao(a)
-        RenderGraphHandle outSpecularRT; //srgb : specular(xyz), a: not used
-        RenderGraphHandle outNormalRT;   //rgba8norm : normal(xyz) + roughness(a)
-        RenderGraphHandle outEmissiveRT; //r11g11b10 : emissive
-        RenderGraphHandle outDepthRT;
-    };
-
     HZB* pHZB = m_pRenderer->GetHZB();
 
-    auto gbuffer_pass = pRenderGraph->AddPass<GBufferPassData>("GBuffer Pass",
-        [&](GBufferPassData& data, RenderGraphBuilder& builder)
+    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("GBuffer Pass",
+        [&](BasePassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
             desc.width = m_pRenderer->GetBackbufferWidth();
@@ -57,10 +57,10 @@ void BasePass::Render(RenderGraph* pRenderGraph)
 
             for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
             {
-                data.reprojectedHZB = builder.Read(pHZB->Get1stPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+                data.inHZB = builder.Read(pHZB->Get1stPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
             }
         },
-        [&](const GBufferPassData& data, IGfxCommandList* pCommandList)
+        [&](const BasePassData& data, IGfxCommandList* pCommandList)
         {
             for (size_t i = 0; i < m_batchs.size(); ++i)
             {
