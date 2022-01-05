@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+const static int GFX_MAX_INFLIGHT_FRAMES = 3;
+
 enum class GfxRenderBackend
 {
     D3D12,

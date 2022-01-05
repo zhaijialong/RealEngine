@@ -93,7 +93,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
         return;
     }
 
-    uint32_t frame_index = pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    uint32_t frame_index = pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
 
     if (m_pVertexBuffer[frame_index] == nullptr || m_pVertexBuffer[frame_index]->GetBuffer()->GetDesc().size < draw_data->TotalVtxCount * sizeof(ImDrawVert))
     {

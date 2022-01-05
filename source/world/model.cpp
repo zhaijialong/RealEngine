@@ -774,10 +774,10 @@ void Model::LoadSkin(const cgltf_skin* skin)
     }
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    m_pBoneMatrixBuffer.reset(pRenderer->CreateRawBuffer(nullptr, sizeof(float4x4) * (uint32_t)m_boneList.size() * MAX_INFLIGHT_FRAMES,
+    m_pBoneMatrixBuffer.reset(pRenderer->CreateRawBuffer(nullptr, sizeof(float4x4) * (uint32_t)m_boneList.size() * GFX_MAX_INFLIGHT_FRAMES,
         "Model::m_pBoneMatrixBuffer", GfxMemoryType::CpuToGpu));
 
-    m_boneMatrixBufferOffset = sizeof(float4x4) * (uint32_t)m_boneList.size() * MAX_INFLIGHT_FRAMES;
+    m_boneMatrixBufferOffset = sizeof(float4x4) * (uint32_t)m_boneList.size() * GFX_MAX_INFLIGHT_FRAMES;
 }
 
 IGfxPipelineState* Model::GetPSO(Material* material)

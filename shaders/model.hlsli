@@ -3,6 +3,24 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
 
+ModelConstant GetModelConstant()
+{
+#if 1
+    return LoadSceneConstantBuffer<ModelInstanceConstant>(c_SceneConstantAddress).modelCB;
+#else
+    return ModelCB;
+#endif
+}
+
+MaterialConstant GetMaterialConstant()
+{
+#if 1
+    return LoadSceneConstantBuffer<ModelInstanceConstant>(c_SceneConstantAddress).materialCB;
+#else
+    return MaterialCB;
+#endif
+}
+
 struct VertexOut
 {
     float4 pos : SV_POSITION;
@@ -18,27 +36,27 @@ struct VertexOut
 
 VertexOut GetVertex(uint vertex_id)
 {    
-    float4 pos = float4(LoadSceneBuffer<float3>(ModelCB.posBufferAddress, vertex_id), 1.0);
-    float2 uv = LoadSceneBuffer<float2>(ModelCB.uvBufferAddress, vertex_id);
-    float3 normal = LoadSceneBuffer<float3>(ModelCB.normalBufferAddress, vertex_id);
+    float4 pos = float4(LoadSceneBuffer<float3>(GetModelConstant().posBufferAddress, vertex_id), 1.0);
+    float2 uv = LoadSceneBuffer<float2>(GetModelConstant().uvBufferAddress, vertex_id);
+    float3 normal = LoadSceneBuffer<float3>(GetModelConstant().normalBufferAddress, vertex_id);
 
-    float4 worldPos = mul(ModelCB.mtxWorld, pos);
+    float4 worldPos = mul(GetModelConstant().mtxWorld, pos);
 
     VertexOut v = (VertexOut)0;
     v.pos = mul(CameraCB.mtxViewProjection, worldPos);
     v.uv = uv;
-    v.normal = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(normal, 0.0f)).xyz);
+    v.normal = normalize(mul(GetModelConstant().mtxWorldInverseTranspose, float4(normal, 0.0f)).xyz);
     
     if (vertex_id == 0)
     {
-        //debug::DrawSphere(ModelCB.center, ModelCB.radius, float3(1, 0, 0));
+        //debug::DrawSphere(GetModelConstant().center, GetModelConstant().radius, float3(1, 0, 0));
     }
     
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE
-    float4 tangent = LoadSceneBuffer<float4>(ModelCB.tangentBufferAddress, vertex_id);
-    v.tangent = normalize(mul(ModelCB.mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
+    float4 tangent = LoadSceneBuffer<float4>(GetModelConstant().tangentBufferAddress, vertex_id);
+    v.tangent = normalize(mul(GetModelConstant().mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
     v.bitangent = normalize(cross(v.normal, v.tangent) * tangent.w);    
     
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.tangent * 0.05, float3(1, 0, 0));
@@ -66,26 +84,37 @@ struct PbrSpecularGlossiness
     float glossiness;
 };
 
+Texture2D GetMaterialTexture2D(uint heapIndex)
+{
+    //return ResourceDescriptorHeap[NonUniformResourceIndex(heapIndex)];
+    return ResourceDescriptorHeap[heapIndex];
+}
+
+SamplerState GetMaterialSampler()
+{
+    return SamplerDescriptorHeap[SceneCB.aniso4xSampler];
+}
+
 PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOut input)
 {
     PbrMetallicRoughness pbrMetallicRoughness;
-    pbrMetallicRoughness.albedo = MaterialCB.albedo.xyz;
+    pbrMetallicRoughness.albedo = GetMaterialConstant().albedo.xyz;
     pbrMetallicRoughness.alpha = 1.0;
-    pbrMetallicRoughness.metallic = MaterialCB.metallic;
-    pbrMetallicRoughness.roughness = MaterialCB.roughness;
+    pbrMetallicRoughness.metallic = GetMaterialConstant().metallic;
+    pbrMetallicRoughness.roughness = GetMaterialConstant().roughness;
     pbrMetallicRoughness.ao = 1.0;
     
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
+    SamplerState linearSampler = GetMaterialSampler();
     
 #if ALBEDO_TEXTURE
-    Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
+    Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant().albedoTexture);
     float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
     pbrMetallicRoughness.albedo *= albedo.xyz;
     pbrMetallicRoughness.alpha = albedo.w;
 #endif
     
 #if METALLIC_ROUGHNESS_TEXTURE
-    Texture2D metallicRoughnessTexture = ResourceDescriptorHeap[MaterialCB.metallicRoughnessTexture];
+    Texture2D metallicRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant().metallicRoughnessTexture);
     float4 metallicRoughness = metallicRoughnessTexture.Sample(linearSampler, input.uv);
     pbrMetallicRoughness.metallic *= metallicRoughness.b;
     pbrMetallicRoughness.roughness *= metallicRoughness.g;
@@ -101,22 +130,22 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOut input)
 PbrSpecularGlossiness GetMaterialSpecularGlossiness(VertexOut input)
 {
     PbrSpecularGlossiness pbrSpecularGlossiness;
-    pbrSpecularGlossiness.diffuse = MaterialCB.diffuse;
-    pbrSpecularGlossiness.specular = MaterialCB.specular;
-    pbrSpecularGlossiness.glossiness = MaterialCB.glossiness;
+    pbrSpecularGlossiness.diffuse = GetMaterialConstant().diffuse;
+    pbrSpecularGlossiness.specular = GetMaterialConstant().specular;
+    pbrSpecularGlossiness.glossiness = GetMaterialConstant().glossiness;
     pbrSpecularGlossiness.alpha = 1.0;
     
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
+    SamplerState linearSampler = GetMaterialSampler();
     
 #if DIFFUSE_TEXTURE
-    Texture2D diffuseTexture = ResourceDescriptorHeap[MaterialCB.diffuseTexture];
+    Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant().diffuseTexture);
     float4 diffuse = diffuseTexture.Sample(linearSampler, input.uv);
     pbrSpecularGlossiness.diffuse *= diffuse.xyz;
     pbrSpecularGlossiness.alpha = diffuse.w;
 #endif
     
 #if SPECULAR_GLOSSINESS_TEXTURE
-    Texture2D specularGlossinessTexture = ResourceDescriptorHeap[MaterialCB.specularGlossinessTexture];
+    Texture2D specularGlossinessTexture = GetMaterialTexture2D(GetMaterialConstant().specularGlossinessTexture);
     float4 specularGlossiness = specularGlossinessTexture.Sample(linearSampler, input.uv);
     pbrSpecularGlossiness.specular *= specularGlossiness.xyz;
     pbrSpecularGlossiness.glossiness *= specularGlossiness.w;
@@ -133,8 +162,8 @@ float3 GetMaterialNormal(VertexOut input, bool isFrontFace)
     float3 T = input.tangent;
     float3 B = input.bitangent;
 
-    Texture2D normalTexture = ResourceDescriptorHeap[MaterialCB.normalTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
+    Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant().normalTexture);
+    SamplerState linearSampler = GetMaterialSampler();
     
     float3 normal = normalTexture.Sample(linearSampler, input.uv).xyz;
     
@@ -160,8 +189,8 @@ float GetMaterialAO(VertexOut input)
     float ao = 1.0;
     
 #if AO_TEXTURE && !AO_METALLIC_ROUGHNESS_TEXTURE
-    Texture2D aoTexture = ResourceDescriptorHeap[MaterialCB.aoTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
+    Texture2D aoTexture = GetMaterialTexture2D(GetMaterialConstant().aoTexture);
+    SamplerState linearSampler = GetMaterialSampler();
     ao = aoTexture.Sample(linearSampler, input.uv).x;
 #endif    
     return ao;
@@ -169,10 +198,10 @@ float GetMaterialAO(VertexOut input)
 
 float3 GetMaterialEmissive(VertexOut input)
 {
-    float3 emissive = MaterialCB.emissive;
+    float3 emissive = GetMaterialConstant().emissive;
 #if EMISSIVE_TEXTURE
-    Texture2D emissiveTexture = ResourceDescriptorHeap[MaterialCB.emissiveTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
+    Texture2D emissiveTexture = GetMaterialTexture2D(GetMaterialConstant().emissiveTexture);
+    SamplerState linearSampler = GetMaterialSampler();
     emissive *= emissiveTexture.Sample(linearSampler, input.uv).xyz;
 #endif
     return emissive;
@@ -182,13 +211,13 @@ float3 GetMaterialEmissive(VertexOut input)
 void AlphaTest(float2 uv)
 {
     float alpha = 1.0;
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.aniso4xSampler];
+    SamplerState linearSampler = GetMaterialSampler();
 #if ALBEDO_TEXTURE
-    Texture2D albedoTexture = ResourceDescriptorHeap[MaterialCB.albedoTexture];
+    Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant().albedoTexture);
     alpha = albedoTexture.Sample(linearSampler, uv).a;
 #elif DIFFUSE_TEXTURE
-    Texture2D diffuseTexture = ResourceDescriptorHeap[MaterialCB.diffuseTexture];
+    Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant().diffuseTexture);
     alpha = diffuseTexture.Sample(linearSampler, uv).a;
 #endif
-    clip(alpha - MaterialCB.alphaCutoff);
+    clip(alpha - GetMaterialConstant().alphaCutoff);
 }

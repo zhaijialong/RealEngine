@@ -10,11 +10,11 @@ struct VSOutput
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {    
-    float4 pos = float4(LoadSceneBuffer<float3>(ModelCB.posBufferAddress, vertex_id), 1.0);
-    float3 normal = LoadSceneBuffer<float3>(ModelCB.normalBufferAddress, vertex_id);
+    float4 pos = float4(LoadSceneBuffer<float3>(GetModelConstant().posBufferAddress, vertex_id), 1.0);
+    float3 normal = LoadSceneBuffer<float3>(GetModelConstant().normalBufferAddress, vertex_id);
 
-    float4 worldPos = mul(ModelCB.mtxWorld, pos);
-    float3 worldNormal = mul(ModelCB.mtxWorldInverseTranspose, float4(normal, 0.0)).xyz;
+    float4 worldPos = mul(GetModelConstant().mtxWorld, pos);
+    float3 worldNormal = mul(GetModelConstant().mtxWorldInverseTranspose, float4(normal, 0.0)).xyz;
     
     VSOutput output;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);
@@ -28,7 +28,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     output.pos.xy += normalize(clipNormal.xy) * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight) * output.pos.w * width * 2;
 
 #if ALPHA_TEST
-    output.uv = LoadSceneBuffer<float2>(ModelCB.uvBufferAddress, vertex_id);
+    output.uv = LoadSceneBuffer<float2>(GetModelConstant().uvBufferAddress, vertex_id);
 #endif
     
     return output;

@@ -44,7 +44,7 @@ GBufferOutput ps_main(VertexOut input, bool isFrontFace : SV_IsFrontFace)
 #endif //PBR_SPECULAR_GLOSSINESS
     
 #if ALPHA_TEST
-    clip(alpha - MaterialCB.alphaCutoff);
+    clip(alpha - GetMaterialConstant().alphaCutoff);
 #endif
     
 #define DEBUG_MESHLET 0

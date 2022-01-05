@@ -39,16 +39,21 @@ void StaticMesh::Tick(float delta_time)
     m_mtxWorld = mul(T, mul(R, S));
 
     UpdateConstants();
-    m_pMaterial->UpdateConstants();
 }
 
 void StaticMesh::UpdateConstants()
 {
+    m_modelCB.meshletCount = m_nMeshletCount;
+    m_modelCB.meshletBufferAddress = m_meshletBufferAddress;
+    m_modelCB.meshletVerticesBufferAddress = m_meshletVerticesBufferAddress;
+    m_modelCB.meshletIndicesBufferAddress = m_meshletIndicesBufferAddress;
+
     m_modelCB.posBufferAddress = m_posBufferAddress;
     m_modelCB.uvBufferAddress = m_uvBufferAddress;
     m_modelCB.normalBufferAddress = m_normalBufferAddress;
     m_modelCB.tangentBufferAddress = m_tangentBufferAddress;
-
+    
+    m_modelCB.objectID = m_nID;
     m_modelCB.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
     m_modelCB.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
     m_modelCB.radius = m_radius * m_modelCB.scale;
@@ -56,6 +61,13 @@ void StaticMesh::UpdateConstants()
     m_modelCB.mtxWorld = m_mtxWorld;
     m_modelCB.mtxWorldInverseTranspose = transpose(inverse(m_mtxWorld));
     m_modelCB.mtxPrevWorld = m_mtxPrevWorld;
+
+    m_pMaterial->UpdateConstants();
+
+    ModelInstanceConstant consts;
+    consts.modelCB = m_modelCB;
+    consts.materialCB = *m_pMaterial->GetConstants();
+    m_sceneConstantAddress = m_pRenderer->AllocateSceneConstant(&consts, sizeof(ModelInstanceConstant));
 }
 
 void StaticMesh::Render(Renderer* pRenderer)
@@ -100,26 +112,21 @@ bool StaticMesh::FrustumCull(const float4* planes, uint32_t plane_count) const
 
 void StaticMesh::Draw(RenderBatch& batch, IGfxPipelineState* pso)
 {
-    uint32_t root_consts[1] = { m_nID };
+    uint32_t root_consts[1] = { m_sceneConstantAddress };
 
     batch.label = m_name.c_str();
     batch.SetPipelineState(pso);
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
     batch.SetConstantBuffer(1, &m_modelCB, sizeof(ModelConstant));
     batch.SetConstantBuffer(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
+
     batch.SetIndexBuffer(m_pRenderer->GetSceneBuffer(), m_indexBufferAddress, m_indexBufferFormat);
     batch.DrawIndexed(m_nIndexCount);
 }
 
 void StaticMesh::Dispatch(RenderBatch& batch, IGfxPipelineState* pso)
 {
-    uint32_t root_consts[5] = {
-        m_nMeshletCount,
-        m_meshletBufferAddress,
-        1,
-        m_meshletVerticesBufferAddress,
-        m_meshletIndicesBufferAddress
-    };
+    uint32_t root_consts[1] = { m_sceneConstantAddress };
 
     batch.label = m_name.c_str();
     batch.SetPipelineState(pso);

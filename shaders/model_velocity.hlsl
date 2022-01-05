@@ -13,23 +13,23 @@ struct VSOutput
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {    
-    float4 pos = float4(LoadSceneBuffer<float3>(ModelCB.posBufferAddress, vertex_id), 1.0);
-    float4 worldPos = mul(ModelCB.mtxWorld, pos);
+    float4 pos = float4(LoadSceneBuffer<float3>(GetModelConstant().posBufferAddress, vertex_id), 1.0);
+    float4 worldPos = mul(GetModelConstant().mtxWorld, pos);
 
     VSOutput output;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);
     
 #if ALPHA_TEST
-    output.uv = LoadSceneBuffer<float2>(ModelCB.uvBufferAddress, vertex_id);
+    output.uv = LoadSceneBuffer<float2>(GetModelConstant().uvBufferAddress, vertex_id);
 #endif
 
 #if ANIME_POS
-    StructuredBuffer<float3> prevPosBuffer = ResourceDescriptorHeap[ModelCB.prevPosBuffer]; //todo
+    StructuredBuffer<float3> prevPosBuffer = ResourceDescriptorHeap[GetModelConstant().prevPosBuffer]; //todo
     float4 prevPos = float4(prevPosBuffer[vertex_id], 1.0);
 #else
     float4 prevPos = pos;
 #endif
-    float4 prevWorldPos = mul(ModelCB.mtxPrevWorld, prevPos);
+    float4 prevWorldPos = mul(GetModelConstant().mtxPrevWorld, prevPos);
     
     output.clipPos = mul(CameraCB.mtxViewProjectionNoJitter, worldPos);
     output.prevClipPos = mul(CameraCB.mtxPrevViewProjectionNoJitter, prevWorldPos);

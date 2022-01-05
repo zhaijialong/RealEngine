@@ -3,6 +3,8 @@
 
 #include "d3d12ma/D3D12MemAlloc.h"
 
+#define MAX_CONSTANT_BUFFER_SIZE (8 * 1024 * 1024)
+
 GpuScene::GpuScene(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
@@ -13,6 +15,11 @@ GpuScene::GpuScene(Renderer* pRenderer)
     D3D12MA::VIRTUAL_BLOCK_DESC desc = {};
     desc.Size = size;
     D3D12MA::CreateVirtualBlock(&desc, &m_pSceneBufferAllocator);
+
+    for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
+    {
+        m_pConstantBuffer[i].reset(pRenderer->CreateRawBuffer(nullptr, MAX_CONSTANT_BUFFER_SIZE, "GpuScene::m_pConstantBuffer", GfxMemoryType::CpuToGpu));
+    }
 }
 
 GpuScene::~GpuScene()
@@ -45,7 +52,35 @@ void GpuScene::Free(uint32_t address)
     m_pSceneBufferAllocator->FreeAllocation(address);
 }
 
-void GpuScene::Clear()
+void GpuScene::ClearSceneBuffer()
 {
     m_pSceneBufferAllocator->Clear();
+}
+
+uint32_t GpuScene::AllocateConstantBuffer(uint32_t size)
+{
+    RE_ASSERT(m_nConstantBufferOffset + size <= MAX_CONSTANT_BUFFER_SIZE);
+    RE_ASSERT(size % 4 == 0);
+
+    uint32_t address = m_nConstantBufferOffset;
+    m_nConstantBufferOffset += size;
+
+    return address;
+}
+
+void GpuScene::ResetSceneConstants()
+{
+    m_nConstantBufferOffset = 0;
+}
+
+IGfxBuffer* GpuScene::GetSceneConstantBuffer() const
+{
+    uint32_t frame_index = m_pRenderer->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
+    return m_pConstantBuffer[frame_index]->GetBuffer();
+}
+
+IGfxDescriptor* GpuScene::GetSceneConstantSRV() const
+{
+    uint32_t frame_index = m_pRenderer->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
+    return m_pConstantBuffer[frame_index]->GetSRV();
 }

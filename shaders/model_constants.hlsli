@@ -2,13 +2,19 @@
 
 struct ModelConstant
 {
+    uint meshletCount;
+    uint meshletBufferAddress;
+    uint meshletVerticesBufferAddress;
+    uint meshletIndicesBufferAddress;
+
     uint posBufferAddress;
     uint uvBufferAddress;
     uint normalBufferAddress;
     uint tangentBufferAddress;
     
     uint prevPosBuffer;
-    uint2 _padding;
+    uint objectID;
+    uint _padding;
     float scale;
     
     float3 center;
@@ -41,9 +47,21 @@ struct MaterialConstant
     float3 specular;
     
     float3 emissive;
+    float _padding;
+};
+
+struct ModelInstanceConstant
+{
+    ModelConstant modelCB;
+    MaterialConstant materialCB;
 };
 
 #ifndef __cplusplus
+cbuffer RootConstants : register(b0)
+{
+    uint c_SceneConstantAddress;
+};
+
 ConstantBuffer<ModelConstant> ModelCB : register(b1);
 ConstantBuffer<MaterialConstant> MaterialCB : register(b2);
 #endif

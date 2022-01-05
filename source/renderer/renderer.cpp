@@ -39,7 +39,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_nWindowHeight = window_height;
 
     GfxDeviceDesc desc;
-    desc.max_frame_lag = MAX_INFLIGHT_FRAMES;
+    desc.max_frame_lag = GFX_MAX_INFLIGHT_FRAMES;
     m_pDevice.reset(CreateGfxDevice(desc));
 
     GfxSwapchainDesc swapchainDesc;
@@ -50,13 +50,13 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
     m_pFrameFence.reset(m_pDevice->CreateFence("Renderer::m_pFrameFence"));
 
-    for (int i = 0; i < MAX_INFLIGHT_FRAMES; ++i)
+    for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         std::string name = "Renderer::m_pCommandLists[" + std::to_string(i) + "]";
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
 
-    for (int i = 0; i < MAX_INFLIGHT_FRAMES; ++i)
+    for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         std::string name = "Renderer::m_pComputeCommandLists[" + std::to_string(i) + "]";
         m_pComputeCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Compute, name));
@@ -64,7 +64,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
     m_pUploadFence.reset(m_pDevice->CreateFence("Renderer::m_pUploadFence"));
 
-    for (int i = 0; i < MAX_INFLIGHT_FRAMES; ++i)
+    for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         std::string name = "Renderer::m_pUploadCommandList[" + std::to_string(i) + "]";
         m_pUploadCommandList[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Copy, name));
@@ -101,7 +101,7 @@ void Renderer::BeginFrame()
 {
     CPU_EVENT("Render", "Renderer::BeginFrame");
 
-    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
     {
         CPU_EVENT("Render", "IGfxFence::Wait");
         m_pFrameFence->Wait(m_nFrameFenceValue[frame_index]);
@@ -125,7 +125,7 @@ void Renderer::UploadResources()
         return;
     }
 
-    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pUploadCommandList = m_pUploadCommandList[frame_index].get();
     pUploadCommandList->Begin();
 
@@ -194,6 +194,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
     SceneConstant sceneCB;
     sceneCB.sceneBufferSRV = m_pGpuScene->GetSceneBufferSRV()->GetHeapIndex();
+    sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
     sceneCB.lightDir = light->GetLightDirection();
     //sceneCB.shadowRT = shadowMapRT->GetSRV()->GetHeapIndex();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
@@ -246,7 +247,7 @@ void Renderer::Render()
 {
     CPU_EVENT("Render", "Renderer::Render");
 
-    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
 
@@ -324,7 +325,7 @@ void Renderer::EndFrame()
 {
     CPU_EVENT("Render", "Renderer::EndFrame");
 
-    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->End();
 
@@ -340,6 +341,7 @@ void Renderer::EndFrame()
 
     m_pStagingBufferAllocator[frame_index]->Reset();
     m_cbAllocator->Reset();
+    m_pGpuScene->ResetSceneConstants();
 
     m_pDevice->EndFrame();
 }
@@ -609,7 +611,7 @@ TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
 
 void Renderer::ClearGpuScene()
 {
-    m_pGpuScene->Clear();
+    m_pGpuScene->ClearSceneBuffer();
 }
 
 IGfxBuffer* Renderer::GetSceneBuffer() const
@@ -634,6 +636,19 @@ void Renderer::FreeSceneBuffer(uint32_t address)
     m_pGpuScene->Free(address);
 }
 
+uint32_t Renderer::AllocateSceneConstant(void* data, uint32_t size)
+{
+    uint32_t address = m_pGpuScene->AllocateConstantBuffer(size);
+
+    if (data)
+    {
+        void* dst = (char*)m_pGpuScene->GetSceneConstantBuffer()->GetCpuAddress() + address;
+        memcpy(dst, data, size);
+    }
+
+    return address;
+}
+
 inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t row_num, uint32_t d)
 {
     uint32_t src_slice_size = src_row_pitch * row_num;
@@ -655,7 +670,7 @@ inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, u
 
 void Renderer::UploadTexture(IGfxTexture* texture, const void* data)
 {
-    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
     StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
 
     uint32_t required_size = texture->GetRequiredStagingBufferSize();
@@ -704,7 +719,7 @@ void Renderer::UploadTexture(IGfxTexture* texture, const void* data)
 
 void Renderer::UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size)
 {
-    uint32_t frame_index = m_pDevice->GetFrameID() % MAX_INFLIGHT_FRAMES;
+    uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
     StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
 
     StagingBuffer staging_buffer = pAllocator->Allocate(data_size);

@@ -45,6 +45,8 @@ private:
     uint32_t m_nMeshletCount = 0;
     ModelConstant m_modelCB = {};
 
+    uint32_t m_sceneConstantAddress = 0;
+
     float4x4 m_mtxWorld;
     float4x4 m_mtxPrevWorld;
 

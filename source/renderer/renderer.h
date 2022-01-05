@@ -11,8 +11,6 @@
 #include "staging_buffer_allocator.h"
 #include "lsignal/lsignal.h"
 
-const static int MAX_INFLIGHT_FRAMES = 3;
-
 using ComputeFunc = std::function<void(IGfxCommandList*)>;
 
 class Renderer
@@ -56,6 +54,7 @@ public:
     IGfxBuffer* GetSceneBuffer() const;
     uint32_t AllocateSceneBuffer(void* data, uint32_t size, uint32_t alignment = 4);
     void FreeSceneBuffer(uint32_t address);
+    uint32_t AllocateSceneConstant(void* data, uint32_t size);
 
     void RequestMouseHitTest(uint32_t x, uint32_t y);
     bool IsEnableMouseHitTest() const { return m_bEnableObjectIDRendering; }
@@ -109,14 +108,14 @@ private:
 
     std::unique_ptr<IGfxFence> m_pFrameFence;
     uint64_t m_nCurrentFrameFenceValue = 0;
-    uint64_t m_nFrameFenceValue[MAX_INFLIGHT_FRAMES] = {};
-    std::unique_ptr<IGfxCommandList> m_pCommandLists[MAX_INFLIGHT_FRAMES];
-    std::unique_ptr<IGfxCommandList> m_pComputeCommandLists[MAX_INFLIGHT_FRAMES];
+    uint64_t m_nFrameFenceValue[GFX_MAX_INFLIGHT_FRAMES] = {};
+    std::unique_ptr<IGfxCommandList> m_pCommandLists[GFX_MAX_INFLIGHT_FRAMES];
+    std::unique_ptr<IGfxCommandList> m_pComputeCommandLists[GFX_MAX_INFLIGHT_FRAMES];
 
     std::unique_ptr<IGfxFence> m_pUploadFence;
     uint64_t m_nCurrentUploadFenceValue = 0;
-    std::unique_ptr<IGfxCommandList> m_pUploadCommandList[MAX_INFLIGHT_FRAMES];
-    std::unique_ptr<StagingBufferAllocator> m_pStagingBufferAllocator[MAX_INFLIGHT_FRAMES];
+    std::unique_ptr<IGfxCommandList> m_pUploadCommandList[GFX_MAX_INFLIGHT_FRAMES];
+    std::unique_ptr<StagingBufferAllocator> m_pStagingBufferAllocator[GFX_MAX_INFLIGHT_FRAMES];
 
     struct TextureUpload
     {
