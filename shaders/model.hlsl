@@ -3,7 +3,7 @@
 
 VertexOut vs_main(uint vertex_id : SV_VertexID)
 {
-    VertexOut v = GetVertex(vertex_id);
+    VertexOut v = GetVertex(c_SceneConstantAddress, vertex_id);
     return v;
 }
 
@@ -17,6 +17,10 @@ struct GBufferOutput
 
 GBufferOutput ps_main(VertexOut input, bool isFrontFace : SV_IsFrontFace)
 {
+#if !NON_UNIFORM_RESOURCE
+    input.sceneConstantAddress = c_SceneConstantAddress;
+#endif
+
     PbrMetallicRoughness pbrMetallicRoughness = GetMaterialMetallicRoughness(input);
     PbrSpecularGlossiness pbrSpecularGlossiness = GetMaterialSpecularGlossiness(input);
     float3 N = GetMaterialNormal(input, isFrontFace);
@@ -44,7 +48,7 @@ GBufferOutput ps_main(VertexOut input, bool isFrontFace : SV_IsFrontFace)
 #endif //PBR_SPECULAR_GLOSSINESS
     
 #if ALPHA_TEST
-    clip(alpha - GetMaterialConstant().alphaCutoff);
+    clip(alpha - GetMaterialConstant(input.sceneConstantAddress).alphaCutoff);
 #endif
     
 #define DEBUG_MESHLET 0

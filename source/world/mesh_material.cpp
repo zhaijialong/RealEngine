@@ -189,6 +189,8 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
+        defines.push_back("NON_UNIFORM_RESOURCE=1");
+
         if (m_bPbrMetallicRoughness) defines.push_back("PBR_METALLIC_ROUGHNESS=1");
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
         if (m_pMetallicRoughnessTexture)

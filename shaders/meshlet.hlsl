@@ -145,8 +145,9 @@ void main_ms(
     {        
         uint vertex_id = LoadSceneBuffer<uint>(GetModelConstant(sceneConstantAddress).meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
 
-        VertexOut v = GetVertex(vertex_id);
+        VertexOut v = GetVertex(sceneConstantAddress, vertex_id);
         v.meshlet = meshletIndex;
+        v.sceneConstantAddress = sceneConstantAddress;
         
         vertices[groupThreadID] = v;
     }

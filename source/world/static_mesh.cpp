@@ -116,8 +116,8 @@ void StaticMesh::Draw(RenderBatch& batch, IGfxPipelineState* pso)
     batch.label = m_name.c_str();
     batch.SetPipelineState(pso);
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
-    batch.SetConstantBuffer(1, &m_modelCB, sizeof(ModelConstant));
-    batch.SetConstantBuffer(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
+    //batch.SetConstantBuffer(1, &m_modelCB, sizeof(ModelConstant));
+    //batch.SetConstantBuffer(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
 
     batch.SetIndexBuffer(m_pRenderer->GetSceneBuffer(), m_indexBufferAddress, m_indexBufferFormat);
     batch.DrawIndexed(m_nIndexCount);
@@ -132,11 +132,9 @@ void StaticMesh::Dispatch(RenderBatch& batch, IGfxPipelineState* pso)
     batch.meshletCount = m_nMeshletCount;
     batch.sceneConstantAddress = m_sceneConstantAddress;
 
-    uint32_t root_consts[1] = { m_sceneConstantAddress };
-
-    batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
-    batch.SetConstantBuffer(1, &m_modelCB, sizeof(ModelConstant));
-    batch.SetConstantBuffer(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
-
-    batch.DispatchMesh((m_nMeshletCount + 31 ) / 32, 1, 1);
+    //uint32_t root_consts[1] = { m_sceneConstantAddress };
+    //batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
+    //batch.SetConstantBuffer(1, &m_modelCB, sizeof(ModelConstant));
+    //batch.SetConstantBuffer(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
+    //batch.DispatchMesh((m_nMeshletCount + 31 ) / 32, 1, 1);
 }

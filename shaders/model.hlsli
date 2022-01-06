@@ -8,6 +8,11 @@ ModelConstant GetModelConstant(uint address)
     return LoadSceneConstantBuffer<ModelInstanceConstant>(address).modelCB;
 }
 
+MaterialConstant GetMaterialConstant(uint address)
+{
+    return LoadSceneConstantBuffer<ModelInstanceConstant>(address).materialCB;
+}
+
 ModelConstant GetModelConstant()
 {
 #if 1
@@ -36,32 +41,33 @@ struct VertexOut
     float3 bitangent : BITANGENT;
 #endif
     
-    uint meshlet : COLOR;
+    uint meshlet : COLOR0;
+    uint sceneConstantAddress : COLOR1;
 };
 
-VertexOut GetVertex(uint vertex_id)
+VertexOut GetVertex(uint sceneConstantAddress,  uint vertex_id)
 {    
-    float4 pos = float4(LoadSceneBuffer<float3>(GetModelConstant().posBufferAddress, vertex_id), 1.0);
-    float2 uv = LoadSceneBuffer<float2>(GetModelConstant().uvBufferAddress, vertex_id);
-    float3 normal = LoadSceneBuffer<float3>(GetModelConstant().normalBufferAddress, vertex_id);
+    float4 pos = float4(LoadSceneBuffer<float3>(GetModelConstant(sceneConstantAddress).posBufferAddress, vertex_id), 1.0);
+    float2 uv = LoadSceneBuffer<float2>(GetModelConstant(sceneConstantAddress).uvBufferAddress, vertex_id);
+    float3 normal = LoadSceneBuffer<float3>(GetModelConstant(sceneConstantAddress).normalBufferAddress, vertex_id);
 
-    float4 worldPos = mul(GetModelConstant().mtxWorld, pos);
+    float4 worldPos = mul(GetModelConstant(sceneConstantAddress).mtxWorld, pos);
 
     VertexOut v = (VertexOut)0;
     v.pos = mul(CameraCB.mtxViewProjection, worldPos);
     v.uv = uv;
-    v.normal = normalize(mul(GetModelConstant().mtxWorldInverseTranspose, float4(normal, 0.0f)).xyz);
+    v.normal = normalize(mul(GetModelConstant(sceneConstantAddress).mtxWorldInverseTranspose, float4(normal, 0.0f)).xyz);
     
     if (vertex_id == 0)
     {
-        //debug::DrawSphere(GetModelConstant().center, GetModelConstant().radius, float3(1, 0, 0));
+        //debug::DrawSphere(GetModelConstant(sceneConstantAddress).center, GetModelConstant(sceneConstantAddress).radius, float3(1, 0, 0));
     }
     
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE
-    float4 tangent = LoadSceneBuffer<float4>(GetModelConstant().tangentBufferAddress, vertex_id);
-    v.tangent = normalize(mul(GetModelConstant().mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
+    float4 tangent = LoadSceneBuffer<float4>(GetModelConstant(sceneConstantAddress).tangentBufferAddress, vertex_id);
+    v.tangent = normalize(mul(GetModelConstant(sceneConstantAddress).mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
     v.bitangent = normalize(cross(v.normal, v.tangent) * tangent.w);    
     
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.tangent * 0.05, float3(1, 0, 0));
@@ -106,23 +112,23 @@ SamplerState GetMaterialSampler()
 PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOut input)
 {
     PbrMetallicRoughness pbrMetallicRoughness;
-    pbrMetallicRoughness.albedo = GetMaterialConstant().albedo.xyz;
+    pbrMetallicRoughness.albedo = GetMaterialConstant(input.sceneConstantAddress).albedo.xyz;
     pbrMetallicRoughness.alpha = 1.0;
-    pbrMetallicRoughness.metallic = GetMaterialConstant().metallic;
-    pbrMetallicRoughness.roughness = GetMaterialConstant().roughness;
+    pbrMetallicRoughness.metallic = GetMaterialConstant(input.sceneConstantAddress).metallic;
+    pbrMetallicRoughness.roughness = GetMaterialConstant(input.sceneConstantAddress).roughness;
     pbrMetallicRoughness.ao = 1.0;
     
     SamplerState linearSampler = GetMaterialSampler();
     
 #if ALBEDO_TEXTURE
-    Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant().albedoTexture);
+    Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant(input.sceneConstantAddress).albedoTexture);
     float4 albedo = albedoTexture.Sample(linearSampler, input.uv);
     pbrMetallicRoughness.albedo *= albedo.xyz;
     pbrMetallicRoughness.alpha = albedo.w;
 #endif
     
 #if METALLIC_ROUGHNESS_TEXTURE
-    Texture2D metallicRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant().metallicRoughnessTexture);
+    Texture2D metallicRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(input.sceneConstantAddress).metallicRoughnessTexture);
     float4 metallicRoughness = metallicRoughnessTexture.Sample(linearSampler, input.uv);
     pbrMetallicRoughness.metallic *= metallicRoughness.b;
     pbrMetallicRoughness.roughness *= metallicRoughness.g;
@@ -138,22 +144,22 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOut input)
 PbrSpecularGlossiness GetMaterialSpecularGlossiness(VertexOut input)
 {
     PbrSpecularGlossiness pbrSpecularGlossiness;
-    pbrSpecularGlossiness.diffuse = GetMaterialConstant().diffuse;
-    pbrSpecularGlossiness.specular = GetMaterialConstant().specular;
-    pbrSpecularGlossiness.glossiness = GetMaterialConstant().glossiness;
+    pbrSpecularGlossiness.diffuse = GetMaterialConstant(input.sceneConstantAddress).diffuse;
+    pbrSpecularGlossiness.specular = GetMaterialConstant(input.sceneConstantAddress).specular;
+    pbrSpecularGlossiness.glossiness = GetMaterialConstant(input.sceneConstantAddress).glossiness;
     pbrSpecularGlossiness.alpha = 1.0;
     
     SamplerState linearSampler = GetMaterialSampler();
     
 #if DIFFUSE_TEXTURE
-    Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant().diffuseTexture);
+    Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant(input.sceneConstantAddress).diffuseTexture);
     float4 diffuse = diffuseTexture.Sample(linearSampler, input.uv);
     pbrSpecularGlossiness.diffuse *= diffuse.xyz;
     pbrSpecularGlossiness.alpha = diffuse.w;
 #endif
     
 #if SPECULAR_GLOSSINESS_TEXTURE
-    Texture2D specularGlossinessTexture = GetMaterialTexture2D(GetMaterialConstant().specularGlossinessTexture);
+    Texture2D specularGlossinessTexture = GetMaterialTexture2D(GetMaterialConstant(input.sceneConstantAddress).specularGlossinessTexture);
     float4 specularGlossiness = specularGlossinessTexture.Sample(linearSampler, input.uv);
     pbrSpecularGlossiness.specular *= specularGlossiness.xyz;
     pbrSpecularGlossiness.glossiness *= specularGlossiness.w;
@@ -170,7 +176,7 @@ float3 GetMaterialNormal(VertexOut input, bool isFrontFace)
     float3 T = input.tangent;
     float3 B = input.bitangent;
 
-    Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant().normalTexture);
+    Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant(input.sceneConstantAddress).normalTexture);
     SamplerState linearSampler = GetMaterialSampler();
     
     float3 normal = normalTexture.Sample(linearSampler, input.uv).xyz;
@@ -197,7 +203,7 @@ float GetMaterialAO(VertexOut input)
     float ao = 1.0;
     
 #if AO_TEXTURE && !AO_METALLIC_ROUGHNESS_TEXTURE
-    Texture2D aoTexture = GetMaterialTexture2D(GetMaterialConstant().aoTexture);
+    Texture2D aoTexture = GetMaterialTexture2D(GetMaterialConstant(input.sceneConstantAddress).aoTexture);
     SamplerState linearSampler = GetMaterialSampler();
     ao = aoTexture.Sample(linearSampler, input.uv).x;
 #endif    
@@ -206,9 +212,9 @@ float GetMaterialAO(VertexOut input)
 
 float3 GetMaterialEmissive(VertexOut input)
 {
-    float3 emissive = GetMaterialConstant().emissive;
+    float3 emissive = GetMaterialConstant(input.sceneConstantAddress).emissive;
 #if EMISSIVE_TEXTURE
-    Texture2D emissiveTexture = GetMaterialTexture2D(GetMaterialConstant().emissiveTexture);
+    Texture2D emissiveTexture = GetMaterialTexture2D(GetMaterialConstant(input.sceneConstantAddress).emissiveTexture);
     SamplerState linearSampler = GetMaterialSampler();
     emissive *= emissiveTexture.Sample(linearSampler, input.uv).xyz;
 #endif

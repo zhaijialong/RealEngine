@@ -1,6 +1,7 @@
 #include "base_pass.h"
 #include "renderer.h"
 #include "hierarchical_depth_buffer.h"
+#include "utils/profiler.h"
 
 struct BasePassData
 {
@@ -104,10 +105,15 @@ void BasePass::MergeBatches()
 
 void BasePass::FlushBatches(IGfxCommandList* pCommandList)
 {
+    CPU_EVENT("Render", "BasePass");
+
     for (auto iter = m_mergedBatches.begin(); iter != m_mergedBatches.end(); ++iter)
     {
         IGfxPipelineState* pso = iter->first;
         const MergedBatch& batch = iter->second;
+
+        std::string event_name = "MergedBatch(" + std::to_string(batch.batches.size()) + " batches, " + std::to_string(batch.meshletCount) + " meshlets)";
+        GPU_EVENT_DEBUG(pCommandList, event_name);
 
         pCommandList->SetPipelineState(pso);
 
