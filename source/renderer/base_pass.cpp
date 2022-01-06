@@ -157,7 +157,7 @@ void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList)
             uint32_t sceneConstantAddress = batch.batches[i].sceneConstantAddress;
             for (size_t m = 0; m < batch.batches[i].meshletCount; ++m)
             {
-                dataPerMeshlet.push_back(uint2(sceneConstantAddress, (uint32_t)m));
+                dataPerMeshlet.emplace_back(sceneConstantAddress, (uint32_t)m);
             }
         }
 
