@@ -1,21 +1,21 @@
 #include "common.hlsli"
 
-cbuffer ReprojectionConsts : register(b0)
+cbuffer RootConsts : register(b0)
 {
-    uint c_prevLinearDepthSRV;
-    uint c_reprojectedDepthUAV;
-    uint c_depthWidth;
-    uint c_depthHeight;
+    uint c_inputSRV;
+    uint c_outputUAV;
+    uint c_hzbWidth;
+    uint c_hzbHeight;
 };
 
 [numthreads(8, 8, 1)]
 void depth_reprojection(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthSRV];
-    RWTexture2D<float> reprojectedDepthTexture = ResourceDescriptorHeap[c_reprojectedDepthUAV];
+    Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_inputSRV];
+    RWTexture2D<float> reprojectedDepthTexture = ResourceDescriptorHeap[c_outputUAV];
     SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
     
-    float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_depthWidth, c_depthHeight);
+    float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_hzbWidth, c_hzbHeight);
     
     float prevLinearDepth = prevLinearDepthTexture.Sample(maxReductionSampler, uv);
     float prevNdcDepth = GetNdcDepth(prevLinearDepth);
@@ -30,24 +30,16 @@ void depth_reprojection(uint3 dispatchThreadID : SV_DispatchThreadID)
     float reprojectedDepth = reprojectedPosition.w < 0.0f ? prevNdcDepth : reprojectedPosition.z;
     
     float2 reprojectedUV = GetScreenUV(reprojectedPosition.xy);
-    float2 reprojectedScreenPos = reprojectedUV * float2(c_depthWidth, c_depthHeight);
+    float2 reprojectedScreenPos = reprojectedUV * float2(c_hzbWidth, c_hzbHeight);
     
     reprojectedDepthTexture[reprojectedScreenPos] = reprojectedDepth;
 }
 
-cbuffer DilationConsts : register(b0)
-{
-    uint c_reprojectedDepthSRV;
-    uint c_hzbMip0UAV;
-    uint c_hzbWidth;
-    uint c_hzbHeight;
-};
-
 [numthreads(8, 8, 1)]
 void depth_dilation(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D<float> reprojectedDepthTexture = ResourceDescriptorHeap[c_reprojectedDepthSRV];
-    RWTexture2D<float> hzbMip0UAV = ResourceDescriptorHeap[c_hzbMip0UAV];
+    Texture2D<float> reprojectedDepthTexture = ResourceDescriptorHeap[c_inputSRV];
+    RWTexture2D<float> hzbMip0UAV = ResourceDescriptorHeap[c_outputUAV];
     
     float depth = reprojectedDepthTexture[dispatchThreadID.xy];
     
@@ -72,4 +64,16 @@ void depth_dilation(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
     
     hzbMip0UAV[dispatchThreadID.xy] = depth;
+}
+
+[numthreads(8, 8, 1)]
+void init_hzb(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    Texture2D<float> inputDepthTexture = ResourceDescriptorHeap[c_inputSRV];
+    RWTexture2D<float> ouputDepthTexture = ResourceDescriptorHeap[c_outputUAV];
+    SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
+    
+    float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_hzbWidth, c_hzbHeight);
+
+    ouputDepthTexture[dispatchThreadID.xy] = inputDepthTexture.SampleLevel(minReductionSampler, uv, 0);
 }

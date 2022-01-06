@@ -11,7 +11,7 @@ public:
     HZB(Renderer* pRenderer);
 
     void Generate1stPhaseCullingHZB(RenderGraph* graph);
-    void Generate2ndPhaseCullingHZB(RenderGraph* graph);//todo
+    void Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depthRT);
     void GenerateSceneHZB(RenderGraph* graph);//todo
 
     uint32_t GetHZBMipCount() const { return m_nHZBMipCount; }
@@ -28,6 +28,7 @@ private:
     void ReprojectDepth(IGfxCommandList* pCommandList, IGfxDescriptor* prevLinearDepthSRV, IGfxTexture* reprojectedDepthTexture, IGfxDescriptor* reprojectedDepthUAV);
     void DilateDepth(IGfxCommandList* pCommandList, IGfxDescriptor* reprojectedDepthSRV, IGfxDescriptor* hzbMip0UAV);
     void BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture);
+    void InitHZB(IGfxCommandList* pCommandList, IGfxDescriptor* inputDepthSRV, IGfxDescriptor* hzbMip0UAV);
 
     void ResetCounterBuffer(IGfxCommandList* pCommandList);
 
@@ -37,6 +38,7 @@ private:
     IGfxPipelineState* m_pDepthReprojectionPSO = nullptr;
     IGfxPipelineState* m_pDepthDilationPSO = nullptr;
     IGfxPipelineState* m_pDepthMipFilterPSO = nullptr;
+    IGfxPipelineState* m_pInitHZBPSO = nullptr;
     
     std::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
 

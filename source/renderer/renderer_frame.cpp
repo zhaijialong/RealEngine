@@ -8,8 +8,10 @@
 void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
 {
     m_pHZB->Generate1stPhaseCullingHZB(m_pRenderGraph.get());
+    m_pBasePass->Render1stPhase(m_pRenderGraph.get());
 
-    m_pBasePass->Render(m_pRenderGraph.get());
+    m_pHZB->Generate2ndPhaseCullingHZB(m_pRenderGraph.get(), m_pBasePass->GetDepthRT());
+    m_pBasePass->Render2ndPhase(m_pRenderGraph.get());
 
     struct DepthPassData
     {

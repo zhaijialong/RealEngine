@@ -191,6 +191,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
     RenderGraphHandle firstPhaseHZBHandle = m_pHZB->Get1stPhaseCullingHZBMip(0);
     RenderGraphTexture* firstPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(firstPhaseHZBHandle);
+    RenderGraphHandle secondPhaseHZBHandle = m_pHZB->Get2ndPhaseCullingHZBMip(0);
+    RenderGraphTexture* secondPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(secondPhaseHZBHandle);
 
     SceneConstant sceneCB;
     sceneCB.sceneBufferSRV = m_pGpuScene->GetSceneBufferSRV()->GetHeapIndex();
@@ -207,6 +209,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.HZBWidth = m_pHZB->GetHZBWidth();
     sceneCB.HZBHeight = m_pHZB->GetHZBHeight();
     sceneCB.firstPhaseCullingHZBSRV = firstPhaseHZBTexture->GetSRV()->GetHeapIndex();
+    sceneCB.secondPhaseCullingHZBSRV = secondPhaseHZBTexture->GetSRV()->GetHeapIndex();
     sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferSRV = m_pGpuDebugLine->GetVertexBufferSRV()->GetHeapIndex();

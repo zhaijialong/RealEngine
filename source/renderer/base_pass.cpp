@@ -25,13 +25,13 @@ RenderBatch& BasePass::AddBatch()
     return m_batches.emplace_back(*allocator);
 }
 
-void BasePass::Render(RenderGraph* pRenderGraph)
+void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
 {
     MergeBatches();
 
     HZB* pHZB = m_pRenderer->GetHZB();
 
-    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("GBuffer Pass",
+    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass 1st phase",
         [&](BasePassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
@@ -65,7 +65,37 @@ void BasePass::Render(RenderGraph* pRenderGraph)
         },
         [&](const BasePassData& data, IGfxCommandList* pCommandList)
         {
-            FlushBatches(pCommandList);
+            Flush1stPhaseBatches(pCommandList);
+        });
+
+    m_diffuseRT = gbuffer_pass->outDiffuseRT;
+    m_specularRT = gbuffer_pass->outSpecularRT;
+    m_normalRT = gbuffer_pass->outNormalRT;
+    m_emissiveRT = gbuffer_pass->outEmissiveRT;
+    m_depthRT = gbuffer_pass->outDepthRT;
+}
+
+void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
+{
+    HZB* pHZB = m_pRenderer->GetHZB();
+
+    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass 2nd phase",
+        [&](BasePassData& data, RenderGraphBuilder& builder)
+        {
+            data.outDiffuseRT = builder.WriteColor(0, m_diffuseRT, 0, GfxRenderPassLoadOp::Load);
+            data.outSpecularRT = builder.WriteColor(1, m_specularRT, 0, GfxRenderPassLoadOp::Load);
+            data.outNormalRT = builder.WriteColor(2, m_normalRT, 0, GfxRenderPassLoadOp::Load);
+            data.outEmissiveRT = builder.WriteColor(3, m_emissiveRT, 0, GfxRenderPassLoadOp::Load);
+            data.outDepthRT = builder.WriteDepth(m_depthRT, 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
+
+            for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
+            {
+                data.inHZB = builder.Read(pHZB->Get2ndPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+            }
+        },
+        [&](const BasePassData& data, IGfxCommandList* pCommandList)
+        {
+            Flush2ndPhaseBatches(pCommandList);
         });
 
     m_diffuseRT = gbuffer_pass->outDiffuseRT;
@@ -101,9 +131,11 @@ void BasePass::MergeBatches()
             m_nonMergedBatches.push_back(batch);
         }
     }
+
+    m_batches.clear();
 }
 
-void BasePass::FlushBatches(IGfxCommandList* pCommandList)
+void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList)
 {
     CPU_EVENT("Render", "BasePass");
 
@@ -137,12 +169,14 @@ void BasePass::FlushBatches(IGfxCommandList* pCommandList)
         pCommandList->DispatchMesh((batch.meshletCount + 31) / 32, 1, 1); //hard coded 32 group size for AS
     }
 
+    m_mergedBatches.clear();
+}
+
+void BasePass::Flush2ndPhaseBatches(IGfxCommandList* pCommandList)
+{
     for (size_t i = 0; i < m_nonMergedBatches.size(); ++i)
     {
         DrawBatch(pCommandList, m_nonMergedBatches[i]);
     }
-
-    m_batches.clear();
-    m_mergedBatches.clear();
     m_nonMergedBatches.clear();
 }

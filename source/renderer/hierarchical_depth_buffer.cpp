@@ -15,6 +15,9 @@ HZB::HZB(Renderer* pRenderer) :
     desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "depth_dilation", "cs_6_6", {});
     m_pDepthDilationPSO = pRenderer->GetPipelineState(desc, "HZB depth dilation PSO");
 
+    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "init_hzb", "cs_6_6", {});
+    m_pInitHZBPSO = pRenderer->GetPipelineState(desc, "HZB init PSO");
+
     desc.cs = pRenderer->GetShader("hzb.hlsl", "build_hzb", "cs_6_6", {});
     m_pDepthMipFilterPSO = pRenderer->GetPipelineState(desc, "HZB generate mips PSO");
 
@@ -71,7 +74,7 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::R16F;
             desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
-            hzb = builder.Create<RenderGraphTexture>(desc, "Reprojected HZB");
+            hzb = builder.Create<RenderGraphTexture>(desc, "1st phase HZB");
 
             data.dilatedDepth = builder.Write(hzb, GfxResourceState::UnorderedAccess, 0);
         },
@@ -107,10 +110,71 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
         });
 }
 
+void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depthRT)
+{
+    struct InitHZBData
+    {
+        RenderGraphHandle inputDepthRT;
+        RenderGraphHandle hzb;
+    };
+
+    RenderGraphHandle hzb;
+
+    auto init_hzb = graph->AddPass<InitHZBData>("Init HZB",
+        [&](InitHZBData& data, RenderGraphBuilder& builder)
+        {
+            data.inputDepthRT = builder.Read(depthRT, GfxResourceState::ShaderResourceNonPS);
+
+            RenderGraphTexture::Desc desc;
+            desc.width = m_hzbSize.x;
+            desc.height = m_hzbSize.y;
+            desc.mip_levels = m_nHZBMipCount;
+            desc.format = GfxFormat::R16F;
+            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            hzb = builder.Create<RenderGraphTexture>(desc, "2nd phase HZB");
+
+            data.hzb = builder.Write(hzb, GfxResourceState::UnorderedAccess, 0);
+        },
+        [=](const InitHZBData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* inputDepth = (RenderGraphTexture*)graph->GetResource(data.inputDepthRT);
+            RenderGraphTexture* hzb = (RenderGraphTexture*)graph->GetResource(data.hzb);
+            InitHZB(pCommandList, inputDepth->GetSRV(), hzb->GetUAV());
+        });
+
+    struct BuildHZBData
+    {
+        RenderGraphHandle hzb;
+    };
+
+    auto hzb_pass = graph->AddPass<BuildHZBData>("Build HZB",
+        [&](BuildHZBData& data, RenderGraphBuilder& builder)
+        {
+            data.hzb = builder.Read(init_hzb->hzb, GfxResourceState::ShaderResourceNonPS);
+
+            m_2ndPhaseCullingHZBMips[0] = data.hzb;
+            for (uint32_t i = 1; i < m_nHZBMipCount; ++i)
+            {
+                m_2ndPhaseCullingHZBMips[i] = builder.Write(hzb, GfxResourceState::UnorderedAccess, i);
+            }
+        },
+        [=](const BuildHZBData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* hzb = (RenderGraphTexture*)graph->GetResource(data.hzb);
+            BuildHZB(pCommandList, hzb);
+        });
+}
+
 RenderGraphHandle HZB::Get1stPhaseCullingHZBMip(uint32_t mip) const
 {
     RE_ASSERT(mip < m_nHZBMipCount);
     return m_1stPhaseCullingHZBMips[mip];
+}
+
+RenderGraphHandle HZB::Get2ndPhaseCullingHZBMip(uint32_t mip) const
+{
+    RE_ASSERT(mip < m_nHZBMipCount);
+    return m_2ndPhaseCullingHZBMips[mip];
 }
 
 void HZB::CalcHZBSize()
@@ -195,6 +259,16 @@ void HZB::BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture)
     uint32_t dispatchY = dispatchThreadGroupCountXY[1];
     uint32_t dispatchZ = 1; //array slice
     pCommandList->Dispatch(dispatchX, dispatchY, dispatchZ);
+}
+
+void HZB::InitHZB(IGfxCommandList* pCommandList, IGfxDescriptor* inputDepthSRV, IGfxDescriptor* hzbMip0UAV)
+{
+    pCommandList->SetPipelineState(m_pInitHZBPSO);
+
+    uint32_t root_consts[4] = { inputDepthSRV->GetHeapIndex(), hzbMip0UAV->GetHeapIndex(), m_hzbSize.x, m_hzbSize.y };
+    pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
+
+    pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
 }
 
 void HZB::ResetCounterBuffer(IGfxCommandList* pCommandList)

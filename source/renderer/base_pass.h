@@ -12,7 +12,8 @@ public:
     BasePass(Renderer* pRenderer);
 
     RenderBatch& AddBatch();
-    void Render(RenderGraph* pRenderGraph);
+    void Render1stPhase(RenderGraph* pRenderGraph);
+    void Render2ndPhase(RenderGraph* pRenderGraph);
 
     RenderGraphHandle GetDiffuseRT() const { return m_diffuseRT; }
     RenderGraphHandle GetSpecularRT() const { return m_specularRT; }
@@ -22,7 +23,8 @@ public:
 
 private:
     void MergeBatches();
-    void FlushBatches(IGfxCommandList* pCommandList);
+    void Flush1stPhaseBatches(IGfxCommandList* pCommandList);
+    void Flush2ndPhaseBatches(IGfxCommandList* pCommandList);
 
 private:
     Renderer* m_pRenderer;
