@@ -12,10 +12,10 @@ RenderGraphResourceAllocator::~RenderGraphResourceAllocator()
     {
         const Heap& heap = *iter;
 
-        for (size_t i = 0; i < heap.textures.size(); ++i)
+        for (size_t i = 0; i < heap.resources.size(); ++i)
         {
-            DeleteDescriptor(heap.textures[i].texture);
-            delete heap.textures[i].texture;
+            DeleteDescriptor(heap.resources[i].resource);
+            delete heap.resources[i].resource;
         }
 
         delete heap.heap;
@@ -35,7 +35,7 @@ void RenderGraphResourceAllocator::Reset()
         Heap& heap = *iter;
         CheckHeapUsage(heap);
 
-        if (heap.textures.empty())
+        if (heap.resources.empty())
         {
             delete heap.heap;
             iter = m_allocatedHeaps.erase(iter);
@@ -67,16 +67,16 @@ void RenderGraphResourceAllocator::CheckHeapUsage(Heap& heap)
 {
     uint64_t current_frame = m_pDevice->GetFrameID();
 
-    for (auto iter = heap.textures.begin(); iter != heap.textures.end();)
+    for (auto iter = heap.resources.begin(); iter != heap.resources.end();)
     {
-        const AliasedTexture aliasedTexture = *iter;
+        const AliasedResource aliasedResource = *iter;
 
-        if (current_frame - aliasedTexture.lastUsedFrame > 30)
+        if (current_frame - aliasedResource.lastUsedFrame > 30)
         {
-            DeleteDescriptor(aliasedTexture.texture);
+            DeleteDescriptor(aliasedResource.resource);
 
-            delete aliasedTexture.texture;
-            iter = heap.textures.erase(iter);
+            delete aliasedResource.resource;
+            iter = heap.resources.erase(iter);
         }
         else
         {
@@ -99,21 +99,22 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
             continue;
         }
 
-        for (size_t j = 0; j < heap.textures.size(); ++j)
+        for (size_t j = 0; j < heap.resources.size(); ++j)
         {
-            AliasedTexture& aliasedTexture = heap.textures[j];
-            if (!aliasedTexture.lifetime.IsUsed() && aliasedTexture.texture->GetDesc() == desc)
+            AliasedResource& aliasedResource = heap.resources[j];
+            if (aliasedResource.isTexture && !aliasedResource.lifetime.IsUsed() && ((IGfxTexture*)aliasedResource.resource)->GetDesc() == desc)
             {
-                aliasedTexture.lifetime = lifetime;
-                initial_state = aliasedTexture.lastUsedState;
-                return aliasedTexture.texture;
+                aliasedResource.lifetime = lifetime;
+                initial_state = aliasedResource.lastUsedState;
+                return (IGfxTexture*)aliasedResource.resource;
             }
         }        
 
-        AliasedTexture aliasedTexture;
-        aliasedTexture.texture = m_pDevice->CreateTexture(desc, heap.heap, 0, "RGTexture " + name);
+        AliasedResource aliasedTexture;
+        aliasedTexture.resource = m_pDevice->CreateTexture(desc, heap.heap, 0, "RGTexture " + name);
+        aliasedTexture.isTexture = true;
         aliasedTexture.lifetime = lifetime;
-        heap.textures.push_back(aliasedTexture);
+        heap.resources.push_back(aliasedTexture);
 
         if (IsDepthFormat(desc.format))
         {
@@ -128,12 +129,59 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
             initial_state = GfxResourceState::UnorderedAccess;
         }
 
-        RE_ASSERT(aliasedTexture.texture != nullptr);
-        return aliasedTexture.texture;
+        RE_ASSERT(aliasedTexture.resource != nullptr);
+        return (IGfxTexture*)aliasedTexture.resource;
     }
 
+    AllocateHeap(texture_size);
+    return AllocateTexture(firstPass, lastPass, desc, name, initial_state);
+}
+
+IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const std::string& name, GfxResourceState& initial_state)
+{
+    LifetimeRange lifetime = { firstPass, lastPass };
+    uint32_t buffer_size = desc.size;
+
+    for (size_t i = 0; i < m_allocatedHeaps.size(); ++i)
+    {
+        Heap& heap = m_allocatedHeaps[i];
+        if (heap.heap->GetDesc().size < buffer_size ||
+            heap.IsOverlapping(lifetime))
+        {
+            continue;
+        }
+
+        for (size_t j = 0; j < heap.resources.size(); ++j)
+        {
+            AliasedResource& aliasedResource = heap.resources[j];
+            if (!aliasedResource.isTexture && !aliasedResource.lifetime.IsUsed() && ((IGfxBuffer*)aliasedResource.resource)->GetDesc() == desc)
+            {
+                aliasedResource.lifetime = lifetime;
+                initial_state = aliasedResource.lastUsedState;
+                return (IGfxBuffer*)aliasedResource.resource;
+            }
+        }
+
+        AliasedResource aliasedBuffer;
+        aliasedBuffer.resource = m_pDevice->CreateBuffer(desc, heap.heap, 0, "RGBuffer " + name);
+        aliasedBuffer.isTexture = false;
+        aliasedBuffer.lifetime = lifetime;
+        heap.resources.push_back(aliasedBuffer);
+
+        initial_state = GfxResourceState::Common;
+
+        RE_ASSERT(aliasedBuffer.resource != nullptr);
+        return (IGfxBuffer*)aliasedBuffer.resource;
+    }
+
+    AllocateHeap(buffer_size);
+    return AllocateBuffer(firstPass, lastPass, desc, name, initial_state);
+}
+
+void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
+{
     GfxHeapDesc heapDesc;
-    heapDesc.size = texture_size;
+    heapDesc.size = size;
 
     char heapName[32];
     std::sprintf(heapName, "RG Heap %.1f MB", heapDesc.size / (1024.0f * 1024.0f));
@@ -141,26 +189,24 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
     Heap heap;
     heap.heap = m_pDevice->CreateHeap(heapDesc, heapName);
     m_allocatedHeaps.push_back(heap);
-
-    return AllocateTexture(firstPass, lastPass, desc, name, initial_state);
 }
 
-void RenderGraphResourceAllocator::Free(IGfxTexture* texture, GfxResourceState state)
+void RenderGraphResourceAllocator::Free(IGfxResource* resource, GfxResourceState state)
 {
-    if (texture != nullptr)
+    if (resource != nullptr)
     {
         for (size_t i = 0; i < m_allocatedHeaps.size(); ++i)
         {
             Heap& heap = m_allocatedHeaps[i];
 
-            for (size_t j = 0; j < heap.textures.size(); ++j)
+            for (size_t j = 0; j < heap.resources.size(); ++j)
             {
-                AliasedTexture& aliasedTexture = heap.textures[j];
-                if (aliasedTexture.texture == texture)
+                AliasedResource& aliasedResource = heap.resources[j];
+                if (aliasedResource.resource == resource)
                 {
-                    aliasedTexture.lifetime.Reset();
-                    aliasedTexture.lastUsedFrame = m_pDevice->GetFrameID();
-                    aliasedTexture.lastUsedState = state;
+                    aliasedResource.lifetime.Reset();
+                    aliasedResource.lastUsedFrame = m_pDevice->GetFrameID();
+                    aliasedResource.lastUsedState = state;
 
                     return;
                 }
@@ -171,33 +217,33 @@ void RenderGraphResourceAllocator::Free(IGfxTexture* texture, GfxResourceState s
     }
 }
 
-IGfxTexture* RenderGraphResourceAllocator::GetAliasedPrevResource(IGfxTexture* texture, uint32_t firstPass)
+IGfxResource* RenderGraphResourceAllocator::GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass)
 {
     for (size_t i = 0; i < m_allocatedHeaps.size(); ++i)
     {
         const Heap& heap = m_allocatedHeaps[i];
-        if (!heap.Contains(texture))
+        if (!heap.Contains(resource))
         {
             continue;
         }
 
-        IGfxTexture* prev_texture = nullptr;
-        uint32_t prev_texture_lastpass = 0;
+        IGfxResource* prev_resource = nullptr;
+        uint32_t prev_resource_lastpass = 0;
 
-        for (size_t j = 0; j < heap.textures.size(); ++j)
+        for (size_t j = 0; j < heap.resources.size(); ++j)
         {
-            const AliasedTexture& aliasedTexture = heap.textures[j];
+            const AliasedResource& aliasedResource = heap.resources[j];
 
-            if (aliasedTexture.texture != texture &&
-                aliasedTexture.lifetime.lastPass < firstPass &&
-                aliasedTexture.lifetime.lastPass > prev_texture_lastpass)
+            if (aliasedResource.resource != resource &&
+                aliasedResource.lifetime.lastPass < firstPass &&
+                aliasedResource.lifetime.lastPass > prev_resource_lastpass)
             {
-                prev_texture = aliasedTexture.texture;
-                prev_texture_lastpass = aliasedTexture.lifetime.lastPass;
+                prev_resource = aliasedResource.resource;
+                prev_resource_lastpass = aliasedResource.lifetime.lastPass;
             }
         }
 
-        return prev_texture;
+        return prev_resource;
     }
 
     RE_ASSERT(false);

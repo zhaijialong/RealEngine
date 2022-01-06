@@ -3,6 +3,7 @@
 #include "render_graph_pass.h"
 #include "render_graph_handle.h"
 #include "render_graph_resource.h"
+#include "render_graph_resource_allocator.h"
 #include "utils/linear_allocator.h"
 #include "utils/math.h"
 

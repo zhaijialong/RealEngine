@@ -218,6 +218,16 @@ struct GfxBufferDesc
     GfxBufferUsageFlags usage = 0;
 };
 
+inline bool operator==(const GfxBufferDesc& lhs, const GfxBufferDesc& rhs)
+{
+    return lhs.stride == rhs.stride &&
+        lhs.size == rhs.size &&
+        lhs.format == rhs.format &&
+        lhs.memory_type == rhs.memory_type &&
+        lhs.alloc_type == rhs.alloc_type &&
+        lhs.usage == rhs.usage;
+}
+
 struct GfxTextureDesc
 {
     uint32_t width = 1;

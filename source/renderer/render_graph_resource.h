@@ -1,12 +1,12 @@
 #pragma once
 
 #include "directed_acyclic_graph.h"
-#include "render_graph_resource_allocator.h"
 #include "gfx/gfx.h"
 #include "utils/assert.h"
 
 class RenderGraphEdge;
 class RenderGraphPassBase;
+class RenderGraphResourceAllocator;
 
 class RenderGraphResource
 {
@@ -55,72 +55,19 @@ class RenderGraphTexture : public RenderGraphResource
 public:
     using Desc = GfxTextureDesc;
 
-    RenderGraphTexture(RenderGraphResourceAllocator& allocator, const std::string& name, const Desc& desc) : 
-        RenderGraphResource(name),
-        m_allocator(allocator)
-    {
-        m_desc = desc;
-    }
-
-    RenderGraphTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state) :
-        RenderGraphResource(texture->GetName()),
-        m_allocator(allocator)
-    {
-        m_desc = texture->GetDesc();
-        m_pTexture = texture;
-        m_initialState = state;
-        m_bImported = true;
-    }
-
-    ~RenderGraphTexture()
-    {
-        if (!m_bImported)
-        {
-            if (m_bOutput)
-            {
-                m_allocator.FreeNonOverlappingTexture(m_pTexture, m_lastState);
-            }
-            else
-            {
-                m_allocator.Free(m_pTexture, m_lastState);
-            }
-        }
-    }
+    RenderGraphTexture(RenderGraphResourceAllocator& allocator, const std::string& name, const Desc& desc);
+    RenderGraphTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state);
+    ~RenderGraphTexture();
 
     IGfxTexture* GetTexture() const { return m_pTexture; }
-    IGfxDescriptor* GetSRV() { RE_ASSERT(!IsImported()); return m_allocator.GetDescriptor(m_pTexture, GfxShaderResourceViewDesc()); }
-    IGfxDescriptor* GetUAV() { RE_ASSERT(!IsImported()); return m_allocator.GetDescriptor(m_pTexture, GfxUnorderedAccessViewDesc()); }
-    IGfxDescriptor* GetUAV(uint32_t mip, uint32_t slice)
-    {
-        RE_ASSERT(!IsImported());
-        GfxUnorderedAccessViewDesc desc;
-        desc.texture.mip_slice = mip;
-        desc.texture.array_slice = slice;
-        return m_allocator.GetDescriptor(m_pTexture, desc);
-    }
+    IGfxDescriptor* GetSRV();
+    IGfxDescriptor* GetUAV();
+    IGfxDescriptor* GetUAV(uint32_t mip, uint32_t slice);
 
-    virtual void Realize() override
-    {
-        if (!m_bImported)
-        {
-            if (m_bOutput)
-            {
-                m_pTexture = m_allocator.AllocateNonOverlappingTexture(m_desc, m_name, m_initialState);
-            }
-            else
-            {
-                m_pTexture = m_allocator.AllocateTexture(m_firstPass, m_lastPass, m_desc, m_name, m_initialState);
-            }
-        }
-    }
-
+    virtual void Realize() override;
     virtual IGfxResource* GetResource() override { return m_pTexture; }
     virtual GfxResourceState GetInitialState() override { return m_initialState; }
-
-    virtual IGfxResource* GetAliasedPrevResource() override
-    {
-        return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass);
-    }
+    virtual IGfxResource* GetAliasedPrevResource() override;
 
 private:
     Desc m_desc;
@@ -131,5 +78,25 @@ private:
 
 class RenderGraphBuffer : public RenderGraphResource
 {
+public:
+    using Desc = GfxBufferDesc;
 
+    RenderGraphBuffer(RenderGraphResourceAllocator& allocator, const std::string& name, const Desc& desc);
+    RenderGraphBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxResourceState state);
+    ~RenderGraphBuffer();
+
+    IGfxBuffer* GetBuffer() const { return m_pBuffer; }
+    IGfxDescriptor* GetSRV();
+    IGfxDescriptor* GetUAV();
+
+    virtual void Realize() override;
+    virtual IGfxResource* GetResource() override { return m_pBuffer; }
+    virtual GfxResourceState GetInitialState() override { return m_initialState; }
+    virtual IGfxResource* GetAliasedPrevResource() override;
+
+private:
+    Desc m_desc;
+    IGfxBuffer* m_pBuffer = nullptr;
+    GfxResourceState m_initialState = GfxResourceState::Common;
+    RenderGraphResourceAllocator& m_allocator;
 };

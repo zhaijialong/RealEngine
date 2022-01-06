@@ -24,9 +24,10 @@ class RenderGraphResourceAllocator
         }
     };
 
-    struct AliasedTexture
+    struct AliasedResource
     {
-        IGfxTexture* texture;
+        IGfxResource* resource;
+        bool isTexture = true;
         LifetimeRange lifetime;
         uint64_t lastUsedFrame = 0;
         GfxResourceState lastUsedState = GfxResourceState::Present;
@@ -35,13 +36,13 @@ class RenderGraphResourceAllocator
     struct Heap
     {
         IGfxHeap* heap;
-        std::vector<AliasedTexture> textures;
+        std::vector<AliasedResource> resources;
 
         bool IsOverlapping(const LifetimeRange& lifetime) const
         {
-            for (size_t i = 0; i < textures.size(); ++i)
+            for (size_t i = 0; i < resources.size(); ++i)
             {
-                if (textures[i].lifetime.IsOverlapping(lifetime))
+                if (resources[i].lifetime.IsOverlapping(lifetime))
                 {
                     return true;
                 }
@@ -49,11 +50,11 @@ class RenderGraphResourceAllocator
             return false;
         }
 
-        bool Contains(IGfxTexture* texture) const
+        bool Contains(IGfxResource* resource) const
         {
-            for (size_t i = 0; i < textures.size(); ++i)
+            for (size_t i = 0; i < resources.size(); ++i)
             {
-                if (textures[i].texture == texture)
+                if (resources[i].resource == resource)
                 {
                     return true;
                 }
@@ -86,9 +87,10 @@ public:
     void FreeNonOverlappingTexture(IGfxTexture* texture, GfxResourceState state);
 
     IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state);
-    void Free(IGfxTexture* texture, GfxResourceState state);
+    IGfxBuffer* AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const std::string& name, GfxResourceState& initial_state);
+    void Free(IGfxResource* resource, GfxResourceState state);
 
-    IGfxTexture* GetAliasedPrevResource(IGfxTexture* texture, uint32_t firstPass);
+    IGfxResource* GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass);
 
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc);
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc);
@@ -96,6 +98,7 @@ public:
 private:
     void CheckHeapUsage(Heap& heap);
     void DeleteDescriptor(IGfxResource* resource);
+    void AllocateHeap(uint32_t size);
 
 private:
     IGfxDevice* m_pDevice;
