@@ -117,13 +117,55 @@ RenderGraphBuffer::~RenderGraphBuffer()
 IGfxDescriptor* RenderGraphBuffer::GetSRV()
 {
     RE_ASSERT(!IsImported());
-    return m_allocator.GetDescriptor(m_pBuffer, GfxShaderResourceViewDesc());
+
+    const GfxBufferDesc& bufferDesc = m_pBuffer->GetDesc();
+    GfxShaderResourceViewDesc desc;
+
+    if (bufferDesc.usage & GfxBufferUsageStructuredBuffer)
+    {
+        desc.type = GfxShaderResourceViewType::StructuredBuffer;
+    }
+    else if (bufferDesc.usage & GfxBufferUsageTypedBuffer)
+    {
+        desc.type = GfxShaderResourceViewType::TypedBuffer;
+    }
+    else if (bufferDesc.usage & GfxBufferUsageRawBuffer)
+    {
+        desc.type = GfxShaderResourceViewType::RawBuffer;
+    }
+
+    desc.buffer.offset = 0;
+    desc.buffer.size = bufferDesc.size;
+
+    return m_allocator.GetDescriptor(m_pBuffer, desc);
 }
 
 IGfxDescriptor* RenderGraphBuffer::GetUAV()
 {
     RE_ASSERT(!IsImported());
-    return m_allocator.GetDescriptor(m_pBuffer, GfxUnorderedAccessViewDesc());
+
+    const GfxBufferDesc& bufferDesc = m_pBuffer->GetDesc();
+    RE_ASSERT(bufferDesc.usage & GfxBufferUsageUnorderedAccess);
+
+    GfxUnorderedAccessViewDesc desc;
+
+    if (bufferDesc.usage & GfxBufferUsageStructuredBuffer)
+    {
+        desc.type = GfxUnorderedAccessViewType::StructuredBuffer;
+    }
+    else if (bufferDesc.usage & GfxBufferUsageTypedBuffer)
+    {
+        desc.type = GfxUnorderedAccessViewType::TypedBuffer;
+    }
+    else if (bufferDesc.usage & GfxBufferUsageRawBuffer)
+    {
+        desc.type = GfxUnorderedAccessViewType::RawBuffer;
+    }
+
+    desc.buffer.offset = 0;
+    desc.buffer.size = bufferDesc.size;
+
+    return m_allocator.GetDescriptor(m_pBuffer, desc);
 }
 
 void RenderGraphBuffer::Realize()
