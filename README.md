@@ -2,12 +2,21 @@
 
 my toy engine, mainly for rendering expariment and learning
 
+requires a GPU which support DX12 Ultimate
+
+## some highlights
+
+* utilize latest DX12 features, such as raytracing, mesh shaders, HLSL 2021, etc.
+* render graph based architecture, with automatically barriers and transient resources management
+* fully bindless resources with SM6.6
+* two-phase occlusion culling (like Ubi's GPU driven pipeline)
+* print functions which can be used shaders
+
 ## planned features
 
 * render graph(~~barriers~~, ~~resource aliasing~~, async compute)
 * ~~GTAO~~
-* SSR
-* SSGI
+* diffuse & specular GI
 * clustered shading
 * volume cloud
 * volume fog
@@ -16,12 +25,9 @@ my toy engine, mainly for rendering expariment and learning
 * ~~CAS~~
 * ~~meshlet~~
 * RTX
-* variable rate shading
-* sampler feedback
-* sparse texture
-* sparse shadowmap
-* water/ocean
-* large-scale landscape
+* a reference pathtracer
+* maybe water/ocean simulation, or large-scale landscape
+
 
 ## AMD related issues
 
