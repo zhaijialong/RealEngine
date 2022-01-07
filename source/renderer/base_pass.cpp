@@ -259,7 +259,7 @@ void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList)
         pCommandList->DispatchMesh((batch.meshletCount + 31) / 32, 1, 1); //hard coded 32 group size for AS
 
         //second phase batch
-        m_indirectBatches.push_back({ pso, dataPerMeshletAddress, occlusionCulledMeshletsBufferOffset, dispatchIndex });
+        m_indirectBatches.push_back({ pso, occlusionCulledMeshletsBufferOffset });
 
         occlusionCulledMeshletsBufferOffset += batch.meshletCount;
         dispatchIndex++;
@@ -275,7 +275,7 @@ void BasePass::Flush2ndPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* p
         const IndirectBatch& batch = m_indirectBatches[i];
         pCommandList->SetPipelineState(batch.pso);
 
-        uint32_t root_consts[5] = { batch.dataPerMeshletAddress, batch.occlusionCulledMeshletsBufferOffset, (uint32_t)i, 0, 0 };
+        uint32_t root_consts[5] = { 0, batch.occlusionCulledMeshletsBufferOffset, (uint32_t)i, 0, 0 };
         pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
 
         pCommandList->DispatchMeshIndirect(pIndirectCommandBuffer, sizeof(uint3) * (uint32_t)i);

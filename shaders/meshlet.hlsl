@@ -12,12 +12,6 @@ cbuffer _ : register(b0)
     uint c_mergedMeshletCount;
 };
 
-uint2 LoadDataPerMeshlet(uint meshlet_index)
-{
-    ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
-    return constantBuffer.Load2(c_dataPerMeshletAddress + sizeof(uint2) * meshlet_index);
-}
-
 struct Meshlet
 {
     float3 center;
@@ -116,7 +110,9 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
 
     if (c_bFirstPass)
     {
-        uint2 dataPerMeshlet = LoadDataPerMeshlet(dispatchThreadID);
+        ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
+        uint2 dataPerMeshlet = constantBuffer.Load2(c_dataPerMeshletAddress + sizeof(uint2) * dispatchThreadID);
+
         sceneConstantAddress = dataPerMeshlet.x;
         meshletIndex = dataPerMeshlet.y;
 

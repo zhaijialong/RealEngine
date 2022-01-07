@@ -46,9 +46,7 @@ private:
     struct IndirectBatch
     {
         IGfxPipelineState* pso;
-        uint32_t dataPerMeshletAddress;
         uint32_t occlusionCulledMeshletsBufferOffset;
-        uint32_t dispatchIndex;
     };
     std::vector<IndirectBatch> m_indirectBatches;
 
