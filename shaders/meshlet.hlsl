@@ -90,12 +90,18 @@ bool Cull(Meshlet meshlet, uint meshletIndex, uint sceneConstantAddress)
             counterBuffer.InterlockedAdd(c_dispatchIndex * 4, 1, culledMeshlets);
 
             occlusionCulledMeshletsBuffer[c_occlusionCulledMeshletsBufferOffset + culledMeshlets] = uint2(sceneConstantAddress, meshletIndex);
+            
+            stats(STATS_1ST_PHASE_OCCLUSION_CULLED_MESHLET, 1);
+        }
+        else
+        {
+            stats(STATS_2ND_PHASE_OCCLUSION_CULLED_MESHLET, 1);
         }
 
-        stats(STATS_OCCLUSION_CULLED_MESHLET, 1);
         return false;
     }
 
+    stats(c_bFirstPass ? STATS_1ST_PHASE_RENDERED_MESHLET : STATS_2ND_PHASE_RENDERED_MESHLET, 1);
     return true;
 }
 
@@ -133,7 +139,14 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
         
         visible = Cull(meshlet, meshletIndex, sceneConstantAddress);
         
-        stats(visible ? STATS_RENDERED_TRIANGLE : STATS_CULLED_TRIANGLE, meshlet.triangleCount);
+        if (c_bFirstPass)
+        {
+            stats(visible ? STATS_1ST_PHASE_RENDERED_TRIANGLE : STATS_1ST_PHASE_CULLED_TRIANGLE, meshlet.triangleCount);
+        }
+        else
+        {
+            stats(visible ? STATS_2ND_PHASE_RENDERED_TRIANGLE : STATS_2ND_PHASE_CULLED_TRIANGLE, meshlet.triangleCount);
+        }
     }
     
     if (visible)
