@@ -26,6 +26,7 @@ public:
     void Present(const RenderGraphHandle& handle, GfxResourceState filnal_state);
 
     RenderGraphHandle Import(IGfxTexture* texture, GfxResourceState state);
+    RenderGraphHandle Import(IGfxBuffer* buffer, GfxResourceState state);
 
     RenderGraphResource* GetResource(const RenderGraphHandle& handle);
     const DirectedAcyclicGraph& GetDAG() const { return m_graph; }

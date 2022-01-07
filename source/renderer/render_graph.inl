@@ -3,35 +3,6 @@
 #include "render_graph.h"
 #include "render_graph_builder.h"
 
-class RenderGraphResourceNode : public DAGNode
-{
-public:
-    RenderGraphResourceNode(DirectedAcyclicGraph& graph, RenderGraphResource* resource, uint32_t version) :
-        DAGNode(graph)
-    {
-        m_pResource = resource;
-        m_version = version;
-    }
-
-    RenderGraphResource* GetResource() const { return m_pResource; }
-    uint32_t GetVersion() const { return m_version; }
-
-    virtual std::string GetGraphvizName() const override 
-    {
-        std::string s = m_pResource->GetName();
-        s.append("\nversion:");
-        s.append(std::to_string(m_version));
-        return s;
-    }
-
-    virtual const char* GetGraphvizColor() const { return !IsCulled() ? "lightskyblue1" : "lightskyblue4"; }
-    virtual const char* GetGraphvizShape() const { return "ellipse"; }
-
-private:
-    RenderGraphResource* m_pResource;
-    uint32_t m_version;
-};
-
 class RenderGraphEdge : public DAGEdge
 {
 public:
@@ -48,6 +19,46 @@ public:
 private:
     GfxResourceState m_usage;
     uint32_t m_subresource;
+};
+
+class RenderGraphResourceNode : public DAGNode
+{
+public:
+    RenderGraphResourceNode(DirectedAcyclicGraph& graph, RenderGraphResource* resource, uint32_t version) :
+        DAGNode(graph),
+        m_graph(graph)
+    {
+        m_pResource = resource;
+        m_version = version;
+    }
+
+    RenderGraphResource* GetResource() const { return m_pResource; }
+    uint32_t GetVersion() const { return m_version; }
+
+    virtual std::string GetGraphvizName() const override
+    {
+        std::string s = m_pResource->GetName();
+        s.append("\nversion:");
+        s.append(std::to_string(m_version));
+        if (m_version > 0)
+        {
+            std::vector<DAGEdge*> incoming_edges = m_graph.GetIncomingEdges(this);
+            RE_ASSERT(incoming_edges.size() == 1);
+            uint32_t subresource = ((RenderGraphEdge*)incoming_edges[0])->GetSubresource();
+            s.append("\nsubresource:");
+            s.append(std::to_string(subresource));
+        }
+        return s;
+    }
+
+    virtual const char* GetGraphvizColor() const { return !IsCulled() ? "lightskyblue1" : "lightskyblue4"; }
+    virtual const char* GetGraphvizShape() const { return "ellipse"; }
+
+private:
+    RenderGraphResource* m_pResource;
+    uint32_t m_version;
+
+    DirectedAcyclicGraph& m_graph;
 };
 
 class RenderGraphEdgeColorAttchment : public RenderGraphEdge
