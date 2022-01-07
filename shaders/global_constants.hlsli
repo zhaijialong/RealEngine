@@ -6,6 +6,11 @@ struct SceneConstant
     uint sceneConstantBufferSRV;
     uint2 _padding0;
 
+    uint occlusionCulledMeshletsBufferUAV;
+    uint occlusionCulledMeshletsCounterBufferUAV;
+    uint occlusionCulledMeshletsBufferSRV;
+    uint occlusionCulledMeshletsCounterBufferSRV;
+
     float3 lightDir;
     uint shadowRT;
     

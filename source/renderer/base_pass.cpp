@@ -6,6 +6,9 @@
 struct BasePassData
 {
     RenderGraphHandle inHZB;
+    RenderGraphHandle occlusionCulledMeshletsBuffer;
+    RenderGraphHandle occlusionCulledMeshletsCounterBuffer;
+    RenderGraphHandle indirectCommandBuffer;
 
     RenderGraphHandle outDiffuseRT;  //srgb : diffuse(xyz) + ao(a)
     RenderGraphHandle outSpecularRT; //srgb : specular(xyz), a: not used
@@ -14,9 +17,18 @@ struct BasePassData
     RenderGraphHandle outDepthRT;
 };
 
+static inline uint32_t roundup(uint32_t a, uint32_t b)
+{
+    return (a / b + 1) * b;
+}
+
 BasePass::BasePass(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
+
+    GfxComputePipelineDesc desc;
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_2nd_phase_indirect_command", "cs_6_6", {});
+    m_pBuildIndirectCommandPSO = pRenderer->GetPipelineState(desc, "2nd phase indirect command PSO");
 }
 
 RenderBatch& BasePass::AddBatch()
@@ -29,7 +41,34 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
 {
     MergeBatches();
 
+    uint32_t max_counter_num = roundup((uint32_t)m_mergedBatches.size(), 65536 / sizeof(uint));
+    uint32_t max_meshlets_num = roundup(m_nTotalMeshletCount, 65536 / sizeof(uint2));
+
     HZB* pHZB = m_pRenderer->GetHZB();
+
+    struct ClearCounterPassData
+    {
+        RenderGraphHandle counterBuffer;
+    };
+    auto clear_counter_pass = pRenderGraph->AddPass<ClearCounterPassData>("Clear Counter",
+        [&](ClearCounterPassData& data, RenderGraphBuilder& builder)
+        {
+            RenderGraphBuffer::Desc bufferDesc;
+            bufferDesc.stride = 4;
+            bufferDesc.size = bufferDesc.stride * max_counter_num;
+            bufferDesc.format = GfxFormat::R32F;
+            bufferDesc.usage = GfxBufferUsageRawBuffer | GfxBufferUsageUnorderedAccess;
+            data.counterBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "Occlusion Culled Meshlets Counter");
+            data.counterBuffer = builder.Write(data.counterBuffer, GfxResourceState::UnorderedAccess);
+        },
+        [=](const ClearCounterPassData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphBuffer* buffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.counterBuffer);
+
+            uint32_t clear_value[4] = { 0, 0, 0, 0 };
+            pCommandList->ClearUAV(buffer->GetBuffer(), buffer->GetUAV(), clear_value);
+            pCommandList->UavBarrier(buffer->GetBuffer()); //todo : support uav barrier in rendergraph
+        });
 
     auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass 1st phase",
         [&](BasePassData& data, RenderGraphBuilder& builder)
@@ -62,6 +101,15 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             {
                 data.inHZB = builder.Read(pHZB->Get1stPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
             }
+
+            RenderGraphBuffer::Desc bufferDesc;
+            bufferDesc.stride = sizeof(uint2);
+            bufferDesc.size = bufferDesc.stride * max_meshlets_num;
+            bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            data.occlusionCulledMeshletsBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "Occlusion Culled Meshlets");
+            data.occlusionCulledMeshletsBuffer = builder.Write(data.occlusionCulledMeshletsBuffer, GfxResourceState::UnorderedAccess);
+
+            data.occlusionCulledMeshletsCounterBuffer = builder.Write(clear_counter_pass->counterBuffer, GfxResourceState::UnorderedAccess);
         },
         [&](const BasePassData& data, IGfxCommandList* pCommandList)
         {
@@ -73,10 +121,40 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
     m_normalRT = gbuffer_pass->outNormalRT;
     m_emissiveRT = gbuffer_pass->outEmissiveRT;
     m_depthRT = gbuffer_pass->outDepthRT;
+
+    m_occlusionCulledMeshletsBuffer = gbuffer_pass->occlusionCulledMeshletsBuffer;
+    m_occlusionCulledMeshletsCounterBuffer = gbuffer_pass->occlusionCulledMeshletsCounterBuffer;
 }
 
 void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
 {
+    struct BuildIndirectCommandPassData
+    {
+        RenderGraphHandle culledMeshletsCounterBuffer;
+        RenderGraphHandle indirectCommandBuffer;
+    };
+
+    uint32_t max_counter_num = roundup((uint32_t)m_mergedBatches.size(), 65536 / sizeof(uint));
+
+    auto build_indirect_command = pRenderGraph->AddPass<BuildIndirectCommandPassData>("Build Indirect Command",
+        [&](BuildIndirectCommandPassData& data, RenderGraphBuilder& builder)
+        {
+            RenderGraphBuffer::Desc bufferDesc;
+            bufferDesc.stride = sizeof(uint3);
+            bufferDesc.size = bufferDesc.stride * max_counter_num;
+            bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            data.indirectCommandBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd Phase Indirect Command");
+            data.indirectCommandBuffer = builder.Write(data.indirectCommandBuffer, GfxResourceState::UnorderedAccess);
+
+            data.culledMeshletsCounterBuffer = builder.Read(m_occlusionCulledMeshletsCounterBuffer, GfxResourceState::ShaderResourceNonPS);
+        },
+        [=](const BuildIndirectCommandPassData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphBuffer* counterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.culledMeshletsCounterBuffer);
+            RenderGraphBuffer* commandBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectCommandBuffer);
+            BuildIndirectCommand(pCommandList, counterBuffer->GetSRV(), commandBuffer->GetUAV());
+        });
+
     HZB* pHZB = m_pRenderer->GetHZB();
 
     auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass 2nd phase",
@@ -92,10 +170,15 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             {
                 data.inHZB = builder.Read(pHZB->Get2ndPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
             }
+
+            data.occlusionCulledMeshletsBuffer = builder.Read(m_occlusionCulledMeshletsBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.occlusionCulledMeshletsCounterBuffer = builder.Read(m_occlusionCulledMeshletsCounterBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.indirectCommandBuffer = builder.Read(build_indirect_command->indirectCommandBuffer, GfxResourceState::IndirectArg);
         },
-        [&](const BasePassData& data, IGfxCommandList* pCommandList)
+        [=](const BasePassData& data, IGfxCommandList* pCommandList)
         {
-            Flush2ndPhaseBatches(pCommandList);
+            RenderGraphBuffer* indirectCommandBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectCommandBuffer);
+            Flush2ndPhaseBatches(pCommandList, indirectCommandBuffer->GetBuffer());
         });
 
     m_diffuseRT = gbuffer_pass->outDiffuseRT;
@@ -107,11 +190,15 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
 
 void BasePass::MergeBatches()
 {
+    m_nTotalMeshletCount = 0;
+
     for (size_t i = 0; i < m_batches.size(); ++i)
     {
         const RenderBatch& batch = m_batches[i];
         if (batch.pso->GetType() == GfxPipelineType::MeshShading)
         {
+            m_nTotalMeshletCount += batch.meshletCount;
+
             auto iter = m_mergedBatches.find(batch.pso);
             if (iter != m_mergedBatches.end())
             {
@@ -139,6 +226,9 @@ void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList)
 {
     CPU_EVENT("Render", "BasePass");
 
+    uint32_t occlusionCulledMeshletsBufferOffset = 0;
+    uint32_t dispatchIndex = 0;
+
     for (auto iter = m_mergedBatches.begin(); iter != m_mergedBatches.end(); ++iter)
     {
         IGfxPipelineState* pso = iter->first;
@@ -163,20 +253,50 @@ void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList)
 
         uint32_t dataPerMeshletAddress = m_pRenderer->AllocateSceneConstant(dataPerMeshlet.data(), sizeof(uint2) * (uint32_t)dataPerMeshlet.size());
 
-        uint32_t root_consts[2] = {dataPerMeshletAddress, batch.meshletCount};
+        uint32_t root_consts[5] = { dataPerMeshletAddress, occlusionCulledMeshletsBufferOffset, dispatchIndex, 1, batch.meshletCount };
         pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
 
         pCommandList->DispatchMesh((batch.meshletCount + 31) / 32, 1, 1); //hard coded 32 group size for AS
+
+        //second phase batch
+        m_indirectBatches.push_back({ pso, dataPerMeshletAddress, occlusionCulledMeshletsBufferOffset, dispatchIndex });
+
+        occlusionCulledMeshletsBufferOffset += batch.meshletCount;
+        dispatchIndex++;
     }
 
     m_mergedBatches.clear();
 }
 
-void BasePass::Flush2ndPhaseBatches(IGfxCommandList* pCommandList)
+void BasePass::Flush2ndPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer)
 {
+    for (size_t i = 0; i < m_indirectBatches.size(); ++i)
+    {
+        const IndirectBatch& batch = m_indirectBatches[i];
+        pCommandList->SetPipelineState(batch.pso);
+
+        uint32_t root_consts[5] = { batch.dataPerMeshletAddress, batch.occlusionCulledMeshletsBufferOffset, (uint32_t)i, 0, 0 };
+        pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
+
+        pCommandList->DispatchMeshIndirect(pIndirectCommandBuffer, sizeof(uint3) * (uint32_t)i);
+    }
+    m_indirectBatches.clear();
+
     for (size_t i = 0; i < m_nonMergedBatches.size(); ++i)
     {
         DrawBatch(pCommandList, m_nonMergedBatches[i]);
     }
     m_nonMergedBatches.clear();
+}
+
+void BasePass::BuildIndirectCommand(IGfxCommandList* pCommandList, IGfxDescriptor* pCounterBufferSRV, IGfxDescriptor* pCommandBufferUAV)
+{
+    pCommandList->SetPipelineState(m_pBuildIndirectCommandPSO);
+
+    uint32_t batch_count = (uint32_t)m_indirectBatches.size();
+
+    uint32_t consts[3] = { batch_count, pCounterBufferSRV->GetHeapIndex(), pCommandBufferUAV->GetHeapIndex() };
+    pCommandList->SetComputeConstants(0, consts, sizeof(consts));
+
+    pCommandList->Dispatch((batch_count + 63) / 64, 1, 1);
 }
