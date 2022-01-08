@@ -1,5 +1,6 @@
 #include "editor.h"
 #include "core/engine.h"
+#include "renderer/texture_loader.h"
 #include "utils/assert.h"
 #include "utils/system.h"
 #include "imgui/imgui.h"
@@ -340,7 +341,13 @@ void Editor::CreateRenderGraph()
         if (ExecuteCommand(cmd.c_str()) == 0)
         {
             std::string png_file = graph_file + ".png";
-            m_pRenderGraph.reset(pRenderer->CreateTexture2D(png_file, true));
+            
+            TextureLoader loader;
+            loader.Load(png_file, true);
+            loader.Resize(8000, 2000);
+
+            m_pRenderGraph.reset(pRenderer->CreateTexture2D(loader.GetWidth(), loader.GetHeight(), 1, loader.GetFormat(), GfxTextureUsageShaderResource, png_file));
+            pRenderer->UploadTexture(m_pRenderGraph->GetTexture(), loader.GetData());
         }
     }
 }

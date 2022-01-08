@@ -19,6 +19,8 @@ public:
     void* GetData() const { return m_pDecompressedData != nullptr ? m_pDecompressedData : m_pTextureData; }
     uint32_t GetDataSize() const { return m_textureSize; }
 
+    bool Resize(uint32_t width, uint32_t height);
+
 private:
     bool LoadDDS(bool srgb);
     bool LoadSTB(bool srgb);

@@ -4,6 +4,9 @@
 #include "ddspp/ddspp.h"
 #include <fstream>
 
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb//stb_image_resize.h"
+
 static inline GfxTextureType get_texture_type(ddspp::TextureType type, bool array)
 {
     switch (type)
@@ -218,6 +221,30 @@ bool TextureLoader::LoadSTB(bool srgb)
     m_height = y;
     m_format = srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM;
     m_textureSize = x * y * 4;    
+
+    return true;
+}
+
+bool TextureLoader::Resize(uint32_t width, uint32_t height)
+{
+    if (m_pDecompressedData == nullptr)
+    {
+        return false;
+    }
+
+    unsigned char* output_data = (unsigned char*)malloc(4 * width * height);
+    int result = stbir_resize_uint8((const unsigned char*)m_pDecompressedData, m_width, m_height, 0,
+        output_data, width, height, 0, 4);
+    if (!result || output_data == nullptr)
+    {
+        return false;
+    }
+
+    stbi_image_free(m_pDecompressedData);
+
+    m_width = width;
+    m_height = height;
+    m_pDecompressedData = output_data;
 
     return true;
 }
