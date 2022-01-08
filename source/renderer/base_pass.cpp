@@ -39,6 +39,8 @@ RenderBatch& BasePass::AddBatch()
 
 void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
 {
+    RENDER_GRAPH_EVENT(pRenderGraph, "BasePass 1st phase");
+
     MergeBatches();
 
     uint32_t max_counter_num = roundup((uint32_t)m_mergedBatches.size(), 65536 / sizeof(uint));
@@ -70,7 +72,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             pCommandList->UavBarrier(buffer->GetBuffer()); //todo : support uav barrier in rendergraph
         });
 
-    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass 1st phase",
+    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass",
         [&](BasePassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
@@ -128,6 +130,8 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
 
 void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
 {
+    RENDER_GRAPH_EVENT(pRenderGraph, "BasePass 2nd phase");
+
     struct BuildIndirectCommandPassData
     {
         RenderGraphHandle culledMeshletsCounterBuffer;
@@ -157,7 +161,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
 
     HZB* pHZB = m_pRenderer->GetHZB();
 
-    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass 2nd phase",
+    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass",
         [&](BasePassData& data, RenderGraphBuilder& builder)
         {
             data.outDiffuseRT = builder.WriteColor(0, m_diffuseRT, 0, GfxRenderPassLoadOp::Load);

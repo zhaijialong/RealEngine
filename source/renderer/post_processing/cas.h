@@ -2,17 +2,14 @@
 
 #include "../render_graph.h"
 
-struct CASPassData
-{
-    RenderGraphHandle inRT;
-    RenderGraphHandle outRT;
-};
-
 class CAS
 {
 public:
     CAS(Renderer* pRenderer);
 
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height);
+
+private:
     void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t width, uint32_t height);
 
 private:

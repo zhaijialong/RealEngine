@@ -15,6 +15,38 @@ CAS::CAS(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "CAS PSO");
 }
 
+RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height)
+{
+    struct CASPassData
+    {
+        RenderGraphHandle inRT;
+        RenderGraphHandle outRT;
+    };
+
+    auto cas_pass = pRenderGraph->AddPass<CASPassData>("CAS",
+        [&](CASPassData& data, RenderGraphBuilder& builder)
+        {
+            data.inRT = builder.Read(inputHandle, GfxResourceState::ShaderResourceNonPS);
+
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::RGBA8SRGB;
+            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            data.outRT = builder.Create<RenderGraphTexture>(desc, "CAS Output");
+            data.outRT = builder.Write(data.outRT, GfxResourceState::UnorderedAccess);
+        },
+        [=](const CASPassData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* inRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inRT);
+            RenderGraphTexture* outRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outRT);
+
+            Draw(pCommandList, inRT->GetSRV(), outRT->GetUAV(), width, height);
+        });
+
+    return cas_pass->outRT;
+}
+
 void CAS::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);

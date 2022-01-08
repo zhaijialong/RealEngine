@@ -11,6 +11,37 @@ ClusteredShading::ClusteredShading(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "ClusteredShading PSO");
 }
 
+RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGraphHandle diffuseRT, RenderGraphHandle specularRT, RenderGraphHandle normalRT, RenderGraphHandle emissiveRT,
+    RenderGraphHandle depthRT, RenderGraphHandle shadowRT, RenderGraphHandle ao, uint32_t width, uint32_t height)
+{
+    auto cluster_shading_pass = pRenderGraph->AddPass<ClusterShadingPassData>("ClusterShading",
+        [&](ClusterShadingPassData& data, RenderGraphBuilder& builder)
+        {
+            data.inDiffuseRT = builder.Read(diffuseRT, GfxResourceState::ShaderResourceNonPS);
+            data.inSpecularRT = builder.Read(specularRT, GfxResourceState::ShaderResourceNonPS);
+            data.inNormalRT = builder.Read(normalRT, GfxResourceState::ShaderResourceNonPS);
+            data.inEmissiveRT = builder.Read(emissiveRT, GfxResourceState::ShaderResourceNonPS);
+            data.inDepthRT = builder.Read(depthRT, GfxResourceState::ShaderResourceNonPS);
+            data.inShadowRT = builder.Read(shadowRT, GfxResourceState::ShaderResourceNonPS);
+            data.inAOTermRT = builder.Read(ao, GfxResourceState::ShaderResourceNonPS);
+
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::RGBA16F;
+            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            data.outHdrRT = builder.Create<RenderGraphTexture>(desc, "SceneColor RT");
+
+            data.outHdrRT = builder.Write(data.outHdrRT, GfxResourceState::UnorderedAccess);
+        },
+        [=](const ClusterShadingPassData& data, IGfxCommandList* pCommandList)
+        {
+            Draw(pCommandList, data, width, height);
+        });
+
+    return cluster_shading_pass->outHdrRT;
+}
+
 void ClusteredShading::Draw(IGfxCommandList* pCommandList, const ClusterShadingPassData& data, uint32_t width, uint32_t height)
 {
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();

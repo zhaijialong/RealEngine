@@ -313,6 +313,38 @@ Tonemapper::Tonemapper(Renderer* pRenderer, DisplayMode display_mode, ColorSpace
         m_saturation, m_crosstalk);
 }
 
+RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height)
+{
+    struct TonemapPassData
+    {
+        RenderGraphHandle inHdrRT;
+        RenderGraphHandle outLdrRT;
+    };
+
+    auto tonemap_pass = pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
+        [&](TonemapPassData& data, RenderGraphBuilder& builder)
+        {
+            data.inHdrRT = builder.Read(inputHandle, GfxResourceState::ShaderResourceNonPS);
+
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::RGBA8SRGB;
+            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            data.outLdrRT = builder.Create<RenderGraphTexture>(desc, "ToneMapping Output");
+            data.outLdrRT = builder.Write(data.outLdrRT, GfxResourceState::UnorderedAccess);
+        },
+        [=](const TonemapPassData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* hdrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inHdrRT);
+            RenderGraphTexture* ldrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outLdrRT);
+
+            Draw(pCommandList, hdrRT->GetSRV(), ldrRT->GetUAV(), width, height);
+        });
+
+    return tonemap_pass->outLdrRT;
+}
+
 void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* pLdrUAV, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);

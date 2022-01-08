@@ -19,6 +19,9 @@ public:
     template<typename Data, typename Setup, typename Exec>
     RenderGraphPass<Data>& AddPass(const char* name, const Setup& setup, const Exec& execute);
 
+    void BeginEvent(const char* name);
+    void EndEvent();
+
     void Clear();
     void Compile();
     void Execute(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
@@ -55,6 +58,8 @@ private:
     RenderGraphResourceAllocator m_resourceAllocator;
     DirectedAcyclicGraph m_graph;
 
+    std::vector<std::string> m_eventNames;
+
     std::unique_ptr<IGfxFence> m_pAsyncComputeFence;
     uint64_t m_nAsyncComputeFenceValue = 0;
 
@@ -76,5 +81,24 @@ private:
     };
     std::vector<PresentTarget> m_outputResources;
 };
+
+class RenderGraphEvent
+{
+public:
+    RenderGraphEvent(RenderGraph* graph, const char* name) : m_pRenderGraph(graph)
+    {
+        m_pRenderGraph->BeginEvent(name);
+    }
+
+    ~RenderGraphEvent()
+    {
+        m_pRenderGraph->EndEvent();
+    }
+
+private:
+    RenderGraph* m_pRenderGraph;
+};
+
+#define RENDER_GRAPH_EVENT(graph, event_name) RenderGraphEvent __graph_event__(graph, event_name)
 
 #include "render_graph.inl"

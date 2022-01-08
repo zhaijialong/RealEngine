@@ -26,6 +26,8 @@ HZB::HZB(Renderer* pRenderer) :
 
 void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
 {
+    RENDER_GRAPH_EVENT(graph, "HZB");
+
     CalcHZBSize();
 
     struct DepthReprojectionData
@@ -112,6 +114,8 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
 
 void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depthRT)
 {
+    RENDER_GRAPH_EVENT(graph, "HZB");
+
     struct InitHZBData
     {
         RenderGraphHandle inputDepthRT;

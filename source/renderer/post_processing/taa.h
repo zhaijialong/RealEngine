@@ -3,35 +3,15 @@
 #include "../render_graph.h"
 #include "../resource/texture_2d.h"
 
-struct TAAVelocityPassData
-{
-    RenderGraphHandle inputDepthRT;
-    RenderGraphHandle inputVelocityRT;
-    RenderGraphHandle outputMotionVectorRT;
-};
-
-struct TAAPassData
-{
-    RenderGraphHandle inputRT;
-    RenderGraphHandle historyRT;
-    RenderGraphHandle velocityRT;
-    RenderGraphHandle linearDepthRT;
-    RenderGraphHandle prevLinearDepthRT;
-    RenderGraphHandle outputRT;
-};
-
-struct TAAApplyPassData
-{
-    RenderGraphHandle inputRT;
-    RenderGraphHandle outputRT;
-    RenderGraphHandle outputHistoryRT;
-};
-
 class TAA
 {
 public:
     TAA(Renderer* pRenderer);
 
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
+        RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height);
+
+private:
     IGfxTexture* GetHistoryRT(uint32_t width, uint32_t height);
 
     void GenerateMotionVector(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* output, uint32_t width, uint32_t height);

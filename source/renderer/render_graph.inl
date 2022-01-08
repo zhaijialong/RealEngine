@@ -145,6 +145,12 @@ inline RenderGraphPass<Data>& RenderGraph::AddPass(const char* name, const Setup
 {
     auto pass = Allocate<RenderGraphPass<Data>>(name, m_graph, execute);
 
+    for (size_t i = 0; i < m_eventNames.size(); ++i)
+    {
+        pass->BeginEvent(m_eventNames[i]);
+    }
+    m_eventNames.clear();
+
     RenderGraphBuilder builder(this, pass);
     setup(pass->GetData(), builder);
 

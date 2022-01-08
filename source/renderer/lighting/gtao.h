@@ -33,13 +33,15 @@ class GTAO
 public:
     GTAO(Renderer* pRenderer);
 
-    void FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassData& data, uint32_t width, uint32_t height);
-    void Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_t width, uint32_t height);
-    void Denoise(IGfxCommandList* pCommandList, const GTAODenoisePassData& data, uint32_t width, uint32_t height);
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depthRT, RenderGraphHandle normalRT, uint32_t width, uint32_t height);
 
 private:
     void CreateHilbertLUT();
     void UpdateGTAOConstants(IGfxCommandList* pCommandList, uint32_t width, uint32_t height);
+
+    void FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassData& data, uint32_t width, uint32_t height);
+    void Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_t width, uint32_t height);
+    void Denoise(IGfxCommandList* pCommandList, const GTAODenoisePassData& data, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

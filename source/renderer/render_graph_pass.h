@@ -21,6 +21,8 @@ public:
     virtual const char* GetGraphvizColor() const { return !IsCulled() ? "darkgoldenrod1" : "darkgoldenrod4"; }
 
     void EnableAsyncCompute() { m_bAsyncCompute = true; }
+    void BeginEvent(const std::string& name) { m_eventNames.push_back(name); }
+    void EndEvent() { m_nEndEventNum++; }
 
 private:
     void Begin(const RenderGraph& graph, IGfxCommandList* pCommandList);
@@ -33,6 +35,9 @@ private:
 protected:
     std::string m_name;
     bool m_bAsyncCompute = false;
+
+    std::vector<std::string> m_eventNames;
+    uint32_t m_nEndEventNum = 0;
 
     struct ResourceBarrier
     {

@@ -74,15 +74,15 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
     CreateCommonResources();
 
-    m_pRenderGraph.reset(new RenderGraph(this));
+    m_pRenderGraph = std::make_unique<RenderGraph>(this);
     m_pGpuScene = std::make_unique<GpuScene>(this);
-    m_pHZB.reset(new HZB(this));
-    m_pLightingProcessor.reset(new LightingProcessor(this));
-    m_pPostProcessor.reset(new PostProcessor(this));
-    m_pGpuDebugLine.reset(new GpuDrivenDebugLine(this));
-    m_pGpuDebugPrint.reset(new GpuDrivenDebugPrint(this));
-    m_pGpuStats.reset(new GpuDrivenStats(this));
-    m_pBasePass.reset(new BasePass(this));
+    m_pHZB = std::make_unique<HZB>(this);
+    m_pBasePass = std::make_unique<BasePass>(this);
+    m_pLightingProcessor = std::make_unique<LightingProcessor>(this);
+    m_pPostProcessor = std::make_unique<PostProcessor>(this);
+    m_pGpuDebugLine = std::make_unique<GpuDrivenDebugLine>(this);
+    m_pGpuDebugPrint = std::make_unique<GpuDrivenDebugPrint>(this);
+    m_pGpuStats = std::make_unique<GpuDrivenStats>(this);
 }
 
 void Renderer::RenderFrame()

@@ -108,11 +108,23 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
 
 void RenderGraphPassBase::Execute(const RenderGraph& graph, IGfxCommandList* pCommandList)
 {
-    GPU_EVENT(pCommandList, m_name);
+    for (size_t i = 0; i < m_eventNames.size(); ++i)
+    {
+        pCommandList->BeginEvent(m_eventNames[i]);
+    }
 
-    Begin(graph, pCommandList);
-    ExecuteImpl(pCommandList);
-    End(pCommandList);
+    {
+        GPU_EVENT(pCommandList, m_name);
+
+        Begin(graph, pCommandList);
+        ExecuteImpl(pCommandList);
+        End(pCommandList);
+    }
+
+    for (uint32_t i = 0; i < m_nEndEventNum; ++i)
+    {
+        pCommandList->EndEvent();
+    }
 }
 
 void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pCommandList)

@@ -9,6 +9,16 @@ RenderGraph::RenderGraph(Renderer* pRenderer) :
     m_pAsyncComputeFence.reset(device->CreateFence("RenderGraph::m_pAsyncComputeFence"));
 }
 
+void RenderGraph::BeginEvent(const char* name)
+{
+    m_eventNames.push_back(name);
+}
+
+void RenderGraph::EndEvent()
+{
+    m_passes.back()->EndEvent();
+}
+
 void RenderGraph::Clear()
 {
     for (size_t i = 0; i < m_objFinalizer.size(); ++i)

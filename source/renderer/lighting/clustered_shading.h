@@ -20,6 +20,10 @@ class ClusteredShading
 public:
     ClusteredShading(Renderer* pRenderer);
 
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle diffuseRT, RenderGraphHandle specularRT, RenderGraphHandle normalRT, RenderGraphHandle emissiveRT,
+        RenderGraphHandle depthRT, RenderGraphHandle shadowRT, RenderGraphHandle ao, uint32_t width, uint32_t height);
+
+private:
     void Draw(IGfxCommandList* pCommandList, const ClusterShadingPassData& data, uint32_t width, uint32_t height);
 
 private:

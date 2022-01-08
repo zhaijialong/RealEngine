@@ -19,24 +19,16 @@ enum ColorSpace
     ColorSpace_Display
 };
 
-struct TonemapPassData
-{
-    RenderGraphHandle inHdrRT;
-    RenderGraphHandle outLdrRT;
-};
-
 class Tonemapper
 {
 public:
     Tonemapper(Renderer* pRenderer, DisplayMode display_mode, ColorSpace color_space);
 
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height);
+
+private:
     void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* pLdrUAV, uint32_t width, uint32_t height);
 
-private:
-    Renderer* m_pRenderer = nullptr;
-    IGfxPipelineState* m_pPSO = nullptr;
-
-private:
     // LPM Only
     void SetLPMConfig(bool con, bool soft, bool con2, bool clip, bool scaleOnly);
     void SetLPMColors(
@@ -45,6 +37,10 @@ private:
         float xyRedC[2], float xyGreenC[2], float xyBlueC[2], float xyWhiteC[2],
         float scaleC
     );
+
+private:
+    Renderer* m_pRenderer = nullptr;
+    IGfxPipelineState* m_pPSO = nullptr;
 
     bool m_shoulder; // Use optional extra shoulderContrast tuning (set to false if shoulderContrast is 1.0).
     bool m_con; // Use first RGB conversion matrix, if 'soft' then 'con' must be true also.

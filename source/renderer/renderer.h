@@ -163,14 +163,13 @@ private:
     IGfxPipelineState* m_pCopyPSO = nullptr;
 
     std::unique_ptr<class HZB> m_pHZB;
+    std::unique_ptr<class BasePass> m_pBasePass;
     std::unique_ptr<class LightingProcessor> m_pLightingProcessor;
     std::unique_ptr<class PostProcessor> m_pPostProcessor;
 
     std::unique_ptr<class GpuDrivenDebugLine> m_pGpuDebugLine;
     std::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;
     std::unique_ptr<class GpuDrivenStats> m_pGpuStats;
-
-    std::unique_ptr<class BasePass> m_pBasePass;
 
     std::vector<ComputeFunc> m_computePassBatchs;
     std::vector<IGfxBuffer*> m_computeBuffers;
