@@ -223,8 +223,8 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         if (m_bDoubleSided) defines.push_back("DOUBLE_SIDED=1");
 
         GfxMeshShadingPipelineDesc psoDesc;
-        psoDesc.as = pRenderer->GetShader("meshlet.hlsl", "main_as", "as_6_6", defines);
-        psoDesc.ms = pRenderer->GetShader("meshlet.hlsl", "main_ms", "ms_6_6", defines);
+        psoDesc.as = pRenderer->GetShader("meshlet_culling.hlsl", "main_as", "as_6_6", defines);
+        psoDesc.ms = pRenderer->GetShader("model_meshlet.hlsl", "main_ms", "ms_6_6", defines);
         psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
         psoDesc.rasterizer_state.cull_mode = m_bDoubleSided ? GfxCullMode::None : GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;

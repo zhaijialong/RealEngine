@@ -18,11 +18,11 @@ public:
     IGfxPipelineState* GetMeshletPSO();
 
     void UpdateConstants();
-    const MaterialConstant* GetConstants() const { return &m_materialCB; }
+    const ModelMaterialConstant* GetConstants() const { return &m_materialCB; }
 
 private:
     std::string m_name;
-    MaterialConstant m_materialCB = {};
+    ModelMaterialConstant m_materialCB = {};
 
     IGfxPipelineState* m_pPSO = nullptr;
     IGfxPipelineState* m_pShadowPSO = nullptr;

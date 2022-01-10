@@ -42,7 +42,7 @@ struct RenderBatch
     float3 center; //world space
     float radius = 0.0f;
     uint32_t meshletCount = 0;
-    uint32_t sceneConstantAddress = 0;
+    uint32_t instanceIndex = 0;
 
     void SetPipelineState(IGfxPipelineState* pPSO)
     {

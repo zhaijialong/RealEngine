@@ -176,7 +176,6 @@
     <ClCompile Include="source\world\directional_light.cpp" />
     <ClCompile Include="source\world\gltf_loader.cpp" />
     <ClCompile Include="source\world\mesh_material.cpp" />
-    <ClCompile Include="source\world\model.cpp" />
     <ClCompile Include="source\world\resource_cache.cpp" />
     <ClCompile Include="source\world\skeletal_mesh.cpp" />
     <ClCompile Include="source\world\skeleton.cpp" />
@@ -293,7 +292,6 @@
     <ClInclude Include="source\world\i_light.h" />
     <ClInclude Include="source\world\i_visible_object.h" />
     <ClInclude Include="source\world\mesh_material.h" />
-    <ClInclude Include="source\world\model.h" />
     <ClInclude Include="source\world\resource_cache.h" />
     <ClInclude Include="source\world\skeletal_mesh.h" />
     <ClInclude Include="source\world\skeleton.h" />
@@ -310,7 +308,9 @@
     <None Include="shaders\common.hlsli" />
     <None Include="shaders\global_constants.hlsli" />
     <None Include="shaders\debug.hlsli" />
+    <None Include="shaders\gpu_scene.hlsli" />
     <None Include="shaders\IntelTAA.hlsli" />
+    <None Include="shaders\meshlet.hlsli" />
     <None Include="shaders\model.hlsli" />
     <None Include="shaders\model_constants.hlsli" />
     <None Include="shaders\stats.hlsli" />
@@ -385,7 +385,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="shaders\meshlet.hlsl">
+    <FxCompile Include="shaders\meshlet_culling.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
@@ -396,6 +396,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="shaders\model_id.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\model_meshlet.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

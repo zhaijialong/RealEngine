@@ -2,6 +2,7 @@
 
 #include "render_graph.h"
 #include "render_batch.h"
+#include "gpu_scene.h"
 #include "resource/texture_2d.h"
 #include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
@@ -50,11 +51,11 @@ public:
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
-    void ClearGpuScene();
     IGfxBuffer* GetSceneBuffer() const;
-    uint32_t AllocateSceneBuffer(void* data, uint32_t size, uint32_t alignment = 4);
+    uint32_t AllocateSceneBuffer(const void* data, uint32_t size, uint32_t alignment = 4);
     void FreeSceneBuffer(uint32_t address);
-    uint32_t AllocateSceneConstant(void* data, uint32_t size);
+    uint32_t AllocateSceneConstant(const void* data, uint32_t size);
+    uint32_t AddInstance(const InstanceData& data);
 
     void RequestMouseHitTest(uint32_t x, uint32_t y);
     bool IsEnableMouseHitTest() const { return m_bEnableObjectIDRendering; }

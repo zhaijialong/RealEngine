@@ -1,5 +1,22 @@
+#include "common.hlsli"
 
-cbuffer RootConstants : register(b0)
+cbuffer InstanceCullingConstants : register(b0)
+{
+    uint c_objectCount;
+    uint c_objectListSRV;
+    uint c_visibleObjectListUAV;
+    uint c_culledObjectListUAV;
+};
+
+[numthreads(64, 1, 1)]
+void instance_culling(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+
+}
+
+
+
+cbuffer IndirectCommandConstants : register(b0)
 {
     uint c_dispatchCount;
     uint c_counterBufferSRV;
@@ -20,5 +37,4 @@ void build_2nd_phase_indirect_command(uint3 dispatchThreadID : SV_DispatchThread
 
     uint cullmeshletsCount = counterBuffer.Load(dispatchIndex * 4);
     commandBuffer[dispatchIndex] = uint3((cullmeshletsCount + 31) / 32, 1, 1);
-
 }

@@ -1,31 +1,6 @@
 #pragma once
 
-struct ModelConstant
-{
-    uint meshletCount;
-    uint meshletBufferAddress;
-    uint meshletVerticesBufferAddress;
-    uint meshletIndicesBufferAddress;
-
-    uint posBufferAddress;
-    uint uvBufferAddress;
-    uint normalBufferAddress;
-    uint tangentBufferAddress;
-    
-    uint prevPosBuffer;
-    uint objectID;
-    uint _padding;
-    float scale;
-    
-    float3 center;
-    float radius;
-    
-    float4x4 mtxWorld;
-    float4x4 mtxWorldInverseTranspose;
-    float4x4 mtxPrevWorld;
-};
-
-struct MaterialConstant
+struct ModelMaterialConstant
 {
     uint albedoTexture;
     uint metallicRoughnessTexture;
@@ -50,18 +25,9 @@ struct MaterialConstant
     float _padding;
 };
 
-struct ModelInstanceConstant
-{
-    ModelConstant modelCB;
-    MaterialConstant materialCB;
-};
-
 #ifndef __cplusplus
 cbuffer RootConstants : register(b0)
 {
-    uint c_SceneConstantAddress;
+    uint c_InstanceIndex;
 };
-
-ConstantBuffer<ModelConstant> ModelCB : register(b1);
-ConstantBuffer<MaterialConstant> MaterialCB : register(b2);
 #endif

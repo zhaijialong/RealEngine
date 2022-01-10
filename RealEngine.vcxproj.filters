@@ -172,9 +172,6 @@
     <ClCompile Include="source\world\directional_light.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
-    <ClCompile Include="source\world\model.cpp">
-      <Filter>source\world</Filter>
-    </ClCompile>
     <ClCompile Include="source\world\sky_sphere.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
@@ -540,9 +537,6 @@
     <ClInclude Include="source\world\i_visible_object.h">
       <Filter>source\world</Filter>
     </ClInclude>
-    <ClInclude Include="source\world\model.h">
-      <Filter>source\world</Filter>
-    </ClInclude>
     <ClInclude Include="source\world\sky_sphere.h">
       <Filter>source\world</Filter>
     </ClInclude>
@@ -747,6 +741,12 @@
     <None Include="shaders\model.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\gpu_scene.hlsli">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\meshlet.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">
@@ -800,7 +800,7 @@
     <FxCompile Include="shaders\model_outline.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\meshlet.hlsl">
+    <FxCompile Include="shaders\meshlet_culling.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\view_frustum.hlsl">
@@ -819,6 +819,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\instance_culling.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\model_meshlet.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

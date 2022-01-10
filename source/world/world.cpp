@@ -107,9 +107,6 @@ void World::ClearScene()
     m_objects.clear();
     m_lights.clear();
     m_pPrimaryLight = nullptr;
-
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    pRenderer->ClearGpuScene();
 }
 
 inline float3 str_to_float3(const std::string& str)

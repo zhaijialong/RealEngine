@@ -3,6 +3,19 @@
 #include "hierarchical_depth_buffer.h"
 #include "utils/profiler.h"
 
+struct FirstPhaseInstanceCullingData
+{
+    RenderGraphHandle objectListBuffer;
+    RenderGraphHandle visibleObjectListBuffer;
+    RenderGraphHandle culledObjectListBuffer;
+};
+
+struct SecondPhaseInstanceCullingData
+{
+    RenderGraphHandle objectListBuffer;
+    RenderGraphHandle visibleObjectListBuffer;
+};
+
 struct BasePassData
 {
     RenderGraphHandle inHZB;
@@ -27,6 +40,12 @@ BasePass::BasePass(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "instance_culling", "cs_6_6", { "FIRST_PHASE=1" });
+    m_p1stPhaseInstanceCullingPSO = pRenderer->GetPipelineState(desc, "1st phase instance culling PSO");
+
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "instance_culling", "cs_6_6", { });
+    m_p2ndPhaseInstanceCullingPSO = pRenderer->GetPipelineState(desc, "2nd phase instance culling PSO");
+
     desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_2nd_phase_indirect_command", "cs_6_6", {});
     m_pBuildIndirectCommandPSO = pRenderer->GetPipelineState(desc, "2nd phase indirect command PSO");
 }
@@ -248,10 +267,10 @@ void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList)
 
         for (size_t i = 0; i < batch.batches.size(); ++i)
         {
-            uint32_t sceneConstantAddress = batch.batches[i].sceneConstantAddress;
+            uint32_t instanceIndex = batch.batches[i].instanceIndex;
             for (size_t m = 0; m < batch.batches[i].meshletCount; ++m)
             {
-                dataPerMeshlet.emplace_back(sceneConstantAddress, (uint32_t)m);
+                dataPerMeshlet.emplace_back(instanceIndex, (uint32_t)m);
             }
         }
 

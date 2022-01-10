@@ -43,31 +43,30 @@ void StaticMesh::Tick(float delta_time)
 
 void StaticMesh::UpdateConstants()
 {
-    m_modelCB.meshletCount = m_nMeshletCount;
-    m_modelCB.meshletBufferAddress = m_meshletBufferAddress;
-    m_modelCB.meshletVerticesBufferAddress = m_meshletVerticesBufferAddress;
-    m_modelCB.meshletIndicesBufferAddress = m_meshletIndicesBufferAddress;
-
-    m_modelCB.posBufferAddress = m_posBufferAddress;
-    m_modelCB.uvBufferAddress = m_uvBufferAddress;
-    m_modelCB.normalBufferAddress = m_normalBufferAddress;
-    m_modelCB.tangentBufferAddress = m_tangentBufferAddress;
-    
-    m_modelCB.objectID = m_nID;
-    m_modelCB.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
-    m_modelCB.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
-    m_modelCB.radius = m_radius * m_modelCB.scale;
-
-    m_modelCB.mtxWorld = m_mtxWorld;
-    m_modelCB.mtxWorldInverseTranspose = transpose(inverse(m_mtxWorld));
-    m_modelCB.mtxPrevWorld = m_mtxPrevWorld;
-
     m_pMaterial->UpdateConstants();
 
-    ModelInstanceConstant consts;
-    consts.modelCB = m_modelCB;
-    consts.materialCB = *m_pMaterial->GetConstants();
-    m_sceneConstantAddress = m_pRenderer->AllocateSceneConstant(&consts, sizeof(ModelInstanceConstant));
+    m_instanceData.meshletCount = m_nMeshletCount;
+    m_instanceData.meshletBufferAddress = m_meshletBufferAddress;
+    m_instanceData.meshletVerticesBufferAddress = m_meshletVerticesBufferAddress;
+    m_instanceData.meshletIndicesBufferAddress = m_meshletIndicesBufferAddress;
+
+    m_instanceData.posBufferAddress = m_posBufferAddress;
+    m_instanceData.uvBufferAddress = m_uvBufferAddress;
+    m_instanceData.normalBufferAddress = m_normalBufferAddress;
+    m_instanceData.tangentBufferAddress = m_tangentBufferAddress;
+    
+    m_instanceData.objectID = m_nID;
+    m_instanceData.materialDataAddress = m_pRenderer->AllocateSceneConstant((void*)m_pMaterial->GetConstants(), sizeof(ModelMaterialConstant));
+    m_instanceData.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
+
+    m_instanceData.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
+    m_instanceData.radius = m_radius * m_instanceData.scale;
+
+    m_instanceData.mtxWorld = m_mtxWorld;
+    m_instanceData.mtxWorldInverseTranspose = transpose(inverse(m_mtxWorld));
+    m_instanceData.mtxPrevWorld = m_mtxPrevWorld;
+
+    m_nInstanceIndex = m_pRenderer->AddInstance(m_instanceData);
 }
 
 void StaticMesh::Render(Renderer* pRenderer)
@@ -111,13 +110,11 @@ bool StaticMesh::FrustumCull(const float4* planes, uint32_t plane_count) const
 
 void StaticMesh::Draw(RenderBatch& batch, IGfxPipelineState* pso)
 {
-    uint32_t root_consts[1] = { m_sceneConstantAddress };
+    uint32_t root_consts[1] = { m_nInstanceIndex };
 
     batch.label = m_name.c_str();
     batch.SetPipelineState(pso);
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
-    //batch.SetConstantBuffer(1, &m_modelCB, sizeof(ModelConstant));
-    //batch.SetConstantBuffer(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
 
     batch.SetIndexBuffer(m_pRenderer->GetSceneBuffer(), m_indexBufferAddress, m_indexBufferFormat);
     batch.DrawIndexed(m_nIndexCount);
@@ -127,14 +124,8 @@ void StaticMesh::Dispatch(RenderBatch& batch, IGfxPipelineState* pso)
 {
     batch.label = m_name.c_str();
     batch.SetPipelineState(pso);
-    batch.center = m_modelCB.center;
-    batch.radius = m_modelCB.radius;
+    batch.center = m_instanceData.center;
+    batch.radius = m_instanceData.radius;
     batch.meshletCount = m_nMeshletCount;
-    batch.sceneConstantAddress = m_sceneConstantAddress;
-
-    //uint32_t root_consts[1] = { m_sceneConstantAddress };
-    //batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
-    //batch.SetConstantBuffer(1, &m_modelCB, sizeof(ModelConstant));
-    //batch.SetConstantBuffer(2, m_pMaterial->GetConstants(), sizeof(MaterialConstant));
-    //batch.DispatchMesh((m_nMeshletCount + 31 ) / 32, 1, 1);
+    batch.instanceIndex = m_nInstanceIndex;
 }

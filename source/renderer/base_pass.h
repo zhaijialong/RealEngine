@@ -32,6 +32,11 @@ private:
     void BuildIndirectCommand(IGfxCommandList* pCommandList, IGfxDescriptor* pCounterBufferSRV, IGfxDescriptor* pCommandBufferUAV);
 private:
     Renderer* m_pRenderer;
+
+    IGfxPipelineState* m_p1stPhaseInstanceCullingPSO = nullptr;
+    IGfxPipelineState* m_p2ndPhaseInstanceCullingPSO = nullptr;
+
+
     IGfxPipelineState* m_pBuildIndirectCommandPSO = nullptr;
 
     std::vector<RenderBatch> m_batches;

@@ -52,9 +52,9 @@ void GpuScene::Free(uint32_t address)
     m_pSceneBufferAllocator->FreeAllocation(address);
 }
 
-void GpuScene::ClearSceneBuffer()
+void GpuScene::Update()
 {
-    m_pSceneBufferAllocator->Clear();
+    m_instanceDataAddress = m_pRenderer->AllocateSceneConstant(m_instanceData.data(), sizeof(InstanceData) * (uint32_t)m_instanceData.size());
 }
 
 uint32_t GpuScene::AllocateConstantBuffer(uint32_t size)
@@ -68,8 +68,15 @@ uint32_t GpuScene::AllocateConstantBuffer(uint32_t size)
     return address;
 }
 
-void GpuScene::ResetSceneConstants()
+uint32_t GpuScene::AddInstance(const InstanceData& data)
 {
+    m_instanceData.push_back(data);
+    return (uint32_t)m_instanceData.size() - 1;
+}
+
+void GpuScene::ResetFrameData()
+{
+    m_instanceData.clear();
     m_nConstantBufferOffset = 0;
 }
 

@@ -202,6 +202,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     SceneConstant sceneCB;
     sceneCB.sceneBufferSRV = m_pGpuScene->GetSceneBufferSRV()->GetHeapIndex();
     sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
+    sceneCB.instanceDataAddress = m_pGpuScene->GetInstanceDataAddress();
     sceneCB.occlusionCulledMeshletsBufferUAV = occlusionCulledMeshletsBuffer->GetUAV()->GetHeapIndex();
     sceneCB.occlusionCulledMeshletsBufferSRV = occlusionCulledMeshletsBuffer->GetSRV()->GetHeapIndex();
     sceneCB.occlusionCulledMeshletsCounterBufferUAV = occlusionCulledMeshletsCounterBuffer->GetUAV()->GetHeapIndex();
@@ -269,6 +270,7 @@ void Renderer::Render()
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
     m_pRenderGraph->Clear();
+    m_pGpuScene->Update();
     
     ImportPrevFrameTextures();
 
@@ -353,7 +355,7 @@ void Renderer::EndFrame()
 
     m_pStagingBufferAllocator[frame_index]->Reset();
     m_cbAllocator->Reset();
-    m_pGpuScene->ResetSceneConstants();
+    m_pGpuScene->ResetFrameData();
 
     m_pDevice->EndFrame();
 }
@@ -621,17 +623,12 @@ TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
     return texture;
 }
 
-void Renderer::ClearGpuScene()
-{
-    m_pGpuScene->ClearSceneBuffer();
-}
-
 IGfxBuffer* Renderer::GetSceneBuffer() const
 {
     return m_pGpuScene->GetSceneBuffer();
 }
 
-uint32_t Renderer::AllocateSceneBuffer(void* data, uint32_t size, uint32_t alignment)
+uint32_t Renderer::AllocateSceneBuffer(const void* data, uint32_t size, uint32_t alignment)
 {
     uint32_t address = m_pGpuScene->Allocate(size, alignment);
 
@@ -648,7 +645,7 @@ void Renderer::FreeSceneBuffer(uint32_t address)
     m_pGpuScene->Free(address);
 }
 
-uint32_t Renderer::AllocateSceneConstant(void* data, uint32_t size)
+uint32_t Renderer::AllocateSceneConstant(const void* data, uint32_t size)
 {
     uint32_t address = m_pGpuScene->AllocateConstantBuffer(size);
 
@@ -659,6 +656,11 @@ uint32_t Renderer::AllocateSceneConstant(void* data, uint32_t size)
     }
 
     return address;
+}
+
+uint32_t Renderer::AddInstance(const InstanceData& data)
+{
+    return m_pGpuScene->AddInstance(data);
 }
 
 inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t row_num, uint32_t d)

@@ -15,14 +15,14 @@ struct VSOutput
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {    
-    float4 pos = float4(LoadSceneBuffer<float3>(GetModelConstant().posBufferAddress, vertex_id), 1.0);
-    float4 worldPos = mul(GetModelConstant().mtxWorld, pos);
+    float4 pos = float4(LoadSceneBuffer<float3>(GetInstanceData(c_InstanceIndex).posBufferAddress, vertex_id), 1.0);
+    float4 worldPos = mul(GetInstanceData(c_InstanceIndex).mtxWorld, pos);
     
     VSOutput output;
     output.pos = mul(c_mtxShadowViewProjection, worldPos);
 
 #if ALPHA_TEST
-    output.uv = LoadSceneBuffer<float2>(GetModelConstant().uvBufferAddress, vertex_id);
+    output.uv = LoadSceneBuffer<float2>(GetInstanceData(c_InstanceIndex).uvBufferAddress, vertex_id);
 #endif
     
     return output;
@@ -31,6 +31,6 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 void ps_main(VSOutput input)
 {
 #if ALPHA_TEST
-    AlphaTest(input.uv);
+    AlphaTest(c_InstanceIndex, input.uv);
 #endif
 }

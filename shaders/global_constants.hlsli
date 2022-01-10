@@ -4,7 +4,8 @@ struct SceneConstant
 {
     uint sceneBufferSRV;
     uint sceneConstantBufferSRV;
-    uint2 _padding0;
+    uint instanceDataAddress;
+    uint _padding0;
 
     uint occlusionCulledMeshletsBufferUAV;
     uint occlusionCulledMeshletsCounterBufferUAV;
