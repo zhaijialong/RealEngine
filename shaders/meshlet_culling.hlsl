@@ -5,12 +5,13 @@
 
 cbuffer _ : register(b0)
 {
-    uint c_dataPerMeshletAddress;    
-    uint c_occlusionCulledMeshletsBufferOffset;
+    uint c_meshletListBufferSRV;
+    uint c_meshletListCounterSRV;
+
+    uint c_meshletListBufferOffset;
     uint c_dispatchIndex;
 
     uint c_bFirstPass;
-    uint c_mergedMeshletCount;
 };
 
 groupshared MeshletPayload s_Payload;
@@ -21,34 +22,31 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
     float3 center = mul(GetInstanceData(instanceIndex).mtxWorld, float4(meshlet.center, 1.0)).xyz;
     float radius = meshlet.radius * GetInstanceData(instanceIndex).scale;
 
-    if (c_bFirstPass)
+    // 1. frustum culling
+    for (uint i = 0; i < 6; ++i)
     {
-        // 1. frustum culling
-        for (uint i = 0; i < 6; ++i)
+        if (dot(center, CameraCB.culling.planes[i].xyz) + CameraCB.culling.planes[i].w + radius < 0)
         {
-            if (dot(center, CameraCB.culling.planes[i].xyz) + CameraCB.culling.planes[i].w + radius < 0)
-            {
-                stats(STATS_FRUSTUM_CULLED_MESHLET, 1);
-                return false;
-            }
-        }
-    
-#if !DOUBLE_SIDED
-        // 2. backface culling
-        int16_t4 cone = unpack_s8s16((int8_t4_packed) meshlet.cone);
-        float3 axis = cone.xyz / 127.0;
-        float cutoff = cone.w / 127.0;
-    
-        axis = normalize(mul(GetInstanceData(instanceIndex).mtxWorld, float4(axis, 0.0)).xyz);
-        float3 view = center - CameraCB.culling.viewPos;
-    
-        if (dot(view, -axis) >= cutoff * length(view) + radius)
-        {
-            stats(STATS_BACKFACE_CULLED_MESHLET, 1);
+            stats(STATS_FRUSTUM_CULLED_MESHLET, 1);
             return false;
         }
-#endif
     }
+    
+#if !DOUBLE_SIDED
+    // 2. backface culling
+    int16_t4 cone = unpack_s8s16((int8_t4_packed) meshlet.cone);
+    float3 axis = cone.xyz / 127.0;
+    float cutoff = cone.w / 127.0;
+    
+    axis = normalize(mul(GetInstanceData(instanceIndex).mtxWorld, float4(axis, 0.0)).xyz);
+    float3 view = center - CameraCB.culling.viewPos;
+    
+    if (dot(view, -axis) >= cutoff * length(view) + radius)
+    {
+        stats(STATS_BACKFACE_CULLED_MESHLET, 1);
+        return false;
+    }
+#endif
 
     // 3. occlusion culling
     Texture2D<float> hzbTexture = ResourceDescriptorHeap[c_bFirstPass ? SceneCB.firstPhaseCullingHZBSRV : SceneCB.secondPhaseCullingHZBSRV];
@@ -58,14 +56,14 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
     {
         if (c_bFirstPass)
         {
-            RWByteAddressBuffer counterBuffer = ResourceDescriptorHeap[SceneCB.occlusionCulledMeshletsCounterBufferUAV];
-            RWStructuredBuffer<uint2> occlusionCulledMeshletsBuffer = ResourceDescriptorHeap[SceneCB.occlusionCulledMeshletsBufferUAV];
+            RWBuffer<uint> counterBuffer = ResourceDescriptorHeap[SceneCB.secondPhaseMeshletsCounterUAV];
+            RWStructuredBuffer<uint2> occlusionCulledMeshletsBuffer = ResourceDescriptorHeap[SceneCB.secondPhaseMeshletsListUAV];
 
             uint culledMeshlets;
-            counterBuffer.InterlockedAdd(c_dispatchIndex * 4, 1, culledMeshlets);
+            InterlockedAdd(counterBuffer[c_dispatchIndex], 1, culledMeshlets);
 
-            occlusionCulledMeshletsBuffer[c_occlusionCulledMeshletsBufferOffset + culledMeshlets] = uint2(instanceIndex, meshletIndex);
-            
+            occlusionCulledMeshletsBuffer[c_meshletListBufferOffset + culledMeshlets] = uint2(instanceIndex, meshletIndex);
+    
             stats(STATS_1ST_PHASE_OCCLUSION_CULLED_MESHLET, 1);
         }
         else
@@ -84,34 +82,19 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
 void main_as(uint dispatchThreadID : SV_DispatchThreadID)
 {
     bool visible = false;
-
     uint instanceIndex = 0;
     uint meshletIndex = 0;
-    uint totalMeshletCount = 0;
-
-    if (c_bFirstPass)
-    {
-        ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
-        uint2 dataPerMeshlet = constantBuffer.Load2(c_dataPerMeshletAddress + sizeof(uint2) * dispatchThreadID);
-
-        instanceIndex = dataPerMeshlet.x;
-        meshletIndex = dataPerMeshlet.y;
-
-        totalMeshletCount = c_mergedMeshletCount;
-    }
-    else
-    {
-        StructuredBuffer<uint2> occlusionCulledMeshletsBuffer = ResourceDescriptorHeap[SceneCB.occlusionCulledMeshletsBufferSRV];
-        uint2 dataPerMeshlet = occlusionCulledMeshletsBuffer[c_occlusionCulledMeshletsBufferOffset + dispatchThreadID];
-        instanceIndex = dataPerMeshlet.x;
-        meshletIndex = dataPerMeshlet.y;
-        
-        ByteAddressBuffer counterBuffer = ResourceDescriptorHeap[SceneCB.occlusionCulledMeshletsCounterBufferSRV];
-        totalMeshletCount = counterBuffer.Load(c_dispatchIndex * 4);
-    }
+    
+    Buffer<uint> counterBuffer = ResourceDescriptorHeap[c_meshletListCounterSRV];
+    uint totalMeshletCount = counterBuffer[c_dispatchIndex];
     
     if (dispatchThreadID < totalMeshletCount)
     {
+        StructuredBuffer<uint2> meshletsListBuffer = ResourceDescriptorHeap[c_meshletListBufferSRV];
+        uint2 dataPerMeshlet = meshletsListBuffer[c_meshletListBufferOffset + dispatchThreadID];
+        instanceIndex = dataPerMeshlet.x;
+        meshletIndex = dataPerMeshlet.y;
+        
         Meshlet meshlet = LoadSceneBuffer<Meshlet>(GetInstanceData(instanceIndex).meshletBufferAddress, meshletIndex);
         
         visible = Cull(meshlet, instanceIndex, meshletIndex);

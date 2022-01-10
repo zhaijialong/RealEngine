@@ -7,10 +7,9 @@ struct SceneConstant
     uint instanceDataAddress;
     uint _padding0;
 
-    uint occlusionCulledMeshletsBufferUAV;
-    uint occlusionCulledMeshletsCounterBufferUAV;
-    uint occlusionCulledMeshletsBufferSRV;
-    uint occlusionCulledMeshletsCounterBufferSRV;
+    uint secondPhaseMeshletsListUAV;
+    uint secondPhaseMeshletsCounterUAV;
+    uint2 _padding1;
 
     float3 lightDir;
     uint shadowRT;

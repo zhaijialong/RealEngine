@@ -194,8 +194,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     RenderGraphTexture* firstPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(firstPhaseHZBHandle);
     RenderGraphTexture* secondPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(secondPhaseHZBHandle);
 
-    RenderGraphHandle occlusionCulledMeshletsBufferHandle = m_pBasePass->GetOcclusionCulledMeshletsBuffer();
-    RenderGraphHandle occlusionCulledMeshletsCounterBufferHandle = m_pBasePass->GetOcclusionCulledMeshletsCounterBuffer();
+    RenderGraphHandle occlusionCulledMeshletsBufferHandle = m_pBasePass->GetSecondPhaseMeshletListBuffer();
+    RenderGraphHandle occlusionCulledMeshletsCounterBufferHandle = m_pBasePass->GetSecondPhaseMeshletListCounterBuffer();
     RenderGraphBuffer* occlusionCulledMeshletsBuffer = (RenderGraphBuffer*)m_pRenderGraph->GetResource(occlusionCulledMeshletsBufferHandle);
     RenderGraphBuffer* occlusionCulledMeshletsCounterBuffer = (RenderGraphBuffer*)m_pRenderGraph->GetResource(occlusionCulledMeshletsCounterBufferHandle);
 
@@ -203,10 +203,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.sceneBufferSRV = m_pGpuScene->GetSceneBufferSRV()->GetHeapIndex();
     sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
     sceneCB.instanceDataAddress = m_pGpuScene->GetInstanceDataAddress();
-    sceneCB.occlusionCulledMeshletsBufferUAV = occlusionCulledMeshletsBuffer->GetUAV()->GetHeapIndex();
-    sceneCB.occlusionCulledMeshletsBufferSRV = occlusionCulledMeshletsBuffer->GetSRV()->GetHeapIndex();
-    sceneCB.occlusionCulledMeshletsCounterBufferUAV = occlusionCulledMeshletsCounterBuffer->GetUAV()->GetHeapIndex();
-    sceneCB.occlusionCulledMeshletsCounterBufferSRV = occlusionCulledMeshletsCounterBuffer->GetSRV()->GetHeapIndex();
+    sceneCB.secondPhaseMeshletsListUAV = occlusionCulledMeshletsBuffer->GetUAV()->GetHeapIndex();
+    sceneCB.secondPhaseMeshletsCounterUAV = occlusionCulledMeshletsCounterBuffer->GetUAV()->GetHeapIndex();
     sceneCB.lightDir = light->GetLightDirection();
     //sceneCB.shadowRT = shadowMapRT->GetSRV()->GetHeapIndex();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();

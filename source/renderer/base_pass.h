@@ -21,13 +21,17 @@ public:
     RenderGraphHandle GetEmissiveRT() const { return m_emissiveRT; }
     RenderGraphHandle GetDepthRT() const { return m_depthRT; }
 
-    RenderGraphHandle GetOcclusionCulledMeshletsBuffer() const { return m_occlusionCulledMeshletsBuffer; }
-    RenderGraphHandle GetOcclusionCulledMeshletsCounterBuffer() const { return m_occlusionCulledMeshletsCounterBuffer; }
+    RenderGraphHandle GetSecondPhaseMeshletListBuffer() const { return m_secondPhaseMeshletListBuffer; }
+    RenderGraphHandle GetSecondPhaseMeshletListCounterBuffer() const { return m_secondPhaseMeshletListCounterBuffer; }
 
 private:
     void MergeBatches();
-    void Flush1stPhaseBatches(IGfxCommandList* pCommandList);
-    void Flush2ndPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer);
+
+    void ResetCounter(IGfxCommandList* pCommandList, RenderGraphBuffer* firstPhaseMeshletCounter, RenderGraphBuffer* secondPhaseObjectCounter, RenderGraphBuffer* secondPhaseMeshletCounter);
+    void InstanceCulling1stPhase(IGfxCommandList* pCommandList, IGfxDescriptor* cullingResultUAV, IGfxDescriptor* secondPhaseObjectListUAV, IGfxDescriptor* secondPhaseObjectListCounterUAV);
+
+    void Flush1stPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* pMeshletListSRV, IGfxDescriptor* pMeshletListCounterSRV);
+    void Flush2ndPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* pMeshletListSRV, IGfxDescriptor* pMeshletListCounterSRV);
 
     void BuildIndirectCommand(IGfxCommandList* pCommandList, IGfxDescriptor* pCounterBufferSRV, IGfxDescriptor* pCommandBufferUAV);
 private:
@@ -36,28 +40,28 @@ private:
     IGfxPipelineState* m_p1stPhaseInstanceCullingPSO = nullptr;
     IGfxPipelineState* m_p2ndPhaseInstanceCullingPSO = nullptr;
 
-
+    IGfxPipelineState* m_pBuildMeshletListPSO = nullptr;
+    IGfxPipelineState* m_pBuildInstanceCullingCommandPSO = nullptr;
     IGfxPipelineState* m_pBuildIndirectCommandPSO = nullptr;
 
-    std::vector<RenderBatch> m_batches;
-
-    struct MergedBatch
-    {
-        std::vector<RenderBatch> batches;
-        uint32_t meshletCount;
-    };
-    std::map<IGfxPipelineState*, MergedBatch> m_mergedBatches;
+    std::vector<RenderBatch> m_instances;
 
     struct IndirectBatch
     {
         IGfxPipelineState* pso;
-        uint32_t occlusionCulledMeshletsBufferOffset;
+        uint32_t originMeshletListAddress;
+        uint32_t originMeshletCount;
+        uint32_t meshletListBufferOffset;
     };
     std::vector<IndirectBatch> m_indirectBatches;
 
-    std::vector<RenderBatch> m_nonMergedBatches;
+    std::vector<RenderBatch> m_nonGpuDrivenBatches;
 
+    uint32_t m_nTotalInstanceCount = 0;
     uint32_t m_nTotalMeshletCount = 0;
+
+
+    uint32_t m_instanceIndexAddress = 0; //[0, 24, 27, 122, ...] size : m_nTotalInstanceCount
 
     RenderGraphHandle m_diffuseRT;
     RenderGraphHandle m_specularRT;
@@ -65,6 +69,9 @@ private:
     RenderGraphHandle m_emissiveRT;
     RenderGraphHandle m_depthRT;
 
-    RenderGraphHandle m_occlusionCulledMeshletsBuffer;
-    RenderGraphHandle m_occlusionCulledMeshletsCounterBuffer;
+    RenderGraphHandle m_secondPhaseObjectListBuffer;
+    RenderGraphHandle m_secondPhaseObjectListCounterBuffer;
+
+    RenderGraphHandle m_secondPhaseMeshletListBuffer;
+    RenderGraphHandle m_secondPhaseMeshletListCounterBuffer;
 };
