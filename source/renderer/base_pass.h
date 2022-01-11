@@ -29,10 +29,12 @@ private:
 
     void ResetCounter(IGfxCommandList* pCommandList, RenderGraphBuffer* firstPhaseMeshletCounter, RenderGraphBuffer* secondPhaseObjectCounter, RenderGraphBuffer* secondPhaseMeshletCounter);
     void InstanceCulling1stPhase(IGfxCommandList* pCommandList, IGfxDescriptor* cullingResultUAV, IGfxDescriptor* secondPhaseObjectListUAV, IGfxDescriptor* secondPhaseObjectListCounterUAV);
+    void InstanceCulling2ndPhase(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* cullingResultUAV, IGfxDescriptor* objectListBufferSRV, IGfxDescriptor* objectListCounterBufferSRV);
 
     void Flush1stPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* pMeshletListSRV, IGfxDescriptor* pMeshletListCounterSRV);
     void Flush2ndPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* pMeshletListSRV, IGfxDescriptor* pMeshletListCounterSRV);
 
+    void BuildMeshletList(IGfxCommandList* pCommandList, IGfxDescriptor* cullingResultSRV, IGfxDescriptor* meshletListBufferUAV, IGfxDescriptor* meshletListCounterBufferUAV);
     void BuildIndirectCommand(IGfxCommandList* pCommandList, IGfxDescriptor* pCounterBufferSRV, IGfxDescriptor* pCommandBufferUAV);
 private:
     Renderer* m_pRenderer;

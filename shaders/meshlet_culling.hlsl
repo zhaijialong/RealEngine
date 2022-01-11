@@ -3,7 +3,7 @@
 #include "debug.hlsli"
 #include "stats.hlsli"
 
-cbuffer _ : register(b0)
+cbuffer MeshletCullingConstant : register(b0)
 {
     uint c_meshletListBufferSRV;
     uint c_meshletListCounterSRV;

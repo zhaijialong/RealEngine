@@ -147,9 +147,6 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             InstanceCulling1stPhase(pCommandList, cullingResultBuffer->GetUAV(), secondPhaseObjectListBuffer->GetUAV(), secondPhaseObjectListCounterBuffer->GetUAV());
         });
 
-    m_secondPhaseObjectListBuffer = instance_culling_pass->secondPhaseObjectListBuffer;
-    m_secondPhaseObjectListCounterBuffer = instance_culling_pass->secondPhaseObjectListCounterBuffer;
-
     struct BuildMeshletListData
     {
         RenderGraphHandle cullingResultBuffer;
@@ -176,21 +173,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             RenderGraphBuffer* meshletListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.meshletListBuffer);
             RenderGraphBuffer* meshletListCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.meshletListCounterBuffer);
 
-            pCommandList->SetPipelineState(m_pBuildMeshletListPSO);
-
-            for (size_t i = 0; i < m_indirectBatches.size(); ++i)
-            {
-                uint32_t consts[7] = {
-                    (uint32_t)i,
-                    cullingResultBuffer->GetSRV()->GetHeapIndex(),
-                    m_indirectBatches[i].originMeshletListAddress,
-                    m_indirectBatches[i].originMeshletCount,
-                    m_indirectBatches[i].meshletListBufferOffset,
-                    meshletListBuffer->GetUAV()->GetHeapIndex(),
-                    meshletListCounterBuffer->GetUAV()->GetHeapIndex() };
-                pCommandList->SetComputeConstants(1, consts, sizeof(consts));
-                pCommandList->Dispatch((m_indirectBatches[i].originMeshletCount + 63) / 64, 1, 1);
-            }
+            BuildMeshletList(pCommandList, cullingResultBuffer->GetSRV(), meshletListBuffer->GetUAV(), meshletListCounterBuffer->GetUAV());
         });
 
     struct BuildIndirectCommandPassData
@@ -278,6 +261,9 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
     m_emissiveRT = gbuffer_pass->outEmissiveRT;
     m_depthRT = gbuffer_pass->outDepthRT;
 
+    m_secondPhaseObjectListBuffer = instance_culling_pass->secondPhaseObjectListBuffer;
+    m_secondPhaseObjectListCounterBuffer = instance_culling_pass->secondPhaseObjectListCounterBuffer;
+
     m_secondPhaseMeshletListBuffer = gbuffer_pass->occlusionCulledMeshletsBuffer;
     m_secondPhaseMeshletListCounterBuffer = gbuffer_pass->occlusionCulledMeshletsCounterBuffer;
 }
@@ -361,12 +347,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             pCommandList->ClearUAV(cullingResultBuffer->GetBuffer(), cullingResultBuffer->GetUAV(), clear_value);
             pCommandList->UavBarrier(cullingResultBuffer->GetBuffer());
 
-            pCommandList->SetPipelineState(m_p2ndPhaseInstanceCullingPSO);
-
-            uint32_t root_consts[3] = { objectListBuffer->GetSRV()->GetHeapIndex(), objectListCounterBuffer->GetSRV()->GetHeapIndex(), cullingResultBuffer->GetUAV()->GetHeapIndex() };
-            pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
-
-            pCommandList->DispatchIndirect(indirectCommandBuffer->GetBuffer(), 0);
+            InstanceCulling2ndPhase(pCommandList, indirectCommandBuffer->GetBuffer(), cullingResultBuffer->GetUAV(), objectListBuffer->GetSRV(), objectListCounterBuffer->GetSRV());
         });
 
     struct BuildMeshletListData
@@ -389,21 +370,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             RenderGraphBuffer* meshletListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.meshletListBuffer);
             RenderGraphBuffer* meshletListCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.meshletListCounterBuffer);
 
-            pCommandList->SetPipelineState(m_pBuildMeshletListPSO);
-
-            for (size_t i = 0; i < m_indirectBatches.size(); ++i)
-            {
-                uint32_t consts[7] = {
-                    (uint32_t)i,
-                    cullingResultBuffer->GetSRV()->GetHeapIndex(),
-                    m_indirectBatches[i].originMeshletListAddress,
-                    m_indirectBatches[i].originMeshletCount,
-                    m_indirectBatches[i].meshletListBufferOffset,
-                    meshletListBuffer->GetUAV()->GetHeapIndex(),
-                    meshletListCounterBuffer->GetUAV()->GetHeapIndex() };
-                pCommandList->SetComputeConstants(1, consts, sizeof(consts));
-                pCommandList->Dispatch((m_indirectBatches[i].originMeshletCount + 63) / 64, 1, 1);
-            }
+            BuildMeshletList(pCommandList, cullingResultBuffer->GetSRV(), meshletListBuffer->GetUAV(), meshletListCounterBuffer->GetUAV());
         });
 
     struct BuildIndirectCommandPassData
@@ -558,9 +525,19 @@ void BasePass::InstanceCulling1stPhase(IGfxCommandList* pCommandList, IGfxDescri
     pCommandList->SetPipelineState(m_p1stPhaseInstanceCullingPSO);
 
     uint32_t instance_count = m_nTotalInstanceCount;
-    uint32_t root_consts[5] = { m_instanceIndexAddress, m_nTotalInstanceCount, cullingResultUAV->GetHeapIndex(), secondPhaseObjectListUAV->GetHeapIndex(), secondPhaseObjectListCounterUAV->GetHeapIndex() };
+    uint32_t root_consts[5] = { m_instanceIndexAddress, instance_count, cullingResultUAV->GetHeapIndex(), secondPhaseObjectListUAV->GetHeapIndex(), secondPhaseObjectListCounterUAV->GetHeapIndex() };
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
     pCommandList->Dispatch((instance_count + 63) / 64, 1, 1);
+}
+
+void BasePass::InstanceCulling2ndPhase(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* cullingResultUAV, IGfxDescriptor* objectListBufferSRV, IGfxDescriptor* objectListCounterBufferSRV)
+{
+    pCommandList->SetPipelineState(m_p2ndPhaseInstanceCullingPSO);
+
+    uint32_t root_consts[3] = { objectListBufferSRV->GetHeapIndex(), objectListCounterBufferSRV->GetHeapIndex(), cullingResultUAV->GetHeapIndex() };
+    pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
+
+    pCommandList->DispatchIndirect(pIndirectCommandBuffer, 0);
 }
 
 void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* pMeshletListSRV, IGfxDescriptor* pMeshletListCounterSRV)
@@ -593,6 +570,25 @@ void BasePass::Flush2ndPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* p
     for (size_t i = 0; i < m_nonGpuDrivenBatches.size(); ++i)
     {
         DrawBatch(pCommandList, m_nonGpuDrivenBatches[i]);
+    }
+}
+
+void BasePass::BuildMeshletList(IGfxCommandList* pCommandList, IGfxDescriptor* cullingResultSRV, IGfxDescriptor* meshletListBufferUAV, IGfxDescriptor* meshletListCounterBufferUAV)
+{
+    pCommandList->SetPipelineState(m_pBuildMeshletListPSO);
+
+    for (size_t i = 0; i < m_indirectBatches.size(); ++i)
+    {
+        uint32_t consts[7] = {
+            (uint32_t)i,
+            cullingResultSRV->GetHeapIndex(),
+            m_indirectBatches[i].originMeshletListAddress,
+            m_indirectBatches[i].originMeshletCount,
+            m_indirectBatches[i].meshletListBufferOffset,
+            meshletListBufferUAV->GetHeapIndex(),
+            meshletListCounterBufferUAV->GetHeapIndex() };
+        pCommandList->SetComputeConstants(1, consts, sizeof(consts));
+        pCommandList->Dispatch((m_indirectBatches[i].originMeshletCount + 63) / 64, 1, 1);
     }
 }
 

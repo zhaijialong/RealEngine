@@ -19,15 +19,10 @@ cbuffer InstanceCullingConstants : register(b0)
 [numthreads(64, 1, 1)]
 void instance_culling(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
-
 #if FIRST_PHASE
     uint instanceCount = c_instanceCount;
-    uint instanceIndex = constantBuffer.Load(c_instanceIndicesAddress + sizeof(uint) * dispatchThreadID.x);
 #else    
-    Buffer<uint> secondPhaseInstanceList = ResourceDescriptorHeap[c_instanceListSRV];
     Buffer<uint> secondPhaseInstanceListCounter = ResourceDescriptorHeap[c_instanceListCounterSRV];
-    uint instanceIndex = secondPhaseInstanceList[dispatchThreadID.x];
     uint instanceCount = secondPhaseInstanceListCounter[0];
 #endif
 
@@ -35,6 +30,14 @@ void instance_culling(uint3 dispatchThreadID : SV_DispatchThreadID)
     {
         return;
     }
+
+#if FIRST_PHASE
+    ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
+    uint instanceIndex = constantBuffer.Load(c_instanceIndicesAddress + sizeof(uint) * dispatchThreadID.x);
+#else
+    Buffer<uint> secondPhaseInstanceList = ResourceDescriptorHeap[c_instanceListSRV];
+    uint instanceIndex = secondPhaseInstanceList[dispatchThreadID.x];
+#endif
 
     InstanceData instanceData = GetInstanceData(instanceIndex);
 
