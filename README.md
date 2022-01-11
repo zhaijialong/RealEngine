@@ -2,14 +2,14 @@
 
 my toy engine, mainly for rendering expariment and learning
 
-requires a GPU which support DX12 Ultimate
+requires a GPU which supports DX12 Ultimate
 
 ## some highlights
 
 * utilize latest DX12 features, such as raytracing, mesh shaders, HLSL 2021, etc.
 * render graph based architecture, with automatically barriers and transient resources management
 * fully bindless resources with SM6.6
-* two-phase occlusion culling (like Ubi's GPU driven pipeline)
+* two-phase occlusion culling (like Ubi's GPU driven pipeline). no matter how many different meshes and textures, always two drawcalls(indirect DispatchMesh) per PSO.
 * print functions which can be used shaders
 
 ## planned features
