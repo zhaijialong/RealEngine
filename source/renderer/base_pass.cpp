@@ -71,8 +71,8 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
 
     MergeBatches();
 
-    uint32_t max_dispatch_num = roundup((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint));
-    uint32_t max_instance_num = roundup(m_nTotalInstanceCount, 65536 / sizeof(uint));
+    uint32_t max_dispatch_num = roundup((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint32_t));
+    uint32_t max_instance_num = roundup(m_nTotalInstanceCount, 65536 / sizeof(uint8_t));
     uint32_t max_meshlets_num = roundup(m_nTotalMeshletCount, 65536 / sizeof(uint2));
 
     HZB* pHZB = m_pRenderer->GetHZB();
@@ -121,13 +121,16 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         [&](InstanceCullingData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc bufferDesc;
-            bufferDesc.stride = 4;
+            bufferDesc.stride = 1;
             bufferDesc.size = bufferDesc.stride * max_instance_num;
-            bufferDesc.format = GfxFormat::R32UI;
+            bufferDesc.format = GfxFormat::R8UI;
             bufferDesc.usage = GfxBufferUsageTypedBuffer | GfxBufferUsageUnorderedAccess;
             data.cullingResultBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st phase culling result");
             data.cullingResultBuffer = builder.Write(data.cullingResultBuffer, GfxResourceState::UnorderedAccess);
 
+            bufferDesc.stride = 4;
+            bufferDesc.size = bufferDesc.stride * max_instance_num;
+            bufferDesc.format = GfxFormat::R32UI;
             data.secondPhaseObjectListBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase object list");
             data.secondPhaseObjectListBuffer = builder.Write(data.secondPhaseObjectListBuffer, GfxResourceState::UnorderedAccess);
 
@@ -274,8 +277,8 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
 
     HZB* pHZB = m_pRenderer->GetHZB();
 
-    uint32_t max_dispatch_num = roundup((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint));
-    uint32_t max_instance_num = roundup(m_nTotalInstanceCount, 65536 / sizeof(uint));
+    uint32_t max_dispatch_num = roundup((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint32_t));
+    uint32_t max_instance_num = roundup(m_nTotalInstanceCount, 65536 / sizeof(uint8_t));
     uint32_t max_meshlets_num = roundup(m_nTotalMeshletCount, 65536 / sizeof(uint2));
 
     struct BuildCullingCommandData
@@ -320,9 +323,9 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         [&](InstanceCullingData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc bufferDesc;
-            bufferDesc.stride = 4;
+            bufferDesc.stride = 1;
             bufferDesc.size = bufferDesc.stride * max_instance_num;
-            bufferDesc.format = GfxFormat::R32UI;
+            bufferDesc.format = GfxFormat::R8UI;
             bufferDesc.usage = GfxBufferUsageTypedBuffer | GfxBufferUsageUnorderedAccess;
             data.cullingResultBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase culling result");
             data.cullingResultBuffer = builder.Write(data.cullingResultBuffer, GfxResourceState::UnorderedAccess);

@@ -27,6 +27,8 @@ ID3D12Heap* D3D12Heap::GetHeap() const
 
 bool D3D12Heap::Create()
 {
+    RE_ASSERT(m_desc.size % (64 * 1024) == 0);
+
     D3D12MA::ALLOCATION_DESC allocationDesc = {};
     allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
     allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_COMMITTED;

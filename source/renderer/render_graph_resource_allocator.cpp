@@ -181,7 +181,7 @@ IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uin
 void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
 {
     GfxHeapDesc heapDesc;
-    heapDesc.size = size;
+    heapDesc.size = std::max(size, 64u * 1024);
 
     char heapName[32];
     std::sprintf(heapName, "RG Heap %.1f MB", heapDesc.size / (1024.0f * 1024.0f));
