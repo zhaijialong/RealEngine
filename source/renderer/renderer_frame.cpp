@@ -24,7 +24,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             RenderGraphTexture::Desc desc;
             desc.width = desc.height = 4096;
             desc.format = GfxFormat::D16;
-            desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageDepthStencil;
 
             data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "ShadowMap");
             data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, 1.0f);
@@ -90,7 +90,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
-            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageRenderTarget;
             desc.format = GfxFormat::RGBA16F;
             data.outVelocityRT = builder.Create<RenderGraphTexture>(desc, "Velocity RT");
 
@@ -119,7 +119,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             desc.format = GfxFormat::R32F;
             data.outputLinearDepthRT = builder.Create<RenderGraphTexture>(desc, "LinearDepth RT");
 
@@ -169,7 +169,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
                 RenderGraphTexture::Desc desc;
                 desc.width = m_nWindowWidth;
                 desc.height = m_nWindowHeight;
-                desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
+                desc.usage = GfxTextureUsageRenderTarget;
                 desc.format = GfxFormat::R32UI;
                 data.idTexture = builder.Create<RenderGraphTexture>(desc, "Object ID");
 

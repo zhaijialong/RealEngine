@@ -29,7 +29,7 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageUnorderedAccess;
             data.outHdrRT = builder.Create<RenderGraphTexture>(desc, "SceneColor RT");
 
             data.outHdrRT = builder.Write(data.outHdrRT, GfxResourceState::UnorderedAccess);

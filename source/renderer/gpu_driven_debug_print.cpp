@@ -105,7 +105,7 @@ void GpuDrivenDebugPrint::CreateFontTexture()
 
     stbtt_BakeFontBitmap(ttf_buffer.data(), 0, 16.0, bitmap.data(), width, height, 0, char_count, cdata.data());
 
-    m_pFontTexture.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R8UNORM, GfxTextureUsageShaderResource, "GpuDrivenDebugPrint::m_pFontTexture"));
+    m_pFontTexture.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R8UNORM, 0, "GpuDrivenDebugPrint::m_pFontTexture"));
     m_pRenderer->UploadTexture(m_pFontTexture->GetTexture(), bitmap.data());
 
     //packed version of stbtt_bakedchar

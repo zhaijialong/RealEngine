@@ -214,7 +214,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             RenderGraphTexture::Desc desc;
             desc.width = m_pRenderer->GetBackbufferWidth();
             desc.height = m_pRenderer->GetBackbufferHeight();
-            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageRenderTarget;
             desc.format = GfxFormat::RGBA8SRGB;
             data.outDiffuseRT = builder.Create<RenderGraphTexture>(desc, "Diffuse RT");
             data.outSpecularRT = builder.Create<RenderGraphTexture>(desc, "Specular RT");
@@ -226,7 +226,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             data.outEmissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
 
             desc.format = GfxFormat::D32FS8;
-            desc.usage = GfxTextureUsageDepthStencil | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageDepthStencil;
             data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "SceneDepth RT");
 
             data.outDiffuseRT = builder.WriteColor(0, data.outDiffuseRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));

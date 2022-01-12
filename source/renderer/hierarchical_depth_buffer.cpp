@@ -45,7 +45,7 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
             desc.width = m_hzbSize.x;
             desc.height = m_hzbSize.y;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             data.reprojectedDepth = builder.Create<RenderGraphTexture>(desc, "Reprojected Depth RT");
 
             data.reprojectedDepth = builder.Write(data.reprojectedDepth, GfxResourceState::UnorderedAccess);
@@ -75,7 +75,7 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
             desc.height = m_hzbSize.y;
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             hzb = builder.Create<RenderGraphTexture>(desc, "1st phase HZB");
 
             data.dilatedDepth = builder.Write(hzb, GfxResourceState::UnorderedAccess, 0);
@@ -134,7 +134,7 @@ void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depth
             desc.height = m_hzbSize.y;
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             hzb = builder.Create<RenderGraphTexture>(desc, "2nd phase HZB");
 
             data.hzb = builder.Write(hzb, GfxResourceState::UnorderedAccess, 0);

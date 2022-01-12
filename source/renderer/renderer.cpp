@@ -248,7 +248,7 @@ void Renderer::ImportPrevFrameTextures()
         m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nWindowWidth ||
         m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nWindowHeight)
     {
-        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::R32F, GfxTextureUsageShaderResource, "Prev LinearDepth"));
+        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::R32F, 0, "Prev LinearDepth"));
     }
 
     m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), GfxResourceState::CopyDst);
@@ -579,7 +579,7 @@ Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
     }
 
     Texture2D* texture = new Texture2D(file);
-    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), GfxTextureUsageShaderResource))
+    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), 0))
     {
         delete texture;
         return nullptr;
@@ -610,7 +610,7 @@ TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
     }
 
     TextureCube* texture = new TextureCube(file);
-    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), GfxTextureUsageShaderResource))
+    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), 0))
     {
         delete texture;
         return nullptr;

@@ -108,10 +108,9 @@ using GfxBufferUsageFlags = uint32_t;
 
 enum GfxTextureUsageBit
 {
-    GfxTextureUsageShaderResource   = 1 << 0,
-    GfxTextureUsageRenderTarget     = 1 << 1,
-    GfxTextureUsageDepthStencil     = 1 << 2,
-    GfxTextureUsageUnorderedAccess  = 1 << 3,
+    GfxTextureUsageRenderTarget     = 1 << 0,
+    GfxTextureUsageDepthStencil     = 1 << 1,
+    GfxTextureUsageUnorderedAccess  = 1 << 2,
 };
 using GfxTextureUsageFlags = uint32_t;
 
@@ -239,7 +238,7 @@ struct GfxTextureDesc
     GfxFormat format = GfxFormat::Unknown;
     GfxMemoryType memory_type = GfxMemoryType::GpuOnly;
     GfxAllocationType alloc_type = GfxAllocationType::Placed;
-    GfxTextureUsageFlags usage = GfxTextureUsageShaderResource;
+    GfxTextureUsageFlags usage = 0;
 };
 
 inline bool operator==(const GfxTextureDesc& lhs, const GfxTextureDesc& rhs)

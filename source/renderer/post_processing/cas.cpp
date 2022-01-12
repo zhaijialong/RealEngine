@@ -32,7 +32,7 @@ RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle input
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA8SRGB;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outRT = builder.Create<RenderGraphTexture>(desc, "CAS Output");
             data.outRT = builder.Write(data.outRT, GfxResourceState::UnorderedAccess);
         },

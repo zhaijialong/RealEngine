@@ -552,11 +552,6 @@ inline D3D12_RESOURCE_DESC d3d12_resource_desc(const GfxTextureDesc& desc)
         resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     }
 
-    if (!(desc.usage & GfxTextureUsageShaderResource))
-    {
-        resourceDesc.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
-    }
-
     switch (desc.type)
     {
     case GfxTextureType::Texture2D:

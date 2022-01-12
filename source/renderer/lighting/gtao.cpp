@@ -39,7 +39,7 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.height = height;
             desc.mip_levels = 5;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             RenderGraphHandle gtao_depth = builder.Create<RenderGraphTexture>(desc, "GTAO depth(HZB)");
 
             data.outputDepthMip0 = builder.Write(gtao_depth, GfxResourceState::UnorderedAccess, 0);
@@ -68,7 +68,7 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::R32UI;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO AOTerm");
             data.outputAOTerm = builder.Write(data.outputAOTerm, GfxResourceState::UnorderedAccess);
 
@@ -91,7 +91,7 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::R32UI;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO denoised AO");
             data.outputAOTerm = builder.Write(data.outputAOTerm, GfxResourceState::UnorderedAccess);
         },
@@ -204,7 +204,7 @@ void GTAO::CreateHilbertLUT()
         }
     }
 
-    m_pHilbertLUT.reset(m_pRenderer->CreateTexture2D(64, 64, 1, GfxFormat::R16UI, GfxTextureUsageShaderResource, "GTAO::m_pHilbertLUT"));
+    m_pHilbertLUT.reset(m_pRenderer->CreateTexture2D(64, 64, 1, GfxFormat::R16UI, 0, "GTAO::m_pHilbertLUT"));
     m_pRenderer->UploadTexture(m_pHilbertLUT->GetTexture(), data);
 }
 

@@ -330,7 +330,7 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA8SRGB;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outLdrRT = builder.Create<RenderGraphTexture>(desc, "ToneMapping Output");
             data.outLdrRT = builder.Write(data.outLdrRT, GfxResourceState::UnorderedAccess);
         },

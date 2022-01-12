@@ -61,7 +61,7 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputMotionVectorRT = builder.Create<RenderGraphTexture>(desc, "TAA motion vector");
             data.outputMotionVectorRT = builder.Write(data.outputMotionVectorRT, GfxResourceState::UnorderedAccess);
         },
@@ -89,7 +89,7 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputRT = builder.Create<RenderGraphTexture>(desc, "TAA Output");
             data.outputRT = builder.Write(data.outputRT, GfxResourceState::UnorderedAccess);
         },
@@ -112,7 +112,7 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource;
+            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputRT = builder.Create<RenderGraphTexture>(desc, "TAA Final");
             data.outputRT = builder.Write(data.outputRT, GfxResourceState::UnorderedAccess);
 
@@ -135,7 +135,7 @@ IGfxTexture* TAA::GetHistoryRT(uint32_t width, uint32_t height)
         m_pHistoryColor->GetTexture()->GetDesc().width != width ||
         m_pHistoryColor->GetTexture()->GetDesc().height != height)
     {
-        m_pHistoryColor.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess | GfxTextureUsageShaderResource, "TAA HistoryTexture"));
+        m_pHistoryColor.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "TAA HistoryTexture"));
         m_bHistoryInvalid = true;
     }
 

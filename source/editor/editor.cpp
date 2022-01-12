@@ -12,7 +12,7 @@ Editor::Editor()
     ifd::FileDialog::Instance().CreateTexture = [this](uint8_t* data, int w, int h, char fmt) -> void* 
     {
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-        Texture2D* texture = pRenderer->CreateTexture2D(w, h, 1, fmt == 1 ? GfxFormat::RGBA8SRGB : GfxFormat::BGRA8SRGB, GfxTextureUsageShaderResource, "ImFileDialog Icon");
+        Texture2D* texture = pRenderer->CreateTexture2D(w, h, 1, fmt == 1 ? GfxFormat::RGBA8SRGB : GfxFormat::BGRA8SRGB, 0, "ImFileDialog Icon");
         pRenderer->UploadTexture(texture->GetTexture(), data);
 
         m_fileDialogIcons.insert(std::make_pair(texture->GetSRV(), texture));
@@ -346,7 +346,7 @@ void Editor::CreateRenderGraph()
             loader.Load(png_file, true);
             loader.Resize(8000, 2000);
 
-            m_pRenderGraph.reset(pRenderer->CreateTexture2D(loader.GetWidth(), loader.GetHeight(), 1, loader.GetFormat(), GfxTextureUsageShaderResource, png_file));
+            m_pRenderGraph.reset(pRenderer->CreateTexture2D(loader.GetWidth(), loader.GetHeight(), 1, loader.GetFormat(), 0, png_file));
             pRenderer->UploadTexture(m_pRenderGraph->GetTexture(), loader.GetData());
         }
     }
