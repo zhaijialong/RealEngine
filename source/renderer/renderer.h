@@ -56,6 +56,7 @@ public:
     void FreeSceneBuffer(uint32_t address);
     uint32_t AllocateSceneConstant(const void* data, uint32_t size);
     uint32_t AddInstance(const InstanceData& data);
+    uint32_t GetInstanceCount() const { return m_pGpuScene->GetInstanceCount(); }
 
     void RequestMouseHitTest(uint32_t x, uint32_t y);
     bool IsEnableMouseHitTest() const { return m_bEnableObjectIDRendering; }

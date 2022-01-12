@@ -19,6 +19,7 @@ public:
     uint32_t AllocateConstantBuffer(uint32_t size);
 
     uint32_t AddInstance(const InstanceData& data);
+    uint32_t GetInstanceCount() const { return (uint32_t)m_instanceData.size(); }
 
     void Update();
     void ResetFrameData();

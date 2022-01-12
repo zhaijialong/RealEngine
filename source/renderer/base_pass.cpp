@@ -49,7 +49,7 @@ BasePass::BasePass(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("instance_culling.hlsl", "instance_culling", "cs_6_6", { });
     m_p2ndPhaseInstanceCullingPSO = pRenderer->GetPipelineState(desc, "2nd phase instance culling PSO");
 
-    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_meshlet_list", "cs_6_6", { "FIRST_PHASE=1" });
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_meshlet_list", "cs_6_6", { });
     m_pBuildMeshletListPSO = pRenderer->GetPipelineState(desc, "build meshlet list PSO");
 
     desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_instance_culling_command", "cs_6_6", { });
@@ -72,7 +72,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
     MergeBatches();
 
     uint32_t max_dispatch_num = roundup((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint32_t));
-    uint32_t max_instance_num = roundup(m_nTotalInstanceCount, 65536 / sizeof(uint8_t));
+    uint32_t max_instance_num = roundup(m_pRenderer->GetInstanceCount(), 65536 / sizeof(uint8_t));
     uint32_t max_meshlets_num = roundup(m_nTotalMeshletCount, 65536 / sizeof(uint2));
 
     HZB* pHZB = m_pRenderer->GetHZB();
@@ -146,6 +146,10 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             RenderGraphBuffer* cullingResultBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.cullingResultBuffer);
             RenderGraphBuffer* secondPhaseObjectListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.secondPhaseObjectListBuffer);
             RenderGraphBuffer* secondPhaseObjectListCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.secondPhaseObjectListCounterBuffer);
+
+            uint32_t clear_value[4] = { 0, 0, 0, 0 };
+            pCommandList->ClearUAV(cullingResultBuffer->GetBuffer(), cullingResultBuffer->GetUAV(), clear_value);
+            pCommandList->UavBarrier(cullingResultBuffer->GetBuffer());
 
             InstanceCulling1stPhase(pCommandList, cullingResultBuffer->GetUAV(), secondPhaseObjectListBuffer->GetUAV(), secondPhaseObjectListCounterBuffer->GetUAV());
         });
@@ -278,7 +282,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
     HZB* pHZB = m_pRenderer->GetHZB();
 
     uint32_t max_dispatch_num = roundup((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint32_t));
-    uint32_t max_instance_num = roundup(m_nTotalInstanceCount, 65536 / sizeof(uint8_t));
+    uint32_t max_instance_num = roundup(m_pRenderer->GetInstanceCount(), 65536 / sizeof(uint8_t));
     uint32_t max_meshlets_num = roundup(m_nTotalMeshletCount, 65536 / sizeof(uint2));
 
     struct BuildCullingCommandData
@@ -455,7 +459,7 @@ void BasePass::MergeBatches()
         std::vector<RenderBatch> batches;
         uint32_t meshletCount;
     };
-    std::map<IGfxPipelineState*, MergedBatch> m_mergedBatches;
+    std::map<IGfxPipelineState*, MergedBatch> mergedBatches;
 
     for (size_t i = 0; i < m_instances.size(); ++i)
     {
@@ -464,8 +468,8 @@ void BasePass::MergeBatches()
         {
             m_nTotalMeshletCount += batch.meshletCount;
 
-            auto iter = m_mergedBatches.find(batch.pso);
-            if (iter != m_mergedBatches.end())
+            auto iter = mergedBatches.find(batch.pso);
+            if (iter != mergedBatches.end())
             {
                 iter->second.meshletCount += batch.meshletCount;
                 iter->second.batches.push_back(batch);
@@ -475,7 +479,7 @@ void BasePass::MergeBatches()
                 MergedBatch mergedBatch;
                 mergedBatch.batches.push_back(batch);
                 mergedBatch.meshletCount = batch.meshletCount;
-                m_mergedBatches.insert(std::make_pair(batch.pso, mergedBatch));
+                mergedBatches.insert(std::make_pair(batch.pso, mergedBatch));
             }
         }
         else
@@ -485,7 +489,7 @@ void BasePass::MergeBatches()
     }
 
     uint32_t meshletListOffset = 0;
-    for (auto iter = m_mergedBatches.begin(); iter != m_mergedBatches.end(); ++iter)
+    for (auto iter = mergedBatches.begin(); iter != mergedBatches.end(); ++iter)
     {
         const MergedBatch& batch = iter->second;
 
