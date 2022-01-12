@@ -62,6 +62,8 @@ void StaticMesh::UpdateConstants()
     m_instanceData.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
     m_instanceData.radius = m_radius * m_instanceData.scale;
 
+    m_instanceData.triangleCount = m_nIndexCount / 3;
+
     m_instanceData.mtxWorld = m_mtxWorld;
     m_instanceData.mtxWorldInverseTranspose = transpose(inverse(m_mtxWorld));
     m_instanceData.mtxPrevWorld = m_mtxPrevWorld;

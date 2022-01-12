@@ -1,5 +1,6 @@
 #include "common.hlsli"
 #include "gpu_scene.hlsli"
+#include "stats.hlsli"
 
 cbuffer InstanceCullingConstants : register(b0)
 {
@@ -49,6 +50,22 @@ void instance_culling(uint3 dispatchThreadID : SV_DispatchThreadID)
     uint2 hzbSize = uint2(SceneCB.HZBWidth, SceneCB.HZBHeight);
 
     bool visible = OcclusionCull(hzbTexture, hzbSize, instanceData.center, instanceData.radius);
+
+#if FIRST_PHASE
+    stats(visible ? STATS_1ST_PHASE_RENDERED_OBJECTS : STATS_1ST_PHASE_CULLED_OBJECTS, 1);
+
+    if(!visible)
+    {
+        stats(STATS_1ST_PHASE_CULLED_TRIANGLE, instanceData.triangleCount);
+    }
+#else
+    stats(visible ? STATS_2ND_PHASE_RENDERED_OBJECTS : STATS_2ND_PHASE_CULLED_OBJECTS, 1);
+
+    if (!visible)
+    {
+        stats(STATS_2ND_PHASE_CULLED_TRIANGLE, instanceData.triangleCount);
+    }
+#endif
 
     RWBuffer<uint> cullingResultBuffer = ResourceDescriptorHeap[c_cullingResultUAV];
     cullingResultBuffer[instanceIndex] = visible ? 1 : 0;
@@ -103,10 +120,10 @@ void build_meshlet_list(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
 
     ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
-    uint2 dataPerMeshlet = constantBuffer.Load2(c_originMeshletListAddress + sizeof(uint2) * dispatchThreadID.x);
+    uint2 meshlet = constantBuffer.Load2(c_originMeshletListAddress + sizeof(uint2) * dispatchThreadID.x);
 
     Buffer<uint> cullingResultBuffer = ResourceDescriptorHeap[c_cullingResultSRV];
-    bool visible = (cullingResultBuffer[dataPerMeshlet.x] == 1 ? true : false);
+    bool visible = (cullingResultBuffer[meshlet.x] == 1 ? true : false);
 
     if(visible)
     {
@@ -116,7 +133,7 @@ void build_meshlet_list(uint3 dispatchThreadID : SV_DispatchThreadID)
         uint meshletCount;
         InterlockedAdd(counterBuffer[c_dispatchIndex], 1, meshletCount);
 
-        meshletListBuffer[c_meshletListOffset + meshletCount] = dataPerMeshlet;
+        meshletListBuffer[c_meshletListOffset + meshletCount] = meshlet;
     }
 }
 
@@ -139,6 +156,6 @@ void build_indirect_command(uint3 dispatchThreadID : SV_DispatchThreadID)
     Buffer<uint> counterBuffer = ResourceDescriptorHeap[c_counterBufferSRV];
     RWStructuredBuffer<uint3> commandBuffer = ResourceDescriptorHeap[c_commandBufferUAV];
 
-    uint cullmeshletsCount = counterBuffer[dispatchIndex];
-    commandBuffer[dispatchIndex] = uint3((cullmeshletsCount + 31) / 32, 1, 1);
+    uint meshletsCount = counterBuffer[dispatchIndex];
+    commandBuffer[dispatchIndex] = uint3((meshletsCount + 31) / 32, 1, 1);
 }

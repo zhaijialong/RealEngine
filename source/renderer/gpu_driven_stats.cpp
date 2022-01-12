@@ -17,14 +17,11 @@ void GpuDrivenStats::Clear(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "GpuDrivenStats clear");
 
-    pCommandList->ResourceBarrier(m_pStatsBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::CopyDst);
+    pCommandList->ResourceBarrier(m_pStatsBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
 
-    for (uint32_t i = 0; i < STATS_MAX_TYPE_COUNT; ++i)
-    {
-        pCommandList->WriteBuffer(m_pStatsBuffer->GetBuffer(), sizeof(uint32_t) * i, 0);
-    }
-
-    pCommandList->ResourceBarrier(m_pStatsBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
+    uint32_t clear_value[4] = { 0, 0, 0, 0 };
+    pCommandList->ClearUAV(m_pStatsBuffer->GetBuffer(), m_pStatsBuffer->GetUAV(), clear_value);
+    pCommandList->UavBarrier(m_pStatsBuffer->GetBuffer());
 }
 
 void GpuDrivenStats::Draw(IGfxCommandList* pCommandList)

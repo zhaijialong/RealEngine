@@ -21,6 +21,9 @@ struct InstanceData
     
     float3 center;
     float radius;
+
+    uint triangleCount;
+    uint3 _padding;
     
     float4x4 mtxWorld;
     float4x4 mtxWorldInverseTranspose;

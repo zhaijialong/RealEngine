@@ -27,7 +27,7 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
     {
         if (dot(center, CameraCB.culling.planes[i].xyz) + CameraCB.culling.planes[i].w + radius < 0)
         {
-            stats(STATS_FRUSTUM_CULLED_MESHLET, 1);
+            stats(c_bFirstPass ? STATS_1ST_PHASE_FRUSTUM_CULLED_MESHLET : STATS_2ND_PHASE_FRUSTUM_CULLED_MESHLET, 1);
             return false;
         }
     }
@@ -43,7 +43,7 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
     
     if (dot(view, -axis) >= cutoff * length(view) + radius)
     {
-        stats(STATS_BACKFACE_CULLED_MESHLET, 1);
+        stats(c_bFirstPass ? STATS_1ST_PHASE_BACKFACE_CULLED_MESHLET : STATS_2ND_PHASE_BACKFACE_CULLED_MESHLET, 1);
         return false;
     }
 #endif
