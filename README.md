@@ -8,6 +8,7 @@ requires a GPU which supports DX12 Ultimate
 
 * utilize latest DX12 features, such as raytracing, mesh shaders, HLSL 2021, etc.
 * render graph based architecture, with automatically barriers and transient resources management
+  ![rendergraph](bin/rendergraph.png)
 * fully bindless resources with SM6.6
 * two-phase occlusion culling (like Ubi's GPU driven pipeline). no matter how many different meshes and textures, always two drawcalls(indirect DispatchMesh) per PSO.
 * print functions which can be used shaders
@@ -31,10 +32,10 @@ requires a GPU which supports DX12 Ultimate
 
 ## AMD related issues
 
-tested on RX6600(win11, Adrenalin 21.11.3)
+tested on RX6600(win11, Adrenalin 21.12.1)
 
-* PIX crashes when capturing
-* indirect DispatchMesh results in GPU hang
+* PIX crashes when capturing, and works if all indirect commands removed 
+* indirect DispatchMesh results in GPU hang after a few seconds
     ```cpp
     void GpuDrivenDebugPrint::Draw(IGfxCommandList* pCommandList)
     {
