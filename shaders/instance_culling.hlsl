@@ -17,58 +17,84 @@ cbuffer InstanceCullingConstants : register(b0)
 #endif
 };
 
-[numthreads(64, 1, 1)]
-void instance_culling(uint3 dispatchThreadID : SV_DispatchThreadID)
+uint GetInstanceCount()
 {
 #if FIRST_PHASE
     uint instanceCount = c_instanceCount;
-#else    
+#else
     Buffer<uint> secondPhaseInstanceListCounter = ResourceDescriptorHeap[c_instanceListCounterSRV];
     uint instanceCount = secondPhaseInstanceListCounter[0];
 #endif
+    return instanceCount;
+}
 
-    if (dispatchThreadID.x >= instanceCount)
-    {
-        return;
-    }
-
+uint GetInstanceIndex(uint dispatchThreadID)
+{
 #if FIRST_PHASE
     ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
-    uint instanceIndex = constantBuffer.Load(c_instanceIndicesAddress + sizeof(uint) * dispatchThreadID.x);
+    uint instanceIndex = constantBuffer.Load(c_instanceIndicesAddress + sizeof(uint) * dispatchThreadID);
 #else
     Buffer<uint> secondPhaseInstanceList = ResourceDescriptorHeap[c_instanceListSRV];
-    uint instanceIndex = secondPhaseInstanceList[dispatchThreadID.x];
+    uint instanceIndex = secondPhaseInstanceList[dispatchThreadID];
 #endif
+    return instanceIndex;
+}
 
-    InstanceData instanceData = GetInstanceData(instanceIndex);
-
+Texture2D<float> GetHZBTexture()
+{
 #if FIRST_PHASE
     Texture2D<float> hzbTexture = ResourceDescriptorHeap[SceneCB.firstPhaseCullingHZBSRV];
 #else
     Texture2D<float> hzbTexture = ResourceDescriptorHeap[SceneCB.secondPhaseCullingHZBSRV];
 #endif
-    uint2 hzbSize = uint2(SceneCB.HZBWidth, SceneCB.HZBHeight);
+    return hzbTexture;
+}
 
-    bool visible = OcclusionCull(hzbTexture, hzbSize, instanceData.center, instanceData.radius);
-
+void CullingStats(bool visible, uint triangleCount)
+{
 #if FIRST_PHASE
-    stats(visible ? STATS_1ST_PHASE_RENDERED_OBJECTS : STATS_1ST_PHASE_CULLED_OBJECTS, 1);
-
-    if(!visible)
+    if(visible)
     {
-        stats(STATS_1ST_PHASE_CULLED_TRIANGLE, instanceData.triangleCount);
+        stats(STATS_1ST_PHASE_RENDERED_OBJECTS, 1);
+    }
+    else
+    {
+        stats(STATS_1ST_PHASE_CULLED_OBJECTS, 1);
+        stats(STATS_1ST_PHASE_CULLED_TRIANGLE, triangleCount);
     }
 #else
-    stats(visible ? STATS_2ND_PHASE_RENDERED_OBJECTS : STATS_2ND_PHASE_CULLED_OBJECTS, 1);
-
-    if (!visible)
+    if(visible)
     {
-        stats(STATS_2ND_PHASE_CULLED_TRIANGLE, instanceData.triangleCount);
+        stats(STATS_2ND_PHASE_RENDERED_OBJECTS, 1);
+    }
+    else
+    {
+        stats(STATS_2ND_PHASE_CULLED_OBJECTS, 1);
+        stats(STATS_2ND_PHASE_CULLED_TRIANGLE, triangleCount);
     }
 #endif
+}
 
+[numthreads(64, 1, 1)]
+void instance_culling(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    uint instanceCount = GetInstanceCount();
+    if (dispatchThreadID.x >= instanceCount)
+    {
+        return;
+    }
+
+    uint instanceIndex = GetInstanceIndex(dispatchThreadID.x);
+    InstanceData instanceData = GetInstanceData(instanceIndex);
+
+    Texture2D<float> hzbTexture = GetHZBTexture();
+    uint2 hzbSize = uint2(SceneCB.HZBWidth, SceneCB.HZBHeight);
+    bool visible = OcclusionCull(hzbTexture, hzbSize, instanceData.center, instanceData.radius);
+    
     RWBuffer<uint> cullingResultBuffer = ResourceDescriptorHeap[c_cullingResultUAV];
     cullingResultBuffer[instanceIndex] = visible ? 1 : 0;
+
+    CullingStats(visible, instanceData.triangleCount);
 
 #if FIRST_PHASE
     if(!visible)

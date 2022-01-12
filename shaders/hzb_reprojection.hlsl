@@ -32,7 +32,7 @@ void depth_reprojection(uint3 dispatchThreadID : SV_DispatchThreadID)
     float2 reprojectedUV = GetScreenUV(reprojectedPosition.xy);
     float2 reprojectedScreenPos = reprojectedUV * float2(c_hzbWidth, c_hzbHeight);
     
-    reprojectedDepthTexture[reprojectedScreenPos] = reprojectedDepth;
+    reprojectedDepthTexture[reprojectedScreenPos] = saturate(reprojectedDepth);
 }
 
 [numthreads(8, 8, 1)]
