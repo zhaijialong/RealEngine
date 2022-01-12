@@ -534,7 +534,9 @@ void BasePass::InstanceCulling1stPhase(IGfxCommandList* pCommandList, IGfxDescri
     uint32_t instance_count = m_nTotalInstanceCount;
     uint32_t root_consts[5] = { m_instanceIndexAddress, instance_count, cullingResultUAV->GetHeapIndex(), secondPhaseObjectListUAV->GetHeapIndex(), secondPhaseObjectListCounterUAV->GetHeapIndex() };
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
-    pCommandList->Dispatch((instance_count + 63) / 64, 1, 1);
+
+    uint32_t group_count = max((instance_count + 63) / 64, 1); //avoid empty dispatch warning
+    pCommandList->Dispatch(group_count, 1, 1);
 }
 
 void BasePass::InstanceCulling2ndPhase(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* cullingResultUAV, IGfxDescriptor* objectListBufferSRV, IGfxDescriptor* objectListCounterBufferSRV)
@@ -608,5 +610,6 @@ void BasePass::BuildIndirectCommand(IGfxCommandList* pCommandList, IGfxDescripto
     uint32_t consts[3] = { batch_count, pCounterBufferSRV->GetHeapIndex(), pCommandBufferUAV->GetHeapIndex() };
     pCommandList->SetComputeConstants(0, consts, sizeof(consts));
 
-    pCommandList->Dispatch((batch_count + 63) / 64, 1, 1);
+    uint32_t group_count = max((batch_count + 63) / 64, 1); //avoid empty dispatch warning
+    pCommandList->Dispatch(group_count, 1, 1);
 }
