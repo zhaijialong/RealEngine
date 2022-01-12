@@ -7,10 +7,12 @@ struct IDxcCompiler3;
 struct IDxcUtils;
 struct IDxcIncludeHandler;
 
+class Renderer;
+
 class ShaderCompiler
 {
 public:
-    ShaderCompiler();
+    ShaderCompiler(Renderer* pRenderer);
     ~ShaderCompiler();
 
     bool Compile(const std::string& source, const std::string& file, const std::string& entry_point, 
@@ -18,6 +20,7 @@ public:
         std::vector<uint8_t>& output_blob);
 
 private:
+    Renderer* m_pRenderer = nullptr;
     IDxcCompiler3* m_pDxcCompiler = nullptr;
     IDxcUtils* m_pDxcUtils = nullptr;
     IDxcIncludeHandler* m_pDxcIncludeHandler = nullptr;

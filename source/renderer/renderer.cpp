@@ -17,7 +17,7 @@
 
 Renderer::Renderer() : m_resizeConnection({})
 {
-    m_pShaderCompiler = std::make_unique<ShaderCompiler>();
+    m_pShaderCompiler = std::make_unique<ShaderCompiler>(this);
     m_pShaderCache = std::make_unique<ShaderCache>(this);
     m_pPipelineCache = std::make_unique<PipelineStateCache>(this);
     m_cbAllocator = std::make_unique<LinearAllocator>(8 * 1024 * 1024);

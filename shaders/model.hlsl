@@ -15,8 +15,16 @@ struct GBufferOutput
     float3 emissiveRT : SV_TARGET3;
 };
 
-GBufferOutput ps_main(VertexOut input, bool isFrontFace : SV_IsFrontFace)
+GBufferOutput ps_main(VertexOut input
+#if !GFX_VENDOR_AMD
+    , bool isFrontFace : SV_IsFrontFace //using SV_IsFrontFace with mesh shaders will result in crashes on AMD
+#endif
+)
 {
+#if GFX_VENDOR_AMD
+    bool isFrontFace = true;
+#endif
+
 #if !NON_UNIFORM_RESOURCE
     input.instanceIndex = c_InstanceIndex;
 #endif

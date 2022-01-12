@@ -1,11 +1,13 @@
 #include "shader_compiler.h"
+#include "renderer.h"
 #include "utils/log.h"
 #include "utils/string.h"
+#include "utils/assert.h"
 #include "dxc/dxcapi.h"
 
 #include <atlbase.h> //CComPtr
 
-ShaderCompiler::ShaderCompiler()
+ShaderCompiler::ShaderCompiler(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
     HMODULE dxc = LoadLibrary(L"dxcompiler.dll");
     if (dxc)
@@ -52,6 +54,23 @@ bool ShaderCompiler::Compile(const std::string& source, const std::string& file,
     for (size_t i = 0; i < wstrDefines.size(); ++i)
     {
         arguments.push_back(L"-D"); arguments.push_back(wstrDefines[i].c_str());
+    }
+
+    arguments.push_back(L"-D");
+    switch (m_pRenderer->GetDevice()->GetVendor())
+    {
+    case GfxVendor::AMD:
+        arguments.push_back(L"GFX_VENDOR_AMD=1");
+        break;
+    case GfxVendor::Intel:
+        arguments.push_back(L"GFX_VENDOR_INTEL=1");
+        break;
+    case GfxVendor::Nvidia:
+        arguments.push_back(L"GFX_VENDOR_NV=1");
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
     }
 
     arguments.push_back(L"-HV 2021");
