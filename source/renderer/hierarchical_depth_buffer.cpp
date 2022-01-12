@@ -183,14 +183,14 @@ RenderGraphHandle HZB::Get2ndPhaseCullingHZBMip(uint32_t mip) const
 
 void HZB::CalcHZBSize()
 {
-    uint32_t mipsX = (uint32_t)std::max(ceilf(log2f((float)m_pRenderer->GetBackbufferWidth())) - 1, 1.0f);
-    uint32_t mipsY = (uint32_t)std::max(ceilf(log2f((float)m_pRenderer->GetBackbufferHeight())) - 1, 1.0f);
+    uint32_t mipsX = (uint32_t)std::max(ceilf(log2f((float)m_pRenderer->GetBackbufferWidth())), 1.0f);
+    uint32_t mipsY = (uint32_t)std::max(ceilf(log2f((float)m_pRenderer->GetBackbufferHeight())), 1.0f);
 
     m_nHZBMipCount = std::max(mipsX, mipsY);
     RE_ASSERT(m_nHZBMipCount <= MAX_HZB_MIP_COUNT);
 
-    m_hzbSize.x = 1 << mipsX;
-    m_hzbSize.y = 1 << mipsY;
+    m_hzbSize.x = 1 << (mipsX - 1);
+    m_hzbSize.y = 1 << (mipsY - 1);
 }
 
 void HZB::ReprojectDepth(IGfxCommandList* pCommandList, IGfxDescriptor* prevLinearDepthSRV, IGfxTexture* reprojectedDepthTexture, IGfxDescriptor* reprojectedDepthUAV)
