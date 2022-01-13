@@ -1,5 +1,10 @@
 #include "debug.hlsli"
 
+cbuffer RootConstants : register(b0)
+{
+    uint c_debugLineVertexBufferSRV;
+};
+
 struct VSOutput
 {
     float4 position : SV_Position;
@@ -8,7 +13,7 @@ struct VSOutput
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {
-    StructuredBuffer<debug::LineVertex> vertexBuffer = ResourceDescriptorHeap[SceneCB.debugLineVertexBufferSRV];
+    StructuredBuffer<debug::LineVertex> vertexBuffer = ResourceDescriptorHeap[c_debugLineVertexBufferSRV];
     
     VSOutput output;
     output.position = mul(CameraCB.mtxViewProjectionNoJitter, float4(vertexBuffer[vertex_id].position, 1.0));

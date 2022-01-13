@@ -79,21 +79,18 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
 }
 
 [numthreads(32, 1, 1)]
-void main_as(uint dispatchThreadID : SV_DispatchThreadID)
-{
-    bool visible = false;
-    uint instanceIndex = 0;
-    uint meshletIndex = 0;
-    
+void main_as(uint3 dispatchThreadID : SV_DispatchThreadID)
+{    
     Buffer<uint> counterBuffer = ResourceDescriptorHeap[c_meshletListCounterSRV];
     uint totalMeshletCount = counterBuffer[c_dispatchIndex];
-    
-    if (dispatchThreadID < totalMeshletCount)
+ 
+    bool visible = false;
+    if (dispatchThreadID.x < totalMeshletCount)
     {
         StructuredBuffer<uint2> meshletsListBuffer = ResourceDescriptorHeap[c_meshletListBufferSRV];
-        uint2 dataPerMeshlet = meshletsListBuffer[c_meshletListBufferOffset + dispatchThreadID];
-        instanceIndex = dataPerMeshlet.x;
-        meshletIndex = dataPerMeshlet.y;
+        uint2 dataPerMeshlet = meshletsListBuffer[c_meshletListBufferOffset + dispatchThreadID.x];
+        uint instanceIndex = dataPerMeshlet.x;
+        uint meshletIndex = dataPerMeshlet.y;
         
         Meshlet meshlet = LoadSceneBuffer<Meshlet>(GetInstanceData(instanceIndex).meshletBufferAddress, meshletIndex);
         
@@ -107,13 +104,13 @@ void main_as(uint dispatchThreadID : SV_DispatchThreadID)
         {
             stats(visible ? STATS_2ND_PHASE_RENDERED_TRIANGLE : STATS_2ND_PHASE_CULLED_TRIANGLE, meshlet.triangleCount);
         }
-    }
-    
-    if (visible)
-    {
-        uint index = WavePrefixCountBits(visible);
-        s_Payload.instanceIndices[index] = instanceIndex;
-        s_Payload.meshletIndices[index] = meshletIndex;
+
+        if (visible)
+        {
+            uint index = WavePrefixCountBits(visible);
+            s_Payload.instanceIndices[index] = instanceIndex;
+            s_Payload.meshletIndices[index] = meshletIndex;
+        }
     }
 
     uint visibleMeshletCount = WaveActiveCountBits(visible);

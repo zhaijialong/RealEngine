@@ -32,11 +32,11 @@ struct SceneConstant
     uint sceneHZBSRV;
     uint debugLineDrawCommandUAV;
     uint debugLineVertexBufferUAV;
-    uint debugLineVertexBufferSRV;
-    
+    uint debugFontCharBufferSRV;
+
     uint debugTextCounterBufferUAV;
     uint debugTextBufferUAV;
-    uint debugFontCharBufferSRV;
+    uint bEnableStats;
     uint statsBufferUAV;
     
     uint pointRepeatSampler;

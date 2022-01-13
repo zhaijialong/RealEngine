@@ -25,6 +25,9 @@ private:
     bool m_bShowGpuMemoryStats = false;
     bool m_bShowRenderGraph = false;
     bool m_bShowImguiDemo = false;
+    bool m_bShowGpuDrivenStats = false;
+    bool m_bViewFrustumLocked = false;
+    bool m_bVsync = true;
 
     std::unordered_map<IGfxDescriptor*, Texture2D*> m_fileDialogIcons;
     std::vector<IGfxDescriptor*> m_pendingDeletions;
@@ -44,9 +47,6 @@ private:
     std::unique_ptr<Texture2D> m_pRotateIcon;
     std::unique_ptr<Texture2D> m_pScaleIcon;
 
-    bool m_bViewFrustumLocked = false;
     float3 m_lockedViewPos;
     float3 m_lockedViewRotation;
-
-    bool m_bVsync = true;
 };

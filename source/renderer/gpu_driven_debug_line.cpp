@@ -51,5 +51,9 @@ void GpuDrivenDebugLine::Draw(IGfxCommandList* pCommandList)
     GPU_EVENT(pCommandList, "GpuDrivenDebugLine");
 
     pCommandList->SetPipelineState(m_pPSO);
+
+    uint root_constants[1] = { GetVertexBufferSRV()->GetHeapIndex() };
+    pCommandList->SetGraphicsConstants(0, root_constants, sizeof(root_constants));
+
     pCommandList->DrawIndirect(m_pDrawArugumentsBuffer->GetBuffer(), 0);
 }

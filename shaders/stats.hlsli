@@ -32,7 +32,7 @@
 
 void stats(uint type, uint count)
 {
-    if (type < STATS_MAX_TYPE_COUNT)
+    if (SceneCB.bEnableStats && (type < STATS_MAX_TYPE_COUNT))
     {
         RWBuffer<uint> statsBuffer = ResourceDescriptorHeap[SceneCB.statsBufferUAV];
     

@@ -74,6 +74,32 @@ void Editor::DrawMenu()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Debug"))
+        {
+            if (ImGui::MenuItem("VSync", "", &m_bVsync))
+            {
+                Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+                pRenderer->GetSwapchain()->SetVSyncEnabled(m_bVsync);
+            }
+
+            if (ImGui::MenuItem("GPU Driven Stats", "", &m_bShowGpuDrivenStats))
+            {
+                Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+                pRenderer->SetGpuDrivenStatsEnabled(m_bShowGpuDrivenStats);
+            }
+
+            if (ImGui::MenuItem("Debug View Frustum", "", & m_bViewFrustumLocked))
+            {
+                Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+                camera->LockViewFrustum(m_bViewFrustumLocked);
+
+                m_lockedViewPos = camera->GetPosition();
+                m_lockedViewRotation = camera->GetRotation();
+            }
+
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Tools"))
         {
             if (ImGui::MenuItem("Profiler"))
@@ -122,6 +148,42 @@ void Editor::DrawMenu()
         }
 
         ifd::FileDialog::Instance().Close();
+    }
+
+    if (m_bViewFrustumLocked)
+    {
+        float3 scale = float3(1.0f, 1.0f, 1.0f);
+        float4x4 mtxWorld;
+        ImGuizmo::RecomposeMatrixFromComponents((const float*)&m_lockedViewPos, (const float*)&m_lockedViewRotation, (const float*)&scale, (float*)&mtxWorld);
+
+        Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+        float4x4 view = camera->GetViewMatrix();
+        float4x4 proj = camera->GetNonJitterProjectionMatrix();
+
+        ImGuizmo::OPERATION operation;
+        switch (m_selectEditMode)
+        {
+        case Editor::SelectEditMode::Translate:
+            operation = ImGuizmo::TRANSLATE;
+            break;
+        case Editor::SelectEditMode::Rotate:
+            operation = ImGuizmo::ROTATE;
+            break;
+        case Editor::SelectEditMode::Scale:
+            operation = ImGuizmo::SCALE;
+            break;
+        default:
+            RE_ASSERT(false);
+            break;
+        }
+        ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, operation, ImGuizmo::WORLD, (float*)&mtxWorld);
+
+        ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&m_lockedViewPos, (float*)&m_lockedViewRotation, (float*)&scale);
+
+        camera->SetFrustumViewPosition(m_lockedViewPos);
+
+        float4x4 mtxViewFrustum = mul(camera->GetProjectionMatrix(), inverse(mtxWorld));
+        camera->UpdateFrustumPlanes(mtxViewFrustum);
     }
 
     if (m_bShowGpuMemoryStats && m_pGpuMemoryStats)
@@ -195,57 +257,6 @@ void Editor::DrawToolBar()
     ImGui::SetNextItemWidth(100.0f);
     ImGui::SliderFloat("##CameraFOV", &fov, 5.0f, 135.0f, "%.0f");
     camera->SetFov(fov);
-
-    ImGui::SameLine(0.0f, 20.0f);
-    if (ImGui::Checkbox("View Frustum Locked", &m_bViewFrustumLocked))
-    {
-        camera->LockViewFrustum(m_bViewFrustumLocked);
-
-        m_lockedViewPos = camera->GetPosition();
-        m_lockedViewRotation = camera->GetRotation();
-    }
-
-    if (m_bViewFrustumLocked)
-    {
-        float3 scale = float3(1.0f, 1.0f, 1.0f);
-        float4x4 mtxWorld;
-        ImGuizmo::RecomposeMatrixFromComponents((const float*)&m_lockedViewPos, (const float*)&m_lockedViewRotation, (const float*)&scale, (float*)&mtxWorld);
-
-        float4x4 view = camera->GetViewMatrix();
-        float4x4 proj = camera->GetNonJitterProjectionMatrix();
-
-        ImGuizmo::OPERATION operation;
-        switch (m_selectEditMode)
-        {
-        case Editor::SelectEditMode::Translate:
-            operation = ImGuizmo::TRANSLATE;
-            break;
-        case Editor::SelectEditMode::Rotate:
-            operation = ImGuizmo::ROTATE;
-            break;
-        case Editor::SelectEditMode::Scale:
-            operation = ImGuizmo::SCALE;
-            break;
-        default:
-            RE_ASSERT(false);
-            break;
-        }
-        ImGuizmo::Manipulate((const float*)&view, (const float*)&proj, operation, ImGuizmo::WORLD, (float*)&mtxWorld);
-
-        ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&m_lockedViewPos, (float*)&m_lockedViewRotation, (float*)&scale);
-
-        camera->SetFrustumViewPosition(m_lockedViewPos);
-
-        float4x4 mtxViewFrustum = mul(camera->GetProjectionMatrix(), inverse(mtxWorld));
-        camera->UpdateFrustumPlanes(mtxViewFrustum);
-    }
-
-    ImGui::SameLine(0.0f, 20.0f);
-    if (ImGui::Checkbox("VSync", &m_bVsync))
-    {
-        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-        pRenderer->GetSwapchain()->SetVSyncEnabled(m_bVsync);
-    }
 
     ImGui::End();
 }

@@ -32,7 +32,7 @@ void main_ms(
     }
     
     if(groupThreadID < meshlet.vertexCount)
-    {        
+    {
         uint vertex_id = LoadSceneBuffer<uint>(GetInstanceData(instanceIndex).meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
 
         VertexOut v = GetVertex(instanceIndex, vertex_id);

@@ -220,10 +220,10 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.secondPhaseCullingHZBSRV = secondPhaseHZBTexture->GetSRV()->GetHeapIndex();
     sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
-    sceneCB.debugLineVertexBufferSRV = m_pGpuDebugLine->GetVertexBufferSRV()->GetHeapIndex();
     sceneCB.debugTextCounterBufferUAV = m_pGpuDebugPrint->GetTextCounterBufferUAV()->GetHeapIndex();
     sceneCB.debugTextBufferUAV = m_pGpuDebugPrint->GetTextBufferUAV()->GetHeapIndex();
     sceneCB.debugFontCharBufferSRV = m_pGpuDebugPrint->GetFontCharBufferSRV()->GetHeapIndex();
+    sceneCB.bEnableStats = m_bGpuDrivenStatsEnabled;
     sceneCB.statsBufferUAV = m_pGpuStats->GetStatsBufferUAV()->GetHeapIndex();
     sceneCB.minReductionSampler = m_pMinReductionSampler->GetHeapIndex();
     sceneCB.maxReductionSampler = m_pMaxReductionSampler->GetHeapIndex();

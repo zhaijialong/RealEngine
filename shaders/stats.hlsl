@@ -9,6 +9,11 @@ cbuffer RootConstants : register(b0)
 [numthreads(1, 1, 1)]
 void main()
 {
+    if (!SceneCB.bEnableStats)
+    {
+        return;
+    }
+
     Buffer<uint> statsBuffer = ResourceDescriptorHeap[c_statsBufferSRV];
 
     float2 screenPos = float2(100, 100);
