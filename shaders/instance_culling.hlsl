@@ -153,7 +153,7 @@ void build_meshlet_list(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     if(visible)
     {
-        RWBuffer<uint2> meshletListBuffer = ResourceDescriptorHeap[c_meshletListBufferUAV];
+        RWStructuredBuffer<uint2> meshletListBuffer = ResourceDescriptorHeap[c_meshletListBufferUAV];
         RWBuffer<uint> counterBuffer = ResourceDescriptorHeap[c_meshletListBufferCounterUAV];
 
         uint meshletCount;
