@@ -28,6 +28,7 @@ private:
     bool m_bShowGpuDrivenStats = false;
     bool m_bViewFrustumLocked = false;
     bool m_bVsync = true;
+    bool m_bShowMeshlets = false;
 
     std::unordered_map<IGfxDescriptor*, Texture2D*> m_fileDialogIcons;
     std::vector<IGfxDescriptor*> m_pendingDeletions;

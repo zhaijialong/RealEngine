@@ -5,7 +5,7 @@ struct SceneConstant
     uint sceneBufferSRV;
     uint sceneConstantBufferSRV;
     uint instanceDataAddress;
-    uint _padding0;
+    uint bShowMeshlets;
 
     uint secondPhaseMeshletsListUAV;
     uint secondPhaseMeshletsCounterUAV;

@@ -41,6 +41,6 @@ private:
     std::unique_ptr<RawBuffer> m_pSceneBuffer;
     D3D12MA::VirtualBlock* m_pSceneBufferAllocator = nullptr;
 
-    std::unique_ptr<RawBuffer> m_pConstantBuffer[GFX_MAX_INFLIGHT_FRAMES];
+    std::unique_ptr<RawBuffer> m_pConstantBuffer[GFX_MAX_INFLIGHT_FRAMES]; //todo : change to gpu memory, and only update dirty regions
     uint32_t m_nConstantBufferOffset = 0;
 };

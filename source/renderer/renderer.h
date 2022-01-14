@@ -63,6 +63,7 @@ public:
     uint32_t GetMouseHitObjectID() const { return m_nMouseHitObjectID; }
 
     void SetGpuDrivenStatsEnabled(bool value) { m_bGpuDrivenStatsEnabled = value; }
+    void SetShowMeshletsEnabled(bool value) { m_bShowMeshlets = value; }
 
     void UploadTexture(IGfxTexture* texture, const void* data);
     void UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size);
@@ -158,6 +159,7 @@ private:
     RenderGraphHandle m_prevLinearDepthHandle;
 
     bool m_bGpuDrivenStatsEnabled = false;
+    bool m_bShowMeshlets = false;
 
     bool m_bEnableObjectIDRendering = false;
     uint32_t m_nMouseX = 0;

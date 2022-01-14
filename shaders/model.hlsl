@@ -59,13 +59,13 @@ GBufferOutput ps_main(VertexOut input
     clip(alpha - GetMaterialConstant(input.instanceIndex).alphaCutoff);
 #endif
     
-#define DEBUG_MESHLET 0
-#if DEBUG_MESHLET
-    uint mhash = Hash(input.meshlet);
-    diffuse.xyz = float3(float(mhash & 255), float((mhash >> 8) & 255), float((mhash >> 16) & 255)) / 255.0;
-    roughness = 1.0;
-    emissive = float3(0.0, 0.0, 0.0);
-#endif
+    if (SceneCB.bShowMeshlets)
+    {
+        uint mhash = Hash(input.meshlet);
+        diffuse.xyz = float3(float(mhash & 255), float((mhash >> 8) & 255), float((mhash >> 16) & 255)) / 255.0;
+        roughness = 1.0;
+        emissive = float3(0.0, 0.0, 0.0);
+    }
     
     GBufferOutput output;
     output.diffuseRT = float4(diffuse, ao);

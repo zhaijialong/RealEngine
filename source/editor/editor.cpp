@@ -88,13 +88,19 @@ void Editor::DrawMenu()
                 pRenderer->SetGpuDrivenStatsEnabled(m_bShowGpuDrivenStats);
             }
 
-            if (ImGui::MenuItem("Debug View Frustum", "", & m_bViewFrustumLocked))
+            if (ImGui::MenuItem("Debug View Frustum", "", &m_bViewFrustumLocked))
             {
                 Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
                 camera->LockViewFrustum(m_bViewFrustumLocked);
 
                 m_lockedViewPos = camera->GetPosition();
                 m_lockedViewRotation = camera->GetRotation();
+            }
+
+            if (ImGui::MenuItem("Show Meshlets", "", &m_bShowMeshlets))
+            {
+                Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+                pRenderer->SetShowMeshletsEnabled(m_bShowMeshlets);
             }
 
             ImGui::EndMenu();
