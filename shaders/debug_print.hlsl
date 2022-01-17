@@ -47,8 +47,8 @@ void main_ms(
     ByteAddressBuffer debugTextCounterBuffer = ResourceDescriptorHeap[c_debugTextCounterBufferSRV];
     uint text_count = debugTextCounterBuffer.Load(0);
  
-#if 1
-    uint text_index = dispatchThreadID.x;
+#if 0
+    uint text_index = dispatchThreadID.x; //amd crashes
 #else
     uint text_index = groupID * GROUP_SIZE + groupIndex;
 #endif
