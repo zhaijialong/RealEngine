@@ -4,6 +4,11 @@
 #include <string>
 #include <vector>
 
+class IGfxBuffer;
+class IGfxTexture;
+class IGfxShader;
+class IGfxRayTracingBLAS;
+
 const static int GFX_MAX_INFLIGHT_FRAMES = 3;
 
 enum class GfxRenderBackend
@@ -171,6 +176,7 @@ enum class GfxShaderResourceViewType
     StructuredBuffer,
     TypedBuffer,
     RawBuffer,
+    RayTracingTLAS,
 };
 
 enum class GfxUnorderedAccessViewType
@@ -329,8 +335,6 @@ inline bool operator==(const GfxUnorderedAccessViewDesc& lhs, const GfxUnordered
         lhs.texture.plane_slice == rhs.texture.plane_slice;
 }
 
-class IGfxTexture;
-
 struct GfxRenderPassColorAttachment
 {
     IGfxTexture* texture = nullptr;
@@ -451,8 +455,6 @@ enum class GfxPipelineType
     MeshShading,
     Compute,
 };
-
-class IGfxShader;
 
 #pragma pack(push, 1)
 struct GfxRasterizerState
@@ -642,4 +644,60 @@ enum class GfxVendor
     AMD,
     Nvidia,
     Intel,
+};
+
+enum GfxRayTracingASFlagBit
+{
+    GfxRayTracingASFlagAllowUpdate = 1 << 0,
+    GfxRayTracingASFlagAllowCompaction = 1 << 1,
+    GfxRayTracingASFlagPreferFastTrace = 1 << 2,
+    GfxRayTracingASFlagPreferFastBuild = 1 << 3,
+    GfxRayTracingASFlagLowMemory = 1 << 4,
+};
+
+using GfxRayTracingASFlag = uint32_t;
+
+enum GfxRayTracingInstanceFlagBit
+{
+    GfxRayTracingInstanceFlagDisableCull = 1 << 0,
+    GfxRayTracingInstanceFlagFrontFaceCCW = 1 << 1,
+    GfxRayTracingInstanceFlagForceOpaque = 1 << 2,
+    GfxRayTracingInstanceFlagForceNoOpaque = 1 << 3,
+};
+
+using GfxRayTracingInstanceFlag = uint32_t;
+
+struct GfxRayTracingGeometry
+{
+    IGfxBuffer* vertex_buffer;
+    uint32_t vertex_buffer_offset;
+    uint32_t vertex_count;
+    uint32_t vertex_stride;
+
+    IGfxBuffer* index_buffer;
+    uint32_t index_buffer_offset;
+    uint32_t index_count;
+
+    bool bOpaque;
+};
+
+struct GfxRayTracingInstance
+{
+    IGfxRayTracingBLAS* blas;
+    float transform[12]; //object to world 3x4 matrix
+    uint32_t instance_id;
+    uint8_t instance_mask;
+    GfxRayTracingInstanceFlag flags;
+};
+
+struct GfxRayTracingBLASDesc
+{
+    std::vector<GfxRayTracingGeometry> geometries;
+    GfxRayTracingASFlag flags;
+};
+
+struct GfxRayTracingTLASDesc
+{
+    std::vector<GfxRayTracingInstance> instances;
+    GfxRayTracingASFlag flags;
 };

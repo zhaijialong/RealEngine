@@ -8,6 +8,8 @@
 #include "d3d12_pipeline_state.h"
 #include "d3d12_descriptor.h"
 #include "d3d12_heap.h"
+#include "d3d12_rt_blas.h"
+#include "d3d12_rt_tlas.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 #include "pix_runtime.h"
 #include "ags.h"
@@ -270,6 +272,28 @@ IGfxDescriptor* D3D12Device::CreateSampler(const GfxSamplerDesc& desc, const std
         return nullptr;
     }
     return pSampler;
+}
+
+IGfxRayTracingBLAS* D3D12Device::CreateRayTracingBLAS(const GfxRayTracingBLASDesc& desc, const std::string& name)
+{
+    D3D12RayTracingBLAS* blas = new D3D12RayTracingBLAS(this, desc, name);
+    if (!blas->Create())
+    {
+        delete blas;
+        return nullptr;
+    }
+    return blas;
+}
+
+IGfxRayTracingTLAS* D3D12Device::CreateRayTracingTLAS(const GfxRayTracingTLASDesc& desc, const std::string& name)
+{
+    D3D12RayTracingTLAS* tlas = new D3D12RayTracingTLAS(this, desc, name);
+    if (!tlas->Create())
+    {
+        delete tlas;
+        return nullptr;
+    }
+    return tlas;
 }
 
 uint32_t D3D12Device::GetAllocationSize(const GfxTextureDesc& desc)

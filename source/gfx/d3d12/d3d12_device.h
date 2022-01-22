@@ -74,6 +74,8 @@ public:
     virtual IGfxDescriptor* CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const std::string& name) override;
     virtual IGfxDescriptor* CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name) override;
     virtual IGfxDescriptor* CreateSampler(const GfxSamplerDesc& desc, const std::string& name) override;
+    virtual IGfxRayTracingBLAS* CreateRayTracingBLAS(const GfxRayTracingBLASDesc& desc, const std::string& name) override;
+    virtual IGfxRayTracingTLAS* CreateRayTracingTLAS(const GfxRayTracingTLASDesc& desc, const std::string& name) override;
 
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
     virtual bool DumpMemoryStats(const std::string& file) override;

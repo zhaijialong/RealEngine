@@ -124,6 +124,7 @@
     <ClCompile Include="source\core\gui.cpp" />
     <ClCompile Include="source\editor\editor.cpp" />
     <ClCompile Include="source\gfx\d3d12\ags.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_rt_blas.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_buffer.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_command_list.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_descriptor.cpp" />
@@ -134,6 +135,7 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_shader.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_swapchain.cpp" />
     <ClCompile Include="source\gfx\d3d12\d3d12_texture.cpp" />
+    <ClCompile Include="source\gfx\d3d12\d3d12_rt_tlas.cpp" />
     <ClCompile Include="source\gfx\d3d12\pix_runtime.cpp" />
     <ClCompile Include="source\gfx\gfx.cpp" />
     <ClCompile Include="source\renderer\base_pass.cpp" />
@@ -214,6 +216,7 @@
     <ClInclude Include="source\core\gui.h" />
     <ClInclude Include="source\editor\editor.h" />
     <ClInclude Include="source\gfx\d3d12\ags.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_rt_blas.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_buffer.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_command_list.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_descriptor.h" />
@@ -225,9 +228,11 @@
     <ClInclude Include="source\gfx\d3d12\d3d12_shader.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_swapchain.h" />
     <ClInclude Include="source\gfx\d3d12\d3d12_texture.h" />
+    <ClInclude Include="source\gfx\d3d12\d3d12_rt_tlas.h" />
     <ClInclude Include="source\gfx\d3d12\pix_runtime.h" />
     <ClInclude Include="source\gfx\gfx.h" />
     <ClInclude Include="source\gfx\gfx_define.h" />
+    <ClInclude Include="source\gfx\i_gfx_rt_blas.h" />
     <ClInclude Include="source\gfx\i_gfx_buffer.h" />
     <ClInclude Include="source\gfx\i_gfx_command_list.h" />
     <ClInclude Include="source\gfx\i_gfx_descriptor.h" />
@@ -239,6 +244,7 @@
     <ClInclude Include="source\gfx\i_gfx_shader.h" />
     <ClInclude Include="source\gfx\i_gfx_swapchain.h" />
     <ClInclude Include="source\gfx\i_gfx_texture.h" />
+    <ClInclude Include="source\gfx\i_gfx_rt_tlas.h" />
     <ClInclude Include="source\renderer\base_pass.h" />
     <ClInclude Include="source\renderer\directed_acyclic_graph.h" />
     <ClInclude Include="source\renderer\gpu_driven_debug_line.h" />
