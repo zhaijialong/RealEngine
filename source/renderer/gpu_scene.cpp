@@ -55,11 +55,6 @@ void GpuScene::Free(uint32_t address)
 void GpuScene::Update()
 {
     m_instanceDataAddress = m_pRenderer->AllocateSceneConstant(m_instanceData.data(), sizeof(InstanceData) * (uint32_t)m_instanceData.size());
-}
-
-void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
-{
-    GPU_EVENT(pCommandList, "BuildTLAS");
 
     if (m_pSceneTLAS == nullptr || m_pSceneTLAS->GetDesc().instance_count < m_raytracingInstances.size())
     {
@@ -69,7 +64,16 @@ void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
 
         IGfxDevice* device = m_pRenderer->GetDevice();
         m_pSceneTLAS.reset(device->CreateRayTracingTLAS(desc, "GpuScene::m_pSceneTLAS"));
+
+        GfxShaderResourceViewDesc srvDesc;
+        srvDesc.type = GfxShaderResourceViewType::RayTracingTLAS;
+        m_pSceneTLASSRV.reset(device->CreateShaderResourceView(m_pSceneTLAS.get(), srvDesc, "GpuScene::m_pSceneTLAS"));
     }
+}
+
+void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
+{
+    GPU_EVENT(pCommandList, "BuildTLAS");
 
     pCommandList->UavBarrier(nullptr); //barrier for blas
     pCommandList->BuildRayTracingTLAS(m_pSceneTLAS.get(), m_raytracingInstances.data(), (uint32_t)m_raytracingInstances.size());

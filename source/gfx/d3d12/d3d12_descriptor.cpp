@@ -2,6 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12_buffer.h"
 #include "d3d12_texture.h"
+#include "d3d12_rt_tlas.h"
 #include "utils/assert.h"
 
 D3D12ShaderResourceView::D3D12ShaderResourceView(D3D12Device* pDevice, IGfxResource* pResource, const GfxShaderResourceViewDesc& desc, const std::string& name)
@@ -124,6 +125,12 @@ bool D3D12ShaderResourceView::Create()
         srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_RAW;
         break;
     }
+    case GfxShaderResourceViewType::RayTracingTLAS:
+    {
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+        srvDesc.RaytracingAccelerationStructure.Location = ((D3D12RayTracingTLAS*)m_pResource)->GetGpuAddress();
+        break;
+    }
     default:
         break;
     }
@@ -131,7 +138,8 @@ bool D3D12ShaderResourceView::Create()
     m_descriptor = ((D3D12Device*)m_pDevice)->AllocateResourceDescriptor();
     
     ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
-    pDevice->CreateShaderResourceView((ID3D12Resource*)m_pResource->GetHandle(), &srvDesc, m_descriptor.cpu_handle);
+    ID3D12Resource* resource = m_desc.type == GfxShaderResourceViewType::RayTracingTLAS ? nullptr : (ID3D12Resource*)m_pResource->GetHandle();
+    pDevice->CreateShaderResourceView(resource, &srvDesc, m_descriptor.cpu_handle);
 
     return true;
 }

@@ -5,11 +5,12 @@ struct SceneConstant
     uint sceneBufferSRV;
     uint sceneConstantBufferSRV;
     uint instanceDataAddress;
-    uint bShowMeshlets;
+    uint sceneRayTracingTLAS;
 
+    uint bShowMeshlets;
     uint secondPhaseMeshletsListUAV;
     uint secondPhaseMeshletsCounterUAV;
-    uint2 _padding1;
+    uint _padding1;
 
     float3 lightDir;
     uint shadowRT;

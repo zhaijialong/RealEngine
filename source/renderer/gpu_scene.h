@@ -33,6 +33,8 @@ public:
 
     uint32_t GetInstanceDataAddress() const { return m_instanceDataAddress; }
 
+    IGfxDescriptor* GetRayTracingTLASSRV() const { return m_pSceneTLASSRV.get(); }
+
 private:
     Renderer* m_pRenderer = nullptr;
 
@@ -46,5 +48,6 @@ private:
     uint32_t m_nConstantBufferOffset = 0;
 
     std::unique_ptr<IGfxRayTracingTLAS> m_pSceneTLAS;
+    std::unique_ptr<IGfxDescriptor> m_pSceneTLASSRV;
     std::vector<GfxRayTracingInstance> m_raytracingInstances;
 };

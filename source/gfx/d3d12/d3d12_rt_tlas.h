@@ -12,6 +12,7 @@ public:
     ~D3D12RayTracingTLAS();
 
     virtual void* GetHandle() const override { return m_pASBuffer; }
+    D3D12_GPU_VIRTUAL_ADDRESS GetGpuAddress() const { return m_pASBuffer->GetGPUVirtualAddress(); }
 
     bool Create();
     void GetBuildDesc(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& desc, const GfxRayTracingInstance* instances, uint32_t instance_count);
