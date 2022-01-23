@@ -589,7 +589,7 @@ inline D3D12_RESOURCE_DESC d3d12_resource_desc(const GfxTextureDesc& desc)
     return resourceDesc;
 }
 
-inline D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS d3d12_as_flags(GfxRayTracingASFlag flags)
+inline D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS d3d12_rt_as_flags(GfxRayTracingASFlag flags)
 {
     D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS d3d12_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
 
@@ -616,6 +616,33 @@ inline D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS d3d12_as_flags(GfxRay
     if (flags & GfxRayTracingASFlagLowMemory)
     {
         d3d12_flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY;
+    }
+
+    return d3d12_flags;
+}
+
+inline D3D12_RAYTRACING_INSTANCE_FLAGS d3d12_rt_instance_flags(GfxRayTracingInstanceFlag flags)
+{
+    D3D12_RAYTRACING_INSTANCE_FLAGS d3d12_flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+
+    if (flags & GfxRayTracingInstanceFlagDisableCull)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_CULL_DISABLE;
+    }
+
+    if (flags & GfxRayTracingInstanceFlagFrontFaceCCW)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE;
+    }
+
+    if (flags & GfxRayTracingInstanceFlagForceOpaque)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE;
+    }
+
+    if (flags & GfxRayTracingInstanceFlagForceNoOpaque)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_NON_OPAQUE;
     }
 
     return d3d12_flags;

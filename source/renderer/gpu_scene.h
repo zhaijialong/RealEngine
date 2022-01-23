@@ -18,10 +18,11 @@ public:
 
     uint32_t AllocateConstantBuffer(uint32_t size);
 
-    uint32_t AddInstance(const InstanceData& data);
+    uint32_t AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas);
     uint32_t GetInstanceCount() const { return (uint32_t)m_instanceData.size(); }
 
     void Update();
+    void BuildRayTracingAS(IGfxCommandList* pCommandList);
     void ResetFrameData();
 
     IGfxBuffer* GetSceneBuffer() const { return m_pSceneBuffer->GetBuffer(); }
@@ -43,4 +44,7 @@ private:
 
     std::unique_ptr<RawBuffer> m_pConstantBuffer[GFX_MAX_INFLIGHT_FRAMES]; //todo : change to gpu memory, and only update dirty regions
     uint32_t m_nConstantBufferOffset = 0;
+
+    std::unique_ptr<IGfxRayTracingTLAS> m_pSceneTLAS;
+    std::vector<GfxRayTracingInstance> m_raytracingInstances;
 };

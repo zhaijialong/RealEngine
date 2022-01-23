@@ -9,8 +9,19 @@ class D3D12RayTracingTLAS : public IGfxRayTracingTLAS
 {
 public:
     D3D12RayTracingTLAS(D3D12Device* pDevice, const GfxRayTracingTLASDesc& desc, const std::string& name);
+    ~D3D12RayTracingTLAS();
 
-    virtual void* GetHandle() const override { return nullptr; }
+    virtual void* GetHandle() const override { return m_pASBuffer; }
 
     bool Create();
+    void GetBuildDesc(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& desc, const GfxRayTracingInstance* instances, uint32_t instance_count);
+
+private:
+    ID3D12Resource* m_pASBuffer = nullptr;
+    ID3D12Resource* m_pScratchBuffer = nullptr;
+
+    ID3D12Resource* m_pInstanceBuffer = nullptr;
+    void* m_pInstanceBufferCpuAddress = nullptr;
+    uint32_t m_nInstanceBufferSize = 0;
+    uint32_t m_nCurrentInstanceBufferOffset = 0;
 };

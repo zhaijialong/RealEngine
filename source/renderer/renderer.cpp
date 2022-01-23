@@ -190,6 +190,8 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList)
         pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
     }
     m_pendingBLASBuilds.clear();
+
+    m_pGpuScene->BuildRayTracingAS(pCommandList);
 }
 
 void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
@@ -669,9 +671,9 @@ uint32_t Renderer::AllocateSceneConstant(const void* data, uint32_t size)
     return address;
 }
 
-uint32_t Renderer::AddInstance(const InstanceData& data)
+uint32_t Renderer::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas)
 {
-    return m_pGpuScene->AddInstance(data);
+    return m_pGpuScene->AddInstance(data, blas);
 }
 
 inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t row_num, uint32_t d)

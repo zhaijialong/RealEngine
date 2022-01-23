@@ -67,7 +67,7 @@ public:
 
     virtual void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas) override;
     virtual void UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas) override;
-    virtual void BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas) override;
+    virtual void BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count) override;
 
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;

@@ -347,7 +347,7 @@ void D3D12CommandList::UavBarrier(IGfxResource* resource)
 {
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-    barrier.UAV.pResource = (ID3D12Resource*)resource->GetHandle();
+    barrier.UAV.pResource = resource ? (ID3D12Resource*)resource->GetHandle() : nullptr;
 
     m_pendingBarriers.push_back(barrier);
 }
@@ -618,10 +618,17 @@ void D3D12CommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 
 void D3D12CommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
+    //todo
 }
 
-void D3D12CommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas)
+void D3D12CommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
 {
+    FlushPendingBarrier();
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
+    ((D3D12RayTracingTLAS*)tlas)->GetBuildDesc(desc, instances, instance_count);
+
+    m_pCommandList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
 }
 
 #if MICROPROFILE_GPU_TIMERS

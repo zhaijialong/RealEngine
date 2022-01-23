@@ -703,6 +703,6 @@ struct GfxRayTracingBLASDesc
 
 struct GfxRayTracingTLASDesc
 {
-    std::vector<GfxRayTracingInstance> instances;
+    uint32_t instance_count;
     GfxRayTracingASFlag flags;
 };

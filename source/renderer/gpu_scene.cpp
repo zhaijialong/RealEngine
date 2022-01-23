@@ -57,6 +57,27 @@ void GpuScene::Update()
     m_instanceDataAddress = m_pRenderer->AllocateSceneConstant(m_instanceData.data(), sizeof(InstanceData) * (uint32_t)m_instanceData.size());
 }
 
+void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
+{
+    GPU_EVENT(pCommandList, "BuildTLAS");
+
+    if (m_pSceneTLAS == nullptr || m_pSceneTLAS->GetDesc().instance_count < m_raytracingInstances.size())
+    {
+        GfxRayTracingTLASDesc desc;
+        desc.instance_count = (uint32_t)m_raytracingInstances.size();
+        desc.flags = GfxRayTracingASFlagPreferFastBuild;
+
+        IGfxDevice* device = m_pRenderer->GetDevice();
+        m_pSceneTLAS.reset(device->CreateRayTracingTLAS(desc, "GpuScene::m_pSceneTLAS"));
+    }
+
+    pCommandList->UavBarrier(nullptr); //barrier for blas
+    pCommandList->BuildRayTracingTLAS(m_pSceneTLAS.get(), m_raytracingInstances.data(), (uint32_t)m_raytracingInstances.size());
+    pCommandList->UavBarrier(m_pSceneTLAS.get());
+
+    m_raytracingInstances.clear();
+}
+
 uint32_t GpuScene::AllocateConstantBuffer(uint32_t size)
 {
     RE_ASSERT(m_nConstantBufferOffset + size <= MAX_CONSTANT_BUFFER_SIZE);
@@ -68,10 +89,23 @@ uint32_t GpuScene::AllocateConstantBuffer(uint32_t size)
     return address;
 }
 
-uint32_t GpuScene::AddInstance(const InstanceData& data)
+uint32_t GpuScene::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas)
 {
     m_instanceData.push_back(data);
-    return (uint32_t)m_instanceData.size() - 1;
+    uint32_t instance_id = (uint32_t)m_instanceData.size() - 1;
+
+    float4x4 transform = transpose(data.mtxWorld);
+
+    GfxRayTracingInstance instance;
+    instance.blas = blas;
+    memcpy(instance.transform, &transform, sizeof(float) * 12);
+    instance.instance_id = instance_id;
+    instance.instance_mask = 0; //todo
+    instance.flags = 0; //todo
+
+    m_raytracingInstances.push_back(instance);
+
+    return instance_id;
 }
 
 void GpuScene::ResetFrameData()

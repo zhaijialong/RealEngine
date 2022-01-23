@@ -42,7 +42,7 @@ bool D3D12RayTracingBLAS::Create()
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS buildInput;
     buildInput.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-    buildInput.Flags = d3d12_as_flags(m_desc.flags);
+    buildInput.Flags = d3d12_rt_as_flags(m_desc.flags);
     buildInput.NumDescs = (UINT)m_geometries.size();
     buildInput.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
     buildInput.pGeometryDescs = m_geometries.data();

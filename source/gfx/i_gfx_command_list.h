@@ -67,7 +67,7 @@ public:
 
     virtual void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas) = 0;
     virtual void UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas) = 0;
-    virtual void BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas) = 0;
+    virtual void BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count) = 0;
 
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const = 0;
