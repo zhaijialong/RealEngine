@@ -104,7 +104,7 @@ uint32_t GpuScene::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* bla
     instance.blas = blas;
     memcpy(instance.transform, &transform, sizeof(float) * 12);
     instance.instance_id = instance_id;
-    instance.instance_mask = 0; //todo
+    instance.instance_mask = 0xFF; //todo
     instance.flags = flags;
 
     m_raytracingInstances.push_back(instance);
