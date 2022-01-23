@@ -63,6 +63,10 @@ uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width)
     case GfxFormat::RGBA32UI:
     case GfxFormat::RGBA32SI:
         return width * 16;
+    case GfxFormat::RGB32F:
+    case GfxFormat::RGB32UI:
+    case GfxFormat::RGB32SI:
+        return width * 12;
     case GfxFormat::RGBA16F:
     case GfxFormat::RGBA16UI:
     case GfxFormat::RGBA16SI:

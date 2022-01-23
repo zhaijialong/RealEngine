@@ -181,6 +181,17 @@ void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
     m_computeBuffers.clear();
 }
 
+void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList)
+{
+    GPU_EVENT(pCommandList, "BuildRayTracingAS");
+
+    for (size_t i = 0; i < m_pendingBLASBuilds.size(); ++i)
+    {
+        pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
+    }
+    m_pendingBLASBuilds.clear();
+}
+
 void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 {
     World* world = Engine::GetInstance()->GetWorld();
@@ -284,6 +295,7 @@ void Renderer::Render()
 
     SetupGlobalConstants(pCommandList);
     FlushComputePass(pCommandList);
+    BuildRayTracingAS(pCommandList);
 
     World* world = Engine::GetInstance()->GetWorld();
     Camera* camera = world->GetCamera();
@@ -745,6 +757,11 @@ void Renderer::UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* dat
     upload.offset = offset;
     upload.staging_buffer = staging_buffer;
     m_pendingBufferUpload.push_back(upload);
+}
+
+void Renderer::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
+{
+    m_pendingBLASBuilds.push_back(blas);
 }
 
 RenderBatch& Renderer::AddBasePassBatch()

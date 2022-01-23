@@ -114,6 +114,12 @@ inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false, bool ua
         return uav ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
     case GfxFormat::RGB10A2UNORM:
         return DXGI_FORMAT_R10G10B10A2_UNORM;
+    case GfxFormat::RGB32F:
+        return DXGI_FORMAT_R32G32B32_FLOAT;
+    case GfxFormat::RGB32UI:
+        return DXGI_FORMAT_R32G32B32_UINT;
+    case GfxFormat::RGB32SI:
+        return DXGI_FORMAT_R32G32B32_SINT;
     case GfxFormat::R11G11B10F:
         return DXGI_FORMAT_R11G11B10_FLOAT;
     case GfxFormat::RG32F:
@@ -581,4 +587,36 @@ inline D3D12_RESOURCE_DESC d3d12_resource_desc(const GfxTextureDesc& desc)
     }
 
     return resourceDesc;
+}
+
+inline D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS d3d12_as_flags(GfxRayTracingASFlag flags)
+{
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS d3d12_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
+
+    if (flags & GfxRayTracingASFlagAllowUpdate)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+    }
+
+    if (flags & GfxRayTracingASFlagAllowCompaction)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION;
+    }
+
+    if (flags & GfxRayTracingASFlagPreferFastTrace)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+    }
+
+    if (flags & GfxRayTracingASFlagPreferFastBuild)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
+    }
+
+    if (flags & GfxRayTracingASFlagLowMemory)
+    {
+        d3d12_flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY;
+    }
+
+    return d3d12_flags;
 }

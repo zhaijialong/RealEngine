@@ -20,7 +20,7 @@ enum class GfxRenderBackend
 enum class GfxFormat
 {
     Unknown,
-    
+
     RGBA32F,
     RGBA32UI,
     RGBA32SI,
@@ -38,6 +38,9 @@ enum class GfxFormat
     BGRA8SRGB,
     RGB10A2UNORM,
 
+    RGB32F,
+    RGB32UI,
+    RGB32SI,
     R11G11B10F,
 
     RG32F,
@@ -673,10 +676,12 @@ struct GfxRayTracingGeometry
     uint32_t vertex_buffer_offset;
     uint32_t vertex_count;
     uint32_t vertex_stride;
+    GfxFormat vertex_format;
 
     IGfxBuffer* index_buffer;
     uint32_t index_buffer_offset;
     uint32_t index_count;
+    GfxFormat index_format;
 
     bool bOpaque;
 };

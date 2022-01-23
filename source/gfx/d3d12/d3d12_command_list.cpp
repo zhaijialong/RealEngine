@@ -6,6 +6,8 @@
 #include "d3d12_pipeline_state.h"
 #include "d3d12_heap.h"
 #include "d3d12_descriptor.h"
+#include "d3d12_rt_blas.h"
+#include "d3d12_rt_tlas.h"
 #include "pix_runtime.h"
 #include "ags.h"
 #include "../gfx.h"
@@ -607,6 +609,19 @@ void D3D12CommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer*
     m_pCommandList->ExecuteIndirect(signature, max_count,
         (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset,
         (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+}
+
+void D3D12CommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
+{
+    m_pCommandList->BuildRaytracingAccelerationStructure(((D3D12RayTracingBLAS*)blas)->GetBuildDesc(), 0, nullptr);
+}
+
+void D3D12CommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas)
+{
+}
+
+void D3D12CommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas)
+{
 }
 
 #if MICROPROFILE_GPU_TIMERS

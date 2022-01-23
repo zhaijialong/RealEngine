@@ -67,6 +67,7 @@ public:
 
     void UploadTexture(IGfxTexture* texture, const void* data);
     void UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size);
+    void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas);
 
     void AddComputePass(const ComputeFunc& func) { m_computePassBatchs.push_back(func); }
     void AddComputeBuffer(IGfxBuffer* buffer) { m_computeBuffers.push_back(buffer); }
@@ -91,6 +92,7 @@ private:
     void EndFrame();
 
     void FlushComputePass(IGfxCommandList* pCommandList);
+    void BuildRayTracingAS(IGfxCommandList* pCommandList);
     void SetupGlobalConstants(IGfxCommandList* pCommandList);
     void ImportPrevFrameTextures();
     void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle);
@@ -139,6 +141,8 @@ private:
         StagingBuffer staging_buffer;
     };
     std::vector<BufferUpload> m_pendingBufferUpload;
+
+    std::vector<IGfxRayTracingBLAS*> m_pendingBLASBuilds;
 
     std::unique_ptr<IGfxDescriptor> m_pAniso2xSampler;
     std::unique_ptr<IGfxDescriptor> m_pAniso4xSampler;

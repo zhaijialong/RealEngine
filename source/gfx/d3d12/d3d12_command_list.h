@@ -65,6 +65,10 @@ public:
     virtual void MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset) override;
     virtual void MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset) override;
 
+    virtual void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas) override;
+    virtual void UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas) override;
+    virtual void BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas) override;
+
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;
 #endif
