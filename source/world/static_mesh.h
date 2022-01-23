@@ -28,6 +28,7 @@ private:
     Renderer* m_pRenderer = nullptr;
     std::string m_name;
     std::unique_ptr<MeshMaterial> m_pMaterial = nullptr;
+    std::unique_ptr<IGfxRayTracingBLAS> m_pBLAS;
 
     uint32_t m_posBufferAddress = -1;
     uint32_t m_uvBufferAddress = -1;
@@ -41,7 +42,7 @@ private:
     uint32_t m_indexBufferAddress = -1;
     GfxFormat m_indexBufferFormat;
     uint32_t m_nIndexCount = 0;
-
+    uint32_t m_nVertexCount = 0;
     uint32_t m_nMeshletCount = 0;
 
     InstanceData m_instanceData = {};

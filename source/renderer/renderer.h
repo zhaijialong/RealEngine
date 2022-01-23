@@ -55,7 +55,7 @@ public:
     uint32_t AllocateSceneBuffer(const void* data, uint32_t size, uint32_t alignment = 4);
     void FreeSceneBuffer(uint32_t address);
     uint32_t AllocateSceneConstant(const void* data, uint32_t size);
-    uint32_t AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas);
+    uint32_t AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas, GfxRayTracingInstanceFlag flags);
     uint32_t GetInstanceCount() const { return m_pGpuScene->GetInstanceCount(); }
 
     void RequestMouseHitTest(uint32_t x, uint32_t y);

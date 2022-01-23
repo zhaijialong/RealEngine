@@ -26,6 +26,28 @@ StaticMesh::~StaticMesh()
 
 bool StaticMesh::Create()
 {
+    //todo : need to cache blas for same models
+
+    GfxRayTracingGeometry geometry;
+    geometry.vertex_buffer = m_pRenderer->GetSceneBuffer();
+    geometry.vertex_buffer_offset = m_posBufferAddress;
+    geometry.vertex_count = m_nVertexCount;
+    geometry.vertex_stride = sizeof(float3);
+    geometry.vertex_format = GfxFormat::RGB32F;
+    geometry.index_buffer = m_pRenderer->GetSceneBuffer();
+    geometry.index_buffer_offset = m_indexBufferAddress;
+    geometry.index_count = m_nIndexCount;
+    geometry.index_format = m_indexBufferFormat;
+    geometry.opaque = true; //todo : alpha test/blend
+
+    GfxRayTracingBLASDesc desc;
+    desc.geometries.push_back(geometry);
+    desc.flags = GfxRayTracingASFlagAllowCompaction | GfxRayTracingASFlagPreferFastBuild;
+
+    IGfxDevice* device = m_pRenderer->GetDevice();
+    m_pBLAS.reset(device->CreateRayTracingBLAS(desc, "BLAS : " + m_name));
+    m_pRenderer->BuildRayTracingBLAS(m_pBLAS.get());
+
     return true;
 }
 
@@ -68,7 +90,8 @@ void StaticMesh::UpdateConstants()
     m_instanceData.mtxWorldInverseTranspose = transpose(inverse(m_mtxWorld));
     m_instanceData.mtxPrevWorld = m_mtxPrevWorld;
 
-    m_nInstanceIndex = m_pRenderer->AddInstance(m_instanceData);
+    GfxRayTracingInstanceFlag flags = m_pMaterial->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
+    m_nInstanceIndex = m_pRenderer->AddInstance(m_instanceData, m_pBLAS.get(), flags);
 }
 
 void StaticMesh::Render(Renderer* pRenderer)

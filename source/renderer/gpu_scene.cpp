@@ -89,7 +89,7 @@ uint32_t GpuScene::AllocateConstantBuffer(uint32_t size)
     return address;
 }
 
-uint32_t GpuScene::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas)
+uint32_t GpuScene::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas, GfxRayTracingInstanceFlag flags)
 {
     m_instanceData.push_back(data);
     uint32_t instance_id = (uint32_t)m_instanceData.size() - 1;
@@ -101,7 +101,7 @@ uint32_t GpuScene::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* bla
     memcpy(instance.transform, &transform, sizeof(float) * 12);
     instance.instance_id = instance_id;
     instance.instance_mask = 0; //todo
-    instance.flags = 0; //todo
+    instance.flags = flags;
 
     m_raytracingInstances.push_back(instance);
 

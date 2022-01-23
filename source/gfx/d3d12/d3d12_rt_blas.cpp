@@ -26,7 +26,7 @@ bool D3D12RayTracingBLAS::Create()
 
         D3D12_RAYTRACING_GEOMETRY_DESC d3d12_geometry = {};
         d3d12_geometry.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES; //todo : support AABB
-        d3d12_geometry.Flags = geometry.bOpaque ? D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE : D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
+        d3d12_geometry.Flags = geometry.opaque ? D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE : D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
         d3d12_geometry.Triangles.IndexFormat = dxgi_format(geometry.index_format);
         d3d12_geometry.Triangles.VertexFormat = dxgi_format(geometry.vertex_format);
         d3d12_geometry.Triangles.IndexCount = geometry.index_count;

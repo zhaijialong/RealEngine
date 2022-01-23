@@ -683,7 +683,7 @@ struct GfxRayTracingGeometry
     uint32_t index_count;
     GfxFormat index_format;
 
-    bool bOpaque;
+    bool opaque;
 };
 
 struct GfxRayTracingInstance

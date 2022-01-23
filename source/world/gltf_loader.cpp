@@ -457,6 +457,7 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     mesh->m_indexBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") IB", remapped_indices, (uint32_t)indices.stride * (uint32_t)index_count);
     mesh->m_indexBufferFormat = indices.stride == 4 ? GfxFormat::R32UI : GfxFormat::R16UI;
     mesh->m_nIndexCount = (uint32_t)index_count;
+    mesh->m_nVertexCount = (uint32_t)remapped_vertex_count;
 
     for (size_t i = 0; i < vertex_types.size(); ++i)
     {

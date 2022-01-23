@@ -20,6 +20,8 @@ public:
     void UpdateConstants();
     const ModelMaterialConstant* GetConstants() const { return &m_materialCB; }
 
+    bool IsFrontFaceCCW() const { return m_bFrontFaceCCW; }
+
 private:
     std::string m_name;
     ModelMaterialConstant m_materialCB = {};

@@ -671,9 +671,9 @@ uint32_t Renderer::AllocateSceneConstant(const void* data, uint32_t size)
     return address;
 }
 
-uint32_t Renderer::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas)
+uint32_t Renderer::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas, GfxRayTracingInstanceFlag flags)
 {
-    return m_pGpuScene->AddInstance(data, blas);
+    return m_pGpuScene->AddInstance(data, blas, flags);
 }
 
 inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t row_num, uint32_t d)
