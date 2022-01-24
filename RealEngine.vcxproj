@@ -315,6 +315,7 @@
     <None Include="shaders\global_constants.hlsli" />
     <None Include="shaders\debug.hlsli" />
     <None Include="shaders\gpu_scene.hlsli" />
+    <None Include="shaders\gtso.hlsli" />
     <None Include="shaders\IntelTAA.hlsli" />
     <None Include="shaders\meshlet.hlsli" />
     <None Include="shaders\model.hlsli" />
