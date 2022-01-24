@@ -2,6 +2,8 @@
 #include "d3d12_rt_blas.h"
 #include "d3d12_device.h"
 
+#define ALIGN(address, alignment) (((address) + (alignment) - 1) & ~((alignment) - 1)) 
+
 D3D12RayTracingTLAS::D3D12RayTracingTLAS(D3D12Device* pDevice, const GfxRayTracingTLASDesc& desc, const std::string& name)
 {
     m_pDevice = pDevice;
@@ -37,7 +39,7 @@ bool D3D12RayTracingTLAS::Create()
     device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &asBufferDesc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr, IID_PPV_ARGS(&m_pASBuffer));
     device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &asBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_pScratchBuffer));
 
-    m_nInstanceBufferSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_desc.instance_count * GFX_MAX_INFLIGHT_FRAMES;
+    m_nInstanceBufferSize = ALIGN(sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_desc.instance_count, D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT) * GFX_MAX_INFLIGHT_FRAMES;
     CD3DX12_RESOURCE_DESC instanceBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_nInstanceBufferSize);
     const D3D12_HEAP_PROPERTIES uploadHeapProps = { D3D12_HEAP_TYPE_UPLOAD, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 0, 0 };
     device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &instanceBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_pInstanceBuffer));
@@ -50,10 +52,17 @@ bool D3D12RayTracingTLAS::Create()
 
 void D3D12RayTracingTLAS::GetBuildDesc(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& desc, const GfxRayTracingInstance* instances, uint32_t instance_count)
 {
+    RE_ASSERT(instance_count <= m_desc.instance_count);
+
+    if (m_nCurrentInstanceBufferOffset + sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instance_count > m_nInstanceBufferSize)
+    {
+        m_nCurrentInstanceBufferOffset = 0;
+    }
+
     desc.Inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
     desc.Inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
     desc.Inputs.InstanceDescs = m_pInstanceBuffer->GetGPUVirtualAddress() + m_nCurrentInstanceBufferOffset;
-    desc.Inputs.NumDescs = m_desc.instance_count;
+    desc.Inputs.NumDescs = instance_count;
     desc.Inputs.Flags = d3d12_rt_as_flags(m_desc.flags);
     desc.DestAccelerationStructureData = m_pASBuffer->GetGPUVirtualAddress();
     desc.ScratchAccelerationStructureData = m_pScratchBuffer->GetGPUVirtualAddress();
@@ -70,8 +79,5 @@ void D3D12RayTracingTLAS::GetBuildDesc(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUC
     }
 
     m_nCurrentInstanceBufferOffset += sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instance_count;
-    if (m_nCurrentInstanceBufferOffset >= m_nInstanceBufferSize)
-    {
-        m_nCurrentInstanceBufferOffset = 0;
-    }
+    m_nCurrentInstanceBufferOffset = ALIGN(m_nCurrentInstanceBufferOffset, D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT);
 }

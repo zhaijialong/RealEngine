@@ -54,12 +54,14 @@ void GpuScene::Free(uint32_t address)
 
 void GpuScene::Update()
 {
-    m_instanceDataAddress = m_pRenderer->AllocateSceneConstant(m_instanceData.data(), sizeof(InstanceData) * (uint32_t)m_instanceData.size());
+    uint32_t instance_count = (uint32_t)m_instanceData.size();
 
-    if (m_pSceneTLAS == nullptr || m_pSceneTLAS->GetDesc().instance_count < m_raytracingInstances.size())
+    m_instanceDataAddress = m_pRenderer->AllocateSceneConstant(m_instanceData.data(), sizeof(InstanceData) * instance_count);
+
+    if (m_pSceneTLAS == nullptr || m_pSceneTLAS->GetDesc().instance_count < instance_count)
     {
         GfxRayTracingTLASDesc desc;
-        desc.instance_count = (uint32_t)m_raytracingInstances.size();
+        desc.instance_count = instance_count;
         desc.flags = GfxRayTracingASFlagPreferFastBuild;
 
         IGfxDevice* device = m_pRenderer->GetDevice();
