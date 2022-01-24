@@ -1,14 +1,6 @@
 #include "common.hlsli"
 #include "gtso.hlsli"
 
-cbuffer CB0 : register(b0)
-{
-    uint c_width;
-    uint c_height;
-    float c_invWidth;
-    float c_invHeight;
-};
-
 cbuffer CB1 : register(b1)
 {
     uint c_diffuseRT;
@@ -41,7 +33,7 @@ float Shadow(float3 worldPos, float3 worldNormal, float4x4 mtxLightVP, Texture2D
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    if (dispatchThreadID.x >= c_width || dispatchThreadID.y >= c_height)
+    if (dispatchThreadID.x >= SceneCB.viewWidth || dispatchThreadID.y >= SceneCB.viewHeight)
     {
         return;
     }

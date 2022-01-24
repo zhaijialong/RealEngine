@@ -57,17 +57,6 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, const ClusterShadingP
 
     pCommandList->SetPipelineState(m_pPSO);
 
-    struct CB0
-    {
-        uint width;
-        uint height;
-        float invWidth;
-        float invHeight;
-    };
-
-    CB0 cb0 = { width, height, 1.0f / width, 1.0f / height };
-    pCommandList->SetComputeConstants(0, &cb0, sizeof(cb0));
-
     struct CB1
     {
         uint diffuseRT;
