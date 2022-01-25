@@ -283,6 +283,9 @@
     <ClCompile Include="source\gfx\d3d12\d3d12_rt_tlas.cpp">
       <Filter>source\gfx\d3d12</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\lighting\rt_shadow.cpp">
+      <Filter>source\renderer\lighting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -639,6 +642,9 @@
     <ClInclude Include="source\gfx\d3d12\d3d12_rt_tlas.h">
       <Filter>source\gfx\d3d12</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\lighting\rt_shadow.h">
+      <Filter>source\renderer\lighting</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -843,6 +849,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\model_meshlet.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\composite_light.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\rt_shadow.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

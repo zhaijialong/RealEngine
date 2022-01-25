@@ -67,7 +67,7 @@ void World::Tick(float delta_time)
 
         object->Tick(delta_time);
 
-        if (object->FrustumCull(planes, 6)) //todo : shadow pass culling
+        if (object->FrustumCull(planes, 6))
         {
             visibleObjects.push_back(object);
         }

@@ -13,47 +13,12 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     m_pHZB->Generate2ndPhaseCullingHZB(m_pRenderGraph.get(), m_pBasePass->GetDepthRT());
     m_pBasePass->Render2ndPhase(m_pRenderGraph.get());
 
-    struct DepthPassData
-    {
-        RenderGraphHandle outDepthRT;
-    };
-
-    auto shadow_pass = m_pRenderGraph->AddPass<DepthPassData>("Shadow Pass",
-        [](DepthPassData& data, RenderGraphBuilder& builder)
-        {
-            RenderGraphTexture::Desc desc;
-            desc.width = desc.height = 4096;
-            desc.format = GfxFormat::D16;
-            desc.usage = GfxTextureUsageDepthStencil;
-
-            data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "ShadowMap");
-            data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, 1.0f);
-        },
-        [&](const DepthPassData& data, IGfxCommandList* pCommandList)
-        {
-            World* world = Engine::GetInstance()->GetWorld();
-            Camera* camera = world->GetCamera();
-            ILight* light = world->GetPrimaryLight();
-
-            float4x4 mtxShadowViewProjection = light->GetShadowMatrix();
-            pCommandList->SetGraphicsConstants(3, &mtxShadowViewProjection, sizeof(float4x4));
-
-            for (size_t i = 0; i < m_shadowPassBatchs.size(); ++i)
-            {
-                DrawBatch(pCommandList, m_shadowPassBatchs[i]);
-            }
-            m_shadowPassBatchs.clear();
-
-            camera->SetupCameraCB(pCommandList);
-        });
-
     LightingProcessInput lightInput;
     lightInput.diffuseRT = m_pBasePass->GetDiffuseRT();
     lightInput.specularRT = m_pBasePass->GetSpecularRT();
     lightInput.normalRT = m_pBasePass->GetNormalRT();
     lightInput.emissiveRT = m_pBasePass->GetEmissiveRT();
     lightInput.depthRT = m_pBasePass->GetDepthRT();
-    lightInput.shadowRT = shadow_pass->outDepthRT;
 
     RenderGraphHandle lightRT = m_pLightingProcessor->Process(m_pRenderGraph.get(), lightInput, m_nWindowWidth, m_nWindowHeight);
 

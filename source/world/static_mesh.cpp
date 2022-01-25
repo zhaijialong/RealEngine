@@ -103,9 +103,6 @@ void StaticMesh::Render(Renderer* pRenderer)
     Draw(bassPassBatch, m_pMaterial->GetPSO());
 #endif
 
-    RenderBatch& shadowPassBatch = pRenderer->AddShadowPassBatch();
-    Draw(shadowPassBatch, m_pMaterial->GetShadowPSO());
-
     if (m_nID == pRenderer->GetMouseHitObjectID())
     {
         RenderBatch& outlinePassBatch = pRenderer->AddForwardPassBatch();

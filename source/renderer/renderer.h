@@ -74,7 +74,6 @@ public:
 
     LinearAllocator* GetConstantAllocator() const { return m_cbAllocator.get(); }
     RenderBatch& AddBasePassBatch();
-    RenderBatch& AddShadowPassBatch() { return m_shadowPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddForwardPassBatch() { return m_forwardPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddVelocityPassBatch() { return m_velocityPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddObjectIDPassBatch() { return m_idPassBatchs.emplace_back(*m_cbAllocator); }
@@ -186,7 +185,6 @@ private:
     std::vector<ComputeFunc> m_computePassBatchs;
     std::vector<IGfxBuffer*> m_computeBuffers;
 
-    std::vector<RenderBatch> m_shadowPassBatchs;
     std::vector<RenderBatch> m_forwardPassBatchs;
     std::vector<RenderBatch> m_velocityPassBatchs;
     std::vector<RenderBatch> m_idPassBatchs;

@@ -2,13 +2,6 @@
 
 #include "common.hlsli"
 
-void DecodeVisibilityBentNormal(const uint packedValue, out float visibility, out float3 bentNormal)
-{
-    float4 decoded = RGBA8UnormToFloat4(packedValue);
-    bentNormal = decoded.xyz * 2.0.xxx - 1.0.xxx; // could normalize - don't want to since it's done so many times, better to do it at the final step only
-    visibility = decoded.w;
-}
-
 float3 GTAOMultiBounce(float visibility, float3 albedo)
 {
     float3 a = 2.0404 * albedo - 0.3324;
