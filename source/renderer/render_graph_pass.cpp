@@ -111,6 +111,7 @@ void RenderGraphPassBase::Execute(const RenderGraph& graph, IGfxCommandList* pCo
     for (size_t i = 0; i < m_eventNames.size(); ++i)
     {
         pCommandList->BeginEvent(m_eventNames[i]);
+        BeginMPGpuEvent(pCommandList, m_eventNames[i]);
     }
 
     {
@@ -124,6 +125,7 @@ void RenderGraphPassBase::Execute(const RenderGraph& graph, IGfxCommandList* pCo
     for (uint32_t i = 0; i < m_nEndEventNum; ++i)
     {
         pCommandList->EndEvent();
+        EndMPGpuEvent(pCommandList);
     }
 }
 

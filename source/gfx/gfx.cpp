@@ -21,8 +21,7 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
     return pDevice;
 }
 
-MPRenderEvent::MPRenderEvent(IGfxCommandList* pCommandList, const std::string& event_name) :
-    m_pCommandList(pCommandList)
+void BeginMPGpuEvent(IGfxCommandList* pCommandList, const std::string& event_name)
 {
 #if MICROPROFILE_GPU_TIMERS
     static const uint32_t EVENT_COLOR[] =
@@ -48,10 +47,10 @@ MPRenderEvent::MPRenderEvent(IGfxCommandList* pCommandList, const std::string& e
 #endif
 }
 
-MPRenderEvent::~MPRenderEvent()
+void EndMPGpuEvent(IGfxCommandList* pCommandList)
 {
 #if MICROPROFILE_GPU_TIMERS
-    MicroProfileLeaveGpu(m_pCommandList->GetProfileLog());
+    MicroProfileLeaveGpu(pCommandList->GetProfileLog());
 #endif
 }
 

@@ -22,6 +22,8 @@ bool IsDepthFormat(GfxFormat format);
 uint32_t CalcSubresource(const GfxTextureDesc& desc, uint32_t mip, uint32_t slice);
 void DecomposeSubresource(const GfxTextureDesc& desc, uint32_t subresource, uint32_t& mip, uint32_t& slice);
 
+void BeginMPGpuEvent(IGfxCommandList* pCommandList, const std::string& event_name);
+void EndMPGpuEvent(IGfxCommandList* pCommandList);
 
 class RenderEvent
 {
@@ -44,8 +46,16 @@ private:
 class MPRenderEvent
 {
 public:
-    MPRenderEvent(IGfxCommandList* pCommandList, const std::string& event_name);
-    ~MPRenderEvent();
+    MPRenderEvent(IGfxCommandList* pCommandList, const std::string& event_name) :
+        m_pCommandList(pCommandList)
+    {
+        BeginMPGpuEvent(pCommandList, event_name);
+    }
+
+    ~MPRenderEvent()
+    {
+        EndMPGpuEvent(m_pCommandList);
+    }
 
 private:
     IGfxCommandList* m_pCommandList;
