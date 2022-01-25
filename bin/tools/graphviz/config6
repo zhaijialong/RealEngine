@@ -38,6 +38,7 @@ gvplugin_core.dll core {
 	}
 	device {
 		svg:svg 1
+		svgz:svg 1
 	}
 	device {
 		json:json 1
@@ -50,6 +51,7 @@ gvplugin_core.dll core {
 	}
 	device {
 		vml:vml 1
+		vmlz:vml 1
 	}
 	device {
 		pic:pic -1
@@ -105,11 +107,11 @@ gvplugin_core.dll core {
 		jpeg:fig 1
 		jpe:fig 1
 		jpg:fig 1
-#FAILS		png:vrml 1
-#FAILS		gif:vrml 1
-#FAILS		jpeg:vrml 1
-#FAILS		jpe:vrml 1
-#FAILS		jpg:vrml 1
+		png:vrml 1
+		gif:vrml 1
+		jpeg:vrml 1
+		jpe:vrml 1
+		jpg:vrml 1
 		eps:ps 1
 		ps:ps 1
 		(lib):ps 1
@@ -149,6 +151,70 @@ gvplugin_core.dll core {
 gvplugin_dot_layout.dll dot_layout {
 	layout {
 		dot 0
+	}
+}
+gvplugin_gd.dll gd {
+	render {
+		gd 1
+	}
+	render {
+		vrml 1
+	}
+	textlayout {
+		textlayout 2
+	}
+	loadimage {
+		gd:gd 1
+		gd2:gd 1
+		gif:gd 1
+		jpeg:gd 1
+		jpe:gd 1
+		jpg:gd 1
+		png:gd 1
+		gd:ps 1
+#FAILS		gd:lasi 1
+		gd2:ps 1
+#FAILS		gd2:lasi 1
+		gif:ps 1
+#FAILS		gif:lasi 1
+		jpeg:ps 1
+		jpg:ps 1
+		jpe:ps 1
+#FAILS		jpeg:lasi 1
+#FAILS		jpg:lasi 1
+#FAILS		jpe:lasi 1
+		png:ps 1
+#FAILS		png:lasi 1
+		gd:cairo 1
+		gd2:cairo 1
+		gif:cairo 1
+		jpeg:cairo 1
+		jpg:cairo 1
+		jpe:cairo 1
+		png:cairo -1
+	}
+	device {
+		gif:cairo 10
+		wbmp:cairo 5
+		jpe:cairo 5
+		jpeg:cairo 5
+		jpg:cairo 5
+		png:cairo 5
+		gd:cairo 5
+		gd2:cairo 5
+	}
+	device {
+		gif:gd 1
+		wbmp:gd 1
+		jpe:gd 1
+		jpeg:gd 1
+		jpg:gd 1
+		png:gd 1
+		gd:gd 1
+		gd2:gd 1
+	}
+	device {
+		vrml:vrml 1
 	}
 }
 gvplugin_gdiplus.dll gdiplus {
