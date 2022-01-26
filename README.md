@@ -2,7 +2,7 @@
 
 My toy engine, mainly for rendering expariment and prototyping. It requires a GPU which supports DX12 Ultimate.
 
-It is not supposed to be used in production, and prefers clean design and code over being heavily optimized (especially in CPU side).
+It is not supposed to be used in production, and prefers clean design and code over being heavily optimized.
 
 ## some highlights
 
@@ -34,7 +34,6 @@ It is not supposed to be used in production, and prefers clean design and code o
 
 tested on RX6600(win11, Adrenalin 21.12.1)
 
-* PIX crashes when capturing, and works if all indirect commands removed 
 * indirect DispatchMesh results in GPU hang after a few seconds
     ```cpp
     void GpuDrivenDebugPrint::Draw(IGfxCommandList* pCommandList)
