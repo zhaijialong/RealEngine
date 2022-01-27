@@ -21,6 +21,8 @@ IGfxPipelineState* MeshMaterial::GetPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
+        defines.push_back("UNIFORM_RESOURCE=1");
+
         if (m_bPbrMetallicRoughness) defines.push_back("PBR_METALLIC_ROUGHNESS=1");
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
         if (m_pMetallicRoughnessTexture)
@@ -77,6 +79,8 @@ IGfxPipelineState* MeshMaterial::GetShadowPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
+        defines.push_back("UNIFORM_RESOURCE=1");
+
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
         if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
@@ -107,6 +111,8 @@ IGfxPipelineState* MeshMaterial::GetVelocityPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
+        defines.push_back("UNIFORM_RESOURCE=1");
+
         if (m_bSkeletalAnim) defines.push_back("ANIME_POS=1");
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
         if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
@@ -135,6 +141,8 @@ IGfxPipelineState* MeshMaterial::GetIDPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
+        defines.push_back("UNIFORM_RESOURCE=1");
+
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
         if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
@@ -162,6 +170,8 @@ IGfxPipelineState* MeshMaterial::GetOutlinePSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
+        defines.push_back("UNIFORM_RESOURCE=1");
+
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
         if (m_pDiffuseTexture) defines.push_back("DIFFUSE_TEXTURE=1");
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
@@ -189,7 +199,6 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         std::vector<std::string> defines;
-        defines.push_back("NON_UNIFORM_RESOURCE=1");
 
         if (m_bPbrMetallicRoughness) defines.push_back("PBR_METALLIC_ROUGHNESS=1");
         if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");

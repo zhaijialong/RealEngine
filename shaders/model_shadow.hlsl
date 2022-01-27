@@ -31,6 +31,6 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 void ps_main(VSOutput input)
 {
 #if ALPHA_TEST
-    AlphaTest(c_InstanceIndex, input.uv);
+    model::AlphaTest(c_InstanceIndex, input.uv);
 #endif
 }

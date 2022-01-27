@@ -40,7 +40,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 float4 ps_main(VSOutput input) : SV_TARGET0
 {    
 #if ALPHA_TEST
-    AlphaTest(c_InstanceIndex, input.uv);
+    model::AlphaTest(c_InstanceIndex, input.uv);
 #endif
     
     float2 ndcPos = input.clipPos.xy / input.clipPos.w;

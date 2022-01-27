@@ -38,7 +38,7 @@ bool StaticMesh::Create()
     geometry.index_buffer_offset = m_indexBufferAddress;
     geometry.index_count = m_nIndexCount;
     geometry.index_format = m_indexBufferFormat;
-    geometry.opaque = true; //todo : alpha test/blend
+    geometry.opaque = m_pMaterial->IsAlphaTest() ? false : true; //todo : alpha blend
 
     GfxRayTracingBLASDesc desc;
     desc.geometries.push_back(geometry);
@@ -67,6 +67,11 @@ void StaticMesh::UpdateConstants()
 {
     m_pMaterial->UpdateConstants();
 
+    m_instanceData.instanceType = (uint)InstanceType::Model;
+    m_instanceData.indexBufferAddress = m_indexBufferAddress;
+    m_instanceData.indexStride = m_indexBufferFormat == GfxFormat::R32UI ? 4 : 2;
+    m_instanceData.triangleCount = m_nIndexCount / 3;
+
     m_instanceData.meshletCount = m_nMeshletCount;
     m_instanceData.meshletBufferAddress = m_meshletBufferAddress;
     m_instanceData.meshletVerticesBufferAddress = m_meshletVerticesBufferAddress;
@@ -76,15 +81,13 @@ void StaticMesh::UpdateConstants()
     m_instanceData.uvBufferAddress = m_uvBufferAddress;
     m_instanceData.normalBufferAddress = m_normalBufferAddress;
     m_instanceData.tangentBufferAddress = m_tangentBufferAddress;
-    
-    m_instanceData.objectID = m_nID;
+
     m_instanceData.materialDataAddress = m_pRenderer->AllocateSceneConstant((void*)m_pMaterial->GetConstants(), sizeof(ModelMaterialConstant));
+    m_instanceData.objectID = m_nID;
     m_instanceData.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
 
     m_instanceData.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
     m_instanceData.radius = m_radius * m_instanceData.scale;
-
-    m_instanceData.triangleCount = m_nIndexCount / 3;
 
     m_instanceData.mtxWorld = m_mtxWorld;
     m_instanceData.mtxWorldInverseTranspose = transpose(inverse(m_mtxWorld));

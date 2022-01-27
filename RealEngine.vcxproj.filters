@@ -774,6 +774,9 @@
     <None Include="shaders\gtso.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\ray_trace.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

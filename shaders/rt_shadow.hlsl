@@ -1,4 +1,5 @@
 #include "common.hlsli"
+#include "ray_trace.hlsli"
 
 cbuffer RaytraceConstants : register(b0)
 {
@@ -28,26 +29,8 @@ void raytrace_shadow(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     Texture2D normalRT = ResourceDescriptorHeap[c_normalSRV];
     float3 N = OctNormalDecode(normalRT[pos].xyz);
-
-    RaytracingAccelerationStructure raytracingAS = ResourceDescriptorHeap[SceneCB.sceneRayTracingTLAS];
-
-    RayDesc ray;
-    ray.Origin = worldPos + N * 0.01;
-    ray.Direction = SceneCB.lightDir;
-    ray.TMin = 0.0;
-    ray.TMax = 1000.0;
-
-    RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
-
-    q.TraceRayInline(
-        raytracingAS,
-        RAY_FLAG_NONE,
-        0xFF,
-        ray);
-
-    q.Proceed();
     
-    float visibility = q.CommittedStatus() == COMMITTED_TRIANGLE_HIT ? 0.0 : 1.0;
+    float visibility = rt::VisibilityRay(worldPos + N * 0.01, SceneCB.lightDir, 1000.0);
 
     RWTexture2D<unorm float> shadowRT = ResourceDescriptorHeap[c_shadowUAV];
     shadowRT[pos] = visibility;

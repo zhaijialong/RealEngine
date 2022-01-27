@@ -4,6 +4,9 @@
 #include "model_constants.hlsli"
 #include "gpu_scene.hlsli"
 
+namespace model
+{
+
 ModelMaterialConstant GetMaterialConstant(uint instance_id)
 {
     return LoadSceneConstantBuffer<ModelMaterialConstant>(GetInstanceData(instance_id).materialDataAddress);
@@ -75,10 +78,10 @@ struct PbrSpecularGlossiness
 
 Texture2D GetMaterialTexture2D(uint heapIndex)
 {
-#if NON_UNIFORM_RESOURCE
-    return ResourceDescriptorHeap[NonUniformResourceIndex(heapIndex)];
-#else
+#if UNIFORM_RESOURCE
     return ResourceDescriptorHeap[heapIndex];
+#else
+    return ResourceDescriptorHeap[NonUniformResourceIndex(heapIndex)];
 #endif
 }
 
@@ -213,3 +216,5 @@ void AlphaTest(uint instanceIndex, float2 uv)
 #endif
     clip(alpha - GetMaterialConstant(instanceIndex).alphaCutoff);
 }
+
+} // namespace model

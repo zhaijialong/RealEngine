@@ -1,9 +1,9 @@
 #include "model.hlsli"
 #include "debug.hlsli"
 
-VertexOut vs_main(uint vertex_id : SV_VertexID)
+model::VertexOut vs_main(uint vertex_id : SV_VertexID)
 {
-    VertexOut v = GetVertex(c_InstanceIndex, vertex_id);
+    model::VertexOut v = model::GetVertex(c_InstanceIndex, vertex_id);
     return v;
 }
 
@@ -15,7 +15,7 @@ struct GBufferOutput
     float3 emissiveRT : SV_TARGET3;
 };
 
-GBufferOutput ps_main(VertexOut input
+GBufferOutput ps_main(model::VertexOut input
 #if !GFX_VENDOR_AMD
     , bool isFrontFace : SV_IsFrontFace //using SV_IsFrontFace with mesh shaders will result in crashes on AMD
 #endif
@@ -25,15 +25,15 @@ GBufferOutput ps_main(VertexOut input
     bool isFrontFace = true;
 #endif
 
-#if !NON_UNIFORM_RESOURCE
+#if UNIFORM_RESOURCE
     input.instanceIndex = c_InstanceIndex;
 #endif
 
-    PbrMetallicRoughness pbrMetallicRoughness = GetMaterialMetallicRoughness(input);
-    PbrSpecularGlossiness pbrSpecularGlossiness = GetMaterialSpecularGlossiness(input);
-    float3 N = GetMaterialNormal(input, isFrontFace);
-    float ao = GetMaterialAO(input);
-    float3 emissive = GetMaterialEmissive(input);
+    model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(input);
+    model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(input);
+    float3 N = model::GetMaterialNormal(input, isFrontFace);
+    float ao = model::GetMaterialAO(input);
+    float3 emissive = model::GetMaterialEmissive(input);
     
     float3 diffuse = float3(1, 1, 1);
     float3 specular = float3(0, 0, 0);
@@ -56,7 +56,7 @@ GBufferOutput ps_main(VertexOut input
 #endif //PBR_SPECULAR_GLOSSINESS
     
 #if ALPHA_TEST
-    clip(alpha - GetMaterialConstant(input.instanceIndex).alphaCutoff);
+    clip(alpha - model::GetMaterialConstant(input.instanceIndex).alphaCutoff);
 #endif
     
     if (SceneCB.bShowMeshlets)

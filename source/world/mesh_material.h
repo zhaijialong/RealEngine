@@ -21,6 +21,7 @@ public:
     const ModelMaterialConstant* GetConstants() const { return &m_materialCB; }
 
     bool IsFrontFaceCCW() const { return m_bFrontFaceCCW; }
+    bool IsAlphaTest() const { return m_bAlphaTest; }
 
 private:
     std::string m_name;
