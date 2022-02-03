@@ -142,7 +142,7 @@ void GLTFLoader::LoadNode(cgltf_data* data, cgltf_node* node, const float4x4& mt
 
         for (cgltf_size i = 0; i < node->mesh->primitives_count; i++)
         {
-            std::string name = "mesh_" + std::to_string(mesh_index) + "_" + std::to_string(i) + " " + node->mesh->name;
+            std::string name = "mesh_" + std::to_string(mesh_index) + "_" + std::to_string(i) + " " + (node->mesh->name ? node->mesh->name : "");
 
             StaticMesh* mesh = LoadMesh(&node->mesh->primitives[i], name);
 

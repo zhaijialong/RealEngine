@@ -42,7 +42,7 @@ bool StaticMesh::Create()
 
     GfxRayTracingBLASDesc desc;
     desc.geometries.push_back(geometry);
-    desc.flags = GfxRayTracingASFlagAllowCompaction | GfxRayTracingASFlagPreferFastBuild;
+    desc.flags = GfxRayTracingASFlagAllowCompaction | GfxRayTracingASFlagPreferFastTrace;
 
     IGfxDevice* device = m_pRenderer->GetDevice();
     m_pBLAS.reset(device->CreateRayTracingBLAS(desc, "BLAS : " + m_name));
@@ -53,14 +53,10 @@ bool StaticMesh::Create()
 
 void StaticMesh::Tick(float delta_time)
 {
-    m_mtxPrevWorld = m_mtxWorld;
-
-    float4x4 T = translation_matrix(m_pos);
-    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
-    float4x4 S = scaling_matrix(m_scale);
-    m_mtxWorld = mul(T, mul(R, S));
-
     UpdateConstants();
+
+    GfxRayTracingInstanceFlag flags = m_pMaterial->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
+    m_nInstanceIndex = m_pRenderer->AddInstance(m_instanceData, m_pBLAS.get(), flags);
 }
 
 void StaticMesh::UpdateConstants()
@@ -86,15 +82,17 @@ void StaticMesh::UpdateConstants()
     m_instanceData.objectID = m_nID;
     m_instanceData.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
 
-    m_instanceData.center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
+    float4x4 T = translation_matrix(m_pos);
+    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
+    float4x4 S = scaling_matrix(m_scale);
+    float4x4 mtxWorld = mul(T, mul(R, S));
+
+    m_instanceData.center = mul(mtxWorld, float4(m_center, 1.0)).xyz();
     m_instanceData.radius = m_radius * m_instanceData.scale;
 
-    m_instanceData.mtxWorld = m_mtxWorld;
-    m_instanceData.mtxWorldInverseTranspose = transpose(inverse(m_mtxWorld));
-    m_instanceData.mtxPrevWorld = m_mtxPrevWorld;
-
-    GfxRayTracingInstanceFlag flags = m_pMaterial->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
-    m_nInstanceIndex = m_pRenderer->AddInstance(m_instanceData, m_pBLAS.get(), flags);
+    m_instanceData.mtxPrevWorld = m_instanceData.mtxWorld;
+    m_instanceData.mtxWorld = mtxWorld;
+    m_instanceData.mtxWorldInverseTranspose = transpose(inverse(mtxWorld));
 }
 
 void StaticMesh::Render(Renderer* pRenderer)
@@ -106,13 +104,7 @@ void StaticMesh::Render(Renderer* pRenderer)
     Draw(bassPassBatch, m_pMaterial->GetPSO());
 #endif
 
-    if (m_nID == pRenderer->GetMouseHitObjectID())
-    {
-        RenderBatch& outlinePassBatch = pRenderer->AddForwardPassBatch();
-        Draw(outlinePassBatch, m_pMaterial->GetOutlinePSO());
-    }
-
-    if (!nearly_equal(m_mtxPrevWorld, m_mtxWorld))
+    if (!nearly_equal(m_instanceData.mtxPrevWorld, m_instanceData.mtxWorld))
     {
         RenderBatch& velocityPassBatch = pRenderer->AddVelocityPassBatch();
         Draw(velocityPassBatch, m_pMaterial->GetVelocityPSO());
@@ -123,14 +115,17 @@ void StaticMesh::Render(Renderer* pRenderer)
         RenderBatch& idPassBatch = pRenderer->AddObjectIDPassBatch();
         Draw(idPassBatch, m_pMaterial->GetIDPSO());
     }
+
+    if (m_nID == pRenderer->GetMouseHitObjectID())
+    {
+        RenderBatch& outlinePassBatch = pRenderer->AddForwardPassBatch();
+        Draw(outlinePassBatch, m_pMaterial->GetOutlinePSO());
+    }
 }
 
 bool StaticMesh::FrustumCull(const float4* planes, uint32_t plane_count) const
 {
-    float3 center = mul(m_mtxWorld, float4(m_center, 1.0)).xyz();
-    float radius = m_radius * max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
-
-    return ::FrustumCull(planes, plane_count, center, radius);
+    return ::FrustumCull(planes, plane_count, m_instanceData.center, m_instanceData.radius);
 }
 
 void StaticMesh::Draw(RenderBatch& batch, IGfxPipelineState* pso)

@@ -5,7 +5,6 @@
 #include "model_constants.hlsli"
 
 class MeshMaterial;
-class Renderer;
 
 class StaticMesh : public IVisibleObject
 {
@@ -38,18 +37,15 @@ private:
     uint32_t m_meshletBufferAddress = -1;
     uint32_t m_meshletVerticesBufferAddress = -1;
     uint32_t m_meshletIndicesBufferAddress = -1;
+    uint32_t m_nMeshletCount = 0;
 
     uint32_t m_indexBufferAddress = -1;
     GfxFormat m_indexBufferFormat;
     uint32_t m_nIndexCount = 0;
     uint32_t m_nVertexCount = 0;
-    uint32_t m_nMeshletCount = 0;
 
     InstanceData m_instanceData = {};
     uint32_t m_nInstanceIndex = 0;
-
-    float4x4 m_mtxWorld;
-    float4x4 m_mtxPrevWorld;
 
     float3 m_center = { 0.0f, 0.0f, 0.0f };
     float m_radius = 0.0f;
