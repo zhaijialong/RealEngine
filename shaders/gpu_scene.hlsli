@@ -24,10 +24,10 @@ struct InstanceData
     uint normalBufferAddress;
     uint tangentBufferAddress;
     
+    uint bVertexAnimation;
     uint materialDataAddress;
     uint objectID;
     float scale;
-    uint _padding0;
     
     float3 center;
     float radius;
@@ -56,6 +56,13 @@ T LoadSceneAnimationBuffer(uint bufferAddress, uint element_id)
 {
     ByteAddressBuffer sceneBuffer = ResourceDescriptorHeap[SceneCB.sceneAnimationBufferSRV];
     return sceneBuffer.Load<T>(bufferAddress + sizeof(T) * element_id);
+}
+
+template<typename T>
+void StoreSceneAnimationBuffer(uint bufferAddress, uint element_id, T value)
+{
+    RWByteAddressBuffer sceneBuffer = ResourceDescriptorHeap[SceneCB.sceneAnimationBufferUAV];
+    sceneBuffer.Store<T>(bufferAddress + sizeof(T) * element_id, value);
 }
 
 template<typename T>

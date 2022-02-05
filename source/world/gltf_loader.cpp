@@ -128,6 +128,7 @@ void GLTFLoader::Load()
         SkeletalMesh* mesh = new SkeletalMesh(m_file);
         mesh->m_pRenderer = Engine::GetInstance()->GetRenderer();
         mesh->m_pAnimation.reset(LoadAnimation(data, &data->animations[0])); //currently only load the first one
+        mesh->m_pSkeleton.reset(LoadSkeleton(data, &data->skins[0]));
 
         for (cgltf_size i = 0; i < data->nodes_count; ++i)
         {
@@ -607,6 +608,53 @@ Animation* GLTFLoader::LoadAnimation(const cgltf_data* data, const cgltf_animati
     return animation;
 }
 
+Skeleton* GLTFLoader::LoadSkeleton(const cgltf_data* data, const cgltf_skin* skin)
+{
+    if (skin == nullptr)
+    {
+        return nullptr;
+    }
+
+    Skeleton* skeleton = new Skeleton(skin->name ? skin->name : "");
+    skeleton->m_joints.resize(skin->joints_count);
+    skeleton->m_inverseBindMatrices.resize(skin->joints_count);
+    skeleton->m_jointMatrices.resize(skin->joints_count);
+
+    for (cgltf_size i = 0; i < skin->joints_count; ++i)
+    {
+        skeleton->m_joints[i] = GetNodeIndex(data, skin->joints[i]);
+    }
+
+    const cgltf_accessor* accessor = skin->inverse_bind_matrices;
+    RE_ASSERT(accessor->count == skin->joints_count);
+
+    uint32_t size = (uint32_t)accessor->stride * (uint32_t)accessor->count;
+
+    std::vector<float4x4> inverseBindMatrices(accessor->count);
+    memcpy(inverseBindMatrices.data(), (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset, size);
+
+    for (cgltf_size i = 0; i < accessor->count; ++i)
+    {
+        float3 translation;
+        float4 rotation;
+        float3 scale;
+        decompose(inverseBindMatrices[i], translation, rotation, scale);
+
+        //right-hand to left-hand
+        translation.z *= -1;
+        rotation.z *= -1;
+        rotation.w *= -1;
+
+        float4x4 T = translation_matrix(translation);
+        float4x4 R = rotation_matrix(rotation);
+        float4x4 S = scaling_matrix(scale);
+
+        skeleton->m_inverseBindMatrices[i] = mul(T, mul(R, S));
+    }
+
+    return skeleton;
+}
+
 SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const cgltf_node* gltf_node)
 {
     SkeletalMeshNode* node = new SkeletalMeshNode;
@@ -697,6 +745,42 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
             vertices = LoadBufferStream(primitive->attributes[i].data, false, vertex_count);
             mesh->staticTangentBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") tangent", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
             break;
+        case cgltf_attribute_type_joints:
+        {
+            const cgltf_accessor* accessor = primitive->attributes[i].data;
+
+            std::vector<ushort4> jointIDs;
+            jointIDs.reserve(accessor->count * 4);
+
+            for (cgltf_size j = 0; j < accessor->count; ++j)
+            {
+                cgltf_uint id[4];
+                cgltf_accessor_read_uint(accessor, j, id, 4);
+
+                jointIDs.push_back(ushort4(id[0], id[1], id[2], id[3]));
+            }
+
+            mesh->jointIDBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") joint ID", jointIDs.data(), sizeof(ushort4) * (uint32_t)accessor->count);
+            break;
+        }
+        case cgltf_attribute_type_weights:
+        {
+            const cgltf_accessor* accessor = primitive->attributes[i].data;
+
+            std::vector<float4> jointWeights;
+            jointWeights.reserve(accessor->count);
+
+            for (cgltf_size j = 0; j < accessor->count; ++j)
+            {
+                cgltf_float weight[4];
+                cgltf_accessor_read_float(accessor, j, weight, 4);
+
+                jointWeights.push_back(float4(weight));
+            }
+
+            mesh->jointWeightBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") joint weight", jointWeights.data(), sizeof(float4) * (uint32_t)accessor->count);
+            break;
+        }
         }
     }
 

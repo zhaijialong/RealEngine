@@ -5,6 +5,7 @@
 static const float M_PI = 3.141592653f;
 
 static const uint INVALID_RESOURCE_INDEX = 0xFFFFFFFF;
+static const uint INVALID_ADDRESS = 0xFFFFFFFF;
 
 float3 DiffuseBRDF(float3 diffuse)
 {

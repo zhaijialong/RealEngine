@@ -78,6 +78,7 @@ void StaticMesh::UpdateConstants()
     m_instanceData.normalBufferAddress = m_normalBufferAddress;
     m_instanceData.tangentBufferAddress = m_tangentBufferAddress;
 
+    m_instanceData.bVertexAnimation = false;
     m_instanceData.materialDataAddress = m_pRenderer->AllocateSceneConstant((void*)m_pMaterial->GetConstants(), sizeof(ModelMaterialConstant));
     m_instanceData.objectID = m_nID;
     m_instanceData.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));

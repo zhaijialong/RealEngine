@@ -147,7 +147,7 @@ struct ComputeBatch
         memcpy(cb[slot].data, data, data_size);
     }
 
-    void DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
+    void Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
     {
         dispatch_x = group_count_x;
         dispatch_y = group_count_y;
@@ -168,7 +168,7 @@ inline void DispatchBatch(IGfxCommandList* pCommandList, const ComputeBatch& bat
     {
         if (batch.cb[i].data != nullptr)
         {
-            pCommandList->SetGraphicsConstants(i, batch.cb[i].data, batch.cb[i].data_size);
+            pCommandList->SetComputeConstants(i, batch.cb[i].data, batch.cb[i].data_size);
         }
     }
 

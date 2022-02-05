@@ -2,18 +2,18 @@
 
 struct SceneConstant
 {
+    uint sceneConstantBufferSRV;
     uint sceneStaticBufferSRV;
     uint sceneAnimationBufferSRV;
-    uint sceneConstantBufferSRV;
-    uint instanceDataAddress;
+    uint sceneAnimationBufferUAV;
 
+    uint instanceDataAddress;
     uint sceneRayTracingTLAS;
-    uint bShowMeshlets;
     uint secondPhaseMeshletsListUAV;
     uint secondPhaseMeshletsCounterUAV;
 
+    uint bShowMeshlets;
     float3 lightDir;
-    uint shadowRT;
     
     float3 lightColor;
     uint shadowSampler;

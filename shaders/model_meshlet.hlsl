@@ -8,7 +8,7 @@ void main_ms(
     uint groupID : SV_GroupID,
     in payload MeshletPayload payload,
     out indices uint3 indices[124],
-    out vertices model::VertexOut vertices[64])
+    out vertices model::VertexOutput vertices[64])
 {
     uint instanceIndex = payload.instanceIndices[groupID];
     uint meshletIndex = payload.meshletIndices[groupID];
@@ -35,7 +35,7 @@ void main_ms(
     {
         uint vertex_id = LoadSceneStaticBuffer<uint>(GetInstanceData(instanceIndex).meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
 
-        model::VertexOut v = model::GetVertex(instanceIndex, vertex_id);
+        model::VertexOutput v = model::GetVertexOutput(instanceIndex, vertex_id);
         v.meshlet = meshletIndex;
         v.instanceIndex = instanceIndex;
         

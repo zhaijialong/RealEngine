@@ -7,6 +7,7 @@ class StaticMesh;
 class MeshMaterial;
 class Texture2D;
 class Animation;
+class Skeleton;
 struct SkeletalMeshNode;
 struct SkeletalMeshData;
 
@@ -16,6 +17,7 @@ struct cgltf_primitive;
 struct cgltf_material;
 struct cgltf_texture_view;
 struct cgltf_animation;
+struct cgltf_skin;
 
 namespace tinyxml2 
 {
@@ -34,6 +36,7 @@ private:
     StaticMesh* LoadStaticMesh(cgltf_primitive* primitive, const std::string& name);
 
     Animation* LoadAnimation(const cgltf_data* data, const cgltf_animation* animation);
+    Skeleton* LoadSkeleton(const cgltf_data* data, const cgltf_skin* skin);
     SkeletalMeshNode* LoadSkeletalMeshNode(const cgltf_data* data, const cgltf_node* node);
     SkeletalMeshData* LoadSkeletalMesh(const cgltf_primitive* primitive, const std::string& name);
 

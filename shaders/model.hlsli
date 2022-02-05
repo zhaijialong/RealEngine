@@ -3,6 +3,7 @@
 #include "common.hlsli"
 #include "model_constants.hlsli"
 #include "gpu_scene.hlsli"
+#include "debug.hlsli"
 
 namespace model
 {
@@ -12,7 +13,15 @@ ModelMaterialConstant GetMaterialConstant(uint instance_id)
     return LoadSceneConstantBuffer<ModelMaterialConstant>(GetInstanceData(instance_id).materialDataAddress);
 }
 
-struct VertexOut
+struct Vertex
+{
+    float3 pos;
+    float2 uv;
+    float3 normal;
+    float4 tangent;
+};
+
+struct VertexOutput
 {
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD;
@@ -26,36 +35,57 @@ struct VertexOut
     uint instanceIndex : COLOR1;
 };
 
-VertexOut GetVertex(uint instance_id,  uint vertex_id)
-{    
-    float4 pos = float4(LoadSceneStaticBuffer<float3>(GetInstanceData(instance_id).posBufferAddress, vertex_id), 1.0);
-    float2 uv = LoadSceneStaticBuffer<float2>(GetInstanceData(instance_id).uvBufferAddress, vertex_id);
-    float3 normal = LoadSceneStaticBuffer<float3>(GetInstanceData(instance_id).normalBufferAddress, vertex_id);
+Vertex GetVertex(uint instance_id,  uint vertex_id)
+{
+    InstanceData instanceData = GetInstanceData(instance_id);
 
-    float4 worldPos = mul(GetInstanceData(instance_id).mtxWorld, pos);
+    Vertex v;
+    v.uv = LoadSceneStaticBuffer<float2>(instanceData.uvBufferAddress, vertex_id);
 
-    VertexOut v = (VertexOut)0;
-    v.pos = mul(CameraCB.mtxViewProjection, worldPos);
-    v.uv = uv;
-    v.normal = normalize(mul(GetInstanceData(instance_id).mtxWorldInverseTranspose, float4(normal, 0.0f)).xyz);
+    if(instanceData.bVertexAnimation)
+    {
+        v.pos = LoadSceneAnimationBuffer<float3>(instanceData.posBufferAddress, vertex_id);
+        v.normal = LoadSceneAnimationBuffer<float3>(instanceData.normalBufferAddress, vertex_id);
+        v.tangent = LoadSceneAnimationBuffer<float4>(instanceData.tangentBufferAddress, vertex_id);
+    }
+    else
+    {
+        v.pos = LoadSceneStaticBuffer<float3>(instanceData.posBufferAddress, vertex_id);
+        v.normal = LoadSceneStaticBuffer<float3>(instanceData.normalBufferAddress, vertex_id);
+        v.tangent = LoadSceneStaticBuffer<float4>(instanceData.tangentBufferAddress, vertex_id);
+    }
+
+    return v;
+}
+
+VertexOutput GetVertexOutput(uint instance_id,  uint vertex_id)
+{
+    InstanceData instanceData = GetInstanceData(instance_id);
+    Vertex v = GetVertex(instance_id, vertex_id);
+
+    float4 worldPos = mul(instanceData.mtxWorld, float4(v.pos, 1.0));
+
+    VertexOutput output = (VertexOutput)0;
+    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
+    output.uv = v.uv;
+    output.normal = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(v.normal, 0.0f)).xyz);
     
     if (vertex_id == 0)
     {
-        //debug::DrawSphere(GetInstanceData(instance_id).center, GetInstanceData(instance_id).radius, float3(1, 0, 0));
+        //debug::DrawSphere(instanceData.center, instanceData.radius, float3(1, 0, 0));
     }
     
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.normal * 0.05, float3(0, 0, 1));
+    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE
-    float4 tangent = LoadSceneStaticBuffer<float4>(GetInstanceData(instance_id).tangentBufferAddress, vertex_id);
-    v.tangent = normalize(mul(GetInstanceData(instance_id).mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
-    v.bitangent = normalize(cross(v.normal, v.tangent) * tangent.w);    
+    output.tangent = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(v.tangent.xyz, 0.0f)).xyz);
+    output.bitangent = normalize(cross(output.normal, output.tangent) * v.tangent.w);    
     
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.tangent * 0.05, float3(1, 0, 0));
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.bitangent * 0.05, float3(0, 1, 0));
+    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));
+    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.bitangent * 0.05, float3(0, 1, 0));
 #endif
     
-    return v;
+    return output;
 }
 
 
@@ -90,7 +120,7 @@ SamplerState GetMaterialSampler()
     return SamplerDescriptorHeap[SceneCB.aniso4xSampler];
 }
 
-PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOut input)
+PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOutput input)
 {
     PbrMetallicRoughness pbrMetallicRoughness;
     pbrMetallicRoughness.albedo = GetMaterialConstant(input.instanceIndex).albedo.xyz;
@@ -122,7 +152,7 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOut input)
     return pbrMetallicRoughness;
 }
 
-PbrSpecularGlossiness GetMaterialSpecularGlossiness(VertexOut input)
+PbrSpecularGlossiness GetMaterialSpecularGlossiness(VertexOutput input)
 {
     PbrSpecularGlossiness pbrSpecularGlossiness;
     pbrSpecularGlossiness.diffuse = GetMaterialConstant(input.instanceIndex).diffuse;
@@ -149,7 +179,7 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(VertexOut input)
     return pbrSpecularGlossiness;
 }
 
-float3 GetMaterialNormal(VertexOut input, bool isFrontFace)
+float3 GetMaterialNormal(VertexOutput input, bool isFrontFace)
 {
     float3 N = input.normal;
     
@@ -179,7 +209,7 @@ float3 GetMaterialNormal(VertexOut input, bool isFrontFace)
     return N;
 }
 
-float GetMaterialAO(VertexOut input)
+float GetMaterialAO(VertexOutput input)
 {
     float ao = 1.0;
     
@@ -191,7 +221,7 @@ float GetMaterialAO(VertexOut input)
     return ao;
 }
 
-float3 GetMaterialEmissive(VertexOut input)
+float3 GetMaterialEmissive(VertexOutput input)
 {
     float3 emissive = GetMaterialConstant(input.instanceIndex).emissive;
 #if EMISSIVE_TEXTURE

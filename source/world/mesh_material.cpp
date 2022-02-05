@@ -250,6 +250,19 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
     return m_pMeshletPSO;
 }
 
+IGfxPipelineState* MeshMaterial::GetVertexSkinningPSO()
+{
+    if (m_pVertexSkinningPSO == nullptr)
+    {
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+        GfxComputePipelineDesc desc;
+        desc.cs = pRenderer->GetShader("vertex_skinning.hlsl", "main", "cs_6_6", {});
+        m_pVertexSkinningPSO = pRenderer->GetPipelineState(desc, "vertex skinning PSO");
+    }
+    return m_pVertexSkinningPSO;
+}
+
 void MeshMaterial::UpdateConstants()
 {
     m_materialCB.albedoTexture = m_pAlbedoTexture ? m_pAlbedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;

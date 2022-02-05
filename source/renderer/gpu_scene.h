@@ -36,6 +36,7 @@ public:
 
     IGfxBuffer* GetSceneAnimationBuffer() const { return m_pSceneAnimationBuffer->GetBuffer(); }
     IGfxDescriptor* GetSceneAnimationBufferSRV() const { return m_pSceneAnimationBuffer->GetSRV(); }
+    IGfxDescriptor* GetSceneAnimationBufferUAV() const { return m_pSceneAnimationBuffer->GetUAV(); }
 
     IGfxBuffer* GetSceneConstantBuffer() const;
     IGfxDescriptor* GetSceneConstantSRV() const;

@@ -209,9 +209,10 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     RenderGraphBuffer* occlusionCulledMeshletsCounterBuffer = (RenderGraphBuffer*)m_pRenderGraph->GetResource(occlusionCulledMeshletsCounterBufferHandle);
 
     SceneConstant sceneCB;
+    sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
     sceneCB.sceneStaticBufferSRV = m_pGpuScene->GetSceneStaticBufferSRV()->GetHeapIndex();
     sceneCB.sceneAnimationBufferSRV = m_pGpuScene->GetSceneAnimationBufferSRV()->GetHeapIndex();
-    sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
+    sceneCB.sceneAnimationBufferUAV = m_pGpuScene->GetSceneAnimationBufferUAV()->GetHeapIndex();
     sceneCB.instanceDataAddress = m_pGpuScene->GetInstanceDataAddress();
     sceneCB.sceneRayTracingTLAS = m_pGpuScene->GetRayTracingTLASSRV()->GetHeapIndex();
     sceneCB.bShowMeshlets = m_bShowMeshlets;

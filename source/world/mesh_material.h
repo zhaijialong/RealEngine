@@ -17,6 +17,8 @@ public:
 
     IGfxPipelineState* GetMeshletPSO();
 
+    IGfxPipelineState* GetVertexSkinningPSO();
+
     void UpdateConstants();
     const ModelMaterialConstant* GetConstants() const { return &m_materialCB; }
 
@@ -35,6 +37,8 @@ private:
     IGfxPipelineState* m_pOutlinePSO = nullptr;
 
     IGfxPipelineState* m_pMeshletPSO = nullptr;
+
+    IGfxPipelineState* m_pVertexSkinningPSO = nullptr;
 
     //pbr_specular_glossiness
     Texture2D* m_pDiffuseTexture = nullptr;

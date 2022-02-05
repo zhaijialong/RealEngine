@@ -14,6 +14,8 @@ struct SkeletalMeshData
     std::unique_ptr<MeshMaterial> material;
 
     uint32_t uvBufferAddress = -1;
+    uint32_t jointIDBufferAddress = -1;
+    uint32_t jointWeightBufferAddress = -1;
 
     uint32_t staticPosBufferAddress = -1;
     uint32_t staticNormalBufferAddress = -1;
@@ -62,7 +64,7 @@ public:
     virtual void Render(Renderer* pRenderer) override;
     virtual bool FrustumCull(const float4* planes, uint32_t plane_count) const override;
 
-    SkeletalMeshNode* GetNode(uint32_t node_id);
+    SkeletalMeshNode* GetNode(uint32_t node_id) const;
 
 private:
     void UpdateMeshNode(SkeletalMeshNode* node);

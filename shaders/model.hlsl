@@ -1,9 +1,9 @@
 #include "model.hlsli"
 #include "debug.hlsli"
 
-model::VertexOut vs_main(uint vertex_id : SV_VertexID)
+model::VertexOutput vs_main(uint vertex_id : SV_VertexID)
 {
-    model::VertexOut v = model::GetVertex(c_InstanceIndex, vertex_id);
+    model::VertexOutput v = model::GetVertexOutput(c_InstanceIndex, vertex_id);
     return v;
 }
 
@@ -15,7 +15,7 @@ struct GBufferOutput
     float3 emissiveRT : SV_TARGET3;
 };
 
-GBufferOutput ps_main(model::VertexOut input
+GBufferOutput ps_main(model::VertexOutput input
 #if !GFX_VENDOR_AMD
     , bool isFrontFace : SV_IsFrontFace //using SV_IsFrontFace with mesh shaders will result in crashes on AMD
 #endif
