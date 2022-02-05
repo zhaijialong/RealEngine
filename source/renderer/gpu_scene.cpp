@@ -55,13 +55,13 @@ void GpuScene::Free(uint32_t address)
 void GpuScene::Update()
 {
     uint32_t instance_count = (uint32_t)m_instanceData.size();
-
     m_instanceDataAddress = m_pRenderer->AllocateSceneConstant(m_instanceData.data(), sizeof(InstanceData) * instance_count);
 
-    if (m_pSceneTLAS == nullptr || m_pSceneTLAS->GetDesc().instance_count < instance_count)
+    uint32_t rt_instance_count = (uint32_t)m_raytracingInstances.size();
+    if (m_pSceneTLAS == nullptr || m_pSceneTLAS->GetDesc().instance_count < rt_instance_count)
     {
         GfxRayTracingTLASDesc desc;
-        desc.instance_count = instance_count;
+        desc.instance_count = rt_instance_count;
         desc.flags = GfxRayTracingASFlagPreferFastBuild;
 
         IGfxDevice* device = m_pRenderer->GetDevice();
@@ -100,16 +100,19 @@ uint32_t GpuScene::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* bla
     m_instanceData.push_back(data);
     uint32_t instance_id = (uint32_t)m_instanceData.size() - 1;
 
-    float4x4 transform = transpose(data.mtxWorld);
+    if (blas)
+    {
+        float4x4 transform = transpose(data.mtxWorld);
 
-    GfxRayTracingInstance instance;
-    instance.blas = blas;
-    memcpy(instance.transform, &transform, sizeof(float) * 12);
-    instance.instance_id = instance_id;
-    instance.instance_mask = 0xFF; //todo
-    instance.flags = flags;
+        GfxRayTracingInstance instance;
+        instance.blas = blas;
+        memcpy(instance.transform, &transform, sizeof(float) * 12);
+        instance.instance_id = instance_id;
+        instance.instance_mask = 0xFF; //todo
+        instance.flags = flags;
 
-    m_raytracingInstances.push_back(instance);
+        m_raytracingInstances.push_back(instance);
+    }
 
     return instance_id;
 }

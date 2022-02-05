@@ -53,7 +53,7 @@ void ResourceCache::ReleaseTexture2D(Texture2D* texture)
     RE_ASSERT(false);
 }
 
-uint32_t ResourceCache::GetSceneBuffer(const std::string& name, void* data, uint32_t size)
+uint32_t ResourceCache::GetSceneBuffer(const std::string& name, const void* data, uint32_t size)
 {
     auto iter = m_cachedSceneBuffer.find(name);
     if (iter != m_cachedSceneBuffer.end())

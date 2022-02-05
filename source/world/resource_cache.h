@@ -11,7 +11,7 @@ public:
     Texture2D* GetTexture2D(const std::string& file, bool srgb = true);
     void ReleaseTexture2D(Texture2D* texture);
 
-    uint32_t GetSceneBuffer(const std::string& name, void* data, uint32_t size);
+    uint32_t GetSceneBuffer(const std::string& name, const void* data, uint32_t size);
     void RelaseSceneBuffer(uint32_t address);
 
 private:

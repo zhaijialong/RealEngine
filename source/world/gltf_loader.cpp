@@ -1,5 +1,8 @@
 #include "gltf_loader.h"
 #include "static_mesh.h"
+#include "skeletal_mesh.h"
+#include "animation.h"
+#include "skeleton.h"
 #include "mesh_material.h"
 #include "resource_cache.h"
 #include "core/engine.h"
@@ -49,11 +52,25 @@ inline void GetTransform(cgltf_node* node, float4x4& matrix)
     matrix = mul(T, mul(R, S));
 }
 
-inline uint32_t GetMeshIndex(cgltf_data* data, cgltf_mesh* mesh)
+inline uint32_t GetMeshIndex(const cgltf_data* data, const cgltf_mesh* mesh)
 {
     for (cgltf_size i = 0; i < data->meshes_count; ++i)
     {
         if (&data->meshes[i] == mesh)
+        {
+            return (uint32_t)i;
+        }
+    }
+
+    RE_ASSERT(false);
+    return 0;
+}
+
+inline uint32_t GetNodeIndex(const cgltf_data* data, const cgltf_node* node)
+{
+    for (cgltf_size i = 0; i < data->nodes_count; ++i)
+    {
+        if (&data->nodes[i] == node)
         {
             return (uint32_t)i;
         }
@@ -68,31 +85,27 @@ GLTFLoader::GLTFLoader(World* world, tinyxml2::XMLElement* element)
     m_pWorld = world;
     m_file = element->FindAttribute("file")->Value();
 
-    float3 position = float3(0, 0, 0);
-    float3 rotation = float3(0, 0, 0);
-    float3 scale = float3(1, 1, 1);
-
     const tinyxml2::XMLAttribute* position_attr = element->FindAttribute("position");
     if (position_attr)
     {
-        position = str_to_float3(position_attr->Value());
+        m_position = str_to_float3(position_attr->Value());
     }
 
     const tinyxml2::XMLAttribute* rotation_attr = element->FindAttribute("rotation");
     if (rotation_attr)
     {
-        rotation = str_to_float3(rotation_attr->Value());
+        m_rotation = str_to_float3(rotation_attr->Value());
     }
 
     const tinyxml2::XMLAttribute* scale_attr = element->FindAttribute("scale");
     if (scale_attr)
     {
-        scale = str_to_float3(scale_attr->Value());
+        m_scale = str_to_float3(scale_attr->Value());
     }
 
-    float4x4 T = translation_matrix(position);
-    float4x4 R = rotation_matrix(rotation_quat(rotation));
-    float4x4 S = scaling_matrix(scale);
+    float4x4 T = translation_matrix(m_position);
+    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
+    float4x4 S = scaling_matrix(m_scale);
     m_mtxWorld = mul(T, mul(R, S));
 }
 
@@ -110,18 +123,43 @@ void GLTFLoader::Load()
 
     cgltf_load_buffers(&options, data, file.c_str());
 
-    for (cgltf_size i = 0; i < data->scenes_count; ++i)
+    if (data->animations_count > 0)
     {
-        for (cgltf_size node = 0; node < data->scenes[i].nodes_count; ++node)
+        SkeletalMesh* mesh = new SkeletalMesh(m_file);
+        mesh->m_pRenderer = Engine::GetInstance()->GetRenderer();
+        mesh->m_pAnimation.reset(LoadAnimation(data, &data->animations[0])); //currently only load the first one
+
+        for (cgltf_size i = 0; i < data->nodes_count; ++i)
         {
-            LoadNode(data, data->scenes[i].nodes[node], m_mtxWorld);
+            mesh->m_nodes.emplace_back(LoadSkeletalMeshNode(data, &data->nodes[i]));
+        }
+
+        for (cgltf_size i = 0; i < data->scene->nodes_count; ++i)
+        {
+            mesh->m_rootNodes.push_back(GetNodeIndex(data, data->scene->nodes[i]));
+        }
+
+        mesh->SetPosition(m_position);
+        mesh->SetRotation(m_rotation);
+        mesh->SetScale(m_scale);
+        mesh->Create();
+        m_pWorld->AddObject(mesh);
+    }
+    else
+    {
+        for (cgltf_size i = 0; i < data->scenes_count; ++i)
+        {
+            for (cgltf_size node = 0; node < data->scenes[i].nodes_count; ++node)
+            {
+                LoadStaticMeshNode(data, data->scenes[i].nodes[node], m_mtxWorld);
+            }
         }
     }
 
     cgltf_free(data);
 }
 
-void GLTFLoader::LoadNode(cgltf_data* data, cgltf_node* node, const float4x4& mtxParentToWorld)
+void GLTFLoader::LoadStaticMeshNode(cgltf_data* data, cgltf_node* node, const float4x4& mtxParentToWorld)
 {
     float4x4 mtxLocalToParent;
     GetTransform(node, mtxLocalToParent);
@@ -144,7 +182,7 @@ void GLTFLoader::LoadNode(cgltf_data* data, cgltf_node* node, const float4x4& mt
         {
             std::string name = "mesh_" + std::to_string(mesh_index) + "_" + std::to_string(i) + " " + (node->mesh->name ? node->mesh->name : "");
 
-            StaticMesh* mesh = LoadMesh(&node->mesh->primitives[i], name);
+            StaticMesh* mesh = LoadStaticMesh(&node->mesh->primitives[i], name);
 
             mesh->m_pMaterial->m_bFrontFaceCCW = bFrontFaceCCW;
             mesh->SetPosition(position);
@@ -155,7 +193,7 @@ void GLTFLoader::LoadNode(cgltf_data* data, cgltf_node* node, const float4x4& mt
 
     for (cgltf_size i = 0; i < node->children_count; ++i)
     {
-        LoadNode(data, node->children[i], mtxLocalToWorld);
+        LoadStaticMeshNode(data, node->children[i], mtxLocalToWorld);
     }
 }
 
@@ -245,7 +283,7 @@ meshopt_Stream LoadBufferStream(const cgltf_accessor* accessor, bool convertToLH
     return stream;
 }
 
-StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& name)
+StaticMesh* GLTFLoader::LoadStaticMesh(cgltf_primitive* primitive, const std::string& name)
 {
     StaticMesh* mesh = new StaticMesh(m_file + " " + name);
     mesh->m_pMaterial.reset(LoadMaterial(primitive->material));
@@ -499,6 +537,157 @@ StaticMesh* GLTFLoader::LoadMesh(cgltf_primitive* primitive, const std::string& 
     {
         RE_FREE(remapped_vertices[i]);
     }
+
+    return mesh;
+}
+
+Animation* GLTFLoader::LoadAnimation(const cgltf_data* data, const cgltf_animation* gltf_animation)
+{
+    Animation* animation = new Animation(gltf_animation->name ? gltf_animation->name : "");
+
+    animation->m_channels.reserve(gltf_animation->channels_count);
+    for (cgltf_size i = 0; i < gltf_animation->channels_count; ++i)
+    {
+        const cgltf_animation_channel* gltf_channel = &gltf_animation->channels[i];
+
+        AnimationChannel channel;
+        channel.targetNode = GetNodeIndex(data, gltf_channel->target_node);
+
+        switch (gltf_channel->target_path)
+        {
+        case cgltf_animation_path_type_translation:
+            channel.mode = AnimationChannelMode::Translation;
+            break;
+        case cgltf_animation_path_type_rotation:
+            channel.mode = AnimationChannelMode::Rotation;
+            break;
+        case cgltf_animation_path_type_scale:
+            channel.mode = AnimationChannelMode::Scale;
+            break;
+        default:
+            RE_ASSERT(false);
+            break;
+        }
+
+        const cgltf_animation_sampler* sampler = gltf_channel->sampler;
+        RE_ASSERT(sampler->interpolation == cgltf_interpolation_type_linear); //currently only support linear sampler
+
+        cgltf_accessor* time_accessor = sampler->input;
+        cgltf_accessor* value_accessor = sampler->output;
+        RE_ASSERT(time_accessor->count == value_accessor->count);
+
+        cgltf_size keyframe_num = time_accessor->count;
+        channel.keyframes.reserve(keyframe_num);
+
+        char* time_data = (char*)time_accessor->buffer_view->buffer->data + time_accessor->buffer_view->offset + time_accessor->offset;
+        char* value_data = (char*)value_accessor->buffer_view->buffer->data + value_accessor->buffer_view->offset + value_accessor->offset;
+
+        for (cgltf_size k = 0; k < keyframe_num; ++k)
+        {
+            float time;
+            float4 value;
+
+            memcpy(&time, time_data + time_accessor->stride * k, time_accessor->stride);
+            memcpy(&value, value_data + value_accessor->stride * k, value_accessor->stride);
+
+            channel.keyframes.push_back(std::make_pair(time, value));
+        }
+
+        animation->m_channels.push_back(channel);
+    }
+
+    for (size_t i = 0; i < animation->m_channels.size(); ++i)
+    {
+        for (size_t j = 0; j < animation->m_channels[i].keyframes.size(); ++j)
+        {
+            animation->m_timeDuration = max(animation->m_channels[i].keyframes[j].first, animation->m_timeDuration);
+        }
+    }
+
+    return animation;
+}
+
+SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const cgltf_node* gltf_node)
+{
+    RE_ASSERT(gltf_node->has_matrix == false);
+
+    SkeletalMeshNode* node = new SkeletalMeshNode;
+    node->id = GetNodeIndex(data, gltf_node);
+    node->name = gltf_node->name ? gltf_node->name : "node_" + std::to_string(node->id);
+    node->parent = gltf_node->parent ? GetNodeIndex(data, gltf_node->parent) : -1;
+    for (cgltf_size i = 0; i < gltf_node->children_count; ++i)
+    {
+        node->children.push_back(GetNodeIndex(data, gltf_node->children[i]));
+    }
+
+    node->translation = float3(gltf_node->translation[0], gltf_node->translation[1], -gltf_node->translation[2]);
+    node->rotation = float4(gltf_node->rotation[0], gltf_node->rotation[1], -gltf_node->rotation[2], -gltf_node->rotation[3]);
+    node->scale = float3(gltf_node->scale);
+    
+    if (gltf_node->mesh)
+    {
+        uint32_t mesh_index = GetMeshIndex(data, gltf_node->mesh);
+
+        for (cgltf_size i = 0; i < gltf_node->mesh->primitives_count; i++)
+        {
+            std::string name = "mesh_" + std::to_string(mesh_index) + "_" + std::to_string(i) + " " + (gltf_node->mesh->name ? gltf_node->mesh->name : "");
+
+            SkeletalMeshData* mesh = LoadSkeletalMesh(&gltf_node->mesh->primitives[i], name);
+            mesh->nodeID = node->id;
+            //todo : mesh->material->m_bFrontFaceCCW = bFrontFaceCCW;
+
+            node->meshes.emplace_back(mesh);
+        }
+    }
+
+    return node;
+}
+
+SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive, const std::string& name)
+{
+    SkeletalMeshData* mesh = new SkeletalMeshData;
+    mesh->name = m_file + " " + name;
+    mesh->material.reset(LoadMaterial(primitive->material));
+
+    ResourceCache* cache = ResourceCache::GetInstance();
+
+    size_t index_count;
+    meshopt_Stream indices = LoadBufferStream(primitive->indices, false, index_count);
+
+    mesh->indexBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") IB", indices.data, (uint32_t)indices.stride * (uint32_t)index_count);
+    mesh->indexBufferFormat = indices.stride == 4 ? GfxFormat::R32UI : GfxFormat::R16UI;
+    mesh->indexCount = (uint32_t)index_count;
+
+    size_t vertex_count;
+    meshopt_Stream vertices;
+
+    for (cgltf_size i = 0; i < primitive->attributes_count; ++i)
+    {
+        switch (primitive->attributes[i].type)
+        {
+        case cgltf_attribute_type_position:
+            vertices = LoadBufferStream(primitive->attributes[i].data, true, vertex_count);
+            mesh->staticPosBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") pos", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+            break;
+        case cgltf_attribute_type_texcoord:
+            if (primitive->attributes[i].index == 0)
+            {
+                vertices = LoadBufferStream(primitive->attributes[i].data, false, vertex_count);
+                mesh->uvBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") UV", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+            }
+            break;
+        case cgltf_attribute_type_normal:
+            vertices = LoadBufferStream(primitive->attributes[i].data, true, vertex_count);
+            mesh->staticNormalBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") normal", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+            break;
+        case cgltf_attribute_type_tangent:
+            vertices = LoadBufferStream(primitive->attributes[i].data, false, vertex_count);
+            mesh->staticTangentBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") tangent", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+            break;
+        }
+    }
+
+    mesh->vertexCount = (uint32_t)vertex_count;
 
     return mesh;
 }
