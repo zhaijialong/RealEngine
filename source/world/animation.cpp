@@ -67,7 +67,8 @@ void Animation::UpdateChannel(SkeletalMesh* mesh, const AnimationChannel& channe
         float4 lower_value = float4(lower_frame.second.x, lower_frame.second.y, -lower_frame.second.z, -lower_frame.second.w);
         float4 upper_value = float4(upper_frame.second.x, upper_frame.second.y, -upper_frame.second.z, -upper_frame.second.w);
 
-        node->rotation = slerp(lower_value, upper_value, interpolation_value);
+        //node->rotation = slerp(lower_value, upper_value, interpolation_value);
+        node->rotation = rotation_slerp(lower_value, upper_value, interpolation_value);
         break;
     }
     case AnimationChannelMode::Scale:

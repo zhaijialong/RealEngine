@@ -115,6 +115,34 @@ inline float3 rotation_angles(const quaternion& q)
     return float3(rotation_pitch(q), rotation_yaw(q), rotation_roll(q));
 }
 
+inline quaternion rotation_slerp(const quaternion& a, quaternion b, float interpolationValue)
+{
+    float dotProduct = dot(a, b);
+
+    //make sure we take the shortest path in case dot Product is negative
+    if (dotProduct < 0.0)
+    {
+        b = -b;
+        dotProduct = -dotProduct;
+    }
+
+    //if the two quaternions are too close to each other, just linear interpolate between the 4D vector
+    if (dotProduct > 0.9995)
+    {
+        return normalize(a + interpolationValue * (b - a));
+    }
+
+    //perform the spherical linear interpolation
+    float theta_0 = acos(dotProduct);
+    float theta = interpolationValue * theta_0;
+    float sin_theta = sin(theta);
+    float sin_theta_0 = sin(theta_0);
+
+    float scalePreviousQuat = cos(theta) - dotProduct * sin_theta / sin_theta_0;
+    float scaleNextQuat = sin_theta / sin_theta_0;
+    return scalePreviousQuat * a + scaleNextQuat * b;
+}
+
 inline float4x4 ortho_matrix(float l, float r, float b, float t, float n, float f)
 {
     //https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-d3dxmatrixorthooffcenterlh
