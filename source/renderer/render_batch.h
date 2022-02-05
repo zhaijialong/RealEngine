@@ -109,3 +109,68 @@ inline void DrawBatch(IGfxCommandList* pCommandList, const RenderBatch& batch)
         pCommandList->DrawIndexed(batch.index_count);
     }
 }
+
+struct ComputeBatch
+{
+    ComputeBatch(LinearAllocator& cb_allocator) : m_allocator(cb_allocator)
+    {
+    }
+
+    const char* label = "";
+    IGfxPipelineState* pso = nullptr;
+
+    struct
+    {
+        void* data = nullptr;
+        uint32_t data_size = 0;
+    } cb[MAX_RENDER_BATCH_CB_COUNT];
+
+    uint32_t dispatch_x = 0;
+    uint32_t dispatch_y = 0;
+    uint32_t dispatch_z = 0;
+
+    void SetPipelineState(IGfxPipelineState* pPSO)
+    {
+        pso = pPSO;
+    }
+
+    void SetConstantBuffer(uint32_t slot, const void* data, size_t data_size)
+    {
+        RE_ASSERT(slot < MAX_RENDER_BATCH_CB_COUNT);
+
+        if (cb[slot].data == nullptr || cb[slot].data_size < data_size)
+        {
+            cb[slot].data = m_allocator.Alloc((uint32_t)data_size);
+        }
+
+        cb[slot].data_size = (uint32_t)data_size;
+        memcpy(cb[slot].data, data, data_size);
+    }
+
+    void DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
+    {
+        dispatch_x = group_count_x;
+        dispatch_y = group_count_y;
+        dispatch_z = group_count_z;
+    }
+
+private:
+    LinearAllocator& m_allocator;
+};
+
+inline void DispatchBatch(IGfxCommandList* pCommandList, const ComputeBatch& batch)
+{
+    GPU_EVENT_DEBUG(pCommandList, batch.label);
+
+    pCommandList->SetPipelineState(batch.pso);
+
+    for (int i = 0; i < MAX_RENDER_BATCH_CB_COUNT; ++i)
+    {
+        if (batch.cb[i].data != nullptr)
+        {
+            pCommandList->SetGraphicsConstants(i, batch.cb[i].data, batch.cb[i].data_size);
+        }
+    }
+
+    pCommandList->Dispatch(batch.dispatch_x, batch.dispatch_y, batch.dispatch_z);
+}

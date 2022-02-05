@@ -44,16 +44,17 @@ struct InstanceData
 
 #ifndef __cplusplus
 
-InstanceData GetInstanceData(uint instance_id)
+template<typename T>
+T LoadSceneStaticBuffer(uint bufferAddress, uint element_id)
 {
-    ByteAddressBuffer constantBuffer = ResourceDescriptorHeap[SceneCB.sceneConstantBufferSRV];
-    return constantBuffer.Load<InstanceData>(SceneCB.instanceDataAddress + sizeof(InstanceData) * instance_id);
+    ByteAddressBuffer sceneBuffer = ResourceDescriptorHeap[SceneCB.sceneStaticBufferSRV];
+    return sceneBuffer.Load<T>(bufferAddress + sizeof(T) * element_id);
 }
 
 template<typename T>
-T LoadSceneBuffer(uint bufferAddress, uint element_id)
+T LoadSceneAnimationBuffer(uint bufferAddress, uint element_id)
 {
-    ByteAddressBuffer sceneBuffer = ResourceDescriptorHeap[SceneCB.sceneBufferSRV];
+    ByteAddressBuffer sceneBuffer = ResourceDescriptorHeap[SceneCB.sceneAnimationBufferSRV];
     return sceneBuffer.Load<T>(bufferAddress + sizeof(T) * element_id);
 }
 
@@ -64,17 +65,22 @@ T LoadSceneConstantBuffer(uint bufferAddress)
     return constantBuffer.Load<T>(bufferAddress);
 }
 
+InstanceData GetInstanceData(uint instance_id)
+{
+    return LoadSceneConstantBuffer<InstanceData>(SceneCB.instanceDataAddress + sizeof(InstanceData) * instance_id);
+}
+
 uint3 GetPrimitiveIndices(uint instance_id, uint primitive_id)
 {
     InstanceData instanceData = GetInstanceData(instance_id);
     
     if (instanceData.indexStride == 2)
     {
-        return LoadSceneBuffer<uint16_t3>(instanceData.indexBufferAddress, primitive_id);
+        return LoadSceneStaticBuffer<uint16_t3>(instanceData.indexBufferAddress, primitive_id);
     }
     else
     {
-        return LoadSceneBuffer<uint3>(instanceData.indexBufferAddress, primitive_id);
+        return LoadSceneStaticBuffer<uint3>(instanceData.indexBufferAddress, primitive_id);
     }
 }
 

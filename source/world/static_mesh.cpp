@@ -29,12 +29,12 @@ bool StaticMesh::Create()
     //todo : need to cache blas for same models
 
     GfxRayTracingGeometry geometry;
-    geometry.vertex_buffer = m_pRenderer->GetSceneBuffer();
+    geometry.vertex_buffer = m_pRenderer->GetSceneStaticBuffer();
     geometry.vertex_buffer_offset = m_posBufferAddress;
     geometry.vertex_count = m_nVertexCount;
     geometry.vertex_stride = sizeof(float3);
     geometry.vertex_format = GfxFormat::RGB32F;
-    geometry.index_buffer = m_pRenderer->GetSceneBuffer();
+    geometry.index_buffer = m_pRenderer->GetSceneStaticBuffer();
     geometry.index_buffer_offset = m_indexBufferAddress;
     geometry.index_count = m_nIndexCount;
     geometry.index_format = m_indexBufferFormat;
@@ -136,7 +136,7 @@ void StaticMesh::Draw(RenderBatch& batch, IGfxPipelineState* pso)
     batch.SetPipelineState(pso);
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
 
-    batch.SetIndexBuffer(m_pRenderer->GetSceneBuffer(), m_indexBufferAddress, m_indexBufferFormat);
+    batch.SetIndexBuffer(m_pRenderer->GetSceneStaticBuffer(), m_indexBufferAddress, m_indexBufferFormat);
     batch.DrawIndexed(m_nIndexCount);
 }
 

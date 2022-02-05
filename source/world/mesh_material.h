@@ -22,6 +22,7 @@ public:
 
     bool IsFrontFaceCCW() const { return m_bFrontFaceCCW; }
     bool IsAlphaTest() const { return m_bAlphaTest; }
+    bool IsVertexSkinned() const { return m_bSkeletalAnim; }
 
 private:
     std::string m_name;

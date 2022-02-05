@@ -17,23 +17,23 @@ void main_ms(
         return;
     }
     
-    Meshlet meshlet = LoadSceneBuffer<Meshlet>(GetInstanceData(instanceIndex).meshletBufferAddress, meshletIndex);
+    Meshlet meshlet = LoadSceneStaticBuffer<Meshlet>(GetInstanceData(instanceIndex).meshletBufferAddress, meshletIndex);
     
     SetMeshOutputCounts(meshlet.vertexCount, meshlet.triangleCount);
     
     if(groupThreadID < meshlet.triangleCount)
     {
         uint3 index = uint3(
-            LoadSceneBuffer<uint16_t>(GetInstanceData(instanceIndex).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3),
-            LoadSceneBuffer<uint16_t>(GetInstanceData(instanceIndex).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 1),
-            LoadSceneBuffer<uint16_t>(GetInstanceData(instanceIndex).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 2));
+            LoadSceneStaticBuffer<uint16_t>(GetInstanceData(instanceIndex).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3),
+            LoadSceneStaticBuffer<uint16_t>(GetInstanceData(instanceIndex).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 1),
+            LoadSceneStaticBuffer<uint16_t>(GetInstanceData(instanceIndex).meshletIndicesBufferAddress, meshlet.triangleOffset + groupThreadID * 3 + 2));
 
         indices[groupThreadID] = index;
     }
     
     if(groupThreadID < meshlet.vertexCount)
     {
-        uint vertex_id = LoadSceneBuffer<uint>(GetInstanceData(instanceIndex).meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
+        uint vertex_id = LoadSceneStaticBuffer<uint>(GetInstanceData(instanceIndex).meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
 
         model::VertexOut v = model::GetVertex(instanceIndex, vertex_id);
         v.meshlet = meshletIndex;

@@ -28,9 +28,9 @@ struct VertexOut
 
 VertexOut GetVertex(uint instance_id,  uint vertex_id)
 {    
-    float4 pos = float4(LoadSceneBuffer<float3>(GetInstanceData(instance_id).posBufferAddress, vertex_id), 1.0);
-    float2 uv = LoadSceneBuffer<float2>(GetInstanceData(instance_id).uvBufferAddress, vertex_id);
-    float3 normal = LoadSceneBuffer<float3>(GetInstanceData(instance_id).normalBufferAddress, vertex_id);
+    float4 pos = float4(LoadSceneStaticBuffer<float3>(GetInstanceData(instance_id).posBufferAddress, vertex_id), 1.0);
+    float2 uv = LoadSceneStaticBuffer<float2>(GetInstanceData(instance_id).uvBufferAddress, vertex_id);
+    float3 normal = LoadSceneStaticBuffer<float3>(GetInstanceData(instance_id).normalBufferAddress, vertex_id);
 
     float4 worldPos = mul(GetInstanceData(instance_id).mtxWorld, pos);
 
@@ -47,7 +47,7 @@ VertexOut GetVertex(uint instance_id,  uint vertex_id)
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + v.normal * 0.05, float3(0, 0, 1));
     
 #if NORMAL_TEXTURE
-    float4 tangent = LoadSceneBuffer<float4>(GetInstanceData(instance_id).tangentBufferAddress, vertex_id);
+    float4 tangent = LoadSceneStaticBuffer<float4>(GetInstanceData(instance_id).tangentBufferAddress, vertex_id);
     v.tangent = normalize(mul(GetInstanceData(instance_id).mtxWorldInverseTranspose, float4(tangent.xyz, 0.0f)).xyz);
     v.bitangent = normalize(cross(v.normal, v.tangent) * tangent.w);    
     

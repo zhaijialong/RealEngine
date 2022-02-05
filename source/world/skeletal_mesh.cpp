@@ -27,6 +27,19 @@ SkeletalMesh::~SkeletalMesh()
 
 bool SkeletalMesh::Create()
 {
+    for (size_t i = 0; i < m_nodes.size(); ++i)
+    {
+        for (size_t j = 0; j < m_nodes[i]->meshes.size(); ++j)
+        {
+            const SkeletalMeshData* mesh = m_nodes[i]->meshes[j].get();
+
+            if (mesh->material->IsVertexSkinned())
+            {
+
+            }
+        }
+    }
+
     return true;
 }
 
@@ -73,14 +86,14 @@ void SkeletalMesh::UpdateMeshNode(SkeletalMeshNode* node)
     float4x4 T = translation_matrix(node->translation);
     float4x4 R = rotation_matrix(node->rotation);
     float4x4 S = scaling_matrix(node->scale);
-    float4x4 localToRoot = mul(T, mul(R, S));
+    float4x4 globalTransform = mul(T, mul(R, S));
 
     if (node->parent != -1)
     {
-        localToRoot = mul(m_nodes[node->parent]->localToRoot, localToRoot);
+        globalTransform = mul(m_nodes[node->parent]->globalTransform, globalTransform);
     }
 
-    node->localToRoot = localToRoot;
+    node->globalTransform = globalTransform;
 
     for (size_t i = 0; i < node->meshes.size(); ++i)
     {
@@ -115,8 +128,10 @@ void SkeletalMesh::UpdateMeshData(SkeletalMeshData* mesh)
     //mesh->instanceData.center = mul(mtxWorld, float4(m_center, 1.0)).xyz();
     //mesh->instanceData.radius = m_radius * mesh->instanceData.scale;
 
+    bool isSkinnedMesh = mesh->material->IsVertexSkinned();
+
     mesh->instanceData.mtxPrevWorld = mesh->instanceData.mtxWorld;
-    mesh->instanceData.mtxWorld = mul(m_mtxWorld, m_nodes[mesh->nodeID]->localToRoot); //todo : skinning mesh should just be m_mtxWorld
+    mesh->instanceData.mtxWorld = isSkinnedMesh ? m_mtxWorld : mul(m_mtxWorld, m_nodes[mesh->nodeID]->globalTransform);
     mesh->instanceData.mtxWorldInverseTranspose = transpose(inverse(mesh->instanceData.mtxWorld));
 
     GfxRayTracingInstanceFlag flags = mesh->material->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
@@ -133,6 +148,6 @@ void SkeletalMesh::Draw(const SkeletalMeshData* mesh)
     batch.SetPipelineState(mesh->material->GetPSO());
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
 
-    batch.SetIndexBuffer(m_pRenderer->GetSceneBuffer(), mesh->indexBufferAddress, mesh->indexBufferFormat);
+    batch.SetIndexBuffer(m_pRenderer->GetSceneStaticBuffer(), mesh->indexBufferAddress, mesh->indexBufferFormat);
     batch.DrawIndexed(mesh->indexCount);
 }

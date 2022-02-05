@@ -46,7 +46,7 @@ struct SkeletalMeshNode
     float4 rotation;
     float3 scale;
 
-    float4x4 localToRoot;
+    float4x4 globalTransform;
 };
 
 class SkeletalMesh : public IVisibleObject

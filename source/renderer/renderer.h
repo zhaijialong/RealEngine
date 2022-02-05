@@ -12,8 +12,6 @@
 #include "staging_buffer_allocator.h"
 #include "lsignal/lsignal.h"
 
-using ComputeFunc = std::function<void(IGfxCommandList*)>;
-
 class Renderer
 {
 public:
@@ -51,10 +49,16 @@ public:
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
     TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
 
-    IGfxBuffer* GetSceneBuffer() const;
-    uint32_t AllocateSceneBuffer(const void* data, uint32_t size, uint32_t alignment = 4);
-    void FreeSceneBuffer(uint32_t address);
+    IGfxBuffer* GetSceneStaticBuffer() const;
+    uint32_t AllocateSceneStaticBuffer(const void* data, uint32_t size, uint32_t alignment = 4);
+    void FreeSceneStaticBuffer(uint32_t address);
+
+    IGfxBuffer* GetSceneAnimationBuffer() const;
+    uint32_t AllocateSceneAnimationBuffer(uint32_t size, uint32_t alignment = 4);
+    void FreeSceneAnimationBuffer(uint32_t address);
+
     uint32_t AllocateSceneConstant(const void* data, uint32_t size);
+
     uint32_t AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas, GfxRayTracingInstanceFlag flags);
     uint32_t GetInstanceCount() const { return m_pGpuScene->GetInstanceCount(); }
 
@@ -69,14 +73,13 @@ public:
     void UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size);
     void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas);
 
-    void AddComputePass(const ComputeFunc& func) { m_computePassBatchs.push_back(func); }
-    void AddComputeBuffer(IGfxBuffer* buffer) { m_computeBuffers.push_back(buffer); }
-
     LinearAllocator* GetConstantAllocator() const { return m_cbAllocator.get(); }
     RenderBatch& AddBasePassBatch();
     RenderBatch& AddForwardPassBatch() { return m_forwardPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddVelocityPassBatch() { return m_velocityPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddObjectIDPassBatch() { return m_idPassBatchs.emplace_back(*m_cbAllocator); }
+
+    ComputeBatch& AddAnimationBatch() { return m_animationBatchs.emplace_back(*m_cbAllocator); }
 
     class HZB* GetHZB() const { return m_pHZB.get(); }
 
@@ -182,8 +185,7 @@ private:
     std::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;
     std::unique_ptr<class GpuDrivenStats> m_pGpuStats;
 
-    std::vector<ComputeFunc> m_computePassBatchs;
-    std::vector<IGfxBuffer*> m_computeBuffers;
+    std::vector<ComputeBatch> m_animationBatchs;
 
     std::vector<RenderBatch> m_forwardPassBatchs;
     std::vector<RenderBatch> m_velocityPassBatchs;

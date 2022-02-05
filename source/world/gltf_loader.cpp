@@ -609,8 +609,6 @@ Animation* GLTFLoader::LoadAnimation(const cgltf_data* data, const cgltf_animati
 
 SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const cgltf_node* gltf_node)
 {
-    RE_ASSERT(gltf_node->has_matrix == false);
-
     SkeletalMeshNode* node = new SkeletalMeshNode;
     node->id = GetNodeIndex(data, gltf_node);
     node->name = gltf_node->name ? gltf_node->name : "node_" + std::to_string(node->id);
@@ -620,12 +618,26 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
         node->children.push_back(GetNodeIndex(data, gltf_node->children[i]));
     }
 
-    node->translation = float3(gltf_node->translation[0], gltf_node->translation[1], -gltf_node->translation[2]);
-    node->rotation = float4(gltf_node->rotation[0], gltf_node->rotation[1], -gltf_node->rotation[2], -gltf_node->rotation[3]);
-    node->scale = float3(gltf_node->scale);
+    if (gltf_node->has_matrix)
+    {
+        float4x4 matrix = float4x4(gltf_node->matrix);
+        decompose(matrix, node->translation, node->rotation, node->scale);
+    }
+    else
+    {
+        node->translation = float3(gltf_node->translation);
+        node->rotation = float4(gltf_node->rotation);
+        node->scale = float3(gltf_node->scale);
+    }
+
+    //right-hand to left-hand
+    node->translation.z *= -1;
+    node->rotation.z *= -1;
+    node->rotation.w *= -1;
     
     if (gltf_node->mesh)
     {
+        bool vertex_skinning = gltf_node->skin != nullptr;
         uint32_t mesh_index = GetMeshIndex(data, gltf_node->mesh);
 
         for (cgltf_size i = 0; i < gltf_node->mesh->primitives_count; i++)
@@ -634,6 +646,7 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
 
             SkeletalMeshData* mesh = LoadSkeletalMesh(&gltf_node->mesh->primitives[i], name);
             mesh->nodeID = node->id;
+            mesh->material->m_bSkeletalAnim = vertex_skinning;
             //todo : mesh->material->m_bFrontFaceCCW = bFrontFaceCCW;
 
             node->meshes.emplace_back(mesh);

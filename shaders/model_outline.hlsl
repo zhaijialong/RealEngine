@@ -10,8 +10,8 @@ struct VSOutput
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {    
-    float4 pos = float4(LoadSceneBuffer<float3>(GetInstanceData(c_InstanceIndex).posBufferAddress, vertex_id), 1.0);
-    float3 normal = LoadSceneBuffer<float3>(GetInstanceData(c_InstanceIndex).normalBufferAddress, vertex_id);
+    float4 pos = float4(LoadSceneStaticBuffer<float3>(GetInstanceData(c_InstanceIndex).posBufferAddress, vertex_id), 1.0);
+    float3 normal = LoadSceneStaticBuffer<float3>(GetInstanceData(c_InstanceIndex).normalBufferAddress, vertex_id);
 
     float4 worldPos = mul(GetInstanceData(c_InstanceIndex).mtxWorld, pos);
     float3 worldNormal = mul(GetInstanceData(c_InstanceIndex).mtxWorldInverseTranspose, float4(normal, 0.0)).xyz;
@@ -28,7 +28,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     output.pos.xy += normalize(clipNormal.xy) * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight) * output.pos.w * width * 2;
 
 #if ALPHA_TEST
-    output.uv = LoadSceneBuffer<float2>(GetInstanceData(c_InstanceIndex).uvBufferAddress, vertex_id);
+    output.uv = LoadSceneStaticBuffer<float2>(GetInstanceData(c_InstanceIndex).uvBufferAddress, vertex_id);
 #endif
     
     return output;

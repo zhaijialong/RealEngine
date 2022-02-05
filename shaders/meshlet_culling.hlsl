@@ -92,7 +92,7 @@ void main_as(uint3 dispatchThreadID : SV_DispatchThreadID)
         uint instanceIndex = dataPerMeshlet.x;
         uint meshletIndex = dataPerMeshlet.y;
         
-        Meshlet meshlet = LoadSceneBuffer<Meshlet>(GetInstanceData(instanceIndex).meshletBufferAddress, meshletIndex);
+        Meshlet meshlet = LoadSceneStaticBuffer<Meshlet>(GetInstanceData(instanceIndex).meshletBufferAddress, meshletIndex);
         
         visible = Cull(meshlet, instanceIndex, meshletIndex);
         

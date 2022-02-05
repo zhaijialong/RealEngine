@@ -66,7 +66,7 @@ uint32_t ResourceCache::GetSceneBuffer(const std::string& name, const void* data
 
     SceneBuffer buffer;
     buffer.refCount = 1;
-    buffer.address = pRenderer->AllocateSceneBuffer(data, size);
+    buffer.address = pRenderer->AllocateSceneStaticBuffer(data, size);
     m_cachedSceneBuffer.insert(std::make_pair(name, buffer));
 
     return buffer.address;
@@ -87,7 +87,7 @@ void ResourceCache::RelaseSceneBuffer(uint32_t address)
 
             if (iter->second.refCount == 0)
             {
-                Engine::GetInstance()->GetRenderer()->FreeSceneBuffer(address);
+                Engine::GetInstance()->GetRenderer()->FreeSceneStaticBuffer(address);
                 m_cachedSceneBuffer.erase(iter);
             }
 

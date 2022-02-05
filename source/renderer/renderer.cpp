@@ -161,24 +161,20 @@ void Renderer::UploadResources()
 
 void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
 {
-    GPU_EVENT(pCommandList, "ComputePasses");
+    GPU_EVENT(pCommandList, "Animation Pass");
 
-    for (size_t i = 0; i < m_computeBuffers.size(); ++i)
+    if (!m_animationBatchs.empty())
     {
-        pCommandList->ResourceBarrier(m_computeBuffers[i], 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
-    }
+        m_pGpuScene->BeginAnimationUpdate(pCommandList);
 
-    for (size_t i = 0; i < m_computePassBatchs.size(); ++i)
-    {
-        m_computePassBatchs[i](pCommandList);
-    }
-    m_computePassBatchs.clear();
+        for (size_t i = 0; i < m_animationBatchs.size(); ++i)
+        {
+            DispatchBatch(pCommandList, m_animationBatchs[i]);
+        }
+        m_animationBatchs.clear();
 
-    for (size_t i = 0; i < m_computeBuffers.size(); ++i)
-    {
-        pCommandList->ResourceBarrier(m_computeBuffers[i], 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
+        m_pGpuScene->EndAnimationUpdate(pCommandList);
     }
-    m_computeBuffers.clear();
 }
 
 void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList)
@@ -213,7 +209,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     RenderGraphBuffer* occlusionCulledMeshletsCounterBuffer = (RenderGraphBuffer*)m_pRenderGraph->GetResource(occlusionCulledMeshletsCounterBufferHandle);
 
     SceneConstant sceneCB;
-    sceneCB.sceneBufferSRV = m_pGpuScene->GetSceneBufferSRV()->GetHeapIndex();
+    sceneCB.sceneStaticBufferSRV = m_pGpuScene->GetSceneStaticBufferSRV()->GetHeapIndex();
+    sceneCB.sceneAnimationBufferSRV = m_pGpuScene->GetSceneAnimationBufferSRV()->GetHeapIndex();
     sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
     sceneCB.instanceDataAddress = m_pGpuScene->GetInstanceDataAddress();
     sceneCB.sceneRayTracingTLAS = m_pGpuScene->GetRayTracingTLASSRV()->GetHeapIndex();
@@ -637,26 +634,41 @@ TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
     return texture;
 }
 
-IGfxBuffer* Renderer::GetSceneBuffer() const
+IGfxBuffer* Renderer::GetSceneStaticBuffer() const
 {
-    return m_pGpuScene->GetSceneBuffer();
+    return m_pGpuScene->GetSceneStaticBuffer();
 }
 
-uint32_t Renderer::AllocateSceneBuffer(const void* data, uint32_t size, uint32_t alignment)
+uint32_t Renderer::AllocateSceneStaticBuffer(const void* data, uint32_t size, uint32_t alignment)
 {
-    uint32_t address = m_pGpuScene->Allocate(size, alignment);
+    uint32_t address = m_pGpuScene->AllocateStaticBuffer(size, alignment);
 
     if (data)
     {
-        UploadBuffer(m_pGpuScene->GetSceneBuffer(), address, data, size);
+        UploadBuffer(m_pGpuScene->GetSceneStaticBuffer(), address, data, size);
     }
 
     return address;
 }
 
-void Renderer::FreeSceneBuffer(uint32_t address)
+void Renderer::FreeSceneStaticBuffer(uint32_t address)
 {
-    m_pGpuScene->Free(address);
+    m_pGpuScene->FreeStaticBuffer(address);
+}
+
+IGfxBuffer* Renderer::GetSceneAnimationBuffer() const
+{
+    return m_pGpuScene->GetSceneAnimationBuffer();
+}
+
+uint32_t Renderer::AllocateSceneAnimationBuffer(uint32_t size, uint32_t alignment)
+{
+    return m_pGpuScene->AllocateAnimationBuffer(size, alignment);
+}
+
+void Renderer::FreeSceneAnimationBuffer(uint32_t address)
+{
+    m_pGpuScene->FreeAnimationBuffer(address);
 }
 
 uint32_t Renderer::AllocateSceneConstant(const void* data, uint32_t size)

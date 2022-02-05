@@ -13,8 +13,11 @@ public:
     GpuScene(Renderer* pRenderer);
     ~GpuScene();
 
-    uint32_t Allocate(uint32_t size, uint32_t alignment);
-    void Free(uint32_t address);
+    uint32_t AllocateStaticBuffer(uint32_t size, uint32_t alignment);
+    void FreeStaticBuffer(uint32_t address);
+
+    uint32_t AllocateAnimationBuffer(uint32_t size, uint32_t alignment);
+    void FreeAnimationBuffer(uint32_t address);
 
     uint32_t AllocateConstantBuffer(uint32_t size);
 
@@ -25,8 +28,14 @@ public:
     void BuildRayTracingAS(IGfxCommandList* pCommandList);
     void ResetFrameData();
 
-    IGfxBuffer* GetSceneBuffer() const { return m_pSceneBuffer->GetBuffer(); }
-    IGfxDescriptor* GetSceneBufferSRV() const { return m_pSceneBuffer->GetSRV(); }
+    void BeginAnimationUpdate(IGfxCommandList* pCommandList);
+    void EndAnimationUpdate(IGfxCommandList* pCommandList);
+
+    IGfxBuffer* GetSceneStaticBuffer() const { return m_pSceneStaticBuffer->GetBuffer(); }
+    IGfxDescriptor* GetSceneStaticBufferSRV() const { return m_pSceneStaticBuffer->GetSRV(); }
+
+    IGfxBuffer* GetSceneAnimationBuffer() const { return m_pSceneAnimationBuffer->GetBuffer(); }
+    IGfxDescriptor* GetSceneAnimationBufferSRV() const { return m_pSceneAnimationBuffer->GetSRV(); }
 
     IGfxBuffer* GetSceneConstantBuffer() const;
     IGfxDescriptor* GetSceneConstantSRV() const;
@@ -41,8 +50,8 @@ private:
     std::vector<InstanceData> m_instanceData;
     uint32_t m_instanceDataAddress = 0;
 
-    std::unique_ptr<RawBuffer> m_pSceneBuffer;
-    D3D12MA::VirtualBlock* m_pSceneBufferAllocator = nullptr;
+    std::unique_ptr<RawBuffer> m_pSceneStaticBuffer;
+    D3D12MA::VirtualBlock* m_pSceneStaticBufferAllocator = nullptr;
 
     std::unique_ptr<RawBuffer> m_pSceneAnimationBuffer;
     D3D12MA::VirtualBlock* m_pSceneAnimationBufferAllocator = nullptr;

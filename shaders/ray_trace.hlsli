@@ -17,9 +17,9 @@ namespace rt
         {
             uint3 primitiveIndices = GetPrimitiveIndices(instanceID, primitiveIndex);
 
-            float2 uv0 = LoadSceneBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.x);
-            float2 uv1 = LoadSceneBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.y);
-            float2 uv2 = LoadSceneBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.z);
+            float2 uv0 = LoadSceneStaticBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.x);
+            float2 uv1 = LoadSceneStaticBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.y);
+            float2 uv2 = LoadSceneStaticBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.z);
 
             float2 uv = uv0 * barycentricCoordinates.x + uv1 * barycentricCoordinates.y + uv2 * barycentricCoordinates.z;
 
