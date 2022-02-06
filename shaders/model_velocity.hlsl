@@ -12,20 +12,21 @@ struct VSOutput
 };
 
 VSOutput vs_main(uint vertex_id : SV_VertexID)
-{    
-    float4 pos = float4(LoadSceneStaticBuffer<float3>(GetInstanceData(c_InstanceIndex).posBufferAddress, vertex_id), 1.0);
+{
+    model::Vertex v = model::GetVertex(c_InstanceIndex, vertex_id);
+
+    float4 pos = float4(v.pos, 1.0);
     float4 worldPos = mul(GetInstanceData(c_InstanceIndex).mtxWorld, pos);
 
     VSOutput output;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);
     
 #if ALPHA_TEST
-    output.uv = LoadSceneStaticBuffer<float2>(GetInstanceData(c_InstanceIndex).uvBufferAddress, vertex_id);
+    output.uv = v.uv;
 #endif
 
 #if ANIME_POS
-    StructuredBuffer<float3> prevPosBuffer = ResourceDescriptorHeap[GetInstanceData(c_InstanceIndex).prevPosBuffer]; //todo
-    float4 prevPos = float4(prevPosBuffer[vertex_id], 1.0);
+    float4 prevPos = float4(LoadSceneAnimationBuffer<float3>(c_PrevAnimationPosAddress, vertex_id), 1.0);
 #else
     float4 prevPos = pos;
 #endif

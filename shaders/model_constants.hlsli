@@ -29,5 +29,6 @@ struct ModelMaterialConstant
 cbuffer RootConstants : register(b0)
 {
     uint c_InstanceIndex;
+    uint c_PrevAnimationPosAddress; //only used for velocity pass
 };
 #endif

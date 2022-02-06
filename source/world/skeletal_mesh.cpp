@@ -23,6 +23,8 @@ SkeletalMeshData::~SkeletalMeshData()
     pRenderer->FreeSceneAnimationBuffer(animPosBufferAddress);
     pRenderer->FreeSceneAnimationBuffer(animNormalBufferAddress);
     pRenderer->FreeSceneAnimationBuffer(animTangentBufferAddress);
+
+    pRenderer->FreeSceneAnimationBuffer(prevAnimPosBufferAddress);
 }
 
 SkeletalMesh::SkeletalMesh(const std::string& name)
@@ -45,6 +47,7 @@ bool SkeletalMesh::Create()
             if (mesh->material->IsVertexSkinned())
             {
                 mesh->animPosBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
+                mesh->prevAnimPosBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
 
                 if (mesh->staticNormalBufferAddress != -1)
                 {
@@ -132,6 +135,8 @@ void SkeletalMesh::UpdateMeshNode(SkeletalMeshNode* node)
 
 void SkeletalMesh::UpdateMeshData(SkeletalMeshData* mesh)
 {
+    std::swap(mesh->prevAnimPosBufferAddress, mesh->animPosBufferAddress);
+
     mesh->material->UpdateConstants();
 
     mesh->instanceData.instanceType = (uint)InstanceType::Model;
@@ -182,35 +187,62 @@ void SkeletalMesh::Draw(const SkeletalMeshData* mesh)
     if (mesh->material->IsVertexSkinned())
     {
         ComputeBatch& batch = m_pRenderer->AddAnimationBatch();
-        batch.label = m_name.c_str();
-        batch.SetPipelineState(mesh->material->GetVertexSkinningPSO());
-
-        uint32_t cb[10] = {
-            mesh->vertexCount,
-
-            mesh->staticPosBufferAddress,
-            mesh->staticNormalBufferAddress,
-            mesh->staticTangentBufferAddress,
-
-            mesh->animPosBufferAddress,
-            mesh->animNormalBufferAddress,
-            mesh->animTangentBufferAddress,
-
-            mesh->jointIDBufferAddress,
-            mesh->jointWeightBufferAddress,
-            m_pSkeleton->GetJointMatricesAddress(),
-        };
-
-        batch.SetConstantBuffer(1, cb, sizeof(cb));
-        batch.Dispatch((mesh->vertexCount + 63) / 64, 1, 1);
+        UpdateVertexSkinning(batch, mesh);
     }
 
     RenderBatch& batch = m_pRenderer->AddBasePassBatch();
+    Draw(batch, mesh, mesh->material->GetPSO());
 
-    uint32_t root_consts[1] = { mesh->instanceIndex };
+    if (mesh->material->IsVertexSkinned() || !nearly_equal(mesh->instanceData.mtxPrevWorld, mesh->instanceData.mtxWorld))
+    {
+        RenderBatch& velocityPassBatch = m_pRenderer->AddVelocityPassBatch();
+        Draw(velocityPassBatch, mesh, mesh->material->GetVelocityPSO());
+    }
+
+    if (m_pRenderer->IsEnableMouseHitTest())
+    {
+        RenderBatch& idPassBatch = m_pRenderer->AddObjectIDPassBatch();
+        Draw(idPassBatch, mesh, mesh->material->GetIDPSO());
+    }
+
+    if (m_nID == m_pRenderer->GetMouseHitObjectID())
+    {
+        RenderBatch& outlinePassBatch = m_pRenderer->AddForwardPassBatch();
+        Draw(outlinePassBatch, mesh, mesh->material->GetOutlinePSO());
+    }
+}
+
+void SkeletalMesh::UpdateVertexSkinning(ComputeBatch& batch, const SkeletalMeshData* mesh)
+{
+    batch.label = m_name.c_str();
+    batch.SetPipelineState(mesh->material->GetVertexSkinningPSO());
+
+    uint32_t cb[10] = {
+        mesh->vertexCount,
+
+        mesh->staticPosBufferAddress,
+        mesh->staticNormalBufferAddress,
+        mesh->staticTangentBufferAddress,
+
+        mesh->animPosBufferAddress,
+        mesh->animNormalBufferAddress,
+        mesh->animTangentBufferAddress,
+
+        mesh->jointIDBufferAddress,
+        mesh->jointWeightBufferAddress,
+        m_pSkeleton->GetJointMatricesAddress(),
+    };
+
+    batch.SetConstantBuffer(1, cb, sizeof(cb));
+    batch.Dispatch((mesh->vertexCount + 63) / 64, 1, 1);
+}
+
+void SkeletalMesh::Draw(RenderBatch& batch, const SkeletalMeshData* mesh, IGfxPipelineState* pso)
+{
+    uint32_t root_consts[2] = { mesh->instanceIndex, mesh->prevAnimPosBufferAddress };
 
     batch.label = m_name.c_str();
-    batch.SetPipelineState(mesh->material->GetPSO());
+    batch.SetPipelineState(pso);
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
 
     batch.SetIndexBuffer(m_pRenderer->GetSceneStaticBuffer(), mesh->indexBufferAddress, mesh->indexBufferFormat);

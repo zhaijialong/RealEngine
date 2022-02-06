@@ -25,6 +25,8 @@ struct SkeletalMeshData
     uint32_t animNormalBufferAddress = -1;
     uint32_t animTangentBufferAddress = -1;
 
+    uint32_t prevAnimPosBufferAddress = -1;
+
     uint32_t indexBufferAddress = -1;
     GfxFormat indexBufferFormat;
     uint32_t indexCount = 0;
@@ -71,6 +73,8 @@ private:
     void UpdateMeshData(SkeletalMeshData* mesh);
 
     void Draw(const SkeletalMeshData* mesh);
+    void UpdateVertexSkinning(ComputeBatch& batch, const SkeletalMeshData* mesh);
+    void Draw(RenderBatch& batch, const SkeletalMeshData* mesh, IGfxPipelineState* pso);
 
 private:
     Renderer* m_pRenderer = nullptr;

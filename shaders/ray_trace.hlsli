@@ -17,11 +17,11 @@ namespace rt
         {
             uint3 primitiveIndices = GetPrimitiveIndices(instanceID, primitiveIndex);
 
-            float2 uv0 = LoadSceneStaticBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.x);
-            float2 uv1 = LoadSceneStaticBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.y);
-            float2 uv2 = LoadSceneStaticBuffer<float2>(instanceData.uvBufferAddress, primitiveIndices.z);
+            model::Vertex v0 = model::GetVertex(instanceID, primitiveIndices.x);
+            model::Vertex v1 = model::GetVertex(instanceID, primitiveIndices.y);
+            model::Vertex v2 = model::GetVertex(instanceID, primitiveIndices.z);
 
-            float2 uv = uv0 * barycentricCoordinates.x + uv1 * barycentricCoordinates.y + uv2 * barycentricCoordinates.z;
+            float2 uv = v0.uv * barycentricCoordinates.x + v1.uv * barycentricCoordinates.y + v2.uv * barycentricCoordinates.z;
 
             ModelMaterialConstant material = model::GetMaterialConstant(instanceID);
 
