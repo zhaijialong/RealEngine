@@ -174,6 +174,11 @@ void SkeletalMesh::UpdateMeshData(SkeletalMeshData* mesh)
 
 void SkeletalMesh::Draw(const SkeletalMeshData* mesh)
 {
+    if (mesh->material->IsAlphaBlend())
+    {
+        return; //todo
+    }
+
     if (mesh->material->IsVertexSkinned())
     {
         ComputeBatch& batch = m_pRenderer->AddAnimationBatch();

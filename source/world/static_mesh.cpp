@@ -98,6 +98,11 @@ void StaticMesh::UpdateConstants()
 
 void StaticMesh::Render(Renderer* pRenderer)
 {
+    if (m_pMaterial->IsAlphaBlend())
+    {
+        return; //todo
+    }
+
     RenderBatch& bassPassBatch = pRenderer->AddBasePassBatch();
 #if 1
     Dispatch(bassPassBatch, m_pMaterial->GetMeshletPSO());

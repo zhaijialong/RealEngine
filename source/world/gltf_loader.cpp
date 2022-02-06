@@ -249,6 +249,7 @@ MeshMaterial* GLTFLoader::LoadMaterial(cgltf_material* gltf_material)
     material->m_emissiveColor = float3(gltf_material->emissive_factor);
     material->m_alphaCutoff = gltf_material->alpha_cutoff;
     material->m_bAlphaTest = gltf_material->alpha_mode == cgltf_alpha_mode_mask;
+    material->m_bAlphaBlend = gltf_material->alpha_mode == cgltf_alpha_mode_blend;
     material->m_bDoubleSided = gltf_material->double_sided;
 
     return material;

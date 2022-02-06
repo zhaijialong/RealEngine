@@ -24,6 +24,7 @@ public:
 
     bool IsFrontFaceCCW() const { return m_bFrontFaceCCW; }
     bool IsAlphaTest() const { return m_bAlphaTest; }
+    bool IsAlphaBlend() const { return m_bAlphaBlend; }
     bool IsVertexSkinned() const { return m_bSkeletalAnim; }
 
 private:
@@ -61,6 +62,7 @@ private:
     float m_alphaCutoff = 0.0f;
     bool m_bAlphaTest = false;
 
+    bool m_bAlphaBlend = false;
     bool m_bSkeletalAnim = false;
     bool m_bFrontFaceCCW = true;
     bool m_bDoubleSided = false;
