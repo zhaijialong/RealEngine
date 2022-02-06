@@ -12,6 +12,7 @@ struct SkeletalMeshData
     uint32_t nodeID;
 
     std::unique_ptr<MeshMaterial> material;
+    std::unique_ptr<IGfxRayTracingBLAS> blas;
 
     uint32_t uvBufferAddress = -1;
     uint32_t jointIDBufferAddress = -1;
@@ -71,6 +72,8 @@ public:
 private:
     void UpdateMeshNode(SkeletalMeshNode* node);
     void UpdateMeshData(SkeletalMeshData* mesh);
+
+    void Create(SkeletalMeshData* mesh);
 
     void Draw(const SkeletalMeshData* mesh);
     void UpdateVertexSkinning(ComputeBatch& batch, const SkeletalMeshData* mesh);

@@ -181,11 +181,21 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "BuildRayTracingAS");
 
-    for (size_t i = 0; i < m_pendingBLASBuilds.size(); ++i)
+    if (!m_pendingBLASBuilds.empty())
     {
-        pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
+        GPU_EVENT(pCommandList, "BuildBLAS");
+
+        for (size_t i = 0; i < m_pendingBLASBuilds.size(); ++i)
+        {
+            pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
+        }
+        m_pendingBLASBuilds.clear();
     }
-    m_pendingBLASBuilds.clear();
+
+
+    {
+        GPU_EVENT(pCommandList, "UpdateBLAS");
+    }
 
     m_pGpuScene->BuildRayTracingAS(pCommandList);
 }

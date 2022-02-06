@@ -613,6 +613,8 @@ void D3D12CommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer*
 
 void D3D12CommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
+    FlushPendingBarrier();
+
     m_pCommandList->BuildRaytracingAccelerationStructure(((D3D12RayTracingBLAS*)blas)->GetBuildDesc(), 0, nullptr);
 }
 
