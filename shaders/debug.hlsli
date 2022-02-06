@@ -211,8 +211,14 @@ namespace debug
             PrintString(screenPos, color, 'N', 'A', 'N');
         }
         else
-        {            
-            PrintInt(screenPos, color, (int) number);
+        {
+            if (number < 0)
+            {
+                PrintChar(screenPos, color, '-');
+                number = -number;
+            }
+
+            PrintInt(screenPos, color, (int)number);
             PrintChar(screenPos, color, '.');
             
             uint frac_value = frac(number) * 100000;
