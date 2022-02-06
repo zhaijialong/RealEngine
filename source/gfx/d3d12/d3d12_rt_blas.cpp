@@ -52,7 +52,7 @@ bool D3D12RayTracingBLAS::Create()
 
     //todo : improve memory usage
     CD3DX12_RESOURCE_DESC asBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(info.ResultDataMaxSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    CD3DX12_RESOURCE_DESC scratchBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(info.ScratchDataSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    CD3DX12_RESOURCE_DESC scratchBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(max(info.ScratchDataSizeInBytes, info.UpdateScratchDataSizeInBytes), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     const D3D12_HEAP_PROPERTIES heapProps = { D3D12_HEAP_TYPE_DEFAULT, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 0, 0 };
     device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &asBufferDesc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr, IID_PPV_ARGS(&m_pASBuffer));
     device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &scratchBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_pScratchBuffer));
@@ -63,4 +63,24 @@ bool D3D12RayTracingBLAS::Create()
     m_buildDesc.SourceAccelerationStructureData = 0;
 
     return true;
+}
+
+void D3D12RayTracingBLAS::GetUpdateDesc(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& desc, D3D12_RAYTRACING_GEOMETRY_DESC& geometry, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
+{
+    RE_ASSERT(m_geometries.size() == 1); //todo : suppport more than 1
+
+    geometry = m_geometries[0];
+    geometry.Triangles.VertexBuffer.StartAddress = vertex_buffer->GetGpuAddress() + vertex_buffer_offset;
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS updateInputs;
+    updateInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+    updateInputs.Flags = d3d12_rt_as_flags(m_desc.flags) | D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
+    updateInputs.NumDescs = 1;
+    updateInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+    updateInputs.pGeometryDescs = &geometry;
+
+    desc.Inputs = updateInputs;
+    desc.DestAccelerationStructureData = m_pASBuffer->GetGPUVirtualAddress();
+    desc.SourceAccelerationStructureData = m_pASBuffer->GetGPUVirtualAddress();
+    desc.ScratchAccelerationStructureData = m_pScratchBuffer->GetGPUVirtualAddress();
 }

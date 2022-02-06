@@ -72,6 +72,7 @@ public:
     void UploadTexture(IGfxTexture* texture, const void* data);
     void UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size);
     void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas);
+    void UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset);
 
     LinearAllocator* GetConstantAllocator() const { return m_cbAllocator.get(); }
     RenderBatch& AddBasePassBatch();
@@ -144,6 +145,13 @@ private:
     };
     std::vector<BufferUpload> m_pendingBufferUpload;
 
+    struct BLASUpdate
+    {
+        IGfxRayTracingBLAS* blas;
+        IGfxBuffer* vertex_buffer;
+        uint32_t vertex_buffer_offset;
+    };
+    std::vector<BLASUpdate> m_pendingBLASUpdates;
     std::vector<IGfxRayTracingBLAS*> m_pendingBLASBuilds;
 
     std::unique_ptr<IGfxDescriptor> m_pAniso2xSampler;

@@ -119,6 +119,60 @@ void SkeletalMesh::UpdateMeshNode(SkeletalMeshNode* node)
     }
 }
 
+void SkeletalMesh::Create(SkeletalMeshData* mesh)
+{
+    if (mesh->material->IsVertexSkinned())
+    {
+        mesh->animPosBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
+        mesh->prevAnimPosBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
+
+        if (mesh->staticNormalBufferAddress != -1)
+        {
+            mesh->animNormalBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
+        }
+
+        if (mesh->staticTangentBufferAddress != -1)
+        {
+            mesh->animTangentBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float4) * mesh->vertexCount);
+        }
+    }
+
+    GfxRayTracingGeometry geometry;
+    if (mesh->material->IsVertexSkinned())
+    {
+        geometry.vertex_buffer = m_pRenderer->GetSceneAnimationBuffer();
+        geometry.vertex_buffer_offset = mesh->prevAnimPosBufferAddress;
+    }
+    else
+    {
+        geometry.vertex_buffer = m_pRenderer->GetSceneStaticBuffer();
+        geometry.vertex_buffer_offset = mesh->staticPosBufferAddress;
+    }
+    geometry.vertex_count = mesh->vertexCount;
+    geometry.vertex_stride = sizeof(float3);
+    geometry.vertex_format = GfxFormat::RGB32F;
+    geometry.index_buffer = m_pRenderer->GetSceneStaticBuffer();
+    geometry.index_buffer_offset = mesh->indexBufferAddress;
+    geometry.index_count = mesh->indexCount;
+    geometry.index_format = mesh->indexBufferFormat;
+    geometry.opaque = mesh->material->IsAlphaTest() ? false : true; //todo : alpha blend
+
+    GfxRayTracingBLASDesc desc;
+    desc.geometries.push_back(geometry);
+    if (mesh->material->IsVertexSkinned())
+    {
+        desc.flags = GfxRayTracingASFlagAllowUpdate | GfxRayTracingASFlagPreferFastTrace;
+    }
+    else
+    {
+        desc.flags = GfxRayTracingASFlagAllowCompaction | GfxRayTracingASFlagPreferFastTrace;
+    }
+
+    IGfxDevice* device = m_pRenderer->GetDevice();
+    mesh->blas.reset(device->CreateRayTracingBLAS(desc, "BLAS : " + m_name));
+    m_pRenderer->BuildRayTracingBLAS(mesh->blas.get());
+}
+
 void SkeletalMesh::UpdateMeshData(SkeletalMeshData* mesh)
 {
     std::swap(mesh->prevAnimPosBufferAddress, mesh->animPosBufferAddress);
@@ -161,53 +215,11 @@ void SkeletalMesh::UpdateMeshData(SkeletalMeshData* mesh)
 
     GfxRayTracingInstanceFlag flags = mesh->material->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
     mesh->instanceIndex = m_pRenderer->AddInstance(mesh->instanceData, mesh->blas.get(), flags);
-}
 
-void SkeletalMesh::Create(SkeletalMeshData* mesh)
-{
     if (mesh->material->IsVertexSkinned())
     {
-        mesh->animPosBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
-        mesh->prevAnimPosBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
-
-        if (mesh->staticNormalBufferAddress != -1)
-        {
-            mesh->animNormalBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
-        }
-
-        if (mesh->staticTangentBufferAddress != -1)
-        {
-            mesh->animTangentBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float4) * mesh->vertexCount);
-        }
+        m_pRenderer->UpdateRayTracingBLAS(mesh->blas.get(), m_pRenderer->GetSceneAnimationBuffer(), mesh->animPosBufferAddress);
     }
-
-    GfxRayTracingGeometry geometry;
-    if(mesh->material->IsVertexSkinned())
-    {
-        geometry.vertex_buffer = m_pRenderer->GetSceneAnimationBuffer();
-        geometry.vertex_buffer_offset = mesh->prevAnimPosBufferAddress;
-    }
-    else
-    {
-        geometry.vertex_buffer = m_pRenderer->GetSceneStaticBuffer();
-        geometry.vertex_buffer_offset = mesh->staticPosBufferAddress;
-    }
-    geometry.vertex_count = mesh->vertexCount;
-    geometry.vertex_stride = sizeof(float3);
-    geometry.vertex_format = GfxFormat::RGB32F;
-    geometry.index_buffer = m_pRenderer->GetSceneStaticBuffer();
-    geometry.index_buffer_offset = mesh->indexBufferAddress;
-    geometry.index_count = mesh->indexCount;
-    geometry.index_format = mesh->indexBufferFormat;
-    geometry.opaque = mesh->material->IsAlphaTest() ? false : true; //todo : alpha blend
-
-    GfxRayTracingBLASDesc desc;
-    desc.geometries.push_back(geometry);
-    desc.flags = GfxRayTracingASFlagAllowCompaction | GfxRayTracingASFlagPreferFastTrace; //todo : update
-
-    IGfxDevice* device = m_pRenderer->GetDevice();
-    mesh->blas.reset(device->CreateRayTracingBLAS(desc, "BLAS : " + m_name));
-    m_pRenderer->BuildRayTracingBLAS(mesh->blas.get());
 }
 
 void SkeletalMesh::Draw(const SkeletalMeshData* mesh)

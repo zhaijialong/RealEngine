@@ -66,7 +66,7 @@ public:
     virtual void MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset) = 0;
 
     virtual void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas) = 0;
-    virtual void UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas) = 0;
+    virtual void UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset) = 0;
     virtual void BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count) = 0;
 
 #if MICROPROFILE_GPU_TIMERS

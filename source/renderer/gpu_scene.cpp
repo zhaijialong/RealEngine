@@ -109,7 +109,6 @@ void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "BuildTLAS");
 
-    pCommandList->UavBarrier(nullptr); //barrier for blas
     pCommandList->BuildRayTracingTLAS(m_pSceneTLAS.get(), m_raytracingInstances.data(), (uint32_t)m_raytracingInstances.size());
     pCommandList->UavBarrier(m_pSceneTLAS.get());
 

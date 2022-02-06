@@ -190,11 +190,21 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList)
             pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
         }
         m_pendingBLASBuilds.clear();
+
+        pCommandList->UavBarrier(nullptr);
     }
 
-
+    if(!m_pendingBLASUpdates.empty())
     {
         GPU_EVENT(pCommandList, "UpdateBLAS");
+
+        for (size_t i = 0; i < m_pendingBLASUpdates.size(); ++i)
+        {
+            pCommandList->UpdateRayTracingBLAS(m_pendingBLASUpdates[i].blas, m_pendingBLASUpdates[i].vertex_buffer, m_pendingBLASUpdates[i].vertex_buffer_offset);
+        }
+        m_pendingBLASUpdates.clear();
+
+        pCommandList->UavBarrier(nullptr);
     }
 
     m_pGpuScene->BuildRayTracingAS(pCommandList);
@@ -788,6 +798,11 @@ void Renderer::UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* dat
 void Renderer::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
     m_pendingBLASBuilds.push_back(blas);
+}
+
+void Renderer::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
+{
+    m_pendingBLASUpdates.push_back({ blas, vertex_buffer, vertex_buffer_offset });
 }
 
 RenderBatch& Renderer::AddBasePassBatch()

@@ -618,9 +618,15 @@ void D3D12CommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
     m_pCommandList->BuildRaytracingAccelerationStructure(((D3D12RayTracingBLAS*)blas)->GetBuildDesc(), 0, nullptr);
 }
 
-void D3D12CommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas)
+void D3D12CommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
 {
-    //todo
+    FlushPendingBarrier();
+
+    D3D12_RAYTRACING_GEOMETRY_DESC geometry;
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc;
+    ((D3D12RayTracingBLAS*)blas)->GetUpdateDesc(desc, geometry, vertex_buffer, vertex_buffer_offset);
+
+    m_pCommandList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
 }
 
 void D3D12CommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
