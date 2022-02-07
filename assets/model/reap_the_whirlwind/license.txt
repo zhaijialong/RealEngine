@@ -1,0 +1,11 @@
+Model Information:
+* title:	Reap the Whirlwind
+* source:	https://sketchfab.com/3d-models/reap-the-whirlwind-297e1595d6cf4466bf5c7803db8c5bd8
+* author:	TooManyDemons (https://sketchfab.com/toomanydemons)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Reap the Whirlwind" (https://sketchfab.com/3d-models/reap-the-whirlwind-297e1595d6cf4466bf5c7803db8c5bd8) by TooManyDemons (https://sketchfab.com/toomanydemons) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
