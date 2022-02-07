@@ -67,6 +67,7 @@ bool D3D12RayTracingBLAS::Create()
 
 void D3D12RayTracingBLAS::GetUpdateDesc(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& desc, D3D12_RAYTRACING_GEOMETRY_DESC& geometry, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
 {
+    RE_ASSERT(m_desc.flags & GfxRayTracingASFlagAllowUpdate);
     RE_ASSERT(m_geometries.size() == 1); //todo : suppport more than 1
 
     geometry = m_geometries[0];

@@ -606,14 +606,10 @@ Animation* GLTFLoader::LoadAnimation(const cgltf_data* data, const cgltf_animati
         }
 
         animation->m_channels.push_back(channel);
-    }
 
-    for (size_t i = 0; i < animation->m_channels.size(); ++i)
-    {
-        for (size_t j = 0; j < animation->m_channels[i].keyframes.size(); ++j)
-        {
-            animation->m_timeDuration = max(animation->m_channels[i].keyframes[j].first, animation->m_timeDuration);
-        }
+        RE_ASSERT(time_accessor->has_min && time_accessor->has_max);
+        float duration = time_accessor->max[0] - time_accessor->min[0];
+        animation->m_timeDuration = max(duration, animation->m_timeDuration);
     }
 
     return animation;
