@@ -32,15 +32,15 @@ public:
     void Load();
     
 private:
-    void LoadStaticMeshNode(cgltf_data* data, cgltf_node* node, const float4x4& mtxParentToWorld);
-    StaticMesh* LoadStaticMesh(cgltf_primitive* primitive, const std::string& name);
+    void LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* node, const float4x4& mtxParentToWorld);
+    StaticMesh* LoadStaticMesh(const cgltf_primitive* primitive, const std::string& name);
 
     Animation* LoadAnimation(const cgltf_data* data, const cgltf_animation* animation);
     Skeleton* LoadSkeleton(const cgltf_data* data, const cgltf_skin* skin);
     SkeletalMeshNode* LoadSkeletalMeshNode(const cgltf_data* data, const cgltf_node* node);
     SkeletalMeshData* LoadSkeletalMesh(const cgltf_primitive* primitive, const std::string& name);
 
-    MeshMaterial* LoadMaterial(cgltf_material* gltf_material);
+    MeshMaterial* LoadMaterial(const cgltf_material* gltf_material);
     Texture2D* LoadTexture(const cgltf_texture_view& texture_view, bool srgb);
 
 private:

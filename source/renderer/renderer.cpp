@@ -161,10 +161,10 @@ void Renderer::UploadResources()
 
 void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
 {
-    GPU_EVENT(pCommandList, "Animation Pass");
-
     if (!m_animationBatchs.empty())
     {
+        GPU_EVENT(pCommandList, "Animation Pass");
+
         m_pGpuScene->BeginAnimationUpdate(pCommandList);
 
         for (size_t i = 0; i < m_animationBatchs.size(); ++i)

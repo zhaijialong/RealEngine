@@ -35,15 +35,9 @@ namespace rt
         return true;
     }
 
-    float VisibilityRay(float3 rayOrigin, float3 rayDirection, float rayTMax)
+    bool TraceVisibilityRay(RayDesc ray)
     {
         RaytracingAccelerationStructure raytracingAS = ResourceDescriptorHeap[SceneCB.sceneRayTracingTLAS];
-
-        RayDesc ray;
-        ray.Origin = rayOrigin;
-        ray.Direction = rayDirection;
-        ray.TMin = 0.0;
-        ray.TMax = rayTMax;
 
         RayQuery<RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
         q.TraceRayInline(raytracingAS, RAY_FLAG_NONE, 0xFF, ray);
@@ -60,6 +54,7 @@ namespace rt
             }
         }
 
-        return q.CommittedStatus() == COMMITTED_NOTHING ? 1.0 : 0.0;
+        bool visible = q.CommittedStatus() == COMMITTED_NOTHING;
+        return visible;
     }
 }

@@ -22,7 +22,7 @@ inline float3 str_to_float3(const std::string& str)
     return float3(v[0], v[1], v[2]);
 }
 
-inline void GetTransform(cgltf_node* node, float4x4& matrix)
+inline void GetTransform(const cgltf_node* node, float4x4& matrix)
 {
     float3 translation;
     float4 rotation;
@@ -50,6 +50,18 @@ inline void GetTransform(cgltf_node* node, float4x4& matrix)
     float4x4 S = scaling_matrix(scale);
 
     matrix = mul(T, mul(R, S));
+}
+
+inline bool IsFrontFaceCCW(const cgltf_node* node)
+{
+    //gltf 2.0 spec : If the determinant is a positive value, the winding order triangle faces is counterclockwise; in the opposite case, the winding order is clockwise.
+
+    cgltf_float m[16];
+    cgltf_node_transform_world(node, m);
+
+    float4x4 matrix(m);
+
+    return determinant(matrix) > 0.0f;
 }
 
 inline uint32_t GetMeshIndex(const cgltf_data* data, const cgltf_mesh* mesh)
@@ -160,24 +172,22 @@ void GLTFLoader::Load()
     cgltf_free(data);
 }
 
-void GLTFLoader::LoadStaticMeshNode(cgltf_data* data, cgltf_node* node, const float4x4& mtxParentToWorld)
+void GLTFLoader::LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* node, const float4x4& mtxParentToWorld)
 {
     float4x4 mtxLocalToParent;
     GetTransform(node, mtxLocalToParent);
 
     float4x4 mtxLocalToWorld = mul(mtxParentToWorld, mtxLocalToParent);
 
-    //gltf 2.0 spec : If the determinant is a positive value, the winding order triangle faces is counterclockwise; in the opposite case, the winding order is clockwise.
-    bool bFrontFaceCCW = determinant(mtxLocalToWorld) > 0.0f;
-
-    float3 position;
-    float3 rotation;
-    float3 scale;
-    decompose(mtxLocalToWorld, position, rotation, scale);
-
     if (node->mesh)
     {
+        float3 position;
+        float3 rotation;
+        float3 scale;
+        decompose(mtxLocalToWorld, position, rotation, scale);
+
         uint32_t mesh_index = GetMeshIndex(data, node->mesh);
+        bool bFrontFaceCCW = IsFrontFaceCCW(node);
 
         for (cgltf_size i = 0; i < node->mesh->primitives_count; i++)
         {
@@ -213,7 +223,7 @@ Texture2D* GLTFLoader::LoadTexture(const cgltf_texture_view& texture_view, bool 
     return texture;
 }
 
-MeshMaterial* GLTFLoader::LoadMaterial(cgltf_material* gltf_material)
+MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
 {
     MeshMaterial* material = new MeshMaterial;
     if (gltf_material == nullptr)
@@ -285,7 +295,7 @@ meshopt_Stream LoadBufferStream(const cgltf_accessor* accessor, bool convertToLH
     return stream;
 }
 
-StaticMesh* GLTFLoader::LoadStaticMesh(cgltf_primitive* primitive, const std::string& name)
+StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const std::string& name)
 {
     StaticMesh* mesh = new StaticMesh(m_file + " " + name);
     mesh->m_pMaterial.reset(LoadMaterial(primitive->material));
@@ -688,6 +698,7 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
     {
         bool vertex_skinning = gltf_node->skin != nullptr;
         uint32_t mesh_index = GetMeshIndex(data, gltf_node->mesh);
+        bool bFrontFaceCCW = IsFrontFaceCCW(gltf_node);
 
         for (cgltf_size i = 0; i < gltf_node->mesh->primitives_count; i++)
         {
@@ -696,7 +707,7 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
             SkeletalMeshData* mesh = LoadSkeletalMesh(&gltf_node->mesh->primitives[i], name);
             mesh->nodeID = node->id;
             mesh->material->m_bSkeletalAnim = vertex_skinning;
-            //todo : mesh->material->m_bFrontFaceCCW = bFrontFaceCCW;
+            mesh->material->m_bFrontFaceCCW = bFrontFaceCCW;
 
             node->meshes.emplace_back(mesh);
         }

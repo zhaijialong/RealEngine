@@ -30,7 +30,13 @@ void raytrace_shadow(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D normalRT = ResourceDescriptorHeap[c_normalSRV];
     float3 N = OctNormalDecode(normalRT[pos].xyz);
     
-    float visibility = rt::VisibilityRay(worldPos + N * 0.01, SceneCB.lightDir, 1000.0);
+    RayDesc ray;
+    ray.Origin = worldPos + N * 0.01;
+    ray.Direction = SceneCB.lightDir;
+    ray.TMin = 0.0;
+    ray.TMax = 1000.0;
+
+    float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
 
     RWTexture2D<unorm float> shadowRT = ResourceDescriptorHeap[c_shadowUAV];
     shadowRT[pos] = visibility;
