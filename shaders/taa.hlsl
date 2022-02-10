@@ -1,5 +1,6 @@
 #include "taa_constants.hlsli"
 #include "common.hlsli"
+#include "IntelTAA.hlsli"
 
 cbuffer genrateVelocityCB : register(b0)
 {
@@ -46,30 +47,6 @@ void generate_velocity_main(uint3 dispatchThreadID : SV_DispatchThreadID)
         outputRT[pos] = float4(motion, deltaZ, 0);
     }
 }
-
-float3 Tonemap_ACES(float3 x)
-{
-    // Narkowicz 2015, "ACES Filmic Tone Mapping Curve"
-    const float a = 2.51;
-    const float b = 0.03;
-    const float c = 2.43;
-    const float d = 0.59;
-    const float e = 0.14;
-    return (x * (a * x + b)) / (x * (c * x + d) + e);
-}
-
-float3 InverseTonemap_ACES(float3 x)
-{
-    // Narkowicz 2015, "ACES Filmic Tone Mapping Curve"
-    const float a = 2.51;
-    const float b = 0.03;
-    const float c = 2.43;
-    const float d = 0.59;
-    const float e = 0.14;
-    return (-d * x + b - sqrt(-1.0127 * x * x + 1.3702 * x + 0.0009)) / (2.0 * (c * x - a));
-}
-
-#include "IntelTAA.hlsli"
 
 [numthreads(INTEL_TAA_NUM_THREADS_X, INTEL_TAA_NUM_THREADS_Y, 1)]
 void main(uint3 inDispatchIdx : SV_DispatchThreadID, uint3 inGroupID : SV_GroupID, uint3 inGroupThreadID : SV_GroupThreadID)

@@ -33,7 +33,8 @@ TAA::TAA(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     std::vector<std::string> defines;
-    //defines.push_back("USE_DEPTH_THRESHOLD=0");
+    defines.push_back("USE_YCOCG_SPACE=0");
+    defines.push_back("LONGEST_VELOCITY_VECTOR_SAMPLES=0");
 
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = pRenderer->GetShader("taa.hlsl", "main", "cs_6_6", defines);

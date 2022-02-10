@@ -347,7 +347,7 @@ fp16_t3 _InverseReinhard( fp32_t3 inRGB )
 }
 
 // should match tonemapper - if disabled will just use Reinhard
-#define USE_ACES_SPACE
+//#define USE_ACES_SPACE
 
 static const float c_ACES_Scale = 1.027;    // invertible aces tends to cut off at the high end so this compresses everything a bit in order to minimize that
 
