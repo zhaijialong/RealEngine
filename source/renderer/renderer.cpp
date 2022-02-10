@@ -751,7 +751,7 @@ void Renderer::UploadTexture(IGfxTexture* texture, const void* data)
             uint32_t min_height = GetFormatBlockHeight(desc.format);
             uint32_t w = max(desc.width >> mip, min_width);
             uint32_t h = max(desc.height >> mip, min_height);
-            uint32_t d = max(desc.depth >> mip, 1);
+            uint32_t d = max(desc.depth >> mip, 1u);
 
             uint32_t src_row_pitch = GetFormatRowPitch(desc.format, w) * GetFormatBlockHeight(desc.format);
             uint32_t dst_row_pitch = texture->GetRowPitch(mip);
