@@ -11,12 +11,13 @@ struct VSOutput
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {    
     model::Vertex v = model::GetVertex(c_InstanceIndex, vertex_id);
+    InstanceData instanceData = GetInstanceData(c_InstanceIndex);
 
     float4 pos = float4(v.pos, 1.0);
     float3 normal = v.normal;
 
-    float4 worldPos = mul(GetInstanceData(c_InstanceIndex).mtxWorld, pos);
-    float3 worldNormal = mul(GetInstanceData(c_InstanceIndex).mtxWorldInverseTranspose, float4(normal, 0.0)).xyz;
+    float4 worldPos = mul(instanceData.mtxWorld, pos);
+    float3 worldNormal = mul(instanceData.mtxWorldInverseTranspose, float4(normal, 0.0)).xyz;
     
     VSOutput output;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);

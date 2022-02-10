@@ -737,6 +737,21 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
         case cgltf_attribute_type_position:
             vertices = LoadBufferStream(primitive->attributes[i].data, true, vertex_count);
             mesh->staticPosBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") pos", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+
+            {
+                float3 min = float3(primitive->attributes[i].data->min);
+                min.z = -min.z;
+
+                float3 max = float3(primitive->attributes[i].data->max);
+                max.z = -max.z;
+
+                float3 center = (min + max) / 2;
+                float radius = length(max - min) / 2;
+
+                mesh->center = center;
+                mesh->radius = radius;
+            }
+
             break;
         case cgltf_attribute_type_texcoord:
             if (primitive->attributes[i].index == 0)

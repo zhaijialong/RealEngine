@@ -19,8 +19,9 @@ groupshared MeshletPayload s_Payload;
 
 bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
 {
-    float3 center = mul(GetInstanceData(instanceIndex).mtxWorld, float4(meshlet.center, 1.0)).xyz;
-    float radius = meshlet.radius * GetInstanceData(instanceIndex).scale;
+    InstanceData instanceData = GetInstanceData(instanceIndex);
+    float3 center = mul(instanceData.mtxWorld, float4(meshlet.center, 1.0)).xyz;
+    float radius = meshlet.radius * instanceData.scale;
 
     // 1. frustum culling
     for (uint i = 0; i < 6; ++i)
@@ -38,7 +39,7 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
     float3 axis = cone.xyz / 127.0;
     float cutoff = cone.w / 127.0;
     
-    axis = normalize(mul(GetInstanceData(instanceIndex).mtxWorld, float4(axis, 0.0)).xyz);
+    axis = normalize(mul(instanceData.mtxWorld, float4(axis, 0.0)).xyz);
     float3 view = center - CameraCB.culling.viewPos;
     
     if (dot(view, -axis) >= cutoff * length(view) + radius)

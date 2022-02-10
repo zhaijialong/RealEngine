@@ -32,10 +32,6 @@ SkeletalMesh::SkeletalMesh(const std::string& name)
     m_name = name;
 }
 
-SkeletalMesh::~SkeletalMesh()
-{
-}
-
 bool SkeletalMesh::Create()
 {
     for (size_t i = 0; i < m_nodes.size(); ++i)
@@ -49,74 +45,6 @@ bool SkeletalMesh::Create()
     }
 
     return true;
-}
-
-void SkeletalMesh::Tick(float delta_time)
-{
-    m_pAnimation->Update(this, delta_time);
-
-    float4x4 T = translation_matrix(m_pos);
-    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
-    float4x4 S = scaling_matrix(m_scale);
-    m_mtxWorld = mul(T, mul(R, S));
-
-    for (size_t i = 0; i < m_rootNodes.size(); ++i)
-    {
-        UpdateMeshNode(GetNode(m_rootNodes[i]));
-    }
-
-    if (m_pSkeleton)
-    {
-        m_pSkeleton->Update(this);
-    }
-}
-
-void SkeletalMesh::Render(Renderer* pRenderer)
-{
-    for (size_t i = 0; i < m_nodes.size(); ++i)
-    {
-        for (size_t j = 0; j < m_nodes[i]->meshes.size(); ++j)
-        {
-            const SkeletalMeshData* mesh = m_nodes[i]->meshes[j].get();
-            Draw(mesh);
-        }
-    }
-}
-
-bool SkeletalMesh::FrustumCull(const float4* planes, uint32_t plane_count) const
-{
-    return true; //todo
-}
-
-SkeletalMeshNode* SkeletalMesh::GetNode(uint32_t node_id) const
-{
-    RE_ASSERT(node_id < m_nodes.size());
-    return m_nodes[node_id].get();
-}
-
-void SkeletalMesh::UpdateMeshNode(SkeletalMeshNode* node)
-{
-    float4x4 T = translation_matrix(node->translation);
-    float4x4 R = rotation_matrix(node->rotation);
-    float4x4 S = scaling_matrix(node->scale);
-    float4x4 globalTransform = mul(T, mul(R, S));
-
-    if (node->parent != -1)
-    {
-        globalTransform = mul(m_nodes[node->parent]->globalTransform, globalTransform);
-    }
-
-    node->globalTransform = globalTransform;
-
-    for (size_t i = 0; i < node->meshes.size(); ++i)
-    {
-        UpdateMeshData(node->meshes[i].get());
-    }
-
-    for (size_t i = 0; i < node->children.size(); ++i)
-    {
-        UpdateMeshNode(GetNode(node->children[i]));
-    }
 }
 
 void SkeletalMesh::Create(SkeletalMeshData* mesh)
@@ -173,52 +101,132 @@ void SkeletalMesh::Create(SkeletalMeshData* mesh)
     m_pRenderer->BuildRayTracingBLAS(mesh->blas.get());
 }
 
-void SkeletalMesh::UpdateMeshData(SkeletalMeshData* mesh)
+void SkeletalMesh::Tick(float delta_time)
 {
-    std::swap(mesh->prevAnimPosBufferAddress, mesh->animPosBufferAddress);
+    float4x4 T = translation_matrix(m_pos);
+    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
+    float4x4 S = scaling_matrix(m_scale);
+    m_mtxWorld = mul(T, mul(R, S));
 
-    mesh->material->UpdateConstants();
+    m_pAnimation->Update(this, delta_time); //update node local transform
 
-    mesh->instanceData.instanceType = (uint)InstanceType::Model;
-    mesh->instanceData.indexBufferAddress = mesh->indexBufferAddress;
-    mesh->instanceData.indexStride = mesh->indexBufferFormat == GfxFormat::R32UI ? 4 : 2;
-    mesh->instanceData.triangleCount = mesh->indexCount / 3;
-
-    mesh->instanceData.uvBufferAddress = mesh->uvBufferAddress;
-
-    bool isSkinnedMesh = mesh->material->IsVertexSkinned();
-    if (isSkinnedMesh)
+    for (size_t i = 0; i < m_rootNodes.size(); ++i)
     {
-        mesh->instanceData.posBufferAddress = mesh->animPosBufferAddress;
-        mesh->instanceData.normalBufferAddress = mesh->animNormalBufferAddress;
-        mesh->instanceData.tangentBufferAddress = mesh->animTangentBufferAddress;
-    }
-    else
-    {
-        mesh->instanceData.posBufferAddress = mesh->staticPosBufferAddress;
-        mesh->instanceData.normalBufferAddress = mesh->staticNormalBufferAddress;
-        mesh->instanceData.tangentBufferAddress = mesh->staticTangentBufferAddress;
+        UpdateNodeTransform(GetNode(m_rootNodes[i])); //update node global transform
     }
 
-    mesh->instanceData.bVertexAnimation = isSkinnedMesh;
-    mesh->instanceData.materialDataAddress = m_pRenderer->AllocateSceneConstant((void*)mesh->material->GetConstants(), sizeof(ModelMaterialConstant));
-    mesh->instanceData.objectID = m_nID;
-    mesh->instanceData.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
-
-    //todo
-    //mesh->instanceData.center = mul(mtxWorld, float4(m_center, 1.0)).xyz();
-    //mesh->instanceData.radius = m_radius * mesh->instanceData.scale;
-
-    mesh->instanceData.mtxPrevWorld = mesh->instanceData.mtxWorld;
-    mesh->instanceData.mtxWorld = isSkinnedMesh ? m_mtxWorld : mul(m_mtxWorld, m_nodes[mesh->nodeID]->globalTransform);
-    mesh->instanceData.mtxWorldInverseTranspose = transpose(inverse(mesh->instanceData.mtxWorld));
-
-    GfxRayTracingInstanceFlag flags = mesh->material->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
-    mesh->instanceIndex = m_pRenderer->AddInstance(mesh->instanceData, mesh->blas.get(), flags);
-
-    if (mesh->material->IsVertexSkinned())
+    if (m_pSkeleton)
     {
-        m_pRenderer->UpdateRayTracingBLAS(mesh->blas.get(), m_pRenderer->GetSceneAnimationBuffer(), mesh->animPosBufferAddress);
+        m_pSkeleton->Update(this);
+    }
+
+    for (size_t i = 0; i < m_rootNodes.size(); ++i)
+    {
+        UpdateMeshConstants(GetNode(m_rootNodes[i]));
+    }
+}
+
+void SkeletalMesh::Render(Renderer* pRenderer)
+{
+    for (size_t i = 0; i < m_nodes.size(); ++i)
+    {
+        for (size_t j = 0; j < m_nodes[i]->meshes.size(); ++j)
+        {
+            const SkeletalMeshData* mesh = m_nodes[i]->meshes[j].get();
+            Draw(mesh);
+        }
+    }
+}
+
+bool SkeletalMesh::FrustumCull(const float4* planes, uint32_t plane_count) const
+{
+    return ::FrustumCull(planes, plane_count, m_pos, m_radius); //todo : not correct
+}
+
+SkeletalMeshNode* SkeletalMesh::GetNode(uint32_t node_id) const
+{
+    RE_ASSERT(node_id < m_nodes.size());
+    return m_nodes[node_id].get();
+}
+
+void SkeletalMesh::UpdateNodeTransform(SkeletalMeshNode* node)
+{
+    float4x4 T = translation_matrix(node->translation);
+    float4x4 R = rotation_matrix(node->rotation);
+    float4x4 S = scaling_matrix(node->scale);
+    node->globalTransform = mul(T, mul(R, S));
+
+    if (node->parent != -1)
+    {
+        node->globalTransform = mul(GetNode(node->parent)->globalTransform, node->globalTransform);
+    }
+
+    for (size_t i = 0; i < node->children.size(); ++i)
+    {
+        UpdateNodeTransform(GetNode(node->children[i]));
+    }
+}
+
+void SkeletalMesh::UpdateMeshConstants(SkeletalMeshNode* node)
+{
+    for (size_t i = 0; i < node->meshes.size(); ++i)
+    {
+        SkeletalMeshData* mesh = node->meshes[i].get();
+
+        std::swap(mesh->prevAnimPosBufferAddress, mesh->animPosBufferAddress);
+
+        mesh->material->UpdateConstants();
+
+        mesh->instanceData.instanceType = (uint)InstanceType::Model;
+        mesh->instanceData.indexBufferAddress = mesh->indexBufferAddress;
+        mesh->instanceData.indexStride = mesh->indexBufferFormat == GfxFormat::R32UI ? 4 : 2;
+        mesh->instanceData.triangleCount = mesh->indexCount / 3;
+
+        mesh->instanceData.uvBufferAddress = mesh->uvBufferAddress;
+
+        bool isSkinnedMesh = mesh->material->IsVertexSkinned();
+        if (isSkinnedMesh)
+        {
+            mesh->instanceData.posBufferAddress = mesh->animPosBufferAddress;
+            mesh->instanceData.normalBufferAddress = mesh->animNormalBufferAddress;
+            mesh->instanceData.tangentBufferAddress = mesh->animTangentBufferAddress;
+        }
+        else
+        {
+            mesh->instanceData.posBufferAddress = mesh->staticPosBufferAddress;
+            mesh->instanceData.normalBufferAddress = mesh->staticNormalBufferAddress;
+            mesh->instanceData.tangentBufferAddress = mesh->staticTangentBufferAddress;
+        }
+
+        mesh->instanceData.bVertexAnimation = isSkinnedMesh;
+        mesh->instanceData.materialDataAddress = m_pRenderer->AllocateSceneConstant((void*)mesh->material->GetConstants(), sizeof(ModelMaterialConstant));
+        mesh->instanceData.objectID = m_nID;
+
+        SkeletalMeshNode* node = GetNode(mesh->nodeID);
+        float4x4 mtxNodeWorld = mul(m_mtxWorld, node->globalTransform);
+
+        mesh->instanceData.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z)) * m_boundScaleFactor;
+
+        mesh->instanceData.center = mul(m_mtxWorld, float4(mesh->center, 1.0)).xyz(); //todo : not correct
+        mesh->instanceData.radius = mesh->radius * mesh->instanceData.scale;
+        m_radius = max(m_radius, mesh->instanceData.radius);
+
+        mesh->instanceData.mtxPrevWorld = mesh->instanceData.mtxWorld;
+        mesh->instanceData.mtxWorld = isSkinnedMesh ? m_mtxWorld : mtxNodeWorld;
+        mesh->instanceData.mtxWorldInverseTranspose = transpose(inverse(mesh->instanceData.mtxWorld));
+
+        GfxRayTracingInstanceFlag flags = mesh->material->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
+        mesh->instanceIndex = m_pRenderer->AddInstance(mesh->instanceData, mesh->blas.get(), flags);
+
+        if (mesh->material->IsVertexSkinned())
+        {
+            m_pRenderer->UpdateRayTracingBLAS(mesh->blas.get(), m_pRenderer->GetSceneAnimationBuffer(), mesh->animPosBufferAddress);
+        }
+    }
+
+    for (size_t i = 0; i < node->children.size(); ++i)
+    {
+        UpdateMeshConstants(GetNode(node->children[i]));
     }
 }
 

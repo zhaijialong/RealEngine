@@ -203,6 +203,11 @@ uint Hash(uint a)
     return a;
 }
 
+float3 GetDebugColor(uint id)
+{
+    uint mhash = Hash(id);
+    return float3(float(mhash & 255), float((mhash >> 8) & 255), float((mhash >> 16) & 255)) / 255.0;
+}
 
 // 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere. Michael Mara, Morgan McGuire. 2013
 bool ProjectSphere(float3 center, float radius, float znear, float P00, float P11, out float4 aabb)

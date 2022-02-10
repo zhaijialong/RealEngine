@@ -484,7 +484,7 @@ void BasePass::MergeBatches()
         }
         else
         {
-            m_nonGpuDrivenBatches.push_back(batch);
+            m_nonGpuDrivenBatches.push_back(batch); //todo : we can also do instance-culling and merging for VS batches
         }
     }
 

@@ -165,9 +165,9 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mi
 
     uint32_t min_width = GetFormatBlockWidth(desc.format);
     uint32_t min_height = GetFormatBlockHeight(desc.format);
-    uint32_t w = max(desc.width >> mip_level, min_width);
-    uint32_t h = max(desc.height >> mip_level, min_height);
-    uint32_t d = max(desc.depth >> mip_level, 1);
+    uint32_t w = std::max(desc.width >> mip_level, min_width);
+    uint32_t h = std::max(desc.height >> mip_level, min_height);
+    uint32_t d = std::max(desc.depth >> mip_level, 1u);
 
     D3D12_TEXTURE_COPY_LOCATION dst = {};
     dst.pResource = (ID3D12Resource*)dst_texture->GetHandle();
@@ -195,17 +195,17 @@ void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* 
 
     uint32_t min_width = GetFormatBlockWidth(desc.format);
     uint32_t min_height = GetFormatBlockHeight(desc.format);
-    uint32_t w = max(desc.width >> mip_level, min_width);
-    uint32_t h = max(desc.height >> mip_level, min_height);
-    uint32_t d = max(desc.depth >> mip_level, 1);
+    uint32_t w = std::max(desc.width >> mip_level, min_width);
+    uint32_t h = std::max(desc.height >> mip_level, min_height);
+    uint32_t d = std::max(desc.depth >> mip_level, 1u);
 
     D3D12_TEXTURE_COPY_LOCATION dst = {};
     dst.pResource = (ID3D12Resource*)dst_buffer->GetHandle();
     dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     dst.PlacedFootprint.Footprint.Format = dxgi_format(desc.format);
-    dst.PlacedFootprint.Footprint.Width = max(desc.width >> mip_level, 1);
-    dst.PlacedFootprint.Footprint.Height = max(desc.height >> mip_level, 1);
-    dst.PlacedFootprint.Footprint.Depth = max(desc.depth >> mip_level, 1);
+    dst.PlacedFootprint.Footprint.Width = std::max(desc.width >> mip_level, 1u);
+    dst.PlacedFootprint.Footprint.Height = std::max(desc.height >> mip_level, 1u);
+    dst.PlacedFootprint.Footprint.Depth = std::max(desc.depth >> mip_level, 1u);
     dst.PlacedFootprint.Footprint.RowPitch = src_texture->GetRowPitch(mip_level);
 
     D3D12_TEXTURE_COPY_LOCATION src;

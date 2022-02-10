@@ -36,6 +36,9 @@ struct SkeletalMeshData
     InstanceData instanceData = {};
     uint32_t instanceIndex = 0;
 
+    float3 center;
+    float radius = 0.0;
+
     ~SkeletalMeshData();
 };
 
@@ -47,6 +50,7 @@ struct SkeletalMeshNode
     std::vector<uint32_t> children;
     std::vector<std::unique_ptr<SkeletalMeshData>> meshes;
 
+    //local transform
     float3 translation;
     float4 rotation;
     float3 scale;
@@ -60,7 +64,6 @@ class SkeletalMesh : public IVisibleObject
 
 public:
     SkeletalMesh(const std::string& name);
-    ~SkeletalMesh();
 
     virtual bool Create() override;
     virtual void Tick(float delta_time) override;
@@ -70,10 +73,10 @@ public:
     SkeletalMeshNode* GetNode(uint32_t node_id) const;
 
 private:
-    void UpdateMeshNode(SkeletalMeshNode* node);
-    void UpdateMeshData(SkeletalMeshData* mesh);
-
     void Create(SkeletalMeshData* mesh);
+
+    void UpdateNodeTransform(SkeletalMeshNode* node);
+    void UpdateMeshConstants(SkeletalMeshNode* node);
 
     void Draw(const SkeletalMeshData* mesh);
     void UpdateVertexSkinning(ComputeBatch& batch, const SkeletalMeshData* mesh);
@@ -90,4 +93,7 @@ private:
 
     std::vector<std::unique_ptr<SkeletalMeshNode>> m_nodes;
     std::vector<uint32_t> m_rootNodes;
+
+    float m_radius = 0.0f;
+    float m_boundScaleFactor = 3.0f;
 };

@@ -61,8 +61,7 @@ GBufferOutput ps_main(model::VertexOutput input
     
     if (SceneCB.bShowMeshlets)
     {
-        uint mhash = Hash(input.meshlet);
-        diffuse.xyz = float3(float(mhash & 255), float((mhash >> 8) & 255), float((mhash >> 16) & 255)) / 255.0;
+        diffuse.xyz = GetDebugColor(input.meshlet);
         roughness = 1.0;
         emissive = float3(0.0, 0.0, 0.0);
     }

@@ -14,9 +14,10 @@ struct VSOutput
 VSOutput vs_main(uint vertex_id : SV_VertexID)
 {
     model::Vertex v = model::GetVertex(c_InstanceIndex, vertex_id);
+    InstanceData instanceData = GetInstanceData(c_InstanceIndex);
 
     float4 pos = float4(v.pos, 1.0);
-    float4 worldPos = mul(GetInstanceData(c_InstanceIndex).mtxWorld, pos);
+    float4 worldPos = mul(instanceData.mtxWorld, pos);
 
     VSOutput output;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);
@@ -30,7 +31,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 #else
     float4 prevPos = pos;
 #endif
-    float4 prevWorldPos = mul(GetInstanceData(c_InstanceIndex).mtxPrevWorld, prevPos);
+    float4 prevWorldPos = mul(instanceData.mtxPrevWorld, prevPos);
     
     output.clipPos = mul(CameraCB.mtxViewProjectionNoJitter, worldPos);
     output.prevClipPos = mul(CameraCB.mtxPrevViewProjectionNoJitter, prevWorldPos);
