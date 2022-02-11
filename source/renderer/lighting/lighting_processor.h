@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gtao.h"
-#include "rt_shadow.h"
+#include "ray_traced_shadow.h"
 #include "clustered_shading.h"
 
 struct LightingProcessInput

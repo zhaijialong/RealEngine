@@ -1,4 +1,4 @@
-#include "rt_shadow.h"
+#include "ray_traced_shadow.h"
 #include "../renderer.h"
 
 RTShadow::RTShadow(Renderer* pRenderer)
@@ -7,7 +7,7 @@ RTShadow::RTShadow(Renderer* pRenderer)
 
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = pRenderer->GetShader("rt_shadow.hlsl", "raytrace_shadow", "cs_6_6", {});
-    m_pRaytracePSO = pRenderer->GetPipelineState(psoDesc, "RTAO PSO");
+    m_pRaytracePSO = pRenderer->GetPipelineState(psoDesc, "RTShadow PSO");
 }
 
 RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle depthRT, RenderGraphHandle normalRT, uint32_t width, uint32_t height)
@@ -47,6 +47,8 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
 
 void RTShadow::RayTrace(IGfxCommandList* pCommandList, IGfxDescriptor* depthSRV, IGfxDescriptor* normalSRV, IGfxDescriptor* shadowUAV, uint32_t width, uint32_t height)
 {
+    //todo : soft-shadow && denoising
+
     pCommandList->SetPipelineState(m_pRaytracePSO);
 
     uint root_constants[3] = { depthSRV->GetHeapIndex(), normalSRV->GetHeapIndex(), shadowUAV->GetHeapIndex() };

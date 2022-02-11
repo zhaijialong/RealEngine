@@ -10,6 +10,38 @@ FXAA::FXAA(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "FXAA PSO");
 }
 
+RenderGraphHandle FXAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height)
+{
+    struct FXAAData
+    {
+        RenderGraphHandle input;
+        RenderGraphHandle output;
+    };
+
+    auto fxaa_pass = pRenderGraph->AddPass<FXAAData>("FXAA",
+        [&](FXAAData& data, RenderGraphBuilder& builder)
+        {
+            data.input = builder.Read(inputHandle, GfxResourceState::ShaderResourceNonPS);
+
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::RGBA8SRGB;
+            desc.usage = GfxTextureUsageUnorderedAccess;
+            data.output = builder.Create<RenderGraphTexture>(desc, "FXAA Output");
+            data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
+        },
+        [=](const FXAAData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
+            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+
+            Draw(pCommandList, input->GetSRV(), output->GetUAV(), width, height);
+        });
+
+    return fxaa_pass->output;
+}
+
 void FXAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);

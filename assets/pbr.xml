@@ -6,5 +6,5 @@
     <model file="model/SciFiHelmet/SciFiHelmet.gltf" position="5.0,0.0,-5.0"/>
     <skysphere />
     <camera position="6.125,1.825,-10.333" rotation="7.199,-31.399,0.0" fov="60.0" znear="0.1" zfar="1000.0"/>
-    <light type="directional" primary="true" rotation="-45.000,45.000,0.000"/>
+    <light type="directional" primary="true" rotation="-45.000,45.000,0.000" intensity="2.0"/>
 </scene>
