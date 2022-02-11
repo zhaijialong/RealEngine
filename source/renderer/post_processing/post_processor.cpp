@@ -6,7 +6,7 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     m_pTAA = std::make_unique<TAA>(pRenderer);
-    m_pToneMapper = std::make_unique<Tonemapper>(pRenderer, DISPLAYMODE_SDR, ColorSpace_REC709);
+    m_pToneMapper = std::make_unique<Tonemapper>(pRenderer);
     m_pFXAA = std::make_unique<FXAA>(pRenderer);
     m_pCAS = std::make_unique<CAS>(pRenderer);
 }

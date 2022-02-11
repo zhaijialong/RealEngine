@@ -504,9 +504,6 @@
     <ClInclude Include="shaders\ffx_a.h">
       <Filter>shaders</Filter>
     </ClInclude>
-    <ClInclude Include="shaders\ffx_lpm.h">
-      <Filter>shaders</Filter>
-    </ClInclude>
     <ClInclude Include="source\renderer\lighting\clustered_shading.h">
       <Filter>source\renderer\lighting</Filter>
     </ClInclude>
