@@ -64,6 +64,20 @@ struct CullingData
     float4 planes[6];
 };
 
+struct PhysicalCamera
+{
+    float aperture;
+    float shutterSpeed;
+    int iso;
+    float exposureCompensation;
+
+    /* add more physical params when adding dof in the future
+    float focalLength;
+    float focusDistance;
+    float bladeNum;
+    */
+};
+
 struct CameraConstant
 {
     float3 cameraPos;
@@ -90,6 +104,7 @@ struct CameraConstant
     float4x4 mtxPrevViewProjectionInverse;
     
     CullingData culling;
+    PhysicalCamera physicalCamera;
 };
 
 #ifndef __cplusplus

@@ -1,13 +1,14 @@
 #include "common.hlsli"
+#include "exposure.hlsli"
 
 cbuffer CB : register(b0)
 {
     uint c_hdrTexture;
     uint c_ldrTexture;
-    uint c_width;
-    uint c_height;
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////
+//https://github.com/EmbarkStudios/kajiya/blob/main/assets/shaders/inc/tonemap.hlsl
 float tonemap_curve(float v)
 {
 #if 0
@@ -35,7 +36,6 @@ float srgb_to_luminance(float3 col)
     return dot(float3(0.2126, 0.7152, 0.0722), col);
 }
 
-//https://github.com/EmbarkStudios/kajiya/blob/main/assets/shaders/inc/tonemap.hlsl
 float3 neutral_tonemap(float3 col)
 {
     float3 ycbcr = rgb_to_ycbcr(col);
@@ -55,21 +55,20 @@ float3 neutral_tonemap(float3 col)
 
     return col * final_mult;
 }
+//////////////////////////////////////////////////////////////////////////////////////////
 
 [numthreads(8, 8, 1)]
 void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
-{
-    if (dispatchThreadID.x >= c_width || dispatchThreadID.y >= c_height)
-    {
-        return;
-    }
+{    
+    Texture2D hdrTexture = ResourceDescriptorHeap[c_hdrTexture];    
+    float3 color = hdrTexture[dispatchThreadID.xy].xyz;
+
+#if AUTO_EXPOSURE
+#else
+#endif
+
+    color = neutral_tonemap(color);   
     
     RWTexture2D<float4> ldrTexture = ResourceDescriptorHeap[c_ldrTexture];
-    Texture2D hdrTexture = ResourceDescriptorHeap[c_hdrTexture];
-    
-    float3 color = hdrTexture[dispatchThreadID.xy].xyz;
-    color = neutral_tonemap(color);
-   
-    
     ldrTexture[dispatchThreadID.xy] = float4(LinearToSrgb(color.xyz), 1.0);
 }

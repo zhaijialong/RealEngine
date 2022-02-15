@@ -59,6 +59,7 @@ private:
     void UpdateJitter();
     void UpdateMatrix();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
+    void OnGui();
 
 private:
     float3 m_pos;
@@ -82,6 +83,11 @@ private:
     float m_znear = 0.0f;
     float m_zfar = 0.0f;
     float m_moveSpeed = 10.0f;
+
+    float m_aperture = 2.8f;
+    int m_shutterSpeed = 125;
+    int m_iso = 100;
+    float m_exposureCompensation = 0.0f;
 
     lsignal::connection m_resizeConnection;
 

@@ -67,29 +67,7 @@ void Camera::SetFov(float fov)
 
 void Camera::Tick(float delta_time)
 {
-    GUI("Settings", "Camera",
-        [&]()
-        {
-            ImGui::SliderFloat("Move Speed", &m_moveSpeed, 1.0f, 200.0f, "%.0f");
-
-            bool perpective_updated = false;
-            perpective_updated |= ImGui::SliderFloat("Fov", &m_fov, 5.0f, 135.0f, "%.0f");
-            perpective_updated |= ImGui::SliderFloat("Near Plane", &m_znear, 0.0001f, 3.0f, "%.4f");
-            perpective_updated |= ImGui::SliderFloat("Far Plane", &m_zfar, 10.0f, 5000.0f, "%.2f");
-
-            if (perpective_updated)
-            {
-                SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
-            }
-
-            if (ImGui::TreeNode("Physical Camera"))
-            {
-                float a = 1.0f;
-                ImGui::SliderFloat("Aperture", &a, 1.0f, 200.0f, "%.0f");
-
-                ImGui::TreePop();
-            }
-        });
+    GUI("Settings", "Camera", [&]() { OnGui(); });
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -160,6 +138,11 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
     m_cameraCB.mtxPrevViewProjectionInverse = inverse(m_prevViewProjectionJitter);
 
     m_cameraCB.culling.viewPos = m_frustumViewPos;
+
+    m_cameraCB.physicalCamera.aperture = m_aperture;
+    m_cameraCB.physicalCamera.shutterSpeed = 1.0f / m_shutterSpeed;
+    m_cameraCB.physicalCamera.iso = m_iso;
+    m_cameraCB.physicalCamera.exposureCompensation = m_exposureCompensation;
 
     for (int i = 0; i < 6; ++i)
     {
@@ -278,6 +261,31 @@ void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
     m_aspectRatio = (float)width / height;
 
     SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
+}
+
+void Camera::OnGui()
+{
+    ImGui::SliderFloat("Move Speed", &m_moveSpeed, 1.0f, 200.0f, "%.0f");
+
+    bool perspective_updated = false;
+    perspective_updated |= ImGui::SliderFloat("Fov", &m_fov, 5.0f, 135.0f, "%.0f");
+    perspective_updated |= ImGui::SliderFloat("Near Plane", &m_znear, 0.0001f, 3.0f, "%.4f");
+    perspective_updated |= ImGui::SliderFloat("Far Plane", &m_zfar, 10.0f, 5000.0f, "%.2f");
+
+    if (perspective_updated)
+    {
+        SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
+    }
+
+    if (ImGui::TreeNode("Physical Camera"))
+    {
+        ImGui::SliderFloat("Aperture", &m_aperture, 0.7f, 32.0f, "%.1f");
+        ImGui::SliderInt("Shutter Speed", &m_shutterSpeed, 1, 4000, "1/%d");
+        ImGui::SliderInt("ISO", &m_iso, 100, 2000, "%d");
+        ImGui::SliderFloat("Exposure Compensation", &m_exposureCompensation, -32.0f, 32.0f, "%.1f");
+
+        ImGui::TreePop();
+    }
 }
 
 void Camera::DrawViewFrustum(IGfxCommandList* pCommandList)
