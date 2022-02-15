@@ -16,5 +16,6 @@ private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPSO = nullptr;
 
+    bool m_bEnable = true;
     float m_sharpenVal = 0.5f;
 };

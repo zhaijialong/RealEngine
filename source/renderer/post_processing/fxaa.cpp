@@ -1,5 +1,6 @@
 #include "fxaa.h"
 #include "../renderer.h"
+#include "utils/gui_util.h"
 
 FXAA::FXAA(Renderer* pRenderer)
 {
@@ -12,6 +13,17 @@ FXAA::FXAA(Renderer* pRenderer)
 
 RenderGraphHandle FXAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height)
 {
+    GUI("PostProcess", "FXAA",
+        [&]()
+        {
+            ImGui::Checkbox("Enable##FXAA", &m_bEnable);
+        });
+
+    if (!m_bEnable)
+    {
+        return inputHandle;
+    }
+
     struct FXAAData
     {
         RenderGraphHandle input;

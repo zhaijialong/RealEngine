@@ -1,5 +1,6 @@
 #include "tonemapper.h"
 #include "../renderer.h"
+#include "utils/gui_util.h"
 
 Tonemapper::Tonemapper(Renderer* pRenderer)
 {
@@ -12,6 +13,12 @@ Tonemapper::Tonemapper(Renderer* pRenderer)
 
 RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height)
 {
+    GUI("PostProcess", "ToneMapping",
+        [&]()
+        {
+
+        });
+
     struct TonemapPassData
     {
         RenderGraphHandle inHdrRT;

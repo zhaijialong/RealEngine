@@ -1,6 +1,6 @@
 #include "taa.h"
 #include "../renderer.h"
-#include "core/engine.h"
+#include "utils/gui_util.h"
 
 #include "taa_constants.hlsli"
 
@@ -50,6 +50,23 @@ TAA::TAA(Renderer* pRenderer)
 RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
     RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height)
 {
+    GUI("PostProcess", "TAA",
+        [&]()
+        {
+            if (ImGui::Checkbox("Enable##TAA", &m_bEnable))
+            {
+                Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+                camera->EnableJitter(m_bEnable);
+
+                m_bHistoryInvalid = true;
+            }
+        });
+
+    if (!m_bEnable)
+    {
+        return sceneColorRT;
+    }
+
     RENDER_GRAPH_EVENT(pRenderGraph, "TAA");
 
     auto taa_velocity_pass = pRenderGraph->AddPass<TAAVelocityPassData>("TAA generate velocity",

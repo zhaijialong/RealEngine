@@ -21,4 +21,6 @@ private:
 private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPSO = nullptr;
+
+    bool m_bEnable = false;
 };

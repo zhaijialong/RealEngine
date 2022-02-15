@@ -26,4 +26,6 @@ private:
 
     std::unique_ptr<Texture2D> m_pHistoryColor;
     bool m_bHistoryInvalid = true;
+
+    bool m_bEnable = true;
 };

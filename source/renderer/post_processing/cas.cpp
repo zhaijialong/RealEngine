@@ -1,5 +1,6 @@
 #include "cas.h"
 #include "../renderer.h"
+#include "utils/gui_util.h"
 
 // CAS
 #define A_CPU
@@ -17,6 +18,18 @@ CAS::CAS(Renderer* pRenderer)
 
 RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height)
 {
+    GUI("PostProcess", "CAS",
+        [&]()
+        {
+            ImGui::Checkbox("Enable##CAS", &m_bEnable);
+            ImGui::SliderFloat("Sharpness##CAS", &m_sharpenVal, 0.0f, 1.0f, "%.2f");
+        });
+
+    if (!m_bEnable)
+    {
+        return inputHandle;
+    }
+
     struct CASPassData
     {
         RenderGraphHandle inRT;
