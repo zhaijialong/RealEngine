@@ -279,10 +279,10 @@ void Camera::OnGui()
 
     if (ImGui::TreeNode("Physical Camera"))
     {
-        ImGui::SliderFloat("Aperture", &m_aperture, 0.7f, 32.0f, "%.1f");
+        ImGui::SliderFloat("Aperture", &m_aperture, 0.7f, 32.0f, "f/%.1f");
         ImGui::SliderInt("Shutter Speed", &m_shutterSpeed, 1, 4000, "1/%d");
         ImGui::SliderInt("ISO", &m_iso, 100, 2000, "%d");
-        ImGui::SliderFloat("Exposure Compensation", &m_exposureCompensation, -32.0f, 32.0f, "%.1f");
+        ImGui::SliderFloat("Exposure Compensation", &m_exposureCompensation, -5.0f, 5.0f, "%.1f");
 
         ImGui::TreePop();
     }
