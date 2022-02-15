@@ -1,6 +1,6 @@
 #include "camera.h"
 #include "core/engine.h"
-#include "imgui/imgui.h"
+#include "utils/gui_util.h"
 
 float2 CalcDepthlinearizationParams(const float4x4& mtxProjection)
 {
@@ -67,6 +67,30 @@ void Camera::SetFov(float fov)
 
 void Camera::Tick(float delta_time)
 {
+    GUI("Settings", "Camera",
+        [&]()
+        {
+            ImGui::SliderFloat("Move Speed", &m_moveSpeed, 1.0f, 200.0f, "%.0f");
+
+            bool perpective_updated = false;
+            perpective_updated |= ImGui::SliderFloat("Fov", &m_fov, 5.0f, 135.0f, "%.0f");
+            perpective_updated |= ImGui::SliderFloat("Near Plane", &m_znear, 0.0001f, 3.0f, "%.4f");
+            perpective_updated |= ImGui::SliderFloat("Far Plane", &m_zfar, 10.0f, 5000.0f, "%.2f");
+
+            if (perpective_updated)
+            {
+                SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
+            }
+
+            if (ImGui::TreeNode("Physical Camera"))
+            {
+                float a = 1.0f;
+                ImGui::SliderFloat("Aperture", &a, 1.0f, 200.0f, "%.0f");
+
+                ImGui::TreePop();
+            }
+        });
+
     ImGuiIO& io = ImGui::GetIO();
 
     if (!io.WantCaptureKeyboard)

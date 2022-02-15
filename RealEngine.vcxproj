@@ -285,6 +285,7 @@
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
     <ClInclude Include="source\renderer\texture_loader.h" />
     <ClInclude Include="source\utils\assert.h" />
+    <ClInclude Include="source\utils\gui_util.h" />
     <ClInclude Include="source\utils\linear_allocator.h" />
     <ClInclude Include="source\utils\log.h" />
     <ClInclude Include="source\utils\math.h" />
@@ -315,6 +316,7 @@
   <ItemGroup>
     <None Include="shaders\atmosphere.hlsli" />
     <None Include="shaders\common.hlsli" />
+    <None Include="shaders\exposure.hlsli" />
     <None Include="shaders\global_constants.hlsli" />
     <None Include="shaders\debug.hlsli" />
     <None Include="shaders\gpu_scene.hlsli" />

@@ -648,6 +648,9 @@
     <ClInclude Include="source\renderer\post_processing\automatic_exposure.h">
       <Filter>source\renderer\post_processing</Filter>
     </ClInclude>
+    <ClInclude Include="source\utils\gui_util.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -778,6 +781,9 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\ray_trace.hlsli">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\exposure.hlsli">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

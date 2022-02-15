@@ -58,6 +58,13 @@ void Editor::Tick()
     DrawToolBar();
     DrawGizmo();
     DrawFrameStats();
+
+    m_commands.clear();
+}
+
+void Editor::AddGuiCommand(const std::string& window, const std::string& section, const std::function<void()>& command)
+{
+    m_commands[window].push_back({ section, command });
 }
 
 void Editor::DrawMenu()
@@ -142,6 +149,16 @@ void Editor::DrawMenu()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Window"))
+        {
+            ImGui::MenuItem("Inspector", "", &m_bShowInspector);
+            ImGui::MenuItem("Settings", "", & m_bShowSettings);
+            ImGui::MenuItem("Lighting", "", &m_bShowLighting);
+            ImGui::MenuItem("PostProcess", "", &m_bShowPostProcess);
+
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
     }
 
@@ -212,6 +229,26 @@ void Editor::DrawMenu()
     {
         ImGui::ShowDemoWindow(&m_bShowImguiDemo);
     }
+
+    if (m_bShowInspector)
+    {
+        DrawWindow("Inspector", &m_bShowInspector);
+    }
+
+    if(m_bShowSettings)
+    {
+        DrawWindow("Settings", &m_bShowSettings);
+    }
+
+    if (m_bShowLighting)
+    {
+        DrawWindow("Lighting", &m_bShowLighting);
+    }
+
+    if (m_bShowPostProcess)
+    {
+        DrawWindow("PostProcess", &m_bShowPostProcess);
+    }
 }
 
 void Editor::DrawToolBar()
@@ -241,28 +278,6 @@ void Editor::DrawToolBar()
     {
         m_selectEditMode = SelectEditMode::Scale;
     }
-
-    ImGui::SameLine(0.0f, 20.0f);
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Camera Speed");
-
-    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
-    float camera_speed = camera->GetMoveSpeed();
-    float fov = camera->GetFov();
-
-    ImGui::SameLine(0.0f, 3.0f);
-    ImGui::SetNextItemWidth(100.0f);
-    ImGui::SliderFloat("##CameraSpeed", &camera_speed, 1.0f, 200.0f, "%.0f");
-    camera->SetMoveSpeed(camera_speed);
-
-    ImGui::SameLine(0.0f, 20.0f);
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("FOV");
-
-    ImGui::SameLine(0.0f, 3.0f);
-    ImGui::SetNextItemWidth(100.0f);
-    ImGui::SliderFloat("##CameraFOV", &fov, 5.0f, 135.0f, "%.0f");
-    camera->SetFov(fov);
 
     ImGui::End();
 }
@@ -384,4 +399,25 @@ void Editor::FlushPendingTextureDeletions()
     }
 
     m_pendingDeletions.clear();
+}
+
+void Editor::DrawWindow(const std::string& window, bool* open)
+{
+    ImGui::Begin(window.c_str(), open);
+
+    auto iter = m_commands.find(window);
+    if (iter != m_commands.end())
+    {
+        for (size_t i = 0; i < iter->second.size(); ++i)
+        {
+            const Command& cmd = iter->second[i];
+
+            if (ImGui::CollapsingHeader(cmd.section.c_str()))
+            {
+                cmd.func();
+            }
+        }
+    }
+
+    ImGui::End();
 }

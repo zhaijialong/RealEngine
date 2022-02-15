@@ -21,6 +21,7 @@ public:
     World* GetWorld() const { return m_pWorld.get(); }
     GUI* GetGUI() const { return m_pGUI.get(); }
     Renderer* GetRenderer() const { return m_pRenderer.get(); }
+    Editor* GetEditor() const { return m_pEditor.get(); }
     enki::TaskScheduler* GetTaskScheduler() const { return m_pTaskScheduler.get(); }
 
     void* GetWindowHandle() const { return m_windowHandle; }
