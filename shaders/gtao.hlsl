@@ -70,6 +70,13 @@ void gtao_main(const uint2 pixCoord : SV_DispatchThreadID)
     RWTexture2D<uint> outWorkingAOTerm = ResourceDescriptorHeap[c_outWorkingAOTerm];
     RWTexture2D<unorm float> outWorkingEdges = ResourceDescriptorHeap[c_outWorkingEdges];
     
+    if (srcWorkingDepth[pixCoord] > CameraCB.farZ - 0.001)
+    {
+        XeGTAO_OutputWorkingTerm(pixCoord, 1.0, float3(0, 0, 0), outWorkingAOTerm);
+        outWorkingEdges[pixCoord] = 1.0;
+        return;
+    }
+
 #if QUALITY_LEVEL == 0
     int sliceCount = 1;
     int stepsPerSlice = 2;

@@ -1,4 +1,5 @@
 #include "common.hlsli"
+#include "gtso.hlsli"
 
 cbuffer CB1 : register(b1)
 {
@@ -12,13 +13,6 @@ cbuffer CB1 : register(b1)
     uint c_aoRT;
     uint c_ouputRT;
 };
-
-void DecodeVisibilityBentNormal(const uint packedValue, out float visibility, out float3 bentNormal)
-{
-    float4 decoded = RGBA8UnormToFloat4(packedValue);
-    bentNormal = decoded.xyz * 2.0.xxx - 1.0.xxx;
-    visibility = decoded.w;
-}
 
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
@@ -61,9 +55,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D<uint> aoRT = ResourceDescriptorHeap[c_aoRT];
     
 #if GTAO
-    float gtao;
-    float3 bentNormal;
-    DecodeVisibilityBentNormal(aoRT[pos], gtao, bentNormal);
+    #if GTSO
+        float gtao;
+        float3 bentNormal;
+        DecodeVisibilityBentNormal(aoRT[pos], gtao, bentNormal);
+    #else
+        float gtao = aoRT[pos] / 255.0;
+    #endif
     
     ao = min(ao, gtao);
 #endif
@@ -86,7 +84,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
 #if GTAO && GTSO
     bentNormal = normalize(mul(CameraCB.mtxViewInverse, float4(bentNormal, 0.0)).xyz);
-    float specularAO = GTSO(R, bentNormal, ao, roughness);
+    float specularAO = ComputeGTSO(R, bentNormal, gtao, roughness);
 #else
     float specularAO = 1.0;
 #endif

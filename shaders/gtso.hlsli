@@ -2,6 +2,13 @@
 
 #include "common.hlsli"
 
+void DecodeVisibilityBentNormal(const uint packedValue, out float visibility, out float3 bentNormal)
+{
+    float4 decoded = RGBA8UnormToFloat4(packedValue);
+    bentNormal = decoded.xyz * 2.0.xxx - 1.0.xxx;
+    visibility = decoded.w;
+}
+
 float3 GTAOMultiBounce(float visibility, float3 albedo)
 {
     float3 a = 2.0404 * albedo - 0.3324;
@@ -65,7 +72,7 @@ float sphericalCapsIntersection(float cosCap1, float cosCap2, float cosDistance)
     return area * (1.0 - max(cosCap1, cosCap2));
 }
 
-float GTSO(float3 reflectionDir, float3 bentNormal, float visibility, float roughness)
+float ComputeGTSO(float3 reflectionDir, float3 bentNormal, float visibility, float roughness)
 {
     roughness = max(roughness, 0.03);
 

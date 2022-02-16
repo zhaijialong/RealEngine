@@ -11,7 +11,6 @@ GTAO::GTAO(Renderer* pRenderer)
 
     std::vector<std::string> defines;
     defines.push_back("XE_GTAO_USE_HALF_FLOAT_PRECISION=0");
-    defines.push_back("XE_GTAO_COMPUTE_BENT_NORMALS=1");
 
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_prefilter_depth_16x16", "cs_6_6", defines);
@@ -36,6 +35,31 @@ GTAO::GTAO(Renderer* pRenderer)
     psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
     m_pGTAOUltraPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
+    //PSOs with GTSO
+    {
+        defines.pop_back();
+        defines.push_back("XE_GTAO_COMPUTE_BENT_NORMALS=1");
+
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_denoise", "cs_6_6", defines);
+        m_pSODenoisePSO = pRenderer->GetPipelineState(psoDesc, "GTAO denoise PSO");
+
+        defines.push_back("QUALITY_LEVEL=0");
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+        m_pGTAOSOLowPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
+
+        defines.back() = "QUALITY_LEVEL=1";
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+        m_pGTAOSOMediumPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
+
+        defines.back() = "QUALITY_LEVEL=2";
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+        m_pGTAOSOHighPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
+
+        defines.back() = "QUALITY_LEVEL=3";
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+        m_pGTAOSOUltraPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
+    }
+
     CreateHilbertLUT();
 }
 
@@ -45,6 +69,7 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
         [&]()
         {
             ImGui::Checkbox("Enable##GTAO", &m_bEnable);
+            ImGui::Checkbox("Enable GTSO##GTAO", &m_bEnableGTSO);
             ImGui::Combo("Quality Level", &m_qualityLevel, "Low\0Medium\0High\0Ultra\00");
             ImGui::SliderFloat("Radius##GTAO", &m_radius, 0.0f, 5.0f, "%.1f");
         });
@@ -94,7 +119,7 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             RenderGraphTexture::Desc desc;
             desc.width = width;
             desc.height = height;
-            desc.format = GfxFormat::R32UI;
+            desc.format = m_bEnableGTSO ? GfxFormat::R32UI : GfxFormat::R8UI;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO AOTerm");
             data.outputAOTerm = builder.Write(data.outputAOTerm, GfxResourceState::UnorderedAccess);
@@ -117,7 +142,7 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             RenderGraphTexture::Desc desc;
             desc.width = width;
             desc.height = height;
-            desc.format = GfxFormat::R32UI;
+            desc.format = m_bEnableGTSO ? GfxFormat::R32UI : GfxFormat::R8UI;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO denoised AO");
             data.outputAOTerm = builder.Write(data.outputAOTerm, GfxResourceState::UnorderedAccess);
@@ -171,16 +196,16 @@ void GTAO::Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_
     switch (m_qualityLevel)
     {
     case 0:
-        pCommandList->SetPipelineState(m_pGTAOLowPSO);
+        pCommandList->SetPipelineState(m_bEnableGTSO ? m_pGTAOSOLowPSO : m_pGTAOLowPSO);
         break;
     case 1:
-        pCommandList->SetPipelineState(m_pGTAOMediumPSO);
+        pCommandList->SetPipelineState(m_bEnableGTSO ? m_pGTAOSOMediumPSO : m_pGTAOMediumPSO);
         break;
     case 2:
-        pCommandList->SetPipelineState(m_pGTAOHighPSO);
+        pCommandList->SetPipelineState(m_bEnableGTSO ? m_pGTAOSOHighPSO : m_pGTAOHighPSO);
         break;
     case 3:
-        pCommandList->SetPipelineState(m_pGTAOUltraPSO);
+        pCommandList->SetPipelineState(m_bEnableGTSO ? m_pGTAOSOUltraPSO : m_pGTAOUltraPSO);
         break;
     default:
         RE_ASSERT(false);
@@ -216,7 +241,7 @@ void GTAO::Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_
 
 void GTAO::Denoise(IGfxCommandList* pCommandList, const GTAODenoisePassData& data, uint32_t width, uint32_t height)
 {
-    pCommandList->SetPipelineState(m_pDenoisePSO);
+    pCommandList->SetPipelineState(m_bEnableGTSO ? m_pSODenoisePSO : m_pDenoisePSO);
 
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
     RenderGraphTexture* inputAO = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputAOTerm);

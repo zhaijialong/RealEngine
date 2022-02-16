@@ -53,9 +53,16 @@ private:
     IGfxPipelineState* m_pGTAOUltraPSO = nullptr;
     IGfxPipelineState* m_pDenoisePSO = nullptr;
 
+    IGfxPipelineState* m_pGTAOSOLowPSO = nullptr;
+    IGfxPipelineState* m_pGTAOSOMediumPSO = nullptr;
+    IGfxPipelineState* m_pGTAOSOHighPSO = nullptr;
+    IGfxPipelineState* m_pGTAOSOUltraPSO = nullptr;
+    IGfxPipelineState* m_pSODenoisePSO = nullptr;
+
     std::unique_ptr<Texture2D> m_pHilbertLUT;
 
     bool m_bEnable = true;
+    bool m_bEnableGTSO = false;
     int m_qualityLevel = 2;
     float m_radius = 0.5f;
 };

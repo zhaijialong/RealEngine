@@ -64,11 +64,19 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, c
             RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input.depthRT);
             RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.shadow);
             RenderGraphTexture* ouputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* aoRT = nullptr;
 
             std::vector<std::string> defines;
             if (data.ao.IsValid())
             {
+                aoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.ao);
+
                 defines.push_back("GTAO=1");
+
+                if (aoRT->GetTexture()->GetDesc().format == GfxFormat::R32UI)
+                {
+                    defines.push_back("GTSO=1");
+                }
             }
 
             switch (m_pRenderer->GetOutputType())
@@ -124,9 +132,8 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, c
             cb1.emissiveRT = emissiveRT->GetSRV()->GetHeapIndex();
             cb1.depthRT = depthRT->GetSRV()->GetHeapIndex();
             cb1.shadowRT = shadowRT->GetSRV()->GetHeapIndex();
-            if (data.ao.IsValid())
+            if (aoRT)
             {
-                RenderGraphTexture* aoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.ao);
                 cb1.aoRT = aoRT->GetSRV()->GetHeapIndex();
             }
             cb1.outputRT = ouputRT->GetUAV()->GetHeapIndex();

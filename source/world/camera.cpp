@@ -2,7 +2,7 @@
 #include "core/engine.h"
 #include "utils/gui_util.h"
 
-float2 CalcDepthlinearizationParams(const float4x4& mtxProjection)
+static inline float2 CalcDepthLinearizationParams(const float4x4& mtxProjection)
 {
     // | 1  0  0  0 |
     // | 0  1  0  0 |
@@ -120,7 +120,7 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
     m_cameraCB.cameraPos = GetPosition();
     m_cameraCB.nearZ = m_znear;
     m_cameraCB.farZ = m_zfar;
-    m_cameraCB.linearZParams = CalcDepthlinearizationParams(m_projection);
+    m_cameraCB.linearZParams = CalcDepthLinearizationParams(m_projection);
     m_cameraCB.jitter = m_jitter;
     m_cameraCB.prevJitter = m_prevJitter;
     
