@@ -60,11 +60,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     Texture2D<uint> aoRT = ResourceDescriptorHeap[c_aoRT];
     
+#if GTAO
     float gtao;
     float3 bentNormal;
     DecodeVisibilityBentNormal(aoRT[pos], gtao, bentNormal);
     
     ao = min(ao, gtao);
+#endif
     
     float3 indirect_diffuse = diffuse.xyz * float3(0.15, 0.15, 0.2);
 
@@ -82,14 +84,14 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float2 PreintegratedGF = brdfTexture.Sample(pointSampler, float2(NdotV, roughness)).xy;
     float3 indirect_specular = filtered_env * (specular * PreintegratedGF.x + PreintegratedGF.y);
     
-#if GTSO
+#if GTAO && GTSO
     bentNormal = normalize(mul(CameraCB.mtxViewInverse, float4(bentNormal, 0.0)).xyz);
     float specularAO = GTSO(R, bentNormal, ao, roughness);
 #else
     float specularAO = 1.0;
 #endif
 
-    float3 radiance = emissive.xyz + direct_light + indirect_diffuse * ao + indirect_specular * specularAO;
+    float3 radiance = emissive + direct_light + indirect_diffuse * ao + indirect_specular * specularAO;
     
     RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_ouputRT];
     outTexture[dispatchThreadID.xy] = float4(radiance, 1.0);

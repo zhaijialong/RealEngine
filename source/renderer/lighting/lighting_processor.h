@@ -24,7 +24,7 @@ private:
     RenderGraphHandle CompositeLight(RenderGraph* pRenderGraph, const LightingProcessInput& input, RenderGraphHandle ao, RenderGraphHandle shadow, uint32_t width, uint32_t height);
 
 private:
-    IGfxPipelineState* m_pCompositePSO = nullptr;
+    Renderer* m_pRenderer;
 
     std::unique_ptr<GTAO> m_pGTAO;
     std::unique_ptr<RTShadow> m_pRTShdow;

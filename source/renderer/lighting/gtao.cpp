@@ -2,6 +2,7 @@
 #include "../renderer.h"
 #include "core/engine.h"
 #include "utils/assert.h"
+#include "utils/gui_util.h"
 #include "XeGTAO.h"
 
 GTAO::GTAO(Renderer* pRenderer)
@@ -16,17 +17,43 @@ GTAO::GTAO(Renderer* pRenderer)
     psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_prefilter_depth_16x16", "cs_6_6", defines);
     m_pPrefilterDepthPSO = pRenderer->GetPipelineState(psoDesc, "GTAO prefilter depth PSO");
 
-    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
-    m_pPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
-
     psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_denoise", "cs_6_6", defines);
     m_pDenoisePSO = pRenderer->GetPipelineState(psoDesc, "GTAO denoise PSO");
+
+    defines.push_back("QUALITY_LEVEL=0");
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+    m_pGTAOLowPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
+
+    defines.back() = "QUALITY_LEVEL=1";
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+    m_pGTAOMediumPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
+
+    defines.back() = "QUALITY_LEVEL=2";
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+    m_pGTAOHighPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
+
+    defines.back() = "QUALITY_LEVEL=3";
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+    m_pGTAOUltraPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
     CreateHilbertLUT();
 }
 
 RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle depthRT, RenderGraphHandle normalRT, uint32_t width, uint32_t height)
 {
+    GUI("Lighting", "GTAO",
+        [&]()
+        {
+            ImGui::Checkbox("Enable##GTAO", &m_bEnable);
+            ImGui::Combo("Quality Level", &m_qualityLevel, "Low\0Medium\0High\0Ultra\00");
+            ImGui::SliderFloat("Radius##GTAO", &m_radius, 0.0f, 5.0f, "%.1f");
+        });
+
+    if (!m_bEnable)
+    {
+        return RenderGraphHandle();
+    }
+
     RENDER_GRAPH_EVENT(pRenderGraph, "GTAO");
 
     auto gtao_filter_depth_pass = pRenderGraph->AddPass<GTAOFilterDepthPassData>("GTAO filter depth",
@@ -141,7 +168,24 @@ void GTAO::FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassD
 
 void GTAO::Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_t width, uint32_t height)
 {
-    pCommandList->SetPipelineState(m_pPSO);
+    switch (m_qualityLevel)
+    {
+    case 0:
+        pCommandList->SetPipelineState(m_pGTAOLowPSO);
+        break;
+    case 1:
+        pCommandList->SetPipelineState(m_pGTAOMediumPSO);
+        break;
+    case 2:
+        pCommandList->SetPipelineState(m_pGTAOHighPSO);
+        break;
+    case 3:
+        pCommandList->SetPipelineState(m_pGTAOUltraPSO);
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
+    }
 
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
     RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputFilteredDepth);
@@ -214,6 +258,8 @@ void GTAO::UpdateGTAOConstants(IGfxCommandList* pCommandList, uint32_t width, ui
     float4x4 projection = camera->GetProjectionMatrix();
 
     XeGTAO::GTAOSettings settings;
+    settings.QualityLevel = m_qualityLevel;
+    settings.Radius = m_radius;
 
     XeGTAO::GTAOConstants consts;
     XeGTAO::GTAOUpdateConstants(consts, width, height, settings, &projection.x.x, true, m_pRenderer->GetFrameID() % 256);

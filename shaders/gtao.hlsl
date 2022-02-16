@@ -70,7 +70,21 @@ void gtao_main(const uint2 pixCoord : SV_DispatchThreadID)
     RWTexture2D<uint> outWorkingAOTerm = ResourceDescriptorHeap[c_outWorkingAOTerm];
     RWTexture2D<unorm float> outWorkingEdges = ResourceDescriptorHeap[c_outWorkingEdges];
     
-    XeGTAO_MainPass(pixCoord, 3, 3, SpatioTemporalNoise(pixCoord, gtaoCB.NoiseIndex), LoadNormal(pixCoord), gtaoCB, srcWorkingDepth, samplerPointClamp, outWorkingAOTerm, outWorkingEdges);
+#if QUALITY_LEVEL == 0
+    int sliceCount = 1;
+    int stepsPerSlice = 2;
+#elif QUALITY_LEVEL == 1
+    int sliceCount = 2;
+    int stepsPerSlice = 2;
+#elif QUALITY_LEVEL == 2
+    int sliceCount = 3;
+    int stepsPerSlice = 3;
+#else
+    int sliceCount = 9;
+    int stepsPerSlice = 3;
+#endif
+
+    XeGTAO_MainPass(pixCoord, sliceCount, stepsPerSlice, SpatioTemporalNoise(pixCoord, gtaoCB.NoiseIndex), LoadNormal(pixCoord), gtaoCB, srcWorkingDepth, samplerPointClamp, outWorkingAOTerm, outWorkingEdges);
 }
 
 cbuffer denoiseCB : register(b0)

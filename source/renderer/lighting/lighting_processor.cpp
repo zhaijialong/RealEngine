@@ -3,9 +3,7 @@
 
 LightingProcessor::LightingProcessor(Renderer* pRenderer)
 {
-    GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("composite_light.hlsl", "main", "cs_6_6", {});
-    m_pCompositePSO = pRenderer->GetPipelineState(psoDesc, "CompositeLight PSO");
+    m_pRenderer = pRenderer;
 
     m_pGTAO = std::make_unique<GTAO>(pRenderer);
     m_pRTShdow = std::make_unique<RTShadow>(pRenderer);
@@ -41,7 +39,12 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, c
             data.input.normalRT = builder.Read(input.normalRT, GfxResourceState::ShaderResourceNonPS);
             data.input.emissiveRT = builder.Read(input.emissiveRT, GfxResourceState::ShaderResourceNonPS);
             data.input.depthRT = builder.Read(input.depthRT, GfxResourceState::ShaderResourceNonPS);
-            data.ao = builder.Read(ao, GfxResourceState::ShaderResourceNonPS);
+
+            if (ao.IsValid())
+            {
+                data.ao = builder.Read(ao, GfxResourceState::ShaderResourceNonPS);
+            }
+
             data.shadow = builder.Read(shadow, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
@@ -60,10 +63,19 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, c
             RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input.emissiveRT);
             RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input.depthRT);
             RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.shadow);
-            RenderGraphTexture* aoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.ao);
             RenderGraphTexture* ouputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
 
-            pCommandList->SetPipelineState(m_pCompositePSO);
+            std::vector<std::string> defines;
+            if (data.ao.IsValid())
+            {
+                defines.push_back("GTAO=1");
+            }
+
+            GfxComputePipelineDesc psoDesc;
+            psoDesc.cs = m_pRenderer->GetShader("composite_light.hlsl", "main", "cs_6_6", defines);
+            IGfxPipelineState* pso = m_pRenderer->GetPipelineState(psoDesc, "CompositeLight PSO");
+
+            pCommandList->SetPipelineState(pso);
 
             struct CB1
             {
@@ -85,7 +97,11 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, c
             cb1.emissiveRT = emissiveRT->GetSRV()->GetHeapIndex();
             cb1.depthRT = depthRT->GetSRV()->GetHeapIndex();
             cb1.shadowRT = shadowRT->GetSRV()->GetHeapIndex();
-            cb1.aoRT = aoRT->GetSRV()->GetHeapIndex();
+            if (data.ao.IsValid())
+            {
+                RenderGraphTexture* aoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.ao);
+                cb1.aoRT = aoRT->GetSRV()->GetHeapIndex();
+            }
             cb1.outputRT = ouputRT->GetUAV()->GetHeapIndex();
 
             pCommandList->SetComputeConstants(1, &cb1, sizeof(cb1));

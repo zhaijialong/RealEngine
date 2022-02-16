@@ -47,8 +47,15 @@ private:
     Renderer* m_pRenderer = nullptr;
 
     IGfxPipelineState* m_pPrefilterDepthPSO = nullptr;
-    IGfxPipelineState* m_pPSO = nullptr;
+    IGfxPipelineState* m_pGTAOLowPSO = nullptr;
+    IGfxPipelineState* m_pGTAOMediumPSO = nullptr;
+    IGfxPipelineState* m_pGTAOHighPSO = nullptr;
+    IGfxPipelineState* m_pGTAOUltraPSO = nullptr;
     IGfxPipelineState* m_pDenoisePSO = nullptr;
 
     std::unique_ptr<Texture2D> m_pHilbertLUT;
+
+    bool m_bEnable = true;
+    int m_qualityLevel = 2;
+    float m_radius = 0.5f;
 };

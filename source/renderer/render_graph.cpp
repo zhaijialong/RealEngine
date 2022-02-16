@@ -129,6 +129,8 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList, IGfxCommandList* pCompu
 
 void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filnal_state)
 {
+    RE_ASSERT(handle.IsValid());
+
     RenderGraphResource* resource = GetResource(handle);
     resource->SetOutput(true);
 
@@ -143,6 +145,7 @@ void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filn
 
 RenderGraphResource* RenderGraph::GetResource(const RenderGraphHandle& handle)
 {
+    RE_ASSERT(handle.IsValid());
     return m_resources[handle.index];
 }
 
@@ -183,6 +186,7 @@ RenderGraphHandle RenderGraph::Import(IGfxBuffer* buffer, GfxResourceState state
 
 RenderGraphHandle RenderGraph::Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource)
 {
+    RE_ASSERT(input.IsValid());
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
 
     AllocatePOD<RenderGraphEdge>(m_graph, input_node, pass, usage, subresource);
@@ -192,6 +196,7 @@ RenderGraphHandle RenderGraph::Read(RenderGraphPassBase* pass, const RenderGraph
 
 RenderGraphHandle RenderGraph::Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource)
 {
+    RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
 
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
@@ -211,6 +216,7 @@ RenderGraphHandle RenderGraph::Write(RenderGraphPassBase* pass, const RenderGrap
 
 RenderGraphHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t color_index, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, const float4& clear_color)
 {
+    RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
 
     GfxResourceState usage = GfxResourceState::RenderTarget;
@@ -232,6 +238,7 @@ RenderGraphHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t co
 
 RenderGraphHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil)
 {
+    RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
 
     GfxResourceState usage = GfxResourceState::DepthStencil;
@@ -253,6 +260,7 @@ RenderGraphHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const Rende
 
 RenderGraphHandle RenderGraph::ReadDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource)
 {
+    RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
 
     GfxResourceState usage = GfxResourceState::DepthStencilReadOnly;

@@ -117,7 +117,7 @@ Texture2D GetMaterialTexture2D(uint heapIndex)
 
 SamplerState GetMaterialSampler()
 {
-    return SamplerDescriptorHeap[SceneCB.aniso4xSampler];
+    return SamplerDescriptorHeap[SceneCB.aniso8xSampler];
 }
 
 PbrMetallicRoughness GetMaterialMetallicRoughness(VertexOutput input)
