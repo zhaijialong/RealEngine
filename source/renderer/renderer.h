@@ -12,6 +12,17 @@
 #include "staging_buffer_allocator.h"
 #include "lsignal/lsignal.h"
 
+enum class RendererOutput
+{
+    Default,
+    Diffuse,
+    Specular,
+    WorldNormal,
+    Emissive,
+    AO,
+    Shadow,
+};
+
 class Renderer
 {
 public:
@@ -27,6 +38,9 @@ public:
     uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
     class ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
     RenderGraph* GetRenderGraph() { return m_pRenderGraph.get(); }
+
+    RendererOutput GetOutputType() const { return m_outputType; }
+    void SetOutputType(RendererOutput output) { m_outputType = output; }
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
@@ -113,6 +127,7 @@ private:
     uint32_t m_nWindowWidth;
     uint32_t m_nWindowHeight;
     lsignal::connection m_resizeConnection;
+    RendererOutput m_outputType = RendererOutput::Default;
 
     std::unique_ptr<LinearAllocator> m_cbAllocator;
 

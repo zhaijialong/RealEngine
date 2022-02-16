@@ -71,6 +71,33 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, c
                 defines.push_back("GTAO=1");
             }
 
+            switch (m_pRenderer->GetOutputType())
+            {
+            case RendererOutput::Default:
+                defines.push_back("OUTPUT_DEFAULT=1");
+                break;
+            case RendererOutput::Diffuse:
+                defines.push_back("OUTPUT_DIFFUSE=1");
+                break;
+            case RendererOutput::Specular:
+                defines.push_back("OUTPUT_SPECULAR=1");
+                break;
+            case RendererOutput::WorldNormal:
+                defines.push_back("OUTPUT_WORLDNORMAL=1");
+                break;
+            case RendererOutput::Emissive:
+                defines.push_back("OUTPUT_EMISSIVE=1");
+                break;
+            case RendererOutput::AO:
+                defines.push_back("OUTPUT_AO=1");
+                break;
+            case RendererOutput::Shadow:
+                defines.push_back("OUTPUT_SHADOW=1");
+                break;
+            default:
+                break;
+            }
+
             GfxComputePipelineDesc psoDesc;
             psoDesc.cs = m_pRenderer->GetShader("composite_light.hlsl", "main", "cs_6_6", defines);
             IGfxPipelineState* pso = m_pRenderer->GetPipelineState(psoDesc, "CompositeLight PSO");

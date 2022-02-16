@@ -279,6 +279,14 @@ void Editor::DrawToolBar()
         m_selectEditMode = SelectEditMode::Scale;
     }
 
+    ImGui::SameLine(0.0f, 20.0f);
+    ImGui::PushItemWidth(150.0f);
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+    int renderOutput = (int)pRenderer->GetOutputType();
+    ImGui::Combo("##RenderOutput", &renderOutput, "Default\0Diffuse\0Specular(F0)\0World Normal\0Emissive\0AO\0Shadow\00");
+    pRenderer->SetOutputType((RendererOutput)renderOutput);
+    ImGui::PopItemWidth();
+
     ImGui::End();
 }
 

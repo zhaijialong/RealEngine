@@ -94,5 +94,20 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 radiance = emissive + direct_light + indirect_diffuse * ao + indirect_specular * specularAO;
     
     RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_ouputRT];
+
+#if OUTPUT_DIFFUSE
+    outTexture[dispatchThreadID.xy] = float4(diffuse.xyz, 1.0);
+#elif OUTPUT_SPECULAR
+    outTexture[dispatchThreadID.xy] = float4(specular, 1.0);
+#elif OUTPUT_WORLDNORMAL
+    outTexture[dispatchThreadID.xy] = float4(N * 0.5 + 0.5, 1.0);
+#elif OUTPUT_EMISSIVE
+    outTexture[dispatchThreadID.xy] = float4(emissive, 1.0);
+#elif OUTPUT_AO
+    outTexture[dispatchThreadID.xy] = float4(ao, ao, ao, 1.0);
+#elif OUTPUT_SHADOW
+    outTexture[dispatchThreadID.xy] = float4(visibility, visibility, visibility, 1.0);
+#else
     outTexture[dispatchThreadID.xy] = float4(radiance, 1.0);
+#endif
 }
