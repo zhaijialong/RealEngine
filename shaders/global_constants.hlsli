@@ -18,8 +18,6 @@ struct SceneConstant
     float3 lightColor;
     uint shadowSampler;
     
-    float4x4 mtxLightVP;
-    
     uint viewWidth;
     uint viewHeight;
     float rcpViewWidth;

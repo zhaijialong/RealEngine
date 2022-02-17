@@ -57,16 +57,28 @@ float3 neutral_tonemap(float3 col)
 }
 //////////////////////////////////////////////////////////////////////////////////////////
 
+float3 ApplyExposure(float3 color)
+{
+#if AUTO_EXPOSURE
+#else
+    float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
+#endif
+
+    EV100 -= CameraCB.physicalCamera.exposureCompensation;
+    float exposure = ConvertEV100ToExposure(EV100);
+
+    // 683 : luminance to radiance
+    // http://www.dfisica.ubi.pt/~hgil/Fotometria/HandBook/ch07.html
+    return color * exposure * 683;
+}
+
 [numthreads(8, 8, 1)]
 void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {    
     Texture2D hdrTexture = ResourceDescriptorHeap[c_hdrTexture];    
     float3 color = hdrTexture[dispatchThreadID.xy].xyz;
 
-#if AUTO_EXPOSURE
-#else
-#endif
-
+    color = ApplyExposure(color);
     color = neutral_tonemap(color);   
     
     RWTexture2D<float4> ldrTexture = ResourceDescriptorHeap[c_ldrTexture];
