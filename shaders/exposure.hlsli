@@ -18,9 +18,9 @@ float ComputeEV100(float avgLuminance)
     return log2(avgLuminance * 100.0 / K);
 }
 
-// the maximum possible luminance with saturation-based speed
 float ConvertEV100ToExposure(float EV100)
 {
+    // with saturation-based speed
     // https://en.wikipedia.org/wiki/Film_speed
     // maxLum = 78 / ( S * q ) * N^2 / t
     //        = 78 / ( S * q ) * 2^ EV_100
@@ -32,9 +32,9 @@ float ConvertEV100ToExposure(float EV100)
     return 1.0 / maxLuminance;
 }
 
-//combination of ComputeEV100 and ConvertEV100ToExposure
 float ComputeExposure(float aperture, float shutterSpeed, float ISO)
 {
+    //combination of ComputeEV100 and ConvertEV100ToExposure
     float maxLuminance = (7800.0 / 65.0) * (aperture * aperture) / (shutterSpeed * ISO);
     return 1.0 / maxLuminance;
 }

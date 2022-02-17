@@ -88,6 +88,17 @@ T SrgbToLinear(T Color)
     return lerp(Color * (1.0 / 12.92), pow(Color * (1.0 / 1.055) + 0.0521327, 2.4), Color > 0.04045);
 }
 
+float3 RGBToYCbCr(float3 color)
+{
+    const float3x3 m = float3x3(0.2126, 0.7152, 0.0722, -0.1146, -0.3854, 0.5, 0.5, -0.4542, -0.0458);
+    return mul(m, color);
+}
+
+float Luminance(float3 color)
+{
+    return dot(color, float3(0.2126729, 0.7151522, 0.0721750));
+}
+
 //pack float2[0,1] in rgb8unorm, each float is 12 bits
 float3 EncodeRGB8Unorm(float2 v)
 {
