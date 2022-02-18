@@ -29,4 +29,7 @@ private:
 
     uint2 m_luminanceSize;
     uint32_t m_luminanceMips = 0;
+
+    float m_minLuminance = 0.001f;
+    float m_maxLuminance = 8.0f;
 };

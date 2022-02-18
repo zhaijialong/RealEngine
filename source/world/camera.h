@@ -84,10 +84,10 @@ private:
     float m_zfar = 0.0f;
     float m_moveSpeed = 10.0f;
 
-    float m_aperture = 2.8f;
-    int m_shutterSpeed = 125;
+    float m_aperture = 1.0f;
+    int m_shutterSpeed = 1;
     int m_iso = 100;
-    float m_exposureCompensation = 0.0f;
+    float m_exposureCompensation = 0.8f;
 
     lsignal::connection m_resizeConnection;
 

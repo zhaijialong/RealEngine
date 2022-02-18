@@ -44,22 +44,18 @@ float3 neutral_tonemap(float3 col)
 
 float3 ApplyExposure(float3 color)
 {
-    // 683 : luminance/radiance conversion
-    // http://www.dfisica.ubi.pt/~hgil/Fotometria/HandBook/ch07.html
-
 #if AUTO_EXPOSURE
     Texture2D<float> avgLuminanceTexture = ResourceDescriptorHeap[c_avgLuminanceTexture];
-    float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip)) * 683;
+    float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip));
 
-    float EV100 = ComputeEV100(avgLuminance );
+    float EV100 = ComputeEV100(avgLuminance);
 #else
     float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
 #endif
 
-    EV100 -= CameraCB.physicalCamera.exposureCompensation;
-    float exposure = ConvertEV100ToExposure(EV100);
+    float exposure = ConvertEV100ToExposure(EV100 - CameraCB.physicalCamera.exposureCompensation);
 
-    return color * exposure * 683;
+    return color * exposure;
 }
 
 [numthreads(8, 8, 1)]

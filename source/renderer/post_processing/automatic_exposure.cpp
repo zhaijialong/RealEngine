@@ -25,7 +25,9 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
     GUI("PostProcess", "AutomaticExposure",
         [&]()
         {
-            ImGui::Checkbox("Enable##CAS", &m_bEnable);
+            ImGui::Checkbox("Enable##Exposure", &m_bEnable);
+            ImGui::SliderFloat("Min Luminance##Exposure", &m_minLuminance, 0.0f, 1.0f, "%.2f");
+            ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.5f, 5.0f, "%.2f");
         });
 
     if (!m_bEnable)
@@ -113,10 +115,12 @@ void AutomaticExposure::InitLuminance(IGfxCommandList* pCommandList, IGfxDescrip
         uint output;
         float rcpWidth;
         float rcpHeight;
+        float minLuminance;
+        float maxLuminance;
     };
 
-    Constants root_constants = { input->GetHeapIndex(), output->GetHeapIndex(), 1.0f / m_luminanceSize.x, 1.0f / m_luminanceSize.y };
-    pCommandList->SetComputeConstants(0, &root_constants, sizeof(root_constants));
+    Constants root_constants = { input->GetHeapIndex(), output->GetHeapIndex(), 1.0f / m_luminanceSize.x, 1.0f / m_luminanceSize.y, m_minLuminance, m_maxLuminance };
+    pCommandList->SetComputeConstants(1, &root_constants, sizeof(root_constants));
 
     pCommandList->Dispatch((m_luminanceSize.x + 7) / 8, (m_luminanceSize.y + 7) / 8, 1);
 }

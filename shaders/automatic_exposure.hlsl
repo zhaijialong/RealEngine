@@ -1,11 +1,13 @@
 #include "common.hlsli"
 
-cbuffer InitLuminanceConstants : register(b0)
+cbuffer InitLuminanceConstants : register(b1)
 {
     uint c_inputSRV;
     uint c_outputUAV;
     float c_rcpWidth;
     float c_rcpHeight;
+    float c_minLuminance;
+    float c_maxLuminance;
 };
 
 [numthreads(8, 8, 1)]
@@ -18,7 +20,7 @@ void init_luminance(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 color = inputTexture.SampleLevel(linearSampler, uv, 0).xyz;
     
     RWTexture2D<float> outputTexture = ResourceDescriptorHeap[c_outputUAV];
-    outputTexture[dispatchThreadID.xy] = Luminance(color);
+    outputTexture[dispatchThreadID.xy] = clamp(Luminance(color), c_minLuminance, c_maxLuminance);
 }
 
 cbuffer spdConstants : register(b1)
