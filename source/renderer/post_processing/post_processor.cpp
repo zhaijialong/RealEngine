@@ -20,10 +20,9 @@ RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostPr
     
     outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, input.sceneDepthRT, input.linearDepthRT, input.velocityRT, width, height);
 
-    RenderGraphHandle avgLuminance = m_pAutomaticExposure->Render(pRenderGraph, outputHandle, width, height);
-    uint32_t avgLuminanceMip = m_pAutomaticExposure->GetAverageLuminanceMip();
+    RenderGraphHandle exposure = m_pAutomaticExposure->Render(pRenderGraph, outputHandle, width, height);
 
-    outputHandle = m_pToneMapper->Render(pRenderGraph, outputHandle, avgLuminance, avgLuminanceMip, width, height);
+    outputHandle = m_pToneMapper->Render(pRenderGraph, outputHandle, exposure, width, height);
     outputHandle = m_pFXAA->Render(pRenderGraph, outputHandle, width, height);
     outputHandle = m_pCAS->Render(pRenderGraph, outputHandle, width, height);
 

@@ -25,72 +25,108 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
     GUI("PostProcess", "AutomaticExposure",
         [&]()
         {
-            ImGui::Checkbox("Enable##Exposure", &m_bEnable);
+            ImGui::Combo("Mode##Exposure", (int*)&m_mode, "Automatic\0Manual\0\0");
             ImGui::SliderFloat("Min Luminance##Exposure", &m_minLuminance, 0.0f, 1.0f, "%.2f");
-            ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.5f, 5.0f, "%.2f");
+            ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.3f, 10.0f, "%.2f");
         });
-
-    if (!m_bEnable)
-    {
-        return RenderGraphHandle();
-    }
 
     RENDER_GRAPH_EVENT(pRenderGraph, "AutomaticExposure");
 
-    ComputeLuminanceSize(width, height);
+    RenderGraphHandle avgLuminanceRT;
 
-    struct InitLuminanceData
+    if (m_mode == ExposureMode::Automatic)
     {
-        RenderGraphHandle input;
-        RenderGraphHandle output;
+        ComputeLuminanceSize(width, height);
+
+        struct InitLuminanceData
+        {
+            RenderGraphHandle input;
+            RenderGraphHandle output;
+        };
+
+        RenderGraphHandle luminanceRT;
+
+        auto init_luminance_pass = pRenderGraph->AddPass<InitLuminanceData>("Init Luminance",
+            [&](InitLuminanceData& data, RenderGraphBuilder& builder)
+            {
+                data.input = builder.Read(sceneColorRT, GfxResourceState::ShaderResourceNonPS);
+
+                RenderGraphTexture::Desc desc;
+                desc.width = m_luminanceSize.x;
+                desc.height = m_luminanceSize.y;
+                desc.mip_levels = m_luminanceMips;
+                desc.format = GfxFormat::R16F;
+                desc.usage = GfxTextureUsageUnorderedAccess;
+
+                luminanceRT = builder.Create<RenderGraphTexture>(desc, "Average Luminance");
+                data.output = builder.Write(luminanceRT, GfxResourceState::UnorderedAccess, 0);
+            },
+            [=](const InitLuminanceData& data, IGfxCommandList* pCommandList)
+            {
+                RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
+                RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+                InitLuminance(pCommandList, input->GetSRV(), output->GetUAV());
+            });
+
+        struct LuminanceReductionData
+        {
+            RenderGraphHandle luminanceRT;
+        };
+
+        auto luminance_reduction_pass = pRenderGraph->AddPass<LuminanceReductionData>("Luminance Reduction",
+            [&](LuminanceReductionData& data, RenderGraphBuilder& builder)
+            {
+                data.luminanceRT = builder.Read(init_luminance_pass->output, GfxResourceState::ShaderResourceNonPS, 0);
+
+                for (uint32_t i = 1; i < m_luminanceMips; ++i)
+                {
+                    data.luminanceRT = builder.Write(luminanceRT, GfxResourceState::UnorderedAccess, i);
+                }
+            },
+            [=](const LuminanceReductionData& data, IGfxCommandList* pCommandList)
+            {
+                RenderGraphTexture* texture = (RenderGraphTexture*)pRenderGraph->GetResource(data.luminanceRT);
+                ReduceLuminance(pCommandList, texture);
+            });
+
+        avgLuminanceRT = luminance_reduction_pass->luminanceRT;
+    }
+
+    struct ExposureData
+    {
+        RenderGraphHandle avgLuminance;
+        RenderGraphHandle exposure;
     };
 
-    RenderGraphHandle luminanceRT;
-
-    auto init_luminance_pass = pRenderGraph->AddPass<InitLuminanceData>("Init Luminance",
-        [&](InitLuminanceData& data, RenderGraphBuilder& builder)
+    auto exposure_pass = pRenderGraph->AddPass<ExposureData>("Exposure",
+        [&](ExposureData& data, RenderGraphBuilder& builder)
         {
-            data.input = builder.Read(sceneColorRT, GfxResourceState::ShaderResourceNonPS);
+            if (avgLuminanceRT.IsValid())
+            {
+                data.avgLuminance = builder.Read(avgLuminanceRT, GfxResourceState::ShaderResourceNonPS, m_luminanceMips - 1);
+            }
 
             RenderGraphTexture::Desc desc;
-            desc.width = m_luminanceSize.x;
-            desc.height = m_luminanceSize.y;
-            desc.mip_levels = m_luminanceMips;
+            desc.width = desc.height = 1;
             desc.format = GfxFormat::R16F;
             desc.usage = GfxTextureUsageUnorderedAccess;
-            
-            luminanceRT = builder.Create<RenderGraphTexture>(desc, "Average Luminance");
-            data.output = builder.Write(luminanceRT, GfxResourceState::UnorderedAccess, 0);
+            data.exposure = builder.Create<RenderGraphTexture>(desc, "Exposure");
+            data.exposure = builder.Write(data.exposure, GfxResourceState::UnorderedAccess);
         },
-        [=](const InitLuminanceData& data, IGfxCommandList* pCommandList)
+        [=](const ExposureData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
-            InitLuminance(pCommandList, input->GetSRV(), output->GetUAV());
-        });
-
-    struct LuminanceReductionData
-    {
-        RenderGraphHandle luminanceRT;
-    };
-
-    auto luminance_reduction_pass = pRenderGraph->AddPass<LuminanceReductionData>("Luminance Reduction",
-        [&](LuminanceReductionData& data, RenderGraphBuilder& builder)
-        {
-            data.luminanceRT = builder.Read(init_luminance_pass->output, GfxResourceState::ShaderResourceNonPS, 0);
-
-            for (uint32_t i = 1; i < m_luminanceMips; ++i)
+            IGfxDescriptor* avgLuminanceSRV = nullptr;
+            if (data.avgLuminance.IsValid())
             {
-                data.luminanceRT = builder.Write(luminanceRT, GfxResourceState::UnorderedAccess, i);
+                RenderGraphTexture* avgLuminance = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgLuminance);
+                avgLuminanceSRV = avgLuminance->GetSRV();
             }
-        },
-        [=](const LuminanceReductionData& data, IGfxCommandList* pCommandList)
-        {
-            RenderGraphTexture* texture = (RenderGraphTexture*)pRenderGraph->GetResource(data.luminanceRT);
-            ReduceLuminance(pCommandList, texture);
+
+            RenderGraphTexture* exposure = (RenderGraphTexture*)pRenderGraph->GetResource(data.exposure);
+            Exposure(pCommandList, avgLuminanceSRV, exposure->GetUAV());
         });
 
-    return luminance_reduction_pass->luminanceRT;
+    return exposure_pass->exposure;
 }
 
 void AutomaticExposure::ComputeLuminanceSize(uint32_t width, uint32_t height)
@@ -181,4 +217,28 @@ void AutomaticExposure::ReduceLuminance(IGfxCommandList* pCommandList, RenderGra
         //todo : currently RG doesn't hanlde subresource last usage properly, this fixed validation warning
         pCommandList->ResourceBarrier(texture->GetTexture(), i, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
     }
+}
+
+void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* avgLuminance, IGfxDescriptor* output)
+{
+    std::vector<std::string> defines;
+    if (m_mode == ExposureMode::Automatic)
+    {
+        defines.push_back("AUTO_EXPOSURE=1");
+    }
+
+    GfxComputePipelineDesc desc;
+    desc.cs = m_pRenderer->GetShader("automatic_exposure.hlsl", "exposure", "cs_6_6", defines);
+    IGfxPipelineState* pso = m_pRenderer->GetPipelineState(desc, "Exposure PSO");
+
+    pCommandList->SetPipelineState(pso);
+
+    uint32_t root_constants[3] = { 
+        avgLuminance ? avgLuminance->GetHeapIndex() : GFX_INVALID_RESOURCE,
+        m_luminanceMips - 1, 
+        output->GetHeapIndex() 
+    };
+
+    pCommandList->SetComputeConstants(0, root_constants, sizeof(root_constants));
+    pCommandList->Dispatch(1, 1, 1);
 }

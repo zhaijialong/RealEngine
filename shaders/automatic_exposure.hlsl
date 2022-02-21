@@ -1,4 +1,5 @@
 #include "common.hlsli"
+#include "exposure.hlsli"
 
 cbuffer InitLuminanceConstants : register(b1)
 {
@@ -111,4 +112,29 @@ void luminance_reduction(uint3 WorkGroupId : SV_GroupID, uint LocalThreadIndex :
         AU1(c_numWorkGroups),
         AU1(WorkGroupId.z),
         AU2(c_workGroupOffset));
+}
+
+cbuffer ExpsureConstants : register(b0)
+{
+    uint c_avgLuminanceTexture;
+    uint c_avgLuminanceMip;
+    uint c_exposureTexture;
+};
+
+[numthreads(1, 1, 1)]
+void exposure()
+{
+#if AUTO_EXPOSURE
+    Texture2D<float> avgLuminanceTexture = ResourceDescriptorHeap[c_avgLuminanceTexture];
+    float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip));
+
+    float EV100 = ComputeEV100(avgLuminance);
+#else
+    float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
+#endif
+
+    float exposure = ConvertEV100ToExposure(EV100 - CameraCB.physicalCamera.exposureCompensation);
+
+    RWTexture2D<float> exposureTexture = ResourceDescriptorHeap[c_exposureTexture];
+    exposureTexture[uint2(0, 0)] = exposure;
 }

@@ -7,7 +7,7 @@ Tonemapper::Tonemapper(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 }
 
-RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, RenderGraphHandle avgLuminance, uint32_t avgLuminanceMip, uint32_t width, uint32_t height)
+RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, RenderGraphHandle exposure, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "ToneMapping",
         [&]()
@@ -18,7 +18,7 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
     struct TonemapPassData
     {
         RenderGraphHandle hdrRT;
-        RenderGraphHandle avgLuminance;
+        RenderGraphHandle exposure;
 
         RenderGraphHandle outLdrRT;
     };
@@ -27,11 +27,7 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
         {
             data.hdrRT = builder.Read(inputHandle, GfxResourceState::ShaderResourceNonPS);
-
-            if (avgLuminance.IsValid())
-            {
-                data.avgLuminance = builder.Read(avgLuminance, GfxResourceState::ShaderResourceNonPS, avgLuminanceMip);
-            }
+            data.exposure = builder.Read(exposure, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -45,27 +41,17 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         {
             RenderGraphTexture* hdrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.hdrRT);
             RenderGraphTexture* ldrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outLdrRT);
-            
-            IGfxDescriptor* avgLuminanceSRV = nullptr;
-            if (data.avgLuminance.IsValid())
-            {
-                RenderGraphTexture* avgLuminanceTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgLuminance);
-                avgLuminanceSRV = avgLuminanceTexture->GetSRV();
-            }
+            RenderGraphTexture* exposureRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.exposure);
 
-            Draw(pCommandList, hdrRT->GetSRV(), avgLuminanceSRV, avgLuminanceMip, ldrRT->GetUAV(), width, height);
+            Draw(pCommandList, hdrRT->GetSRV(), exposureRT->GetSRV(), ldrRT->GetUAV(), width, height);
         });
 
     return tonemap_pass->outLdrRT;
 }
 
-void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* pAvgLuminance, uint32_t avgLuminanceMip, IGfxDescriptor* pLdrUAV, uint32_t width, uint32_t height)
+void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* exposure, IGfxDescriptor* pLdrUAV, uint32_t width, uint32_t height)
 {
     std::vector<std::string> defines;
-    if (pAvgLuminance)
-    {
-        defines.push_back("AUTO_EXPOSURE=1");
-    }
 
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = m_pRenderer->GetShader("tone_mapping.hlsl", "cs_main", "cs_6_6", defines);
@@ -73,11 +59,10 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IG
 
     pCommandList->SetPipelineState(pso);
 
-    uint32_t resourceCB[4] = { 
+    uint32_t resourceCB[3] = { 
         pHdrSRV->GetHeapIndex(), 
         pLdrUAV->GetHeapIndex(), 
-        pAvgLuminance ? pAvgLuminance->GetHeapIndex() : GFX_INVALID_RESOURCE,
-        avgLuminanceMip,
+        exposure->GetHeapIndex(),
     };
     pCommandList->SetComputeConstants(0, resourceCB, sizeof(resourceCB));
 

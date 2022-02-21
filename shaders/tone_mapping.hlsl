@@ -1,12 +1,10 @@
 #include "common.hlsli"
-#include "exposure.hlsli"
 
 cbuffer CB : register(b0)
 {
     uint c_hdrTexture;
     uint c_ldrTexture;
-    uint c_avgLuminanceTexture;
-    uint c_avgLuminanceMip;
+    uint c_exposureTexture;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -44,16 +42,8 @@ float3 neutral_tonemap(float3 col)
 
 float3 ApplyExposure(float3 color)
 {
-#if AUTO_EXPOSURE
-    Texture2D<float> avgLuminanceTexture = ResourceDescriptorHeap[c_avgLuminanceTexture];
-    float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip));
-
-    float EV100 = ComputeEV100(avgLuminance);
-#else
-    float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
-#endif
-
-    float exposure = ConvertEV100ToExposure(EV100 - CameraCB.physicalCamera.exposureCompensation);
+    Texture2D<float> exposureTexture = ResourceDescriptorHeap[c_exposureTexture];
+    float exposure = exposureTexture.Load(uint3(0, 0, 0));
 
     return color * exposure;
 }
