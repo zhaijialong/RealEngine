@@ -29,6 +29,8 @@ public:
     const std::string& GetAssetPath() const { return m_assetPath; }
     const std::string& GetShaderPath() const { return m_shaderPath; }
 
+    float GetFrameDeltaTime() const { return m_frameTime; }
+
 public:
     lsignal::signal<void(void*, uint32_t, uint32_t)> WindowResizeSignal;
 
@@ -44,6 +46,7 @@ private:
     std::unique_ptr<class enki::TaskScheduler> m_pTaskScheduler;
     
     uint64_t m_lastFrameTime = 0;
+    float m_frameTime = 0.0f; //in seconds
 
     CSimpleIniA m_configIni;
 

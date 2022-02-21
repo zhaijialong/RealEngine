@@ -50,11 +50,11 @@ void Engine::Tick()
 {
     CPU_EVENT("Tick", "Engine::Tick");
 
-    float frame_time = (float)stm_sec(stm_laptime(&m_lastFrameTime));
+    m_frameTime = (float)stm_sec(stm_laptime(&m_lastFrameTime));
 
     m_pGUI->Tick();
     m_pEditor->Tick();
-    m_pWorld->Tick(frame_time);
+    m_pWorld->Tick(m_frameTime);
 
     m_pRenderer->RenderFrame();
 

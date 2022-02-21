@@ -2,6 +2,7 @@
 
 #include "../render_graph.h"
 #include "../resource/typed_buffer.h"
+#include "../resource/texture_2d.h"
 
 class AutomaticExposure
 {
@@ -23,6 +24,7 @@ private:
     IGfxPipelineState* m_pLuminanceReductionPSO = nullptr;
 
     std::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
+    std::unique_ptr<Texture2D> m_pPreviousEV100;
 
     enum class ExposureMode
     {
@@ -36,4 +38,6 @@ private:
 
     float m_minLuminance = 0.001f;
     float m_maxLuminance = 10.0f;
+    float m_adaptionSpeed = 1.0f;
+    bool m_bHistoryInvalid = true;
 };

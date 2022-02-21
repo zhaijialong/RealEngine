@@ -52,6 +52,8 @@ struct SceneConstant
     uint maxReductionSampler;
     uint envTexture;
     uint brdfTexture;
+
+    float frameTime;
 };
 
 struct CullingData

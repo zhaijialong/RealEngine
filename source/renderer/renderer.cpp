@@ -269,6 +269,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
     sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
     sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
+    sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
 
     pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
     pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));

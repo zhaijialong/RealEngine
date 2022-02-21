@@ -18,6 +18,7 @@ AutomaticExposure::AutomaticExposure(Renderer* pRenderer)
     m_pLuminanceReductionPSO = pRenderer->GetPipelineState(desc, "Luminance Reduction PSO");
 
     m_pSPDCounterBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "AutomaticExposure::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
+    m_pPreviousEV100.reset(pRenderer->CreateTexture2D(1, 1, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "AutomaticExposure::m_pPreviousEV100"));
 }
 
 RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, uint32_t width, uint32_t height)
@@ -28,6 +29,7 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             ImGui::Combo("Mode##Exposure", (int*)&m_mode, "Automatic\0Manual\0\0");
             ImGui::SliderFloat("Min Luminance##Exposure", &m_minLuminance, 0.0f, 1.0f, "%.2f");
             ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.3f, 10.0f, "%.2f");
+            ImGui::SliderFloat("Eye Adaption Speed##Exposure", &m_adaptionSpeed, 0.01, 5.0f, "%.2f");
         });
 
     RENDER_GRAPH_EVENT(pRenderGraph, "AutomaticExposure");
@@ -221,6 +223,15 @@ void AutomaticExposure::ReduceLuminance(IGfxCommandList* pCommandList, RenderGra
 
 void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* avgLuminance, IGfxDescriptor* output)
 {
+    if (m_bHistoryInvalid)
+    {
+        m_bHistoryInvalid = false;
+
+        float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        pCommandList->ClearUAV(m_pPreviousEV100->GetTexture(), m_pPreviousEV100->GetUAV(), clear_value);
+        pCommandList->UavBarrier(m_pPreviousEV100->GetTexture());
+    }
+
     std::vector<std::string> defines;
     if (m_mode == ExposureMode::Automatic)
     {
@@ -233,12 +244,23 @@ void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* 
 
     pCommandList->SetPipelineState(pso);
 
-    uint32_t root_constants[3] = { 
-        avgLuminance ? avgLuminance->GetHeapIndex() : GFX_INVALID_RESOURCE,
-        m_luminanceMips - 1, 
-        output->GetHeapIndex() 
+    struct ExpsureConstants
+    {
+        uint avgLuminanceTexture;
+        uint avgLuminanceMip;
+        uint exposureTexture;
+        uint previousEV100Texture;
+        float adaptionSpeed;
     };
 
-    pCommandList->SetComputeConstants(0, root_constants, sizeof(root_constants));
+    ExpsureConstants root_constants = {
+        avgLuminance ? avgLuminance->GetHeapIndex() : GFX_INVALID_RESOURCE,
+        m_luminanceMips - 1, 
+        output->GetHeapIndex(),
+        m_pPreviousEV100->GetUAV()->GetHeapIndex(),
+        m_adaptionSpeed
+    };
+
+    pCommandList->SetComputeConstants(0, &root_constants, sizeof(root_constants));
     pCommandList->Dispatch(1, 1, 1);
 }

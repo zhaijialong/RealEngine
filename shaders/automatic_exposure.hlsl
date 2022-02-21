@@ -119,6 +119,8 @@ cbuffer ExpsureConstants : register(b0)
     uint c_avgLuminanceTexture;
     uint c_avgLuminanceMip;
     uint c_exposureTexture;
+    uint c_previousEV100Texture;
+    float c_adaptionSpeed;
 };
 
 [numthreads(1, 1, 1)]
@@ -132,6 +134,14 @@ void exposure()
 #else
     float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
 #endif
+
+    RWTexture2D<float> previousEV100Texture = ResourceDescriptorHeap[c_previousEV100Texture];
+    float previousEV100 = previousEV100Texture[uint2(0, 0)];
+
+    //eye adaption
+    EV100 = previousEV100 + (EV100 - previousEV100) * (1 - exp(-SceneCB.frameTime * c_adaptionSpeed));
+
+    previousEV100Texture[uint2(0, 0)] = EV100;
 
     float exposure = ConvertEV100ToExposure(EV100 - CameraCB.physicalCamera.exposureCompensation);
 
