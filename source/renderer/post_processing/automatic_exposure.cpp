@@ -11,9 +11,6 @@ AutomaticExposure::AutomaticExposure(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("automatic_exposure.hlsl", "init_luminance", "cs_6_6", {});
-    m_pInitLuminancePSO = pRenderer->GetPipelineState(desc, "Init Luminance PSO");
-
     desc.cs = pRenderer->GetShader("automatic_exposure.hlsl", "luminance_reduction", "cs_6_6", {});
     m_pLuminanceReductionPSO = pRenderer->GetPipelineState(desc, "Luminance Reduction PSO");
 
@@ -26,17 +23,19 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
     GUI("PostProcess", "AutomaticExposure",
         [&]()
         {
-            ImGui::Combo("Mode##Exposure", (int*)&m_mode, "Automatic\0Manual\0\0");
+            ImGui::Combo("Exposure Mode##Exposure", (int*)&m_exposuremode, "Automatic\0AutomaticHistogram\0Manual\0\0");
+            ImGui::Combo("Metering Mode##Exposure", (int*)&m_meteringMode, "Average\0Spot\0CenterWeighted\00");
             ImGui::SliderFloat("Min Luminance##Exposure", &m_minLuminance, 0.0f, 1.0f, "%.2f");
             ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.3f, 10.0f, "%.2f");
             ImGui::SliderFloat("Eye Adaption Speed##Exposure", &m_adaptionSpeed, 0.01, 5.0f, "%.2f");
+            ImGui::Checkbox("Debug EV100##Exposure", &m_bDebugEV100);
         });
 
     RENDER_GRAPH_EVENT(pRenderGraph, "AutomaticExposure");
 
     RenderGraphHandle avgLuminanceRT;
 
-    if (m_mode == ExposureMode::Automatic)
+    if (m_exposuremode == ExposureMode::Automatic)
     {
         ComputeLuminanceSize(width, height);
 
@@ -57,7 +56,7 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
                 desc.width = m_luminanceSize.x;
                 desc.height = m_luminanceSize.y;
                 desc.mip_levels = m_luminanceMips;
-                desc.format = GfxFormat::R16F;
+                desc.format = GfxFormat::RG16F;
                 desc.usage = GfxTextureUsageUnorderedAccess;
 
                 luminanceRT = builder.Create<RenderGraphTexture>(desc, "Average Luminance");
@@ -92,6 +91,10 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             });
 
         avgLuminanceRT = luminance_reduction_pass->luminanceRT;
+    }
+    else if (m_exposuremode == ExposureMode::AutomaticHistogram)
+    {
+        //todo
     }
 
     struct ExposureData
@@ -145,19 +148,47 @@ void AutomaticExposure::ComputeLuminanceSize(uint32_t width, uint32_t height)
 
 void AutomaticExposure::InitLuminance(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output)
 {
-    pCommandList->SetPipelineState(m_pInitLuminancePSO);
+    std::vector<std::string> defines;
+
+    switch (m_meteringMode)
+    {
+    case MeteringMode::Average:
+        defines.push_back("METERING_MODE_AVERAGE=1");
+        break;
+    case MeteringMode::Spot:
+        defines.push_back("METERING_MODE_SPOT=1");
+        break;
+    case MeteringMode::CenterWeighted:
+        defines.push_back("METERING_MODE_CENTER_WEIGHTED=1");
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
+    }
+
+    GfxComputePipelineDesc desc;
+    desc.cs = m_pRenderer->GetShader("automatic_exposure.hlsl", "init_luminance", "cs_6_6", defines);
+    IGfxPipelineState* pso = m_pRenderer->GetPipelineState(desc, "Init Luminance PSO");
+
+    pCommandList->SetPipelineState(pso);
 
     struct Constants
     {
         uint input;
         uint output;
+        float width;
+        float height;
         float rcpWidth;
         float rcpHeight;
         float minLuminance;
         float maxLuminance;
     };
 
-    Constants root_constants = { input->GetHeapIndex(), output->GetHeapIndex(), 1.0f / m_luminanceSize.x, 1.0f / m_luminanceSize.y, m_minLuminance, m_maxLuminance };
+    Constants root_constants = { 
+        input->GetHeapIndex(), output->GetHeapIndex(), 
+        (float)m_luminanceSize.x, (float)m_luminanceSize.y,
+        1.0f / m_luminanceSize.x, 1.0f / m_luminanceSize.y, 
+        m_minLuminance, m_maxLuminance };
     pCommandList->SetComputeConstants(1, &root_constants, sizeof(root_constants));
 
     pCommandList->Dispatch((m_luminanceSize.x + 7) / 8, (m_luminanceSize.y + 7) / 8, 1);
@@ -233,9 +264,26 @@ void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* 
     }
 
     std::vector<std::string> defines;
-    if (m_mode == ExposureMode::Automatic)
+
+    switch (m_exposuremode)
     {
-        defines.push_back("AUTO_EXPOSURE=1");
+    case ExposureMode::Automatic:
+        defines.push_back("EXPOSURE_MODE_AUTO=1");
+        break;
+    case ExposureMode::AutomaticHistogram:
+        defines.push_back("EXPOSURE_MODE_AUTO_HISTOGRAM=1");
+        break;
+    case ExposureMode::Manual:
+        defines.push_back("EXPOSURE_MODE_MANUAL=1");
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
+    }
+
+    if (m_bDebugEV100)
+    {
+        defines.push_back("DEBUG_SHOW_EV100=1");
     }
 
     GfxComputePipelineDesc desc;

@@ -1,15 +1,35 @@
 #include "common.hlsli"
 #include "exposure.hlsli"
+#include "debug.hlsli"
 
 cbuffer InitLuminanceConstants : register(b1)
 {
     uint c_inputSRV;
     uint c_outputUAV;
+    float c_width;
+    float c_height;
     float c_rcpWidth;
     float c_rcpHeight;
     float c_minLuminance;
     float c_maxLuminance;
 };
+
+float GetMeteringWeight(float2 screenPos, float2 screenSize)
+{    
+#if METERING_MODE_SPOT
+    const float screenDiagonal = 0.5f * (screenSize.x + screenSize.y);
+    const float radius = 0.075 * screenDiagonal;
+    const float2 center = screenSize * 0.5f;
+    float d = length(center - screenPos) - radius;
+    return 1.0 - saturate(d);
+#elif METERING_MODE_CENTER_WEIGHTED
+    const float screenDiagonal = 0.5f * (screenSize.x + screenSize.y);
+    const float2 center = screenSize * 0.5f;
+    return 1.0 - saturate(pow(length(center - screenPos) / screenDiagonal, 1.0));
+#else //METERING_MODE_AVERAGE
+    return 1.0;
+#endif
+}
 
 [numthreads(8, 8, 1)]
 void init_luminance(uint3 dispatchThreadID : SV_DispatchThreadID)
@@ -17,11 +37,15 @@ void init_luminance(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D inputTexture = ResourceDescriptorHeap[c_inputSRV];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
 
-    float2 uv = (dispatchThreadID.xy + 0.5) * float2(c_rcpWidth, c_rcpHeight);
+    float2 screenPos = (float2)dispatchThreadID.xy + 0.5;
+    float2 uv = screenPos * float2(c_rcpWidth, c_rcpHeight);
     float3 color = inputTexture.SampleLevel(linearSampler, uv, 0).xyz;
+
+    float luminance = clamp(Luminance(color), c_minLuminance, c_maxLuminance);
+    float weight = GetMeteringWeight(screenPos, float2(c_width, c_height));
     
-    RWTexture2D<float> outputTexture = ResourceDescriptorHeap[c_outputUAV];
-    outputTexture[dispatchThreadID.xy] = clamp(Luminance(color), c_minLuminance, c_maxLuminance);
+    RWTexture2D<float2> outputTexture = ResourceDescriptorHeap[c_outputUAV];
+    outputTexture[dispatchThreadID.xy] = float2(luminance, weight);
 }
 
 cbuffer spdConstants : register(b1)
@@ -44,6 +68,7 @@ cbuffer spdConstants : register(b1)
 
 groupshared AU1 spdCounter;
 groupshared AF1 spdIntermediateR[16][16];
+groupshared AF1 spdIntermediateG[16][16];
 
 AF4 SpdLoadSourceImage(ASU2 p, AU1 slice)
 {
@@ -52,25 +77,25 @@ AF4 SpdLoadSourceImage(ASU2 p, AU1 slice)
     
     AF2 textureCoord = p * c_invInputSize + c_invInputSize;
     AF4 result = imgSrc.SampleLevel(srcSampler, textureCoord, 0);
-    result = AF4(result.x, 0, 0, 0);
+    result = AF4(result.xy, 0, 0);
     return result;
 }
 AF4 SpdLoad(ASU2 tex, AU1 slice)
 {
-    globallycoherent RWTexture2D<float> imgDst5 = ResourceDescriptorHeap[c_imgDst[5].x];
-    return float4(imgDst5[tex], 0, 0, 0);
+    globallycoherent RWTexture2D<float2> imgDst5 = ResourceDescriptorHeap[c_imgDst[5].x];
+    return float4(imgDst5[tex], 0, 0);
 }
 void SpdStore(ASU2 pix, AF4 outValue, AU1 index, AU1 slice)
 {
     if (index == 5)
     {
-        globallycoherent RWTexture2D<float> imgDst5 = ResourceDescriptorHeap[c_imgDst[5].x];
-        imgDst5[pix] = outValue.x;
+        globallycoherent RWTexture2D<float2> imgDst5 = ResourceDescriptorHeap[c_imgDst[5].x];
+        imgDst5[pix] = outValue.xy;
         return;
     }
     
-    RWTexture2D<float> imgDst = ResourceDescriptorHeap[c_imgDst[index].x];
-    imgDst[pix] = outValue.x;
+    RWTexture2D<float2> imgDst = ResourceDescriptorHeap[c_imgDst[index].x];
+    imgDst[pix] = outValue.xy;
 }
 void SpdIncreaseAtomicCounter(AU1 slice)
 {
@@ -88,15 +113,22 @@ void SpdResetAtomicCounter(AU1 slice)
 }
 AF4 SpdLoadIntermediate(AU1 x, AU1 y)
 {
-    return AF4(spdIntermediateR[x][y], 0, 0, 0);
+    return AF4(spdIntermediateR[x][y], spdIntermediateG[x][y], 0, 0);
 }
 void SpdStoreIntermediate(AU1 x, AU1 y, AF4 value)
 {
     spdIntermediateR[x][y] = value.x;
+    spdIntermediateG[x][y] = value.y;
 }
 AF4 SpdReduce4(AF4 v0, AF4 v1, AF4 v2, AF4 v3)
 {
-    return float4((v0.x + v1.x + v2.x + v3.x) * 0.25, 0, 0, 0);
+    float weight = (v0.y + v1.y + v2.y + v3.y) * 0.25;
+    float luminance = 0.0f;
+    if(weight > 0.0)
+    {
+        luminance = (v0.x * v0.y + v1.x * v1.y + v2.x * v2.y + v3.x * v3.y) / (v0.y + v1.y + v2.y + v3.y);
+    }
+    return float4(luminance, weight, 0, 0);
 }
 
 #define SPD_LINEAR_SAMPLER
@@ -126,9 +158,9 @@ cbuffer ExpsureConstants : register(b0)
 [numthreads(1, 1, 1)]
 void exposure()
 {
-#if AUTO_EXPOSURE
-    Texture2D<float> avgLuminanceTexture = ResourceDescriptorHeap[c_avgLuminanceTexture];
-    float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip));
+#if EXPOSURE_MODE_AUTO
+    Texture2D<float2> avgLuminanceTexture = ResourceDescriptorHeap[c_avgLuminanceTexture];
+    float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip)).x;
 
     float EV100 = ComputeEV100(avgLuminance);
 #else
@@ -141,9 +173,16 @@ void exposure()
     //eye adaption
     EV100 = previousEV100 + (EV100 - previousEV100) * (1 - exp(-SceneCB.frameTime * c_adaptionSpeed));
 
+#if DEBUG_SHOW_EV100
+    float2 pos = float2(100, 100);
+    float3 color = float3(1, 1, 1);
+    debug::PrintString(pos, color, 'E', 'V', '1', '0', '0', ':', ' ');
+    debug::PrintFloat(pos, color, EV100);
+#endif
+
     previousEV100Texture[uint2(0, 0)] = EV100;
 
-    float exposure = ConvertEV100ToExposure(EV100 - CameraCB.physicalCamera.exposureCompensation);
+    float exposure = ComputeExposure(EV100 - CameraCB.physicalCamera.exposureCompensation);
 
     RWTexture2D<float> exposureTexture = ResourceDescriptorHeap[c_exposureTexture];
     exposureTexture[uint2(0, 0)] = exposure;

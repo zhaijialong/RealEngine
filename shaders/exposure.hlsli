@@ -1,5 +1,8 @@
 #pragma once
 
+//reference : https://placeholderart.wordpress.com/2014/12/15/implementing-a-physically-based-camera-automatic-exposure/
+
+
 float ComputeEV100(float aperture, float shutterSpeed, float ISO)
 {
     // https://en.wikipedia.org/wiki/Exposure_value
@@ -18,7 +21,7 @@ float ComputeEV100(float avgLuminance)
     return log2(avgLuminance * 100.0 / K);
 }
 
-float ConvertEV100ToExposure(float EV100)
+float ComputeExposure(float EV100)
 {
     // with saturation-based speed
     // https://en.wikipedia.org/wiki/Film_speed
@@ -34,7 +37,7 @@ float ConvertEV100ToExposure(float EV100)
 
 float ComputeExposure(float aperture, float shutterSpeed, float ISO)
 {
-    //combination of ComputeEV100 and ConvertEV100ToExposure
+    //combination of ComputeEV100 and ComputeExposure
     float maxLuminance = (7800.0 / 65.0) * (aperture * aperture) / (shutterSpeed * ISO);
     return 1.0 / maxLuminance;
 }

@@ -20,7 +20,6 @@ private:
 private:
     Renderer* m_pRenderer;
 
-    IGfxPipelineState* m_pInitLuminancePSO = nullptr;
     IGfxPipelineState* m_pLuminanceReductionPSO = nullptr;
 
     std::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
@@ -29,9 +28,19 @@ private:
     enum class ExposureMode
     {
         Automatic,
+        AutomaticHistogram,
         Manual,
     };
-    ExposureMode m_mode = ExposureMode::Automatic;
+
+    enum class MeteringMode
+    {
+        Average,
+        Spot,
+        CenterWeighted,
+    };
+
+    ExposureMode m_exposuremode = ExposureMode::Automatic;
+    MeteringMode m_meteringMode = MeteringMode::CenterWeighted;
 
     uint2 m_luminanceSize;
     uint32_t m_luminanceMips = 0;
@@ -40,4 +49,5 @@ private:
     float m_maxLuminance = 10.0f;
     float m_adaptionSpeed = 1.0f;
     bool m_bHistoryInvalid = true;
+    bool m_bDebugEV100 = false;
 };
