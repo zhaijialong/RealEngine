@@ -25,7 +25,8 @@ float GetMeteringWeight(float2 screenPos, float2 screenSize)
 #elif METERING_MODE_CENTER_WEIGHTED
     const float screenDiagonal = 0.5f * (screenSize.x + screenSize.y);
     const float2 center = screenSize * 0.5f;
-    return 1.0 - saturate(pow(length(center - screenPos) / screenDiagonal, 1.0));
+    //return 1.0 - saturate(pow(length(center - screenPos) * 2 / screenDiagonal, 0.5));
+    return smoothstep(1.0, 0.0, length(center - screenPos) / (max(screenSize.x, screenSize.y) * 0.5));
 #else //METERING_MODE_AVERAGE
     return 1.0;
 #endif
