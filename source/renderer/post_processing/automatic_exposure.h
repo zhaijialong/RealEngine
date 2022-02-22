@@ -15,12 +15,17 @@ private:
     void ComputeLuminanceSize(uint32_t width, uint32_t height);
     void InitLuminance(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output);
     void ReduceLuminance(IGfxCommandList* pCommandList, RenderGraphTexture* texture);
+
+    void BuildHistogram(IGfxCommandList* pCommandList, IGfxDescriptor* inputTexture, IGfxBuffer* histogramBuffer, IGfxDescriptor* histogramBufferUAV, uint32_t width, uint32_t height);
+    void ReduceHistogram(IGfxCommandList* pCommandList, IGfxDescriptor* histogramBufferSRV, IGfxDescriptor* avgLuminanceUAV);
+
     void Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* avgLuminance, IGfxDescriptor* output);
 
 private:
     Renderer* m_pRenderer;
 
     IGfxPipelineState* m_pLuminanceReductionPSO = nullptr;
+    IGfxPipelineState* m_pHistogramReductionPSO = nullptr;
 
     std::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
     std::unique_ptr<Texture2D> m_pPreviousEV100;
@@ -39,7 +44,7 @@ private:
         CenterWeighted,
     };
 
-    ExposureMode m_exposuremode = ExposureMode::Automatic;
+    ExposureMode m_exposuremode = ExposureMode::AutomaticHistogram;
     MeteringMode m_meteringMode = MeteringMode::CenterWeighted;
 
     uint2 m_luminanceSize;
@@ -47,7 +52,7 @@ private:
 
     float m_minLuminance = 0.001f;
     float m_maxLuminance = 10.0f;
-    float m_adaptionSpeed = 1.0f;
+    float m_adaptionSpeed = 1.5f;
     bool m_bHistoryInvalid = true;
     bool m_bDebugEV100 = false;
 };

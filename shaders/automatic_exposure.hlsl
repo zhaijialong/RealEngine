@@ -14,24 +14,6 @@ cbuffer InitLuminanceConstants : register(b1)
     float c_maxLuminance;
 };
 
-float GetMeteringWeight(float2 screenPos, float2 screenSize)
-{    
-#if METERING_MODE_SPOT
-    const float screenDiagonal = 0.5f * (screenSize.x + screenSize.y);
-    const float radius = 0.075 * screenDiagonal;
-    const float2 center = screenSize * 0.5f;
-    float d = length(center - screenPos) - radius;
-    return 1.0 - saturate(d);
-#elif METERING_MODE_CENTER_WEIGHTED
-    const float screenDiagonal = 0.5f * (screenSize.x + screenSize.y);
-    const float2 center = screenSize * 0.5f;
-    //return 1.0 - saturate(pow(length(center - screenPos) * 2 / screenDiagonal, 0.5));
-    return smoothstep(1.0, 0.0, length(center - screenPos) / (max(screenSize.x, screenSize.y) * 0.5));
-#else //METERING_MODE_AVERAGE
-    return 1.0;
-#endif
-}
-
 [numthreads(8, 8, 1)]
 void init_luminance(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
@@ -159,7 +141,7 @@ cbuffer ExpsureConstants : register(b0)
 [numthreads(1, 1, 1)]
 void exposure()
 {
-#if EXPOSURE_MODE_AUTO
+#if EXPOSURE_MODE_AUTO || EXPOSURE_MODE_AUTO_HISTOGRAM
     Texture2D<float2> avgLuminanceTexture = ResourceDescriptorHeap[c_avgLuminanceTexture];
     float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip)).x;
 

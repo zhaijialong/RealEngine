@@ -13,6 +13,9 @@ AutomaticExposure::AutomaticExposure(Renderer* pRenderer)
     GfxComputePipelineDesc desc;
     desc.cs = pRenderer->GetShader("automatic_exposure.hlsl", "luminance_reduction", "cs_6_6", {});
     m_pLuminanceReductionPSO = pRenderer->GetPipelineState(desc, "Luminance Reduction PSO");
+    
+    desc.cs = m_pRenderer->GetShader("automatic_exposure_histogram.hlsl", "histogram_reduction", "cs_6_6", {});
+    m_pHistogramReductionPSO = pRenderer->GetPipelineState(desc, "Histogram Reduction PSO");
 
     m_pSPDCounterBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "AutomaticExposure::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
     m_pPreviousEV100.reset(pRenderer->CreateTexture2D(1, 1, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "AutomaticExposure::m_pPreviousEV100"));
@@ -27,8 +30,8 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             ImGui::Combo("Metering Mode##Exposure", (int*)&m_meteringMode, "Average\0Spot\0CenterWeighted\00");
             ImGui::SliderFloat("Min Luminance##Exposure", &m_minLuminance, 0.0f, 1.0f, "%.2f");
             ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.3f, 10.0f, "%.2f");
-            ImGui::SliderFloat("Eye Adaption Speed##Exposure", &m_adaptionSpeed, 0.01, 5.0f, "%.2f");
-            ImGui::Checkbox("Debug EV100##Exposure", &m_bDebugEV100);
+            ImGui::SliderFloat("Eye Adaption Speed##Exposure", &m_adaptionSpeed, 0.01f, 5.0f, "%.2f");
+            ImGui::Checkbox("Show EV100##Exposure", &m_bDebugEV100);
         });
 
     RENDER_GRAPH_EVENT(pRenderGraph, "AutomaticExposure");
@@ -94,7 +97,58 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
     }
     else if (m_exposuremode == ExposureMode::AutomaticHistogram)
     {
-        //todo
+        struct BuildHistogramData
+        {
+            RenderGraphHandle inputTexture;
+            RenderGraphHandle histogramBuffer;
+        };
+
+        auto build_histogram_pass = pRenderGraph->AddPass<BuildHistogramData>("Build Histogram",
+            [&](BuildHistogramData& data, RenderGraphBuilder& builder)
+            {
+                data.inputTexture = builder.Read(sceneColorRT, GfxResourceState::ShaderResourceNonPS);
+
+                RenderGraphBuffer::Desc desc;
+                desc.stride = 4;
+                desc.size = desc.stride * 128; //128 bins
+                desc.format = GfxFormat::R32F;
+                desc.usage = GfxBufferUsageRawBuffer | GfxBufferUsageUnorderedAccess;
+                data.histogramBuffer = builder.Create<RenderGraphBuffer>(desc, "Luminance Histogram");
+                data.histogramBuffer = builder.Write(data.histogramBuffer, GfxResourceState::UnorderedAccess);
+            },
+            [=](const BuildHistogramData& data, IGfxCommandList* pCommandList)
+            {
+                RenderGraphTexture* inputTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputTexture);
+                RenderGraphBuffer* histogramBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.histogramBuffer);
+                BuildHistogram(pCommandList, inputTexture->GetSRV(), histogramBuffer->GetBuffer(), histogramBuffer->GetUAV(), width, height);
+            });
+
+        struct HistogramReductionData
+        {
+            RenderGraphHandle histogramBuffer;
+            RenderGraphHandle avgLuminanceTexture;
+        };
+
+        auto histogram_reduction_pass = pRenderGraph->AddPass<HistogramReductionData>("Histogram Reduction",
+            [&](HistogramReductionData& data, RenderGraphBuilder& builder)
+            {
+                data.histogramBuffer = builder.Read(build_histogram_pass->histogramBuffer, GfxResourceState::ShaderResourceNonPS);
+
+                RenderGraphTexture::Desc desc;
+                desc.width = desc.height = 1;
+                desc.format = GfxFormat::R16F;
+                desc.usage = GfxTextureUsageUnorderedAccess;
+                data.avgLuminanceTexture = builder.Create<RenderGraphTexture>(desc, "Average Luminance");
+                data.avgLuminanceTexture = builder.Write(data.avgLuminanceTexture, GfxResourceState::UnorderedAccess);
+            },
+            [=](const HistogramReductionData& data, IGfxCommandList* pCommandList)
+            {
+                RenderGraphBuffer* histogramBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.histogramBuffer);
+                RenderGraphTexture* avgLuminanceTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgLuminanceTexture);
+                ReduceHistogram(pCommandList, histogramBuffer->GetSRV(), avgLuminanceTexture->GetUAV());
+            });
+
+        avgLuminanceRT = histogram_reduction_pass->avgLuminanceTexture;
     }
 
     struct ExposureData
@@ -108,7 +162,8 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
         {
             if (avgLuminanceRT.IsValid())
             {
-                data.avgLuminance = builder.Read(avgLuminanceRT, GfxResourceState::ShaderResourceNonPS, m_luminanceMips - 1);
+                uint32_t mip = m_exposuremode == ExposureMode::Automatic ? m_luminanceMips - 1 : 0;
+                data.avgLuminance = builder.Read(avgLuminanceRT, GfxResourceState::ShaderResourceNonPS, mip);
             }
 
             RenderGraphTexture::Desc desc;
@@ -184,12 +239,12 @@ void AutomaticExposure::InitLuminance(IGfxCommandList* pCommandList, IGfxDescrip
         float maxLuminance;
     };
 
-    Constants root_constants = { 
+    Constants constants = { 
         input->GetHeapIndex(), output->GetHeapIndex(), 
         (float)m_luminanceSize.x, (float)m_luminanceSize.y,
         1.0f / m_luminanceSize.x, 1.0f / m_luminanceSize.y, 
         m_minLuminance, m_maxLuminance };
-    pCommandList->SetComputeConstants(1, &root_constants, sizeof(root_constants));
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
 
     pCommandList->Dispatch((m_luminanceSize.x + 7) / 8, (m_luminanceSize.y + 7) / 8, 1);
 }
@@ -252,6 +307,79 @@ void AutomaticExposure::ReduceLuminance(IGfxCommandList* pCommandList, RenderGra
     }
 }
 
+void AutomaticExposure::BuildHistogram(IGfxCommandList* pCommandList, IGfxDescriptor* inputTexture, IGfxBuffer* histogramBuffer, IGfxDescriptor* histogramBufferUAV, uint32_t width, uint32_t height)
+{
+    uint32_t clear_value[4] = { 0, 0, 0, 0 };
+    pCommandList->ClearUAV(histogramBuffer, histogramBufferUAV, clear_value);
+    pCommandList->UavBarrier(histogramBuffer);
+
+    std::vector<std::string> defines;
+
+    switch (m_meteringMode)
+    {
+    case MeteringMode::Average:
+        defines.push_back("METERING_MODE_AVERAGE=1");
+        break;
+    case MeteringMode::Spot:
+        defines.push_back("METERING_MODE_SPOT=1");
+        break;
+    case MeteringMode::CenterWeighted:
+        defines.push_back("METERING_MODE_CENTER_WEIGHTED=1");
+        break;
+    default:
+        RE_ASSERT(false);
+        break;
+    }
+
+    GfxComputePipelineDesc desc;
+    desc.cs = m_pRenderer->GetShader("automatic_exposure_histogram.hlsl", "build_histogram", "cs_6_6", defines);
+    IGfxPipelineState* pso = m_pRenderer->GetPipelineState(desc, "Build Histogram PSO");
+
+    pCommandList->SetPipelineState(pso);
+
+    uint32_t half_width = (width + 1) / 2;
+    uint32_t half_height = (height + 1) / 2;
+
+    struct BuildHistogramConstants
+    {
+        uint inputTextureSRV;
+        uint histogramBufferUAV;
+        uint width;
+        uint height;
+        float rcpWidth;
+        float rcpHeight;
+        float minLuminance;
+        float maxLuminance;
+    };
+
+    BuildHistogramConstants constants = {
+        inputTexture->GetHeapIndex(), histogramBufferUAV->GetHeapIndex(),
+        half_width, half_height, 1.0f / half_width, 1.0f / half_height,
+        m_minLuminance, m_maxLuminance
+    };
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
+
+    pCommandList->Dispatch((half_width + 15) / 16, (half_height + 7) / 8, 1);
+}
+
+void AutomaticExposure::ReduceHistogram(IGfxCommandList* pCommandList, IGfxDescriptor* histogramBufferSRV, IGfxDescriptor* avgLuminanceUAV)
+{
+    pCommandList->SetPipelineState(m_pHistogramReductionPSO);
+
+    struct ReduceHistogramConstants
+    {
+        uint histogramBufferSRV;
+        uint avgLuminanceTextureUAV;
+        float minLuminance;
+        float maxLuminance;
+    };
+
+    ReduceHistogramConstants constants = { histogramBufferSRV->GetHeapIndex(), avgLuminanceUAV->GetHeapIndex(), m_minLuminance, m_maxLuminance };
+    pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
+
+    pCommandList->Dispatch(1, 1, 1);
+}
+
 void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* avgLuminance, IGfxDescriptor* output)
 {
     if (m_bHistoryInvalid)
@@ -303,7 +431,7 @@ void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* 
 
     ExpsureConstants root_constants = {
         avgLuminance ? avgLuminance->GetHeapIndex() : GFX_INVALID_RESOURCE,
-        m_luminanceMips - 1, 
+        m_exposuremode == ExposureMode::Automatic ? m_luminanceMips - 1 : 0,
         output->GetHeapIndex(),
         m_pPreviousEV100->GetUAV()->GetHeapIndex(),
         m_adaptionSpeed
