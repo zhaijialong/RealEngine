@@ -51,7 +51,7 @@ private:
     uint32_t m_luminanceMips = 0;
 
     float m_minLuminance = 0.001f;
-    float m_maxLuminance = 10.0f;
+    float m_maxLuminance = 5.0f;
     float m_adaptionSpeed = 1.5f;
     float m_histogramLowPercentile = 0.1f;
     float m_histogramHighPercentile = 0.9f;

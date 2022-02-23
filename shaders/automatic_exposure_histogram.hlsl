@@ -10,7 +10,7 @@
 uint GetHistogramBin(float luminance, float minLuminance, float maxLuminance)
 {
     float position = saturate((luminance - minLuminance) / (maxLuminance - minLuminance));
-    return uint(pow(position, 1.0 / 5.0) * (HISTOGRAM_BIN_NUM - 1));
+    return uint(pow(position, 1.0 / 5.0) * (HISTOGRAM_BIN_NUM - 1)); //todo : maybe log2(luminance) will have better distribution among the histogram bins
 }
 
 float GetLuminance(uint histogramBin, float minLuminance, float maxLuminance)
