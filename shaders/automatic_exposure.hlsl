@@ -145,7 +145,7 @@ void exposure()
     Texture2D<float2> avgLuminanceTexture = ResourceDescriptorHeap[c_avgLuminanceTexture];
     float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip)).x;
 
-    float EV100 = ComputeEV100(avgLuminance);
+    float EV100 = ComputeEV100(max(avgLuminance, 0.001));
 #else
     float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
 #endif
