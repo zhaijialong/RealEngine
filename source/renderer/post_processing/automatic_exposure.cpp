@@ -31,6 +31,11 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             ImGui::SliderFloat("Min Luminance##Exposure", &m_minLuminance, 0.0f, 1.0f, "%.2f");
             ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.3f, 10.0f, "%.2f");
             ImGui::SliderFloat("Eye Adaption Speed##Exposure", &m_adaptionSpeed, 0.01f, 5.0f, "%.2f");
+            if (m_exposuremode == ExposureMode::AutomaticHistogram)
+            {
+                ImGui::SliderFloat("Low Percentile##Exposure", &m_histogramLowPercentile, 0.0f, 0.49f, "%.2f");
+                ImGui::SliderFloat("High Percentile##Exposure", &m_histogramHighPercentile, 0.51f, 1.0f, "%.2f");
+            }
             ImGui::Checkbox("Show EV100##Exposure", &m_bDebugEV100);
         });
 
@@ -372,10 +377,15 @@ void AutomaticExposure::ReduceHistogram(IGfxCommandList* pCommandList, IGfxDescr
         uint avgLuminanceTextureUAV;
         float minLuminance;
         float maxLuminance;
+        float lowPercentile;
+        float highPercentile;
     };
 
-    ReduceHistogramConstants constants = { histogramBufferSRV->GetHeapIndex(), avgLuminanceUAV->GetHeapIndex(), m_minLuminance, m_maxLuminance };
-    pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
+    ReduceHistogramConstants constants = { 
+        histogramBufferSRV->GetHeapIndex(), avgLuminanceUAV->GetHeapIndex(), 
+        m_minLuminance, m_maxLuminance, m_histogramLowPercentile, m_histogramHighPercentile 
+    };
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
 
     pCommandList->Dispatch(1, 1, 1);
 }

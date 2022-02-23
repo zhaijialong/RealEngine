@@ -66,39 +66,69 @@ struct ReduceHistogramConstants
     uint avgLuminanceTextureUAV;
     float minLuminance;
     float maxLuminance;
+    float lowPercentile;
+    float highPercentile;
 };
-ConstantBuffer<ReduceHistogramConstants> ReductionCB : register(b0);
+ConstantBuffer<ReduceHistogramConstants> ReductionCB : register(b1);
 
-groupshared float s_Luminance[HISTOGRAM_BIN_NUM];
+groupshared float s_values[HISTOGRAM_BIN_NUM];
+groupshared float s_intermediateValues[HISTOGRAM_BIN_NUM]; //used for sum reduction
+
+float ComputeAverageLuminance(float lowPercentileSum, float highPercentileSum)
+{
+    float sumLuminance = 0.0f;
+    float sumWeight = 0.0f;
+
+    [unroll]
+    for (uint i = 0; i < HISTOGRAM_BIN_NUM; ++i)
+    {
+        float histogramValue = s_values[i];
+        float luminance = GetLuminance(i, ReductionCB.minLuminance, ReductionCB.maxLuminance);
+
+        // remove dark values
+        float off = min(lowPercentileSum, histogramValue);
+        lowPercentileSum -= off;
+        highPercentileSum -= off;
+        histogramValue -= off;
+
+        // remove highlight values
+        histogramValue = min(highPercentileSum, histogramValue);
+        highPercentileSum -= histogramValue;
+
+        sumLuminance += histogramValue * luminance;
+        sumWeight += histogramValue;
+    }
+
+    return sumLuminance / max(sumWeight, 0.0001);
+}
 
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void histogram_reduction(uint groupIndex : SV_GroupIndex)
 {
     ByteAddressBuffer histogramBuffer = ResourceDescriptorHeap[ReductionCB.histogramBufferSRV];
-    uint histogramCount = histogramBuffer.Load(groupIndex * 4);
-    float luminance = GetLuminance(groupIndex, ReductionCB.minLuminance, ReductionCB.maxLuminance);
+    float histogramValue = histogramBuffer.Load(groupIndex * 4) / 1024.0f;
 
-    s_HistogramBins[groupIndex] = histogramCount;
-    s_Luminance[groupIndex] = histogramCount * luminance;
-
+    s_values[groupIndex] = histogramValue;
+    s_intermediateValues[groupIndex] = histogramValue;
+    
     GroupMemoryBarrierWithGroupSync();
 
-    // sum reduction
     [unroll]
-    for (uint histogramSampleIndex = (HISTOGRAM_BIN_NUM >> 1); histogramSampleIndex > 0; histogramSampleIndex >>= 1)
+    for (uint i = (HISTOGRAM_BIN_NUM >> 1); i > 0; i >>= 1)
     {
-        if (groupIndex < histogramSampleIndex)
+        if (groupIndex < i)
         {
-            s_HistogramBins[groupIndex] += s_HistogramBins[groupIndex + histogramSampleIndex];
-            s_Luminance[groupIndex] += s_Luminance[groupIndex + histogramSampleIndex];
+            s_intermediateValues[groupIndex] += s_intermediateValues[groupIndex + i];
         }
 
         GroupMemoryBarrierWithGroupSync();
     }
 
-    if(groupIndex == 0)
+    float histogramValueSum = s_intermediateValues[0];
+
+    if (groupIndex == 0)
     {
         RWTexture2D<float> avgLuminanceTexture = ResourceDescriptorHeap[ReductionCB.avgLuminanceTextureUAV];
-        avgLuminanceTexture[uint2(0, 0)] = s_Luminance[0] / s_HistogramBins[0];
+        avgLuminanceTexture[uint2(0, 0)] = ComputeAverageLuminance(histogramValueSum * ReductionCB.lowPercentile, histogramValueSum * ReductionCB.highPercentile);
     }
 }
