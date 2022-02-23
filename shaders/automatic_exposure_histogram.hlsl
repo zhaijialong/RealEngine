@@ -4,17 +4,19 @@
 // reference : https://alextardif.com/HistogramLuminance.html
 
 #define GROUP_SIZE_X 16
-#define GROUP_SIZE_Y 8
+#define GROUP_SIZE_Y 16
 #define HISTOGRAM_BIN_NUM (GROUP_SIZE_X * GROUP_SIZE_Y)
 
 uint GetHistogramBin(float luminance, float minLuminance, float maxLuminance)
 {
-    return uint(saturate((luminance - minLuminance) / (maxLuminance - minLuminance)) * (HISTOGRAM_BIN_NUM - 1));
+    float position = saturate((luminance - minLuminance) / (maxLuminance - minLuminance));
+    return uint(pow(position, 1.0 / 5.0) * (HISTOGRAM_BIN_NUM - 1));
 }
 
 float GetLuminance(uint histogramBin, float minLuminance, float maxLuminance)
 {
-    return ((float)histogramBin + 0.5) / float(HISTOGRAM_BIN_NUM - 1) * (maxLuminance - minLuminance);
+    float position = ((float)histogramBin + 0.5) / float(HISTOGRAM_BIN_NUM - 1);
+    return pow(position, 5.0) * (maxLuminance - minLuminance);
 }
 
 

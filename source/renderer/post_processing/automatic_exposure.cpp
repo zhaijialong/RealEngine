@@ -115,7 +115,7 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
 
                 RenderGraphBuffer::Desc desc;
                 desc.stride = 4;
-                desc.size = desc.stride * 128; //128 bins
+                desc.size = desc.stride * 256; //256 bins
                 desc.format = GfxFormat::R32F;
                 desc.usage = GfxBufferUsageRawBuffer | GfxBufferUsageUnorderedAccess;
                 data.histogramBuffer = builder.Create<RenderGraphBuffer>(desc, "Luminance Histogram");
@@ -364,7 +364,7 @@ void AutomaticExposure::BuildHistogram(IGfxCommandList* pCommandList, IGfxDescri
     };
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
 
-    pCommandList->Dispatch((half_width + 15) / 16, (half_height + 7) / 8, 1);
+    pCommandList->Dispatch((half_width + 15) / 16, (half_height + 15) / 16, 1);
 }
 
 void AutomaticExposure::ReduceHistogram(IGfxCommandList* pCommandList, IGfxDescriptor* histogramBufferSRV, IGfxDescriptor* avgLuminanceUAV)
