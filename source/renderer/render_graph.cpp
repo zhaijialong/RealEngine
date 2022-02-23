@@ -16,7 +16,14 @@ void RenderGraph::BeginEvent(const char* name)
 
 void RenderGraph::EndEvent()
 {
-    m_passes.back()->EndEvent();
+    if (!m_eventNames.empty())
+    {
+        m_eventNames.pop_back();
+    }
+    else
+    {
+        m_passes.back()->EndEvent();
+    }
 }
 
 void RenderGraph::Clear()
