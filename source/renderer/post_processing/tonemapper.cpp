@@ -66,6 +66,11 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IG
 {
     std::vector<std::string> defines;
 
+    if (bloom)
+    {
+        defines.push_back("BLOOM=1");
+    }
+
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = m_pRenderer->GetShader("tone_mapping.hlsl", "cs_main", "cs_6_6", defines);
     IGfxPipelineState* pso = m_pRenderer->GetPipelineState(psoDesc, "ToneMapping PSO");
@@ -78,18 +83,24 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IG
         uint ldrTexture;
         uint exposureTexture;
         uint bloomTexture;
+        float2 pixelSize;
+        float2 bloomPixelSize;
         float bloomIntensity;
     };
     
-    Constants constants = {
-        pHdrSRV->GetHeapIndex(),
-        pLdrUAV->GetHeapIndex(),
-        exposure->GetHeapIndex(),
-        bloom ? bloom->GetHeapIndex() : GFX_INVALID_RESOURCE,
-        bloom_intensity
-    };
+    Constants constants;
+    constants.hdrTexture = pHdrSRV->GetHeapIndex();
+    constants.ldrTexture = pLdrUAV->GetHeapIndex();
+    constants.exposureTexture = exposure->GetHeapIndex();
+    constants.bloomTexture = bloom ? bloom->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    constants.bloomIntensity = bloom_intensity;
+    constants.pixelSize = float2(1.0f / width, 1.0f / height);
 
-    pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
+    uint32_t bloom_width = (width + 1) >> 1;
+    uint32_t bloom_height = (height + 1) >> 1;
+    constants.bloomPixelSize = float2(1.0f / bloom_width, 1.0f / bloom_height);
+
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
 
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }

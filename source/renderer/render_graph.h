@@ -54,7 +54,7 @@ private:
     RenderGraphHandle ReadDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource);
 
 private:
-    LinearAllocator m_allocator { 32 * 1024 };
+    LinearAllocator m_allocator { 512 * 1024 };
     RenderGraphResourceAllocator m_resourceAllocator;
     DirectedAcyclicGraph m_graph;
 

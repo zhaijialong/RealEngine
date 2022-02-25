@@ -29,6 +29,5 @@ private:
 
     bool m_bEnable = true;
     float m_threshold = 1.0f;
-    float m_blurRadius = 1.0f;
-    float m_intensity = 1.0f;
+    float m_intensity = 0.5f;
 };

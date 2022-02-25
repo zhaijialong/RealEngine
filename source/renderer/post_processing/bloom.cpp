@@ -24,7 +24,6 @@ RenderGraphHandle Bloom::Render(RenderGraph* pRenderGraph, RenderGraphHandle sce
         {
             ImGui::Checkbox("Enable##Bloom", &m_bEnable);
             ImGui::SliderFloat("Threshold##Bloom", &m_threshold, 0.0f, 10.0f, "%.2f");
-            ImGui::SliderFloat("Blur Radius##Bloom", &m_blurRadius, 0.1f, 5.0f, "%.2f");
             ImGui::SliderFloat("Intensity##Bloom", &m_intensity, 0.0f, 10.0f, "%.2f");
         });
 
@@ -141,6 +140,7 @@ void Bloom::Downsample(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGf
         float2 outputPixelSize; //low mip
         uint inputTexture;
         uint outputTexture;
+        float threshold;
     };
 
     uint32_t input_width = m_mipSize[mip - 1].x;
@@ -153,6 +153,7 @@ void Bloom::Downsample(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGf
     constants.outputTexture = output->GetHeapIndex();
     constants.inputPixelSize = float2(1.0f / input_width, 1.0f / input_height);
     constants.outputPixelSize = float2(1.0f / output_width, 1.0f / output_height);
+    constants.threshold = m_threshold;
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
     pCommandList->Dispatch((output_width + 7) / 8, (output_height + 7) / 8, 1);

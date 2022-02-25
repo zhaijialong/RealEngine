@@ -7,6 +7,7 @@ struct DownsampleConstants
 
     uint inputTexture;
     uint outputTexture;
+    float threshold;
 };
 ConstantBuffer<DownsampleConstants> DownsampleCB : register(b1);
 
@@ -18,7 +19,7 @@ void downsampling(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float2 uv = ((float2)dispatchThreadID.xy + 0.5) * DownsampleCB.outputPixelSize;
 
-    outputTexture[dispatchThreadID.xy] = BloomDownsample(inputTexture, uv, DownsampleCB.inputPixelSize);
+    outputTexture[dispatchThreadID.xy] = BloomDownsample(inputTexture, uv, DownsampleCB.inputPixelSize, DownsampleCB.threshold);
 }
 
 struct UpsampleConstants
