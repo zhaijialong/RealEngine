@@ -289,6 +289,9 @@
     <ClCompile Include="source\renderer\post_processing\automatic_exposure.cpp">
       <Filter>source\renderer\post_processing</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\post_processing\bloom.cpp">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -651,6 +654,9 @@
     <ClInclude Include="source\utils\gui_util.h">
       <Filter>source\utils</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\post_processing\bloom.h">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -786,6 +792,9 @@
     <None Include="shaders\exposure.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\bloom.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">
@@ -873,6 +882,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\automatic_exposure_histogram.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\bloom.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

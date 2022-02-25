@@ -5,6 +5,8 @@ cbuffer CB : register(b0)
     uint c_hdrTexture;
     uint c_ldrTexture;
     uint c_exposureTexture;
+    uint c_bloomTexture;
+    float c_bloomIntensity;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////

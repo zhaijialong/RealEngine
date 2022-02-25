@@ -7,7 +7,7 @@ Tonemapper::Tonemapper(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 }
 
-RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, RenderGraphHandle exposure, uint32_t width, uint32_t height)
+RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, RenderGraphHandle exposure, RenderGraphHandle bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "ToneMapping",
         [&]()
@@ -19,6 +19,7 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
     {
         RenderGraphHandle hdrRT;
         RenderGraphHandle exposure;
+        RenderGraphHandle bloom;
 
         RenderGraphHandle outLdrRT;
     };
@@ -28,6 +29,11 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         {
             data.hdrRT = builder.Read(inputHandle, GfxResourceState::ShaderResourceNonPS);
             data.exposure = builder.Read(exposure, GfxResourceState::ShaderResourceNonPS);
+
+            if (bloom.IsValid())
+            {
+                data.bloom = builder.Read(bloom, GfxResourceState::ShaderResourceNonPS);
+            }
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -43,13 +49,20 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
             RenderGraphTexture* ldrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outLdrRT);
             RenderGraphTexture* exposureRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.exposure);
 
-            Draw(pCommandList, hdrRT->GetSRV(), exposureRT->GetSRV(), ldrRT->GetUAV(), width, height);
+            IGfxDescriptor* bloomSRV = nullptr;
+            if (data.bloom.IsValid())
+            {
+                RenderGraphTexture* bloom = (RenderGraphTexture*)pRenderGraph->GetResource(data.bloom);
+                bloomSRV = bloom->GetSRV();
+            }
+
+            Draw(pCommandList, hdrRT->GetSRV(), exposureRT->GetSRV(), ldrRT->GetUAV(), bloomSRV, bloom_intensity, width, height);
         });
 
     return tonemap_pass->outLdrRT;
 }
 
-void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* exposure, IGfxDescriptor* pLdrUAV, uint32_t width, uint32_t height)
+void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* exposure, IGfxDescriptor* pLdrUAV, IGfxDescriptor* bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
     std::vector<std::string> defines;
 
@@ -59,12 +72,24 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IG
 
     pCommandList->SetPipelineState(pso);
 
-    uint32_t resourceCB[3] = { 
-        pHdrSRV->GetHeapIndex(), 
-        pLdrUAV->GetHeapIndex(), 
-        exposure->GetHeapIndex(),
+    struct Constants
+    {
+        uint hdrTexture;
+        uint ldrTexture;
+        uint exposureTexture;
+        uint bloomTexture;
+        float bloomIntensity;
     };
-    pCommandList->SetComputeConstants(0, resourceCB, sizeof(resourceCB));
+    
+    Constants constants = {
+        pHdrSRV->GetHeapIndex(),
+        pLdrUAV->GetHeapIndex(),
+        exposure->GetHeapIndex(),
+        bloom ? bloom->GetHeapIndex() : GFX_INVALID_RESOURCE,
+        bloom_intensity
+    };
+
+    pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
 
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }

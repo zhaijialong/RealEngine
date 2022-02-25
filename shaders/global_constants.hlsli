@@ -50,9 +50,10 @@ struct SceneConstant
     
     uint minReductionSampler;
     uint maxReductionSampler;
-    uint envTexture;
+    uint linearBlackBoarderSampler;
     uint brdfTexture;
 
+    uint envTexture;
     float frameTime;
 };
 

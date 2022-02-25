@@ -2,6 +2,7 @@
 
 #include "taa.h"
 #include "automatic_exposure.h"
+#include "bloom.h"
 #include "tonemapper.h"
 #include "fxaa.h"
 #include "cas.h"
@@ -26,6 +27,7 @@ private:
 
     std::unique_ptr<TAA> m_pTAA;
     std::unique_ptr<AutomaticExposure> m_pAutomaticExposure;
+    std::unique_ptr<Bloom> m_pBloom;
     std::unique_ptr<Tonemapper> m_pToneMapper;
     std::unique_ptr<FXAA> m_pFXAA;
     std::unique_ptr<CAS> m_pCAS;

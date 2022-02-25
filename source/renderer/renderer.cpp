@@ -267,6 +267,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.aniso4xSampler = m_pAniso4xSampler->GetHeapIndex();
     sceneCB.aniso8xSampler = m_pAniso8xSampler->GetHeapIndex();
     sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
+    sceneCB.linearBlackBoarderSampler = m_pLinearBlackBoarderSampler->GetHeapIndex();
     sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
     sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
@@ -460,6 +461,11 @@ void Renderer::CreateCommonResources()
     desc.mag_filter = GfxFilter::Linear;
     desc.mip_filter = GfxFilter::Linear;
     m_pLinearClampSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearClampSampler"));
+
+    desc.address_u = GfxSamplerAddressMode::ClampToBorder;
+    desc.address_v = GfxSamplerAddressMode::ClampToBorder;
+    desc.address_w = GfxSamplerAddressMode::ClampToBorder;
+    m_pLinearBlackBoarderSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearBlackBoarderSampler"));
 
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;

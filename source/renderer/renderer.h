@@ -180,6 +180,7 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
     std::unique_ptr<IGfxDescriptor> m_pMinReductionSampler;
     std::unique_ptr<IGfxDescriptor> m_pMaxReductionSampler;
+    std::unique_ptr<IGfxDescriptor> m_pLinearBlackBoarderSampler;
 
     std::unique_ptr<Texture2D> m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;

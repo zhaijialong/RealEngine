@@ -7,6 +7,7 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
 
     m_pTAA = std::make_unique<TAA>(pRenderer);
     m_pAutomaticExposure = std::make_unique<AutomaticExposure>(pRenderer);
+    m_pBloom = std::make_unique<Bloom>(pRenderer);
     m_pToneMapper = std::make_unique<Tonemapper>(pRenderer);
     m_pFXAA = std::make_unique<FXAA>(pRenderer);
     m_pCAS = std::make_unique<CAS>(pRenderer);
@@ -19,10 +20,12 @@ RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostPr
     RenderGraphHandle outputHandle = input.sceneColorRT;
     
     outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, input.sceneDepthRT, input.linearDepthRT, input.velocityRT, width, height);
+    //outputHandle = m_pDOF->Render(pRenderGraph, outputHandle)
 
     RenderGraphHandle exposure = m_pAutomaticExposure->Render(pRenderGraph, outputHandle, width, height);
+    RenderGraphHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, width, height);
 
-    outputHandle = m_pToneMapper->Render(pRenderGraph, outputHandle, exposure, width, height);
+    outputHandle = m_pToneMapper->Render(pRenderGraph, outputHandle, exposure, bloom, m_pBloom->GetIntensity(), width, height);
     outputHandle = m_pFXAA->Render(pRenderGraph, outputHandle, width, height);
     outputHandle = m_pCAS->Render(pRenderGraph, outputHandle, width, height);
 
