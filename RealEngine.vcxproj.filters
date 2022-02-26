@@ -292,6 +292,9 @@
     <ClCompile Include="source\renderer\post_processing\bloom.cpp">
       <Filter>source\renderer\post_processing</Filter>
     </ClCompile>
+    <ClCompile Include="external\fmt\src\format.cc">
+      <Filter>external\fmt\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -657,6 +660,15 @@
     <ClInclude Include="source\renderer\post_processing\bloom.h">
       <Filter>source\renderer\post_processing</Filter>
     </ClInclude>
+    <ClInclude Include="external\fmt\include\fmt\core.h">
+      <Filter>external\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="external\fmt\include\fmt\format.h">
+      <Filter>external\fmt\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="external\fmt\include\fmt\format-inl.h">
+      <Filter>external\fmt\include\fmt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -733,6 +745,18 @@
     </Filter>
     <Filter Include="external\enkiTS">
       <UniqueIdentifier>{75a0efe5-c6b4-4670-b8ac-dc0995577136}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\fmt">
+      <UniqueIdentifier>{435baa06-47f6-4802-bb57-fae24f161ca1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\fmt\include">
+      <UniqueIdentifier>{107bb371-36f3-43bd-b1ca-b3ac830712dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\fmt\include\fmt">
+      <UniqueIdentifier>{12117b78-30b6-4f16-ac13-e7afdc6b433f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\fmt\src">
+      <UniqueIdentifier>{85a9c9b2-de7e-4789-867d-deddc936d034}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

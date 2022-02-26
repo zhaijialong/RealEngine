@@ -57,7 +57,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>MICROPROFILE_ENABLED=1;MICROPROFILE_GPU_TIMERS=1;MICROPROFILE_GPU_TIMERS_D3D12=1;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:strictStrings- %(AdditionalOptions)</AdditionalOptions>
@@ -76,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>MICROPROFILE_ENABLED=1;MICROPROFILE_GPU_TIMERS=1;MICROPROFILE_GPU_TIMERS_D3D12=1;_CRT_SECURE_NO_WARNINGS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:strictStrings- %(AdditionalOptions)</AdditionalOptions>
@@ -93,6 +93,7 @@
     <ClCompile Include="external\d3d12ma\D3D12MemAlloc.cpp" />
     <ClCompile Include="external\enkiTS\TaskScheduler.cpp" />
     <ClCompile Include="external\enkiTS\TaskScheduler_c.cpp" />
+    <ClCompile Include="external\fmt\src\format.cc" />
     <ClCompile Include="external\ImFileDialog\ImFileDialog.cpp" />
     <ClCompile Include="external\ImGuizmo\ImGuizmo.cpp" />
     <ClCompile Include="external\imgui\imgui.cpp" />
@@ -193,6 +194,9 @@
     <ClInclude Include="external\enkiTS\LockLessMultiReadPipe.h" />
     <ClInclude Include="external\enkiTS\TaskScheduler.h" />
     <ClInclude Include="external\enkiTS\TaskScheduler_c.h" />
+    <ClInclude Include="external\fmt\include\fmt\core.h" />
+    <ClInclude Include="external\fmt\include\fmt\format-inl.h" />
+    <ClInclude Include="external\fmt\include\fmt\format.h" />
     <ClInclude Include="external\ImFileDialog\ImFileDialog.h" />
     <ClInclude Include="external\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="external\imgui\imconfig.h" />
