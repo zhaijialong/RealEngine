@@ -13,6 +13,7 @@
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
 #include "utils/profiler.h"
+#include "fmt/format.h"
 #include "global_constants.hlsli"
 
 Renderer::Renderer() : m_resizeConnection({})
@@ -52,13 +53,13 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
-        std::string name = "Renderer::m_pCommandLists[" + std::to_string(i) + "]";
+        std::string name = fmt::format("Renderer::m_pCommandLists[{}]", i);
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
 
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
-        std::string name = "Renderer::m_pComputeCommandLists[" + std::to_string(i) + "]";
+        std::string name = fmt::format("Renderer::m_pComputeCommandLists[{}]", i);
         m_pComputeCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Compute, name));
     }
 
@@ -66,7 +67,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
-        std::string name = "Renderer::m_pUploadCommandList[" + std::to_string(i) + "]";
+        std::string name = fmt::format("Renderer::m_pUploadCommandList[{}]", i);
         m_pUploadCommandList[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Copy, name));
 
         m_pStagingBufferAllocator[i] = std::make_unique<StagingBufferAllocator>(this);
@@ -296,7 +297,7 @@ void Renderer::Render()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
 
-    std::string event_name = "Render Frame " + std::to_string(m_pDevice->GetFrameID());
+    std::string event_name = fmt::format("Render Frame {}", m_pDevice->GetFrameID());
     GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
 
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");

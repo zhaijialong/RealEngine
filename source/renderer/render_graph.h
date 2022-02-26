@@ -17,9 +17,9 @@ public:
     RenderGraph(Renderer* pRenderer);
 
     template<typename Data, typename Setup, typename Exec>
-    RenderGraphPass<Data>& AddPass(const char* name, const Setup& setup, const Exec& execute);
+    RenderGraphPass<Data>& AddPass(const std::string& name, const Setup& setup, const Exec& execute);
 
-    void BeginEvent(const char* name);
+    void BeginEvent(const std::string& name);
     void EndEvent();
 
     void Clear();
@@ -44,7 +44,7 @@ private:
     T* AllocatePOD(ArgsT&&... arguments);
 
     template<typename Resource>
-    RenderGraphHandle Create(const typename Resource::Desc& desc, const char* name);
+    RenderGraphHandle Create(const typename Resource::Desc& desc, const std::string& name);
 
     RenderGraphHandle Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
     RenderGraphHandle Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);

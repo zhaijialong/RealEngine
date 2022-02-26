@@ -1,6 +1,7 @@
 #include "bloom.h"
 #include "../renderer.h"
 #include "utils/gui_util.h"
+#include "fmt/format.h"
 
 Bloom::Bloom(Renderer* pRenderer)
 {
@@ -67,8 +68,7 @@ RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHa
         RenderGraphHandle output;
     };
 
-    char name[64];
-    sprintf(name, "Bloom DownsampleMip%d(%dx%d)", mip, m_mipSize[mip].x, m_mipSize[mip].y);
+    std::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y);
 
     auto downsample_pass = pRenderGraph->AddPass<DownsamplePassData>(name,
         [&](DownsamplePassData& data, RenderGraphBuilder& builder)
@@ -102,8 +102,7 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
         RenderGraphHandle output;
     };
 
-    char name[64];
-    sprintf(name, "Bloom UpsampleMip%d(%dx%d)", mip, m_mipSize[mip].x, m_mipSize[mip].y);
+    std::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y);
 
     auto upsample_pass = pRenderGraph->AddPass<UpsamplePassData>(name,
         [&](UpsamplePassData& data, RenderGraphBuilder& builder)

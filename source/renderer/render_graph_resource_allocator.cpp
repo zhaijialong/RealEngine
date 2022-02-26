@@ -1,5 +1,6 @@
 #include "render_graph_resource_allocator.h"
 #include "utils/assert.h"
+#include "fmt/format.h"
 
 RenderGraphResourceAllocator::RenderGraphResourceAllocator(IGfxDevice* pDevice)
 {
@@ -183,8 +184,7 @@ void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
     GfxHeapDesc heapDesc;
     heapDesc.size = std::max(size, 64u * 1024);
 
-    char heapName[32];
-    std::sprintf(heapName, "RG Heap %.1f MB", heapDesc.size / (1024.0f * 1024.0f));
+    std::string heapName = fmt::format("RG Heap {:.1f} MB", heapDesc.size / (1024.0f * 1024.0f));
 
     Heap heap;
     heap.heap = m_pDevice->CreateHeap(heapDesc, heapName);

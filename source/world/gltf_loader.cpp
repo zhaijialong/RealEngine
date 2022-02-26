@@ -9,6 +9,7 @@
 #include "utils/string.h"
 #include "tinyxml2/tinyxml2.h"
 #include "meshoptimizer/meshoptimizer.h"
+#include "fmt/format.h"
 
 #define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
@@ -191,7 +192,7 @@ void GLTFLoader::LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* no
 
         for (cgltf_size i = 0; i < node->mesh->primitives_count; i++)
         {
-            std::string name = "mesh_" + std::to_string(mesh_index) + "_" + std::to_string(i) + " " + (node->mesh->name ? node->mesh->name : "");
+            std::string name = fmt::format("mesh_{}_{} {}", mesh_index, i, (node->mesh->name ? node->mesh->name : ""));
 
             StaticMesh* mesh = LoadStaticMesh(&node->mesh->primitives[i], name);
 
@@ -666,7 +667,7 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
 {
     SkeletalMeshNode* node = new SkeletalMeshNode;
     node->id = GetNodeIndex(data, gltf_node);
-    node->name = gltf_node->name ? gltf_node->name : "node_" + std::to_string(node->id);
+    node->name = gltf_node->name ? gltf_node->name : fmt::format("node_{}", node->id);
     node->parent = gltf_node->parent ? GetNodeIndex(data, gltf_node->parent) : -1;
     for (cgltf_size i = 0; i < gltf_node->children_count; ++i)
     {
@@ -698,7 +699,7 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
 
         for (cgltf_size i = 0; i < gltf_node->mesh->primitives_count; i++)
         {
-            std::string name = "mesh_" + std::to_string(mesh_index) + "_" + std::to_string(i) + " " + (gltf_node->mesh->name ? gltf_node->mesh->name : "");
+            std::string name = fmt::format("mesh_{}_{} {}", mesh_index, i, (gltf_node->mesh->name ? gltf_node->mesh->name : ""));
 
             SkeletalMeshData* mesh = LoadSkeletalMesh(&gltf_node->mesh->primitives[i], name);
             mesh->nodeID = node->id;

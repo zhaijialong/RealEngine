@@ -9,7 +9,7 @@ RenderGraph::RenderGraph(Renderer* pRenderer) :
     m_pAsyncComputeFence.reset(device->CreateFence("RenderGraph::m_pAsyncComputeFence"));
 }
 
-void RenderGraph::BeginEvent(const char* name)
+void RenderGraph::BeginEvent(const std::string& name)
 {
     m_eventNames.push_back(name);
 }

@@ -436,7 +436,7 @@ bool D3D12Device::Init()
 
     for (uint32_t i = 0; i < CB_ALLOCATOR_COUNT; ++i)
     {
-        std::string name = "CB Allocator " + std::to_string(i);
+        std::string name = fmt::format("CB Allocator {}", i);
         m_pConstantBufferAllocators[i] = std::make_unique<D3D12ConstantBufferAllocator>(this, 8 * 1024 * 1024, name);
     }
 
