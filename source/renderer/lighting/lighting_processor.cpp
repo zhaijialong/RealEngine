@@ -1,5 +1,6 @@
 #include "lighting_processor.h"
 #include "../renderer.h"
+#include "../base_pass.h"
 
 LightingProcessor::LightingProcessor(Renderer* pRenderer)
 {
@@ -10,21 +11,27 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pClusteredShading = std::make_unique<ClusteredShading>(pRenderer);
 }
 
-RenderGraphHandle LightingProcessor::Process(RenderGraph* pRenderGraph, const LightingProcessInput& input, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::Process(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");
 
-    RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, input.depthRT, input.normalRT, width, height);
-    RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, input.depthRT, input.normalRT, width, height);
+    BasePass* pBasePass = m_pRenderer->GetBassPass();
 
-    return CompositeLight(pRenderGraph, input, gtao, shadow, width, height);
+    RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, pBasePass->GetDepthRT(), pBasePass->GetNormalRT(), width, height);
+    RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, pBasePass->GetDepthRT(), pBasePass->GetNormalRT(), width, height);
+
+    return CompositeLight(pRenderGraph, gtao, shadow, width, height);
 }
 
-RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, const LightingProcessInput& input, RenderGraphHandle ao, RenderGraphHandle shadow, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle ao, RenderGraphHandle shadow, uint32_t width, uint32_t height)
 {
     struct CompositeLightData
     {
-        LightingProcessInput input;
+        RenderGraphHandle diffuseRT;
+        RenderGraphHandle specularRT;
+        RenderGraphHandle normalRT;
+        RenderGraphHandle emissiveRT;
+        RenderGraphHandle depthRT;
         RenderGraphHandle ao;
         RenderGraphHandle shadow;
 
@@ -34,11 +41,13 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, c
     auto pass = pRenderGraph->AddPass<CompositeLightData>("CompositeLight",
         [&](CompositeLightData& data, RenderGraphBuilder& builder)
         {
-            data.input.diffuseRT = builder.Read(input.diffuseRT, GfxResourceState::ShaderResourceNonPS);
-            data.input.specularRT = builder.Read(input.specularRT, GfxResourceState::ShaderResourceNonPS);
-            data.input.normalRT = builder.Read(input.normalRT, GfxResourceState::ShaderResourceNonPS);
-            data.input.emissiveRT = builder.Read(input.emissiveRT, GfxResourceState::ShaderResourceNonPS);
-            data.input.depthRT = builder.Read(input.depthRT, GfxResourceState::ShaderResourceNonPS);
+            BasePass* pBasePass = m_pRenderer->GetBassPass();
+
+            data.diffuseRT = builder.Read(pBasePass->GetDiffuseRT(), GfxResourceState::ShaderResourceNonPS);
+            data.specularRT = builder.Read(pBasePass->GetSpecularRT(), GfxResourceState::ShaderResourceNonPS);
+            data.normalRT = builder.Read(pBasePass->GetNormalRT(), GfxResourceState::ShaderResourceNonPS);
+            data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT(), GfxResourceState::ShaderResourceNonPS);
+            data.depthRT = builder.Read(pBasePass->GetDepthRT(), GfxResourceState::ShaderResourceNonPS);
 
             if (ao.IsValid())
             {
@@ -57,11 +66,11 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, c
         },
         [=](const CompositeLightData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* diffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input.diffuseRT);
-            RenderGraphTexture* specularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input.specularRT);
-            RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input.normalRT);
-            RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input.emissiveRT);
-            RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input.depthRT);
+            RenderGraphTexture* diffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.diffuseRT);
+            RenderGraphTexture* specularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.specularRT);
+            RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalRT);
+            RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.emissiveRT);
+            RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthRT);
             RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.shadow);
             RenderGraphTexture* ouputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
             RenderGraphTexture* aoRT = nullptr;

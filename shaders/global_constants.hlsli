@@ -55,6 +55,7 @@ struct SceneConstant
 
     uint envTexture;
     float frameTime;
+    uint frameIndex;
 };
 
 struct CullingData

@@ -4,24 +4,15 @@
 #include "ray_traced_shadow.h"
 #include "clustered_shading.h"
 
-struct LightingProcessInput
-{
-    RenderGraphHandle diffuseRT;
-    RenderGraphHandle specularRT;
-    RenderGraphHandle normalRT;
-    RenderGraphHandle emissiveRT;
-    RenderGraphHandle depthRT;
-};
-
 class LightingProcessor
 {
 public:
     LightingProcessor(Renderer* pRenderer);
 
-    RenderGraphHandle Process(RenderGraph* pRenderGraph, const LightingProcessInput& input, uint32_t width, uint32_t height);
+    RenderGraphHandle Process(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
     
 private:
-    RenderGraphHandle CompositeLight(RenderGraph* pRenderGraph, const LightingProcessInput& input, RenderGraphHandle ao, RenderGraphHandle shadow, uint32_t width, uint32_t height);
+    RenderGraphHandle CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle ao, RenderGraphHandle shadow, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer;

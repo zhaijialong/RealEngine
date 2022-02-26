@@ -69,6 +69,8 @@ void Camera::Tick(float delta_time)
 {
     GUI("Settings", "Camera", [&]() { OnGui(); });
 
+    m_bMoved = false;
+
     ImGuiIO& io = ImGui::GetIO();
 
     if (!io.WantCaptureKeyboard)
@@ -76,24 +78,32 @@ void Camera::Tick(float delta_time)
         if (ImGui::IsKeyDown('A'))
         {
             m_pos += GetLeft() * m_moveSpeed * delta_time;
+            m_bMoved = true;
         }
         else if (ImGui::IsKeyDown('S'))
         {
             m_pos += GetBack() * m_moveSpeed * delta_time;
+            m_bMoved = true;
         }
         else if (ImGui::IsKeyDown('D'))
         {
             m_pos += GetRight() * m_moveSpeed * delta_time;
+            m_bMoved = true;
         }
         else if (ImGui::IsKeyDown('W'))
         {
             m_pos += GetForward() * m_moveSpeed * delta_time;
+            m_bMoved = true;
         }
     }
 
     if (!io.WantCaptureMouse)
     {
-        m_pos += GetForward() * io.MouseWheel * m_moveSpeed * delta_time;
+        if (!nearly_equal(io.MouseWheel, 0.0f))
+        {
+            m_pos += GetForward() * io.MouseWheel * m_moveSpeed * delta_time;
+            m_bMoved = true;
+        }
 
         if (ImGui::IsMouseDragging(1))
         {
@@ -101,6 +111,7 @@ void Camera::Tick(float delta_time)
 
             m_rotation.x = fmodf(m_rotation.x + io.MouseDelta.y * rotate_speed, 360.0f);
             m_rotation.y = fmodf(m_rotation.y + io.MouseDelta.x * rotate_speed, 360.0f);
+            m_bMoved = true;
         }
     }
 

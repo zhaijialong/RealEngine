@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "hierarchical_depth_buffer.h"
 #include "base_pass.h"
+#include "path_tracer.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
@@ -13,14 +14,15 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     m_pHZB->Generate2ndPhaseCullingHZB(m_pRenderGraph.get(), m_pBasePass->GetDepthRT());
     m_pBasePass->Render2ndPhase(m_pRenderGraph.get());
 
-    LightingProcessInput lightInput;
-    lightInput.diffuseRT = m_pBasePass->GetDiffuseRT();
-    lightInput.specularRT = m_pBasePass->GetSpecularRT();
-    lightInput.normalRT = m_pBasePass->GetNormalRT();
-    lightInput.emissiveRT = m_pBasePass->GetEmissiveRT();
-    lightInput.depthRT = m_pBasePass->GetDepthRT();
-
-    RenderGraphHandle lightRT = m_pLightingProcessor->Process(m_pRenderGraph.get(), lightInput, m_nWindowWidth, m_nWindowHeight);
+    RenderGraphHandle sceneColorRT;
+    if (m_outputType == RendererOutput::PathTracing)
+    {
+        sceneColorRT = m_pPathTracer->Render(m_pRenderGraph.get(), m_nWindowWidth, m_nWindowHeight);
+    }
+    else
+    {
+        sceneColorRT = m_pLightingProcessor->Process(m_pRenderGraph.get(), m_nWindowWidth, m_nWindowHeight);
+    }
 
     struct ForwardPassData
     {
@@ -31,7 +33,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     auto forward_pass = m_pRenderGraph->AddPass<ForwardPassData>("Forward Pass",
         [&](ForwardPassData& data, RenderGraphBuilder& builder)
         {
-            data.outSceneColorRT = builder.WriteColor(0, lightRT, 0, GfxRenderPassLoadOp::Load);
+            data.outSceneColorRT = builder.WriteColor(0, sceneColorRT, 0, GfxRenderPassLoadOp::Load);
             data.outSceneDepthRT = builder.WriteDepth(m_pBasePass->GetDepthRT(), 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
         },
         [&](const ForwardPassData& data, IGfxCommandList* pCommandList)

@@ -283,7 +283,7 @@ void Editor::DrawToolBar()
     ImGui::PushItemWidth(150.0f);
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     int renderOutput = (int)pRenderer->GetOutputType();
-    ImGui::Combo("##RenderOutput", &renderOutput, "Default\0Diffuse\0Specular(F0)\0World Normal\0Emissive\0AO\0Shadow\00");
+    ImGui::Combo("##RenderOutput", &renderOutput, "Default\0Diffuse\0Specular(F0)\0World Normal\0Emissive\0AO\0Shadow\0Path Tracing\0\0");
     pRenderer->SetOutputType((RendererOutput)renderOutput);
     ImGui::PopItemWidth();
 

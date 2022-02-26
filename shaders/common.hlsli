@@ -155,7 +155,7 @@ float GetNdcDepth(float linearDepth)
 
 float3 GetWorldPosition(uint2 screenPos, float depth)
 {
-    float2 screenUV = ((float2) screenPos + 0.5) * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
+    float2 screenUV = ((float2)screenPos + 0.5) * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
     float4 clipPos = float4((screenUV * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
     float4 worldPos = mul(CameraCB.mtxViewProjectionInverse, clipPos);
     worldPos.xyz /= worldPos.w;

@@ -150,6 +150,7 @@
     <ClCompile Include="source\renderer\lighting\gtao.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
     <ClCompile Include="source\renderer\lighting\ray_traced_shadow.cpp" />
+    <ClCompile Include="source\renderer\path_tracer.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
     <ClCompile Include="source\renderer\post_processing\automatic_exposure.cpp" />
     <ClCompile Include="source\renderer\post_processing\bloom.cpp" />
@@ -262,6 +263,7 @@
     <ClInclude Include="source\renderer\lighting\gtao.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
     <ClInclude Include="source\renderer\lighting\ray_traced_shadow.h" />
+    <ClInclude Include="source\renderer\path_tracer.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
     <ClInclude Include="source\renderer\post_processing\automatic_exposure.h" />
     <ClInclude Include="source\renderer\post_processing\bloom.h" />
@@ -332,6 +334,7 @@
     <None Include="shaders\meshlet.hlsli" />
     <None Include="shaders\model.hlsli" />
     <None Include="shaders\model_constants.hlsli" />
+    <None Include="shaders\random.hlsli" />
     <None Include="shaders\ray_trace.hlsli" />
     <None Include="shaders\stats.hlsli" />
     <None Include="shaders\taa_constants.hlsli" />
@@ -440,6 +443,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="shaders\model_velocity.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\path_tracer.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

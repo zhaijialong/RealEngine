@@ -146,15 +146,16 @@ void exposure()
     float avgLuminance = avgLuminanceTexture.Load(uint3(0, 0, c_avgLuminanceMip)).x;
 
     float EV100 = ComputeEV100(max(avgLuminance, 0.001));
-#else
-    float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
-#endif
-
+    
     RWTexture2D<float> previousEV100Texture = ResourceDescriptorHeap[c_previousEV100Texture];
     float previousEV100 = previousEV100Texture[uint2(0, 0)];
 
     //eye adaption
     EV100 = previousEV100 + (EV100 - previousEV100) * (1 - exp(-SceneCB.frameTime * c_adaptionSpeed));
+    previousEV100Texture[uint2(0, 0)] = EV100;
+#else
+    float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
+#endif
 
 #if DEBUG_SHOW_EV100
     float2 pos = float2(100, 100);
@@ -162,8 +163,6 @@ void exposure()
     debug::PrintString(pos, color, 'E', 'V', '1', '0', '0', ':', ' ');
     debug::PrintFloat(pos, color, EV100);
 #endif
-
-    previousEV100Texture[uint2(0, 0)] = EV100;
 
     float exposure = ComputeExposure(EV100 - CameraCB.physicalCamera.exposureCompensation);
 

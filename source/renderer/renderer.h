@@ -21,6 +21,7 @@ enum class RendererOutput
     Emissive,
     AO,
     Shadow,
+    PathTracing,
 };
 
 class Renderer
@@ -97,6 +98,7 @@ public:
     ComputeBatch& AddAnimationBatch() { return m_animationBatchs.emplace_back(*m_cbAllocator); }
 
     class HZB* GetHZB() const { return m_pHZB.get(); }
+    class BasePass* GetBassPass() const { return m_pBasePass.get(); }
 
 private:
     void CreateCommonResources();
@@ -204,6 +206,7 @@ private:
     std::unique_ptr<class BasePass> m_pBasePass;
     std::unique_ptr<class LightingProcessor> m_pLightingProcessor;
     std::unique_ptr<class PostProcessor> m_pPostProcessor;
+    std::unique_ptr<class PathTracer> m_pPathTracer;
 
     std::unique_ptr<class GpuDrivenDebugLine> m_pGpuDebugLine;
     std::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;

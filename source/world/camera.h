@@ -55,6 +55,8 @@ public:
     void SetupCameraCB(IGfxCommandList* pCommandList);
     void DrawViewFrustum(IGfxCommandList* pCommandList);
 
+    bool IsMoved() const { return m_bMoved; }
+
 private:
     void UpdateJitter();
     void UpdateMatrix();
@@ -64,6 +66,8 @@ private:
 private:
     float3 m_pos;
     float3 m_rotation; //in degrees
+
+    bool m_bMoved = false;
 
     float4x4 m_world;
     float4x4 m_view;

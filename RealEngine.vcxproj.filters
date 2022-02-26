@@ -295,6 +295,9 @@
     <ClCompile Include="external\fmt\src\format.cc">
       <Filter>external\fmt\src</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\path_tracer.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -669,6 +672,9 @@
     <ClInclude Include="external\fmt\include\fmt\format-inl.h">
       <Filter>external\fmt\include\fmt</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\path_tracer.h">
+      <Filter>source\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -819,6 +825,9 @@
     <None Include="shaders\bloom.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\random.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">
@@ -909,6 +918,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\bloom.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\path_tracer.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

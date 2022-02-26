@@ -9,6 +9,7 @@
 #include "gpu_scene.h"
 #include "hierarchical_depth_buffer.h"
 #include "base_pass.h"
+#include "path_tracer.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
@@ -84,6 +85,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_pGpuDebugLine = std::make_unique<GpuDrivenDebugLine>(this);
     m_pGpuDebugPrint = std::make_unique<GpuDrivenDebugPrint>(this);
     m_pGpuStats = std::make_unique<GpuDrivenStats>(this);
+    m_pPathTracer = std::make_unique<PathTracer>(this);
 }
 
 void Renderer::RenderFrame()
@@ -272,6 +274,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
     sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
+    sceneCB.frameIndex = (uint32_t)GetFrameID();
 
     pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
     pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
