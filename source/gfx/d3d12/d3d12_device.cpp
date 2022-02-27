@@ -32,6 +32,12 @@ static IDXGIAdapter1* FindAdapter(IDXGIFactory4* pDXGIFactory, D3D_FEATURE_LEVEL
         DXGI_ADAPTER_DESC1 desc;
         pDXGIAdapter->GetDesc1(&desc);
 
+        if (desc.VendorId == 0x8086) //skip intel gpus for now (until their Xe GPU comes out)
+        {
+            pDXGIAdapter->Release();
+            continue;
+        }
+
         if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) &&
             SUCCEEDED(D3D12CreateDevice(pDXGIAdapter, minimumFeatureLevel, _uuidof(ID3D12Device), nullptr)))
         {
