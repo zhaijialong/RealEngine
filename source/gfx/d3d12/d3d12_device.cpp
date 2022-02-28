@@ -32,7 +32,7 @@ static IDXGIAdapter1* FindAdapter(IDXGIFactory4* pDXGIFactory, D3D_FEATURE_LEVEL
         DXGI_ADAPTER_DESC1 desc;
         pDXGIAdapter->GetDesc1(&desc);
 
-        if (desc.VendorId == 0x8086) //skip intel gpus for now (until their Xe GPU comes out)
+        if (desc.VendorId == 0x1414) //MS software GPU
         {
             pDXGIAdapter->Release();
             continue;
@@ -367,7 +367,7 @@ bool D3D12Device::Init()
         return false;
     }
 
-    D3D_FEATURE_LEVEL minimumFeatureLevel = D3D_FEATURE_LEVEL_12_0;
+    D3D_FEATURE_LEVEL minimumFeatureLevel = D3D_FEATURE_LEVEL_12_2;
     m_pDxgiAdapter = FindAdapter(m_pDxgiFactory, minimumFeatureLevel);
     if (m_pDxgiAdapter == nullptr)
     {
