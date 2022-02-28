@@ -53,9 +53,22 @@ struct SceneConstant
     uint linearBlackBoarderSampler;
     uint brdfTexture;
 
-    uint envTexture;
+    uint sobolSequenceTexture;
+    uint scramblingRankingTexture1SPP;
+    uint scramblingRankingTexture2SPP;
+    uint scramblingRankingTexture4SPP;
+
+    uint scramblingRankingTexture8SPP;
+    uint scramblingRankingTexture16SPP;
+    uint scramblingRankingTexture32SPP;
+    uint scramblingRankingTexture64SPP;
+
+    uint scramblingRankingTexture128SPP;
+    uint scramblingRankingTexture256SPP;
     float frameTime;
     uint frameIndex;
+
+    uint envTexture;
 };
 
 struct CullingData

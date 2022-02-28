@@ -275,6 +275,16 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
     sceneCB.frameIndex = (uint32_t)GetFrameID();
+    sceneCB.sobolSequenceTexture = m_pSobolSequenceTexture->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture1SPP = m_pScramblingRankingTexture1SPP->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture2SPP = m_pScramblingRankingTexture2SPP->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture4SPP = m_pScramblingRankingTexture4SPP->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture8SPP = m_pScramblingRankingTexture8SPP->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture16SPP = m_pScramblingRankingTexture16SPP->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture32SPP = m_pScramblingRankingTexture32SPP->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture64SPP = m_pScramblingRankingTexture64SPP->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture128SPP = m_pScramblingRankingTexture128SPP->GetSRV()->GetHeapIndex();
+    sceneCB.scramblingRankingTexture256SPP = m_pScramblingRankingTexture256SPP->GetSRV()->GetHeapIndex();
 
     pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
     pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
@@ -512,6 +522,17 @@ void Renderer::CreateCommonResources()
     std::string asset_path = Engine::GetInstance()->GetAssetPath();
     m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
     m_pEnvTexture.reset(CreateTextureCube(asset_path + "textures/output_pmrem.dds"));
+
+    m_pSobolSequenceTexture.reset(CreateTexture2D(asset_path + "textures/blue_noise/sobol_256_4d.png", false));
+    m_pScramblingRankingTexture1SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_1spp.png", false));
+    m_pScramblingRankingTexture2SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_2spp.png", false));
+    m_pScramblingRankingTexture4SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_4spp.png", false));
+    m_pScramblingRankingTexture8SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_8spp.png", false));
+    m_pScramblingRankingTexture16SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_16spp.png", false));
+    m_pScramblingRankingTexture32SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_32spp.png", false));
+    m_pScramblingRankingTexture64SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_64spp.png", false));
+    m_pScramblingRankingTexture128SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_128spp.png", false));
+    m_pScramblingRankingTexture256SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_256spp.png", false));
 
     GfxGraphicsPipelineDesc psoDesc;
     psoDesc.vs = GetShader("copy.hlsl", "vs_main", "vs_6_6", {});

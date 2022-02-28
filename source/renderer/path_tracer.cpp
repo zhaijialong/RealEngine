@@ -24,6 +24,7 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, uint32_t width, 
             {
                 m_bHistoryInvalid = true;
             }
+            ImGui::SliderInt("Max Ray Length##PathTracer", (int*)&m_maxRayLength, 1, 32);
         });
 
     RENDER_GRAPH_EVENT(pRenderGraph, "PathTracer");
@@ -125,12 +126,13 @@ void PathTracer::PathTrace(IGfxCommandList* pCommandList, IGfxDescriptor* diffus
 {
     pCommandList->SetPipelineState(m_pPathTracingPSO);
 
-    uint32_t constants[6] = { 
+    uint32_t constants[7] = {
         diffuse->GetHeapIndex(),
         specular->GetHeapIndex(),
         normal->GetHeapIndex(),
         emissive->GetHeapIndex(),
-        depth->GetHeapIndex(), 
+        depth->GetHeapIndex(),
+        m_maxRayLength,
         output->GetHeapIndex() 
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));

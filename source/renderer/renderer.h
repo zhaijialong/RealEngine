@@ -184,6 +184,17 @@ private:
     std::unique_ptr<IGfxDescriptor> m_pMaxReductionSampler;
     std::unique_ptr<IGfxDescriptor> m_pLinearBlackBoarderSampler;
 
+    std::unique_ptr<Texture2D> m_pSobolSequenceTexture;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture1SPP;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture2SPP;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture4SPP;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture8SPP;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture16SPP;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture32SPP;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture64SPP;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture128SPP;
+    std::unique_ptr<Texture2D> m_pScramblingRankingTexture256SPP;
+
     std::unique_ptr<Texture2D> m_pBrdfTexture;
     std::unique_ptr<TextureCube> m_pEnvTexture;
 

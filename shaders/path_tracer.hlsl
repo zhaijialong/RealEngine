@@ -10,6 +10,7 @@ cbuffer PathTracingConstants : register(b1)
     uint c_emissiveRT;
     uint c_depthTRT;
 
+    uint c_maxRayLength;
     uint c_outputTexture;
 };
 
@@ -33,11 +34,17 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 worldPos = GetWorldPosition(dispatchThreadID.xy, depth);
     float3 N = OctNormalDecode(normalRT[dispatchThreadID.xy].xyz);
     
-    PRNG random = PRNG::Create(dispatchThreadID.x + dispatchThreadID.y * SceneCB.viewWidth, SceneCB.frameIndex);
+#if 0
+    PRNG rng = PRNG::Create(dispatchThreadID.x + dispatchThreadID.y * SceneCB.viewWidth);
+    float2 rand = rng.RandomFloat2();
+#else
+    BNDS<1> rng = BNDS<1>::Create(dispatchThreadID.xy, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
+    float2 rand = rng.RandomFloat2(0);
+#endif
 
     RayDesc ray;
     ray.Origin = worldPos + N * 0.01;
-    ray.Direction = SampleCosHemisphere(random.RandomFloat2(), N);
+    ray.Direction = SampleCosHemisphere(rand, N);
     ray.TMin = 0.001;
     ray.TMax = 1.0;
 
