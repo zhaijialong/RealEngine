@@ -21,6 +21,7 @@ private:
     IGfxPipelineState* m_pPathTracingPSO = nullptr;
     IGfxPipelineState* m_pAccumulationPSO = nullptr;
 
+    bool m_bEnableAccumulation = true;
     bool m_bHistoryInvalid = true;
     std::unique_ptr<Texture2D> m_pHistoryAccumulation;
 };

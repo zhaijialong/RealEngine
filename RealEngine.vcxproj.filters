@@ -828,6 +828,9 @@
     <None Include="shaders\random.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\importance_sampling.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

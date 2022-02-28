@@ -203,23 +203,6 @@ uint Float4ToRGBA8Unorm(float4 input)
     return (uint)pack_u8(unpacked);
 }
 
-uint Hash(uint a)
-{
-    a = (a + 0x7ed55d16) + (a << 12);
-    a = (a ^ 0xc761c23c) ^ (a >> 19);
-    a = (a + 0x165667b1) + (a << 5);
-    a = (a + 0xd3a2646c) ^ (a << 9);
-    a = (a + 0xfd7046c5) + (a << 3);
-    a = (a ^ 0xb55a4f09) ^ (a >> 16);
-    return a;
-}
-
-float3 GetDebugColor(uint id)
-{
-    uint mhash = Hash(id);
-    return float3(float(mhash & 255), float((mhash >> 8) & 255), float((mhash >> 16) & 255)) / 255.0;
-}
-
 // 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere. Michael Mara, Morgan McGuire. 2013
 bool ProjectSphere(float3 center, float radius, float znear, float P00, float P11, out float4 aabb)
 {
@@ -266,4 +249,14 @@ bool OcclusionCull(Texture2D<float> hzbTexture, uint2 hzbSize, float3 center, fl
     }
     
     return visible;
+}
+
+// "Efficient Construction of Perpendicular Vectors Without Branching"
+float3 GetPerpendicularVector(float3 u)
+{
+    float3 a = abs(u);
+    uint xm = ((a.x - a.y) < 0 && (a.x - a.z) < 0) ? 1 : 0;
+    uint ym = (a.y - a.z) < 0 ? (1 ^ xm) : 0;
+    uint zm = 1 ^ (xm | ym);
+    return cross(u, float3(xm, ym, zm));
 }

@@ -1,5 +1,5 @@
 #include "model.hlsli"
-#include "debug.hlsli"
+#include "random.hlsli"
 
 model::VertexOutput vs_main(uint vertex_id : SV_VertexID)
 {
@@ -61,7 +61,8 @@ GBufferOutput ps_main(model::VertexOutput input
     
     if (SceneCB.bShowMeshlets)
     {
-        diffuse.xyz = GetDebugColor(input.meshlet);
+        uint hash = WangHash(input.meshlet);
+        diffuse.xyz = float3(float(hash & 255), float((hash >> 8) & 255), float((hash >> 16) & 255)) / 255.0;
         roughness = 1.0;
         emissive = float3(0.0, 0.0, 0.0);
     }

@@ -2,6 +2,7 @@
 #include "renderer.h"
 #include "base_pass.h"
 #include "core/engine.h"
+#include "utils/gui_util.h"
 
 PathTracer::PathTracer(Renderer* pRenderer)
 {
@@ -17,6 +18,14 @@ PathTracer::PathTracer(Renderer* pRenderer)
 
 RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
 {
+    GUI("Settings", "PathTracer", [&]()
+        {
+            if (ImGui::Checkbox("Enable Accumulation##PathTracer", &m_bEnableAccumulation))
+            {
+                m_bHistoryInvalid = true;
+            }
+        });
+
     RENDER_GRAPH_EVENT(pRenderGraph, "PathTracer");
 
     struct PathTracingData
@@ -132,7 +141,7 @@ void PathTracer::Accumulate(IGfxCommandList* pCommandList, IGfxDescriptor* input
 {
     pCommandList->SetPipelineState(m_pAccumulationPSO);
 
-    uint32_t constants[3] = { input->GetHeapIndex(), historyUAV->GetHeapIndex(), outputUAV->GetHeapIndex() };
+    uint32_t constants[4] = { input->GetHeapIndex(), historyUAV->GetHeapIndex(), outputUAV->GetHeapIndex(), m_bEnableAccumulation };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
