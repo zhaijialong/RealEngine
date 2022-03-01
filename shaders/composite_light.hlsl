@@ -50,7 +50,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     Texture2D<float> shadowRT = ResourceDescriptorHeap[c_shadowRT];
     float visibility = shadowRT[pos.xy];
-    float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse.xyz, specular, roughness) * visibility * SceneCB.lightColor;
+    float NdotL = saturate(dot(N, SceneCB.lightDir));
+    float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse.xyz, specular, roughness) * visibility * SceneCB.lightColor * NdotL;
     
     Texture2D<uint> aoRT = ResourceDescriptorHeap[c_aoRT];
     

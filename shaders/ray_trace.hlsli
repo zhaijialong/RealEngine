@@ -139,11 +139,11 @@ namespace rt
 
                 material.emissive = model::GetMaterialEmissive(hitInfo.instanceID, uv);
                 
-                float3 N = mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetNormal(hitInfo.barycentricCoordinates), 0.0)).xyz;
+                float3 N = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetNormal(hitInfo.barycentricCoordinates), 0.0)).xyz);
                 if(modelMaterial.normalTexture != INVALID_RESOURCE_INDEX)
                 {
-                    float3 T = mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetTangent(hitInfo.barycentricCoordinates).xyz, 0.0)).xyz;
-                    float3 B = cross(N, T) * primitive.GetTangent(hitInfo.barycentricCoordinates).w;
+                    float3 T = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetTangent(hitInfo.barycentricCoordinates).xyz, 0.0)).xyz);
+                    float3 B = normalize(cross(N, T) * primitive.GetTangent(hitInfo.barycentricCoordinates).w);
 
                     N = model::GetMaterialNormal(hitInfo.instanceID, uv, T, B, N);
                 }

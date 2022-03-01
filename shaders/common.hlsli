@@ -9,22 +9,22 @@ static const uint INVALID_ADDRESS = 0xFFFFFFFF;
 
 float3 DiffuseBRDF(float3 diffuse)
 {
-    return diffuse; // / M_PI;
+    return diffuse / M_PI;
 }
 
-float3 D_GGX(float3 N, float3 H, float a)
+float D_GGX(float3 N, float3 H, float a)
 {
     float a2 = a * a;
     float NdotH = saturate(dot(N, H));
     
     float denom = (NdotH * NdotH * (a2 - 1.0) + 1.0);
-    denom = /*M_PI */denom * denom;
+    denom = M_PI * denom * denom;
     
     return a2 * rcp(denom);
 }
 
 //http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html
-float3 V_SmithGGX(float3 N, float3 V, float3 L, float a)
+float V_SmithGGX(float3 N, float3 V, float3 L, float a)
 {
     float a2 = a * a;
     float NdotV = saturate(dot(N, V));
@@ -48,8 +48,8 @@ float3 SpecularBRDF(float3 N, float3 V, float3 L, float3 specular, float roughne
     float a = roughness * roughness;
     float3 H = normalize(V + L);
 
-    float3 D = D_GGX(N, H, a);
-    float3 Vis = V_SmithGGX(N, V, L, a);
+    float D = D_GGX(N, H, a);
+    float Vis = V_SmithGGX(N, V, L, a);
     F = F_Schlick(V, H, specular);
 
     return D * Vis * F;
@@ -59,11 +59,9 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 diffuse, float3 specular, float
 {
     float3 F;
     float3 specular_brdf = SpecularBRDF(N, V, L, specular, roughness, F);
-    float3 diffuse_brdf = DiffuseBRDF(diffuse) * (1.0 - F);    
-    
-    float NdotL = saturate(dot(N, L));
+    float3 diffuse_brdf = DiffuseBRDF(diffuse) * (1.0 - F);
 
-    return (diffuse_brdf + specular_brdf) * NdotL;
+    return diffuse_brdf + specular_brdf;
 }
 
 template<typename T>
@@ -249,14 +247,4 @@ bool OcclusionCull(Texture2D<float> hzbTexture, uint2 hzbSize, float3 center, fl
     }
     
     return visible;
-}
-
-// "Efficient Construction of Perpendicular Vectors Without Branching"
-float3 GetPerpendicularVector(float3 u)
-{
-    float3 a = abs(u);
-    uint xm = ((a.x - a.y) < 0 && (a.x - a.z) < 0) ? 1 : 0;
-    uint ym = (a.y - a.z) < 0 ? (1 ^ xm) : 0;
-    uint zm = 1 ^ (xm | ym);
-    return cross(u, float3(xm, ym, zm));
 }

@@ -242,9 +242,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.secondPhaseMeshletsListUAV = occlusionCulledMeshletsBuffer->GetUAV()->GetHeapIndex();
     sceneCB.secondPhaseMeshletsCounterUAV = occlusionCulledMeshletsCounterBuffer->GetUAV()->GetHeapIndex();
     sceneCB.lightDir = light->GetLightDirection();
-    //sceneCB.shadowRT = shadowMapRT->GetSRV()->GetHeapIndex();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
-    sceneCB.shadowSampler = m_pShadowSampler->GetHeapIndex();
+    sceneCB.lightRadius = 0.02f; //todo
     sceneCB.viewWidth = m_nWindowWidth;
     sceneCB.viewHeight = m_nWindowHeight;
     sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;

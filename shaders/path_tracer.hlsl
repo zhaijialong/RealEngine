@@ -1,6 +1,7 @@
 #include "ray_trace.hlsli"
 #include "random.hlsli"
 #include "importance_sampling.hlsli"
+#include "debug.hlsli"
 
 cbuffer PathTracingConstants : register(b1)
 {
@@ -13,6 +14,13 @@ cbuffer PathTracingConstants : register(b1)
     uint c_maxRayLength;
     uint c_outputTexture;
 };
+
+float ProbabilityToSampleDiffuse(float3 diffuse, float3 specular)
+{
+    float lumDiffuse = Luminance(diffuse);
+    float lumSpecular = Luminance(specular);
+    return lumDiffuse / max(lumDiffuse + lumSpecular, 0.0001);
+}
 
 [numthreads(8, 8, 1)]
 void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
@@ -31,34 +39,108 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         return;
     }
 
-    float3 worldPos = GetWorldPosition(dispatchThreadID.xy, depth);
-    float3 N = OctNormalDecode(normalRT[dispatchThreadID.xy].xyz);
-    float roughness = normalRT[dispatchThreadID.xy].w;
-    
-    //BNDS<1> rng = BNDS<1>::Create(dispatchThreadID.xy, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
     PRNG rng = PRNG::Create(dispatchThreadID.x + dispatchThreadID.y * SceneCB.viewWidth);
 
-    float3 wo = normalize(CameraCB.cameraPos - worldPos);
-    float3 H = SampleGGX(rng.RandomFloat2(), roughness, N);
-    float3 L = reflect(-wo, H);
+    float3 position = GetWorldPosition(dispatchThreadID.xy, depth);
+    float3 wo = normalize(CameraCB.cameraPos - position);
 
-    RayDesc ray;
-    ray.Origin = worldPos + N * 0.01;
-    ray.Direction = L;
-    ray.TMin = 0.001;
-    ray.TMax = 1000.0;
+    float3 diffuse = diffuseRT[dispatchThreadID.xy].xyz;
+    float3 specular = specularRT[dispatchThreadID.xy].xyz;
+    float3 N = OctNormalDecode(normalRT[dispatchThreadID.xy].xyz);
+    float roughness = max(normalRT[dispatchThreadID.xy].w, 0.03);
+    float3 emissive = emissiveRT[dispatchThreadID.xy];
 
-    float3 radiance = float3(0, 0, 0);
+    float3 radiance = 0.0;
+    float3 throughput = 1.0;
+    float pdf = 1.0;
 
-    rt::HitInfo hitInfo;
-    if (rt::TraceRay(ray, hitInfo))
+    for (uint i = 0; i < c_maxRayLength + 1; ++i)
     {
-        rt::MaterialData material = rt::GetMaterial(hitInfo);
+        //direct light
+        float3 wi = SceneCB.lightDir;
 
-        radiance = material.diffuse;
-    }
+        RayDesc ray;
+        ray.Origin = position + N * 0.01;
+        ray.Direction = SampleConeUniform(rng.RandomFloat2(), SceneCB.lightRadius, wi);
+        ray.TMin = 0.0;
+        ray.TMax = 1000.0;
 
-    outputTexture[dispatchThreadID.xy] = float4(radiance, 1.0);
+        float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
+        float NdotL = saturate(dot(N, wi));
+        float3 direct_light = BRDF(wi, wo, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor * NdotL;
+        radiance += direct_light * throughput / pdf;
+
+        if (i == c_maxRayLength)
+        {
+            break;
+        }
+
+        //indirect light
+        float probDiffuse = ProbabilityToSampleDiffuse(diffuse, specular);
+        if (rng.RandomFloat() < probDiffuse)
+        {
+            wi = SampleCosHemisphere(rng.RandomFloat2(), N); //pdf : NdotL / M_PI
+
+            float3 diffuse_brdf = DiffuseBRDF(diffuse);
+            float NdotL = saturate(dot(N, wi));
+
+            throughput *= diffuse_brdf * NdotL;
+            pdf *= (NdotL / M_PI) * probDiffuse;
+        }
+        else
+        {
+            float3 H = SampleGGX(rng.RandomFloat2(), roughness, N); //pdf : D * NdotH / (4 * LdotH);
+            wi = reflect(-wo, H);
+
+            float3 F;
+            float3 specular_brdf = SpecularBRDF(N, wo, wi, specular, roughness, F);
+            float NdotL = saturate(dot(N, wi));
+
+            throughput *= specular_brdf * NdotL;
+
+            float D = D_GGX(N, H, roughness * roughness);
+            float NdotH = saturate(dot(N, H));
+            float LdotH = saturate(dot(wi, H));
+
+            pdf *= (D * NdotH / (4 * LdotH)) * (1.0 - probDiffuse);
+        }
+        
+        //firefly rejection
+        if (max(max(throughput.x, throughput.y), throughput.z) / pdf > 5.0)
+        {
+            break;
+        }
+
+        ray.Origin = position + N * 0.01;
+        ray.Direction = wi;
+        ray.TMin = 0.001;
+        ray.TMax = 1000.0;
+
+        rt::HitInfo hitInfo;
+        if (rt::TraceRay(ray, hitInfo))
+        {
+            rt::MaterialData material = rt::GetMaterial(hitInfo);
+
+            position = hitInfo.position;
+            wo = -wi;
+
+            diffuse = material.diffuse;
+            specular = material.specular;
+            N = material.worldNormal;
+            roughness = max(material.roughness, 0.03);
+        }
+        else
+        {
+            TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
+            SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+            float3 sky_color = envTexture.SampleLevel(linearSampler, wi, 0).xyz;
+
+            radiance += sky_color * throughput / pdf;
+            break;
+        }
+    }    
+
+    outputTexture[dispatchThreadID.xy] = float4(clamp(radiance, 0.0, 65504.0), 1.0);
 }
 
 cbuffer AccumulationConstants : register(b0)

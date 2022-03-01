@@ -16,7 +16,7 @@ struct SceneConstant
     float3 lightDir;
     
     float3 lightColor;
-    uint shadowSampler;
+    float lightRadius;
     
     uint viewWidth;
     uint viewHeight;
