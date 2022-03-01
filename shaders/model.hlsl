@@ -26,14 +26,22 @@ GBufferOutput ps_main(model::VertexOutput input
 #endif
 
 #if UNIFORM_RESOURCE
-    input.instanceIndex = c_InstanceIndex;
+    uint instanceIndex = c_InstanceIndex;
+#else
+    uint instanceIndex = input.instanceIndex;
 #endif
 
-    model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(input);
-    model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(input);
-    float3 N = model::GetMaterialNormal(input, isFrontFace);
-    float ao = model::GetMaterialAO(input);
-    float3 emissive = model::GetMaterialEmissive(input);
+    model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(instanceIndex, input.uv);
+    model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(instanceIndex, input.uv);
+    float3 N = input.normal;
+#if NORMAL_TEXTURE
+    N = model::GetMaterialNormal(instanceIndex, input.uv, input.tangent, input.bitangent, N);
+#endif
+#if DOUBLE_SIDED
+    N *= isFrontFace ? 1.0 : -1.0;
+#endif
+    float ao = model::GetMaterialAO(instanceIndex, input.uv);
+    float3 emissive = model::GetMaterialEmissive(instanceIndex, input.uv);
     
     float3 diffuse = float3(1, 1, 1);
     float3 specular = float3(0, 0, 0);

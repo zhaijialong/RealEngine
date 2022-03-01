@@ -23,6 +23,11 @@ struct ModelMaterialConstant
     
     float3 emissive;
     float _padding;
+
+    uint bPbrMetallicRoughness;
+    uint bPbrSpecularGlossiness;
+    uint bRGNormalTexture;
+    uint bDoubleSided;
 };
 
 #ifndef __cplusplus

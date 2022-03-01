@@ -33,24 +33,30 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 worldPos = GetWorldPosition(dispatchThreadID.xy, depth);
     float3 N = OctNormalDecode(normalRT[dispatchThreadID.xy].xyz);
+    float roughness = normalRT[dispatchThreadID.xy].w;
     
-#if 0
+    //BNDS<1> rng = BNDS<1>::Create(dispatchThreadID.xy, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
     PRNG rng = PRNG::Create(dispatchThreadID.x + dispatchThreadID.y * SceneCB.viewWidth);
-    float2 rand = rng.RandomFloat2();
-#else
-    BNDS<1> rng = BNDS<1>::Create(dispatchThreadID.xy, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
-    float2 rand = rng.RandomFloat2(0);
-#endif
+
+    float3 wo = normalize(CameraCB.cameraPos - worldPos);
+    float3 H = SampleGGX(rng.RandomFloat2(), roughness, N);
+    float3 L = reflect(-wo, H);
 
     RayDesc ray;
     ray.Origin = worldPos + N * 0.01;
-    ray.Direction = SampleCosHemisphere(rand, N);
+    ray.Direction = L;
     ray.TMin = 0.001;
-    ray.TMax = 1.0;
+    ray.TMax = 1000.0;
 
-    float visibility = rt::TraceVisibilityRay(ray) ? 3.0 : 0.0;
+    float3 radiance = float3(0, 0, 0);
 
-    float3 radiance = float3(visibility, visibility, visibility);
+    rt::HitInfo hitInfo;
+    if (rt::TraceRay(ray, hitInfo))
+    {
+        rt::MaterialData material = rt::GetMaterial(hitInfo);
+
+        radiance = material.diffuse;
+    }
 
     outputTexture[dispatchThreadID.xy] = float4(radiance, 1.0);
 }

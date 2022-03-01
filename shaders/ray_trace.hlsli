@@ -1,6 +1,8 @@
 #pragma once
 
 #include "gpu_scene.hlsli"
+
+#define DYNAMIC_MATERIAL_SWITCH
 #include "model.hlsli"
 
 namespace rt
@@ -15,13 +17,8 @@ namespace rt
         InstanceData instanceData = GetInstanceData(instanceID);
         if (instanceData.GetInstanceType() == InstanceType::Model)
         {
-            uint3 primitiveIndices = GetPrimitiveIndices(instanceID, primitiveIndex);
-
-            model::Vertex v0 = model::GetVertex(instanceID, primitiveIndices.x);
-            model::Vertex v1 = model::GetVertex(instanceID, primitiveIndices.y);
-            model::Vertex v2 = model::GetVertex(instanceID, primitiveIndices.z);
-
-            float2 uv = v0.uv * barycentricCoordinates.x + v1.uv * barycentricCoordinates.y + v2.uv * barycentricCoordinates.z;
+            model::Primitive primitive = model::Primitive::Create(instanceID, primitiveIndex);
+            float2 uv = primitive.GetUV(barycentricCoordinates);
 
             ModelMaterialConstant material = model::GetMaterialConstant(instanceID);
 
@@ -48,7 +45,7 @@ namespace rt
             uint primitiveIndex = q.CandidatePrimitiveIndex();
             float3 barycentricCoordinates = GetBarycentricCoordinates(q.CandidateTriangleBarycentrics());
 
-            if (rt::AlphaTest(instanceID, primitiveIndex, barycentricCoordinates))
+            if (AlphaTest(instanceID, primitiveIndex, barycentricCoordinates))
             {
                 q.CommitNonOpaqueTriangleHit();
             }
@@ -56,5 +53,114 @@ namespace rt
 
         bool visible = q.CommittedStatus() == COMMITTED_NOTHING;
         return visible;
+    }
+
+    struct HitInfo
+    {
+        float3 position;
+        float3 barycentricCoordinates;
+        uint instanceID;
+        uint primitiveIndex;
+        bool bFrontFace;
+    };
+
+    bool TraceRay(RayDesc ray, out HitInfo hitInfo)
+    {
+        RaytracingAccelerationStructure raytracingAS = ResourceDescriptorHeap[SceneCB.sceneRayTracingTLAS];
+
+        RayQuery<RAY_FLAG_NONE> q;
+        q.TraceRayInline(raytracingAS, RAY_FLAG_NONE, 0xFF, ray);
+
+        while (q.Proceed())
+        {
+            uint instanceID = q.CandidateInstanceID();
+            uint primitiveIndex = q.CandidatePrimitiveIndex();
+            float3 barycentricCoordinates = GetBarycentricCoordinates(q.CandidateTriangleBarycentrics());
+
+            if (AlphaTest(instanceID, primitiveIndex, barycentricCoordinates))
+            {
+                q.CommitNonOpaqueTriangleHit();
+            }
+        }
+
+        if (q.CommittedStatus() == COMMITTED_NOTHING)
+        {
+            return false;
+        }
+
+        hitInfo.position = q.WorldRayOrigin() + q.WorldRayDirection() + q.CommittedRayT();
+        hitInfo.barycentricCoordinates = GetBarycentricCoordinates(q.CommittedTriangleBarycentrics());
+        hitInfo.instanceID = q.CommittedInstanceID();
+        hitInfo.primitiveIndex = q.CommittedPrimitiveIndex();
+        hitInfo.bFrontFace = q.CommittedTriangleFrontFace();
+
+        return true;
+    }
+
+    struct MaterialData
+    {
+        float3 diffuse;
+        float3 specular;
+        float3 worldNormal;
+        float roughness;
+        float3 emissive;
+    };
+
+    MaterialData GetMaterial(HitInfo hitInfo) //todo : texture lod
+    {
+        MaterialData material = (MaterialData)0;
+        InstanceData instanceData = GetInstanceData(hitInfo.instanceID);
+
+        switch (instanceData.GetInstanceType())
+        {
+            case InstanceType::Model:
+            {
+                model::Primitive primitive = model::Primitive::Create(hitInfo.instanceID, hitInfo.primitiveIndex);
+                ModelMaterialConstant modelMaterial = model::GetMaterialConstant(hitInfo.instanceID);
+                
+                float2 uv = primitive.GetUV(hitInfo.barycentricCoordinates);
+
+                if (modelMaterial.bPbrMetallicRoughness)
+                {
+                    model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(hitInfo.instanceID, uv);
+
+                    material.diffuse = pbrMetallicRoughness.albedo * (1.0 - pbrMetallicRoughness.metallic);
+                    material.specular = lerp(0.04, pbrMetallicRoughness.albedo, pbrMetallicRoughness.metallic);
+                    material.roughness = pbrMetallicRoughness.roughness;
+                }
+                else if (modelMaterial.bPbrSpecularGlossiness)
+                {
+                    model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(hitInfo.instanceID, uv);
+
+                    material.specular = pbrSpecularGlossiness.specular;
+                    material.diffuse = pbrSpecularGlossiness.diffuse * (1.0 - max(max(material.specular.r, material.specular.g), material.specular.b));
+                    material.roughness = 1.0 - pbrSpecularGlossiness.glossiness;
+                }
+
+                material.emissive = model::GetMaterialEmissive(hitInfo.instanceID, uv);
+                
+                float3 N = mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetNormal(hitInfo.barycentricCoordinates), 0.0)).xyz;
+                if(modelMaterial.normalTexture != INVALID_RESOURCE_INDEX)
+                {
+                    float3 T = mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetTangent(hitInfo.barycentricCoordinates).xyz, 0.0)).xyz;
+                    float3 B = cross(N, T) * primitive.GetTangent(hitInfo.barycentricCoordinates).w;
+
+                    N = model::GetMaterialNormal(hitInfo.instanceID, uv, T, B, N);
+                }
+
+                if(modelMaterial.bDoubleSided)
+                {
+                    N *= hitInfo.bFrontFace ? 1.0 : -1.0;
+                }
+                
+                material.worldNormal = N;
+
+                break;
+            }
+            default:
+                break;
+        }
+
+        return material;
     }
 }

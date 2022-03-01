@@ -280,4 +280,9 @@ void MeshMaterial::UpdateConstants()
     m_materialCB.diffuse = m_diffuseColor;
     m_materialCB.specular = m_specularColor;
     m_materialCB.glossiness = m_glossiness;
+
+    m_materialCB.bPbrMetallicRoughness = m_bPbrMetallicRoughness;
+    m_materialCB.bPbrSpecularGlossiness = m_bPbrSpecularGlossiness;
+    m_materialCB.bRGNormalTexture = m_pNormalTexture && (m_pNormalTexture->GetTexture()->GetDesc().format == GfxFormat::BC5UNORM);
+    m_materialCB.bDoubleSided = m_bDoubleSided;
 }
