@@ -62,7 +62,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         RayDesc ray;
         ray.Origin = position + N * 0.01;
         ray.Direction = SampleConeUniform(rng.RandomFloat2(), SceneCB.lightRadius, wi);
-        ray.TMin = 0.0;
+        ray.TMin = 0.00001;
         ray.TMax = 1000.0;
 
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
@@ -104,14 +104,14 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
             pdf *= (D * NdotH / (4 * LdotH)) * (1.0 - probDiffuse);
         }
-        
+
         //firefly rejection
-        if (max(max(throughput.x, throughput.y), throughput.z) / pdf > 5.0)
+        if (max(max(throughput.x, throughput.y), throughput.z) / pdf > 100.0)
         {
             break;
         }
 
-        ray.Origin = position + N * 0.01;
+        ray.Origin = position + N * 0.001;
         ray.Direction = wi;
         ray.TMin = 0.001;
         ray.TMax = 1000.0;
