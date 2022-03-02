@@ -16,4 +16,11 @@ private:
 
 private:
     Renderer* m_pRenderer = nullptr;
+
+    enum class TonemappingMode
+    {
+        Neutrual,
+        ACES,
+    };
+    TonemappingMode m_mode = TonemappingMode::Neutrual;
 };

@@ -12,7 +12,7 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
     GUI("PostProcess", "ToneMapping",
         [&]()
         {
-
+            ImGui::Combo("Mode##Tonemapper", (int*)&m_mode, "Neutral\0ACES\0\0");
         });
 
     struct TonemapPassData
@@ -65,6 +65,18 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
 void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* exposure, IGfxDescriptor* pLdrUAV, IGfxDescriptor* bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
     std::vector<std::string> defines;
+
+    switch (m_mode)
+    {
+    case Tonemapper::TonemappingMode::Neutrual:
+        defines.push_back("NEUTRAL=1");
+        break;
+    case Tonemapper::TonemappingMode::ACES:
+        defines.push_back("ACES=1");
+        break;
+    default:
+        break;
+    }
 
     if (bloom)
     {

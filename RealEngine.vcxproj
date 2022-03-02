@@ -339,6 +339,7 @@
     <None Include="shaders\ray_trace.hlsli" />
     <None Include="shaders\stats.hlsli" />
     <None Include="shaders\taa_constants.hlsli" />
+    <None Include="shaders\tone_mapping.hlsli" />
     <None Include="shaders\XeGTAO.hlsli" />
     <None Include="source\renderer\render_graph.inl" />
   </ItemGroup>
