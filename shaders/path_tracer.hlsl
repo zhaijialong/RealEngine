@@ -139,9 +139,14 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
             radiance += sky_color * throughput / pdf;
             break;
         }
-    }    
+    }
 
-    outputTexture[dispatchThreadID.xy] = float4(clamp(radiance, 0.0, 65504.0), 1.0);
+    if(any(isnan(radiance)) || any(isinf(radiance)))
+    {
+        radiance = float3(0, 0, 0);
+    }
+
+    outputTexture[dispatchThreadID.xy] = float4(radiance, 1.0);
 }
 
 cbuffer AccumulationConstants : register(b0)
@@ -171,5 +176,5 @@ void accumulation(uint3 dispatchThreadID : SV_DispatchThreadID)
         historyTexture[dispatchThreadID.xy] = float4(output, 1.0);
     }
 
-    accumulationTexture[dispatchThreadID.xy] = float4(output, 1.0);
+    accumulationTexture[dispatchThreadID.xy] = float4(clamp(output, 0.0, 65504.0), 1.0);
 }

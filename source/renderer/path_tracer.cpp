@@ -53,7 +53,7 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, uint32_t width, 
             RenderGraphTexture::Desc desc;
             desc.width = width;
             desc.height = height;
-            desc.format = GfxFormat::RGBA16F;
+            desc.format = GfxFormat::RGBA32F;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, "PathTracing output");
             data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
@@ -80,7 +80,7 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, uint32_t width, 
         m_pHistoryAccumulation->GetTexture()->GetDesc().width != width ||
         m_pHistoryAccumulation->GetTexture()->GetDesc().height != height)
     {
-        m_pHistoryAccumulation.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "PathTracer::m_pHistoryAccumulation"));
+        m_pHistoryAccumulation.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA32F, GfxTextureUsageUnorderedAccess, "PathTracer::m_pHistoryAccumulation"));
         m_bHistoryInvalid = true;
     }
 
