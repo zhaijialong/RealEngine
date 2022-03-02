@@ -19,8 +19,8 @@ private:
 
     enum class TonemappingMode
     {
-        Neutrual,
+        Neutral,
         ACES,
     };
-    TonemappingMode m_mode = TonemappingMode::Neutrual;
+    TonemappingMode m_mode = TonemappingMode::Neutral;
 };

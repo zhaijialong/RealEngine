@@ -68,7 +68,7 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IG
 
     switch (m_mode)
     {
-    case Tonemapper::TonemappingMode::Neutrual:
+    case Tonemapper::TonemappingMode::Neutral:
         defines.push_back("NEUTRAL=1");
         break;
     case Tonemapper::TonemappingMode::ACES:
