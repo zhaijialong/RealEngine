@@ -68,7 +68,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
         float NdotL = saturate(dot(N, wi));
         float3 direct_light = BRDF(wi, wo, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor * NdotL;
-        radiance += direct_light * throughput / pdf;
+        radiance += (direct_light + emissive) * throughput / pdf;
 
         if (i == c_maxRayLength)
         {
@@ -128,6 +128,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
             specular = material.specular;
             N = material.worldNormal;
             roughness = max(material.roughness, 0.03);
+            emissive = material.emissive;
         }
         else
         {
@@ -148,6 +149,7 @@ cbuffer AccumulationConstants : register(b0)
     uint c_currentFrameTexture;
     uint c_historyTexture;
     uint c_accumulationTexture;
+    uint c_accumulatedFrames;
     uint c_bEnableAccumulation;
 };
 
@@ -165,7 +167,7 @@ void accumulation(uint3 dispatchThreadID : SV_DispatchThreadID)
         RWTexture2D<float4> historyTexture = ResourceDescriptorHeap[c_historyTexture];
         float3 history = historyTexture[dispatchThreadID.xy].xyz;
 
-        output = (SceneCB.frameIndex * history + current) / (SceneCB.frameIndex + 1);
+        output = (c_accumulatedFrames * history + current) / (c_accumulatedFrames + 1);
         historyTexture[dispatchThreadID.xy] = float4(output, 1.0);
     }
 

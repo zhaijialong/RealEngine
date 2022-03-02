@@ -108,6 +108,7 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, uint32_t width, 
             if (m_bHistoryInvalid)
             {
                 m_bHistoryInvalid = false;
+                m_nAccumulatedFrames = 0;
 
                 float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
                 pCommandList->ClearUAV(m_pHistoryAccumulation->GetTexture(), m_pHistoryAccumulation->GetUAV(), clear_value);
@@ -143,7 +144,7 @@ void PathTracer::Accumulate(IGfxCommandList* pCommandList, IGfxDescriptor* input
 {
     pCommandList->SetPipelineState(m_pAccumulationPSO);
 
-    uint32_t constants[4] = { input->GetHeapIndex(), historyUAV->GetHeapIndex(), outputUAV->GetHeapIndex(), m_bEnableAccumulation };
+    uint32_t constants[5] = { input->GetHeapIndex(), historyUAV->GetHeapIndex(), outputUAV->GetHeapIndex(), m_nAccumulatedFrames++, m_bEnableAccumulation };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }

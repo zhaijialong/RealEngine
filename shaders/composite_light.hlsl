@@ -67,7 +67,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     ao = min(ao, gtao);
 #endif
     
-    float3 indirect_diffuse = diffuse.xyz * float3(0.15, 0.15, 0.2);
+    float3 indirect_diffuse = diffuse.xyz * float3(0.1, 0.1, 0.12);
 
     TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
     Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.brdfTexture];

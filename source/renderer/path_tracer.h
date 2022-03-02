@@ -24,6 +24,7 @@ private:
     std::unique_ptr<Texture2D> m_pHistoryAccumulation;
 
     uint m_maxRayLength = 8;
+    uint m_nAccumulatedFrames = 0;
     bool m_bEnableAccumulation = true;
     bool m_bHistoryInvalid = true;
 };
