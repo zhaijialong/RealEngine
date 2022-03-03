@@ -55,14 +55,21 @@ bool D3D12GraphicsPipelineState::Create()
     desc.SampleMask = 0xFFFFFFFF;
     desc.SampleDesc.Count = 1;
 
+    ID3D12PipelineState* pipelineState = nullptr;
     ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
-    if (FAILED(pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&m_pPipelineState))))
+    if (FAILED(pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState))))
     {
         return false;
     }
 
-    m_pPipelineState->SetName(string_to_wstring(m_name).c_str());
+    pipelineState->SetName(string_to_wstring(m_name).c_str());
 
+    if (m_pPipelineState)
+    {
+        ((D3D12Device*)m_pDevice)->Delete(m_pPipelineState);
+    }
+
+    m_pPipelineState = pipelineState;
     return true;
 }
 
@@ -86,14 +93,21 @@ bool D3D12ComputePipelineState::Create()
     desc.pRootSignature = ((D3D12Device*)m_pDevice)->GetRootSignature();
     desc.CS = ((D3D12Shader*)m_desc.cs)->GetByteCode();
 
+    ID3D12PipelineState* pipelineState = nullptr;
     ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
-    if (FAILED(pDevice->CreateComputePipelineState(&desc, IID_PPV_ARGS(&m_pPipelineState))))
+    if (FAILED(pDevice->CreateComputePipelineState(&desc, IID_PPV_ARGS(&pipelineState))))
     {
         return false;
     }
 
-    m_pPipelineState->SetName(string_to_wstring(m_name).c_str());
+    pipelineState->SetName(string_to_wstring(m_name).c_str());
 
+    if (m_pPipelineState)
+    {
+        ((D3D12Device*)m_pDevice)->Delete(m_pPipelineState);
+    }
+
+    m_pPipelineState = pipelineState;
     return true;
 }
 
@@ -147,13 +161,21 @@ bool D3D12MeshShadingPipelineState::Create()
     streamDesc.pPipelineStateSubobjectStream = &psoStream;
     streamDesc.SizeInBytes = sizeof(psoStream);
 
+    ID3D12PipelineState* pipelineState = nullptr;
     ID3D12Device2* pDevice = (ID3D12Device2*)m_pDevice->GetHandle();
-    HRESULT hr = pDevice->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&m_pPipelineState));
+    HRESULT hr = pDevice->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState));
     if (FAILED(hr))
     {
         return false;
     }
 
-    m_pPipelineState->SetName(string_to_wstring(m_name).c_str());
+    pipelineState->SetName(string_to_wstring(m_name).c_str());
+
+    if (m_pPipelineState)
+    {
+        ((D3D12Device*)m_pDevice)->Delete(m_pPipelineState);
+    }
+
+    m_pPipelineState = pipelineState;
     return true;
 }
