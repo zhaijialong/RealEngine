@@ -50,6 +50,11 @@ inline bool operator==(const GfxMeshShadingPipelineDesc& lhs, const GfxMeshShadi
     return memcmp(lhs_states, rhs_states, sizeof(GfxMeshShadingPipelineDesc) - state_offset) == 0;
 }
 
+inline bool operator==(const GfxComputePipelineDesc& lhs, const GfxComputePipelineDesc& rhs)
+{
+    return lhs.cs->GetHash() == rhs.cs->GetHash();
+}
+
 PipelineStateCache::PipelineStateCache(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
@@ -91,7 +96,7 @@ IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxMeshShadingPipe
 
 IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name)
 {
-    auto iter = m_cachedComputePSO.find(desc.cs->GetHash());
+    auto iter = m_cachedComputePSO.find(desc);
     if (iter != m_cachedComputePSO.end())
     {
         return iter->second.get();
@@ -100,8 +105,47 @@ IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxComputePipeline
     IGfxPipelineState* pPSO = m_pRenderer->GetDevice()->CreateComputePipelineState(desc, name);
     if (pPSO)
     {
-        m_cachedComputePSO.insert(std::make_pair(desc.cs->GetHash(), pPSO));
+        m_cachedComputePSO.insert(std::make_pair(desc, pPSO));
     }
 
     return pPSO;
+}
+
+void PipelineStateCache::RecreatePSO(IGfxShader* shader)
+{
+    for (auto iter = m_cachedGraphicsPSO.begin(); iter != m_cachedGraphicsPSO.end(); ++iter)
+    {
+        const GfxGraphicsPipelineDesc& desc = iter->first;
+        IGfxPipelineState* pso = iter->second.get();
+
+        if (desc.vs == shader ||
+            desc.ps == shader)
+        {
+            pso->Create();
+        }
+    }
+
+    for (auto iter = m_cachedMeshShadingPSO.begin(); iter != m_cachedMeshShadingPSO.end(); ++iter)
+    {
+        const GfxMeshShadingPipelineDesc& desc = iter->first;
+        IGfxPipelineState* pso = iter->second.get();
+
+        if (desc.as == shader ||
+            desc.ms == shader ||
+            desc.ps == shader)
+        {
+            pso->Create();
+        }
+    }
+
+    for (auto iter = m_cachedComputePSO.begin(); iter != m_cachedComputePSO.end(); ++iter)
+    {
+        const GfxComputePipelineDesc& desc = iter->first;
+        IGfxPipelineState* pso = iter->second.get();
+
+        if (desc.cs == shader)
+        {
+            pso->Create();
+        }
+    }
 }

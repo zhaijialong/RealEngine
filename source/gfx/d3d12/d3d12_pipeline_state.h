@@ -12,7 +12,7 @@ public:
     ~D3D12GraphicsPipelineState();
 
     virtual void* GetHandle() const { return m_pPipelineState; }
-    bool Create();
+    virtual bool Create() override;
 
     D3D_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const { return m_primitiveTopology; }
 
@@ -29,7 +29,7 @@ public:
     ~D3D12MeshShadingPipelineState();
 
     virtual void* GetHandle() const { return m_pPipelineState; }
-    bool Create();
+    virtual bool Create() override;
 
 private:
 private:
@@ -44,7 +44,7 @@ public:
     ~D3D12ComputePipelineState();
 
     virtual void* GetHandle() const { return m_pPipelineState; }
-    bool Create();
+    virtual bool Create() override;
 
 private:
     ID3D12PipelineState* m_pPipelineState = nullptr;

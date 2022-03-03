@@ -17,6 +17,18 @@ inline std::wstring string_to_wstring(const std::string& s)
     return result;
 }
 
+inline std::string wstring_to_string(const std::wstring& s)
+{
+    DWORD size = WideCharToMultiByte(CP_ACP, 0, s.c_str(), -1, NULL, 0, NULL, FALSE);
+
+    std::string result;
+    result.resize(size);
+
+    WideCharToMultiByte(CP_ACP, 0, s.c_str(), -1, (LPSTR)result.c_str(), size, NULL, FALSE);
+
+    return result;
+}
+
 inline void string_to_float_array(const std::string& str, std::vector<float>& output)
 {
     const std::string delims = ",";

@@ -38,6 +38,8 @@ public:
     uint32_t GetBackbufferHeight() const { return m_pSwapchain->GetDesc().height; }
     uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
     class ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
+    class ShaderCache* GetShaderCache() const { return m_pShaderCache.get(); }
+    class PipelineStateCache* GetPipelineStateCache() const { return m_pPipelineCache.get(); }
     RenderGraph* GetRenderGraph() { return m_pRenderGraph.get(); }
 
     RendererOutput GetOutputType() const { return m_outputType; }
@@ -49,6 +51,7 @@ public:
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
     IGfxPipelineState* GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name);
     IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name);
+    void ReloadShaders();
     IGfxDescriptor* GetPointSampler() const { return m_pPointRepeatSampler.get(); }
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearRepeatSampler.get(); }
 

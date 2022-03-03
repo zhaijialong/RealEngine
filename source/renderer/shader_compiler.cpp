@@ -1,11 +1,72 @@
 #include "shader_compiler.h"
 #include "renderer.h"
+#include "shader_cache.h"
 #include "utils/log.h"
 #include "utils/string.h"
 #include "utils/assert.h"
 #include "dxc/dxcapi.h"
 
+#include <filesystem>
 #include <atlbase.h> //CComPtr
+
+class DXCIncludeHandler : public IDxcIncludeHandler
+{
+public:
+    DXCIncludeHandler(ShaderCache* pShaderCache, IDxcUtils* pDxcUtils) : m_pShaderCache(pShaderCache), m_pDxcUtils(pDxcUtils)
+    {
+    }
+
+    HRESULT STDMETHODCALLTYPE LoadSource(LPCWSTR fileName, IDxcBlob** includeSource) override
+    {
+        std::string absolute_path = std::filesystem::absolute(fileName).string();
+        std::string source = m_pShaderCache->GetCachedFileContent(absolute_path);
+
+        *includeSource = nullptr;
+        return m_pDxcUtils->CreateBlob(source.data(), source.size(), CP_UTF8, reinterpret_cast<IDxcBlobEncoding**>(includeSource));
+    }
+
+    ULONG STDMETHODCALLTYPE AddRef() override
+    {
+        ++m_ref;
+        return m_ref;
+    }
+
+    ULONG STDMETHODCALLTYPE Release() override
+    {
+        --m_ref;
+        ULONG result = m_ref;
+        if (result == 0)
+        {
+            delete this;
+        }
+        return result;
+    }
+
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** object) override
+    {
+        if (IsEqualIID(iid, __uuidof(IDxcIncludeHandler)))
+        {
+            *object = dynamic_cast<IDxcIncludeHandler*>(this);
+            this->AddRef();
+            return S_OK;
+        }
+        else if (IsEqualIID(iid, __uuidof(IUnknown)))
+        {
+            *object = dynamic_cast<IUnknown*>(this);
+            this->AddRef();
+            return S_OK;
+        }
+        else
+        {
+            return E_NOINTERFACE;
+        }
+    }
+
+private:
+    ShaderCache* m_pShaderCache = nullptr;
+    IDxcUtils* m_pDxcUtils = nullptr;
+    std::atomic<ULONG> m_ref = 0;
+};
 
 ShaderCompiler::ShaderCompiler(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
@@ -17,7 +78,9 @@ ShaderCompiler::ShaderCompiler(Renderer* pRenderer) : m_pRenderer(pRenderer)
         DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_pDxcUtils));
         DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_pDxcCompiler));
 
-        m_pDxcUtils->CreateDefaultIncludeHandler(&m_pDxcIncludeHandler);
+        //m_pDxcUtils->CreateDefaultIncludeHandler(&m_pDxcIncludeHandler);
+        m_pDxcIncludeHandler = new DXCIncludeHandler(pRenderer->GetShaderCache(), m_pDxcUtils);
+        m_pDxcIncludeHandler->AddRef();
     }
 }
 

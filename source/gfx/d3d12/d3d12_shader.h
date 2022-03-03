@@ -12,6 +12,7 @@ public:
     D3D12Shader(D3D12Device* pDevice, const GfxShaderDesc& desc, const std::vector<uint8_t> data, const std::string& name);
 
     virtual void* GetHandle() const override { return nullptr; }
+    virtual bool SetShaderData(const uint8_t* data, uint32_t data_size) override;
 
     D3D12_SHADER_BYTECODE GetByteCode() const { return { m_data.data(), m_data.size()}; }
 

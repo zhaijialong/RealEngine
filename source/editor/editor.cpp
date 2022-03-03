@@ -110,6 +110,12 @@ void Editor::DrawMenu()
                 pRenderer->SetShowMeshletsEnabled(m_bShowMeshlets);
             }
 
+            if (ImGui::MenuItem("Reload Shaders"))
+            {
+                Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+                pRenderer->ReloadShaders();
+            }
+
             ImGui::EndMenu();
         }
 

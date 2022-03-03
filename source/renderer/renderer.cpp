@@ -19,8 +19,8 @@
 
 Renderer::Renderer() : m_resizeConnection({})
 {
-    m_pShaderCompiler = std::make_unique<ShaderCompiler>(this);
     m_pShaderCache = std::make_unique<ShaderCache>(this);
+    m_pShaderCompiler = std::make_unique<ShaderCompiler>(this);
     m_pPipelineCache = std::make_unique<PipelineStateCache>(this);
     m_cbAllocator = std::make_unique<LinearAllocator>(8 * 1024 * 1024);
 
@@ -430,6 +430,11 @@ void Renderer::MouseHitTest()
 
         m_bEnableObjectIDRendering = false;
     }
+}
+
+void Renderer::ReloadShaders()
+{
+    m_pShaderCache->ReloadShaders();
 }
 
 IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines)
