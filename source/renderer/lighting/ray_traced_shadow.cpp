@@ -47,7 +47,7 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
 
 void RTShadow::RayTrace(IGfxCommandList* pCommandList, IGfxDescriptor* depthSRV, IGfxDescriptor* normalSRV, IGfxDescriptor* shadowUAV, uint32_t width, uint32_t height)
 {
-    //todo : soft-shadow && denoising
+    //todo : denoising
 
     pCommandList->SetPipelineState(m_pRaytracePSO);
 
