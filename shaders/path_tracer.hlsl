@@ -47,7 +47,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 diffuse = diffuseRT[dispatchThreadID.xy].xyz;
     float3 specular = specularRT[dispatchThreadID.xy].xyz;
     float3 N = OctNormalDecode(normalRT[dispatchThreadID.xy].xyz);
-    float roughness = max(normalRT[dispatchThreadID.xy].w, 0.03);
+    float roughness = normalRT[dispatchThreadID.xy].w;
     float3 emissive = emissiveRT[dispatchThreadID.xy];
 
     float3 radiance = 0.0;
@@ -91,6 +91,8 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         {
             float3 H = SampleGGX(rng.RandomFloat2(), roughness, N); //pdf : D * NdotH / (4 * LdotH);
             wi = reflect(-wo, H);
+            
+            roughness = max(roughness, 0.065); //fix reflection artifacts on smooth surface
 
             float3 F;
             float3 specular_brdf = SpecularBRDF(N, wo, wi, specular, roughness, F);
@@ -127,7 +129,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
             diffuse = material.diffuse;
             specular = material.specular;
             N = material.worldNormal;
-            roughness = max(material.roughness, 0.03);
+            roughness = material.roughness;
             emissive = material.emissive;
         }
         else
