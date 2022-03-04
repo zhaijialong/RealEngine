@@ -41,7 +41,7 @@ bool GUI::Init()
     ImFontConfig fontConfig;
     fontConfig.OversampleH = fontConfig.OversampleV = 3;
     
-    std::string font_file = Engine::GetInstance()->GetAssetPath() + "fonts/DroidSans.ttf";
+    eastl::string font_file = Engine::GetInstance()->GetAssetPath() + "fonts/DroidSans.ttf";
     io.Fonts->AddFontFromFileTTF(font_file.c_str(), 13.0f, &fontConfig);
 
     unsigned char* pixels;

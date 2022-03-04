@@ -6,6 +6,7 @@
 #include "render_graph_resource_allocator.h"
 #include "utils/linear_allocator.h"
 #include "utils/math.h"
+#include "EASTL/unique_ptr.h"
 
 class RenderGraphResourceNode;
 class Renderer;
@@ -17,9 +18,9 @@ public:
     RenderGraph(Renderer* pRenderer);
 
     template<typename Data, typename Setup, typename Exec>
-    RenderGraphPass<Data>& AddPass(const std::string& name, const Setup& setup, const Exec& execute);
+    RenderGraphPass<Data>& AddPass(const eastl::string& name, const Setup& setup, const Exec& execute);
 
-    void BeginEvent(const std::string& name);
+    void BeginEvent(const eastl::string& name);
     void EndEvent();
 
     void Clear();
@@ -34,7 +35,7 @@ public:
     RenderGraphResource* GetResource(const RenderGraphHandle& handle);
     const DirectedAcyclicGraph& GetDAG() const { return m_graph; }
 
-    bool Export(const std::string& file);
+    bool Export(const eastl::string& file);
 
 private:
     template<typename T, typename... ArgsT>
@@ -44,7 +45,7 @@ private:
     T* AllocatePOD(ArgsT&&... arguments);
 
     template<typename Resource>
-    RenderGraphHandle Create(const typename Resource::Desc& desc, const std::string& name);
+    RenderGraphHandle Create(const typename Resource::Desc& desc, const eastl::string& name);
 
     RenderGraphHandle Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
     RenderGraphHandle Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
@@ -58,28 +59,28 @@ private:
     RenderGraphResourceAllocator m_resourceAllocator;
     DirectedAcyclicGraph m_graph;
 
-    std::vector<std::string> m_eventNames;
+    eastl::vector<eastl::string> m_eventNames;
 
-    std::unique_ptr<IGfxFence> m_pAsyncComputeFence;
+    eastl::unique_ptr<IGfxFence> m_pAsyncComputeFence;
     uint64_t m_nAsyncComputeFenceValue = 0;
 
-    std::vector<RenderGraphPassBase*> m_passes;
-    std::vector<RenderGraphResource*> m_resources;
-    std::vector<RenderGraphResourceNode*> m_resourceNodes;
+    eastl::vector<RenderGraphPassBase*> m_passes;
+    eastl::vector<RenderGraphResource*> m_resources;
+    eastl::vector<RenderGraphResourceNode*> m_resourceNodes;
 
     struct ObjFinalizer
     {
         void* obj;
         void(*finalizer)(void*);
     };
-    std::vector<ObjFinalizer>  m_objFinalizer;
+    eastl::vector<ObjFinalizer>  m_objFinalizer;
 
     struct PresentTarget
     {
         RenderGraphResource* resource;
         GfxResourceState state;
     };
-    std::vector<PresentTarget> m_outputResources;
+    eastl::vector<PresentTarget> m_outputResources;
 };
 
 class RenderGraphEvent

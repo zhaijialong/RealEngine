@@ -12,6 +12,6 @@ public:
 private:
     IGfxPipelineState* m_pPSO = nullptr;
 
-    std::unique_ptr<IndexBuffer> m_pIndexBuffer;
-    std::unique_ptr<StructuredBuffer> m_pVertexBuffer;
+    eastl::unique_ptr<IndexBuffer> m_pIndexBuffer;
+    eastl::unique_ptr<StructuredBuffer> m_pVertexBuffer;
 };

@@ -2,7 +2,6 @@
 
 #include "camera.h"
 #include "i_light.h"
-#include <memory>
 
 namespace tinyxml2
 {
@@ -16,8 +15,8 @@ public:
 
     Camera* GetCamera() const { return m_pCamera.get(); }
 
-    void LoadScene(const std::string& file);
-    void SaveScene(const std::string& file);
+    void LoadScene(const eastl::string& file);
+    void SaveScene(const eastl::string& file);
 
     void AddObject(IVisibleObject* object);
     void AddLight(ILight* light);
@@ -37,10 +36,10 @@ private:
     void CreateSky(tinyxml2::XMLElement* element);
 
 private:
-    std::unique_ptr<Camera> m_pCamera;
+    eastl::unique_ptr<Camera> m_pCamera;
 
-    std::vector<std::unique_ptr<IVisibleObject>> m_objects;
-    std::vector<std::unique_ptr<ILight>> m_lights;
+    eastl::vector<eastl::unique_ptr<IVisibleObject>> m_objects;
+    eastl::vector<eastl::unique_ptr<ILight>> m_lights;
 
     ILight* m_pPrimaryLight = nullptr;
 };

@@ -8,7 +8,7 @@ class D3D12Device;
 class D3D12RayTracingBLAS : public IGfxRayTracingBLAS
 {
 public:
-    D3D12RayTracingBLAS(D3D12Device* pDevice, const GfxRayTracingBLASDesc& desc, const std::string& name);
+    D3D12RayTracingBLAS(D3D12Device* pDevice, const GfxRayTracingBLASDesc& desc, const eastl::string& name);
     ~D3D12RayTracingBLAS();
 
     virtual void* GetHandle() const override { return m_pASBuffer; }
@@ -20,7 +20,7 @@ public:
     void GetUpdateDesc(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& desc, D3D12_RAYTRACING_GEOMETRY_DESC& geometry, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset);
 
 private:
-    std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> m_geometries;
+    eastl::vector<D3D12_RAYTRACING_GEOMETRY_DESC> m_geometries;
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC m_buildDesc;
 
     ID3D12Resource* m_pASBuffer = nullptr;

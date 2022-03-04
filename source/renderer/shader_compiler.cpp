@@ -18,8 +18,8 @@ public:
 
     HRESULT STDMETHODCALLTYPE LoadSource(LPCWSTR fileName, IDxcBlob** includeSource) override
     {
-        std::string absolute_path = std::filesystem::absolute(fileName).string();
-        std::string source = m_pShaderCache->GetCachedFileContent(absolute_path);
+        eastl::string absolute_path = std::filesystem::absolute(fileName).string().c_str();
+        eastl::string source = m_pShaderCache->GetCachedFileContent(absolute_path);
 
         *includeSource = nullptr;
         return m_pDxcUtils->CreateBlob(source.data(), (UINT32)source.size(), CP_UTF8, reinterpret_cast<IDxcBlobEncoding**>(includeSource));
@@ -91,26 +91,26 @@ ShaderCompiler::~ShaderCompiler()
     m_pDxcUtils->Release();
 }
 
-bool ShaderCompiler::Compile(const std::string& source, const std::string& file, const std::string& entry_point,
-    const std::string& profile, const std::vector<std::string>& defines,
-    std::vector<uint8_t>& output_blob)
+bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& file, const eastl::string& entry_point,
+    const eastl::string& profile, const eastl::vector<eastl::string>& defines,
+    eastl::vector<uint8_t>& output_blob)
 {
     DxcBuffer sourceBuffer;
     sourceBuffer.Ptr = source.data();
     sourceBuffer.Size = source.length();
     sourceBuffer.Encoding = DXC_CP_ACP;
 
-    std::wstring wstrFile = string_to_wstring(file);
-    std::wstring wstrEntryPoint = string_to_wstring(entry_point);
-    std::wstring wstrProfile = string_to_wstring(profile);
+    eastl::wstring wstrFile = string_to_wstring(file);
+    eastl::wstring wstrEntryPoint = string_to_wstring(entry_point);
+    eastl::wstring wstrProfile = string_to_wstring(profile);
 
-    std::vector<std::wstring> wstrDefines;
+    eastl::vector<eastl::wstring> wstrDefines;
     for (size_t i = 0; i < defines.size(); ++i)
     {
         wstrDefines.push_back(string_to_wstring(defines[i]));
     }
 
-    std::vector<LPCWSTR> arguments;
+    eastl::vector<LPCWSTR> arguments;
     arguments.push_back(wstrFile.c_str());
     arguments.push_back(L"-E"); arguments.push_back(wstrEntryPoint.c_str());
     arguments.push_back(L"-T"); arguments.push_back(wstrProfile.c_str());

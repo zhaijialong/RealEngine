@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderer.h"
-#include <unordered_map>
+#include "EASTL/hash_map.h"
 
 class Editor
 {
@@ -11,7 +11,7 @@ public:
 
     void Tick();
 
-    void AddGuiCommand(const std::string& window, const std::string& section, const std::function<void()>& command);
+    void AddGuiCommand(const eastl::string& window, const eastl::string& section, const std::function<void()>& command);
 
 private:
     void DrawMenu();
@@ -23,7 +23,7 @@ private:
     void CreateRenderGraph();
     void FlushPendingTextureDeletions();
 
-    void DrawWindow(const std::string& window, bool* open);
+    void DrawWindow(const eastl::string& window, bool* open);
 
 private:
     bool m_bShowGpuMemoryStats = false;
@@ -41,17 +41,17 @@ private:
 
     struct Command
     {
-        std::string section;
-        std::function<void()> func;
+        eastl::string section;
+        eastl::function<void()> func;
     };
-    using WindowCommand = std::vector<Command>;
-    std::unordered_map<std::string, WindowCommand> m_commands;
+    using WindowCommand = eastl::vector<Command>;
+    eastl::hash_map<eastl::string, WindowCommand> m_commands;
 
-    std::unordered_map<IGfxDescriptor*, Texture2D*> m_fileDialogIcons;
-    std::vector<IGfxDescriptor*> m_pendingDeletions;
+    eastl::hash_map<IGfxDescriptor*, Texture2D*> m_fileDialogIcons;
+    eastl::vector<IGfxDescriptor*> m_pendingDeletions;
 
-    std::unique_ptr<Texture2D> m_pGpuMemoryStats;
-    std::unique_ptr<Texture2D> m_pRenderGraph;
+    eastl::unique_ptr<Texture2D> m_pGpuMemoryStats;
+    eastl::unique_ptr<Texture2D> m_pRenderGraph;
 
     enum class SelectEditMode
     {
@@ -61,9 +61,9 @@ private:
     };
 
     SelectEditMode m_selectEditMode = SelectEditMode::Translate;
-    std::unique_ptr<Texture2D> m_pTranslateIcon;
-    std::unique_ptr<Texture2D> m_pRotateIcon;
-    std::unique_ptr<Texture2D> m_pScaleIcon;
+    eastl::unique_ptr<Texture2D> m_pTranslateIcon;
+    eastl::unique_ptr<Texture2D> m_pRotateIcon;
+    eastl::unique_ptr<Texture2D> m_pScaleIcon;
 
     float3 m_lockedViewPos;
     float3 m_lockedViewRotation;

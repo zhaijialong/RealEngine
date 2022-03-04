@@ -16,7 +16,7 @@ void RenderGraphResource::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pa
     }
 }
 
-RenderGraphTexture::RenderGraphTexture(RenderGraphResourceAllocator& allocator, const std::string& name, const Desc& desc) :
+RenderGraphTexture::RenderGraphTexture(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
     RenderGraphResource(name),
     m_allocator(allocator)
 {
@@ -89,7 +89,7 @@ IGfxResource* RenderGraphTexture::GetAliasedPrevResource()
     return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass);
 }
 
-RenderGraphBuffer::RenderGraphBuffer(RenderGraphResourceAllocator& allocator, const std::string& name, const Desc& desc) :
+RenderGraphBuffer::RenderGraphBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
     RenderGraphResource(name),
     m_allocator(allocator)
 {

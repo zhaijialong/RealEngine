@@ -23,7 +23,7 @@ public:
     virtual void Signal(IGfxFence* fence, uint64_t value) = 0;
     virtual void Submit() = 0;
 
-    virtual void BeginEvent(const std::string& event_name) = 0;
+    virtual void BeginEvent(const eastl::string& event_name) = 0;
     virtual void EndEvent() = 0;
 
     virtual void CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset) = 0;

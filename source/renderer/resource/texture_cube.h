@@ -1,12 +1,12 @@
 #pragma once
 
 #include "gfx/gfx.h"
-#include <memory>
+#include "EASTL/unique_ptr.h"
 
 class TextureCube
 {
 public:
-    TextureCube(const std::string& name);
+    TextureCube(const eastl::string& name);
 
     bool Create(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags);
 
@@ -14,8 +14,8 @@ public:
     IGfxDescriptor* GetSRV() const { return m_pSRV.get(); }
 
 protected:
-    std::string m_name;
+    eastl::string m_name;
 
-    std::unique_ptr<IGfxTexture> m_pTexture;
-    std::unique_ptr<IGfxDescriptor> m_pSRV;
+    eastl::unique_ptr<IGfxTexture> m_pTexture;
+    eastl::unique_ptr<IGfxDescriptor> m_pSRV;
 };

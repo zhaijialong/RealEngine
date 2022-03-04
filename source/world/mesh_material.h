@@ -28,7 +28,7 @@ public:
     bool IsVertexSkinned() const { return m_bSkeletalAnim; }
 
 private:
-    std::string m_name;
+    eastl::string m_name;
     ModelMaterialConstant m_materialCB = {};
 
     IGfxPipelineState* m_pPSO = nullptr;

@@ -2,7 +2,7 @@
 #include "core/engine.h"
 #include "../renderer.h"
 
-StructuredBuffer::StructuredBuffer(const std::string& name)
+StructuredBuffer::StructuredBuffer(const eastl::string& name)
 {
     m_name = name;
 }

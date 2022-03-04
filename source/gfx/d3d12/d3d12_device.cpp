@@ -110,7 +110,7 @@ D3D12Device::~D3D12Device()
 }
 
 
-IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, const std::string& name)
+IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, const eastl::string& name)
 {
     D3D12Buffer* pBuffer = new D3D12Buffer(this, desc, name);
     if (!pBuffer->Create())
@@ -121,7 +121,7 @@ IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, const std::stri
     return pBuffer;
 }
 
-IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, IGfxHeap* heap, uint32_t offset, const std::string& name)
+IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, IGfxHeap* heap, uint32_t offset, const eastl::string& name)
 {
     D3D12Buffer* pBuffer = new D3D12Buffer(this, desc, name);
     if (!pBuffer->Create((D3D12Heap*)heap, offset))
@@ -132,7 +132,7 @@ IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, IGfxHeap* heap,
     return pBuffer;
 }
 
-IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, const std::string& name)
+IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, const eastl::string& name)
 {
     D3D12Texture* pTexture = new D3D12Texture(this, desc, name);
     if (!pTexture->Create())
@@ -143,7 +143,7 @@ IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, const std::s
     return pTexture;
 }
 
-IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, IGfxHeap* heap, uint32_t offset, const std::string& name)
+IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, IGfxHeap* heap, uint32_t offset, const eastl::string& name)
 {
     D3D12Texture* pTexture = new D3D12Texture(this, desc, name);
     if (!pTexture->Create((D3D12Heap*)heap, offset))
@@ -154,7 +154,7 @@ IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, IGfxHeap* he
     return pTexture;
 }
 
-IGfxFence* D3D12Device::CreateFence(const std::string& name)
+IGfxFence* D3D12Device::CreateFence(const eastl::string& name)
 {
     D3D12Fence* pFence = new D3D12Fence(this, name);
     if (!pFence->Create())
@@ -165,7 +165,7 @@ IGfxFence* D3D12Device::CreateFence(const std::string& name)
     return pFence;
 }
 
-IGfxHeap* D3D12Device::CreateHeap(const GfxHeapDesc& desc, const std::string& name)
+IGfxHeap* D3D12Device::CreateHeap(const GfxHeapDesc& desc, const eastl::string& name)
 {
     D3D12Heap* pHeap = new D3D12Heap(this, desc, name);
     if (!pHeap->Create())
@@ -176,7 +176,7 @@ IGfxHeap* D3D12Device::CreateHeap(const GfxHeapDesc& desc, const std::string& na
     return pHeap;
 }
 
-IGfxSwapchain* D3D12Device::CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name)
+IGfxSwapchain* D3D12Device::CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name)
 {
     D3D12Swapchain* pSwapchain = new D3D12Swapchain(this, desc, name);
     if (!pSwapchain->Create())
@@ -187,7 +187,7 @@ IGfxSwapchain* D3D12Device::CreateSwapchain(const GfxSwapchainDesc& desc, const 
     return pSwapchain;
 }
 
-IGfxCommandList* D3D12Device::CreateCommandList(GfxCommandQueue queue_type, const std::string& name)
+IGfxCommandList* D3D12Device::CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name)
 {
     D3D12CommandList* pCommandList = new D3D12CommandList(this, queue_type, name);
     if (!pCommandList->Create())
@@ -198,12 +198,12 @@ IGfxCommandList* D3D12Device::CreateCommandList(GfxCommandQueue queue_type, cons
     return pCommandList;
 }
 
-IGfxShader* D3D12Device::CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name)
+IGfxShader* D3D12Device::CreateShader(const GfxShaderDesc& desc, const eastl::vector<uint8_t>& data, const eastl::string& name)
 {
     return new D3D12Shader(this, desc, data, name);
 }
 
-IGfxPipelineState* D3D12Device::CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name)
+IGfxPipelineState* D3D12Device::CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
 {
     D3D12GraphicsPipelineState* pPipeline = new D3D12GraphicsPipelineState(this, desc, name);
     if (!pPipeline->Create())
@@ -214,7 +214,7 @@ IGfxPipelineState* D3D12Device::CreateGraphicsPipelineState(const GfxGraphicsPip
     return pPipeline;
 }
 
-IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name)
+IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name)
 {
     D3D12MeshShadingPipelineState* pPipeline = new D3D12MeshShadingPipelineState(this, desc, name);
     if (!pPipeline->Create())
@@ -225,7 +225,7 @@ IGfxPipelineState* D3D12Device::CreateMeshShadingPipelineState(const GfxMeshShad
     return pPipeline;
 }
 
-IGfxPipelineState* D3D12Device::CreateComputePipelineState(const GfxComputePipelineDesc& desc, const std::string& name)
+IGfxPipelineState* D3D12Device::CreateComputePipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name)
 {
     D3D12ComputePipelineState* pPipeline = new D3D12ComputePipelineState(this, desc, name);
     if (!pPipeline->Create())
@@ -236,7 +236,7 @@ IGfxPipelineState* D3D12Device::CreateComputePipelineState(const GfxComputePipel
     return pPipeline;
 }
 
-IGfxDescriptor* D3D12Device::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const std::string& name)
+IGfxDescriptor* D3D12Device::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const eastl::string& name)
 {
     D3D12ShaderResourceView* pSRV = new D3D12ShaderResourceView(this, resource, desc, name);
     if (!pSRV->Create())
@@ -247,7 +247,7 @@ IGfxDescriptor* D3D12Device::CreateShaderResourceView(IGfxResource* resource, co
     return pSRV;
 }
 
-IGfxDescriptor* D3D12Device::CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const std::string& name)
+IGfxDescriptor* D3D12Device::CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const eastl::string& name)
 {
     D3D12UnorderedAccessView* pUAV = new D3D12UnorderedAccessView(this, resource, desc, name);
     if (!pUAV->Create())
@@ -258,7 +258,7 @@ IGfxDescriptor* D3D12Device::CreateUnorderedAccessView(IGfxResource* resource, c
     return pUAV;
 }
 
-IGfxDescriptor* D3D12Device::CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name)
+IGfxDescriptor* D3D12Device::CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const eastl::string& name)
 {
     D3D12ConstantBufferView* pCBV = new D3D12ConstantBufferView(this, buffer, desc, name);
     if (!pCBV->Create())
@@ -269,7 +269,7 @@ IGfxDescriptor* D3D12Device::CreateConstantBufferView(IGfxBuffer* buffer, const 
     return pCBV;
 }
 
-IGfxDescriptor* D3D12Device::CreateSampler(const GfxSamplerDesc& desc, const std::string& name)
+IGfxDescriptor* D3D12Device::CreateSampler(const GfxSamplerDesc& desc, const eastl::string& name)
 {
     D3D12Sampler* pSampler = new D3D12Sampler(this, desc, name);
     if (!pSampler->Create())
@@ -280,7 +280,7 @@ IGfxDescriptor* D3D12Device::CreateSampler(const GfxSamplerDesc& desc, const std
     return pSampler;
 }
 
-IGfxRayTracingBLAS* D3D12Device::CreateRayTracingBLAS(const GfxRayTracingBLASDesc& desc, const std::string& name)
+IGfxRayTracingBLAS* D3D12Device::CreateRayTracingBLAS(const GfxRayTracingBLASDesc& desc, const eastl::string& name)
 {
     D3D12RayTracingBLAS* blas = new D3D12RayTracingBLAS(this, desc, name);
     if (!blas->Create())
@@ -291,7 +291,7 @@ IGfxRayTracingBLAS* D3D12Device::CreateRayTracingBLAS(const GfxRayTracingBLASDes
     return blas;
 }
 
-IGfxRayTracingTLAS* D3D12Device::CreateRayTracingTLAS(const GfxRayTracingTLASDesc& desc, const std::string& name)
+IGfxRayTracingTLAS* D3D12Device::CreateRayTracingTLAS(const GfxRayTracingTLASDesc& desc, const eastl::string& name)
 {
     D3D12RayTracingTLAS* tlas = new D3D12RayTracingTLAS(this, desc, name);
     if (!tlas->Create())
@@ -310,7 +310,7 @@ uint32_t D3D12Device::GetAllocationSize(const GfxTextureDesc& desc)
     return (uint32_t)info.SizeInBytes;
 }
 
-bool D3D12Device::DumpMemoryStats(const std::string& file)
+bool D3D12Device::DumpMemoryStats(const eastl::string& file)
 {
     FILE* f = nullptr;
     _wfopen_s(&f, string_to_wstring(file).c_str(), L"wb");
@@ -442,16 +442,16 @@ bool D3D12Device::Init()
 
     for (uint32_t i = 0; i < CB_ALLOCATOR_COUNT; ++i)
     {
-        std::string name = fmt::format("CB Allocator {}", i);
-        m_pConstantBufferAllocators[i] = std::make_unique<D3D12ConstantBufferAllocator>(this, 8 * 1024 * 1024, name);
+        eastl::string name = fmt::format("CB Allocator {}", i).c_str();
+        m_pConstantBufferAllocators[i] = eastl::make_unique<D3D12ConstantBufferAllocator>(this, 8 * 1024 * 1024, name);
     }
 
-    m_pRTVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false, 512, "RTV Heap");
-    m_pDSVAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, false, 128, "DSV Heap");
-    m_pResDescriptorAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true, 65536, "Resource Heap");
-    m_pSamplerAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true, 32, "Sampler Heap");
+    m_pRTVAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false, 512, "RTV Heap");
+    m_pDSVAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, false, 128, "DSV Heap");
+    m_pResDescriptorAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true, 65536, "Resource Heap");
+    m_pSamplerAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true, 32, "Sampler Heap");
 
-    m_pNonShaderVisibleUavAllocator = std::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, false, 1024, "Non shader visible UAV Heap");
+    m_pNonShaderVisibleUavAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, false, 1024, "Non shader visible UAV Heap");
 
     CreateRootSignature();
     CreateIndirectCommandSignatures();
@@ -757,7 +757,7 @@ void D3D12Device::CreateIndirectCommandSignatures()
     m_pMultiDispatchMeshSignature->SetName(L"D3D12Device::m_pMultiDispatchMeshSignature");
 }
 
-D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shader_visible, uint32_t descriptor_count, const std::string& name)
+D3D12DescriptorAllocator::D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shader_visible, uint32_t descriptor_count, const eastl::string& name)
 {
     m_descriptorSize = device->GetDescriptorHandleIncrementSize(type);
     m_descirptorCount = descriptor_count;
@@ -819,7 +819,7 @@ D3D12Descriptor D3D12DescriptorAllocator::GetDescriptor(uint32_t index) const
     return descriptor;
 }
 
-D3D12ConstantBufferAllocator::D3D12ConstantBufferAllocator(D3D12Device* device, uint32_t buffer_size, const std::string& name)
+D3D12ConstantBufferAllocator::D3D12ConstantBufferAllocator(D3D12Device* device, uint32_t buffer_size, const eastl::string& name)
 {
     GfxBufferDesc desc;
     desc.size = buffer_size;

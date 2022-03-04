@@ -12,16 +12,16 @@ class RenderGraphEdgeDepthAttchment;
 class RenderGraphPassBase : public DAGNode
 {
 public:
-    RenderGraphPassBase(const std::string& name, DirectedAcyclicGraph& graph);
+    RenderGraphPassBase(const eastl::string& name, DirectedAcyclicGraph& graph);
 
     void Resolve(const DirectedAcyclicGraph& graph);
     void Execute(const RenderGraph& graph, IGfxCommandList* pCommandList);
 
-    virtual std::string GetGraphvizName() const override { return m_name.c_str(); }
+    virtual eastl::string GetGraphvizName() const override { return m_name.c_str(); }
     virtual const char* GetGraphvizColor() const { return !IsCulled() ? "darkgoldenrod1" : "darkgoldenrod4"; }
 
     void EnableAsyncCompute() { m_bAsyncCompute = true; }
-    void BeginEvent(const std::string& name) { m_eventNames.push_back(name); }
+    void BeginEvent(const eastl::string& name) { m_eventNames.push_back(name); }
     void EndEvent() { m_nEndEventNum++; }
 
 private:
@@ -33,10 +33,10 @@ private:
     virtual void ExecuteImpl(IGfxCommandList* pCommandList) = 0;
 
 protected:
-    std::string m_name;
+    eastl::string m_name;
     bool m_bAsyncCompute = false;
 
-    std::vector<std::string> m_eventNames;
+    eastl::vector<eastl::string> m_eventNames;
     uint32_t m_nEndEventNum = 0;
 
     struct ResourceBarrier
@@ -46,14 +46,14 @@ protected:
         GfxResourceState old_state;
         GfxResourceState new_state;
     };
-    std::vector<ResourceBarrier> m_resourceBarriers;
+    eastl::vector<ResourceBarrier> m_resourceBarriers;
 
     struct AliasBarrier
     {
         IGfxResource* before;
         IGfxResource* after;
     };
-    std::vector<AliasBarrier> m_aliasBarriers;
+    eastl::vector<AliasBarrier> m_aliasBarriers;
 
     RenderGraphEdgeColorAttchment* m_pColorRT[8] = {};
     RenderGraphEdgeDepthAttchment* m_pDepthRT = nullptr;
@@ -63,7 +63,7 @@ template<class T>
 class RenderGraphPass : public RenderGraphPassBase
 {
 public:
-    RenderGraphPass(const std::string& name, DirectedAcyclicGraph& graph, const std::function<void(const T&, IGfxCommandList*)>& execute) :
+    RenderGraphPass(const eastl::string& name, DirectedAcyclicGraph& graph, const std::function<void(const T&, IGfxCommandList*)>& execute) :
         RenderGraphPassBase(name, graph)
     {
         m_execute = execute;

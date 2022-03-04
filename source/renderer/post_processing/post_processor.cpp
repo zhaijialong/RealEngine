@@ -5,12 +5,12 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
-    m_pTAA = std::make_unique<TAA>(pRenderer);
-    m_pAutomaticExposure = std::make_unique<AutomaticExposure>(pRenderer);
-    m_pBloom = std::make_unique<Bloom>(pRenderer);
-    m_pToneMapper = std::make_unique<Tonemapper>(pRenderer);
-    m_pFXAA = std::make_unique<FXAA>(pRenderer);
-    m_pCAS = std::make_unique<CAS>(pRenderer);
+    m_pTAA = eastl::make_unique<TAA>(pRenderer);
+    m_pAutomaticExposure = eastl::make_unique<AutomaticExposure>(pRenderer);
+    m_pBloom = eastl::make_unique<Bloom>(pRenderer);
+    m_pToneMapper = eastl::make_unique<Tonemapper>(pRenderer);
+    m_pFXAA = eastl::make_unique<FXAA>(pRenderer);
+    m_pCAS = eastl::make_unique<CAS>(pRenderer);
 }
 
 RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostProcessInput& input, uint32_t width, uint32_t height)

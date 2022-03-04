@@ -208,7 +208,7 @@ void AutomaticExposure::ComputeLuminanceSize(uint32_t width, uint32_t height)
 
 void AutomaticExposure::InitLuminance(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output)
 {
-    std::vector<std::string> defines;
+    eastl::vector<eastl::string> defines;
 
     switch (m_meteringMode)
     {
@@ -318,7 +318,7 @@ void AutomaticExposure::BuildHistogram(IGfxCommandList* pCommandList, IGfxDescri
     pCommandList->ClearUAV(histogramBuffer, histogramBufferUAV, clear_value);
     pCommandList->UavBarrier(histogramBuffer);
 
-    std::vector<std::string> defines;
+    eastl::vector<eastl::string> defines;
 
     switch (m_meteringMode)
     {
@@ -401,7 +401,7 @@ void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* 
         pCommandList->UavBarrier(m_pPreviousEV100->GetTexture());
     }
 
-    std::vector<std::string> defines;
+    eastl::vector<eastl::string> defines;
 
     switch (m_exposuremode)
     {

@@ -15,9 +15,9 @@
 #include "cgltf/cgltf.h"
 
 
-inline float3 str_to_float3(const std::string& str)
+inline float3 str_to_float3(const eastl::string& str)
 {
-    std::vector<float> v;
+    eastl::vector<float> v;
     v.reserve(3);
     string_to_float_array(str, v);
     return float3(v[0], v[1], v[2]);
@@ -124,7 +124,7 @@ GLTFLoader::GLTFLoader(World* world, tinyxml2::XMLElement* element)
 
 void GLTFLoader::Load()
 {
-    std::string file = Engine::GetInstance()->GetAssetPath() + m_file;
+    eastl::string file = Engine::GetInstance()->GetAssetPath() + m_file;
 
     cgltf_options options = {};
     cgltf_data* data = NULL;
@@ -192,7 +192,7 @@ void GLTFLoader::LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* no
 
         for (cgltf_size i = 0; i < node->mesh->primitives_count; i++)
         {
-            std::string name = fmt::format("mesh_{}_{} {}", mesh_index, i, (node->mesh->name ? node->mesh->name : ""));
+            eastl::string name = fmt::format("mesh_{}_{} {}", mesh_index, i, (node->mesh->name ? node->mesh->name : "")).c_str();
 
             StaticMesh* mesh = LoadStaticMesh(&node->mesh->primitives[i], name);
 
@@ -217,7 +217,7 @@ Texture2D* GLTFLoader::LoadTexture(const cgltf_texture_view& texture_view, bool 
     }
 
     size_t last_slash = m_file.find_last_of('/');
-    std::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
+    eastl::string path = Engine::GetInstance()->GetAssetPath() + m_file.substr(0, last_slash + 1);
 
     Texture2D* texture = ResourceCache::GetInstance()->GetTexture2D(path + texture_view.texture->image->uri, srgb);
 
@@ -296,7 +296,7 @@ meshopt_Stream LoadBufferStream(const cgltf_accessor* accessor, bool convertToLH
     return stream;
 }
 
-StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const std::string& name)
+StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const eastl::string& name)
 {
     StaticMesh* mesh = new StaticMesh(m_file + " " + name);
     mesh->m_pMaterial.reset(LoadMaterial(primitive->material));
@@ -305,8 +305,8 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const s
     meshopt_Stream indices = LoadBufferStream(primitive->indices, false, index_count);
 
     size_t vertex_count;
-    std::vector<meshopt_Stream> vertex_streams;
-    std::vector<cgltf_attribute_type> vertex_types;
+    eastl::vector<meshopt_Stream> vertex_streams;
+    eastl::vector<cgltf_attribute_type> vertex_types;
 
     for (cgltf_size i = 0; i < primitive->attributes_count; ++i)
     {
@@ -347,10 +347,10 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const s
         }
     }
 
-    std::vector<unsigned int> remap(index_count);
+    eastl::vector<unsigned int> remap(index_count);
 
     void* remapped_indices = RE_ALLOC(indices.stride * index_count);
-    std::vector<void*> remapped_vertices;
+    eastl::vector<void*> remapped_vertices;
 
     size_t remapped_vertex_count;
 
@@ -396,9 +396,9 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const s
     const float cone_weight = 0.5f;
     size_t max_meshlets = meshopt_buildMeshletsBound(index_count, max_vertices, max_triangles);
 
-    std::vector<meshopt_Meshlet> meshlets(max_meshlets);
-    std::vector<unsigned int> meshlet_vertices(max_meshlets * max_vertices);
-    std::vector<unsigned char> meshlet_triangles(max_meshlets * max_triangles * 3);
+    eastl::vector<meshopt_Meshlet> meshlets(max_meshlets);
+    eastl::vector<unsigned int> meshlet_vertices(max_meshlets * max_vertices);
+    eastl::vector<unsigned char> meshlet_triangles(max_meshlets * max_triangles * 3);
 
     size_t meshlet_count;
     switch (indices.stride)
@@ -431,7 +431,7 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const s
     meshlet_triangles.resize(last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3));
     meshlets.resize(meshlet_count);
 
-    std::vector<unsigned short> meshlet_triangles16;
+    eastl::vector<unsigned short> meshlet_triangles16;
     meshlet_triangles16.reserve(meshlet_triangles.size());
     for (size_t i = 0; i < meshlet_triangles.size(); ++i)
     {
@@ -462,7 +462,7 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const s
         uint vertexOffset;
         uint triangleOffset;
     };
-    std::vector<MeshletBound> meshlet_bounds(meshlet_count);
+    eastl::vector<MeshletBound> meshlet_bounds(meshlet_count);
 
     for (size_t i = 0; i < meshlet_count; ++i)
     {
@@ -603,7 +603,7 @@ Animation* GLTFLoader::LoadAnimation(const cgltf_data* data, const cgltf_animati
             memcpy(&time, time_data + time_accessor->stride * k, time_accessor->stride);
             memcpy(&value, value_data + value_accessor->stride * k, value_accessor->stride);
 
-            channel.keyframes.push_back(std::make_pair(time, value));
+            channel.keyframes.push_back(eastl::make_pair(time, value));
         }
 
         animation->m_channels.push_back(channel);
@@ -638,7 +638,7 @@ Skeleton* GLTFLoader::LoadSkeleton(const cgltf_data* data, const cgltf_skin* ski
 
     uint32_t size = (uint32_t)accessor->stride * (uint32_t)accessor->count;
 
-    std::vector<float4x4> inverseBindMatrices(accessor->count);
+    eastl::vector<float4x4> inverseBindMatrices(accessor->count);
     memcpy(inverseBindMatrices.data(), (char*)accessor->buffer_view->buffer->data + accessor->buffer_view->offset + accessor->offset, size);
 
     for (cgltf_size i = 0; i < accessor->count; ++i)
@@ -667,7 +667,7 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
 {
     SkeletalMeshNode* node = new SkeletalMeshNode;
     node->id = GetNodeIndex(data, gltf_node);
-    node->name = gltf_node->name ? gltf_node->name : fmt::format("node_{}", node->id);
+    node->name = gltf_node->name ? gltf_node->name : fmt::format("node_{}", node->id).c_str();
     node->parent = gltf_node->parent ? GetNodeIndex(data, gltf_node->parent) : -1;
     for (cgltf_size i = 0; i < gltf_node->children_count; ++i)
     {
@@ -699,7 +699,7 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
 
         for (cgltf_size i = 0; i < gltf_node->mesh->primitives_count; i++)
         {
-            std::string name = fmt::format("mesh_{}_{} {}", mesh_index, i, (gltf_node->mesh->name ? gltf_node->mesh->name : ""));
+            eastl::string name = fmt::format("mesh_{}_{} {}", mesh_index, i, (gltf_node->mesh->name ? gltf_node->mesh->name : "")).c_str();
 
             SkeletalMeshData* mesh = LoadSkeletalMesh(&gltf_node->mesh->primitives[i], name);
             mesh->nodeID = node->id;
@@ -713,7 +713,7 @@ SkeletalMeshNode* GLTFLoader::LoadSkeletalMeshNode(const cgltf_data* data, const
     return node;
 }
 
-SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive, const std::string& name)
+SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive, const eastl::string& name)
 {
     SkeletalMeshData* mesh = new SkeletalMeshData;
     mesh->name = m_file + " " + name;
@@ -773,7 +773,7 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
         {
             const cgltf_accessor* accessor = primitive->attributes[i].data;
 
-            std::vector<ushort4> jointIDs;
+            eastl::vector<ushort4> jointIDs;
             jointIDs.reserve(accessor->count * 4);
 
             for (cgltf_size j = 0; j < accessor->count; ++j)
@@ -791,7 +791,7 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
         {
             const cgltf_accessor* accessor = primitive->attributes[i].data;
 
-            std::vector<float4> jointWeights;
+            eastl::vector<float4> jointWeights;
             jointWeights.reserve(accessor->count);
 
             for (cgltf_size j = 0; j < accessor->count; ++j)

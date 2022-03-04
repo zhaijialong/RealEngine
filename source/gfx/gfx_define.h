@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdint.h>
-#include <string>
-#include <vector>
+#include "EASTL/string.h"
+#include "EASTL/vector.h"
 
 class IGfxBuffer;
 class IGfxTexture;
@@ -369,10 +368,10 @@ struct GfxRenderPassDesc
 
 struct GfxShaderDesc
 {
-    std::string file;
-    std::string entry_point;
-    std::string profile;
-    std::vector<std::string> defines;
+    eastl::string file;
+    eastl::string entry_point;
+    eastl::string profile;
+    eastl::vector<eastl::string> defines;
 };
 
 enum class GfxCullMode
@@ -697,7 +696,7 @@ struct GfxRayTracingInstance
 
 struct GfxRayTracingBLASDesc
 {
-    std::vector<GfxRayTracingGeometry> geometries;
+    eastl::vector<GfxRayTracingGeometry> geometries;
     GfxRayTracingASFlag flags;
 };
 

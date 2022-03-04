@@ -3,7 +3,7 @@
 #include "core/engine.h"
 #include "utils/assert.h"
 
-IndexBuffer::IndexBuffer(const std::string& name)
+IndexBuffer::IndexBuffer(const eastl::string& name)
 {
     m_name = name;
 }

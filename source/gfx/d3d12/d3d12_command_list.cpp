@@ -14,7 +14,7 @@
 #include "utils/assert.h"
 #include "utils/profiler.h"
 
-D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const std::string& name)
+D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_name = name;
@@ -145,7 +145,7 @@ void D3D12CommandList::Submit()
 #endif
 }
 
-void D3D12CommandList::BeginEvent(const std::string& event_name)
+void D3D12CommandList::BeginEvent(const eastl::string& event_name)
 {
     pix::BeginEvent(m_pCommandList, event_name.c_str());
     ags::BeginEvent(m_pCommandList, event_name.c_str());
@@ -276,11 +276,11 @@ void D3D12CommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t
 
 void D3D12CommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
 {
-    std::vector<D3D12_TILED_RESOURCE_COORDINATE> coordinates;
-    std::vector<D3D12_TILE_REGION_SIZE> sizes;
-    std::vector<D3D12_TILE_RANGE_FLAGS> flags;
-    std::vector<UINT> heapTileOffsets;
-    std::vector<UINT> tileCounts;
+    eastl::vector<D3D12_TILED_RESOURCE_COORDINATE> coordinates;
+    eastl::vector<D3D12_TILE_REGION_SIZE> sizes;
+    eastl::vector<D3D12_TILE_RANGE_FLAGS> flags;
+    eastl::vector<UINT> heapTileOffsets;
+    eastl::vector<UINT> tileCounts;
 
     coordinates.reserve(mapping_count);
     sizes.reserve(mapping_count);

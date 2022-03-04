@@ -2,7 +2,6 @@
 
 #include "render_batch.h"
 #include "render_graph.h"
-#include <map>
 
 class Renderer;
 
@@ -46,7 +45,7 @@ private:
     IGfxPipelineState* m_pBuildInstanceCullingCommandPSO = nullptr;
     IGfxPipelineState* m_pBuildIndirectCommandPSO = nullptr;
 
-    std::vector<RenderBatch> m_instances;
+    eastl::vector<RenderBatch> m_instances;
 
     struct IndirectBatch
     {
@@ -55,9 +54,9 @@ private:
         uint32_t originMeshletCount;
         uint32_t meshletListBufferOffset;
     };
-    std::vector<IndirectBatch> m_indirectBatches;
+    eastl::vector<IndirectBatch> m_indirectBatches;
 
-    std::vector<RenderBatch> m_nonGpuDrivenBatches;
+    eastl::vector<RenderBatch> m_nonGpuDrivenBatches;
 
     uint32_t m_nTotalInstanceCount = 0;
     uint32_t m_nTotalMeshletCount = 0;

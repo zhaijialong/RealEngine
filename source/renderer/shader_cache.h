@@ -1,23 +1,23 @@
 #pragma once
 
 #include "../gfx/gfx.h"
-#include <unordered_map>
-#include <memory>
+#include "EASTL/hash_map.h"
+#include "EASTL/unique_ptr.h"
 
-namespace std
+namespace eastl
 {
     template <>
     struct hash<GfxShaderDesc>
     {
         size_t operator()(const GfxShaderDesc& desc) const
         {
-            std::string s = desc.file + desc.entry_point + desc.profile;
+            eastl::string s = desc.file + desc.entry_point + desc.profile;
             for (size_t i = 0; i < desc.defines.size(); ++i)
             {
                 s += desc.defines[i];
             }
 
-            return std::hash<std::string>{}(s);
+            return eastl::hash<eastl::string>{}(s);
         }
     };
 }
@@ -29,20 +29,20 @@ class ShaderCache
 public:
     ShaderCache(Renderer* pRenderer);
 
-    IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
-    std::string GetCachedFileContent(const std::string& file);
+    IGfxShader* GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines);
+    eastl::string GetCachedFileContent(const eastl::string& file);
 
     void ReloadShaders();
 
 private:
-    IGfxShader* CreateShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
+    IGfxShader* CreateShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines);
     void RecompileShader(IGfxShader* shader);
 
-    std::vector<IGfxShader*> GetShaderList(const std::string& file);
-    bool IsFileIncluded(const IGfxShader* shader, const std::string& file);
+    eastl::vector<IGfxShader*> GetShaderList(const eastl::string& file);
+    bool IsFileIncluded(const IGfxShader* shader, const eastl::string& file);
 
 private:
     Renderer* m_pRenderer;
-    std::unordered_map<GfxShaderDesc, std::unique_ptr<IGfxShader>> m_cachedShaders;
-    std::unordered_map<std::string, std::string> m_cachedFile;
+    eastl::hash_map<GfxShaderDesc, eastl::unique_ptr<IGfxShader>> m_cachedShaders;
+    eastl::hash_map<eastl::string, eastl::string> m_cachedFile;
 };

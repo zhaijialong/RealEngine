@@ -9,7 +9,7 @@ GTAO::GTAO(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
-    std::vector<std::string> defines;
+    eastl::vector<eastl::string> defines;
     defines.push_back("XE_GTAO_USE_HALF_FLOAT_PRECISION=0");
 
     GfxComputePipelineDesc psoDesc;

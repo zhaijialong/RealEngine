@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
-#include <string>
+#include "EASTL/vector.h"
+#include "EASTL/string.h"
 
 using DAGNodeID = uint32_t;
 
@@ -39,11 +39,11 @@ public:
     bool IsCulled() const { return m_nRefCount == 0; }
     uint32_t GetRefCount() const { return IsTarget() ? 1 : m_nRefCount; }
 
-    virtual std::string GetGraphvizName() const { return "unknown"; }
+    virtual eastl::string GetGraphvizName() const { return "unknown"; }
     virtual const char* GetGraphvizColor() const { return !IsCulled() ? "skyblue" : "skyblue4"; }
     virtual const char* GetGraphvizEdgeColor() const { return "darkolivegreen"; }
     virtual const char* GetGraphvizShape() const { return "rectangle"; }
-    std::string Graphvizify() const;
+    eastl::string Graphvizify() const;
 
 private:
     DAGNodeID m_ID;
@@ -66,12 +66,12 @@ public:
     void Cull();
     bool IsEdgeValid(const DAGEdge* edge) const;
 
-    std::vector<DAGEdge*> GetIncomingEdges(const DAGNode* node) const;
-    std::vector<DAGEdge*> GetOutgoingEdges(const DAGNode* node) const;
+    eastl::vector<DAGEdge*> GetIncomingEdges(const DAGNode* node) const;
+    eastl::vector<DAGEdge*> GetOutgoingEdges(const DAGNode* node) const;
 
     //dot.exe -Tpng -O file
     bool ExportGraphviz(const char* file);
 private:
-    std::vector<DAGNode*> m_nodes;
-    std::vector<DAGEdge*> m_edges;
+    eastl::vector<DAGNode*> m_nodes;
+    eastl::vector<DAGEdge*> m_edges;
 };

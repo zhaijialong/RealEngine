@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/math.h"
+#include "EASTL/string.h"
 
 class World;
 class StaticMesh;
@@ -33,19 +34,19 @@ public:
     
 private:
     void LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* node, const float4x4& mtxParentToWorld);
-    StaticMesh* LoadStaticMesh(const cgltf_primitive* primitive, const std::string& name);
+    StaticMesh* LoadStaticMesh(const cgltf_primitive* primitive, const eastl::string& name);
 
     Animation* LoadAnimation(const cgltf_data* data, const cgltf_animation* animation);
     Skeleton* LoadSkeleton(const cgltf_data* data, const cgltf_skin* skin);
     SkeletalMeshNode* LoadSkeletalMeshNode(const cgltf_data* data, const cgltf_node* node);
-    SkeletalMeshData* LoadSkeletalMesh(const cgltf_primitive* primitive, const std::string& name);
+    SkeletalMeshData* LoadSkeletalMesh(const cgltf_primitive* primitive, const eastl::string& name);
 
     MeshMaterial* LoadMaterial(const cgltf_material* gltf_material);
     Texture2D* LoadTexture(const cgltf_texture_view& texture_view, bool srgb);
 
 private:
     World* m_pWorld = nullptr;
-    std::string m_file;
+    eastl::string m_file;
 
     float3 m_position = float3(0, 0, 0);
     float3 m_rotation = float3(0, 0, 0);

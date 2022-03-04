@@ -27,8 +27,8 @@ private:
     IGfxPipelineState* m_pLuminanceReductionPSO = nullptr;
     IGfxPipelineState* m_pHistogramReductionPSO = nullptr;
 
-    std::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
-    std::unique_ptr<Texture2D> m_pPreviousEV100;
+    eastl::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
+    eastl::unique_ptr<Texture2D> m_pPreviousEV100;
 
     enum class ExposureMode
     {

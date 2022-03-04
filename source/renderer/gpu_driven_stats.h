@@ -18,5 +18,5 @@ private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPSO = nullptr;
 
-    std::unique_ptr<TypedBuffer> m_pStatsBuffer;
+    eastl::unique_ptr<TypedBuffer> m_pStatsBuffer;
 };

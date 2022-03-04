@@ -86,7 +86,7 @@ void RenderGraphResourceAllocator::CheckHeapUsage(Heap& heap)
     }
 }
 
-IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state)
+IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const eastl::string& name, GfxResourceState& initial_state)
 {
     LifetimeRange lifetime = { firstPass, lastPass };
     uint32_t texture_size = m_pDevice->GetAllocationSize(desc);
@@ -138,7 +138,7 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
     return AllocateTexture(firstPass, lastPass, desc, name, initial_state);
 }
 
-IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const std::string& name, GfxResourceState& initial_state)
+IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const eastl::string& name, GfxResourceState& initial_state)
 {
     LifetimeRange lifetime = { firstPass, lastPass };
     uint32_t buffer_size = desc.size;
@@ -184,7 +184,7 @@ void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
     GfxHeapDesc heapDesc;
     heapDesc.size = std::max(size, 64u * 1024);
 
-    std::string heapName = fmt::format("RG Heap {:.1f} MB", heapDesc.size / (1024.0f * 1024.0f));
+    eastl::string heapName = fmt::format("RG Heap {:.1f} MB", heapDesc.size / (1024.0f * 1024.0f)).c_str();
 
     Heap heap;
     heap.heap = m_pDevice->CreateHeap(heapDesc, heapName);
@@ -250,7 +250,7 @@ IGfxResource* RenderGraphResourceAllocator::GetAliasedPrevResource(IGfxResource*
     return nullptr;
 }
 
-IGfxTexture* RenderGraphResourceAllocator::AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state)
+IGfxTexture* RenderGraphResourceAllocator::AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const eastl::string& name, GfxResourceState& initial_state)
 {
     for (auto iter = m_freeOverlappingTextures.begin(); iter != m_freeOverlappingTextures.end(); ++iter)
     {

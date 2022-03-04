@@ -11,11 +11,11 @@
 
 World::World()
 {
-    m_pCamera = std::make_unique<Camera>();
+    m_pCamera = eastl::make_unique<Camera>();
     m_pCamera->EnableJitter(true);
 }
 
-void World::LoadScene(const std::string& file)
+void World::LoadScene(const eastl::string& file)
 {    
     tinyxml2::XMLDocument doc;
     if (tinyxml2::XML_SUCCESS != doc.LoadFile(file.c_str()))
@@ -34,7 +34,7 @@ void World::LoadScene(const std::string& file)
     }
 }
 
-void World::SaveScene(const std::string& file)
+void World::SaveScene(const eastl::string& file)
 {
 }
 
@@ -43,13 +43,13 @@ void World::AddObject(IVisibleObject* object)
     RE_ASSERT(object != nullptr);
 
     object->SetID((uint32_t)m_objects.size());
-    m_objects.push_back(std::unique_ptr<IVisibleObject>(object));
+    m_objects.push_back(eastl::unique_ptr<IVisibleObject>(object));
 }
 
 void World::AddLight(ILight* light)
 {
     RE_ASSERT(light != nullptr);
-    m_lights.push_back(std::unique_ptr<ILight>(light));
+    m_lights.push_back(eastl::unique_ptr<ILight>(light));
 }
 
 void World::Tick(float delta_time)
@@ -58,7 +58,7 @@ void World::Tick(float delta_time)
 
     m_pCamera->Tick(delta_time);
 
-    std::vector<IVisibleObject*> visibleObjects;
+    eastl::vector<IVisibleObject*> visibleObjects;
     const float4* planes = m_pCamera->GetFrustumPlanes();
 
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
@@ -109,9 +109,9 @@ void World::ClearScene()
     m_pPrimaryLight = nullptr;
 }
 
-inline float3 str_to_float3(const std::string& str)
+inline float3 str_to_float3(const eastl::string& str)
 {
-    std::vector<float> v;
+    eastl::vector<float> v;
     v.reserve(3);
     string_to_float_array(str, v);
     return float3(v[0], v[1], v[2]);

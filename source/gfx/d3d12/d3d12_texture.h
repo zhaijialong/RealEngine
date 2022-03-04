@@ -14,7 +14,7 @@ namespace D3D12MA
 class D3D12Texture : public IGfxTexture
 {
 public:
-    D3D12Texture(D3D12Device* pDevice, const GfxTextureDesc& desc, const std::string& name);
+    D3D12Texture(D3D12Device* pDevice, const GfxTextureDesc& desc, const eastl::string& name);
     ~D3D12Texture();
 
     virtual void* GetHandle() const override { return m_pTexture; }
@@ -31,8 +31,8 @@ private:
     ID3D12Resource* m_pTexture = nullptr;
     D3D12MA::Allocation* m_pAllocation = nullptr;
 
-    std::vector<D3D12Descriptor> m_RTV;
-    std::vector<D3D12Descriptor> m_DSV;
+    eastl::vector<D3D12Descriptor> m_RTV;
+    eastl::vector<D3D12Descriptor> m_DSV;
 
 private:
     friend class D3D12Swapchain;

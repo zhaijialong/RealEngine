@@ -59,7 +59,7 @@ private:
     IGfxPipelineState* m_pGTAOSOUltraPSO = nullptr;
     IGfxPipelineState* m_pSODenoisePSO = nullptr;
 
-    std::unique_ptr<Texture2D> m_pHilbertLUT;
+    eastl::unique_ptr<Texture2D> m_pHilbertLUT;
 
     bool m_bEnable = true;
     bool m_bEnableGTSO = false;

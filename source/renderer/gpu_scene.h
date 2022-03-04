@@ -48,19 +48,19 @@ public:
 private:
     Renderer* m_pRenderer = nullptr;
 
-    std::vector<InstanceData> m_instanceData;
+    eastl::vector<InstanceData> m_instanceData;
     uint32_t m_instanceDataAddress = 0;
 
-    std::unique_ptr<RawBuffer> m_pSceneStaticBuffer;
+    eastl::unique_ptr<RawBuffer> m_pSceneStaticBuffer;
     D3D12MA::VirtualBlock* m_pSceneStaticBufferAllocator = nullptr;
 
-    std::unique_ptr<RawBuffer> m_pSceneAnimationBuffer;
+    eastl::unique_ptr<RawBuffer> m_pSceneAnimationBuffer;
     D3D12MA::VirtualBlock* m_pSceneAnimationBufferAllocator = nullptr;
 
-    std::unique_ptr<RawBuffer> m_pConstantBuffer[GFX_MAX_INFLIGHT_FRAMES]; //todo : change to gpu memory, and only update dirty regions
+    eastl::unique_ptr<RawBuffer> m_pConstantBuffer[GFX_MAX_INFLIGHT_FRAMES]; //todo : change to gpu memory, and only update dirty regions
     uint32_t m_nConstantBufferOffset = 0;
 
-    std::unique_ptr<IGfxRayTracingTLAS> m_pSceneTLAS;
-    std::unique_ptr<IGfxDescriptor> m_pSceneTLASSRV;
-    std::vector<GfxRayTracingInstance> m_raytracingInstances;
+    eastl::unique_ptr<IGfxRayTracingTLAS> m_pSceneTLAS;
+    eastl::unique_ptr<IGfxDescriptor> m_pSceneTLASSRV;
+    eastl::vector<GfxRayTracingInstance> m_raytracingInstances;
 };

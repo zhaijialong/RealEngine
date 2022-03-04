@@ -1,14 +1,14 @@
 #pragma once
 
 #include "gfx/gfx.h"
-#include <memory>
+#include "EASTL/unique_ptr.h"
 
 class Renderer;
 
 class Texture2D
 {
 public:
-    Texture2D(const std::string& name);
+    Texture2D(const eastl::string& name);
 
     bool Create(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags);
 
@@ -17,9 +17,9 @@ public:
     IGfxDescriptor* GetUAV() const { return m_pUAV.get(); }
 
 protected:
-    std::string m_name;
+    eastl::string m_name;
 
-    std::unique_ptr<IGfxTexture> m_pTexture;
-    std::unique_ptr<IGfxDescriptor> m_pSRV;
-    std::unique_ptr<IGfxDescriptor> m_pUAV;
+    eastl::unique_ptr<IGfxTexture> m_pTexture;
+    eastl::unique_ptr<IGfxDescriptor> m_pSRV;
+    eastl::unique_ptr<IGfxDescriptor> m_pUAV;
 };

@@ -2,8 +2,8 @@
 
 #include "../gfx/gfx.h"
 #include "xxHash/xxhash.h"
-#include <unordered_map>
-#include <memory>
+#include "EASTL/hash_map.h"
+#include "EASTL/unique_ptr.h"
 
 //cityhash Hash128to64
 inline uint64_t hash_combine_64(uint64_t hash0, uint64_t hash1)
@@ -16,7 +16,7 @@ inline uint64_t hash_combine_64(uint64_t hash0, uint64_t hash1)
     return b * kMul;
 }
 
-namespace std
+namespace eastl
 {
     template <>
     struct hash<GfxGraphicsPipelineDesc>
@@ -73,15 +73,15 @@ class PipelineStateCache
 public:
     PipelineStateCache(Renderer* pRenderer);
 
-    IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
-    IGfxPipelineState* GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name);
-    IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name);
+    IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name);
+    IGfxPipelineState* GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name);
+    IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name);
 
     void RecreatePSO(IGfxShader* shader);
 
 private:
     Renderer* m_pRenderer;
-    std::unordered_map<GfxGraphicsPipelineDesc, std::unique_ptr<IGfxPipelineState>> m_cachedGraphicsPSO;
-    std::unordered_map<GfxMeshShadingPipelineDesc, std::unique_ptr<IGfxPipelineState>> m_cachedMeshShadingPSO;
-    std::unordered_map<GfxComputePipelineDesc, std::unique_ptr<IGfxPipelineState>> m_cachedComputePSO;
+    eastl::hash_map<GfxGraphicsPipelineDesc, eastl::unique_ptr<IGfxPipelineState>> m_cachedGraphicsPSO;
+    eastl::hash_map<GfxMeshShadingPipelineDesc, eastl::unique_ptr<IGfxPipelineState>> m_cachedMeshShadingPSO;
+    eastl::hash_map<GfxComputePipelineDesc, eastl::unique_ptr<IGfxPipelineState>> m_cachedComputePSO;
 };

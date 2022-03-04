@@ -18,8 +18,8 @@ private:
 private:
     Renderer* m_pRenderer;
 
-    std::unique_ptr<GTAO> m_pGTAO;
-    std::unique_ptr<RTShadow> m_pRTShdow;
-    std::unique_ptr<HybridStochasticReflection> m_pReflection;
-    std::unique_ptr<ClusteredShading> m_pClusteredShading;
+    eastl::unique_ptr<GTAO> m_pGTAO;
+    eastl::unique_ptr<RTShadow> m_pRTShdow;
+    eastl::unique_ptr<HybridStochasticReflection> m_pReflection;
+    eastl::unique_ptr<ClusteredShading> m_pClusteredShading;
 };

@@ -5,8 +5,8 @@ bool SkySphere::Create()
 {
     const float M_PI = 3.141592653f;
 
-    std::vector<float3> vertices;
-    std::vector<uint16_t> indices;
+    eastl::vector<float3> vertices;
+    eastl::vector<uint16_t> indices;
 
     int latitudeBands = 50;
     int longitudeBands = 50;

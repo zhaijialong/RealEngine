@@ -15,7 +15,7 @@ Editor::Editor()
         Texture2D* texture = pRenderer->CreateTexture2D(w, h, 1, fmt == 1 ? GfxFormat::RGBA8SRGB : GfxFormat::BGRA8SRGB, 0, "ImFileDialog Icon");
         pRenderer->UploadTexture(texture->GetTexture(), data);
 
-        m_fileDialogIcons.insert(std::make_pair(texture->GetSRV(), texture));
+        m_fileDialogIcons.insert(eastl::make_pair(texture->GetSRV(), texture));
 
         return texture->GetSRV();
     };
@@ -25,7 +25,7 @@ Editor::Editor()
         m_pendingDeletions.push_back((IGfxDescriptor*)tex); //should be deleted in next frame
     };
 
-    std::string asset_path = Engine::GetInstance()->GetAssetPath();
+    eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     m_pTranslateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/translate.png", true));
     m_pRotateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/rotate.png", true));
@@ -62,7 +62,7 @@ void Editor::Tick()
     m_commands.clear();
 }
 
-void Editor::AddGuiCommand(const std::string& window, const std::string& section, const std::function<void()>& command)
+void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& section, const std::function<void()>& command)
 {
     m_commands[window].push_back({ section, command });
 }
@@ -172,7 +172,7 @@ void Editor::DrawMenu()
     {
         if (ifd::FileDialog::Instance().HasResult())
         {
-            std::string result = ifd::FileDialog::Instance().GetResult().u8string();
+            eastl::string result = ifd::FileDialog::Instance().GetResult().u8string().c_str();
             Engine::GetInstance()->GetWorld()->LoadScene(result);
         }
 
@@ -361,12 +361,12 @@ void Editor::CreateGpuMemoryStats()
 
     if (pDevice->DumpMemoryStats(pEngine->GetWorkPath() + "d3d12ma.json"))
     {
-        std::string path = pEngine->GetWorkPath();
-        std::string cmd = "python " + path + "tools/D3d12maDumpVis.py -o " + path + "d3d12ma.png " + path + "d3d12ma.json";
+        eastl::string path = pEngine->GetWorkPath();
+        eastl::string cmd = "python " + path + "tools/D3d12maDumpVis.py -o " + path + "d3d12ma.png " + path + "d3d12ma.json";
 
         if (ExecuteCommand(cmd.c_str()) == 0)
         {
-            std::string file = path + "d3d12ma.png";
+            eastl::string file = path + "d3d12ma.png";
             m_pGpuMemoryStats.reset(pRenderer->CreateTexture2D(file, true));
         }
     }
@@ -377,16 +377,16 @@ void Editor::CreateRenderGraph()
     Engine* pEngine = Engine::GetInstance();
     Renderer* pRenderer = pEngine->GetRenderer();
 
-    std::string path = pEngine->GetWorkPath();
-    std::string graph_file = path + "rendergraph";
+    eastl::string path = pEngine->GetWorkPath();
+    eastl::string graph_file = path + "rendergraph";
 
     if (pRenderer->GetRenderGraph()->Export(graph_file))
     {
-        std::string dot_exe = Engine::GetInstance()->GetWorkPath() + "tools/graphviz/dot.exe";
-        std::string cmd = dot_exe + " -Tpng -O " + graph_file;
+        eastl::string dot_exe = Engine::GetInstance()->GetWorkPath() + "tools/graphviz/dot.exe";
+        eastl::string cmd = dot_exe + " -Tpng -O " + graph_file;
         if (ExecuteCommand(cmd.c_str()) == 0)
         {
-            std::string png_file = graph_file + ".png";
+            eastl::string png_file = graph_file + ".png";
             
             TextureLoader loader;
             loader.Load(png_file, true);
@@ -415,7 +415,7 @@ void Editor::FlushPendingTextureDeletions()
     m_pendingDeletions.clear();
 }
 
-void Editor::DrawWindow(const std::string& window, bool* open)
+void Editor::DrawWindow(const eastl::string& window, bool* open)
 {
     ImGui::Begin(window.c_str(), open);
 

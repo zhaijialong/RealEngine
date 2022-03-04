@@ -9,7 +9,7 @@ RenderGraph::RenderGraph(Renderer* pRenderer) :
     m_pAsyncComputeFence.reset(device->CreateFence("RenderGraph::m_pAsyncComputeFence"));
 }
 
-void RenderGraph::BeginEvent(const std::string& name)
+void RenderGraph::BeginEvent(const eastl::string& name)
 {
     m_eventNames.push_back(name);
 }
@@ -62,7 +62,7 @@ void RenderGraph::Compile()
 
         RenderGraphResource* resource = node->GetResource();
 
-        std::vector<DAGEdge*> outgoing_edge = m_graph.GetOutgoingEdges(node);
+        eastl::vector<DAGEdge*> outgoing_edge = m_graph.GetOutgoingEdges(node);
         for (size_t i = 0; i < outgoing_edge.size(); ++i)
         {
             RenderGraphEdge* edge = (RenderGraphEdge*)outgoing_edge[i];
@@ -74,7 +74,7 @@ void RenderGraph::Compile()
             }
         }
 
-        std::vector<DAGEdge*> imcoming_edge = m_graph.GetIncomingEdges(node);
+        eastl::vector<DAGEdge*> imcoming_edge = m_graph.GetIncomingEdges(node);
         for (size_t i = 0; i < imcoming_edge.size(); ++i)
         {
             RenderGraphEdge* edge = (RenderGraphEdge*)imcoming_edge[i];
@@ -156,7 +156,7 @@ RenderGraphResource* RenderGraph::GetResource(const RenderGraphHandle& handle)
     return m_resources[handle.index];
 }
 
-bool RenderGraph::Export(const std::string& file)
+bool RenderGraph::Export(const eastl::string& file)
 {
     return m_graph.ExportGraphviz(file.c_str());
 }

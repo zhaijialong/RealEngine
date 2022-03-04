@@ -8,7 +8,7 @@ ResourceCache* ResourceCache::GetInstance()
     return &cache;
 }
 
-Texture2D* ResourceCache::GetTexture2D(const std::string& file, bool srgb)
+Texture2D* ResourceCache::GetTexture2D(const eastl::string& file, bool srgb)
 {
     auto iter = m_cachedTexture2D.find(file);
     if (iter != m_cachedTexture2D.end())
@@ -22,7 +22,7 @@ Texture2D* ResourceCache::GetTexture2D(const std::string& file, bool srgb)
     Resource texture;
     texture.refCount = 1;
     texture.ptr = pRenderer->CreateTexture2D(file, srgb);
-    m_cachedTexture2D.insert(std::make_pair(file, texture));
+    m_cachedTexture2D.insert(eastl::make_pair(file, texture));
 
     return (Texture2D*)texture.ptr;
 }
@@ -53,7 +53,7 @@ void ResourceCache::ReleaseTexture2D(Texture2D* texture)
     RE_ASSERT(false);
 }
 
-uint32_t ResourceCache::GetSceneBuffer(const std::string& name, const void* data, uint32_t size)
+uint32_t ResourceCache::GetSceneBuffer(const eastl::string& name, const void* data, uint32_t size)
 {
     auto iter = m_cachedSceneBuffer.find(name);
     if (iter != m_cachedSceneBuffer.end())
@@ -67,7 +67,7 @@ uint32_t ResourceCache::GetSceneBuffer(const std::string& name, const void* data
     SceneBuffer buffer;
     buffer.refCount = 1;
     buffer.address = pRenderer->AllocateSceneStaticBuffer(data, size);
-    m_cachedSceneBuffer.insert(std::make_pair(name, buffer));
+    m_cachedSceneBuffer.insert(eastl::make_pair(name, buffer));
 
     return buffer.address;
 }

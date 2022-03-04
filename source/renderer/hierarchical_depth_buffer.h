@@ -40,7 +40,7 @@ private:
     IGfxPipelineState* m_pDepthMipFilterPSO = nullptr;
     IGfxPipelineState* m_pInitHZBPSO = nullptr;
     
-    std::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
+    eastl::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
 
     uint32_t m_nHZBMipCount = 0;
     uint2 m_hzbSize;

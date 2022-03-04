@@ -8,11 +8,11 @@ class MeshMaterial;
 
 struct SkeletalMeshData
 {
-    std::string name;
+    eastl::string name;
     uint32_t nodeID;
 
-    std::unique_ptr<MeshMaterial> material;
-    std::unique_ptr<IGfxRayTracingBLAS> blas;
+    eastl::unique_ptr<MeshMaterial> material;
+    eastl::unique_ptr<IGfxRayTracingBLAS> blas;
 
     uint32_t uvBufferAddress = -1;
     uint32_t jointIDBufferAddress = -1;
@@ -44,11 +44,11 @@ struct SkeletalMeshData
 
 struct SkeletalMeshNode
 {
-    std::string name;
+    eastl::string name;
     uint32_t id;
     uint32_t parent;
-    std::vector<uint32_t> children;
-    std::vector<std::unique_ptr<SkeletalMeshData>> meshes;
+    eastl::vector<uint32_t> children;
+    eastl::vector<eastl::unique_ptr<SkeletalMeshData>> meshes;
 
     //local transform
     float3 translation;
@@ -63,7 +63,7 @@ class SkeletalMesh : public IVisibleObject
     friend class GLTFLoader;
 
 public:
-    SkeletalMesh(const std::string& name);
+    SkeletalMesh(const eastl::string& name);
 
     virtual bool Create() override;
     virtual void Tick(float delta_time) override;
@@ -84,15 +84,15 @@ private:
 
 private:
     Renderer* m_pRenderer = nullptr;
-    std::string m_name;
+    eastl::string m_name;
 
     float4x4 m_mtxWorld;
 
-    std::unique_ptr<Skeleton> m_pSkeleton;
-    std::unique_ptr<Animation> m_pAnimation;
+    eastl::unique_ptr<Skeleton> m_pSkeleton;
+    eastl::unique_ptr<Animation> m_pAnimation;
 
-    std::vector<std::unique_ptr<SkeletalMeshNode>> m_nodes;
-    std::vector<uint32_t> m_rootNodes;
+    eastl::vector<eastl::unique_ptr<SkeletalMeshNode>> m_nodes;
+    eastl::vector<uint32_t> m_rootNodes;
 
     float m_radius = 0.0f;
     float m_boundScaleFactor = 3.0f;

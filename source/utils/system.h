@@ -26,7 +26,7 @@ inline int ExecuteCommand(const char* cmd)
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
 
-    std::wstring wcmd = string_to_wstring(cmd);
+    eastl::wstring wcmd = string_to_wstring(cmd);
 
     // Start the child process. 
     if (!CreateProcess(NULL,   // No module name (use command line)

@@ -49,10 +49,10 @@ public:
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
-    IGfxShader* GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines);
-    IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name);
-    IGfxPipelineState* GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name);
-    IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name);
+    IGfxShader* GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines);
+    IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name);
+    IGfxPipelineState* GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name);
+    IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name);
     void ReloadShaders();
     IGfxDescriptor* GetPointSampler() const { return m_pPointRepeatSampler.get(); }
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearRepeatSampler.get(); }
@@ -60,14 +60,14 @@ public:
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
     RenderGraphHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
 
-    IndexBuffer* CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
-    StructuredBuffer* CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
-    TypedBuffer* CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
-    RawBuffer* CreateRawBuffer(const void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
+    IndexBuffer* CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
+    StructuredBuffer* CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
+    TypedBuffer* CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
+    RawBuffer* CreateRawBuffer(const void* data, uint32_t size, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
 
-    Texture2D* CreateTexture2D(const std::string& file, bool srgb = true);
-    Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name);
-    TextureCube* CreateTextureCube(const std::string& file, bool srgb = true);
+    Texture2D* CreateTexture2D(const eastl::string& file, bool srgb = true);
+    Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
+    TextureCube* CreateTextureCube(const eastl::string& file, bool srgb = true);
 
     IGfxBuffer* GetSceneStaticBuffer() const;
     uint32_t AllocateSceneStaticBuffer(const void* data, uint32_t size, uint32_t alignment = 4);
@@ -124,30 +124,30 @@ private:
     void MouseHitTest();
 
 private:
-    std::unique_ptr<IGfxDevice> m_pDevice;
-    std::unique_ptr<IGfxSwapchain> m_pSwapchain;
-    std::unique_ptr<RenderGraph> m_pRenderGraph;
-    std::unique_ptr<class ShaderCompiler> m_pShaderCompiler;
-    std::unique_ptr<class ShaderCache> m_pShaderCache;
-    std::unique_ptr<class PipelineStateCache> m_pPipelineCache;
-    std::unique_ptr<class GpuScene> m_pGpuScene;
+    eastl::unique_ptr<IGfxDevice> m_pDevice;
+    eastl::unique_ptr<IGfxSwapchain> m_pSwapchain;
+    eastl::unique_ptr<RenderGraph> m_pRenderGraph;
+    eastl::unique_ptr<class ShaderCompiler> m_pShaderCompiler;
+    eastl::unique_ptr<class ShaderCache> m_pShaderCache;
+    eastl::unique_ptr<class PipelineStateCache> m_pPipelineCache;
+    eastl::unique_ptr<class GpuScene> m_pGpuScene;
     uint32_t m_nWindowWidth;
     uint32_t m_nWindowHeight;
     lsignal::connection m_resizeConnection;
     RendererOutput m_outputType = RendererOutput::Default;
 
-    std::unique_ptr<LinearAllocator> m_cbAllocator;
+    eastl::unique_ptr<LinearAllocator> m_cbAllocator;
 
-    std::unique_ptr<IGfxFence> m_pFrameFence;
+    eastl::unique_ptr<IGfxFence> m_pFrameFence;
     uint64_t m_nCurrentFrameFenceValue = 0;
     uint64_t m_nFrameFenceValue[GFX_MAX_INFLIGHT_FRAMES] = {};
-    std::unique_ptr<IGfxCommandList> m_pCommandLists[GFX_MAX_INFLIGHT_FRAMES];
-    std::unique_ptr<IGfxCommandList> m_pComputeCommandLists[GFX_MAX_INFLIGHT_FRAMES];
+    eastl::unique_ptr<IGfxCommandList> m_pCommandLists[GFX_MAX_INFLIGHT_FRAMES];
+    eastl::unique_ptr<IGfxCommandList> m_pComputeCommandLists[GFX_MAX_INFLIGHT_FRAMES];
 
-    std::unique_ptr<IGfxFence> m_pUploadFence;
+    eastl::unique_ptr<IGfxFence> m_pUploadFence;
     uint64_t m_nCurrentUploadFenceValue = 0;
-    std::unique_ptr<IGfxCommandList> m_pUploadCommandList[GFX_MAX_INFLIGHT_FRAMES];
-    std::unique_ptr<StagingBufferAllocator> m_pStagingBufferAllocator[GFX_MAX_INFLIGHT_FRAMES];
+    eastl::unique_ptr<IGfxCommandList> m_pUploadCommandList[GFX_MAX_INFLIGHT_FRAMES];
+    eastl::unique_ptr<StagingBufferAllocator> m_pStagingBufferAllocator[GFX_MAX_INFLIGHT_FRAMES];
 
     struct TextureUpload
     {
@@ -157,7 +157,7 @@ private:
         StagingBuffer staging_buffer;
         uint32_t offset;
     };
-    std::vector<TextureUpload> m_pendingTextureUploads;
+    eastl::vector<TextureUpload> m_pendingTextureUploads;
 
     struct BufferUpload
     {
@@ -165,7 +165,7 @@ private:
         uint32_t offset;
         StagingBuffer staging_buffer;
     };
-    std::vector<BufferUpload> m_pendingBufferUpload;
+    eastl::vector<BufferUpload> m_pendingBufferUpload;
 
     struct BLASUpdate
     {
@@ -173,37 +173,37 @@ private:
         IGfxBuffer* vertex_buffer;
         uint32_t vertex_buffer_offset;
     };
-    std::vector<BLASUpdate> m_pendingBLASUpdates;
-    std::vector<IGfxRayTracingBLAS*> m_pendingBLASBuilds;
+    eastl::vector<BLASUpdate> m_pendingBLASUpdates;
+    eastl::vector<IGfxRayTracingBLAS*> m_pendingBLASBuilds;
 
-    std::unique_ptr<IGfxDescriptor> m_pAniso2xSampler;
-    std::unique_ptr<IGfxDescriptor> m_pAniso4xSampler;
-    std::unique_ptr<IGfxDescriptor> m_pAniso8xSampler;
-    std::unique_ptr<IGfxDescriptor> m_pAniso16xSampler;
-    std::unique_ptr<IGfxDescriptor> m_pPointRepeatSampler;
-    std::unique_ptr<IGfxDescriptor> m_pPointClampSampler;
-    std::unique_ptr<IGfxDescriptor> m_pLinearRepeatSampler;
-    std::unique_ptr<IGfxDescriptor> m_pLinearClampSampler;
-    std::unique_ptr<IGfxDescriptor> m_pShadowSampler;
-    std::unique_ptr<IGfxDescriptor> m_pMinReductionSampler;
-    std::unique_ptr<IGfxDescriptor> m_pMaxReductionSampler;
-    std::unique_ptr<IGfxDescriptor> m_pLinearBlackBoarderSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pAniso2xSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pAniso4xSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pAniso8xSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pAniso16xSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pPointRepeatSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pPointClampSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pLinearRepeatSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pLinearClampSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pShadowSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pMinReductionSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pMaxReductionSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pLinearBlackBoarderSampler;
 
-    std::unique_ptr<Texture2D> m_pSobolSequenceTexture;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture1SPP;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture2SPP;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture4SPP;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture8SPP;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture16SPP;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture32SPP;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture64SPP;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture128SPP;
-    std::unique_ptr<Texture2D> m_pScramblingRankingTexture256SPP;
+    eastl::unique_ptr<Texture2D> m_pSobolSequenceTexture;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture1SPP;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture2SPP;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture4SPP;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture8SPP;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture16SPP;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture32SPP;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture64SPP;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture128SPP;
+    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture256SPP;
 
-    std::unique_ptr<Texture2D> m_pBrdfTexture;
-    std::unique_ptr<TextureCube> m_pEnvTexture;
+    eastl::unique_ptr<Texture2D> m_pBrdfTexture;
+    eastl::unique_ptr<TextureCube> m_pEnvTexture;
 
-    std::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
+    eastl::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
     RenderGraphHandle m_prevLinearDepthHandle;
 
     bool m_bGpuDrivenStatsEnabled = false;
@@ -213,24 +213,24 @@ private:
     uint32_t m_nMouseX = 0;
     uint32_t m_nMouseY = 0;
     uint32_t m_nMouseHitObjectID = UINT32_MAX;
-    std::unique_ptr<IGfxBuffer> m_pObjectIDBuffer;
+    eastl::unique_ptr<IGfxBuffer> m_pObjectIDBuffer;
     uint32_t m_nObjectIDRowPitch = 0;
 
     IGfxPipelineState* m_pCopyPSO = nullptr;
 
-    std::unique_ptr<class HZB> m_pHZB;
-    std::unique_ptr<class BasePass> m_pBasePass;
-    std::unique_ptr<class LightingProcessor> m_pLightingProcessor;
-    std::unique_ptr<class PostProcessor> m_pPostProcessor;
-    std::unique_ptr<class PathTracer> m_pPathTracer;
+    eastl::unique_ptr<class HZB> m_pHZB;
+    eastl::unique_ptr<class BasePass> m_pBasePass;
+    eastl::unique_ptr<class LightingProcessor> m_pLightingProcessor;
+    eastl::unique_ptr<class PostProcessor> m_pPostProcessor;
+    eastl::unique_ptr<class PathTracer> m_pPathTracer;
 
-    std::unique_ptr<class GpuDrivenDebugLine> m_pGpuDebugLine;
-    std::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;
-    std::unique_ptr<class GpuDrivenStats> m_pGpuStats;
+    eastl::unique_ptr<class GpuDrivenDebugLine> m_pGpuDebugLine;
+    eastl::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;
+    eastl::unique_ptr<class GpuDrivenStats> m_pGpuStats;
 
-    std::vector<ComputeBatch> m_animationBatchs;
+    eastl::vector<ComputeBatch> m_animationBatchs;
 
-    std::vector<RenderBatch> m_forwardPassBatchs;
-    std::vector<RenderBatch> m_velocityPassBatchs;
-    std::vector<RenderBatch> m_idPassBatchs;
+    eastl::vector<RenderBatch> m_forwardPassBatchs;
+    eastl::vector<RenderBatch> m_velocityPassBatchs;
+    eastl::vector<RenderBatch> m_idPassBatchs;
 };

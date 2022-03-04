@@ -12,7 +12,7 @@ Engine* Engine::GetInstance()
     return &engine;
 }
 
-void Engine::Init(const std::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
+void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
     StartProfiler();
 
@@ -23,16 +23,16 @@ void Engine::Init(const std::string& work_path, void* window_handle, uint32_t wi
     m_workPath = work_path;
     LoadEngineConfig();
 
-    m_pRenderer = std::make_unique<Renderer>();
+    m_pRenderer = eastl::make_unique<Renderer>();
     m_pRenderer->CreateDevice(window_handle, window_width, window_height);
 
-    m_pWorld = std::make_unique<World>();
+    m_pWorld = eastl::make_unique<World>();
     m_pWorld->LoadScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
 
-    m_pGUI = std::make_unique<GUI>();
+    m_pGUI = eastl::make_unique<GUI>();
     m_pGUI->Init();
 
-    m_pEditor = std::make_unique<Editor>();
+    m_pEditor = eastl::make_unique<Editor>();
 
     stm_setup();
 }
@@ -63,7 +63,7 @@ void Engine::Tick()
 
 void Engine::LoadEngineConfig()
 {
-    std::string ini_file = m_workPath + "RealEngine.ini";
+    eastl::string ini_file = m_workPath + "RealEngine.ini";
 
     SI_Error error = m_configIni.LoadFile(ini_file.c_str());
     if (error != SI_OK)

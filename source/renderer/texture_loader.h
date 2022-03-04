@@ -8,7 +8,7 @@ public:
     TextureLoader();
     ~TextureLoader();
 
-    bool Load(const std::string& file, bool srgb);
+    bool Load(const eastl::string& file, bool srgb);
 
     uint32_t GetWidth() const { return m_width; }
     uint32_t GetHeight() const { return m_height; }
@@ -38,5 +38,5 @@ private:
     void* m_pDecompressedData = nullptr;
     uint32_t m_textureSize = 0;
 
-    std::vector<uint8_t> m_fileData;
+    eastl::vector<uint8_t> m_fileData;
 };

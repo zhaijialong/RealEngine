@@ -154,7 +154,7 @@ TextureLoader::~TextureLoader()
     }
 }
 
-bool TextureLoader::Load(const std::string& file, bool srgb)
+bool TextureLoader::Load(const eastl::string& file, bool srgb)
 {
     std::ifstream is;
     is.open(file.c_str(), std::ios::binary);
@@ -173,7 +173,7 @@ bool TextureLoader::Load(const std::string& file, bool srgb)
     is.read(buffer, length);
     is.close();
 
-    if (file.find(".dds") != std::string::npos)
+    if (file.find(".dds") != eastl::string::npos)
     {
         return LoadDDS(srgb);
     }

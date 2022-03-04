@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gfx_define.h"
-#include <string>
 
 class IGfxDevice;
 
@@ -13,9 +12,9 @@ public:
     virtual void* GetHandle() const = 0;
 
     IGfxDevice* GetDevice() const { return m_pDevice; }
-    const std::string& GetName() const { return m_name; }
+    const eastl::string& GetName() const { return m_name; }
 
 protected:
     IGfxDevice* m_pDevice = nullptr;
-    std::string m_name;
+    eastl::string m_name;
 };

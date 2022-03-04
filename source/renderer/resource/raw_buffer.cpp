@@ -2,7 +2,7 @@
 #include "core/engine.h"
 #include "../renderer.h"
 
-RawBuffer::RawBuffer(const std::string& name)
+RawBuffer::RawBuffer(const eastl::string& name)
 {
     m_name = name;
 }

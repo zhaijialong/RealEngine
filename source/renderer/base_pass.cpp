@@ -2,6 +2,7 @@
 #include "renderer.h"
 #include "hierarchical_depth_buffer.h"
 #include "utils/profiler.h"
+#include "EASTL/map.h"
 
 struct FirstPhaseInstanceCullingData
 {
@@ -443,7 +444,7 @@ void BasePass::MergeBatches()
 {
     m_nTotalInstanceCount = (uint32_t)m_instances.size();
 
-    std::vector<uint32_t> instanceIndices(m_nTotalInstanceCount);
+    eastl::vector<uint32_t> instanceIndices(m_nTotalInstanceCount);
     for (uint32_t i = 0; i < m_nTotalInstanceCount; ++i)
     {
         instanceIndices[i] = m_instances[i].instanceIndex;
@@ -456,10 +457,10 @@ void BasePass::MergeBatches()
 
     struct MergedBatch
     {
-        std::vector<RenderBatch> batches;
+        eastl::vector<RenderBatch> batches;
         uint32_t meshletCount;
     };
-    std::map<IGfxPipelineState*, MergedBatch> mergedBatches;
+    eastl::map<IGfxPipelineState*, MergedBatch> mergedBatches;
 
     for (size_t i = 0; i < m_instances.size(); ++i)
     {
@@ -479,7 +480,7 @@ void BasePass::MergeBatches()
                 MergedBatch mergedBatch;
                 mergedBatch.batches.push_back(batch);
                 mergedBatch.meshletCount = batch.meshletCount;
-                mergedBatches.insert(std::make_pair(batch.pso, mergedBatch));
+                mergedBatches.insert(eastl::make_pair(batch.pso, mergedBatch));
             }
         }
         else
@@ -493,7 +494,7 @@ void BasePass::MergeBatches()
     {
         const MergedBatch& batch = iter->second;
 
-        std::vector<uint2> meshletList;
+        eastl::vector<uint2> meshletList;
         meshletList.reserve(batch.meshletCount);
 
         for (size_t i = 0; i < batch.batches.size(); ++i)

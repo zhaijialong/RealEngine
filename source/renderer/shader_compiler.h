@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include "EASTL/vector.h"
+#include "EASTL/string.h"
 
 struct IDxcCompiler3;
 struct IDxcUtils;
@@ -15,9 +15,9 @@ public:
     ShaderCompiler(Renderer* pRenderer);
     ~ShaderCompiler();
 
-    bool Compile(const std::string& source, const std::string& file, const std::string& entry_point, 
-        const std::string& profile, const std::vector<std::string>& defines,
-        std::vector<uint8_t>& output_blob);
+    bool Compile(const eastl::string& source, const eastl::string& file, const eastl::string& entry_point, 
+        const eastl::string& profile, const eastl::vector<eastl::string>& defines,
+        eastl::vector<uint8_t>& output_blob);
 
 private:
     Renderer* m_pRenderer = nullptr;

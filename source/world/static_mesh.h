@@ -10,7 +10,7 @@ class StaticMesh : public IVisibleObject
 {
     friend class GLTFLoader;
 public:
-    StaticMesh(const std::string& name);
+    StaticMesh(const eastl::string& name);
     ~StaticMesh();
 
     virtual bool Create() override;
@@ -25,9 +25,9 @@ private:
 
 private:
     Renderer* m_pRenderer = nullptr;
-    std::string m_name;
-    std::unique_ptr<MeshMaterial> m_pMaterial = nullptr;
-    std::unique_ptr<IGfxRayTracingBLAS> m_pBLAS;
+    eastl::string m_name;
+    eastl::unique_ptr<MeshMaterial> m_pMaterial = nullptr;
+    eastl::unique_ptr<IGfxRayTracingBLAS> m_pBLAS;
 
     uint32_t m_posBufferAddress = -1;
     uint32_t m_uvBufferAddress = -1;

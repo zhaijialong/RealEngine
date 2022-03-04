@@ -5,7 +5,7 @@
 #include "d3d12_rt_tlas.h"
 #include "utils/assert.h"
 
-D3D12ShaderResourceView::D3D12ShaderResourceView(D3D12Device* pDevice, IGfxResource* pResource, const GfxShaderResourceViewDesc& desc, const std::string& name)
+D3D12ShaderResourceView::D3D12ShaderResourceView(D3D12Device* pDevice, IGfxResource* pResource, const GfxShaderResourceViewDesc& desc, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_name = name;
@@ -144,7 +144,7 @@ bool D3D12ShaderResourceView::Create()
     return true;
 }
 
-D3D12UnorderedAccessView::D3D12UnorderedAccessView(D3D12Device* pDevice, IGfxResource* pResource, const GfxUnorderedAccessViewDesc& desc, const std::string& name)
+D3D12UnorderedAccessView::D3D12UnorderedAccessView(D3D12Device* pDevice, IGfxResource* pResource, const GfxUnorderedAccessViewDesc& desc, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_name = name;
@@ -259,7 +259,7 @@ bool D3D12UnorderedAccessView::Create()
     return true;
 }
 
-D3D12ConstantBufferView::D3D12ConstantBufferView(D3D12Device* pDevice, IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name)
+D3D12ConstantBufferView::D3D12ConstantBufferView(D3D12Device* pDevice, IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_name = name;
@@ -288,7 +288,7 @@ bool D3D12ConstantBufferView::Create()
     return true;
 }
 
-D3D12Sampler::D3D12Sampler(D3D12Device* pDevice, const GfxSamplerDesc& desc, const std::string& name)
+D3D12Sampler::D3D12Sampler(D3D12Device* pDevice, const GfxSamplerDesc& desc, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_name = name;

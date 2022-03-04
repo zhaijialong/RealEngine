@@ -60,7 +60,7 @@ PipelineStateCache::PipelineStateCache(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 }
 
-IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name)
+IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
 {
     auto iter = m_cachedGraphicsPSO.find(desc);
     if (iter != m_cachedGraphicsPSO.end())
@@ -71,13 +71,13 @@ IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxGraphicsPipelin
     IGfxPipelineState* pPSO = m_pRenderer->GetDevice()->CreateGraphicsPipelineState(desc, name);
     if (pPSO)
     {
-        m_cachedGraphicsPSO.insert(std::make_pair(desc, pPSO));
+        m_cachedGraphicsPSO.insert(eastl::make_pair(desc, eastl::unique_ptr<IGfxPipelineState>(pPSO)));
     }
 
     return pPSO;
 }
 
-IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name)
+IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name)
 {
     auto iter = m_cachedMeshShadingPSO.find(desc);
     if (iter != m_cachedMeshShadingPSO.end())
@@ -88,13 +88,13 @@ IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxMeshShadingPipe
     IGfxPipelineState* pPSO = m_pRenderer->GetDevice()->CreateMeshShadingPipelineState(desc, name);
     if (pPSO)
     {
-        m_cachedMeshShadingPSO.insert(std::make_pair(desc, pPSO));
+        m_cachedMeshShadingPSO.insert(eastl::make_pair(desc, eastl::unique_ptr<IGfxPipelineState>(pPSO)));
     }
 
     return pPSO;
 }
 
-IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name)
+IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name)
 {
     auto iter = m_cachedComputePSO.find(desc);
     if (iter != m_cachedComputePSO.end())
@@ -105,7 +105,7 @@ IGfxPipelineState* PipelineStateCache::GetPipelineState(const GfxComputePipeline
     IGfxPipelineState* pPSO = m_pRenderer->GetDevice()->CreateComputePipelineState(desc, name);
     if (pPSO)
     {
-        m_cachedComputePSO.insert(std::make_pair(desc, pPSO));
+        m_cachedComputePSO.insert(eastl::make_pair(desc, eastl::unique_ptr<IGfxPipelineState>(pPSO)));
     }
 
     return pPSO;

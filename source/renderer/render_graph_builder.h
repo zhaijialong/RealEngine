@@ -16,7 +16,7 @@ public:
     void EnableAsyncCompute() { m_pPass->EnableAsyncCompute(); }
 
     template<typename Resource>
-    RenderGraphHandle Create(const typename Resource::Desc& desc, const std::string& name)
+    RenderGraphHandle Create(const typename Resource::Desc& desc, const eastl::string& name)
     {
         return m_pGraph->Create<Resource>(desc, name);
     }

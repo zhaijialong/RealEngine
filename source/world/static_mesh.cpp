@@ -3,7 +3,7 @@
 #include "resource_cache.h"
 #include "core/engine.h"
 
-StaticMesh::StaticMesh(const std::string& name)
+StaticMesh::StaticMesh(const eastl::string& name)
 {
     m_name = name;
 }

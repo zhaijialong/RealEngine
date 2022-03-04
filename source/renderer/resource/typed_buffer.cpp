@@ -2,7 +2,7 @@
 #include "core/engine.h"
 #include "../renderer.h"
 
-TypedBuffer::TypedBuffer(const std::string& name)
+TypedBuffer::TypedBuffer(const eastl::string& name)
 {
     m_name = name;
 }

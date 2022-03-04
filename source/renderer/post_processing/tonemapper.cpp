@@ -64,7 +64,7 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
 
 void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* exposure, IGfxDescriptor* pLdrUAV, IGfxDescriptor* bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
-    std::vector<std::string> defines;
+    eastl::vector<eastl::string> defines;
 
     switch (m_mode)
     {

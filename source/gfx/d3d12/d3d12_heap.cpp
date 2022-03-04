@@ -2,7 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 
-D3D12Heap::D3D12Heap(D3D12Device* pDevice, const GfxHeapDesc& desc, const std::string& name)
+D3D12Heap::D3D12Heap(D3D12Device* pDevice, const GfxHeapDesc& desc, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_desc = desc;

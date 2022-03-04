@@ -1,7 +1,7 @@
 #include "d3d12_fence.h"
 #include "d3d12_device.h"
 
-D3D12Fence::D3D12Fence(D3D12Device* pDevice, const std::string& name)
+D3D12Fence::D3D12Fence(D3D12Device* pDevice, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_name = name;

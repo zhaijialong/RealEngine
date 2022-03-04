@@ -27,10 +27,10 @@ private:
     IGfxPipelineState* m_pDrawPSO = nullptr;
     IGfxPipelineState* m_pBuildCommandPSO = nullptr;
 
-    std::unique_ptr<Texture2D> m_pFontTexture;
-    std::unique_ptr<StructuredBuffer> m_pFontCharBuffer; //0-128 to quad uv mapping
+    eastl::unique_ptr<Texture2D> m_pFontTexture;
+    eastl::unique_ptr<StructuredBuffer> m_pFontCharBuffer; //0-128 to quad uv mapping
 
-    std::unique_ptr<StructuredBuffer> m_pTextBuffer;
-    std::unique_ptr<RawBuffer> m_pTextCounterBuffer;
-    std::unique_ptr<RawBuffer> m_pDrawArugumentsBuffer;
+    eastl::unique_ptr<StructuredBuffer> m_pTextBuffer;
+    eastl::unique_ptr<RawBuffer> m_pTextCounterBuffer;
+    eastl::unique_ptr<RawBuffer> m_pDrawArugumentsBuffer;
 };

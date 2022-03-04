@@ -9,7 +9,7 @@ class IGfxFence;
 class D3D12CommandList : public IGfxCommandList
 {
 public:
-    D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const std::string& name);
+    D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name);
     ~D3D12CommandList();
 
     bool Create();
@@ -23,7 +23,7 @@ public:
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
     virtual void Submit() override;
 
-    virtual void BeginEvent(const std::string& event_name) override;
+    virtual void BeginEvent(const eastl::string& event_name) override;
     virtual void EndEvent() override;
 
     virtual void CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* buffer, uint32_t offset) override;
@@ -84,7 +84,7 @@ private:
 
     IGfxPipelineState* m_pCurrentPSO = nullptr;
 
-    std::vector<D3D12_RESOURCE_BARRIER> m_pendingBarriers;
+    eastl::vector<D3D12_RESOURCE_BARRIER> m_pendingBarriers;
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
     struct MicroProfileThreadLogGpu* m_pProfileLog = nullptr;

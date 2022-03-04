@@ -25,10 +25,10 @@ public:
 private:
     Renderer* m_pRenderer = nullptr;
 
-    std::unique_ptr<TAA> m_pTAA;
-    std::unique_ptr<AutomaticExposure> m_pAutomaticExposure;
-    std::unique_ptr<Bloom> m_pBloom;
-    std::unique_ptr<Tonemapper> m_pToneMapper;
-    std::unique_ptr<FXAA> m_pFXAA;
-    std::unique_ptr<CAS> m_pCAS;
+    eastl::unique_ptr<TAA> m_pTAA;
+    eastl::unique_ptr<AutomaticExposure> m_pAutomaticExposure;
+    eastl::unique_ptr<Bloom> m_pBloom;
+    eastl::unique_ptr<Tonemapper> m_pToneMapper;
+    eastl::unique_ptr<FXAA> m_pFXAA;
+    eastl::unique_ptr<CAS> m_pCAS;
 };

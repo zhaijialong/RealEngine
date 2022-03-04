@@ -4,7 +4,7 @@
 
 #define ALIGN(address, alignment) (((address) + (alignment) - 1) & ~((alignment) - 1)) 
 
-D3D12RayTracingTLAS::D3D12RayTracingTLAS(D3D12Device* pDevice, const GfxRayTracingTLASDesc& desc, const std::string& name)
+D3D12RayTracingTLAS::D3D12RayTracingTLAS(D3D12Device* pDevice, const GfxRayTracingTLASDesc& desc, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_desc = desc;

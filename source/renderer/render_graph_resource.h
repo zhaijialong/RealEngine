@@ -11,7 +11,7 @@ class RenderGraphResourceAllocator;
 class RenderGraphResource
 {
 public:
-    RenderGraphResource(const std::string& name)
+    RenderGraphResource(const eastl::string& name)
     {
         m_name = name;
     }
@@ -40,7 +40,7 @@ public:
     virtual IGfxResource* GetAliasedPrevResource() = 0;
 
 protected:
-    std::string m_name;
+    eastl::string m_name;
 
     DAGNodeID m_firstPass = UINT32_MAX;
     DAGNodeID m_lastPass = 0;
@@ -55,7 +55,7 @@ class RenderGraphTexture : public RenderGraphResource
 public:
     using Desc = GfxTextureDesc;
 
-    RenderGraphTexture(RenderGraphResourceAllocator& allocator, const std::string& name, const Desc& desc);
+    RenderGraphTexture(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc);
     RenderGraphTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state);
     ~RenderGraphTexture();
 
@@ -81,7 +81,7 @@ class RenderGraphBuffer : public RenderGraphResource
 public:
     using Desc = GfxBufferDesc;
 
-    RenderGraphBuffer(RenderGraphResourceAllocator& allocator, const std::string& name, const Desc& desc);
+    RenderGraphBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc);
     RenderGraphBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxResourceState state);
     ~RenderGraphBuffer();
 

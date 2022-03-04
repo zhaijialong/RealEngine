@@ -35,18 +35,18 @@ public:
     RenderGraphResource* GetResource() const { return m_pResource; }
     uint32_t GetVersion() const { return m_version; }
 
-    virtual std::string GetGraphvizName() const override
+    virtual eastl::string GetGraphvizName() const override
     {
-        std::string s = m_pResource->GetName();
+        eastl::string s = m_pResource->GetName();
         s.append("\nversion:");
-        s.append(std::to_string(m_version));
+        s.append(eastl::to_string(m_version));
         if (m_version > 0)
         {
-            std::vector<DAGEdge*> incoming_edges = m_graph.GetIncomingEdges(this);
+            eastl::vector<DAGEdge*> incoming_edges = m_graph.GetIncomingEdges(this);
             RE_ASSERT(incoming_edges.size() == 1);
             uint32_t subresource = ((RenderGraphEdge*)incoming_edges[0])->GetSubresource();
             s.append("\nsubresource:");
-            s.append(std::to_string(subresource));
+            s.append(eastl::to_string(subresource));
         }
         return s;
     }
@@ -141,7 +141,7 @@ inline T* RenderGraph::AllocatePOD(ArgsT&&... arguments)
 }
 
 template<typename Data, typename Setup, typename Exec>
-inline RenderGraphPass<Data>& RenderGraph::AddPass(const std::string& name, const Setup& setup, const Exec& execute)
+inline RenderGraphPass<Data>& RenderGraph::AddPass(const eastl::string& name, const Setup& setup, const Exec& execute)
 {
     auto pass = Allocate<RenderGraphPass<Data>>(name, m_graph, execute);
 
@@ -160,7 +160,7 @@ inline RenderGraphPass<Data>& RenderGraph::AddPass(const std::string& name, cons
 }
 
 template<typename Resource>
-inline RenderGraphHandle RenderGraph::Create(const typename Resource::Desc& desc, const std::string& name)
+inline RenderGraphHandle RenderGraph::Create(const typename Resource::Desc& desc, const eastl::string& name)
 {
     auto resource = Allocate<Resource>(m_resourceAllocator, name, desc);
     auto node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);

@@ -2,7 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12_buffer.h"
 
-D3D12RayTracingBLAS::D3D12RayTracingBLAS(D3D12Device* pDevice, const GfxRayTracingBLASDesc& desc, const std::string& name)
+D3D12RayTracingBLAS::D3D12RayTracingBLAS(D3D12Device* pDevice, const GfxRayTracingBLASDesc& desc, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_desc = desc;

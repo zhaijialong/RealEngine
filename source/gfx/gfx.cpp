@@ -21,7 +21,7 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
     return pDevice;
 }
 
-void BeginMPGpuEvent(IGfxCommandList* pCommandList, const std::string& event_name)
+void BeginMPGpuEvent(IGfxCommandList* pCommandList, const eastl::string& event_name)
 {
 #if MICROPROFILE_GPU_TIMERS
     static const uint32_t EVENT_COLOR[] =

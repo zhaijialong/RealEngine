@@ -21,7 +21,7 @@ private:
     IGfxPipelineState* m_pPathTracingPSO = nullptr;
     IGfxPipelineState* m_pAccumulationPSO = nullptr;
 
-    std::unique_ptr<Texture2D> m_pHistoryAccumulation;
+    eastl::unique_ptr<Texture2D> m_pHistoryAccumulation;
 
     uint m_maxRayLength = 8;
     uint m_nAccumulatedFrames = 0;

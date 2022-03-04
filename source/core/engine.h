@@ -14,7 +14,7 @@ class Engine
 public:
     static Engine* GetInstance();
 
-    void Init(const std::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height);
+    void Init(const eastl::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height);
     void Shut();
     void Tick();
 
@@ -25,9 +25,9 @@ public:
     enki::TaskScheduler* GetTaskScheduler() const { return m_pTaskScheduler.get(); }
 
     void* GetWindowHandle() const { return m_windowHandle; }
-    const std::string& GetWorkPath() const { return m_workPath; }
-    const std::string& GetAssetPath() const { return m_assetPath; }
-    const std::string& GetShaderPath() const { return m_shaderPath; }
+    const eastl::string& GetWorkPath() const { return m_workPath; }
+    const eastl::string& GetAssetPath() const { return m_assetPath; }
+    const eastl::string& GetShaderPath() const { return m_shaderPath; }
 
     float GetFrameDeltaTime() const { return m_frameTime; }
 
@@ -38,12 +38,12 @@ private:
     void LoadEngineConfig();
 
 private:
-    std::unique_ptr<Renderer> m_pRenderer;
-    std::unique_ptr<World> m_pWorld;
-    std::unique_ptr<GUI> m_pGUI;
-    std::unique_ptr<Editor> m_pEditor;
+    eastl::unique_ptr<Renderer> m_pRenderer;
+    eastl::unique_ptr<World> m_pWorld;
+    eastl::unique_ptr<GUI> m_pGUI;
+    eastl::unique_ptr<Editor> m_pEditor;
 
-    std::unique_ptr<class enki::TaskScheduler> m_pTaskScheduler;
+    eastl::unique_ptr<class enki::TaskScheduler> m_pTaskScheduler;
     
     uint64_t m_lastFrameTime = 0;
     float m_frameTime = 0.0f; //in seconds
@@ -51,7 +51,7 @@ private:
     CSimpleIniA m_configIni;
 
     void* m_windowHandle = nullptr;
-    std::string m_workPath;
-    std::string m_assetPath;
-    std::string m_shaderPath;
+    eastl::string m_workPath;
+    eastl::string m_assetPath;
+    eastl::string m_shaderPath;
 };

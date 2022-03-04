@@ -87,9 +87,9 @@ void GpuDrivenDebugPrint::Draw(IGfxCommandList* pCommandList)
 
 void GpuDrivenDebugPrint::CreateFontTexture()
 {
-    std::string font_file = Engine::GetInstance()->GetAssetPath() + "fonts/Roboto-Medium.ttf";
+    eastl::string font_file = Engine::GetInstance()->GetAssetPath() + "fonts/Roboto-Medium.ttf";
 
-    std::vector<uint8_t> ttf_buffer(1 << 20);
+    eastl::vector<uint8_t> ttf_buffer(1 << 20);
 
     FILE* file = fopen(font_file.c_str(), "rb");
     RE_ASSERT(file != nullptr);
@@ -100,8 +100,8 @@ void GpuDrivenDebugPrint::CreateFontTexture()
     const uint32_t width = 256;
     const uint32_t height = 256;
 
-    std::vector<unsigned char> bitmap(width * height);
-    std::vector<stbtt_bakedchar> cdata(char_count);
+    eastl::vector<unsigned char> bitmap(width * height);
+    eastl::vector<stbtt_bakedchar> cdata(char_count);
 
     stbtt_BakeFontBitmap(ttf_buffer.data(), 0, 16.0, bitmap.data(), width, height, 0, char_count, cdata.data());
 
@@ -128,7 +128,7 @@ void GpuDrivenDebugPrint::CreateFontTexture()
         float xadvance;
     };
 
-    std::vector<BakedChar> packed_cdata(char_count);
+    eastl::vector<BakedChar> packed_cdata(char_count);
     for (uint32_t i = 0; i < char_count; ++i)
     {
         packed_cdata[i].x0 = (uint8_t)cdata[i].x0;

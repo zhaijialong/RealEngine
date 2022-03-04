@@ -3,7 +3,7 @@
 #include "d3d12_heap.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 
-D3D12Buffer::D3D12Buffer(D3D12Device* pDevice, const GfxBufferDesc& desc, const std::string& name)
+D3D12Buffer::D3D12Buffer(D3D12Device* pDevice, const GfxBufferDesc& desc, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_desc = desc;
@@ -74,7 +74,7 @@ bool D3D12Buffer::Create(D3D12Heap* heap, uint32_t offset)
         return false;
     }
 
-    std::wstring name_wstr = string_to_wstring(m_name);
+    eastl::wstring name_wstr = string_to_wstring(m_name);
     m_pBuffer->SetName(name_wstr.c_str());
     if (m_pAllocation)
     {

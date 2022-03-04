@@ -1,15 +1,14 @@
 #pragma once
 
 #include <Windows.h>
-#include <string>
-#include <vector>
-#include <algorithm>
+#include "EASTL/string.h"
+#include "EASTL/vector.h"
 
-inline std::wstring string_to_wstring(const std::string& s)
+inline eastl::wstring string_to_wstring(const eastl::string& s)
 {
     DWORD size = MultiByteToWideChar(CP_ACP, 0, s.c_str(), -1, NULL, 0);
 
-    std::wstring result;
+    eastl::wstring result;
     result.resize(size);
 
     MultiByteToWideChar(CP_ACP, 0, s.c_str(), -1, (LPWSTR)result.c_str(), size);
@@ -17,11 +16,11 @@ inline std::wstring string_to_wstring(const std::string& s)
     return result;
 }
 
-inline std::string wstring_to_string(const std::wstring& s)
+inline eastl::string wstring_to_string(const eastl::wstring& s)
 {
     DWORD size = WideCharToMultiByte(CP_ACP, 0, s.c_str(), -1, NULL, 0, NULL, FALSE);
 
-    std::string result;
+    eastl::string result;
     result.resize(size);
 
     WideCharToMultiByte(CP_ACP, 0, s.c_str(), -1, (LPSTR)result.c_str(), size, NULL, FALSE);
@@ -29,27 +28,27 @@ inline std::string wstring_to_string(const std::wstring& s)
     return result;
 }
 
-inline void string_to_float_array(const std::string& str, std::vector<float>& output)
+inline void string_to_float_array(const eastl::string& str, eastl::vector<float>& output)
 {
-    const std::string delims = ",";
+    const eastl::string delims = ",";
 
-    auto first = std::cbegin(str);
+    auto first = eastl::cbegin(str);
 
-    while (first != std::cend(str))
+    while (first != eastl::cend(str))
     {
-        const auto second = std::find_first_of(first, std::cend(str),
-            std::cbegin(delims), std::cend(delims));
+        const auto second = eastl::find_first_of(first, eastl::cend(str),
+            eastl::cbegin(delims), eastl::cend(delims));
 
         if (first != second)
         {
-            output.push_back(std::stof(std::string(first, second)));
+            output.push_back((float)atof(eastl::string(first, second).c_str()));
         }
 
-        if (second == std::cend(str))
+        if (second == eastl::cend(str))
         {
             break;
         }
 
-        first = std::next(second);
+        first = eastl::next(second);
     }
 }

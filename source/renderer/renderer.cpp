@@ -19,10 +19,10 @@
 
 Renderer::Renderer() : m_resizeConnection({})
 {
-    m_pShaderCache = std::make_unique<ShaderCache>(this);
-    m_pShaderCompiler = std::make_unique<ShaderCompiler>(this);
-    m_pPipelineCache = std::make_unique<PipelineStateCache>(this);
-    m_cbAllocator = std::make_unique<LinearAllocator>(8 * 1024 * 1024);
+    m_pShaderCache = eastl::make_unique<ShaderCache>(this);
+    m_pShaderCompiler = eastl::make_unique<ShaderCompiler>(this);
+    m_pPipelineCache = eastl::make_unique<PipelineStateCache>(this);
+    m_cbAllocator = eastl::make_unique<LinearAllocator>(8 * 1024 * 1024);
 
     m_resizeConnection = Engine::GetInstance()->WindowResizeSignal.connect(this, &Renderer::OnWindowResize);
 }
@@ -54,13 +54,13 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
-        std::string name = fmt::format("Renderer::m_pCommandLists[{}]", i);
+        eastl::string name = fmt::format("Renderer::m_pCommandLists[{}]", i).c_str();
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
 
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
-        std::string name = fmt::format("Renderer::m_pComputeCommandLists[{}]", i);
+        eastl::string name = fmt::format("Renderer::m_pComputeCommandLists[{}]", i).c_str();
         m_pComputeCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Compute, name));
     }
 
@@ -68,24 +68,24 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
-        std::string name = fmt::format("Renderer::m_pUploadCommandList[{}]", i);
+        eastl::string name = fmt::format("Renderer::m_pUploadCommandList[{}]", i).c_str();
         m_pUploadCommandList[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Copy, name));
 
-        m_pStagingBufferAllocator[i] = std::make_unique<StagingBufferAllocator>(this);
+        m_pStagingBufferAllocator[i] = eastl::make_unique<StagingBufferAllocator>(this);
     }
 
     CreateCommonResources();
 
-    m_pRenderGraph = std::make_unique<RenderGraph>(this);
-    m_pGpuScene = std::make_unique<GpuScene>(this);
-    m_pHZB = std::make_unique<HZB>(this);
-    m_pBasePass = std::make_unique<BasePass>(this);
-    m_pLightingProcessor = std::make_unique<LightingProcessor>(this);
-    m_pPostProcessor = std::make_unique<PostProcessor>(this);
-    m_pGpuDebugLine = std::make_unique<GpuDrivenDebugLine>(this);
-    m_pGpuDebugPrint = std::make_unique<GpuDrivenDebugPrint>(this);
-    m_pGpuStats = std::make_unique<GpuDrivenStats>(this);
-    m_pPathTracer = std::make_unique<PathTracer>(this);
+    m_pRenderGraph = eastl::make_unique<RenderGraph>(this);
+    m_pGpuScene = eastl::make_unique<GpuScene>(this);
+    m_pHZB = eastl::make_unique<HZB>(this);
+    m_pBasePass = eastl::make_unique<BasePass>(this);
+    m_pLightingProcessor = eastl::make_unique<LightingProcessor>(this);
+    m_pPostProcessor = eastl::make_unique<PostProcessor>(this);
+    m_pGpuDebugLine = eastl::make_unique<GpuDrivenDebugLine>(this);
+    m_pGpuDebugPrint = eastl::make_unique<GpuDrivenDebugPrint>(this);
+    m_pGpuStats = eastl::make_unique<GpuDrivenStats>(this);
+    m_pPathTracer = eastl::make_unique<PathTracer>(this);
 }
 
 void Renderer::RenderFrame()
@@ -309,8 +309,7 @@ void Renderer::Render()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
 
-    std::string event_name = fmt::format("Render Frame {}", m_pDevice->GetFrameID());
-    GPU_EVENT_DEBUG(pCommandList, event_name.c_str());
+    GPU_EVENT_DEBUG(pCommandList, fmt::format("Render Frame {}", m_pDevice->GetFrameID()).c_str());
 
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
@@ -437,22 +436,22 @@ void Renderer::ReloadShaders()
     m_pShaderCache->ReloadShaders();
 }
 
-IGfxShader* Renderer::GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines)
+IGfxShader* Renderer::GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines)
 {
     return m_pShaderCache->GetShader(file, entry_point, profile, defines);
 }
 
-IGfxPipelineState* Renderer::GetPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name)
+IGfxPipelineState* Renderer::GetPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
 {
     return m_pPipelineCache->GetPipelineState(desc, name);
 }
 
-IGfxPipelineState* Renderer::GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name)
+IGfxPipelineState* Renderer::GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name)
 {
     return m_pPipelineCache->GetPipelineState(desc, name);
 }
 
-IGfxPipelineState* Renderer::GetPipelineState(const GfxComputePipelineDesc& desc, const std::string& name)
+IGfxPipelineState* Renderer::GetPipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name)
 {
     return m_pPipelineCache->GetPipelineState(desc, name);
 }
@@ -523,7 +522,7 @@ void Renderer::CreateCommonResources()
     desc.compare_func = GfxCompareFunc::LessEqual;
     m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
 
-    std::string asset_path = Engine::GetInstance()->GetAssetPath();
+    eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
     m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
     m_pEnvTexture.reset(CreateTextureCube(asset_path + "textures/output_pmrem.dds"));
 
@@ -558,9 +557,9 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
     }
 }
 
-IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const std::string& name, GfxMemoryType memory_type)
+IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const eastl::string& name, GfxMemoryType memory_type)
 {
-    std::vector<uint16_t> u16IB;
+    eastl::vector<uint16_t> u16IB;
     if (stride == 1)
     {
         u16IB.resize(index_count);
@@ -588,7 +587,7 @@ IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint
     return buffer;
 }
 
-StructuredBuffer* Renderer::CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const std::string& name, GfxMemoryType memory_type, bool uav)
+StructuredBuffer* Renderer::CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const eastl::string& name, GfxMemoryType memory_type, bool uav)
 {
     StructuredBuffer* buffer = new StructuredBuffer(name);
     if (!buffer->Create(stride, element_count, memory_type, uav))
@@ -605,7 +604,7 @@ StructuredBuffer* Renderer::CreateStructuredBuffer(const void* data, uint32_t st
     return buffer;
 }
 
-TypedBuffer* Renderer::CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const std::string& name, GfxMemoryType memory_type, bool uav)
+TypedBuffer* Renderer::CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const eastl::string& name, GfxMemoryType memory_type, bool uav)
 {
     TypedBuffer* buffer = new TypedBuffer(name);
     if (!buffer->Create(format, element_count, memory_type, uav))
@@ -622,7 +621,7 @@ TypedBuffer* Renderer::CreateTypedBuffer(const void* data, GfxFormat format, uin
     return buffer;
 }
 
-RawBuffer* Renderer::CreateRawBuffer(const void* data, uint32_t size, const std::string& name, GfxMemoryType memory_type, bool uav)
+RawBuffer* Renderer::CreateRawBuffer(const void* data, uint32_t size, const eastl::string& name, GfxMemoryType memory_type, bool uav)
 {
     RawBuffer* buffer = new RawBuffer(name);
     if (!buffer->Create(size, memory_type, uav))
@@ -639,7 +638,7 @@ RawBuffer* Renderer::CreateRawBuffer(const void* data, uint32_t size, const std:
     return buffer;
 }
 
-Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
+Texture2D* Renderer::CreateTexture2D(const eastl::string& file, bool srgb)
 {
     TextureLoader loader;
     if (!loader.Load(file, srgb))
@@ -659,7 +658,7 @@ Texture2D* Renderer::CreateTexture2D(const std::string& file, bool srgb)
     return texture;
 }
 
-Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const std::string& name)
+Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name)
 {
     Texture2D* texture = new Texture2D(name);
     if (!texture->Create(width, height, levels, format, flags))
@@ -670,7 +669,7 @@ Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, uint32_t l
     return texture;
 }
 
-TextureCube* Renderer::CreateTextureCube(const std::string& file, bool srgb)
+TextureCube* Renderer::CreateTextureCube(const eastl::string& file, bool srgb)
 {
     TextureLoader loader;
     if (!loader.Load(file, srgb))

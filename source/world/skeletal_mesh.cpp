@@ -27,7 +27,7 @@ SkeletalMeshData::~SkeletalMeshData()
     pRenderer->FreeSceneAnimationBuffer(prevAnimPosBufferAddress);
 }
 
-SkeletalMesh::SkeletalMesh(const std::string& name)
+SkeletalMesh::SkeletalMesh(const eastl::string& name)
 {
     m_name = name;
 }

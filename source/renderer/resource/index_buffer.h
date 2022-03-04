@@ -1,12 +1,12 @@
 #pragma once
 
 #include "gfx/gfx.h"
-#include <memory>
+#include "EASTL/unique_ptr.h"
 
 class IndexBuffer
 {
 public:
-    IndexBuffer(const std::string& name);
+    IndexBuffer(const eastl::string& name);
 
     bool Create(uint32_t stride, uint32_t index_count, GfxMemoryType memory_type);
 
@@ -15,8 +15,8 @@ public:
     GfxFormat GetFormat() const { return m_pBuffer->GetDesc().format; }
 
 private:
-    std::string m_name;
+    eastl::string m_name;
 
-    std::unique_ptr<IGfxBuffer> m_pBuffer;
+    eastl::unique_ptr<IGfxBuffer> m_pBuffer;
     uint32_t m_nIndexCount = 0;
 };

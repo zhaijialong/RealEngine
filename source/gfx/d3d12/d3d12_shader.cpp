@@ -2,7 +2,7 @@
 #include "d3d12_device.h"
 #include "xxHash/xxhash.h"
 
-D3D12Shader::D3D12Shader(D3D12Device* pDevice, const GfxShaderDesc& desc, const std::vector<uint8_t> data, const std::string& name)
+D3D12Shader::D3D12Shader(D3D12Device* pDevice, const GfxShaderDesc& desc, const eastl::vector<uint8_t> data, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_desc = desc;

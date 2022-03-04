@@ -2,7 +2,7 @@
 
 #include "d3d12_header.h"
 #include "../i_gfx_device.h"
-
+#include "EASTL/unique_ptr.h"
 #include <queue>
 
 namespace D3D12MA
@@ -14,7 +14,7 @@ namespace D3D12MA
 class D3D12DescriptorAllocator
 {
 public:
-    D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shader_visible, uint32_t descriptor_count, const std::string& name);
+    D3D12DescriptorAllocator(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shader_visible, uint32_t descriptor_count, const eastl::string& name);
     ~D3D12DescriptorAllocator();
 
     D3D12Descriptor Allocate();
@@ -29,7 +29,7 @@ private:
     uint32_t m_descirptorCount = 0;
     uint32_t m_allocatedCount = 0;
     bool m_bShaderVisible = false;
-    std::vector<D3D12Descriptor> m_freeDescriptors;
+    eastl::vector<D3D12Descriptor> m_freeDescriptors;
 };
 
 class D3D12Device;
@@ -37,12 +37,12 @@ class D3D12Device;
 class D3D12ConstantBufferAllocator
 {
 public:
-    D3D12ConstantBufferAllocator(D3D12Device* device, uint32_t buffer_size, const std::string& name);
+    D3D12ConstantBufferAllocator(D3D12Device* device, uint32_t buffer_size, const eastl::string& name);
 
     void Allocate(uint32_t size, void** cpu_address, uint64_t* gpu_address);
     void Reset();
 private:
-    std::unique_ptr<IGfxBuffer> m_pBuffer = nullptr;
+    eastl::unique_ptr<IGfxBuffer> m_pBuffer = nullptr;
     uint32_t m_allcatedSize = 0;
 };
 
@@ -58,27 +58,27 @@ public:
     virtual void* GetHandle() const override { return m_pDevice; }
     virtual GfxVendor GetVendor() const override { return m_vendor; }
 
-    virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const std::string& name) override;
-    virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const std::string& name) override;
-    virtual IGfxFence* CreateFence(const std::string& name) override;
-    virtual IGfxHeap* CreateHeap(const GfxHeapDesc& desc, const std::string& name) override;
-    virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, const std::string& name) override;
-    virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, IGfxHeap* heap, uint32_t offset, const std::string& name) override;
-    virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, const std::string& name) override;
-    virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, IGfxHeap* heap, uint32_t offset, const std::string& name) override;
-    virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const std::vector<uint8_t>& data, const std::string& name) override;
-    virtual IGfxPipelineState* CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const std::string& name) override;
-    virtual IGfxPipelineState* CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const std::string& name) override;
-    virtual IGfxPipelineState* CreateComputePipelineState(const GfxComputePipelineDesc& desc, const std::string& name) override;
-    virtual IGfxDescriptor* CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const std::string& name) override;
-    virtual IGfxDescriptor* CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const std::string& name) override;
-    virtual IGfxDescriptor* CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const std::string& name) override;
-    virtual IGfxDescriptor* CreateSampler(const GfxSamplerDesc& desc, const std::string& name) override;
-    virtual IGfxRayTracingBLAS* CreateRayTracingBLAS(const GfxRayTracingBLASDesc& desc, const std::string& name) override;
-    virtual IGfxRayTracingTLAS* CreateRayTracingTLAS(const GfxRayTracingTLASDesc& desc, const std::string& name) override;
+    virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name) override;
+    virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name) override;
+    virtual IGfxFence* CreateFence(const eastl::string& name) override;
+    virtual IGfxHeap* CreateHeap(const GfxHeapDesc& desc, const eastl::string& name) override;
+    virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, const eastl::string& name) override;
+    virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, IGfxHeap* heap, uint32_t offset, const eastl::string& name) override;
+    virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, const eastl::string& name) override;
+    virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, IGfxHeap* heap, uint32_t offset, const eastl::string& name) override;
+    virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const eastl::vector<uint8_t>& data, const eastl::string& name) override;
+    virtual IGfxPipelineState* CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name) override;
+    virtual IGfxPipelineState* CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name) override;
+    virtual IGfxPipelineState* CreateComputePipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name) override;
+    virtual IGfxDescriptor* CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const eastl::string& name) override;
+    virtual IGfxDescriptor* CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const eastl::string& name) override;
+    virtual IGfxDescriptor* CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const eastl::string& name) override;
+    virtual IGfxDescriptor* CreateSampler(const GfxSamplerDesc& desc, const eastl::string& name) override;
+    virtual IGfxRayTracingBLAS* CreateRayTracingBLAS(const GfxRayTracingBLASDesc& desc, const eastl::string& name) override;
+    virtual IGfxRayTracingTLAS* CreateRayTracingTLAS(const GfxRayTracingTLASDesc& desc, const eastl::string& name) override;
 
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
-    virtual bool DumpMemoryStats(const std::string& file) override;
+    virtual bool DumpMemoryStats(const eastl::string& file) override;
 
     bool Init();
     IDXGIFactory5* GetDxgiFactory() const { return m_pDxgiFactory; }
@@ -152,14 +152,14 @@ private:
     D3D12MA::Allocator* m_pResourceAllocator = nullptr;
 
     static const uint32_t CB_ALLOCATOR_COUNT = 3;
-    std::unique_ptr<D3D12ConstantBufferAllocator> m_pConstantBufferAllocators[CB_ALLOCATOR_COUNT];
+    eastl::unique_ptr<D3D12ConstantBufferAllocator> m_pConstantBufferAllocators[CB_ALLOCATOR_COUNT];
 
-    std::unique_ptr<D3D12DescriptorAllocator> m_pRTVAllocator;
-    std::unique_ptr<D3D12DescriptorAllocator> m_pDSVAllocator;
-    std::unique_ptr<D3D12DescriptorAllocator> m_pResDescriptorAllocator;
-    std::unique_ptr<D3D12DescriptorAllocator> m_pSamplerAllocator;
+    eastl::unique_ptr<D3D12DescriptorAllocator> m_pRTVAllocator;
+    eastl::unique_ptr<D3D12DescriptorAllocator> m_pDSVAllocator;
+    eastl::unique_ptr<D3D12DescriptorAllocator> m_pResDescriptorAllocator;
+    eastl::unique_ptr<D3D12DescriptorAllocator> m_pSamplerAllocator;
 
-    std::unique_ptr<D3D12DescriptorAllocator> m_pNonShaderVisibleUavAllocator;
+    eastl::unique_ptr<D3D12DescriptorAllocator> m_pNonShaderVisibleUavAllocator;
 
     uint64_t m_nFrameID = 0;
 

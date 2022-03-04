@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../gfx/gfx.h"
-#include <memory>
+#include "EASTL/unique_ptr.h"
 
 class Renderer;
 
@@ -25,7 +25,7 @@ private:
 
 private:
     Renderer* m_pRenderer = nullptr;
-    std::vector<std::unique_ptr<IGfxBuffer>> m_pBuffers;
+    eastl::vector<eastl::unique_ptr<IGfxBuffer>> m_pBuffers;
     uint32_t m_nCurrentBuffer = 0;
     uint32_t m_nAllocatedSize = 0;
     uint64_t m_nLastAllocatedFrame = 0;

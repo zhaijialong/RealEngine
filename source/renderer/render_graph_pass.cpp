@@ -1,7 +1,7 @@
 #include "render_graph_pass.h"
 #include "render_graph.h"
 
-RenderGraphPassBase::RenderGraphPassBase(const std::string& name, DirectedAcyclicGraph& graph) :
+RenderGraphPassBase::RenderGraphPassBase(const eastl::string& name, DirectedAcyclicGraph& graph) :
     DAGNode(graph)
 {
     m_name = name;
@@ -9,7 +9,7 @@ RenderGraphPassBase::RenderGraphPassBase(const std::string& name, DirectedAcycli
 
 void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
 {
-    std::vector<DAGEdge*> incoming_edge = graph.GetIncomingEdges(this);
+    eastl::vector<DAGEdge*> incoming_edge = graph.GetIncomingEdges(this);
 
     for (size_t i = 0; i < incoming_edge.size(); ++i)
     {
@@ -19,8 +19,8 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
         RenderGraphResourceNode* resource_node = (RenderGraphResourceNode*)graph.GetNode(edge->GetFromNode());
         RenderGraphResource* resource = resource_node->GetResource();
 
-        std::vector<DAGEdge*> resource_incoming = graph.GetIncomingEdges(resource_node);
-        std::vector<DAGEdge*> resource_outgoing = graph.GetOutgoingEdges(resource_node);
+        eastl::vector<DAGEdge*> resource_incoming = graph.GetIncomingEdges(resource_node);
+        eastl::vector<DAGEdge*> resource_outgoing = graph.GetOutgoingEdges(resource_node);
         RE_ASSERT(resource_incoming.size() <= 1);
         RE_ASSERT(resource_outgoing.size() >= 1);
 
@@ -81,7 +81,7 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
         }
     }
 
-    std::vector<DAGEdge*> outgoing_edge = graph.GetOutgoingEdges(this);
+    eastl::vector<DAGEdge*> outgoing_edge = graph.GetOutgoingEdges(this);
 
     for (size_t i = 0; i < outgoing_edge.size(); ++i)
     {

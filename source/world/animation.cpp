@@ -1,7 +1,7 @@
 #include "animation.h"
 #include "skeletal_mesh.h"
 
-Animation::Animation(const std::string& name)
+Animation::Animation(const eastl::string& name)
 {
     m_name = name;
 }
@@ -23,8 +23,8 @@ void Animation::Update(SkeletalMesh* mesh, float delta_time)
 
 void Animation::UpdateChannel(SkeletalMesh* mesh, const AnimationChannel& channel)
 {
-    std::pair<float, float4> lower_frame;
-    std::pair<float, float4> upper_frame;
+    eastl::pair<float, float4> lower_frame;
+    eastl::pair<float, float4> upper_frame;
 
     bool found = false;
     for (size_t frame = 0; frame < channel.keyframes.size() - 1; ++frame)

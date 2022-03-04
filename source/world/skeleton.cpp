@@ -2,7 +2,7 @@
 #include "skeletal_mesh.h"
 #include "core/engine.h"
 
-Skeleton::Skeleton(const std::string& name)
+Skeleton::Skeleton(const eastl::string& name)
 {
     m_name = name;
     m_pRenderer = Engine::GetInstance()->GetRenderer();

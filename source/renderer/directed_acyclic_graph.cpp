@@ -62,7 +62,7 @@ void DirectedAcyclicGraph::Cull()
     }
 
     // cull nodes with a 0 reference count
-    std::vector<DAGNode*> stack;
+    eastl::vector<DAGNode*> stack;
     for (size_t i = 0; i < m_nodes.size(); ++i) 
     {
         if (m_nodes[i]->GetRefCount() == 0) 
@@ -76,7 +76,7 @@ void DirectedAcyclicGraph::Cull()
         DAGNode* node = stack.back();
         stack.pop_back();
 
-        std::vector<DAGEdge*> incoming = GetIncomingEdges(node);
+        eastl::vector<DAGEdge*> incoming = GetIncomingEdges(node);
 
         for (size_t i = 0; i < incoming.size(); ++i) 
         {
@@ -95,9 +95,9 @@ bool DirectedAcyclicGraph::IsEdgeValid(const DAGEdge* edge) const
     return !GetNode(edge->m_from)->IsCulled() && !GetNode(edge->m_to)->IsCulled();
 }
 
-std::vector<DAGEdge*> DirectedAcyclicGraph::GetIncomingEdges(const DAGNode* node) const
+eastl::vector<DAGEdge*> DirectedAcyclicGraph::GetIncomingEdges(const DAGNode* node) const
 {
-    std::vector<DAGEdge*> result;
+    eastl::vector<DAGEdge*> result;
     for (size_t i = 0; i < m_edges.size(); ++i)
     {
         if (m_edges[i]->m_to == node->GetId())
@@ -108,9 +108,9 @@ std::vector<DAGEdge*> DirectedAcyclicGraph::GetIncomingEdges(const DAGNode* node
     return result;
 }
 
-std::vector<DAGEdge*> DirectedAcyclicGraph::GetOutgoingEdges(const DAGNode* node) const
+eastl::vector<DAGEdge*> DirectedAcyclicGraph::GetOutgoingEdges(const DAGNode* node) const
 {
-    std::vector<DAGEdge*> result;
+    eastl::vector<DAGEdge*> result;
     for (size_t i = 0; i < m_edges.size(); ++i)
     {
         if (m_edges[i]->m_from == node->GetId())
@@ -138,8 +138,8 @@ bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
     for (size_t i = 0; i < m_nodes.size(); ++i) 
     {
         uint32_t id = m_nodes[i]->GetId();
-        std::string s = m_nodes[i]->Graphvizify();
-        out << "  \"N" << id << "\" " << s << "\n";
+        eastl::string s = m_nodes[i]->Graphvizify();
+        out << "  \"N" << id << "\" " << s.c_str() << "\n";
     }
 
     out << "\n";
@@ -153,7 +153,7 @@ bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
         auto pos = std::partition(first, edges.end(),
             [this](auto const& edge) { return IsEdgeValid(edge); });
 
-        std::string s = node->GetGraphvizEdgeColor();
+        eastl::string s = node->GetGraphvizEdgeColor();
 
         // render the valid edges
         if (first != pos) 
@@ -186,9 +186,9 @@ bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
     return true;
 }
 
-std::string DAGNode::Graphvizify() const
+eastl::string DAGNode::Graphvizify() const
 {
-    std::string s;
+    eastl::string s;
     s.reserve(128);
 
     s.append("[label=\"");

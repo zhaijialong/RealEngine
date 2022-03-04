@@ -36,7 +36,7 @@ class RenderGraphResourceAllocator
     struct Heap
     {
         IGfxHeap* heap;
-        std::vector<AliasedResource> resources;
+        eastl::vector<AliasedResource> resources;
 
         bool IsOverlapping(const LifetimeRange& lifetime) const
         {
@@ -83,11 +83,11 @@ public:
 
     void Reset();
 
-    IGfxTexture* AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state);
+    IGfxTexture* AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const eastl::string& name, GfxResourceState& initial_state);
     void FreeNonOverlappingTexture(IGfxTexture* texture, GfxResourceState state);
 
-    IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const std::string& name, GfxResourceState& initial_state);
-    IGfxBuffer* AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const std::string& name, GfxResourceState& initial_state);
+    IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const eastl::string& name, GfxResourceState& initial_state);
+    IGfxBuffer* AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const eastl::string& name, GfxResourceState& initial_state);
     void Free(IGfxResource* resource, GfxResourceState state);
 
     IGfxResource* GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass);
@@ -103,7 +103,7 @@ private:
 private:
     IGfxDevice* m_pDevice;
 
-    std::vector<Heap> m_allocatedHeaps;
+    eastl::vector<Heap> m_allocatedHeaps;
 
     struct NonOverlappingTexture
     {
@@ -111,8 +111,8 @@ private:
         GfxResourceState lastUsedState;
         uint64_t lastUsedFrame;
     };
-    std::vector<NonOverlappingTexture> m_freeOverlappingTextures;
+    eastl::vector<NonOverlappingTexture> m_freeOverlappingTextures;
 
-    std::vector<SRVDescriptor> m_allocatedSRVs;
-    std::vector<UAVDescriptor> m_allocatedUAVs;
+    eastl::vector<SRVDescriptor> m_allocatedSRVs;
+    eastl::vector<UAVDescriptor> m_allocatedUAVs;
 };

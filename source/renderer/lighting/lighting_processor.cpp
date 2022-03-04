@@ -6,10 +6,10 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
-    m_pGTAO = std::make_unique<GTAO>(pRenderer);
-    m_pRTShdow = std::make_unique<RTShadow>(pRenderer);
-    m_pClusteredShading = std::make_unique<ClusteredShading>(pRenderer);
-    m_pReflection = std::make_unique<HybridStochasticReflection>(pRenderer);
+    m_pGTAO = eastl::make_unique<GTAO>(pRenderer);
+    m_pRTShdow = eastl::make_unique<RTShadow>(pRenderer);
+    m_pClusteredShading = eastl::make_unique<ClusteredShading>(pRenderer);
+    m_pReflection = eastl::make_unique<HybridStochasticReflection>(pRenderer);
 }
 
 RenderGraphHandle LightingProcessor::Process(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
@@ -87,7 +87,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
             RenderGraphTexture* aoRT = nullptr;
 
-            std::vector<std::string> defines;
+            eastl::vector<eastl::string> defines;
             if (data.ao.IsValid())
             {
                 aoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.ao);

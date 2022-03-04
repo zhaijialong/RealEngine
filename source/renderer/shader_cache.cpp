@@ -30,7 +30,7 @@ inline bool operator==(const GfxShaderDesc& lhs, const GfxShaderDesc& rhs)
     return true;
 }
 
-static inline std::string LoadFile(const std::string& path)
+static inline eastl::string LoadFile(const eastl::string& path)
 {
     std::ifstream is;
     is.open(path.c_str(), std::ios::binary);
@@ -43,7 +43,7 @@ static inline std::string LoadFile(const std::string& path)
     uint32_t length = (uint32_t)is.tellg();
     is.seekg(0, std::ios::beg);
 
-    std::string content;
+    eastl::string content;
     content.resize(length);
 
     is.read((char*)content.data(), length);
@@ -57,10 +57,10 @@ ShaderCache::ShaderCache(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 }
 
-IGfxShader* ShaderCache::GetShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines)
+IGfxShader* ShaderCache::GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines)
 {
-    std::string file_path = Engine::GetInstance()->GetShaderPath() + file;
-    std::string absolute_path = std::filesystem::absolute(file_path).string();
+    eastl::string file_path = Engine::GetInstance()->GetShaderPath() + file;
+    eastl::string absolute_path = std::filesystem::absolute(file_path.c_str()).string().c_str();
 
     GfxShaderDesc desc;
     desc.file = absolute_path;
@@ -77,13 +77,13 @@ IGfxShader* ShaderCache::GetShader(const std::string& file, const std::string& e
     IGfxShader* pShader = CreateShader(absolute_path, entry_point, profile, defines);
     if (pShader != nullptr)
     {
-        m_cachedShaders.insert(std::make_pair(desc, pShader));
+        m_cachedShaders.insert(eastl::make_pair(desc, eastl::unique_ptr<IGfxShader>(pShader)));
     }
 
     return pShader;
 }
 
-std::string ShaderCache::GetCachedFileContent(const std::string& file)
+eastl::string ShaderCache::GetCachedFileContent(const eastl::string& file)
 {
     auto iter = m_cachedFile.find(file);
     if (iter != m_cachedFile.end())
@@ -91,9 +91,9 @@ std::string ShaderCache::GetCachedFileContent(const std::string& file)
         return iter->second;
     }
 
-    std::string source = LoadFile(file);
+    eastl::string source = LoadFile(file);
 
-    m_cachedFile.insert(std::make_pair(file, source));
+    m_cachedFile.insert(eastl::make_pair(file, source));
 
     return source;
 }
@@ -102,16 +102,16 @@ void ShaderCache::ReloadShaders()
 {
     for (auto iter = m_cachedFile.begin(); iter != m_cachedFile.end(); ++iter)
     {
-        const std::string& path = iter->first;
-        const std::string& source = iter->second;
+        const eastl::string& path = iter->first;
+        const eastl::string& source = iter->second;
         
-        std::string new_source = LoadFile(path);
+        eastl::string new_source = LoadFile(path);
 
         if (source != new_source)
         {
             m_cachedFile[path] = new_source;
 
-            std::vector<IGfxShader*> changedShaders = GetShaderList(path);
+            eastl::vector<IGfxShader*> changedShaders = GetShaderList(path);
             for (size_t i = 0; i < changedShaders.size(); ++i)
             {
                 RecompileShader(changedShaders[i]);
@@ -120,11 +120,11 @@ void ShaderCache::ReloadShaders()
     }
 }
 
-IGfxShader* ShaderCache::CreateShader(const std::string& file, const std::string& entry_point, const std::string& profile, const std::vector<std::string>& defines)
+IGfxShader* ShaderCache::CreateShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines)
 {
-    std::string source = GetCachedFileContent(file);
+    eastl::string source = GetCachedFileContent(file);
 
-    std::vector<uint8_t> shader_blob;
+    eastl::vector<uint8_t> shader_blob;
     if (!m_pRenderer->GetShaderCompiler()->Compile(source, file, entry_point, profile, defines, shader_blob))
     {
         return nullptr;
@@ -136,7 +136,7 @@ IGfxShader* ShaderCache::CreateShader(const std::string& file, const std::string
     desc.profile = profile;
     desc.defines = defines;
 
-    std::string name = file + " : " + entry_point + "(" + profile + ")";
+    eastl::string name = file + " : " + entry_point + "(" + profile + ")";
     IGfxShader* shader = m_pRenderer->GetDevice()->CreateShader(desc, shader_blob, name);
     return shader;
 }
@@ -144,9 +144,9 @@ IGfxShader* ShaderCache::CreateShader(const std::string& file, const std::string
 void ShaderCache::RecompileShader(IGfxShader* shader)
 {
     const GfxShaderDesc& desc = shader->GetDesc();
-    std::string source = GetCachedFileContent(desc.file);
+    eastl::string source = GetCachedFileContent(desc.file);
 
-    std::vector<uint8_t> shader_blob;
+    eastl::vector<uint8_t> shader_blob;
     if (!m_pRenderer->GetShaderCompiler()->Compile(source, desc.file, desc.entry_point, desc.profile, desc.defines, shader_blob))
     {
         return;
@@ -158,9 +158,9 @@ void ShaderCache::RecompileShader(IGfxShader* shader)
     pipelineCache->RecreatePSO(shader);
 }
 
-std::vector<IGfxShader*> ShaderCache::GetShaderList(const std::string& file)
+eastl::vector<IGfxShader*> ShaderCache::GetShaderList(const eastl::string& file)
 {
-    std::vector<IGfxShader*> shaders;
+    eastl::vector<IGfxShader*> shaders;
 
     for (auto iter = m_cachedShaders.begin(); iter != m_cachedShaders.end(); ++iter)
     {
@@ -173,7 +173,7 @@ std::vector<IGfxShader*> ShaderCache::GetShaderList(const std::string& file)
     return shaders;
 }
 
-bool ShaderCache::IsFileIncluded(const IGfxShader* shader, const std::string& file)
+bool ShaderCache::IsFileIncluded(const IGfxShader* shader, const eastl::string& file)
 {
     const GfxShaderDesc& desc = shader->GetDesc();
 
@@ -182,12 +182,12 @@ bool ShaderCache::IsFileIncluded(const IGfxShader* shader, const std::string& fi
         return true;
     }
 
-    std::string extension = std::filesystem::path(file).extension().string();
+    eastl::string extension = std::filesystem::path(file.c_str()).extension().string().c_str();
     bool is_header = extension == ".hlsli" || extension == ".h";
 
     if (is_header)
     {
-        std::string source = GetCachedFileContent(desc.file);
+        std::string source = GetCachedFileContent(desc.file).c_str();
         std::regex r("#include\\s*\"\\s*\\S+.\\S+\\s*\"");
 
         std::smatch result;
@@ -195,16 +195,16 @@ bool ShaderCache::IsFileIncluded(const IGfxShader* shader, const std::string& fi
         {
             for (size_t i = 0; i < result.size(); ++i)
             {
-                std::string include = result[i].str();
+                eastl::string include = result[i].str().c_str();
 
                 size_t first = include.find_first_of('\"');
                 size_t last = include.find_last_of('\"');
-                std::string header = include.substr(first + 1, last - first - 1);
+                eastl::string header = include.substr(first + 1, last - first - 1);
 
-                std::filesystem::path path(desc.file);
-                std::filesystem::path header_path = path.parent_path() / header;
+                std::filesystem::path path(desc.file.c_str());
+                std::filesystem::path header_path = path.parent_path() / header.c_str();
 
-                if (std::filesystem::absolute(header_path).string() == file)
+                if (std::filesystem::absolute(header_path).string().c_str() == file)
                 {
                     return true;
                 }

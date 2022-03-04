@@ -32,7 +32,7 @@ TAA::TAA(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
-    std::vector<std::string> defines;
+    eastl::vector<eastl::string> defines;
     defines.push_back("USE_YCOCG_SPACE=0");
     defines.push_back("LONGEST_VELOCITY_VECTOR_SAMPLES=0");
 

@@ -1,12 +1,12 @@
 #pragma once
 
 #include "gfx/gfx.h"
-#include <memory>
+#include "EASTL/unique_ptr.h"
 
 class RawBuffer
 {
 public:
-    RawBuffer(const std::string& name);
+    RawBuffer(const eastl::string& name);
 
     bool Create(uint32_t size, GfxMemoryType memory_type, bool uav);
 
@@ -15,8 +15,8 @@ public:
     IGfxDescriptor* GetUAV() const { return m_pUAV.get(); }
 
 protected:
-    std::string m_name;
-    std::unique_ptr<IGfxBuffer> m_pBuffer;
-    std::unique_ptr<IGfxDescriptor> m_pSRV;
-    std::unique_ptr<IGfxDescriptor> m_pUAV;
+    eastl::string m_name;
+    eastl::unique_ptr<IGfxBuffer> m_pBuffer;
+    eastl::unique_ptr<IGfxDescriptor> m_pSRV;
+    eastl::unique_ptr<IGfxDescriptor> m_pUAV;
 };

@@ -2,7 +2,7 @@
 #include "core/engine.h"
 #include "../renderer.h"
 
-TextureCube::TextureCube(const std::string& name)
+TextureCube::TextureCube(const eastl::string& name)
 {
     m_name = name;
 }

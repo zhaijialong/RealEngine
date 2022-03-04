@@ -68,7 +68,7 @@ RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHa
         RenderGraphHandle output;
     };
 
-    std::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y);
+    eastl::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y).c_str();
 
     auto downsample_pass = pRenderGraph->AddPass<DownsamplePassData>(name,
         [&](DownsamplePassData& data, RenderGraphBuilder& builder)
@@ -102,7 +102,7 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
         RenderGraphHandle output;
     };
 
-    std::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y);
+    eastl::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y).c_str();
 
     auto upsample_pass = pRenderGraph->AddPass<UpsamplePassData>(name,
         [&](UpsamplePassData& data, RenderGraphBuilder& builder)

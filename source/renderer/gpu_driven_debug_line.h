@@ -22,6 +22,6 @@ private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPSO = nullptr;
 
-    std::unique_ptr<RawBuffer> m_pDrawArugumentsBuffer;
-    std::unique_ptr<StructuredBuffer> m_pLineVertexBuffer;
+    eastl::unique_ptr<RawBuffer> m_pDrawArugumentsBuffer;
+    eastl::unique_ptr<StructuredBuffer> m_pLineVertexBuffer;
 };
