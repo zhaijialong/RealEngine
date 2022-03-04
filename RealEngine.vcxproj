@@ -57,7 +57,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>MICROPROFILE_ENABLED=1;MICROPROFILE_GPU_TIMERS=1;MICROPROFILE_GPU_TIMERS_D3D12=1;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:strictStrings- %(AdditionalOptions)</AdditionalOptions>
@@ -76,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>MICROPROFILE_ENABLED=1;MICROPROFILE_GPU_TIMERS=1;MICROPROFILE_GPU_TIMERS_D3D12=1;_CRT_SECURE_NO_WARNINGS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:strictStrings- %(AdditionalOptions)</AdditionalOptions>
@@ -91,6 +91,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="external\d3d12ma\D3D12MemAlloc.cpp" />
+    <ClCompile Include="external\EASTL\source\allocator_eastl.cpp" />
+    <ClCompile Include="external\EASTL\source\assert.cpp" />
+    <ClCompile Include="external\EASTL\source\atomic.cpp" />
+    <ClCompile Include="external\EASTL\source\fixed_pool.cpp" />
+    <ClCompile Include="external\EASTL\source\hashtable.cpp" />
+    <ClCompile Include="external\EASTL\source\intrusive_list.cpp" />
+    <ClCompile Include="external\EASTL\source\numeric_limits.cpp" />
+    <ClCompile Include="external\EASTL\source\red_black_tree.cpp" />
+    <ClCompile Include="external\EASTL\source\string.cpp" />
+    <ClCompile Include="external\EASTL\source\thread_support.cpp" />
     <ClCompile Include="external\enkiTS\TaskScheduler.cpp" />
     <ClCompile Include="external\enkiTS\TaskScheduler_c.cpp" />
     <ClCompile Include="external\fmt\src\format.cc" />
@@ -121,6 +131,7 @@
     <ClCompile Include="external\simpleini\ConvertUTF.c" />
     <ClCompile Include="external\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="external\xxHash\xxhash.c" />
+    <ClCompile Include="source\core\eastl_allocator.cpp" />
     <ClCompile Include="source\core\engine.cpp" />
     <ClCompile Include="source\core\gui.cpp" />
     <ClCompile Include="source\editor\editor.cpp" />
@@ -193,6 +204,95 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\algorithm.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\allocator.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\allocator_malloc.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\any.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\array.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\atomic.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bit.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bitset.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bitvector.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\adaptors.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\call_traits.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\compressed_pair.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\fixed_ring_buffer.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\fixed_tuple_vector.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\intrusive_sdlist.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\intrusive_slist.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\list_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\lru_cache.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\ring_buffer.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\sort_extra.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\bonus\tuple_vector.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\chrono.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\core_allocator.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\core_allocator_adapter.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\deque.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\finally.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_allocator.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_function.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_hash_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_hash_set.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_list.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_set.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_slist.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_string.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_substring.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\fixed_vector.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\functional.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\hash_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\hash_set.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\heap.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\initializer_list.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\intrusive_hash_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\intrusive_hash_set.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\intrusive_list.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\intrusive_ptr.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\iterator.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\linked_array.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\linked_ptr.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\list.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\memory.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\meta.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\numeric.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\numeric_limits.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\optional.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\priority_queue.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\queue.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\random.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\ratio.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\safe_ptr.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\scoped_array.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\scoped_ptr.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\segmented_vector.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\set.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\shared_array.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\shared_ptr.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\slist.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\sort.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\span.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\stack.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\string.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\string_hash_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\string_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\string_view.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\tuple.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\type_traits.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\unique_ptr.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\unordered_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\unordered_set.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\utility.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\variant.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\vector.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\vector_map.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\vector_multimap.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\vector_multiset.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\vector_set.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\version.h" />
+    <ClInclude Include="external\EASTL\include\EASTL\weak_ptr.h" />
     <ClInclude Include="external\enkiTS\LockLessMultiReadPipe.h" />
     <ClInclude Include="external\enkiTS\TaskScheduler.h" />
     <ClInclude Include="external\enkiTS\TaskScheduler_c.h" />
@@ -220,6 +320,7 @@
     <ClInclude Include="shaders\fxaa.hlsli" />
     <ClInclude Include="shaders\IntelTAA.h" />
     <ClInclude Include="shaders\XeGTAO.h" />
+    <ClInclude Include="source\core\eastl_allocator.h" />
     <ClInclude Include="source\core\engine.h" />
     <ClInclude Include="source\core\gui.h" />
     <ClInclude Include="source\editor\editor.h" />
@@ -321,6 +422,7 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="external\d3d12ma\D3D12MemAlloc.natvis" />
+    <Natvis Include="external\EASTL\EASTL.natvis" />
     <Natvis Include="external\hlslpp\hlsl++.natvis" />
   </ItemGroup>
   <ItemGroup>
