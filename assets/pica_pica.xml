@@ -1,5 +1,6 @@
 <scene>
     <model file="model/pica_pica/scene.gltf" />
+    <model file="model/CornellBox/CornellBox.gltf" position = "-50,0,0" scale="5, 5, 5"/>
     <skysphere />
     <camera position="-13.482,20.457,-42.455" rotation="19.199,16.599,0.0" fov="60.0" znear="0.1" zfar="1000.0"/>
     <light type="directional" primary="true" rotation="-45.000,45.000,0.000"/>
