@@ -298,6 +298,9 @@
     <ClCompile Include="source\renderer\path_tracer.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\lighting\hybrid_stochastic_reflection.cpp">
+      <Filter>source\renderer\lighting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -674,6 +677,9 @@
     </ClInclude>
     <ClInclude Include="source\renderer\path_tracer.h">
       <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\lighting\hybrid_stochastic_reflection.h">
+      <Filter>source\renderer\lighting</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

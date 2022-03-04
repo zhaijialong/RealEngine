@@ -9,19 +9,14 @@ cbuffer CB1 : register(b1)
     uint c_emissiveRT;
     
     uint c_depthRT;
-    uint c_shadowRT;
+    uint c_directLightingRT;
     uint c_aoRT;
-    uint c_ouputRT;
+    uint c_outputRT;
 };
 
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
-{
-    if (dispatchThreadID.x >= SceneCB.viewWidth || dispatchThreadID.y >= SceneCB.viewHeight)
-    {
-        return;
-    }
-    
+{    
     int2 pos = dispatchThreadID.xy;
     
     Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthRT];
@@ -46,12 +41,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float ao = diffuse.w;
     
     float3 worldPos = GetWorldPosition(pos.xy, depth);
-    float3 V = normalize(CameraCB.cameraPos - worldPos);
+    float3 V = normalize(CameraCB.cameraPos - worldPos);    
     
-    Texture2D<float> shadowRT = ResourceDescriptorHeap[c_shadowRT];
-    float visibility = shadowRT[pos.xy];
-    float NdotL = saturate(dot(N, SceneCB.lightDir));
-    float3 direct_light = BRDF(SceneCB.lightDir, V, N, diffuse.xyz, specular, roughness) * visibility * SceneCB.lightColor * NdotL;
+    Texture2D directLightingRT = ResourceDescriptorHeap[c_directLightingRT];
+    float3 direct_light = directLightingRT[pos].xyz;
     
     Texture2D<uint> aoRT = ResourceDescriptorHeap[c_aoRT];
     
@@ -67,7 +60,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     ao = min(ao, gtao);
 #endif
     
-    float3 indirect_diffuse = diffuse.xyz * float3(0.1, 0.1, 0.12);
+    float3 indirect_diffuse = float3(0.1, 0.1, 0.12);
 
     TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
     Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.brdfTexture];
@@ -90,9 +83,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float specularAO = 1.0;
 #endif
 
-    float3 radiance = emissive + direct_light + indirect_diffuse * ao + indirect_specular * specularAO;
+    float3 radiance = emissive + direct_light + diffuse.xyz * indirect_diffuse * ao + indirect_specular * specularAO;
     
-    RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_ouputRT];
+    RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_outputRT];
 
 #if OUTPUT_DIFFUSE
     outTexture[dispatchThreadID.xy] = float4(diffuse.xyz, 1.0);
@@ -104,8 +97,12 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     outTexture[dispatchThreadID.xy] = float4(emissive, 1.0);
 #elif OUTPUT_AO
     outTexture[dispatchThreadID.xy] = float4(ao, ao, ao, 1.0);
-#elif OUTPUT_SHADOW
-    outTexture[dispatchThreadID.xy] = float4(visibility, visibility, visibility, 1.0);
+#elif OUTPUT_DIRECT_LIGHTING
+    outTexture[dispatchThreadID.xy] = float4(direct_light, 1.0);
+#elif OUTPUT_INDIRECT_SPECULAR
+    outTexture[dispatchThreadID.xy] = float4(indirect_specular, 1.0);
+#elif OUTPUT_INDIRECT_DIFFUSE
+    outTexture[dispatchThreadID.xy] = float4(indirect_diffuse, 1.0);
 #else
     outTexture[dispatchThreadID.xy] = float4(radiance, 1.0);
 #endif

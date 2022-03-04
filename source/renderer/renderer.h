@@ -20,7 +20,9 @@ enum class RendererOutput
     WorldNormal,
     Emissive,
     AO,
-    Shadow,
+    DirectLighting,
+    IndirectSpecular,
+    IndirectDiffuse,
     PathTracing,
 };
 

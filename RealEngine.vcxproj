@@ -148,6 +148,7 @@
     <ClCompile Include="source\renderer\hierarchical_depth_buffer.cpp" />
     <ClCompile Include="source\renderer\lighting\clustered_shading.cpp" />
     <ClCompile Include="source\renderer\lighting\gtao.cpp" />
+    <ClCompile Include="source\renderer\lighting\hybrid_stochastic_reflection.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
     <ClCompile Include="source\renderer\lighting\ray_traced_shadow.cpp" />
     <ClCompile Include="source\renderer\path_tracer.cpp" />
@@ -261,6 +262,7 @@
     <ClInclude Include="source\renderer\hierarchical_depth_buffer.h" />
     <ClInclude Include="source\renderer\lighting\clustered_shading.h" />
     <ClInclude Include="source\renderer\lighting\gtao.h" />
+    <ClInclude Include="source\renderer\lighting\hybrid_stochastic_reflection.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
     <ClInclude Include="source\renderer\lighting\ray_traced_shadow.h" />
     <ClInclude Include="source\renderer\path_tracer.h" />

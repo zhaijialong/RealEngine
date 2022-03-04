@@ -9,6 +9,7 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pGTAO = std::make_unique<GTAO>(pRenderer);
     m_pRTShdow = std::make_unique<RTShadow>(pRenderer);
     m_pClusteredShading = std::make_unique<ClusteredShading>(pRenderer);
+    m_pReflection = std::make_unique<HybridStochasticReflection>(pRenderer);
 }
 
 RenderGraphHandle LightingProcessor::Process(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
@@ -16,14 +17,22 @@ RenderGraphHandle LightingProcessor::Process(RenderGraph* pRenderGraph, uint32_t
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");
 
     BasePass* pBasePass = m_pRenderer->GetBassPass();
+    RenderGraphHandle diffuse = pBasePass->GetDiffuseRT();
+    RenderGraphHandle specular = pBasePass->GetSpecularRT();
+    RenderGraphHandle normal = pBasePass->GetNormalRT();
+    RenderGraphHandle emissive = pBasePass->GetEmissiveRT();
+    RenderGraphHandle depth = pBasePass->GetDepthRT();
 
-    RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, pBasePass->GetDepthRT(), pBasePass->GetNormalRT(), width, height);
-    RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, pBasePass->GetDepthRT(), pBasePass->GetNormalRT(), width, height);
+    RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
+    RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, width, height);
+    RenderGraphHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, depth, shadow, width, height);
+    RenderGraphHandle indirect_specular = m_pReflection->Render(pRenderGraph, width, height);
+    //RenderGraphHandle indirect_diffuse = todo : diffuse GI
 
-    return CompositeLight(pRenderGraph, gtao, shadow, width, height);
+    return CompositeLight(pRenderGraph, gtao, direct_lighting, width, height);
 }
 
-RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle ao, RenderGraphHandle shadow, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle ao, RenderGraphHandle direct_lighting, uint32_t width, uint32_t height)
 {
     struct CompositeLightData
     {
@@ -33,7 +42,10 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
         RenderGraphHandle emissiveRT;
         RenderGraphHandle depthRT;
         RenderGraphHandle ao;
-        RenderGraphHandle shadow;
+
+        RenderGraphHandle directLighting;
+        RenderGraphHandle indirectSpecular;
+        RenderGraphHandle indirectDiffuse;
 
         RenderGraphHandle output;
     };
@@ -54,7 +66,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
                 data.ao = builder.Read(ao, GfxResourceState::ShaderResourceNonPS);
             }
 
-            data.shadow = builder.Read(shadow, GfxResourceState::ShaderResourceNonPS);
+            data.directLighting = builder.Read(direct_lighting, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -71,8 +83,8 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalRT);
             RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.emissiveRT);
             RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthRT);
-            RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.shadow);
-            RenderGraphTexture* ouputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* directLightingRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.directLighting);
+            RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
             RenderGraphTexture* aoRT = nullptr;
 
             std::vector<std::string> defines;
@@ -108,8 +120,14 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             case RendererOutput::AO:
                 defines.push_back("OUTPUT_AO=1");
                 break;
-            case RendererOutput::Shadow:
-                defines.push_back("OUTPUT_SHADOW=1");
+            case RendererOutput::DirectLighting:
+                defines.push_back("OUTPUT_DIRECT_LIGHTING=1");
+                break;
+            case RendererOutput::IndirectSpecular:
+                defines.push_back("OUTPUT_INDIRECT_SPECULAR=1");
+                break;
+            case RendererOutput::IndirectDiffuse:
+                defines.push_back("OUTPUT_INDIRECT_DIFFUSE=1");
                 break;
             default:
                 break;
@@ -129,7 +147,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
                 uint emissiveRT;
 
                 uint depthRT;
-                uint shadowRT;
+                uint directLightingRT;
                 uint aoRT;
                 uint outputRT;
             };
@@ -140,12 +158,12 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             cb1.normalRT = normalRT->GetSRV()->GetHeapIndex();
             cb1.emissiveRT = emissiveRT->GetSRV()->GetHeapIndex();
             cb1.depthRT = depthRT->GetSRV()->GetHeapIndex();
-            cb1.shadowRT = shadowRT->GetSRV()->GetHeapIndex();
+            cb1.directLightingRT = directLightingRT->GetSRV()->GetHeapIndex();
             if (aoRT)
             {
                 cb1.aoRT = aoRT->GetSRV()->GetHeapIndex();
             }
-            cb1.outputRT = ouputRT->GetUAV()->GetHeapIndex();
+            cb1.outputRT = outputRT->GetUAV()->GetHeapIndex();
 
             pCommandList->SetComputeConstants(1, &cb1, sizeof(cb1));
 

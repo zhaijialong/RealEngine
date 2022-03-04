@@ -22,7 +22,7 @@ public:
         std::string source = m_pShaderCache->GetCachedFileContent(absolute_path);
 
         *includeSource = nullptr;
-        return m_pDxcUtils->CreateBlob(source.data(), source.size(), CP_UTF8, reinterpret_cast<IDxcBlobEncoding**>(includeSource));
+        return m_pDxcUtils->CreateBlob(source.data(), (UINT32)source.size(), CP_UTF8, reinterpret_cast<IDxcBlobEncoding**>(includeSource));
     }
 
     ULONG STDMETHODCALLTYPE AddRef() override
