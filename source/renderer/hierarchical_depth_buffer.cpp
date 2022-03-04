@@ -183,10 +183,10 @@ RenderGraphHandle HZB::Get2ndPhaseCullingHZBMip(uint32_t mip) const
 
 void HZB::CalcHZBSize()
 {
-    uint32_t mipsX = (uint32_t)std::max(ceilf(log2f((float)m_pRenderer->GetBackbufferWidth())), 1.0f);
-    uint32_t mipsY = (uint32_t)std::max(ceilf(log2f((float)m_pRenderer->GetBackbufferHeight())), 1.0f);
+    uint32_t mipsX = (uint32_t)eastl::max(ceilf(log2f((float)m_pRenderer->GetBackbufferWidth())), 1.0f);
+    uint32_t mipsY = (uint32_t)eastl::max(ceilf(log2f((float)m_pRenderer->GetBackbufferHeight())), 1.0f);
 
-    m_nHZBMipCount = std::max(mipsX, mipsY);
+    m_nHZBMipCount = eastl::max(mipsX, mipsY);
     RE_ASSERT(m_nHZBMipCount <= MAX_HZB_MIP_COUNT);
 
     m_hzbSize.x = 1 << (mipsX - 1);

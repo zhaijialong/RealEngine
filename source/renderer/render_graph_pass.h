@@ -2,7 +2,7 @@
 
 #include "directed_acyclic_graph.h"
 #include "gfx/gfx.h"
-#include <functional>
+#include "EASTL/functional.h"
 
 class RenderGraph;
 class RenderGraphResource;
@@ -63,7 +63,7 @@ template<class T>
 class RenderGraphPass : public RenderGraphPassBase
 {
 public:
-    RenderGraphPass(const eastl::string& name, DirectedAcyclicGraph& graph, const std::function<void(const T&, IGfxCommandList*)>& execute) :
+    RenderGraphPass(const eastl::string& name, DirectedAcyclicGraph& graph, const eastl::function<void(const T&, IGfxCommandList*)>& execute) :
         RenderGraphPassBase(name, graph)
     {
         m_execute = execute;
@@ -80,6 +80,6 @@ private:
 
 protected:
     T m_parameters;
-    std::function<void(const T&, IGfxCommandList*)> m_execute;
+    eastl::function<void(const T&, IGfxCommandList*)> m_execute;
 };
 

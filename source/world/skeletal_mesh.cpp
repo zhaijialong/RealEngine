@@ -173,7 +173,7 @@ void SkeletalMesh::UpdateMeshConstants(SkeletalMeshNode* node)
     {
         SkeletalMeshData* mesh = node->meshes[i].get();
 
-        std::swap(mesh->prevAnimPosBufferAddress, mesh->animPosBufferAddress);
+        eastl::swap(mesh->prevAnimPosBufferAddress, mesh->animPosBufferAddress);
 
         mesh->material->UpdateConstants();
 

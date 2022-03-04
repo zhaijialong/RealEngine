@@ -39,8 +39,8 @@ RenderGraphHandle Bloom::Render(RenderGraph* pRenderGraph, RenderGraphHandle sce
     {
         m_mipSize[i] = uint2(width, height);
 
-        width = std::max(1u, (width + 1) >> 1);
-        height = std::max(1u, (height + 1) >> 1);
+        width = eastl::max(1u, (width + 1) >> 1);
+        height = eastl::max(1u, (height + 1) >> 1);
     }
 
     RenderGraphHandle downsampleMip1 = DownsamplePass(pRenderGraph, sceneColorRT, 1);

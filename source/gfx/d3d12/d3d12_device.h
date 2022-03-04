@@ -3,7 +3,7 @@
 #include "d3d12_header.h"
 #include "../i_gfx_device.h"
 #include "EASTL/unique_ptr.h"
-#include <queue>
+#include "EASTL/queue.h"
 
 namespace D3D12MA
 {
@@ -168,25 +168,25 @@ private:
         IUnknown* object;
         uint64_t frame;
     };
-    std::queue<ObjectDeletion> m_deletionQueue;
+    eastl::queue<ObjectDeletion> m_deletionQueue;
 
     struct AllocationDeletion
     {
         D3D12MA::Allocation* allocation;
         uint64_t frame;
     };
-    std::queue<AllocationDeletion> m_allocationDeletionQueue;
+    eastl::queue<AllocationDeletion> m_allocationDeletionQueue;
 
     struct DescriptorDeletion
     {
         D3D12Descriptor descriptor;
         uint64_t frame;
     };
-    std::queue<DescriptorDeletion> m_rtvDeletionQueue;
-    std::queue<DescriptorDeletion> m_dsvDeletionQueue;
-    std::queue<DescriptorDeletion> m_resourceDeletionQueue;
-    std::queue<DescriptorDeletion> m_samplerDeletionQueue;
-    std::queue<DescriptorDeletion> m_nonShaderVisibleUAVDeletionQueue;
+    eastl::queue<DescriptorDeletion> m_rtvDeletionQueue;
+    eastl::queue<DescriptorDeletion> m_dsvDeletionQueue;
+    eastl::queue<DescriptorDeletion> m_resourceDeletionQueue;
+    eastl::queue<DescriptorDeletion> m_samplerDeletionQueue;
+    eastl::queue<DescriptorDeletion> m_nonShaderVisibleUAVDeletionQueue;
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
     int m_nProfileGraphicsQueue = -1;

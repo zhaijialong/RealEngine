@@ -2,6 +2,7 @@
 
 #include "renderer/renderer.h"
 #include "EASTL/hash_map.h"
+#include "EASTL/functional.h"
 
 class Editor
 {
@@ -11,7 +12,7 @@ public:
 
     void Tick();
 
-    void AddGuiCommand(const eastl::string& window, const eastl::string& section, const std::function<void()>& command);
+    void AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command);
 
 private:
     void DrawMenu();

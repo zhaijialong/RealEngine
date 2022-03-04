@@ -62,7 +62,7 @@ void Editor::Tick()
     m_commands.clear();
 }
 
-void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& section, const std::function<void()>& command)
+void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command)
 {
     m_commands[window].push_back({ section, command });
 }

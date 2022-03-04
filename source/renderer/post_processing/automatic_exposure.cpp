@@ -196,10 +196,10 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
 
 void AutomaticExposure::ComputeLuminanceSize(uint32_t width, uint32_t height)
 {
-    uint32_t mipsX = (uint32_t)std::max(ceilf(log2f((float)width)), 1.0f);
-    uint32_t mipsY = (uint32_t)std::max(ceilf(log2f((float)height)), 1.0f);
+    uint32_t mipsX = (uint32_t)eastl::max(ceilf(log2f((float)width)), 1.0f);
+    uint32_t mipsY = (uint32_t)eastl::max(ceilf(log2f((float)height)), 1.0f);
 
-    m_luminanceMips = std::max(mipsX, mipsY);
+    m_luminanceMips = eastl::max(mipsX, mipsY);
     RE_ASSERT(m_luminanceMips <= 13); //spd limit
 
     m_luminanceSize.x = 1 << (mipsX - 1);
