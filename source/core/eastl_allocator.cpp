@@ -1,27 +1,30 @@
 #include "eastl_allocator.h"
-#include <stdio.h>
+#include "stb/stb_sprintf.h"
+#include "rpmalloc/rpmalloc.h"
+#include <stdio.h> //vsnwprintf
+
+// Required by EASTL
 
 void* operator new[](size_t size, const char* pName, int flags, unsigned debugFlags, const char* file, int line)
 {
-    return malloc(size);
+    return rpmalloc(size);
 }
 
 void* operator new[](size_t size, size_t alignment, size_t alignmentOffset, const char* pName, int flags, unsigned debugFlags, const char* file, int line)
 {
-    return malloc(size);
+    return rpaligned_alloc(alignment, size);
 }
 
-// Required by EASTL
 int Vsnprintf8(char* p, size_t n, const char* pFormat, va_list arguments)
 {
-    return vsnprintf(p, n, pFormat, arguments);
+    return stbsp_vsnprintf(p, (int)n, pFormat, arguments);
 }
 
-int Vsnprintf16(char16_t* p, size_t n, const char16_t* pFormat, va_list arguments)
+int VsnprintfW(wchar_t* pDestination, size_t n, const wchar_t* pFormat, va_list arguments)
 {
 #ifdef _MSC_VER
-    return _vsnwprintf((wchar_t*)p, n, (const wchar_t*)pFormat, arguments);
+    return _vsnwprintf(pDestination, n, pFormat, arguments);
 #else
-    return vsnwprintf(p, n, pFormat, arguments);
+    return vsnwprintf(pDestination, n, pFormat, arguments);
 #endif
 }

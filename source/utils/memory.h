@@ -1,6 +1,6 @@
 #pragma once
 
-#include <malloc.h>
+#include "rpmalloc/rpmalloc.h"
 
-#define RE_ALLOC malloc
-#define RE_FREE free
+#define RE_ALLOC rpmalloc
+#define RE_FREE rpfree

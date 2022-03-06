@@ -57,7 +57,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>MICROPROFILE_ENABLED=1;MICROPROFILE_GPU_TIMERS=1;MICROPROFILE_GPU_TIMERS_D3D12=1;EASTL_EASTDC_VSNPRINTF=0;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;$(SolutionDir)external/rpmalloc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:strictStrings- %(AdditionalOptions)</AdditionalOptions>
@@ -76,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>MICROPROFILE_ENABLED=1;MICROPROFILE_GPU_TIMERS=1;MICROPROFILE_GPU_TIMERS_D3D12=1;EASTL_EASTDC_VSNPRINTF=0;_CRT_SECURE_NO_WARNINGS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;$(SolutionDir)external/rpmalloc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:strictStrings- %(AdditionalOptions)</AdditionalOptions>
@@ -128,6 +128,7 @@
     <ClCompile Include="external\meshoptimizer\vfetchanalyzer.cpp" />
     <ClCompile Include="external\meshoptimizer\vfetchoptimizer.cpp" />
     <ClCompile Include="external\microprofile\microprofile.cpp" />
+    <ClCompile Include="external\rpmalloc\rpmalloc.c" />
     <ClCompile Include="external\simpleini\ConvertUTF.c" />
     <ClCompile Include="external\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="external\xxHash\xxhash.c" />
@@ -310,6 +311,8 @@
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="external\meshoptimizer\meshoptimizer.h" />
     <ClInclude Include="external\microprofile\microprofile.h" />
+    <ClInclude Include="external\rpmalloc\rpmalloc.h" />
+    <ClInclude Include="external\rpmalloc\rpnew.h" />
     <ClInclude Include="external\simpleini\ConvertUTF.h" />
     <ClInclude Include="external\simpleini\SimpleIni.h" />
     <ClInclude Include="external\tinyxml2\tinyxml2.h" />

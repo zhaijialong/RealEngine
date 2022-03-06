@@ -35,6 +35,7 @@ public:
     lsignal::signal<void(void*, uint32_t, uint32_t)> WindowResizeSignal;
 
 private:
+    ~Engine();
     void LoadEngineConfig();
 
 private:

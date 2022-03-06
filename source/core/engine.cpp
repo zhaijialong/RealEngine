@@ -2,22 +2,34 @@
 #include "utils/log.h"
 #include "utils/profiler.h"
 #include "enkiTS/TaskScheduler.h"
+#include "rpmalloc/rpmalloc.h"
+#include "rpmalloc/rpnew.h"
 
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
 
 Engine* Engine::GetInstance()
 {
+    rpmalloc_initialize();
     static Engine engine;
     return &engine;
+}
+
+Engine::~Engine()
+{
+    rpmalloc_finalize();
 }
 
 void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
     StartProfiler();
 
+    enki::TaskSchedulerConfig config;
+    config.profilerCallbacks.threadStart = [](uint32_t) { rpmalloc_thread_initialize(); };
+    config.profilerCallbacks.threadStop = [](uint32_t) { rpmalloc_thread_finalize(1); };
+
     m_pTaskScheduler.reset(new enki::TaskScheduler());
-    m_pTaskScheduler->Initialize();
+    m_pTaskScheduler->Initialize(config);
 
     m_windowHandle = window_handle;
     m_workPath = work_path;
@@ -39,11 +51,15 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
 
 void Engine::Shut()
 {
-    m_pWorld.reset();
-
     ShutdownProfiler();
 
-    //m_pWorld->SaveScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
+    m_pTaskScheduler->WaitforAllAndShutdown();
+    m_pTaskScheduler.reset();
+
+    m_pWorld.reset();
+    m_pEditor.reset();
+    m_pGUI.reset();
+    m_pRenderer.reset();
 }
 
 void Engine::Tick()
