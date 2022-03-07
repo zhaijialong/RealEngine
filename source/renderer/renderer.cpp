@@ -272,6 +272,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.aniso8xSampler = m_pAniso8xSampler->GetHeapIndex();
     sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
     sceneCB.linearBlackBoarderSampler = m_pLinearBlackBoarderSampler->GetHeapIndex();
+    sceneCB.skyCubeTexture = m_pSkyCubeMap->GetCubeTexture()->GetSRV()->GetHeapIndex();
     sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
     sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
@@ -332,6 +333,8 @@ void Renderer::Render()
     SetupGlobalConstants(pCommandList);
     FlushComputePass(pCommandList);
     BuildRayTracingAS(pCommandList);
+
+    m_pSkyCubeMap->Update(pCommandList);
 
     World* world = Engine::GetInstance()->GetWorld();
     Camera* camera = world->GetCamera();
@@ -688,6 +691,17 @@ TextureCube* Renderer::CreateTextureCube(const eastl::string& file, bool srgb)
 
     UploadTexture(texture->GetTexture(), loader.GetData());
 
+    return texture;
+}
+
+TextureCube* Renderer::CreateTextureCube(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name)
+{
+    TextureCube* texture = new TextureCube(name);
+    if (!texture->Create(width, height, levels, format, flags))
+    {
+        delete texture;
+        return nullptr;
+    }
     return texture;
 }
 

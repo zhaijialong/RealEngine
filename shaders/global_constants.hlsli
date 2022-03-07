@@ -68,7 +68,8 @@ struct SceneConstant
     float frameTime;
     uint frameIndex;
 
-    uint envTexture;
+    uint skyCubeTexture;
+    uint envTexture; //todo : this will be deleted
 };
 
 struct CullingData

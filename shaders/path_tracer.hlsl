@@ -134,9 +134,9 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         }
         else
         {
-            TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
+            TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
             SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
-            float3 sky_color = envTexture.SampleLevel(linearSampler, wi, 0).xyz;
+            float3 sky_color = skyTexture.SampleLevel(linearSampler, wi, 0).xyz;
 
             radiance += sky_color * throughput / pdf;
             break;

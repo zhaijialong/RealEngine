@@ -67,6 +67,7 @@ public:
     Texture2D* CreateTexture2D(const eastl::string& file, bool srgb = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
     TextureCube* CreateTextureCube(const eastl::string& file, bool srgb = true);
+    TextureCube* CreateTextureCube(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
 
     IGfxBuffer* GetSceneStaticBuffer() const;
     uint32_t AllocateSceneStaticBuffer(const void* data, uint32_t size, uint32_t alignment = 4);

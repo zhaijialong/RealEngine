@@ -2,15 +2,12 @@
 #include "hierarchical_depth_buffer.h"
 #include "base_pass.h"
 #include "path_tracer.h"
-#include "sky_cubemap.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
 
 void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
 {
-    m_pSkyCubeMap->Render(m_pRenderGraph.get());
-
     m_pHZB->Generate1stPhaseCullingHZB(m_pRenderGraph.get());
     m_pBasePass->Render1stPhase(m_pRenderGraph.get());
 
