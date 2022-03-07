@@ -10,7 +10,7 @@ class LightingProcessor
 public:
     LightingProcessor(Renderer* pRenderer);
 
-    RenderGraphHandle Process(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
     
 private:
     RenderGraphHandle CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle ao, RenderGraphHandle direct_lighting, uint32_t width, uint32_t height);

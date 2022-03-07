@@ -13,14 +13,15 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
     m_pCAS = eastl::make_unique<CAS>(pRenderer);
 }
 
-RenderGraphHandle PostProcessor::Process(RenderGraph* pRenderGraph, const PostProcessInput& input, uint32_t width, uint32_t height)
+RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
+    RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "PostProcess");
 
-    RenderGraphHandle outputHandle = input.sceneColorRT;
+    RenderGraphHandle outputHandle = sceneColorRT;
     
-    outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, input.sceneDepthRT, input.linearDepthRT, input.velocityRT, width, height);
-    //outputHandle = m_pDOF->Render(pRenderGraph, outputHandle)
+    outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, sceneDepthRT, linearDepthRT, velocityRT, width, height);
+    //todo : outputHandle = m_pDOF->Render(pRenderGraph, outputHandle)
 
     RenderGraphHandle exposure = m_pAutomaticExposure->Render(pRenderGraph, outputHandle, width, height);
     RenderGraphHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, width, height);

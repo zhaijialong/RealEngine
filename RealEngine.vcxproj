@@ -188,6 +188,7 @@
     <ClCompile Include="source\renderer\resource\typed_buffer.cpp" />
     <ClCompile Include="source\renderer\shader_cache.cpp" />
     <ClCompile Include="source\renderer\shader_compiler.cpp" />
+    <ClCompile Include="source\renderer\sky_cubemap.cpp" />
     <ClCompile Include="source\renderer\staging_buffer_allocator.cpp" />
     <ClCompile Include="source\renderer\texture_loader.cpp" />
     <ClCompile Include="source\windows\main.cpp" />
@@ -396,6 +397,7 @@
     <ClInclude Include="source\renderer\resource\typed_buffer.h" />
     <ClInclude Include="source\renderer\shader_cache.h" />
     <ClInclude Include="source\renderer\shader_compiler.h" />
+    <ClInclude Include="source\renderer\sky_cubemap.h" />
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
     <ClInclude Include="source\renderer\texture_loader.h" />
     <ClInclude Include="source\utils\assert.h" />

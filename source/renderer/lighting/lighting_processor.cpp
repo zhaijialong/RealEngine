@@ -12,7 +12,7 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pReflection = eastl::make_unique<HybridStochasticReflection>(pRenderer);
 }
 
-RenderGraphHandle LightingProcessor::Process(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");
 

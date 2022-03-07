@@ -337,6 +337,9 @@
     <ClCompile Include="external\rpmalloc\rpmalloc.c">
       <Filter>external\rpmalloc</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\sky_cubemap.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -992,6 +995,9 @@
     </ClInclude>
     <ClInclude Include="external\rpmalloc\rpnew.h">
       <Filter>external\rpmalloc</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\sky_cubemap.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

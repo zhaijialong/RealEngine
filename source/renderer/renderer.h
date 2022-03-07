@@ -103,6 +103,7 @@ public:
 
     class HZB* GetHZB() const { return m_pHZB.get(); }
     class BasePass* GetBassPass() const { return m_pBasePass.get(); }
+    class SkyCubeMap* GetSkyCubeMap() const { return m_pSkyCubeMap.get(); }
 
 private:
     void CreateCommonResources();
@@ -113,6 +114,12 @@ private:
     void Render();
     void BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth);
     void EndFrame();
+
+    void ForwardPass(RenderGraphHandle& color, RenderGraphHandle& depth);
+    RenderGraphHandle VelocityPass(RenderGraphHandle& depth);
+    RenderGraphHandle LinearizeDepthPass(RenderGraphHandle depth);
+    void ObjectIDPass(RenderGraphHandle& depth);
+    void CopyLinearDepthPass(RenderGraphHandle linearDepth);
 
     void FlushComputePass(IGfxCommandList* pCommandList);
     void BuildRayTracingAS(IGfxCommandList* pCommandList);
@@ -221,6 +228,7 @@ private:
     eastl::unique_ptr<class LightingProcessor> m_pLightingProcessor;
     eastl::unique_ptr<class PostProcessor> m_pPostProcessor;
     eastl::unique_ptr<class PathTracer> m_pPathTracer;
+    eastl::unique_ptr<class SkyCubeMap> m_pSkyCubeMap;
 
     eastl::unique_ptr<class GpuDrivenDebugLine> m_pGpuDebugLine;
     eastl::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;
