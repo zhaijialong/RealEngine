@@ -52,6 +52,8 @@ void RenderGraph::Compile()
 
     m_graph.Cull();
 
+    eastl::vector<DAGEdge*> edges;
+
     for (size_t i = 0; i < m_resourceNodes.size(); ++i)
     {
         RenderGraphResourceNode* node = m_resourceNodes[i];
@@ -62,10 +64,10 @@ void RenderGraph::Compile()
 
         RenderGraphResource* resource = node->GetResource();
 
-        eastl::vector<DAGEdge*> outgoing_edge = m_graph.GetOutgoingEdges(node);
-        for (size_t i = 0; i < outgoing_edge.size(); ++i)
+        m_graph.GetOutgoingEdges(node, edges);
+        for (size_t i = 0; i < edges.size(); ++i)
         {
-            RenderGraphEdge* edge = (RenderGraphEdge*)outgoing_edge[i];
+            RenderGraphEdge* edge = (RenderGraphEdge*)edges[i];
             RenderGraphPassBase* pass = (RenderGraphPassBase*)m_graph.GetNode(edge->GetToNode());
 
             if (!pass->IsCulled())
@@ -74,10 +76,10 @@ void RenderGraph::Compile()
             }
         }
 
-        eastl::vector<DAGEdge*> imcoming_edge = m_graph.GetIncomingEdges(node);
-        for (size_t i = 0; i < imcoming_edge.size(); ++i)
+        m_graph.GetIncomingEdges(node, edges);
+        for (size_t i = 0; i < edges.size(); ++i)
         {
-            RenderGraphEdge* edge = (RenderGraphEdge*)imcoming_edge[i];
+            RenderGraphEdge* edge = (RenderGraphEdge*)edges[i];
             RenderGraphPassBase* pass = (RenderGraphPassBase*)m_graph.GetNode(edge->GetToNode());
 
             if (!pass->IsCulled())

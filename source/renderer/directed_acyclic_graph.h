@@ -66,8 +66,8 @@ public:
     void Cull();
     bool IsEdgeValid(const DAGEdge* edge) const;
 
-    eastl::vector<DAGEdge*> GetIncomingEdges(const DAGNode* node) const;
-    eastl::vector<DAGEdge*> GetOutgoingEdges(const DAGNode* node) const;
+    void GetIncomingEdges(const DAGNode* node, eastl::vector<DAGEdge*>& edges) const;
+    void GetOutgoingEdges(const DAGNode* node, eastl::vector<DAGEdge*>& edges) const;
 
     //dot.exe -Tpng -O file
     bool ExportGraphviz(const char* file);

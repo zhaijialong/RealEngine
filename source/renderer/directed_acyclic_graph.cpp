@@ -76,7 +76,8 @@ void DirectedAcyclicGraph::Cull()
         DAGNode* node = stack.back();
         stack.pop_back();
 
-        eastl::vector<DAGEdge*> incoming = GetIncomingEdges(node);
+        eastl::vector<DAGEdge*> incoming;
+        GetIncomingEdges(node, incoming);
 
         for (size_t i = 0; i < incoming.size(); ++i) 
         {
@@ -95,30 +96,30 @@ bool DirectedAcyclicGraph::IsEdgeValid(const DAGEdge* edge) const
     return !GetNode(edge->m_from)->IsCulled() && !GetNode(edge->m_to)->IsCulled();
 }
 
-eastl::vector<DAGEdge*> DirectedAcyclicGraph::GetIncomingEdges(const DAGNode* node) const
+void DirectedAcyclicGraph::GetIncomingEdges(const DAGNode* node, eastl::vector<DAGEdge*>& edges) const
 {
-    eastl::vector<DAGEdge*> result;
+    edges.clear();
+
     for (size_t i = 0; i < m_edges.size(); ++i)
     {
         if (m_edges[i]->m_to == node->GetId())
         {
-            result.push_back(m_edges[i]);
+            edges.push_back(m_edges[i]);
         }
     }
-    return result;
 }
 
-eastl::vector<DAGEdge*> DirectedAcyclicGraph::GetOutgoingEdges(const DAGNode* node) const
+void DirectedAcyclicGraph::GetOutgoingEdges(const DAGNode* node, eastl::vector<DAGEdge*>& edges) const
 {
-    eastl::vector<DAGEdge*> result;
+    edges.clear();
+
     for (size_t i = 0; i < m_edges.size(); ++i)
     {
         if (m_edges[i]->m_from == node->GetId())
         {
-            result.push_back(m_edges[i]);
+            edges.push_back(m_edges[i]);
         }
     }
-    return result;
 }
 
 bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
@@ -148,7 +149,9 @@ bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
         DAGNode* node = m_nodes[i];
         uint32_t id = node->GetId();
 
-        auto edges = GetOutgoingEdges(node);
+        eastl::vector<DAGEdge*> edges;
+        GetOutgoingEdges(node, edges);
+
         auto first = edges.begin();
         auto pos = std::partition(first, edges.end(),
             [this](auto const& edge) { return IsEdgeValid(edge); });

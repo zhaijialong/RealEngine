@@ -42,7 +42,8 @@ public:
         s.append(eastl::to_string(m_version));
         if (m_version > 0)
         {
-            eastl::vector<DAGEdge*> incoming_edges = m_graph.GetIncomingEdges(this);
+            eastl::vector<DAGEdge*> incoming_edges;
+            m_graph.GetIncomingEdges(this, incoming_edges);
             RE_ASSERT(incoming_edges.size() == 1);
             uint32_t subresource = ((RenderGraphEdge*)incoming_edges[0])->GetSubresource();
             s.append("\nsubresource:");

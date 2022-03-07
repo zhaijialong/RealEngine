@@ -9,18 +9,22 @@ RenderGraphPassBase::RenderGraphPassBase(const eastl::string& name, DirectedAcyc
 
 void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
 {
-    eastl::vector<DAGEdge*> incoming_edge = graph.GetIncomingEdges(this);
+    eastl::vector<DAGEdge*> edges;
 
-    for (size_t i = 0; i < incoming_edge.size(); ++i)
+    eastl::vector<DAGEdge*> resource_incoming;
+    eastl::vector<DAGEdge*> resource_outgoing;
+
+    graph.GetIncomingEdges(this, edges);
+    for (size_t i = 0; i < edges.size(); ++i)
     {
-        RenderGraphEdge* edge = (RenderGraphEdge*)incoming_edge[i];
+        RenderGraphEdge* edge = (RenderGraphEdge*)edges[i];
         RE_ASSERT(edge->GetToNode() == this->GetId());
 
         RenderGraphResourceNode* resource_node = (RenderGraphResourceNode*)graph.GetNode(edge->GetFromNode());
         RenderGraphResource* resource = resource_node->GetResource();
 
-        eastl::vector<DAGEdge*> resource_incoming = graph.GetIncomingEdges(resource_node);
-        eastl::vector<DAGEdge*> resource_outgoing = graph.GetOutgoingEdges(resource_node);
+        graph.GetIncomingEdges(resource_node, resource_incoming);
+        graph.GetOutgoingEdges(resource_node, resource_outgoing);
         RE_ASSERT(resource_incoming.size() <= 1);
         RE_ASSERT(resource_outgoing.size() >= 1);
 
@@ -81,11 +85,10 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
         }
     }
 
-    eastl::vector<DAGEdge*> outgoing_edge = graph.GetOutgoingEdges(this);
-
-    for (size_t i = 0; i < outgoing_edge.size(); ++i)
+    graph.GetOutgoingEdges(this, edges);
+    for (size_t i = 0; i < edges.size(); ++i)
     {
-        RenderGraphEdge* edge = (RenderGraphEdge*)outgoing_edge[i];
+        RenderGraphEdge* edge = (RenderGraphEdge*)edges[i];
         RE_ASSERT(edge->GetFromNode() == this->GetId());
 
         GfxResourceState new_state = edge->GetUsage();
