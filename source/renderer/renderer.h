@@ -10,7 +10,6 @@
 #include "resource/raw_buffer.h"
 #include "resource/typed_buffer.h"
 #include "staging_buffer_allocator.h"
-#include "lsignal/lsignal.h"
 
 enum class RendererOutput
 {
@@ -133,7 +132,6 @@ private:
     eastl::unique_ptr<class GpuScene> m_pGpuScene;
     uint32_t m_nWindowWidth;
     uint32_t m_nWindowHeight;
-    lsignal::connection m_resizeConnection;
     RendererOutput m_outputType = RendererOutput::Default;
 
     eastl::unique_ptr<LinearAllocator> m_cbAllocator;

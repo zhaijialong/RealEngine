@@ -4,7 +4,7 @@
 #include "world/world.h"
 #include "editor/editor.h"
 #include "renderer/renderer.h"
-#include "lsignal/lsignal.h"
+#include "sigslot/signal.hpp"
 #include "simpleini/SimpleIni.h"
 
 namespace enki { class TaskScheduler; }
@@ -32,7 +32,7 @@ public:
     float GetFrameDeltaTime() const { return m_frameTime; }
 
 public:
-    lsignal::signal<void(void*, uint32_t, uint32_t)> WindowResizeSignal;
+    sigslot::signal<void*, uint32_t, uint32_t> WindowResizeSignal;
 
 private:
     ~Engine();

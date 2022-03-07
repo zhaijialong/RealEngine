@@ -17,14 +17,14 @@
 #include "fmt/format.h"
 #include "global_constants.hlsli"
 
-Renderer::Renderer() : m_resizeConnection({})
+Renderer::Renderer()
 {
     m_pShaderCache = eastl::make_unique<ShaderCache>(this);
     m_pShaderCompiler = eastl::make_unique<ShaderCompiler>(this);
     m_pPipelineCache = eastl::make_unique<PipelineStateCache>(this);
     m_cbAllocator = eastl::make_unique<LinearAllocator>(8 * 1024 * 1024);
 
-    m_resizeConnection = Engine::GetInstance()->WindowResizeSignal.connect(this, &Renderer::OnWindowResize);
+    Engine::GetInstance()->WindowResizeSignal.connect(&Renderer::OnWindowResize, this);
 }
 
 Renderer::~Renderer()
@@ -32,7 +32,7 @@ Renderer::~Renderer()
     WaitGpuFinished();
     m_pRenderGraph->Clear();
 
-    Engine::GetInstance()->WindowResizeSignal.disconnect(m_resizeConnection);
+    Engine::GetInstance()->WindowResizeSignal.disconnect(this);
 }
 
 void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height)

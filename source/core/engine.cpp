@@ -10,7 +10,6 @@
 
 Engine* Engine::GetInstance()
 {
-    rpmalloc_initialize();
     static Engine engine;
     return &engine;
 }

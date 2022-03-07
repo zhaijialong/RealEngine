@@ -24,18 +24,17 @@ static inline float2 CalcDepthLinearizationParams(const float4x4& mtxProjection)
     return float2(C1, C2);
 }
 
-Camera::Camera() : 
-    m_resizeConnection({})
+Camera::Camera()
 {
     m_pos = float3(0.0f, 0.0f, 0.0f);
     m_rotation = float3(0.0, 0.0, 0.0f);
 
-    m_resizeConnection = Engine::GetInstance()->WindowResizeSignal.connect(this, &Camera::OnWindowResize);
+    Engine::GetInstance()->WindowResizeSignal.connect(&Camera::OnWindowResize, this);
 }
 
 Camera::~Camera()
 {
-    Engine::GetInstance()->WindowResizeSignal.disconnect(m_resizeConnection);
+    Engine::GetInstance()->WindowResizeSignal.disconnect(this);
 }
 
 void Camera::SetPerpective(float aspectRatio, float yfov, float znear, float zfar)

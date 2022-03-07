@@ -1,7 +1,6 @@
 #pragma once
 
 #include "utils/math.h"
-#include "lsignal/lsignal.h"
 #include "global_constants.hlsli"
 
 class IGfxCommandList;
@@ -92,8 +91,6 @@ private:
     int m_shutterSpeed = 1;
     int m_iso = 100;
     float m_exposureCompensation = 0.8f;
-
-    lsignal::connection m_resizeConnection;
 
     bool m_bEnableJitter = false;
     float2 m_prevJitter{ 0.0f, 0.0f };

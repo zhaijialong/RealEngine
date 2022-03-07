@@ -1,5 +1,6 @@
 #include "core/engine.h"
 #include "imgui/imgui_impl_win32.h"
+#include "rpmalloc/rpmalloc.h"
 #include "resource.h"
 #include <Windows.h>
 
@@ -49,6 +50,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_ LPWSTR    lpCmdLine,
     _In_ int       nCmdShow)
 {
+    rpmalloc_initialize();
     ImGui_ImplWin32_EnableDpiAwareness();
 
     WNDCLASSEX windowClass = { 0 };
