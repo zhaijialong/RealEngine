@@ -70,7 +70,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 lightColor = SceneCB.lightColor;
 
     float3 transmittance;
-    float3 color = IntegrateScattering(rayStart, rayDir, rayLength, lightDir, lightColor, transmittance);
+    float3 color = IntegrateScattering(rayStart, rayDir, rayLength, lightDir, lightColor, 64, transmittance);
 
     RWTexture2DArray<float3> cubeTexture = ResourceDescriptorHeap[c_cubeTextureUAV];
     cubeTexture[dispatchThreadID] = color;

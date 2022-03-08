@@ -61,23 +61,11 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 #endif
     
     float3 indirect_diffuse = float3(0.1, 0.1, 0.12);
-
-    TextureCube envTexture = ResourceDescriptorHeap[SceneCB.envTexture];
-    Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.brdfTexture];
-    
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
-    SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
-    
-    const float MAX_REFLECTION_LOD = 7.0;
-    float3 R = reflect(-V, N);
-    float3 filtered_env = envTexture.SampleLevel(linearSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
-    
-    float NdotV = saturate(dot(N, V));
-    float2 PreintegratedGF = brdfTexture.Sample(pointSampler, float2(NdotV, roughness)).xy;
-    float3 indirect_specular = filtered_env * (specular * PreintegratedGF.x + PreintegratedGF.y);
+    float3 indirect_specular = SpecularIBL(N, V, roughness, specular);
     
 #if GTAO && GTSO
     bentNormal = normalize(mul(CameraCB.mtxViewInverse, float4(bentNormal, 0.0)).xyz);
+    float3 R = reflect(-V, N);
     float specularAO = ComputeGTSO(R, bentNormal, gtao, roughness);
 #else
     float specularAO = 1.0;

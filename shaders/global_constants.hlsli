@@ -51,7 +51,7 @@ struct SceneConstant
     uint minReductionSampler;
     uint maxReductionSampler;
     uint linearBlackBoarderSampler;
-    uint brdfTexture;
+    uint preintegratedGFTexture;
 
     uint sobolSequenceTexture;
     uint scramblingRankingTexture1SPP;
@@ -69,7 +69,8 @@ struct SceneConstant
     uint frameIndex;
 
     uint skyCubeTexture;
-    uint envTexture; //todo : this will be deleted
+    uint skySpecularIBLTexture;
+    uint skyDiffuseIBLTexture;
 };
 
 struct CullingData

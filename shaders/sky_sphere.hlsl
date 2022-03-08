@@ -48,7 +48,7 @@ float4 ps_main(VSOutput input) : SV_TARGET
     float3 lightColor = SceneCB.lightColor;
 
     float3 transmittance;
-    float3 color = IntegrateScattering(rayStart, rayDir, rayLength, lightDir, lightColor, transmittance);
+    float3 color = IntegrateScattering(rayStart, rayDir, rayLength, lightDir, lightColor, 32, transmittance);
 
     return float4(color, 1);
 }

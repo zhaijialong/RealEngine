@@ -273,8 +273,9 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
     sceneCB.linearBlackBoarderSampler = m_pLinearBlackBoarderSampler->GetHeapIndex();
     sceneCB.skyCubeTexture = m_pSkyCubeMap->GetCubeTexture()->GetSRV()->GetHeapIndex();
-    sceneCB.envTexture = m_pEnvTexture->GetSRV()->GetHeapIndex();
-    sceneCB.brdfTexture = m_pBrdfTexture->GetSRV()->GetHeapIndex();
+    sceneCB.skySpecularIBLTexture = m_pSkyCubeMap->GetSpecularCubeTexture()->GetSRV()->GetHeapIndex();
+    sceneCB.skyDiffuseIBLTexture = m_pSkyCubeMap->GetDiffuseCubeTexture()->GetSRV()->GetHeapIndex();
+    sceneCB.preintegratedGFTexture = m_pPreintegratedGFTexture->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
     sceneCB.frameIndex = (uint32_t)GetFrameID();
     sceneCB.sobolSequenceTexture = m_pSobolSequenceTexture->GetSRV()->GetHeapIndex();
@@ -528,8 +529,7 @@ void Renderer::CreateCommonResources()
     m_pShadowSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pShadowSampler"));
 
     eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
-    m_pBrdfTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
-    m_pEnvTexture.reset(CreateTextureCube(asset_path + "textures/output_pmrem.dds"));
+    m_pPreintegratedGFTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
 
     m_pSobolSequenceTexture.reset(CreateTexture2D(asset_path + "textures/blue_noise/sobol_256_4d.png", false));
     m_pScramblingRankingTexture1SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_1spp.png", false));
