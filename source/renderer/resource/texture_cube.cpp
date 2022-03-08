@@ -42,16 +42,31 @@ bool TextureCube::Create(uint32_t width, uint32_t height, uint32_t levels, GfxFo
         return false;
     }
 
+    srvDesc.type = GfxShaderResourceViewType::Texture2DArray;
+
+    m_pArraySRV.reset(pDevice->CreateShaderResourceView(m_pTexture.get(), srvDesc, m_name));
+    if (m_pArraySRV == nullptr)
+    {
+        return false;
+    }
+
     if (flags & GfxTextureUsageUnorderedAccess)
     {
         GfxUnorderedAccessViewDesc uavDesc;
         uavDesc.type = GfxUnorderedAccessViewType::Texture2DArray;
         uavDesc.texture.array_size = 6;
 
-        m_pUAV.reset(pDevice->CreateUnorderedAccessView(m_pTexture.get(), uavDesc, m_name));
-        if (m_pUAV == nullptr)
+        for (uint32_t i = 0; i < levels; ++i)
         {
-            return false;
+            uavDesc.texture.mip_slice = i;
+
+            IGfxDescriptor* uav = pDevice->CreateUnorderedAccessView(m_pTexture.get(), uavDesc, m_name);
+            if (uav == nullptr)
+            {
+                return false;
+            }
+
+            m_pUAV.push_back(eastl::unique_ptr<IGfxDescriptor>(uav));
         }
     }
 

@@ -1277,6 +1277,12 @@
     <FxCompile Include="shaders\sky_cubemap.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\cubemap_spd.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ibl_prefilter.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">
