@@ -60,18 +60,19 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     ao = min(ao, gtao);
 #endif
     
-    float3 indirect_diffuse = float3(0.1, 0.1, 0.12);
+    //todo : realtime GI
+    float3 indirect_diffuse = float3(0.2, 0.2, 0.25);//DiffuseIBL(N);
     float3 indirect_specular = SpecularIBL(N, V, roughness, specular);
     
 #if GTAO && GTSO
     bentNormal = normalize(mul(CameraCB.mtxViewInverse, float4(bentNormal, 0.0)).xyz);
     float3 R = reflect(-V, N);
     float specularAO = ComputeGTSO(R, bentNormal, gtao, roughness);
-#else
-    float specularAO = 1.0;
+
+    indirect_specular *= specularAO;
 #endif
 
-    float3 radiance = emissive + direct_light + diffuse.xyz * indirect_diffuse * ao + indirect_specular * specularAO;
+    float3 radiance = emissive + direct_light + diffuse.xyz * indirect_diffuse * ao + indirect_specular;
     
     RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_outputRT];
 

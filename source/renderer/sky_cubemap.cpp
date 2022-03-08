@@ -36,15 +36,26 @@ void SkyCubeMap::Update(IGfxCommandList* pCommandList)
     ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
     if (m_prevLightDir != light->GetLightDirection() ||
         m_prevLightColor != light->GetLightColor() ||
-        m_prevLightIntensity != light->GetLightIntensity() || 1)
+        m_prevLightIntensity != light->GetLightIntensity())
     {
         m_prevLightDir = light->GetLightDirection();
         m_prevLightColor = light->GetLightColor();
         m_prevLightIntensity = light->GetLightIntensity();
 
         UpdateCubeTexture(pCommandList);
+
+        bool first_frame = m_pRenderer->GetFrameID() == 0;
+        if (!first_frame)
+        {
+            pCommandList->ResourceBarrier(m_pSpecularTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::ShaderResourceAll, GfxResourceState::UnorderedAccess);
+            pCommandList->ResourceBarrier(m_pDiffuseTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::ShaderResourceAll, GfxResourceState::UnorderedAccess);
+        }
+
         UpdateSpecularCubeTexture(pCommandList);
         UpdateDiffuseCubeTexture(pCommandList);
+
+        pCommandList->ResourceBarrier(m_pSpecularTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceAll);
+        pCommandList->ResourceBarrier(m_pDiffuseTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceAll);
     }
 }
 
@@ -145,13 +156,7 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
 
 void SkyCubeMap::UpdateSpecularCubeTexture(IGfxCommandList* pCommandList)
 {
-    GPU_EVENT(pCommandList, "IBL Specular filter");
-
-    bool first_frame = m_pRenderer->GetFrameID() == 0;
-    if (!first_frame)
-    {
-        pCommandList->ResourceBarrier(m_pSpecularTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::ShaderResourceAll, GfxResourceState::UnorderedAccess);
-    }
+    GPU_EVENT(pCommandList, "IBL specular filter");
 
     pCommandList->SetPipelineState(m_pSpecularFilterPSO);
 
@@ -170,12 +175,23 @@ void SkyCubeMap::UpdateSpecularCubeTexture(IGfxCommandList* pCommandList)
         uint32_t size = textureDesc.width >> i;
         pCommandList->Dispatch((size + 7) / 8, (size + 7) / 8, 6);
     }
-
-    pCommandList->ResourceBarrier(m_pSpecularTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceAll);
 }
 
 void SkyCubeMap::UpdateDiffuseCubeTexture(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "IBL diffuse filter");
-    //todo
+
+    bool first_frame = m_pRenderer->GetFrameID() == 0;
+    if (!first_frame)
+    {
+    }
+
+    pCommandList->SetPipelineState(m_pDiffuseFilterPSO);
+
+    const GfxTextureDesc& textureDesc = m_pSpecularTexture->GetTexture()->GetDesc();
+    uint32_t size = textureDesc.width;
+
+    uint32_t cb[3] = { m_pTexture->GetSRV()->GetHeapIndex(), m_pDiffuseTexture->GetUAV(0)->GetHeapIndex(), size };
+    pCommandList->SetComputeConstants(0, cb, sizeof(cb));
+    pCommandList->Dispatch((size + 7) / 8, (size + 7) / 8, 6);
 }

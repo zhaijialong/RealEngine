@@ -267,3 +267,11 @@ float3 SpecularIBL(float3 N, float3 V, float roughness, float3 specular)
 
     return prefilteredColor * (specular * preintegratedGF.x + preintegratedGF.y);
 }
+
+float3 DiffuseIBL(float3 N)
+{
+    TextureCube envTexture = ResourceDescriptorHeap[SceneCB.skyDiffuseIBLTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+
+    return envTexture.SampleLevel(linearSampler, N, 0.0).xyz;
+}

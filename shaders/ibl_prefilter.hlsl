@@ -102,8 +102,35 @@ void specular_filter(uint3 dispatchThreadID : SV_DispatchThreadID)
     outputTexture[dispatchThreadID] = float4(prefilteredColor / totalWeight, 1.0);
 }
 
-[numthreads(1, 1, 1)]
-void diffuse_filter()
+[numthreads(8, 8, 1)]
+void diffuse_filter(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    TextureCube inputTexture = ResourceDescriptorHeap[c_inputTexture];
+    RWTexture2DArray<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 
+    float2 uv = (float2(dispatchThreadID.xy) + 0.5) / c_cubeSize;
+    float2 xy = uv * 2.0f - float2(1.0f, 1.0f);
+    xy.y = -xy.y;
+    uint slice = dispatchThreadID.z;
+    float3 N = normalize(ups[slice] * xy.y + rights[slice] * xy.x + views[slice]);
+
+    float3 irradiance = 0.0;
+
+    const uint sampleCount = 4 * 1024;
+    for (uint i = 0; i < sampleCount; ++i)
+    {
+        float2 random = Hammersley(i, sampleCount);
+        float3 L = SampleCosHemisphere(random, N);
+
+        float NdotL = saturate(dot(N, L));
+        float pdf = NdotL / M_PI;
+
+        float3 diffuseBRDF = DiffuseBRDF(inputTexture.SampleLevel(linearSampler, L, 0.0).xyz);
+        irradiance += diffuseBRDF * NdotL / pdf;
+    }
+
+    irradiance /= sampleCount;
+
+    outputTexture[dispatchThreadID] = float4(irradiance, 1.0);
 }
