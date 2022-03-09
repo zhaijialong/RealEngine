@@ -60,7 +60,7 @@ void SkyCubeMap::Update(IGfxCommandList* pCommandList)
         }
     }
 
-    GUI("Settings", "SkyLight", [&]()
+    GUI("Settings", "Sky Light", [&]()
         {
             if (ImGui::Combo("Source##SkyCubeMap", (int*)&m_source, "Realtime\0HDRI\0\0"))
             {

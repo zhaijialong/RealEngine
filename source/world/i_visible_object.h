@@ -10,7 +10,7 @@ public:
 
     virtual bool Create() = 0;
     virtual void Tick(float delta_time) = 0;
-    virtual void Render(Renderer* pRenderer) = 0;
+    virtual void Render(Renderer* pRenderer) {}
     virtual bool FrustumCull(const float4* planes, uint32_t plane_count) const { return true; }
 
     float3 GetPosition() const { return m_pos; }
