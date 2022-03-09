@@ -117,7 +117,7 @@ void diffuse_filter(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 irradiance = 0.0;
 
-    const uint sampleCount = 4 * 1024;
+    const uint sampleCount = 64 * 1024;
     for (uint i = 0; i < sampleCount; ++i)
     {
         float2 random = Hammersley(i, sampleCount);

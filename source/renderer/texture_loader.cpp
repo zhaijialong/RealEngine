@@ -179,7 +179,8 @@ bool TextureLoader::Load(const eastl::string& file, bool srgb)
     }
     else
     {
-        return LoadSTB(srgb);
+        bool hdr = file.find(".hdr") != eastl::string::npos;
+        return LoadSTB(srgb, hdr);
     }
 }
 
@@ -208,10 +209,23 @@ bool TextureLoader::LoadDDS(bool srgb)
     return true;
 }
 
-bool TextureLoader::LoadSTB(bool srgb)
+bool TextureLoader::LoadSTB(bool srgb, bool hdr)
 {
     int x, y, comp;
-    m_pDecompressedData = stbi_load_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, STBI_rgb_alpha);
+
+    if (hdr)
+    {
+        m_pDecompressedData = stbi_loadf_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, STBI_rgb);
+        m_format = GfxFormat::RGB32F;
+        m_textureSize = x * y * 12;
+    }
+    else
+    {
+        m_pDecompressedData = stbi_load_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, STBI_rgb_alpha);
+        m_format = srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM;
+        m_textureSize = x * y * 4;
+    }
+
     if (m_pDecompressedData == nullptr)
     {
         return false;
@@ -219,8 +233,6 @@ bool TextureLoader::LoadSTB(bool srgb)
 
     m_width = x;
     m_height = y;
-    m_format = srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM;
-    m_textureSize = x * y * 4;    
 
     return true;
 }

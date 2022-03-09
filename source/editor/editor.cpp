@@ -238,22 +238,22 @@ void Editor::DrawMenu()
 
     if (m_bShowInspector)
     {
-        DrawWindow("Inspector", &m_bShowInspector);
+        Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("Inspector", &m_bShowInspector); });
     }
 
-    if(m_bShowSettings)
+    if (m_bShowSettings)
     {
-        DrawWindow("Settings", &m_bShowSettings);
+        Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("Settings", &m_bShowSettings); });
     }
 
     if (m_bShowLighting)
     {
-        DrawWindow("Lighting", &m_bShowLighting);
+        Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("Lighting", &m_bShowLighting); });
     }
 
     if (m_bShowPostProcess)
     {
-        DrawWindow("PostProcess", &m_bShowPostProcess);
+        Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("PostProcess", &m_bShowPostProcess); });
     }
 }
 

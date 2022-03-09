@@ -1,6 +1,7 @@
 #include "sky_cubemap.h"
 #include "renderer.h"
-#include "core/engine.h"
+#include "utils/gui_util.h"
+#include "ImFileDialog/ImFileDialog.h"
 
 #define A_CPU
 #include "ffx_a.h"
@@ -11,8 +12,11 @@ SkyCubeMap::SkyCubeMap(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
+    desc.cs = pRenderer->GetShader("sky_cubemap.hlsl", "main", "cs_6_6", { "HDRI_TEXTURE=1" });
+    m_pTexturedSkyPSO = pRenderer->GetPipelineState(desc, "SkyCubeMap PSO");
+
     desc.cs = pRenderer->GetShader("sky_cubemap.hlsl", "main", "cs_6_6", {});
-    m_pPSO = pRenderer->GetPipelineState(desc, "SkyCubeMap PSO");
+    m_pRealtimeSkyPSO = pRenderer->GetPipelineState(desc, "SkyCubeMap PSO");
 
     desc.cs = pRenderer->GetShader("cubemap_spd.hlsl", "main", "cs_6_6", {});
     m_pGenerateMipsPSO = pRenderer->GetPipelineState(desc, "Cubemap SPD PSO");
@@ -27,20 +31,68 @@ SkyCubeMap::SkyCubeMap(Renderer* pRenderer)
     m_pTexture.reset(pRenderer->CreateTextureCube(128, 128, 8, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pTexture"));
     m_pSpecularTexture.reset(pRenderer->CreateTextureCube(128, 128, 8, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pSpecularTexture"));
     m_pDiffuseTexture.reset(pRenderer->CreateTextureCube(128, 128, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pDiffuseTexture"));
+
+    m_pHDRITexture.reset(pRenderer->CreateTexture2D(Engine::GetInstance()->GetAssetPath() + "textures/hdri/rural_landscape_1k.hdr"));
 }
 
 void SkyCubeMap::Update(IGfxCommandList* pCommandList)
 {
-    GPU_EVENT(pCommandList, "SkyCubeMap");
-
-    ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
-    if (m_prevLightDir != light->GetLightDirection() ||
-        m_prevLightColor != light->GetLightColor() ||
-        m_prevLightIntensity != light->GetLightIntensity())
+    if (m_source == SkySource::Realtime)
     {
-        m_prevLightDir = light->GetLightDirection();
-        m_prevLightColor = light->GetLightColor();
-        m_prevLightIntensity = light->GetLightIntensity();
+        ILight* light = Engine::GetInstance()->GetWorld()->GetPrimaryLight();
+        if (m_prevLightDir != light->GetLightDirection() ||
+            m_prevLightColor != light->GetLightColor() ||
+            m_prevLightIntensity != light->GetLightIntensity())
+        {
+            m_prevLightDir = light->GetLightDirection();
+            m_prevLightColor = light->GetLightColor();
+            m_prevLightIntensity = light->GetLightIntensity();
+            m_bDirty = true;
+        }
+    }
+    else
+    {
+        if (m_pPendingHDRITexture)
+        {
+            eastl::swap(m_pHDRITexture, m_pPendingHDRITexture);
+            m_pPendingHDRITexture.reset();
+            m_bDirty = true;
+        }
+    }
+
+    GUI("Settings", "SkyLight", [&]()
+        {
+            if (ImGui::Combo("Source##SkyCubeMap", (int*)&m_source, "Realtime\0HDRI\0\0"))
+            {
+                m_bDirty = true;
+            }
+
+            if (m_source == SkySource::HDRI)
+            {
+                ImGui::Image((ImTextureID)m_pHDRITexture->GetSRV(), ImVec2(300, 150));
+            }
+
+            if (ImGui::Button("Select##SkyCubeMap"))
+            {
+                ifd::FileDialog::Instance().Open("Select HDRI", "Select HDRI", "HDRI file (*.hdr){.hdr},.*");
+            }
+
+            if (ifd::FileDialog::Instance().IsDone("Select HDRI"))
+            {
+                if (ifd::FileDialog::Instance().HasResult())
+                {
+                    eastl::string file = ifd::FileDialog::Instance().GetResult().u8string().c_str();
+                    m_pPendingHDRITexture.reset(m_pRenderer->CreateTexture2D(file));
+                }
+                ifd::FileDialog::Instance().Close();
+            }
+        });
+
+    if (m_bDirty)
+    {
+        m_bDirty = false;
+
+        GPU_EVENT(pCommandList, "SkyCubeMap");
 
         UpdateCubeTexture(pCommandList);
 
@@ -71,18 +123,19 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
 
     pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopyDst);
 
-    pCommandList->SetPipelineState(m_pPSO);
+    pCommandList->SetPipelineState(m_source == SkySource::Realtime ? m_pRealtimeSkyPSO : m_pTexturedSkyPSO);
 
     struct CB
     {
         uint cubeTextureUAV;
         uint cubeTextureSize;
         float rcpTextureSize;
+        uint hdriTexture;
     };
 
     uint32_t size = m_pTexture->GetTexture()->GetDesc().width;
 
-    CB cb = { m_pTexture->GetUAV(0)->GetHeapIndex(), size, 1.0f / size };
+    CB cb = { m_pTexture->GetUAV(0)->GetHeapIndex(), size, 1.0f / size, m_pHDRITexture->GetSRV()->GetHeapIndex() };
     pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
     pCommandList->Dispatch((size + 7) / 8, (size + 7) / 8, 6);
 
@@ -99,6 +152,7 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
     }
 
     //generate mipmaps, needed in specular filtering
+    //todo : sometimes the last mip is zero, check it again later
     pCommandList->SetPipelineState(m_pGenerateMipsPSO);
 
     varAU2(dispatchThreadGroupCountXY);

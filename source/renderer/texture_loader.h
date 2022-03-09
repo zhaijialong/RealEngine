@@ -23,7 +23,7 @@ public:
 
 private:
     bool LoadDDS(bool srgb);
-    bool LoadSTB(bool srgb);
+    bool LoadSTB(bool srgb, bool hdr);
 
 private:
     uint32_t m_width = 1;

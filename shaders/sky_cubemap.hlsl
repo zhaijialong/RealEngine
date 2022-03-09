@@ -1,11 +1,12 @@
+#include "common.hlsli"
 #include "atmosphere.hlsli"
-#include "global_constants.hlsli"
 
 cbuffer CB : register(b0)
 {
     uint c_cubeTextureUAV;
     uint c_cubeTextureSize;
     float c_rcpTextureSize;
+    uint c_hdriTexture;
 };
 
 static const float3 views[6] =
@@ -51,9 +52,19 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     xy.y = -xy.y;
 
     uint slice = dispatchThreadID.z;
+    float3 dir = normalize(ups[slice] * xy.y + rights[slice] * xy.x + views[slice]);
 
+#if HDRI_TEXTURE
+    Texture2D hdriTexture = ResourceDescriptorHeap[c_hdriTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+
+    float3 V = -dir;
+    float u = (atan2(V.x, V.z) / M_PI + 1.0) * 0.5;
+    float v = 1.0 - acos(V.y) / M_PI;
+    float3 color = hdriTexture.SampleLevel(linearSampler, float2(u, v), 0).xyz;
+#else
     float3 rayStart = float3(0, 0, 0);
-    float3 rayDir = normalize(ups[slice] * xy.y + rights[slice] * xy.x + views[slice]);
+    float3 rayDir = dir;
     float rayLength = INFINITY;
 
     bool PlanetShadow = false;
@@ -71,6 +82,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 transmittance;
     float3 color = IntegrateScattering(rayStart, rayDir, rayLength, lightDir, lightColor, 64, transmittance);
+#endif
 
     RWTexture2DArray<float3> cubeTexture = ResourceDescriptorHeap[c_cubeTextureUAV];
     cubeTexture[dispatchThreadID] = color;

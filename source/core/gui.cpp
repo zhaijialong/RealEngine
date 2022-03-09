@@ -81,6 +81,13 @@ void GUI::Tick()
 void GUI::Render(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "GUI");
+
+    for (size_t i = 0; i < m_commands.size(); ++i)
+    {
+        m_commands[i]();
+    }
+    m_commands.clear();
+
     ImGui::Render();
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
