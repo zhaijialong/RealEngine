@@ -31,6 +31,7 @@ struct VertexOutput
     float3 bitangent : BITANGENT;
 #endif
     
+    float3 worldPos : WORLD_POSITION;
     uint meshlet : COLOR0;
     uint instanceIndex : COLOR1;
 };
@@ -67,6 +68,7 @@ VertexOutput GetVertexOutput(uint instance_id,  uint vertex_id)
 
     VertexOutput output = (VertexOutput)0;
     output.pos = mul(CameraCB.mtxViewProjection, worldPos);
+    output.worldPos = worldPos.xyz;
     output.uv = v.uv;
     output.normal = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(v.normal, 0.0f)).xyz);
     
