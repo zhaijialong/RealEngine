@@ -1,7 +1,7 @@
 # RealEngine
 
-My toy engine, mainly for rendering expariment and prototyping. It requires a GPU which supports DX12 Ultimate.
-
+My toy engine, mainly for rendering expariment and prototyping. 
+It requires a GPU which supports DX12 Ultimate with latest driver.
 It is not supposed to be used in production, and prefers clean design and code over being heavily optimized.
 
 ## some highlights
@@ -11,6 +11,7 @@ It is not supposed to be used in production, and prefers clean design and code o
   ![rendergraph](bin/rendergraph.png)
 * fully bindless resources with SM6.6
 * two-phase occlusion culling (like Ubi's GPU driven pipeline). no matter how many different meshes and textures, always two drawcalls(indirect DispatchMesh) per PSO.
+* hybrid rendering with raytracing
 * `Print`, `DrawLine` functions in shaders which can be very useful for debugging
 
 ## planned features
@@ -19,15 +20,14 @@ It is not supposed to be used in production, and prefers clean design and code o
 * ~~GTAO~~
 * diffuse & specular GI
 * clustered shading
-* volume cloud
-* volume fog
-* ~~LPM~~
+* ~~Bloom~~
+* ~~Auto Exposure~~
 * ~~TAA~~
 * ~~CAS~~
 * ~~meshlet~~
 * ~~RTX~~
-* a reference pathtracer
-* maybe water/ocean simulation, or large-scale landscape
+* ~~a reference pathtracer~~
+* maybe  volumetric cloud/fog, water/ocean simulation, large-scale landscape, or any random things
 
 
 ## AMD related issues
