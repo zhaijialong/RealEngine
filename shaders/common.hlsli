@@ -163,7 +163,7 @@ float3 GetWorldPosition(uint2 screenPos, float depth)
 
 float3 GetNdcPos(float4 clipPos)
 {
-    return clipPos.xyz / clipPos.w;
+    return clipPos.xyz / max(clipPos.w, 0.0000001);
 }
 
 //[-1, 1] -> [0, 1]
@@ -274,4 +274,29 @@ float3 DiffuseIBL(float3 N)
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
 
     return envTexture.SampleLevel(linearSampler, N, 0.0).xyz;
+}
+
+//rgba16unorm
+float4 PackVelocity(float3 ndcPos, float3 prevNdcPos)
+{
+    float2 velocity = ndcPos.xy - prevNdcPos.xy; //[-2, 2];
+    velocity = velocity * 0.25 + 0.5; //[0, 1]
+
+    uint deltaZ = asuint(ndcPos.z - prevNdcPos.z);
+    uint2 int16DeltaZ = uint2(deltaZ >> 16, deltaZ & 0xFFFF);
+
+    return float4(velocity, int16DeltaZ / 65535.0);
+}
+
+//return ndcPos - prevNdcPos;
+float3 UnpackVelocity(float4 packedVelocity)
+{
+    float3 velocity;
+    velocity.xy = packedVelocity.xy * 4.0 - 2.0;
+
+    uint2 int16DeltaZ = (uint2)round(packedVelocity.zw * 65535.0);
+    uint deltaZ = (int16DeltaZ.x << 16) | int16DeltaZ.y;
+    velocity.z = asfloat(deltaZ);
+
+    return velocity;
 }

@@ -322,7 +322,6 @@
     <ClInclude Include="shaders\ffx_cas.h" />
     <ClInclude Include="shaders\ffx_spd.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
-    <ClInclude Include="shaders\IntelTAA.h" />
     <ClInclude Include="shaders\XeGTAO.h" />
     <ClInclude Include="source\core\eastl_allocator.h" />
     <ClInclude Include="source\core\engine.h" />
@@ -440,14 +439,12 @@
     <None Include="shaders\gpu_scene.hlsli" />
     <None Include="shaders\gtso.hlsli" />
     <None Include="shaders\importance_sampling.hlsli" />
-    <None Include="shaders\IntelTAA.hlsli" />
     <None Include="shaders\meshlet.hlsli" />
     <None Include="shaders\model.hlsli" />
     <None Include="shaders\model_constants.hlsli" />
     <None Include="shaders\random.hlsli" />
     <None Include="shaders\ray_trace.hlsli" />
     <None Include="shaders\stats.hlsli" />
-    <None Include="shaders\taa_constants.hlsli" />
     <None Include="shaders\tone_mapping.hlsli" />
     <None Include="shaders\XeGTAO.hlsli" />
     <None Include="source\renderer\render_graph.inl" />

@@ -45,17 +45,8 @@ float4 ps_main(VSOutput input) : SV_TARGET0
     model::AlphaTest(c_InstanceIndex, input.uv);
 #endif
     
-    float2 ndcPos = input.clipPos.xy / input.clipPos.w;
-    float2 screenPos = GetScreenPosition(ndcPos);
-    
-    float2 prevNdcPos = input.prevClipPos.xy / input.prevClipPos.w;
-    float2 prevScreenPos = GetScreenPosition(prevNdcPos);
-    
-    float2 motion = prevScreenPos.xy - screenPos.xy;
-    
-    float linearZ = input.clipPos.w;
-    float prevLinearZ = input.prevClipPos.w;    
-    float deltaZ = prevLinearZ - linearZ;
-    
-    return float4(motion, deltaZ, 0);
+    float3 ndcPos = GetNdcPos(input.clipPos);
+    float3 prevNdcPos = GetNdcPos(input.prevClipPos);
+
+    return PackVelocity(ndcPos, prevNdcPos);
 }

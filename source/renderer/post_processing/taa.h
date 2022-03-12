@@ -12,20 +12,16 @@ public:
         RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height);
 
 private:
-    IGfxTexture* GetHistoryRT(uint32_t width, uint32_t height);
-
-    void GenerateMotionVector(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* output, uint32_t width, uint32_t height);
     void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* velocity, IGfxDescriptor* linearDepth, IGfxDescriptor* output, uint32_t width, uint32_t height);
-    void Apply(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPSO = nullptr;
-    IGfxPipelineState* m_pApplyPSO = nullptr;
-    IGfxPipelineState* m_pMotionVectorPSO = nullptr;
 
-    eastl::unique_ptr<Texture2D> m_pHistoryColor;
+    //ping-pong
+    eastl::unique_ptr<Texture2D> m_pHistoryColorInput;
+    eastl::unique_ptr<Texture2D> m_pHistoryColorOutput;
+
     bool m_bHistoryInvalid = true;
-
     bool m_bEnable = true;
 };

@@ -85,7 +85,7 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
             desc.usage = GfxTextureUsageRenderTarget;
-            desc.format = GfxFormat::RGBA16F;
+            desc.format = GfxFormat::RGBA16UNORM;
             data.outVelocityRT = builder.Create<RenderGraphTexture>(desc, "Velocity RT");
 
             data.outVelocityRT = builder.WriteColor(0, data.outVelocityRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0));

@@ -615,9 +615,6 @@
     <ClInclude Include="source\world\skeletal_mesh.h">
       <Filter>source\world</Filter>
     </ClInclude>
-    <ClInclude Include="shaders\IntelTAA.h">
-      <Filter>shaders</Filter>
-    </ClInclude>
     <ClInclude Include="shaders\XeGTAO.h">
       <Filter>shaders</Filter>
     </ClInclude>
@@ -1134,13 +1131,7 @@
     <None Include="source\renderer\render_graph.inl">
       <Filter>source\renderer</Filter>
     </None>
-    <None Include="shaders\IntelTAA.hlsli">
-      <Filter>shaders</Filter>
-    </None>
     <None Include="shaders\XeGTAO.hlsli">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="shaders\taa_constants.hlsli">
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\debug.hlsli">
