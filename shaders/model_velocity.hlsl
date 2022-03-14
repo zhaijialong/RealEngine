@@ -45,8 +45,8 @@ float4 ps_main(VSOutput input) : SV_TARGET0
     model::AlphaTest(c_InstanceIndex, input.uv);
 #endif
     
-    float3 ndcPos = GetNdcPos(input.clipPos);
-    float3 prevNdcPos = GetNdcPos(input.prevClipPos);
+    float3 ndcPos = GetNdcPosition(input.clipPos);
+    float3 prevNdcPos = GetNdcPosition(input.prevClipPos);
 
     return PackVelocity(ndcPos, prevNdcPos);
 }

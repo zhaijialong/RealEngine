@@ -102,7 +102,7 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
         RenderGraphHandle output;
     };
 
-    eastl::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y).c_str();
+    eastl::string name = fmt::format("Bloom UpsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y).c_str();
 
     auto upsample_pass = pRenderGraph->AddPass<UpsamplePassData>(name,
         [&](UpsamplePassData& data, RenderGraphBuilder& builder)

@@ -161,9 +161,22 @@ float3 GetWorldPosition(uint2 screenPos, float depth)
     return worldPos.xyz;
 }
 
-float3 GetNdcPos(float4 clipPos)
+float3 GetNdcPosition(float4 clipPos)
 {
     return clipPos.xyz / max(clipPos.w, 0.0000001);
+}
+
+//[0, width/height] -> [-1, 1]
+float2 GetNdcPosition(float2 screenPos)
+{
+    float2 screenUV = screenPos * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
+    return (screenUV * 2.0 - 1.0) * float2(1.0, -1.0);
+}
+
+//[0, width/height] -> [0, 1]
+float2 GetScreenUV(uint2 screenPos)
+{
+    return ((float2)screenPos + 0.5) * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
 }
 
 //[-1, 1] -> [0, 1]
@@ -176,13 +189,6 @@ float2 GetScreenUV(float2 ndcPos)
 float2 GetScreenPosition(float2 ndcPos)
 {
     return GetScreenUV(ndcPos) * float2(SceneCB.viewWidth, SceneCB.viewHeight);
-}
-
-//[0, width/height] -> [-1, 1]
-float2 GetNdcPosition(float2 screenPos)
-{
-    float2 screenUV = screenPos * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
-    return (screenUV * 2.0 - 1.0) * float2(1.0, -1.0);
 }
 
 float4 RGBA8UnormToFloat4(uint packed)
