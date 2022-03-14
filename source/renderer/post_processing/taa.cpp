@@ -22,6 +22,12 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
                 Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
                 camera->EnableJitter(m_bEnable);
 
+                if (!m_bEnable)
+                {
+                    m_pHistoryColorInput.reset();
+                    m_pHistoryColorOutput.reset();
+                }
+
                 m_bHistoryInvalid = true;
             }
         });
