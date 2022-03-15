@@ -50,12 +50,10 @@ float3 BicubicFilter(Texture2D colorTex, float2 texcoord, float4 rtMetrics)
 }
 
 // An Excursion in Temporal Supersampling. Marco Salvi[2016]
-float3 VarianceClip(float3 history, float3 c0, float3 c1, float3 c2, float3 c3, float3 c4, float3 c5, float3 c6, float3 c7, float3 c8)
+float3 VarianceClip(float3 history, float gamma, float3 c0, float3 c1, float3 c2, float3 c3, float3 c4, float3 c5, float3 c6, float3 c7, float3 c8)
 {
     float3 m1 = c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8;
     float3 m2 = c0 * c0 + c1 * c1 + c2 * c2 + c3 * c3 + c4 * c4 + c5 * c5 + c6 * c6 + c7 * c7 + c8 * c8;
-
-    const float gamma = 1.0f;
 
     float3 mu = m1 / 9.0;
     float3 sigma = sqrt(abs(m2 / 9.0 - mu * mu));
@@ -65,7 +63,7 @@ float3 VarianceClip(float3 history, float3 c0, float3 c1, float3 c2, float3 c3, 
     return clamp(history, min, max);
 }
 
-float3 GetVelocity(uint2 screenPos, float linearDepth)
+float3 GetVelocity(uint2 screenPos)
 {
     Texture2D linearDepthRT = ResourceDescriptorHeap[c_linearDepthRT];
     Texture2D velocityTexture = ResourceDescriptorHeap[c_velocityRT];
@@ -74,16 +72,11 @@ float3 GetVelocity(uint2 screenPos, float linearDepth)
     float4 velocity = velocityTexture[screenPos];
 #else
     int2 closestPosOffset = int2(0, 0);
-    float closestDepth = linearDepth;
+    float closestDepth = 1e8;
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
-            if (x == 0 && y == 0)
-            {
-                continue;
-            }
-
             float depth = linearDepthRT[screenPos + int2(x, y)].x;
             if (depth < closestDepth)
             {
@@ -101,7 +94,7 @@ float3 GetVelocity(uint2 screenPos, float linearDepth)
         return UnpackVelocity(velocity);
     }
     
-    float3 ndcPos = float3(GetNdcPosition((float2)screenPos + 0.5), GetNdcDepth(linearDepth));
+    float3 ndcPos = float3(GetNdcPosition((float2)screenPos + 0.5), GetNdcDepth(linearDepthRT[screenPos].x));
     
     float4 prevClipPos = mul(CameraCB.mtxClipToPrevClipNoJitter, float4(ndcPos, 1.0));
     float3 prevNdcPos = GetNdcPosition(prevClipPos);
@@ -119,13 +112,18 @@ float4 GetHistory(float2 uv)
     float4 rtMetrics = float4(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight, SceneCB.viewWidth, SceneCB.viewHeight);
     float3 historyColor = BicubicFilter(historyInputTexture, uv, rtMetrics);
 
-    if (c_historyInputRT == c_inputRT)
-    {
-        historyColor = Tonemap(historyColor); //first frame
-        historyWeight = 0.0;
-    }
-
     return float4(historyColor, historyWeight);
+}
+
+float GetVelocityConfidenceFactor(float3 velocity)
+{
+    // Difference in pixels for velocity after which the pixel is marked as no-history
+    const uint FRAME_VELOCITY_IN_PIXELS_DIFF = 256;
+
+    //velocity.xy is in [-2, 2]
+    float2 velocityInPixels = velocity.xy * 0.25 * float2(SceneCB.viewWidth, SceneCB.viewHeight);
+
+    return saturate(1.0 - length(velocityInPixels) / FRAME_VELOCITY_IN_PIXELS_DIFF);
 }
 
 [numthreads(8, 8, 1)]
@@ -134,28 +132,22 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     int2 screenPos = dispatchThreadID.xy;
 
     Texture2D inputTexture = ResourceDescriptorHeap[c_inputRT];
-    Texture2D linearDepthRT = ResourceDescriptorHeap[c_linearDepthRT];
     RWTexture2D<unorm float4> historyOutputTexture = ResourceDescriptorHeap[c_historyOutputRT];
     RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputRT];
 
     float3 inputColor = Tonemap(inputTexture[screenPos].xyz);
 
-    float linearDepth = linearDepthRT[screenPos].x;
-    float3 velocity = GetVelocity(screenPos, linearDepth);
+    float3 velocity = GetVelocity(screenPos);
     float2 prevNdcPos = GetNdcPosition((float2)screenPos + 0.5) - velocity.xy;
     float2 prevUV = GetScreenUV(prevNdcPos);
 
-    if (any(prevUV < 0.0) || any(prevUV > 1.0))
-    {
-        //out of screen
-        historyOutputTexture[screenPos] = float4(inputColor, 0.5);
-        outputTexture[screenPos] = float4(TonemapInvert(inputColor), 1.0);
-        return;
-    }
+    bool firstFrame = c_historyInputRT == c_inputRT;
+    bool outOfBound = any(prevUV < 0.0) || any(prevUV > 1.0);
+    float velocityConfidenceFactor = GetVelocityConfidenceFactor(velocity);
+    bool historyValid = !firstFrame && !outOfBound && (velocityConfidenceFactor > 0.0);
     
     const int2 screenPosMin = int2(0, 0);
     const int2 screenPosMax = int2(SceneCB.viewWidth, SceneCB.viewHeight) - 1;
-
     float3 c0 = Tonemap(inputTexture[clamp(screenPos + int2(-1, -1), screenPosMin, screenPosMax)].xyz);
     float3 c1 = Tonemap(inputTexture[clamp(screenPos + int2(0, -1), screenPosMin, screenPosMax)].xyz);
     float3 c2 = Tonemap(inputTexture[clamp(screenPos + int2(1, -1), screenPosMin, screenPosMax)].xyz);
@@ -166,18 +158,26 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 c7 = Tonemap(inputTexture[clamp(screenPos + int2(0, 1), screenPosMin, screenPosMax)].xyz);
     float3 c8 = Tonemap(inputTexture[clamp(screenPos + int2(1, 1), screenPosMin, screenPosMax)].xyz);
 
-    float4 historyColor = GetHistory(prevUV);
-    historyColor.xyz = VarianceClip(historyColor.xyz, c0, c1, c2, c3, c4, c5, c6, c7, c8);
+    if (historyValid)
+    {
+        float4 historyColor = GetHistory(prevUV);
 
-    float luma = Luminance(inputColor);
-    float prevLuma = Luminance(historyColor.xyz);
-    float lumaDiff = saturate(abs(luma - prevLuma) / max(luma, prevLuma));
+        const float varianceGamma = lerp(0.75, 2, velocityConfidenceFactor * velocityConfidenceFactor);
+        historyColor.xyz = VarianceClip(historyColor.xyz, varianceGamma, c0, c1, c2, c3, c4, c5, c6, c7, c8);
 
-    float weight = historyColor.w * (1.0 - lumaDiff) * (1.0 - lumaDiff);
-    float newWeight = saturate(1.0 / (2.0 - weight)); //[0.5, 1.0)
+        float weight = historyColor.w * velocityConfidenceFactor;
 
-    float3 ouputColor = lerp(inputColor, historyColor.xyz, lerp(0.8, 0.99, newWeight));
+        float3 ouputColor = lerp(inputColor, historyColor.xyz, weight);
+        float newWeight = saturate(1.0 / (2.0 - weight));
 
-    historyOutputTexture[screenPos] = float4(ouputColor, newWeight);
-    outputTexture[screenPos] = float4(TonemapInvert(ouputColor), 1.0);
+        historyOutputTexture[screenPos] = float4(ouputColor, newWeight);
+        outputTexture[screenPos] = float4(TonemapInvert(ouputColor), 1.0);
+    }
+    else
+    {
+        float3 ouputColor = c0 * 0.0625 + c1 * 0.125 + c2 * 0.0625 + c3 * 0.125 + c4 * 0.25 + c5 * 0.125 + c6 * 0.0625 + c7 * 0.125 + c8 * 0.0625;
+
+        historyOutputTexture[screenPos] = float4(ouputColor, 0.5);
+        outputTexture[screenPos] = float4(TonemapInvert(ouputColor), 1.0);
+    }
 }
