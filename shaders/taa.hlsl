@@ -118,7 +118,7 @@ float4 GetHistory(float2 uv)
 float GetVelocityConfidenceFactor(float3 velocity)
 {
     // Difference in pixels for velocity after which the pixel is marked as no-history
-    const uint FRAME_VELOCITY_IN_PIXELS_DIFF = 256;
+    const uint FRAME_VELOCITY_IN_PIXELS_DIFF = 128;
 
     //velocity.xy is in [-2, 2]
     float2 velocityInPixels = velocity.xy * 0.25 * float2(SceneCB.viewWidth, SceneCB.viewHeight);
