@@ -12,7 +12,11 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
     {
     case GfxRenderBackend::D3D12:
         pDevice = new D3D12Device(desc);
-        ((D3D12Device*)pDevice)->Init();
+        if (!((D3D12Device*)pDevice)->Init())
+        {
+            delete pDevice;
+            pDevice = nullptr;
+        }
         break;
     default:
         break;
