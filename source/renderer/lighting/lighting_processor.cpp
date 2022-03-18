@@ -12,7 +12,7 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pReflection = eastl::make_unique<HybridStochasticReflection>(pRenderer);
 }
 
-RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");
 
@@ -23,7 +23,7 @@ RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGra
     RenderGraphHandle emissive = pBasePass->GetEmissiveRT();
 
     RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
-    RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, width, height);
+    RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, velocity, width, height);
     RenderGraphHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, depth, shadow, width, height);
     RenderGraphHandle indirect_specular = m_pReflection->Render(pRenderGraph, width, height);
     //RenderGraphHandle indirect_diffuse = todo : diffuse GI
