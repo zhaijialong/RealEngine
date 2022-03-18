@@ -12,7 +12,7 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pReflection = eastl::make_unique<HybridStochasticReflection>(pRenderer);
 }
 
-RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");
 
@@ -21,7 +21,6 @@ RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, uint32_t 
     RenderGraphHandle specular = pBasePass->GetSpecularRT();
     RenderGraphHandle normal = pBasePass->GetNormalRT();
     RenderGraphHandle emissive = pBasePass->GetEmissiveRT();
-    RenderGraphHandle depth = pBasePass->GetDepthRT();
 
     RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
     RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, width, height);
@@ -29,10 +28,10 @@ RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, uint32_t 
     RenderGraphHandle indirect_specular = m_pReflection->Render(pRenderGraph, width, height);
     //RenderGraphHandle indirect_diffuse = todo : diffuse GI
 
-    return CompositeLight(pRenderGraph, gtao, direct_lighting, width, height);
+    return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, width, height);
 }
 
-RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle ao, RenderGraphHandle direct_lighting, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting, uint32_t width, uint32_t height)
 {
     struct CompositeLightData
     {
@@ -59,7 +58,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             data.specularRT = builder.Read(pBasePass->GetSpecularRT(), GfxResourceState::ShaderResourceNonPS);
             data.normalRT = builder.Read(pBasePass->GetNormalRT(), GfxResourceState::ShaderResourceNonPS);
             data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT(), GfxResourceState::ShaderResourceNonPS);
-            data.depthRT = builder.Read(pBasePass->GetDepthRT(), GfxResourceState::ShaderResourceNonPS);
+            data.depthRT = builder.Read(depth, GfxResourceState::ShaderResourceNonPS);
 
             if (ao.IsValid())
             {

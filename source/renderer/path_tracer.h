@@ -8,7 +8,7 @@ class PathTracer
 public:
     PathTracer(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, uint32_t width, uint32_t height);
 
 private:
     void PathTrace(IGfxCommandList* pCommandList, IGfxDescriptor* diffuse, IGfxDescriptor* specular, IGfxDescriptor* normal, IGfxDescriptor* emissive, IGfxDescriptor* depth, 

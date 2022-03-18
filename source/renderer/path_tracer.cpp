@@ -16,7 +16,7 @@ PathTracer::PathTracer(Renderer* pRenderer)
     m_pAccumulationPSO = pRenderer->GetPipelineState(psoDesc, "PathTracing accumulation PSO");
 }
 
-RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
+RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, uint32_t width, uint32_t height)
 {
     GUI("Settings", "PathTracer", [&]()
         {
@@ -48,7 +48,7 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, uint32_t width, 
             data.specularRT = builder.Read(pBasePass->GetSpecularRT(), GfxResourceState::ShaderResourceNonPS);
             data.normalRT = builder.Read(pBasePass->GetNormalRT(), GfxResourceState::ShaderResourceNonPS);
             data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT(), GfxResourceState::ShaderResourceNonPS);
-            data.depthRT = builder.Read(pBasePass->GetDepthRT(), GfxResourceState::ShaderResourceNonPS);
+            data.depthRT = builder.Read(depth, GfxResourceState::ShaderResourceNonPS);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;

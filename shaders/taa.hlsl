@@ -63,7 +63,7 @@ float3 VarianceClip(float3 history, float gamma, float3 c0, float3 c1, float3 c2
     return clamp(history, min, max);
 }
 
-float3 GetVelocity(uint2 screenPos)
+float2 GetVelocity(uint2 screenPos)
 {
     Texture2D linearDepthRT = ResourceDescriptorHeap[c_linearDepthRT];
     Texture2D velocityTexture = ResourceDescriptorHeap[c_velocityRT];
@@ -84,19 +84,9 @@ float3 GetVelocity(uint2 screenPos)
     }
 
     int2 closestScreenPos = screenPos + closestPosOffset;
-    float4 velocity = velocityTexture[closestScreenPos];
+    float2 velocity = velocityTexture[closestScreenPos].xy;
 
-    if (any(abs(velocity) > 0.00001))
-    {
-        return UnpackVelocity(velocity);
-    }
-    
-    float3 ndcPos = float3(GetNdcPosition((float2)closestScreenPos + 0.5), GetNdcDepth(closestDepth));
-    
-    float4 prevClipPos = mul(CameraCB.mtxClipToPrevClipNoJitter, float4(ndcPos, 1.0));
-    float3 prevNdcPos = GetNdcPosition(prevClipPos);
-
-    return ndcPos - prevNdcPos;
+    return velocity;
 }
 
 float4 GetHistory(float2 uv)
@@ -112,13 +102,13 @@ float4 GetHistory(float2 uv)
     return float4(historyColor, historyWeight);
 }
 
-float GetVelocityConfidenceFactor(float3 velocity)
+float GetVelocityConfidenceFactor(float2 velocity)
 {
     // Difference in pixels for velocity after which the pixel is marked as no-history
     const uint FRAME_VELOCITY_IN_PIXELS_DIFF = 128;
 
     //velocity.xy is in ndc space
-    float2 velocityInPixels = velocity.xy * 0.5 * float2(SceneCB.viewWidth, SceneCB.viewHeight);
+    float2 velocityInPixels = velocity * 0.5 * float2(SceneCB.viewWidth, SceneCB.viewHeight);
 
     return saturate(1.0 - length(velocityInPixels) / FRAME_VELOCITY_IN_PIXELS_DIFF);
 }
@@ -134,8 +124,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 inputColor = Tonemap(inputTexture[screenPos].xyz);
 
-    float3 velocity = GetVelocity(screenPos);
-    float2 prevUV = GetScreenUV(screenPos) - velocity.xy * float2(0.5, -0.5); //velocity.xy is in ndc space
+    float2 velocity = GetVelocity(screenPos);
+    float2 prevUV = GetScreenUV(screenPos) - velocity * float2(0.5, -0.5); //velocity.xy is in ndc space
 
     bool firstFrame = c_historyInputRT == c_inputRT;
     bool outOfBound = any(prevUV < 0.0) || any(prevUV > 1.0);

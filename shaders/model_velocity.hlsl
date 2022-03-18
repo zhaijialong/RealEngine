@@ -39,7 +39,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     return output;
 }
 
-float4 ps_main(VSOutput input) : SV_TARGET0
+float2 ps_main(VSOutput input) : SV_TARGET0
 {    
 #if ALPHA_TEST
     model::AlphaTest(c_InstanceIndex, input.uv);
@@ -48,5 +48,5 @@ float4 ps_main(VSOutput input) : SV_TARGET0
     float3 ndcPos = GetNdcPosition(input.clipPos);
     float3 prevNdcPos = GetNdcPosition(input.prevClipPos);
 
-    return PackVelocity(ndcPos, prevNdcPos);
+    return ndcPos.xy - prevNdcPos.xy;
 }

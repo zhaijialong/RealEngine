@@ -545,6 +545,7 @@ void Renderer::CreateCommonResources()
     GfxGraphicsPipelineDesc psoDesc;
     psoDesc.vs = GetShader("copy.hlsl", "vs_main", "vs_6_6", {});
     psoDesc.ps = GetShader("copy.hlsl", "ps_main", "ps_6_6", {});
+    psoDesc.depthstencil_state.depth_write = false;
     psoDesc.rt_format[0] = m_pSwapchain->GetDesc().backbuffer_format;
     m_pCopyPSO = GetPipelineState(psoDesc, "Copy PSO");
 }

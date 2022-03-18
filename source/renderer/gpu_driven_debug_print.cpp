@@ -18,6 +18,7 @@ GpuDrivenDebugPrint::GpuDrivenDebugPrint(Renderer* pRenderer)
     GfxMeshShadingPipelineDesc drawPSODesc;
     drawPSODesc.ms = pRenderer->GetShader("debug_print.hlsl", "main_ms", "ms_6_6", {});
     drawPSODesc.ps = pRenderer->GetShader("debug_print.hlsl", "main_ps", "ps_6_6", {});
+    drawPSODesc.depthstencil_state.depth_write = false;
     drawPSODesc.rt_format[0] = pRenderer->GetSwapchain()->GetBackBuffer()->GetDesc().format;
     drawPSODesc.blend_state[0].blend_enable = true;
     drawPSODesc.blend_state[0].color_src = GfxBlendFactor::SrcAlpha;

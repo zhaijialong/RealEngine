@@ -56,6 +56,7 @@ bool GUI::Init()
     GfxGraphicsPipelineDesc psoDesc;
     psoDesc.vs = pRenderer->GetShader("imgui.hlsl", "vs_main", "vs_6_6", {});
     psoDesc.ps = pRenderer->GetShader("imgui.hlsl", "ps_main", "ps_6_6", {});
+    psoDesc.depthstencil_state.depth_write = false;
     psoDesc.blend_state[0].blend_enable = true;
     psoDesc.blend_state[0].color_src = GfxBlendFactor::SrcAlpha;
     psoDesc.blend_state[0].color_dst = GfxBlendFactor::InvSrcAlpha;

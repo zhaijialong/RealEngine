@@ -15,21 +15,20 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     m_pBasePass->Render2ndPhase(m_pRenderGraph.get());
 
     RenderGraphHandle sceneDepthRT = m_pBasePass->GetDepthRT();
-    RenderGraphHandle sceneColorRT;
+    RenderGraphHandle velocityRT = VelocityPass(sceneDepthRT);
+    RenderGraphHandle linearDepthRT = LinearizeDepthPass(sceneDepthRT);
 
+    RenderGraphHandle sceneColorRT;
     if (m_outputType == RendererOutput::PathTracing)
     {
-        sceneColorRT = m_pPathTracer->Render(m_pRenderGraph.get(), m_nWindowWidth, m_nWindowHeight);
+        sceneColorRT = m_pPathTracer->Render(m_pRenderGraph.get(), sceneDepthRT, m_nWindowWidth, m_nWindowHeight);
     }
     else
     {
-        sceneColorRT = m_pLightingProcessor->Render(m_pRenderGraph.get(), m_nWindowWidth, m_nWindowHeight);
+        sceneColorRT = m_pLightingProcessor->Render(m_pRenderGraph.get(), sceneDepthRT, m_nWindowWidth, m_nWindowHeight);
     }
 
     ForwardPass(sceneColorRT, sceneDepthRT);
-
-    RenderGraphHandle velocityRT = VelocityPass(sceneDepthRT);
-    RenderGraphHandle linearDepthRT = LinearizeDepthPass(sceneDepthRT);
 
     RenderGraphHandle output = m_pPostProcessor->Render(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, linearDepthRT, velocityRT, m_nWindowWidth, m_nWindowHeight);
 
@@ -55,7 +54,7 @@ void Renderer::ForwardPass(RenderGraphHandle& color, RenderGraphHandle& depth)
         [&](ForwardPassData& data, RenderGraphBuilder& builder)
         {
             data.outSceneColorRT = builder.WriteColor(0, color, 0, GfxRenderPassLoadOp::Load);
-            data.outSceneDepthRT = builder.WriteDepth(depth, 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
+            data.outSceneDepthRT = builder.ReadDepth(depth, 0);
         },
         [&](const ForwardPassData& data, IGfxCommandList* pCommandList)
         {
@@ -72,26 +71,28 @@ void Renderer::ForwardPass(RenderGraphHandle& color, RenderGraphHandle& depth)
 
 RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
 {
-    struct VelocityPassData
+    RENDER_GRAPH_EVENT(m_pRenderGraph.get(), "Velocity Pass");
+
+    struct ObjectVelocityPassData
     {
         RenderGraphHandle outVelocityRT;
         RenderGraphHandle outSceneDepthRT;
     };
 
-    auto velocity_pass = m_pRenderGraph->AddPass<VelocityPassData>("Velocity Pass",
-        [&](VelocityPassData& data, RenderGraphBuilder& builder)
+    auto obj_velocity_pass = m_pRenderGraph->AddPass<ObjectVelocityPassData>("Object Velocity",
+        [&](ObjectVelocityPassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
-            desc.usage = GfxTextureUsageRenderTarget;
-            desc.format = GfxFormat::RGBA16UNORM;
+            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageUnorderedAccess;
+            desc.format = GfxFormat::RG32F;
             data.outVelocityRT = builder.Create<RenderGraphTexture>(desc, "Velocity RT");
 
             data.outVelocityRT = builder.WriteColor(0, data.outVelocityRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0));
-            data.outSceneDepthRT = builder.ReadDepth(depth, 0);
+            data.outSceneDepthRT = builder.WriteDepth(depth, 0, GfxRenderPassLoadOp::Load);
         },
-        [&](const VelocityPassData& data, IGfxCommandList* pCommandList)
+        [&](const ObjectVelocityPassData& data, IGfxCommandList* pCommandList)
         {
             for (size_t i = 0; i < m_velocityPassBatchs.size(); ++i)
             {
@@ -100,8 +101,36 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
             m_velocityPassBatchs.clear();
         });
 
-    depth = velocity_pass->outSceneDepthRT;
-    return velocity_pass->outVelocityRT;
+    struct CameraVelocityPassData
+    {
+        RenderGraphHandle velocity;
+        RenderGraphHandle depth;
+    };
+
+    auto camera_velocity_pass = m_pRenderGraph->AddPass<CameraVelocityPassData>("Camera Velocity",
+        [&](CameraVelocityPassData& data, RenderGraphBuilder& builder)
+        {
+            data.velocity = builder.Write(obj_velocity_pass->outVelocityRT, GfxResourceState::UnorderedAccess);
+            data.depth = builder.Read(obj_velocity_pass->outSceneDepthRT, GfxResourceState::ShaderResourceNonPS);
+        },
+        [=](const CameraVelocityPassData& data, IGfxCommandList* pCommandList)
+        {
+            GfxComputePipelineDesc psoDesc;
+            psoDesc.cs = GetShader("velocity.hlsl", "main", "cs_6_6", {});
+            IGfxPipelineState* pPSO = GetPipelineState(psoDesc, "Velocity PSO");
+
+            pCommandList->SetPipelineState(pPSO);
+
+            RenderGraphTexture* velocity = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.velocity);
+            RenderGraphTexture* depth = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.depth);
+            uint32_t cb[2] = { velocity->GetUAV()->GetHeapIndex(), depth->GetSRV()->GetHeapIndex()};
+            pCommandList->SetComputeConstants(0, cb, sizeof(cb));
+
+            pCommandList->Dispatch((m_nWindowWidth + 7) / 8, (m_nWindowHeight + 7) / 8, 1);
+        });
+
+    depth = camera_velocity_pass->depth;
+    return camera_velocity_pass->velocity;
 }
 
 RenderGraphHandle Renderer::LinearizeDepthPass(RenderGraphHandle depth)
