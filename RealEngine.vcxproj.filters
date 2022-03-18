@@ -996,6 +996,18 @@
     <ClInclude Include="source\renderer\sky_cubemap.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_filter.h">
+      <Filter>shaders\ray_traced_shadow\ffx-shadows-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_prepare.h">
+      <Filter>shaders\ray_traced_shadow\ffx-shadows-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_tileclassification.h">
+      <Filter>shaders\ray_traced_shadow\ffx-shadows-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_util.h">
+      <Filter>shaders\ray_traced_shadow\ffx-shadows-dnsr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -1102,6 +1114,12 @@
     </Filter>
     <Filter Include="external\rpmalloc">
       <UniqueIdentifier>{87e520dd-8e65-4144-977c-cc4c79ba521d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\ray_traced_shadow">
+      <UniqueIdentifier>{7a9bbb83-af75-4dd5-add6-aef1aca10d8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\ray_traced_shadow\ffx-shadows-dnsr">
+      <UniqueIdentifier>{ab3736a3-074f-416b-9298-dd253033f183}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1247,9 +1265,6 @@
     <FxCompile Include="shaders\composite_light.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\rt_shadow.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
     <FxCompile Include="shaders\vertex_skinning.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
@@ -1276,6 +1291,18 @@
     </FxCompile>
     <FxCompile Include="shaders\velocity.hlsl">
       <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ray_traced_shadow\denoiser_filter.hlsl">
+      <Filter>shaders\ray_traced_shadow</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ray_traced_shadow\denoiser_prepare.hlsl">
+      <Filter>shaders\ray_traced_shadow</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ray_traced_shadow\denoiser_tileclassification.hlsl">
+      <Filter>shaders\ray_traced_shadow</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ray_traced_shadow\ray_trace.hlsl">
+      <Filter>shaders\ray_traced_shadow</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

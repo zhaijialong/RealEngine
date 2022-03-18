@@ -3,4 +3,13 @@
 #include "fmt/format.h"
 #include <Windows.h>
 
-#define RE_LOG(...) OutputDebugStringA(fmt::format(__VA_ARGS__).c_str())
+inline void RE_LOG(const char* log)
+{
+    OutputDebugStringA(log);
+}
+
+template <typename... T>
+inline void RE_LOG(const char* format, T&&... args)
+{
+    OutputDebugStringA(fmt::format(format, args...).c_str());
+}

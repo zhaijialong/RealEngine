@@ -16,4 +16,5 @@ private:
     Renderer* m_pRenderer = nullptr;
 
     IGfxPipelineState* m_pRaytracePSO = nullptr;
+    bool m_bEnableDenoiser = true;
 };

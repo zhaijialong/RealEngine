@@ -1,6 +1,6 @@
-#include "ray_trace.hlsli"
-#include "random.hlsli"
-#include "importance_sampling.hlsli"
+#include "../ray_trace.hlsli"
+#include "../random.hlsli"
+#include "../importance_sampling.hlsli"
 
 cbuffer RaytraceConstants : register(b0)
 {
@@ -10,7 +10,7 @@ cbuffer RaytraceConstants : register(b0)
 };
 
 [numthreads(8, 8, 1)]
-void raytrace_shadow(uint3 dispatchThreadID : SV_DispatchThreadID)
+void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     if (dispatchThreadID.x >= SceneCB.viewWidth || dispatchThreadID.y >= SceneCB.viewHeight)
     {
@@ -20,9 +20,12 @@ void raytrace_shadow(uint3 dispatchThreadID : SV_DispatchThreadID)
     int2 pos = dispatchThreadID.xy;
     
     Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthSRV];
+    RWTexture2D<unorm float> shadowRT = ResourceDescriptorHeap[c_shadowUAV];
+
     float depth = depthRT[pos];
     if (depth == 0.0)
     {
+        shadowRT[pos] = 1.0;
         return;
     }
 
@@ -33,8 +36,8 @@ void raytrace_shadow(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     #define SPP 1
     
-    PRNG rng = PRNG::Create(dispatchThreadID.x + dispatchThreadID.y * SceneCB.viewWidth);
-    BNDS<SPP> bnds = BNDS<SPP>::Create(dispatchThreadID.xy, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
+    PRNG rng = PRNG::Create(pos.x + pos.y * SceneCB.viewWidth);
+    BNDS<SPP> bnds = BNDS<SPP>::Create(pos.xy, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
 
     float visibility = 0;
 
@@ -54,6 +57,5 @@ void raytrace_shadow(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     visibility /= SPP;
 
-    RWTexture2D<unorm float> shadowRT = ResourceDescriptorHeap[c_shadowUAV];
     shadowRT[pos] = visibility;
 }

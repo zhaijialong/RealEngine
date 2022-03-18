@@ -322,6 +322,10 @@
     <ClInclude Include="shaders\ffx_cas.h" />
     <ClInclude Include="shaders\ffx_spd.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
+    <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_filter.h" />
+    <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_prepare.h" />
+    <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_tileclassification.h" />
+    <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_util.h" />
     <ClInclude Include="shaders\XeGTAO.h" />
     <ClInclude Include="source\core\eastl_allocator.h" />
     <ClInclude Include="source\core\engine.h" />
@@ -566,7 +570,19 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="shaders\rt_shadow.hlsl">
+    <FxCompile Include="shaders\ray_traced_shadow\denoiser_filter.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\ray_traced_shadow\denoiser_prepare.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\ray_traced_shadow\denoiser_tileclassification.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\ray_traced_shadow\ray_trace.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

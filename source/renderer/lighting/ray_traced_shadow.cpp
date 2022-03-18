@@ -6,7 +6,7 @@ RTShadow::RTShadow(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("rt_shadow.hlsl", "raytrace_shadow", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/ray_trace.hlsl", "main", "cs_6_6", {});
     m_pRaytracePSO = pRenderer->GetPipelineState(psoDesc, "RTShadow PSO");
 }
 
@@ -42,13 +42,21 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             RayTrace(pCommandList, depthRT->GetSRV(), normalRT->GetSRV(), shadowRT->GetUAV(), width, height);
         });
 
+    if (!m_bEnableDenoiser)
+    {
+        rtshadow_pass->shadow;
+    }
+
+    struct DenoiserPreparePassData
+    {
+
+    };
+
     return rtshadow_pass->shadow;
 }
 
 void RTShadow::RayTrace(IGfxCommandList* pCommandList, IGfxDescriptor* depthSRV, IGfxDescriptor* normalSRV, IGfxDescriptor* shadowUAV, uint32_t width, uint32_t height)
 {
-    //todo : denoising
-
     pCommandList->SetPipelineState(m_pRaytracePSO);
 
     uint root_constants[3] = { depthSRV->GetHeapIndex(), normalSRV->GetHeapIndex(), shadowUAV->GetHeapIndex() };
