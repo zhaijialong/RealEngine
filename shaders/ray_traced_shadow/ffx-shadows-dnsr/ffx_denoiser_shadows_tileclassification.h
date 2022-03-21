@@ -120,7 +120,7 @@ bool FFX_DNSR_Shadows_IsDisoccluded(uint2 did, float depth, float2 velocity)
         float linear_depth = FFX_DNSR_Shadows_GetLinearDepth(did, clip_space.z);   // get linear depth
 
         int2 idx = previous_uv * dims;
-        const float previous_depth = FFX_DNSR_Shadows_GetLinearDepth(idx, FFX_DNSR_Shadows_ReadPreviousDepth(idx));
+        const float previous_depth = FFX_DNSR_Shadows_ReadPreviousLinearDepth(idx);
         const float depth_difference = abs(previous_depth - linear_depth) / linear_depth;
 
         // Resolve into the disocclusion mask

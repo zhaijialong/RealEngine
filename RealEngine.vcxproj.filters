@@ -340,6 +340,9 @@
     <ClCompile Include="source\renderer\sky_cubemap.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\lighting\shadow_denoiser.cpp">
+      <Filter>source\renderer\lighting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -1007,6 +1010,9 @@
     </ClInclude>
     <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_util.h">
       <Filter>shaders\ray_traced_shadow\ffx-shadows-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\lighting\shadow_denoiser.h">
+      <Filter>source\renderer\lighting</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

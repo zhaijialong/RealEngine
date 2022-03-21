@@ -29,10 +29,10 @@ float FFX_DNSR_Shadows_ReadDepth(int2 p)
     return depthTexture[p].x;
 }
 
-float FFX_DNSR_Shadows_ReadPreviousDepth(int2 p)
+float FFX_DNSR_Shadows_ReadPreviousLinearDepth(int2 p)
 {
     Texture2D prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
-    return GetNdcDepth(prevLinearDepthTexture[p].x);
+    return prevLinearDepthTexture[p].x;
 }
 
 float3 FFX_DNSR_Shadows_ReadNormals(int2 p)

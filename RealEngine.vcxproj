@@ -163,6 +163,7 @@
     <ClCompile Include="source\renderer\lighting\hybrid_stochastic_reflection.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
     <ClCompile Include="source\renderer\lighting\ray_traced_shadow.cpp" />
+    <ClCompile Include="source\renderer\lighting\shadow_denoiser.cpp" />
     <ClCompile Include="source\renderer\path_tracer.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
     <ClCompile Include="source\renderer\post_processing\automatic_exposure.cpp" />
@@ -373,6 +374,7 @@
     <ClInclude Include="source\renderer\lighting\hybrid_stochastic_reflection.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
     <ClInclude Include="source\renderer\lighting\ray_traced_shadow.h" />
+    <ClInclude Include="source\renderer\lighting\shadow_denoiser.h" />
     <ClInclude Include="source\renderer\path_tracer.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
     <ClInclude Include="source\renderer\post_processing\automatic_exposure.h" />
