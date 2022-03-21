@@ -89,7 +89,13 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         }
         else
         {
-            float3 H = SampleGGX(rng.RandomFloat2(), roughness, N); //pdf : D * NdotH / (4 * LdotH);
+            #define GGX_VNDF 1
+
+#if GGX_VNDF
+            float3 H = SampleGGXVNDF(rng.RandomFloat2(), roughness, N, wo);
+#else
+            float3 H = SampleGGX(rng.RandomFloat2(), roughness, N);
+#endif
             wi = reflect(-wo, H);
             
             roughness = max(roughness, 0.065); //fix reflection artifacts on smooth surface
@@ -100,11 +106,19 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
             throughput *= specular_brdf * NdotL;
 
-            float D = D_GGX(N, H, roughness * roughness);
+            float a = roughness * roughness;
+            float a2 = a * a;
+            float D = D_GGX(N, H, a);
             float NdotH = saturate(dot(N, H));
             float LdotH = saturate(dot(wi, H));
+            float NdotV = saturate(dot(N, wo));
 
-            pdf *= (D * NdotH / (4 * LdotH)) * (1.0 - probDiffuse);
+#if GGX_VNDF
+            float samplePDF = 2.0 * LdotH * D / (NdotV + sqrt(NdotV * (NdotV - NdotV * a2) + a2));
+#else
+            float samplePDF = (D * NdotH / (4 * LdotH));
+#endif
+            pdf *= samplePDF  * (1.0 - probDiffuse);
         }
 
         //firefly rejection
