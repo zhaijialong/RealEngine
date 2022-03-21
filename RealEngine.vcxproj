@@ -164,6 +164,7 @@
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
     <ClCompile Include="source\renderer\lighting\ray_traced_shadow.cpp" />
     <ClCompile Include="source\renderer\lighting\shadow_denoiser.cpp" />
+    <ClCompile Include="source\renderer\lighting\reflection_denoiser.cpp" />
     <ClCompile Include="source\renderer\path_tracer.cpp" />
     <ClCompile Include="source\renderer\pipeline_cache.cpp" />
     <ClCompile Include="source\renderer\post_processing\automatic_exposure.cpp" />
@@ -323,6 +324,12 @@
     <ClInclude Include="shaders\ffx_cas.h" />
     <ClInclude Include="shaders\ffx_spd.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_common.h" />
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_config.h" />
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_prefilter.h" />
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_reproject.h" />
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_resolve_temporal.h" />
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-sssr\ffx_sssr.h" />
     <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_filter.h" />
     <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_prepare.h" />
     <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_tileclassification.h" />
@@ -375,6 +382,7 @@
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
     <ClInclude Include="source\renderer\lighting\ray_traced_shadow.h" />
     <ClInclude Include="source\renderer\lighting\shadow_denoiser.h" />
+    <ClInclude Include="source\renderer\lighting\reflection_denoiser.h" />
     <ClInclude Include="source\renderer\path_tracer.h" />
     <ClInclude Include="source\renderer\pipeline_cache.h" />
     <ClInclude Include="source\renderer\post_processing\automatic_exposure.h" />

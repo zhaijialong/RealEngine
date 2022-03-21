@@ -300,9 +300,13 @@ void Renderer::ImportPrevFrameTextures()
         m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nWindowHeight)
     {
         m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::R32F, 0, "Prev LinearDepth"));
+        m_pPrevNormalTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::RGBA8UNORM, 0, "Prev Normal"));
+        m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::RGBA16F, 0, "Prev SceneColor"));
     }
 
     m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), GfxResourceState::CopyDst);
+    m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), GfxResourceState::CopyDst);
+    m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), GfxResourceState::CopyDst);
 }
 
 void Renderer::Render()

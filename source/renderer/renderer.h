@@ -56,9 +56,6 @@ public:
     IGfxDescriptor* GetPointSampler() const { return m_pPointRepeatSampler.get(); }
     IGfxDescriptor* GetLinearSampler() const { return m_pLinearRepeatSampler.get(); }
 
-    Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
-    RenderGraphHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
-
     IndexBuffer* CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
     TypedBuffer* CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
@@ -106,6 +103,13 @@ public:
     class BasePass* GetBassPass() const { return m_pBasePass.get(); }
     class SkyCubeMap* GetSkyCubeMap() const { return m_pSkyCubeMap.get(); }
 
+    Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
+    Texture2D* GetPrevNormalTexture() const { return m_pPrevNormalTexture.get(); }
+    Texture2D* GetPrevSceneColorTexture() const { return m_pPrevSceneColorTexture.get(); }
+    RenderGraphHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
+    RenderGraphHandle GetPrevNormalHandle() const { return m_prevNormalHandle; }
+    RenderGraphHandle GetPrevSceneColorHandle() const { return m_prevSceneColorHandle; }
+
 private:
     void CreateCommonResources();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
@@ -120,7 +124,7 @@ private:
     RenderGraphHandle VelocityPass(RenderGraphHandle& depth);
     RenderGraphHandle LinearizeDepthPass(RenderGraphHandle depth);
     void ObjectIDPass(RenderGraphHandle& depth);
-    void CopyLinearDepthPass(RenderGraphHandle linearDepth);
+    void CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle normal, RenderGraphHandle sceneColor);
 
     void FlushComputePass(IGfxCommandList* pCommandList);
     void BuildRayTracingAS(IGfxCommandList* pCommandList);
@@ -209,7 +213,11 @@ private:
     eastl::unique_ptr<Texture2D> m_pPreintegratedGFTexture;
 
     eastl::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
+    eastl::unique_ptr<Texture2D> m_pPrevNormalTexture;
+    eastl::unique_ptr<Texture2D> m_pPrevSceneColorTexture;
     RenderGraphHandle m_prevLinearDepthHandle;
+    RenderGraphHandle m_prevNormalHandle;
+    RenderGraphHandle m_prevSceneColorHandle;
 
     bool m_bGpuDrivenStatsEnabled = false;
     bool m_bShowMeshlets = false;

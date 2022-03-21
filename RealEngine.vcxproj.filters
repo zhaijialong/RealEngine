@@ -343,6 +343,9 @@
     <ClCompile Include="source\renderer\lighting\shadow_denoiser.cpp">
       <Filter>source\renderer\lighting</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\lighting\reflection_denoiser.cpp">
+      <Filter>source\renderer\lighting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -1014,6 +1017,27 @@
     <ClInclude Include="source\renderer\lighting\shadow_denoiser.h">
       <Filter>source\renderer\lighting</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\lighting\reflection_denoiser.h">
+      <Filter>source\renderer\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-sssr\ffx_sssr.h">
+      <Filter>shaders\hybrid_stochastic_reflection\ffx-sssr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_config.h">
+      <Filter>shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_prefilter.h">
+      <Filter>shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_reproject.h">
+      <Filter>shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_resolve_temporal.h">
+      <Filter>shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_common.h">
+      <Filter>shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -1126,6 +1150,15 @@
     </Filter>
     <Filter Include="shaders\ray_traced_shadow\ffx-shadows-dnsr">
       <UniqueIdentifier>{ab3736a3-074f-416b-9298-dd253033f183}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\hybrid_stochastic_reflection">
+      <UniqueIdentifier>{2ca06c54-0668-4983-b1c7-5c9d37bbb113}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\hybrid_stochastic_reflection\ffx-sssr">
+      <UniqueIdentifier>{c738fd1a-6920-4e8f-941b-c670e8bd5322}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr">
+      <UniqueIdentifier>{e8781113-f22e-46b9-8709-10ade299657e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
