@@ -15,6 +15,8 @@ private:
     void DenoiserPrepare(IGfxCommandList* pCommandList, IGfxDescriptor* raytraceResult, IGfxDescriptor* maskBuffer, uint32_t width, uint32_t height);
     void DenoiserTileClassification(IGfxCommandList* pCommandList, IGfxDescriptor* shadowMaskBuffer, IGfxDescriptor* depthTexture, IGfxDescriptor* normalTexture,
         IGfxDescriptor* velocityTexture, IGfxDescriptor* tileMetaDataBufferUAV, IGfxDescriptor* reprojectionResultTextureUAV, uint32_t width, uint32_t height);
+    void DenoiserFilter(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, IGfxDescriptor* depthTexture, IGfxDescriptor* normalTexture, 
+        IGfxDescriptor* tileMetaDataBuffer, uint32_t pass_index, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;
@@ -22,6 +24,8 @@ private:
     IGfxPipelineState* m_pRaytracePSO = nullptr;
     IGfxPipelineState* m_pPrepareMaskPSO = nullptr;
     IGfxPipelineState* m_pTileClassificationPSO = nullptr;
+    IGfxPipelineState* m_pFilterPSO[3] = {};
+
 
     eastl::unique_ptr<Texture2D> m_pMomentsTexture;
     eastl::unique_ptr<Texture2D> m_pPrevMomentsTexture;

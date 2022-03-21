@@ -1,6 +1,7 @@
 #include "ray_traced_shadow.h"
 #include "../renderer.h"
 #include "utils/gui_util.h"
+#include "fmt/format.h"
 
 RTShadow::RTShadow(Renderer* pRenderer)
 {
@@ -15,6 +16,13 @@ RTShadow::RTShadow(Renderer* pRenderer)
 
     psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/denoiser_tileclassification.hlsl", "main", "cs_6_6", { "INVERTED_DEPTH_RANGE=1" });
     m_pTileClassificationPSO = pRenderer->GetPipelineState(psoDesc, "RTShadow Denoiser PSO");
+
+    for (int i = 0; i < 3; ++i)
+    {
+        eastl::string define = fmt::format("FILTER_PASS={}", i).c_str();
+        psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/denoiser_filter.hlsl", "main", "cs_6_6", { define });
+        m_pFilterPSO[i] = pRenderer->GetPipelineState(psoDesc, "RTShadow Denoiser PSO");
+    }
 }
 
 RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle depthRT, RenderGraphHandle normalRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height)
@@ -121,7 +129,7 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         {
             RenderGraphHandle momentsTexture = builder.Import(m_pMomentsTexture->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
             RenderGraphHandle prevMomentsTexture = builder.Import(m_pPrevMomentsTexture->GetTexture(), GfxResourceState::UnorderedAccess);
-            RenderGraphHandle historyTexture = builder.Import(m_pHistoryTexture->GetTexture(), GfxResourceState::UnorderedAccess);
+            RenderGraphHandle historyTexture = builder.Import(m_pHistoryTexture->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 
             data.shadowMaskBuffer = builder.Read(prepare_pass->shadowMaskBuffer, GfxResourceState::ShaderResourceNonPS);
             data.depthTexture = builder.Read(depthRT, GfxResourceState::ShaderResourceNonPS);
@@ -150,8 +158,6 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             textureDesc.usage = GfxTextureUsageUnorderedAccess;
             data.reprojectionResultTexture = builder.Create<RenderGraphTexture>(textureDesc, "ShadowDenoiser reprojection result");
             data.reprojectionResultTexture = builder.Write(data.reprojectionResultTexture, GfxResourceState::UnorderedAccess);
-
-            builder.MakeTarget(); //todo
         },
         [=](const DenoiserTileClassificationData& data, IGfxCommandList* pCommandList)
         {
@@ -165,8 +171,91 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             DenoiserTileClassification(pCommandList, shadowMaskBuffer->GetSRV(), depthTexture->GetSRV(), normalTexture->GetSRV(), velocityTexture->GetSRV(),
                 tileMetaDataBuffer->GetUAV(), reprojectionResultTexture->GetUAV(), width, height);
         });
+    
+    struct DenoiserFilterPassData
+    {
+        RenderGraphHandle inputTexture;
+        RenderGraphHandle outputTexture;
+        RenderGraphHandle depthTexture;
+        RenderGraphHandle normalTexture;
+        RenderGraphHandle tileMetaDataBuffer;
+    };
 
-    return rtshadow_pass->shadow;
+    auto filter_pass0 = pRenderGraph->AddPass<DenoiserFilterPassData>("ShadowDenoiser filter0",
+        [&](DenoiserFilterPassData& data, RenderGraphBuilder& builder)
+        {
+            data.depthTexture = builder.Read(depthRT, GfxResourceState::ShaderResourceNonPS);
+            data.normalTexture = builder.Read(normalRT, GfxResourceState::ShaderResourceNonPS);
+            data.tileMetaDataBuffer = builder.Read(classification_pass->tileMetaDataBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.inputTexture = builder.Read(classification_pass->reprojectionResultTexture, GfxResourceState::ShaderResourceNonPS);
+
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::RG16F;
+            desc.usage = GfxTextureUsageUnorderedAccess;
+            data.outputTexture = builder.Create<RenderGraphTexture>(desc, "ShadowDenoiser filter0 output");
+            data.outputTexture = builder.Write(data.outputTexture, GfxResourceState::UnorderedAccess);
+        },
+        [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputTexture);
+            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputTexture);
+            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthTexture);
+            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalTexture);
+            RenderGraphBuffer* tileMetaData = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileMetaDataBuffer);
+
+            DenoiserFilter(pCommandList, input->GetSRV(), output->GetUAV(), depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 0, width, height);
+        });
+
+    auto filter_pass1 = pRenderGraph->AddPass<DenoiserFilterPassData>("ShadowDenoiser filter1",
+        [&](DenoiserFilterPassData& data, RenderGraphBuilder& builder)
+        {
+            data.depthTexture = builder.Read(depthRT, GfxResourceState::ShaderResourceNonPS);
+            data.normalTexture = builder.Read(normalRT, GfxResourceState::ShaderResourceNonPS);
+            data.tileMetaDataBuffer = builder.Read(classification_pass->tileMetaDataBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.inputTexture = builder.Read(filter_pass0->outputTexture, GfxResourceState::ShaderResourceNonPS);
+            data.outputTexture = builder.Write(classification_pass->historyTexture, GfxResourceState::UnorderedAccess);
+        },
+        [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputTexture);
+            IGfxDescriptor* outputUAV = m_pHistoryTexture->GetUAV();
+            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthTexture);
+            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalTexture);
+            RenderGraphBuffer* tileMetaData = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileMetaDataBuffer);
+
+            DenoiserFilter(pCommandList, input->GetSRV(), outputUAV, depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 1, width, height);
+        });
+
+    auto filter_pass2 = pRenderGraph->AddPass<DenoiserFilterPassData>("ShadowDenoiser filter2",
+        [&](DenoiserFilterPassData& data, RenderGraphBuilder& builder)
+        {
+            data.depthTexture = builder.Read(depthRT, GfxResourceState::ShaderResourceNonPS);
+            data.normalTexture = builder.Read(normalRT, GfxResourceState::ShaderResourceNonPS);
+            data.tileMetaDataBuffer = builder.Read(classification_pass->tileMetaDataBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.inputTexture = builder.Read(filter_pass1->outputTexture, GfxResourceState::ShaderResourceNonPS);
+
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::R8UNORM;
+            desc.usage = GfxTextureUsageUnorderedAccess;
+            data.outputTexture = builder.Create<RenderGraphTexture>(desc, "ShadowDenoiser filter2 output");
+            data.outputTexture = builder.Write(data.outputTexture, GfxResourceState::UnorderedAccess);
+        },
+        [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
+        {
+            IGfxDescriptor* input = m_pHistoryTexture->GetSRV();
+            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputTexture);
+            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthTexture);
+            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalTexture);
+            RenderGraphBuffer* tileMetaData = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileMetaDataBuffer);
+
+            DenoiserFilter(pCommandList, input, output->GetUAV(), depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 2, width, height);
+        });
+
+    return filter_pass2->outputTexture;
 }
 
 void RTShadow::RayTrace(IGfxCommandList* pCommandList, IGfxDescriptor* depthSRV, IGfxDescriptor* normalSRV, IGfxDescriptor* shadowUAV, uint32_t width, uint32_t height)
@@ -228,7 +317,19 @@ void RTShadow::DenoiserTileClassification(IGfxCommandList* pCommandList, IGfxDes
 
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+}
 
-    //todo : delete
-    pCommandList->ResourceBarrier(m_pHistoryTexture->GetTexture(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
+void RTShadow::DenoiserFilter(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, IGfxDescriptor* depthTexture, IGfxDescriptor* normalTexture, IGfxDescriptor* tileMetaDataBuffer, uint32_t pass_index, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pFilterPSO[pass_index]);
+
+    uint32_t constants[5] = {
+        input->GetHeapIndex(),
+        output->GetHeapIndex(),
+        depthTexture->GetHeapIndex(),
+        normalTexture->GetHeapIndex(),
+        tileMetaDataBuffer->GetHeapIndex(),
+    };
+    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
