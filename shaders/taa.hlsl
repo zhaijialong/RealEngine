@@ -99,7 +99,7 @@ float4 GetHistory(float2 uv)
     float4 rtMetrics = float4(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight, SceneCB.viewWidth, SceneCB.viewHeight);
     float3 historyColor = BicubicFilter(historyInputTexture, uv, rtMetrics);
 
-    return float4(historyColor, historyWeight);
+    return float4(saturate(historyColor), historyWeight);
 }
 
 float GetVelocityConfidenceFactor(float2 velocity)
