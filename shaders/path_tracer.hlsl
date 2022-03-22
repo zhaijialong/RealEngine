@@ -114,9 +114,9 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
             float NdotV = saturate(dot(N, wo));
 
 #if GGX_VNDF
-            float samplePDF = 2.0 * LdotH * D / (NdotV + sqrt(NdotV * (NdotV - NdotV * a2) + a2));
+            float samplePDF = D / (2.0 * (NdotV + sqrt(NdotV * (NdotV - NdotV * a2) + a2)));
 #else
-            float samplePDF = (D * NdotH / (4 * LdotH));
+            float samplePDF = D * NdotH / (4 * LdotH);
 #endif
             pdf *= samplePDF  * (1.0 - probDiffuse);
         }

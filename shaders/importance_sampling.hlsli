@@ -63,7 +63,7 @@ float3 SampleCosHemisphere(float2 randVal, float3 N)
     return TangentToWorld(v, N);
 }
 
-// PDF = D * NdotH / (4 * HdotV)
+// PDF = D * NdotH / (4 * VdotH)
 float3 SampleGGX(float2 randVal, float roughness, float3 N)
 {
     float a = roughness * roughness;
@@ -78,7 +78,7 @@ float3 SampleGGX(float2 randVal, float roughness, float3 N)
 }
 
 // http://jcgt.org/published/0007/04/01/paper.pdf
-// PDF = G_SmithV * VdotH * D / NdotV = 2.0 * VdotH * D / (NdotV + sqrt(NdotV * (NdotV - NdotV * a2) + a2))
+// PDF = G_SmithV * VdotH * D / NdotV / (4 * VdotH) = D / (2.0 * (NdotV + sqrt(NdotV * (NdotV - NdotV * a2) + a2)))
 float3 SampleGGXVNDF(float2 randVal, float roughness, float3 N, float3 V)
 {
     float a = roughness * roughness;
