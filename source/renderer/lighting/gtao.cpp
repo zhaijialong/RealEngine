@@ -91,7 +91,6 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.height = height;
             desc.mip_levels = 5;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             RenderGraphHandle gtao_depth = builder.Create<RenderGraphTexture>(desc, "GTAO depth(HZB)");
 
             data.outputDepthMip0 = builder.Write(gtao_depth, 0);
@@ -120,7 +119,6 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.width = width;
             desc.height = height;
             desc.format = m_bEnableGTSO ? GfxFormat::R32UI : GfxFormat::R8UI;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO AOTerm");
             data.outputAOTerm = builder.Write(data.outputAOTerm);
 
@@ -143,7 +141,6 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.width = width;
             desc.height = height;
             desc.format = m_bEnableGTSO ? GfxFormat::R32UI : GfxFormat::R8UI;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO denoised AO");
             data.outputAOTerm = builder.Write(data.outputAOTerm);
         },

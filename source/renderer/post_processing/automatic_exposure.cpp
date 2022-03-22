@@ -65,7 +65,6 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
                 desc.height = m_luminanceSize.y;
                 desc.mip_levels = m_luminanceMips;
                 desc.format = GfxFormat::RG16F;
-                desc.usage = GfxTextureUsageUnorderedAccess;
 
                 luminanceRT = builder.Create<RenderGraphTexture>(desc, "Average Luminance");
                 data.output = builder.Write(luminanceRT);
@@ -117,7 +116,7 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
                 desc.stride = 4;
                 desc.size = desc.stride * 256; //256 bins
                 desc.format = GfxFormat::R32F;
-                desc.usage = GfxBufferUsageRawBuffer | GfxBufferUsageUnorderedAccess;
+                desc.usage = GfxBufferUsageRawBuffer;
                 data.histogramBuffer = builder.Create<RenderGraphBuffer>(desc, "Luminance Histogram");
                 data.histogramBuffer = builder.Write(data.histogramBuffer);
             },
@@ -142,7 +141,6 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
                 RenderGraphTexture::Desc desc;
                 desc.width = desc.height = 1;
                 desc.format = GfxFormat::R16F;
-                desc.usage = GfxTextureUsageUnorderedAccess;
                 data.avgLuminanceTexture = builder.Create<RenderGraphTexture>(desc, "Average Luminance");
                 data.avgLuminanceTexture = builder.Write(data.avgLuminanceTexture);
             },
@@ -174,7 +172,6 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             RenderGraphTexture::Desc desc;
             desc.width = desc.height = 1;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.exposure = builder.Create<RenderGraphTexture>(desc, "Exposure");
             data.exposure = builder.Write(data.exposure);
         },

@@ -69,6 +69,28 @@ IGfxDescriptor* RenderGraphTexture::GetUAV(uint32_t mip, uint32_t slice)
     return m_allocator.GetDescriptor(m_pTexture, desc);
 }
 
+void RenderGraphTexture::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
+{
+    RenderGraphResource::Resolve(edge, pass);
+
+    GfxResourceState usage = edge->GetUsage();
+    switch (usage)
+    {
+    case GfxResourceState::RenderTarget:
+        m_desc.usage |= GfxTextureUsageRenderTarget;
+        break;
+    case GfxResourceState::UnorderedAccess:
+        m_desc.usage |= GfxTextureUsageUnorderedAccess;
+        break;
+    case GfxResourceState::DepthStencil:
+    case GfxResourceState::DepthStencilReadOnly:
+        m_desc.usage |= GfxTextureUsageDepthStencil;
+        break;
+    default:
+        break;
+    }
+}
+
 void RenderGraphTexture::Realize()
 {
     if (!m_bImported)
@@ -166,6 +188,16 @@ IGfxDescriptor* RenderGraphBuffer::GetUAV()
     desc.buffer.size = bufferDesc.size;
 
     return m_allocator.GetDescriptor(m_pBuffer, desc);
+}
+
+void RenderGraphBuffer::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
+{
+    RenderGraphResource::Resolve(edge, pass);
+
+    if (edge->GetUsage() == GfxResourceState::UnorderedAccess)
+    {
+        m_desc.usage |= GfxBufferUsageUnorderedAccess;
+    }
 }
 
 void RenderGraphBuffer::Realize()

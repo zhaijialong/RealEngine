@@ -54,7 +54,7 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
             RenderGraphBuffer::Desc desc;
             desc.stride = sizeof(uint32_t);
             desc.size = tile_x * tile_y * sizeof(uint32_t);
-            desc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            desc.usage = GfxBufferUsageStructuredBuffer;
             data.shadowMaskBuffer = builder.Create<RenderGraphBuffer>(desc, "ShadowDenoiser mask");
             data.shadowMaskBuffer = builder.Write(data.shadowMaskBuffer);
         },
@@ -103,7 +103,7 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
             RenderGraphBuffer::Desc bufferDesc;
             bufferDesc.stride = sizeof(uint32_t);
             bufferDesc.size = tile_x * tile_y * sizeof(uint32_t);
-            bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            bufferDesc.usage = GfxBufferUsageStructuredBuffer;
             data.tileMetaDataBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "ShadowDenoiser tile metadata");
             data.tileMetaDataBuffer = builder.Write(data.tileMetaDataBuffer);
 
@@ -111,7 +111,6 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
             textureDesc.width = width;
             textureDesc.height = height;
             textureDesc.format = GfxFormat::RG16F;
-            textureDesc.usage = GfxTextureUsageUnorderedAccess;
             data.reprojectionResultTexture = builder.Create<RenderGraphTexture>(textureDesc, "ShadowDenoiser reprojection result");
             data.reprojectionResultTexture = builder.Write(data.reprojectionResultTexture);
         },
@@ -169,7 +168,6 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RG16F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputTexture = builder.Create<RenderGraphTexture>(desc, "ShadowDenoiser filter1 output");
             data.outputTexture = builder.Write(data.outputTexture);
         },
@@ -196,7 +194,6 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::R8UNORM;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputTexture = builder.Create<RenderGraphTexture>(desc, "ShadowDenoiser filter2 output");
             data.outputTexture = builder.Write(data.outputTexture);
         },

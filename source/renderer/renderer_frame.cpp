@@ -87,7 +87,6 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
-            desc.usage = GfxTextureUsageRenderTarget | GfxTextureUsageUnorderedAccess;
             desc.format = GfxFormat::RG16F;
             data.outVelocityRT = builder.Create<RenderGraphTexture>(desc, "Velocity RT");
 
@@ -149,7 +148,6 @@ RenderGraphHandle Renderer::LinearizeDepthPass(RenderGraphHandle depth)
             RenderGraphTexture::Desc desc;
             desc.width = m_nWindowWidth;
             desc.height = m_nWindowHeight;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             desc.format = GfxFormat::R32F;
             data.outputLinearDepthRT = builder.Create<RenderGraphTexture>(desc, "LinearDepth RT");
 
@@ -191,7 +189,6 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
                 RenderGraphTexture::Desc desc;
                 desc.width = m_nWindowWidth;
                 desc.height = m_nWindowHeight;
-                desc.usage = GfxTextureUsageRenderTarget;
                 desc.format = GfxFormat::R32UI;
                 data.idTexture = builder.Create<RenderGraphTexture>(desc, "Object ID");
 

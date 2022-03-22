@@ -79,7 +79,6 @@ RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHa
             desc.width = m_mipSize[mip].x;
             desc.height = m_mipSize[mip].y;
             desc.format = GfxFormat::R11G11B10F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, name);
             data.output = builder.Write(data.output);
         },
@@ -114,7 +113,6 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
             desc.width = m_mipSize[mip].x;
             desc.height = m_mipSize[mip].y;
             desc.format = GfxFormat::R11G11B10F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, name);
             data.output = builder.Write(data.output);
         },

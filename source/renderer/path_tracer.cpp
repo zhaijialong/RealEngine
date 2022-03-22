@@ -54,7 +54,6 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA32F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, "PathTracing output");
             data.output = builder.Write(data.output);
         },
@@ -99,7 +98,6 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageRenderTarget;
             data.output = builder.Create<RenderGraphTexture>(desc, "SceneColor RT");
             data.output = builder.Write(data.output);
         },

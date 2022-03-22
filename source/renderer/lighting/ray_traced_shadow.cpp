@@ -38,7 +38,6 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::R8UNORM;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.shadow = builder.Create<RenderGraphTexture>(desc, "RTShadow raytraced shadow");
             data.shadow = builder.Write(data.shadow);
         },

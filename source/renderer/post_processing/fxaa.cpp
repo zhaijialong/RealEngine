@@ -39,7 +39,6 @@ RenderGraphHandle FXAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA8SRGB;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, "FXAA Output");
             data.output = builder.Write(data.output);
         },

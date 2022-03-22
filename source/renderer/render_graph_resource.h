@@ -17,6 +17,7 @@ public:
     }
     virtual ~RenderGraphResource() {}
 
+    virtual void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass);
     virtual void Realize() = 0;
     virtual IGfxResource* GetResource() = 0;
     virtual GfxResourceState GetInitialState() = 0;
@@ -25,7 +26,6 @@ public:
     DAGNodeID GetFirstPassID() const { return m_firstPass; }
     DAGNodeID GetLastPassID() const { return m_lastPass; }
 
-    void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass);
     bool IsUsed() const { return m_firstPass != UINT32_MAX; }
     bool IsImported() const { return m_bImported; }
 
@@ -64,6 +64,7 @@ public:
     IGfxDescriptor* GetUAV();
     IGfxDescriptor* GetUAV(uint32_t mip, uint32_t slice);
 
+    virtual void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass) override;
     virtual void Realize() override;
     virtual IGfxResource* GetResource() override { return m_pTexture; }
     virtual GfxResourceState GetInitialState() override { return m_initialState; }
@@ -89,6 +90,7 @@ public:
     IGfxDescriptor* GetSRV();
     IGfxDescriptor* GetUAV();
 
+    virtual void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass) override;
     virtual void Realize() override;
     virtual IGfxResource* GetResource() override { return m_pBuffer; }
     virtual GfxResourceState GetInitialState() override { return m_initialState; }

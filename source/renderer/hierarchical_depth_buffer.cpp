@@ -45,7 +45,6 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
             desc.width = m_hzbSize.x;
             desc.height = m_hzbSize.y;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.reprojectedDepth = builder.Create<RenderGraphTexture>(desc, "Reprojected Depth RT");
 
             data.reprojectedDepth = builder.Write(data.reprojectedDepth);
@@ -75,7 +74,6 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
             desc.height = m_hzbSize.y;
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             hzb = builder.Create<RenderGraphTexture>(desc, "1st phase HZB");
 
             data.dilatedDepth = builder.Write(hzb);
@@ -134,7 +132,6 @@ void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depth
             desc.height = m_hzbSize.y;
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::R16F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             hzb = builder.Create<RenderGraphTexture>(desc, "2nd phase HZB");
 
             data.hzb = builder.Write(hzb);

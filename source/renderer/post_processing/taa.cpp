@@ -74,7 +74,6 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputRT = builder.Create<RenderGraphTexture>(desc, "TAA Output");
 
             data.outputRT = builder.Write(data.outputRT);

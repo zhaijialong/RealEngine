@@ -36,7 +36,6 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, "Direct Lighting");
             data.output = builder.Write(data.output);
         },

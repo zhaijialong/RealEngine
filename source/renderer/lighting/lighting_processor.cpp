@@ -71,7 +71,6 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageRenderTarget;
             data.output = builder.Create<RenderGraphTexture>(desc, "SceneColor RT");
             data.output = builder.Write(data.output);
         },

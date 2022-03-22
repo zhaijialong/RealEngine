@@ -91,7 +91,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             bufferDesc.stride = 4;
             bufferDesc.size = bufferDesc.stride * max_dispatch_num;
             bufferDesc.format = GfxFormat::R32UI;
-            bufferDesc.usage = GfxBufferUsageTypedBuffer | GfxBufferUsageUnorderedAccess;
+            bufferDesc.usage = GfxBufferUsageTypedBuffer;
 
             data.firstPhaseMeshletListCounterBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st phase meshlet list counter");
             data.firstPhaseMeshletListCounterBuffer = builder.Write(data.firstPhaseMeshletListCounterBuffer);
@@ -125,7 +125,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             bufferDesc.stride = 1;
             bufferDesc.size = bufferDesc.stride * max_instance_num;
             bufferDesc.format = GfxFormat::R8UI;
-            bufferDesc.usage = GfxBufferUsageTypedBuffer | GfxBufferUsageUnorderedAccess;
+            bufferDesc.usage = GfxBufferUsageTypedBuffer;
             data.cullingResultBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st phase culling result");
             data.cullingResultBuffer = builder.Write(data.cullingResultBuffer);
 
@@ -168,7 +168,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             RenderGraphBuffer::Desc bufferDesc;
             bufferDesc.stride = sizeof(uint2);
             bufferDesc.size = bufferDesc.stride * max_meshlets_num;
-            bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            bufferDesc.usage = GfxBufferUsageStructuredBuffer;
             data.meshletListBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st phase meshlet list");
 
             data.cullingResultBuffer = builder.Read(instance_culling_pass->cullingResultBuffer);
@@ -196,7 +196,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             RenderGraphBuffer::Desc bufferDesc;
             bufferDesc.stride = sizeof(uint3);
             bufferDesc.size = bufferDesc.stride * max_dispatch_num;
-            bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            bufferDesc.usage = GfxBufferUsageStructuredBuffer;
             data.indirectCommandBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st Phase Indirect Command");
             data.indirectCommandBuffer = builder.Write(data.indirectCommandBuffer);
 
@@ -215,7 +215,6 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             RenderGraphTexture::Desc desc;
             desc.width = m_pRenderer->GetBackbufferWidth();
             desc.height = m_pRenderer->GetBackbufferHeight();
-            desc.usage = GfxTextureUsageRenderTarget;
             desc.format = GfxFormat::RGBA8SRGB;
             data.outDiffuseRT = builder.Create<RenderGraphTexture>(desc, "Diffuse RT");
             data.outSpecularRT = builder.Create<RenderGraphTexture>(desc, "Specular RT");
@@ -227,7 +226,6 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             data.outEmissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
 
             desc.format = GfxFormat::D32FS8;
-            desc.usage = GfxTextureUsageDepthStencil;
             data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "SceneDepth RT");
 
             data.outDiffuseRT = builder.WriteColor(0, data.outDiffuseRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
@@ -248,7 +246,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             RenderGraphBuffer::Desc bufferDesc;
             bufferDesc.stride = sizeof(uint2);
             bufferDesc.size = bufferDesc.stride * max_meshlets_num;
-            bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            bufferDesc.usage = GfxBufferUsageStructuredBuffer;
             data.occlusionCulledMeshletsBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase meshlet list");
             data.occlusionCulledMeshletsBuffer = builder.Write(data.occlusionCulledMeshletsBuffer);
 
@@ -297,7 +295,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             RenderGraphBuffer::Desc desc;
             desc.stride = sizeof(uint3);
             desc.size = desc.stride;
-            desc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            desc.usage = GfxBufferUsageStructuredBuffer;
             data.commandBuffer = builder.Create<RenderGraphBuffer>(desc, "2nd phase instance culling command");
             data.commandBuffer = builder.Write(data.commandBuffer);
 
@@ -331,7 +329,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             bufferDesc.stride = 1;
             bufferDesc.size = bufferDesc.stride * max_instance_num;
             bufferDesc.format = GfxFormat::R8UI;
-            bufferDesc.usage = GfxBufferUsageTypedBuffer | GfxBufferUsageUnorderedAccess;
+            bufferDesc.usage = GfxBufferUsageTypedBuffer;
             data.cullingResultBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase culling result");
             data.cullingResultBuffer = builder.Write(data.cullingResultBuffer);
 
@@ -393,7 +391,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             RenderGraphBuffer::Desc bufferDesc;
             bufferDesc.stride = sizeof(uint3);
             bufferDesc.size = bufferDesc.stride * max_dispatch_num;
-            bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
+            bufferDesc.usage = GfxBufferUsageStructuredBuffer;
             data.indirectCommandBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd Phase Indirect Command");
             data.indirectCommandBuffer = builder.Write(data.indirectCommandBuffer);
 
