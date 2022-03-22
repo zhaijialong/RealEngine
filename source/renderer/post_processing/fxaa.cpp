@@ -30,10 +30,10 @@ RenderGraphHandle FXAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
         RenderGraphHandle output;
     };
 
-    auto fxaa_pass = pRenderGraph->AddPass<FXAAData>("FXAA",
+    auto fxaa_pass = pRenderGraph->AddPass<FXAAData>("FXAA", RenderPassType::Compute,
         [&](FXAAData& data, RenderGraphBuilder& builder)
         {
-            data.input = builder.Read(inputHandle, GfxResourceState::ShaderResourceNonPS);
+            data.input = builder.Read(inputHandle);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -41,7 +41,7 @@ RenderGraphHandle FXAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             desc.format = GfxFormat::RGBA8SRGB;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, "FXAA Output");
-            data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
+            data.output = builder.Write(data.output);
         },
         [=](const FXAAData& data, IGfxCommandList* pCommandList)
         {

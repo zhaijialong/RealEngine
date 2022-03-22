@@ -1,10 +1,11 @@
 #include "render_graph_pass.h"
 #include "render_graph.h"
 
-RenderGraphPassBase::RenderGraphPassBase(const eastl::string& name, DirectedAcyclicGraph& graph) :
+RenderGraphPassBase::RenderGraphPassBase(const eastl::string& name, RenderPassType type, DirectedAcyclicGraph& graph) :
     DAGNode(graph)
 {
     m_name = name;
+    m_type = type;
 }
 
 void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)

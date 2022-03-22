@@ -39,16 +39,16 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         RenderGraphHandle output;
     };
 
-    auto pt_pass = pRenderGraph->AddPass<PathTracingData>("PathTracing",
+    auto pt_pass = pRenderGraph->AddPass<PathTracingData>("PathTracing", RenderPassType::Compute,
         [&](PathTracingData& data, RenderGraphBuilder& builder)
         {
             BasePass* pBasePass = m_pRenderer->GetBassPass();
             
-            data.diffuseRT = builder.Read(pBasePass->GetDiffuseRT(), GfxResourceState::ShaderResourceNonPS);
-            data.specularRT = builder.Read(pBasePass->GetSpecularRT(), GfxResourceState::ShaderResourceNonPS);
-            data.normalRT = builder.Read(pBasePass->GetNormalRT(), GfxResourceState::ShaderResourceNonPS);
-            data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT(), GfxResourceState::ShaderResourceNonPS);
-            data.depthRT = builder.Read(depth, GfxResourceState::ShaderResourceNonPS);
+            data.diffuseRT = builder.Read(pBasePass->GetDiffuseRT());
+            data.specularRT = builder.Read(pBasePass->GetSpecularRT());
+            data.normalRT = builder.Read(pBasePass->GetNormalRT());
+            data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT());
+            data.depthRT = builder.Read(depth);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -56,7 +56,7 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
             desc.format = GfxFormat::RGBA32F;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, "PathTracing output");
-            data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
+            data.output = builder.Write(data.output);
         },
         [=](const PathTracingData& data, IGfxCommandList* pCommandList)
         {
@@ -89,11 +89,11 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
 
     RenderGraphHandle history = pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxResourceState::UnorderedAccess);
 
-    auto accumulation_pass = pRenderGraph->AddPass<AccumulationData>("Accumulation",
+    auto accumulation_pass = pRenderGraph->AddPass<AccumulationData>("Accumulation", RenderPassType::Compute,
         [&](AccumulationData& data, RenderGraphBuilder& builder)
         {
-            data.currentFrame = builder.Read(pt_pass->output, GfxResourceState::ShaderResourceNonPS);
-            data.history = builder.Write(history, GfxResourceState::UnorderedAccess);
+            data.currentFrame = builder.Read(pt_pass->output);
+            data.history = builder.Write(history);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -101,7 +101,7 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
             desc.format = GfxFormat::RGBA16F;
             desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageRenderTarget;
             data.output = builder.Create<RenderGraphTexture>(desc, "SceneColor RT");
-            data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
+            data.output = builder.Write(data.output);
         },
         [=](const AccumulationData& data, IGfxCommandList* pCommandList)
         {

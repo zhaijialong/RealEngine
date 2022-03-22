@@ -23,14 +23,14 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
         RenderGraphHandle output;
     };
 
-    auto clustered_shading = pRenderGraph->AddPass<ClusteredShadingData>("Clustered Shading",
+    auto clustered_shading = pRenderGraph->AddPass<ClusteredShadingData>("Clustered Shading", RenderPassType::Compute,
         [&](ClusteredShadingData& data, RenderGraphBuilder& builder)
         {
-            data.diffuseRT = builder.Read(diffuse, GfxResourceState::ShaderResourceNonPS);
-            data.specularRT = builder.Read(specular, GfxResourceState::ShaderResourceNonPS);
-            data.normalRT = builder.Read(normal, GfxResourceState::ShaderResourceNonPS);
-            data.depthRT = builder.Read(depth, GfxResourceState::ShaderResourceNonPS);
-            data.shadow = builder.Read(shadow, GfxResourceState::ShaderResourceNonPS);
+            data.diffuseRT = builder.Read(diffuse);
+            data.specularRT = builder.Read(specular);
+            data.normalRT = builder.Read(normal);
+            data.depthRT = builder.Read(depth);
+            data.shadow = builder.Read(shadow);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -38,7 +38,7 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
             desc.format = GfxFormat::RGBA16F;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, "Direct Lighting");
-            data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
+            data.output = builder.Write(data.output);
         },
         [=](const ClusteredShadingData& data, IGfxCommandList* pCommandList)
         {

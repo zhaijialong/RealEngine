@@ -142,9 +142,9 @@ inline T* RenderGraph::AllocatePOD(ArgsT&&... arguments)
 }
 
 template<typename Data, typename Setup, typename Exec>
-inline RenderGraphPass<Data>& RenderGraph::AddPass(const eastl::string& name, const Setup& setup, const Exec& execute)
+inline RenderGraphPass<Data>& RenderGraph::AddPass(const eastl::string& name, RenderPassType type, const Setup& setup, const Exec& execute)
 {
-    auto pass = Allocate<RenderGraphPass<Data>>(name, m_graph, execute);
+    auto pass = Allocate<RenderGraphPass<Data>>(name, type, m_graph, execute);
 
     for (size_t i = 0; i < m_eventNames.size(); ++i)
     {

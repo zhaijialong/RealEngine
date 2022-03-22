@@ -18,7 +18,7 @@ public:
     RenderGraph(Renderer* pRenderer);
 
     template<typename Data, typename Setup, typename Exec>
-    RenderGraphPass<Data>& AddPass(const eastl::string& name, const Setup& setup, const Exec& execute);
+    RenderGraphPass<Data>& AddPass(const eastl::string& name, RenderPassType type, const Setup& setup, const Exec& execute);
 
     void BeginEvent(const eastl::string& name);
     void EndEvent();

@@ -49,23 +49,23 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
         RenderGraphHandle output;
     };
 
-    auto pass = pRenderGraph->AddPass<CompositeLightData>("CompositeLight",
+    auto pass = pRenderGraph->AddPass<CompositeLightData>("CompositeLight", RenderPassType::Compute,
         [&](CompositeLightData& data, RenderGraphBuilder& builder)
         {
             BasePass* pBasePass = m_pRenderer->GetBassPass();
 
-            data.diffuseRT = builder.Read(pBasePass->GetDiffuseRT(), GfxResourceState::ShaderResourceNonPS);
-            data.specularRT = builder.Read(pBasePass->GetSpecularRT(), GfxResourceState::ShaderResourceNonPS);
-            data.normalRT = builder.Read(pBasePass->GetNormalRT(), GfxResourceState::ShaderResourceNonPS);
-            data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT(), GfxResourceState::ShaderResourceNonPS);
-            data.depthRT = builder.Read(depth, GfxResourceState::ShaderResourceNonPS);
+            data.diffuseRT = builder.Read(pBasePass->GetDiffuseRT());
+            data.specularRT = builder.Read(pBasePass->GetSpecularRT());
+            data.normalRT = builder.Read(pBasePass->GetNormalRT());
+            data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT());
+            data.depthRT = builder.Read(depth);
 
             if (ao.IsValid())
             {
-                data.ao = builder.Read(ao, GfxResourceState::ShaderResourceNonPS);
+                data.ao = builder.Read(ao);
             }
 
-            data.directLighting = builder.Read(direct_lighting, GfxResourceState::ShaderResourceNonPS);
+            data.directLighting = builder.Read(direct_lighting);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -73,7 +73,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             desc.format = GfxFormat::RGBA16F;
             desc.usage = GfxTextureUsageUnorderedAccess | GfxTextureUsageRenderTarget;
             data.output = builder.Create<RenderGraphTexture>(desc, "SceneColor RT");
-            data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
+            data.output = builder.Write(data.output);
         },
         [=](const CompositeLightData& data, IGfxCommandList* pCommandList)
         {

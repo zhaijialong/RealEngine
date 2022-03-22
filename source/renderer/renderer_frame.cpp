@@ -18,6 +18,8 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     RenderGraphHandle velocityRT = VelocityPass(sceneDepthRT);
     RenderGraphHandle linearDepthRT = LinearizeDepthPass(sceneDepthRT);
 
+    m_pHZB->GenerateSceneHZB(m_pRenderGraph.get(), sceneDepthRT);
+
     RenderGraphHandle sceneColorRT;
     if (m_outputType == RendererOutput::PathTracing)
     {
@@ -50,7 +52,7 @@ void Renderer::ForwardPass(RenderGraphHandle& color, RenderGraphHandle& depth)
         RenderGraphHandle outSceneDepthRT;
     };
 
-    auto forward_pass = m_pRenderGraph->AddPass<ForwardPassData>("Forward Pass",
+    auto forward_pass = m_pRenderGraph->AddPass<ForwardPassData>("Forward Pass", RenderPassType::Graphics,
         [&](ForwardPassData& data, RenderGraphBuilder& builder)
         {
             data.outSceneColorRT = builder.WriteColor(0, color, 0, GfxRenderPassLoadOp::Load);
@@ -79,7 +81,7 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
         RenderGraphHandle outSceneDepthRT;
     };
 
-    auto obj_velocity_pass = m_pRenderGraph->AddPass<ObjectVelocityPassData>("Object Velocity",
+    auto obj_velocity_pass = m_pRenderGraph->AddPass<ObjectVelocityPassData>("Object Velocity", RenderPassType::Graphics,
         [&](ObjectVelocityPassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
@@ -107,11 +109,11 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
         RenderGraphHandle depth;
     };
 
-    auto camera_velocity_pass = m_pRenderGraph->AddPass<CameraVelocityPassData>("Camera Velocity",
+    auto camera_velocity_pass = m_pRenderGraph->AddPass<CameraVelocityPassData>("Camera Velocity", RenderPassType::Compute,
         [&](CameraVelocityPassData& data, RenderGraphBuilder& builder)
         {
-            data.velocity = builder.Write(obj_velocity_pass->outVelocityRT, GfxResourceState::UnorderedAccess);
-            data.depth = builder.Read(obj_velocity_pass->outSceneDepthRT, GfxResourceState::ShaderResourceNonPS);
+            data.velocity = builder.Write(obj_velocity_pass->outVelocityRT);
+            data.depth = builder.Read(obj_velocity_pass->outSceneDepthRT);
         },
         [=](const CameraVelocityPassData& data, IGfxCommandList* pCommandList)
         {
@@ -141,7 +143,7 @@ RenderGraphHandle Renderer::LinearizeDepthPass(RenderGraphHandle depth)
         RenderGraphHandle outputLinearDepthRT;
     };
 
-    auto linearize_depth_pass = m_pRenderGraph->AddPass<LinearizeDepthPassData>("Linearize Depth",
+    auto linearize_depth_pass = m_pRenderGraph->AddPass<LinearizeDepthPassData>("Linearize Depth", RenderPassType::Compute,
         [&](LinearizeDepthPassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
@@ -151,8 +153,8 @@ RenderGraphHandle Renderer::LinearizeDepthPass(RenderGraphHandle depth)
             desc.format = GfxFormat::R32F;
             data.outputLinearDepthRT = builder.Create<RenderGraphTexture>(desc, "LinearDepth RT");
 
-            data.inputDepthRT = builder.Read(depth, GfxResourceState::ShaderResourceNonPS);
-            data.outputLinearDepthRT = builder.Write(data.outputLinearDepthRT, GfxResourceState::UnorderedAccess);
+            data.inputDepthRT = builder.Read(depth);
+            data.outputLinearDepthRT = builder.Write(data.outputLinearDepthRT);
         },
         [&](const LinearizeDepthPassData& data, IGfxCommandList* pCommandList)
         {
@@ -183,7 +185,7 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
             RenderGraphHandle sceneDepthTexture;
         };
 
-        auto id_pass = m_pRenderGraph->AddPass<IDPassData>("Object ID Pass",
+        auto id_pass = m_pRenderGraph->AddPass<IDPassData>("Object ID Pass", RenderPassType::Graphics,
             [&](IDPassData& data, RenderGraphBuilder& builder)
             {
                 RenderGraphTexture::Desc desc;
@@ -214,10 +216,10 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
             RenderGraphHandle srcTexture;
         };
 
-        m_pRenderGraph->AddPass<CopyIDPassData>("Copy ID to Readback Buffer",
+        m_pRenderGraph->AddPass<CopyIDPassData>("Copy ID to Readback Buffer", RenderPassType::Copy,
             [&](CopyIDPassData& data, RenderGraphBuilder& builder)
             {
-                data.srcTexture = builder.Read(id_pass->idTexture, GfxResourceState::CopySrc);
+                data.srcTexture = builder.Read(id_pass->idTexture);
 
                 builder.MakeTarget();
             },
@@ -258,17 +260,17 @@ void Renderer::CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle 
         RenderGraphHandle dstSceneColorTexture;
     };
 
-    m_pRenderGraph->AddPass<CopyPassData>("Copy History Textures",
+    m_pRenderGraph->AddPass<CopyPassData>("Copy History Textures", RenderPassType::Copy,
         [&](CopyPassData& data, RenderGraphBuilder& builder)
         {
-            data.srcLinearDepthTexture = builder.Read(linearDepth, GfxResourceState::CopySrc);
-            data.dstLinearDepthTexture = builder.Write(m_prevLinearDepthHandle, GfxResourceState::CopyDst);
+            data.srcLinearDepthTexture = builder.Read(linearDepth);
+            data.dstLinearDepthTexture = builder.Write(m_prevLinearDepthHandle);
 
-            data.srcNormalTexture = builder.Read(normal, GfxResourceState::CopySrc);
-            data.dstNormalTexture = builder.Write(m_prevNormalHandle, GfxResourceState::CopyDst);
+            data.srcNormalTexture = builder.Read(normal);
+            data.dstNormalTexture = builder.Write(m_prevNormalHandle);
 
-            data.srcSceneColorTexture = builder.Read(sceneColor, GfxResourceState::CopySrc);
-            data.dstSceneColorTexture = builder.Write(m_prevSceneColorHandle, GfxResourceState::CopyDst);
+            data.srcSceneColorTexture = builder.Read(sceneColor);
+            data.dstSceneColorTexture = builder.Write(m_prevSceneColorHandle);
 
             builder.MakeTarget();
         },

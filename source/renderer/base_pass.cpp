@@ -84,7 +84,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         RenderGraphHandle secondPhaseObjectListCounterBuffer;
         RenderGraphHandle secondPhaseMeshletListCounterBuffer;
     };
-    auto clear_counter_pass = pRenderGraph->AddPass<ClearCounterPassData>("Clear Counter",
+    auto clear_counter_pass = pRenderGraph->AddPass<ClearCounterPassData>("Clear Counter", RenderPassType::Compute,
         [&](ClearCounterPassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc bufferDesc;
@@ -94,13 +94,13 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             bufferDesc.usage = GfxBufferUsageTypedBuffer | GfxBufferUsageUnorderedAccess;
 
             data.firstPhaseMeshletListCounterBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st phase meshlet list counter");
-            data.firstPhaseMeshletListCounterBuffer = builder.Write(data.firstPhaseMeshletListCounterBuffer, GfxResourceState::UnorderedAccess);
+            data.firstPhaseMeshletListCounterBuffer = builder.Write(data.firstPhaseMeshletListCounterBuffer);
 
             data.secondPhaseObjectListCounterBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase object list counter");
-            data.secondPhaseObjectListCounterBuffer = builder.Write(data.secondPhaseObjectListCounterBuffer, GfxResourceState::UnorderedAccess);
+            data.secondPhaseObjectListCounterBuffer = builder.Write(data.secondPhaseObjectListCounterBuffer);
 
             data.secondPhaseMeshletListCounterBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase meshlet list counter");
-            data.secondPhaseMeshletListCounterBuffer = builder.Write(data.secondPhaseMeshletListCounterBuffer, GfxResourceState::UnorderedAccess);
+            data.secondPhaseMeshletListCounterBuffer = builder.Write(data.secondPhaseMeshletListCounterBuffer);
         },
         [=](const ClearCounterPassData& data, IGfxCommandList* pCommandList)
         {
@@ -118,7 +118,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         RenderGraphHandle secondPhaseObjectListBuffer;
         RenderGraphHandle secondPhaseObjectListCounterBuffer;
     };
-    auto instance_culling_pass = pRenderGraph->AddPass<InstanceCullingData>("Instance Culling",
+    auto instance_culling_pass = pRenderGraph->AddPass<InstanceCullingData>("Instance Culling", RenderPassType::Compute,
         [&](InstanceCullingData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc bufferDesc;
@@ -127,19 +127,19 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             bufferDesc.format = GfxFormat::R8UI;
             bufferDesc.usage = GfxBufferUsageTypedBuffer | GfxBufferUsageUnorderedAccess;
             data.cullingResultBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st phase culling result");
-            data.cullingResultBuffer = builder.Write(data.cullingResultBuffer, GfxResourceState::UnorderedAccess);
+            data.cullingResultBuffer = builder.Write(data.cullingResultBuffer);
 
             bufferDesc.stride = 4;
             bufferDesc.size = bufferDesc.stride * max_instance_num;
             bufferDesc.format = GfxFormat::R32UI;
             data.secondPhaseObjectListBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase object list");
-            data.secondPhaseObjectListBuffer = builder.Write(data.secondPhaseObjectListBuffer, GfxResourceState::UnorderedAccess);
+            data.secondPhaseObjectListBuffer = builder.Write(data.secondPhaseObjectListBuffer);
 
-            data.secondPhaseObjectListCounterBuffer = builder.Write(clear_counter_pass->secondPhaseObjectListCounterBuffer, GfxResourceState::UnorderedAccess);
+            data.secondPhaseObjectListCounterBuffer = builder.Write(clear_counter_pass->secondPhaseObjectListCounterBuffer);
 
             for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
             {
-                data.hzbTexture = builder.Read(pHZB->Get1stPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+                data.hzbTexture = builder.Read(pHZB->Get1stPhaseCullingHZBMip(i), i);
             }
         },
         [=](const InstanceCullingData& data, IGfxCommandList* pCommandList)
@@ -162,7 +162,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         RenderGraphHandle meshletListCounterBuffer;
     };
 
-    auto build_meshlet_list_pass = pRenderGraph->AddPass<BuildMeshletListData>("Build Meshlet List",
+    auto build_meshlet_list_pass = pRenderGraph->AddPass<BuildMeshletListData>("Build Meshlet List", RenderPassType::Compute,
         [&](BuildMeshletListData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc bufferDesc;
@@ -171,9 +171,9 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
             data.meshletListBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st phase meshlet list");
 
-            data.cullingResultBuffer = builder.Read(instance_culling_pass->cullingResultBuffer, GfxResourceState::ShaderResourceNonPS);
-            data.meshletListBuffer = builder.Write(data.meshletListBuffer, GfxResourceState::UnorderedAccess);
-            data.meshletListCounterBuffer = builder.Write(clear_counter_pass->firstPhaseMeshletListCounterBuffer, GfxResourceState::UnorderedAccess);
+            data.cullingResultBuffer = builder.Read(instance_culling_pass->cullingResultBuffer);
+            data.meshletListBuffer = builder.Write(data.meshletListBuffer);
+            data.meshletListCounterBuffer = builder.Write(clear_counter_pass->firstPhaseMeshletListCounterBuffer);
         },
         [=](const BuildMeshletListData& data, IGfxCommandList* pCommandList)
         {
@@ -190,7 +190,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         RenderGraphHandle indirectCommandBuffer;
     };
 
-    auto build_indirect_command = pRenderGraph->AddPass<BuildIndirectCommandPassData>("Build Indirect Command",
+    auto build_indirect_command = pRenderGraph->AddPass<BuildIndirectCommandPassData>("Build Indirect Command", RenderPassType::Compute,
         [&](BuildIndirectCommandPassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc bufferDesc;
@@ -198,9 +198,9 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             bufferDesc.size = bufferDesc.stride * max_dispatch_num;
             bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
             data.indirectCommandBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "1st Phase Indirect Command");
-            data.indirectCommandBuffer = builder.Write(data.indirectCommandBuffer, GfxResourceState::UnorderedAccess);
+            data.indirectCommandBuffer = builder.Write(data.indirectCommandBuffer);
 
-            data.meshletListCounterBuffer = builder.Read(build_meshlet_list_pass->meshletListCounterBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.meshletListCounterBuffer = builder.Read(build_meshlet_list_pass->meshletListCounterBuffer);
         },
         [=](const BuildIndirectCommandPassData& data, IGfxCommandList* pCommandList)
         {
@@ -209,7 +209,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             BuildIndirectCommand(pCommandList, meshletListCounterBuffer->GetSRV(), commandBuffer->GetUAV());
         });
 
-    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass",
+    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass", RenderPassType::Graphics,
         [&](BasePassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
@@ -238,21 +238,21 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
 
             for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
             {
-                data.inHZB = builder.Read(pHZB->Get1stPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+                data.inHZB = builder.Read(pHZB->Get1stPhaseCullingHZBMip(i), i, RenderGraphBuilderFlag::ShaderStageNonPS);
             }
 
-            data.indirectCommandBuffer = builder.Read(build_indirect_command->indirectCommandBuffer, GfxResourceState::IndirectArg);
-            data.meshletListBuffer = builder.Read(build_meshlet_list_pass->meshletListBuffer, GfxResourceState::ShaderResourceNonPS);
-            data.meshletListCounterBuffer = builder.Read(build_meshlet_list_pass->meshletListCounterBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.indirectCommandBuffer = builder.ReadIndirectArg(build_indirect_command->indirectCommandBuffer);
+            data.meshletListBuffer = builder.Read(build_meshlet_list_pass->meshletListBuffer, 0, RenderGraphBuilderFlag::ShaderStageNonPS);
+            data.meshletListCounterBuffer = builder.Read(build_meshlet_list_pass->meshletListCounterBuffer, 0, RenderGraphBuilderFlag::ShaderStageNonPS);
 
             RenderGraphBuffer::Desc bufferDesc;
             bufferDesc.stride = sizeof(uint2);
             bufferDesc.size = bufferDesc.stride * max_meshlets_num;
             bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
             data.occlusionCulledMeshletsBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase meshlet list");
-            data.occlusionCulledMeshletsBuffer = builder.Write(data.occlusionCulledMeshletsBuffer, GfxResourceState::UnorderedAccess);
+            data.occlusionCulledMeshletsBuffer = builder.Write(data.occlusionCulledMeshletsBuffer);
 
-            data.occlusionCulledMeshletsCounterBuffer = builder.Write(clear_counter_pass->secondPhaseMeshletListCounterBuffer, GfxResourceState::UnorderedAccess);
+            data.occlusionCulledMeshletsCounterBuffer = builder.Write(clear_counter_pass->secondPhaseMeshletListCounterBuffer);
         },
         [=](const BasePassData& data, IGfxCommandList* pCommandList)
         {
@@ -291,7 +291,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         RenderGraphHandle objectListCounterBuffer;
         RenderGraphHandle commandBuffer;
     };
-    auto build_culling_command = pRenderGraph->AddPass<BuildCullingCommandData>("Build Instance Culling Command",
+    auto build_culling_command = pRenderGraph->AddPass<BuildCullingCommandData>("Build Instance Culling Command", RenderPassType::Compute,
         [&](BuildCullingCommandData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc desc;
@@ -299,9 +299,9 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             desc.size = desc.stride;
             desc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
             data.commandBuffer = builder.Create<RenderGraphBuffer>(desc, "2nd phase instance culling command");
-            data.commandBuffer = builder.Write(data.commandBuffer, GfxResourceState::UnorderedAccess);
+            data.commandBuffer = builder.Write(data.commandBuffer);
 
-            data.objectListCounterBuffer = builder.Read(m_secondPhaseObjectListCounterBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.objectListCounterBuffer = builder.Read(m_secondPhaseObjectListCounterBuffer);
         },
         [=](const BuildCullingCommandData& data, IGfxCommandList* pCommandList)
         {
@@ -324,7 +324,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         RenderGraphHandle objectListCounterBuffer;
     };
 
-    auto instance_culling_pass = pRenderGraph->AddPass<InstanceCullingData>("Instance Culling",
+    auto instance_culling_pass = pRenderGraph->AddPass<InstanceCullingData>("Instance Culling", RenderPassType::Compute,
         [&](InstanceCullingData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc bufferDesc;
@@ -333,15 +333,15 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             bufferDesc.format = GfxFormat::R8UI;
             bufferDesc.usage = GfxBufferUsageTypedBuffer | GfxBufferUsageUnorderedAccess;
             data.cullingResultBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd phase culling result");
-            data.cullingResultBuffer = builder.Write(data.cullingResultBuffer, GfxResourceState::UnorderedAccess);
+            data.cullingResultBuffer = builder.Write(data.cullingResultBuffer);
 
-            data.indirectCommandBuffer = builder.Read(build_culling_command->commandBuffer, GfxResourceState::IndirectArg);
-            data.objectListBuffer = builder.Read(m_secondPhaseObjectListBuffer, GfxResourceState::ShaderResourceNonPS);
-            data.objectListCounterBuffer = builder.Read(m_secondPhaseObjectListCounterBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.indirectCommandBuffer = builder.ReadIndirectArg(build_culling_command->commandBuffer);
+            data.objectListBuffer = builder.Read(m_secondPhaseObjectListBuffer);
+            data.objectListCounterBuffer = builder.Read(m_secondPhaseObjectListCounterBuffer);
 
             for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
             {
-                data.hzbTexture = builder.Read(pHZB->Get2ndPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+                data.hzbTexture = builder.Read(pHZB->Get2ndPhaseCullingHZBMip(i), i);
             }
         },
         [=](const InstanceCullingData& data, IGfxCommandList* pCommandList)
@@ -365,12 +365,12 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         RenderGraphHandle meshletListCounterBuffer;
     };
 
-    auto build_meshlet_list_pass = pRenderGraph->AddPass<BuildMeshletListData>("Build Meshlet List",
+    auto build_meshlet_list_pass = pRenderGraph->AddPass<BuildMeshletListData>("Build Meshlet List", RenderPassType::Compute,
         [&](BuildMeshletListData& data, RenderGraphBuilder& builder)
         {
-            data.cullingResultBuffer = builder.Read(instance_culling_pass->cullingResultBuffer, GfxResourceState::ShaderResourceNonPS);
-            data.meshletListBuffer = builder.Write(m_secondPhaseMeshletListBuffer, GfxResourceState::UnorderedAccess);
-            data.meshletListCounterBuffer = builder.Write(m_secondPhaseMeshletListCounterBuffer, GfxResourceState::UnorderedAccess);
+            data.cullingResultBuffer = builder.Read(instance_culling_pass->cullingResultBuffer);
+            data.meshletListBuffer = builder.Write(m_secondPhaseMeshletListBuffer);
+            data.meshletListCounterBuffer = builder.Write(m_secondPhaseMeshletListCounterBuffer);
         },
         [=](const BuildMeshletListData& data, IGfxCommandList* pCommandList)
         {
@@ -387,7 +387,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         RenderGraphHandle indirectCommandBuffer;
     };
 
-    auto build_indirect_command = pRenderGraph->AddPass<BuildIndirectCommandPassData>("Build Indirect Command",
+    auto build_indirect_command = pRenderGraph->AddPass<BuildIndirectCommandPassData>("Build Indirect Command", RenderPassType::Compute,
         [&](BuildIndirectCommandPassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphBuffer::Desc bufferDesc;
@@ -395,9 +395,9 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             bufferDesc.size = bufferDesc.stride * max_dispatch_num;
             bufferDesc.usage = GfxBufferUsageStructuredBuffer | GfxBufferUsageUnorderedAccess;
             data.indirectCommandBuffer = builder.Create<RenderGraphBuffer>(bufferDesc, "2nd Phase Indirect Command");
-            data.indirectCommandBuffer = builder.Write(data.indirectCommandBuffer, GfxResourceState::UnorderedAccess);
+            data.indirectCommandBuffer = builder.Write(data.indirectCommandBuffer);
 
-            data.meshletListCounterBuffer = builder.Read(build_meshlet_list_pass->meshletListCounterBuffer, GfxResourceState::ShaderResourceNonPS);
+            data.meshletListCounterBuffer = builder.Read(build_meshlet_list_pass->meshletListCounterBuffer);
         },
         [=](const BuildIndirectCommandPassData& data, IGfxCommandList* pCommandList)
         {
@@ -406,7 +406,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             BuildIndirectCommand(pCommandList, meshletListCounterBuffer->GetSRV(), commandBuffer->GetUAV());
         });
 
-    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass",
+    auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass", RenderPassType::Graphics,
         [&](BasePassData& data, RenderGraphBuilder& builder)
         {
             data.outDiffuseRT = builder.WriteColor(0, m_diffuseRT, 0, GfxRenderPassLoadOp::Load);
@@ -417,12 +417,12 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
 
             for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
             {
-                data.inHZB = builder.Read(pHZB->Get2ndPhaseCullingHZBMip(i), GfxResourceState::ShaderResourceNonPS, i);
+                data.inHZB = builder.Read(pHZB->Get2ndPhaseCullingHZBMip(i), i, RenderGraphBuilderFlag::ShaderStageNonPS);
             }
 
-            data.meshletListBuffer = builder.Read(build_meshlet_list_pass->meshletListBuffer, GfxResourceState::ShaderResourceNonPS);
-            data.meshletListCounterBuffer = builder.Read(build_meshlet_list_pass->meshletListCounterBuffer, GfxResourceState::ShaderResourceNonPS);
-            data.indirectCommandBuffer = builder.Read(build_indirect_command->indirectCommandBuffer, GfxResourceState::IndirectArg);
+            data.meshletListBuffer = builder.Read(build_meshlet_list_pass->meshletListBuffer, 0, RenderGraphBuilderFlag::ShaderStageNonPS);
+            data.meshletListCounterBuffer = builder.Read(build_meshlet_list_pass->meshletListCounterBuffer, 0, RenderGraphBuilderFlag::ShaderStageNonPS);
+            data.indirectCommandBuffer = builder.ReadIndirectArg(build_indirect_command->indirectCommandBuffer);
         },
         [=](const BasePassData& data, IGfxCommandList* pCommandList)
         {

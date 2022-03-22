@@ -12,7 +12,7 @@ public:
 
     void Generate1stPhaseCullingHZB(RenderGraph* graph);
     void Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depthRT);
-    void GenerateSceneHZB(RenderGraph* graph);//todo
+    void GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT);
 
     uint32_t GetHZBMipCount() const { return m_nHZBMipCount; }
     uint32_t GetHZBWidth() const { return m_hzbSize.x; };

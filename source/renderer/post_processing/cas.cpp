@@ -36,10 +36,10 @@ RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle input
         RenderGraphHandle outRT;
     };
 
-    auto cas_pass = pRenderGraph->AddPass<CASPassData>("CAS",
+    auto cas_pass = pRenderGraph->AddPass<CASPassData>("CAS", RenderPassType::Compute,
         [&](CASPassData& data, RenderGraphBuilder& builder)
         {
-            data.inRT = builder.Read(inputHandle, GfxResourceState::ShaderResourceNonPS);
+            data.inRT = builder.Read(inputHandle);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -47,7 +47,7 @@ RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle input
             desc.format = GfxFormat::RGBA8SRGB;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.outRT = builder.Create<RenderGraphTexture>(desc, "CAS Output");
-            data.outRT = builder.Write(data.outRT, GfxResourceState::UnorderedAccess);
+            data.outRT = builder.Write(data.outRT);
         },
         [=](const CASPassData& data, IGfxCommandList* pCommandList)
         {

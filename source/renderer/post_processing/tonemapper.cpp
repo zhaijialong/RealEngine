@@ -24,15 +24,15 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         RenderGraphHandle outLdrRT;
     };
 
-    auto tonemap_pass = pRenderGraph->AddPass<TonemapPassData>("ToneMapping",
+    auto tonemap_pass = pRenderGraph->AddPass<TonemapPassData>("ToneMapping", RenderPassType::Compute,
         [&](TonemapPassData& data, RenderGraphBuilder& builder)
         {
-            data.hdrRT = builder.Read(inputHandle, GfxResourceState::ShaderResourceNonPS);
-            data.exposure = builder.Read(exposure, GfxResourceState::ShaderResourceNonPS);
+            data.hdrRT = builder.Read(inputHandle);
+            data.exposure = builder.Read(exposure);
 
             if (bloom.IsValid())
             {
-                data.bloom = builder.Read(bloom, GfxResourceState::ShaderResourceNonPS);
+                data.bloom = builder.Read(bloom);
             }
 
             RenderGraphTexture::Desc desc;
@@ -41,7 +41,7 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
             desc.format = GfxFormat::RGBA8SRGB;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.outLdrRT = builder.Create<RenderGraphTexture>(desc, "ToneMapping Output");
-            data.outLdrRT = builder.Write(data.outLdrRT, GfxResourceState::UnorderedAccess);
+            data.outLdrRT = builder.Write(data.outLdrRT);
         },
         [=](const TonemapPassData& data, IGfxCommandList* pCommandList)
         {

@@ -58,17 +58,17 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
         RenderGraphHandle historyOutputRT;
     };
 
-    auto taa_pass = pRenderGraph->AddPass<TAAPassData>("TAA",
+    auto taa_pass = pRenderGraph->AddPass<TAAPassData>("TAA", RenderPassType::Compute,
         [&](TAAPassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphHandle historyInputRT = builder.Import(m_pHistoryColorInput->GetTexture(), GfxResourceState::UnorderedAccess);
             RenderGraphHandle historyOutputRT = builder.Import(m_pHistoryColorOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 
-            data.inputRT = builder.Read(sceneColorRT, GfxResourceState::ShaderResourceNonPS);
-            data.historyInputRT = builder.Read(historyInputRT, GfxResourceState::ShaderResourceNonPS);
-            data.velocityRT = builder.Read(velocityRT, GfxResourceState::ShaderResourceNonPS);
-            data.linearDepthRT = builder.Read(linearDepthRT, GfxResourceState::ShaderResourceNonPS);
-            data.prevLinearDepthRT = builder.Read(m_pRenderer->GetPrevLinearDepthHandle(), GfxResourceState::ShaderResourceNonPS);
+            data.inputRT = builder.Read(sceneColorRT);
+            data.historyInputRT = builder.Read(historyInputRT);
+            data.velocityRT = builder.Read(velocityRT);
+            data.linearDepthRT = builder.Read(linearDepthRT);
+            data.prevLinearDepthRT = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -77,8 +77,8 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputRT = builder.Create<RenderGraphTexture>(desc, "TAA Output");
 
-            data.outputRT = builder.Write(data.outputRT, GfxResourceState::UnorderedAccess);
-            data.historyOutputRT = builder.Write(historyOutputRT, GfxResourceState::UnorderedAccess);
+            data.outputRT = builder.Write(data.outputRT);
+            data.historyOutputRT = builder.Write(historyOutputRT);
         },
         [=](const TAAPassData& data, IGfxCommandList* pCommandList)
         {

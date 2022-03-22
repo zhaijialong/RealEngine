@@ -28,11 +28,11 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         RenderGraphHandle shadow;
     };
 
-    auto rtshadow_pass = pRenderGraph->AddPass<RTShadowData>("RTShadow raytrace",
+    auto rtshadow_pass = pRenderGraph->AddPass<RTShadowData>("RTShadow raytrace", RenderPassType::Compute,
         [&](RTShadowData& data, RenderGraphBuilder& builder)
         {
-            data.depth = builder.Read(depthRT, GfxResourceState::ShaderResourceNonPS);
-            data.normal = builder.Read(normalRT, GfxResourceState::ShaderResourceNonPS);
+            data.depth = builder.Read(depthRT);
+            data.normal = builder.Read(normalRT);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -40,7 +40,7 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             desc.format = GfxFormat::R8UNORM;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.shadow = builder.Create<RenderGraphTexture>(desc, "RTShadow raytraced shadow");
-            data.shadow = builder.Write(data.shadow, GfxResourceState::UnorderedAccess);
+            data.shadow = builder.Write(data.shadow);
         },
         [=](const RTShadowData& data, IGfxCommandList* pCommandList)
         {

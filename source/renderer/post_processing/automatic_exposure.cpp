@@ -55,10 +55,10 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
 
         RenderGraphHandle luminanceRT;
 
-        auto init_luminance_pass = pRenderGraph->AddPass<InitLuminanceData>("Init Luminance",
+        auto init_luminance_pass = pRenderGraph->AddPass<InitLuminanceData>("Init Luminance", RenderPassType::Compute,
             [&](InitLuminanceData& data, RenderGraphBuilder& builder)
             {
-                data.input = builder.Read(sceneColorRT, GfxResourceState::ShaderResourceNonPS);
+                data.input = builder.Read(sceneColorRT);
 
                 RenderGraphTexture::Desc desc;
                 desc.width = m_luminanceSize.x;
@@ -68,7 +68,7 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
                 desc.usage = GfxTextureUsageUnorderedAccess;
 
                 luminanceRT = builder.Create<RenderGraphTexture>(desc, "Average Luminance");
-                data.output = builder.Write(luminanceRT, GfxResourceState::UnorderedAccess, 0);
+                data.output = builder.Write(luminanceRT);
             },
             [=](const InitLuminanceData& data, IGfxCommandList* pCommandList)
             {
@@ -82,14 +82,14 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             RenderGraphHandle luminanceRT;
         };
 
-        auto luminance_reduction_pass = pRenderGraph->AddPass<LuminanceReductionData>("Luminance Reduction",
+        auto luminance_reduction_pass = pRenderGraph->AddPass<LuminanceReductionData>("Luminance Reduction", RenderPassType::Compute,
             [&](LuminanceReductionData& data, RenderGraphBuilder& builder)
             {
-                data.luminanceRT = builder.Read(init_luminance_pass->output, GfxResourceState::ShaderResourceNonPS, 0);
+                data.luminanceRT = builder.Read(init_luminance_pass->output);
 
                 for (uint32_t i = 1; i < m_luminanceMips; ++i)
                 {
-                    data.luminanceRT = builder.Write(luminanceRT, GfxResourceState::UnorderedAccess, i);
+                    data.luminanceRT = builder.Write(luminanceRT, i);
                 }
             },
             [=](const LuminanceReductionData& data, IGfxCommandList* pCommandList)
@@ -108,10 +108,10 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             RenderGraphHandle histogramBuffer;
         };
 
-        auto build_histogram_pass = pRenderGraph->AddPass<BuildHistogramData>("Build Histogram",
+        auto build_histogram_pass = pRenderGraph->AddPass<BuildHistogramData>("Build Histogram", RenderPassType::Compute,
             [&](BuildHistogramData& data, RenderGraphBuilder& builder)
             {
-                data.inputTexture = builder.Read(sceneColorRT, GfxResourceState::ShaderResourceNonPS);
+                data.inputTexture = builder.Read(sceneColorRT);
 
                 RenderGraphBuffer::Desc desc;
                 desc.stride = 4;
@@ -119,7 +119,7 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
                 desc.format = GfxFormat::R32F;
                 desc.usage = GfxBufferUsageRawBuffer | GfxBufferUsageUnorderedAccess;
                 data.histogramBuffer = builder.Create<RenderGraphBuffer>(desc, "Luminance Histogram");
-                data.histogramBuffer = builder.Write(data.histogramBuffer, GfxResourceState::UnorderedAccess);
+                data.histogramBuffer = builder.Write(data.histogramBuffer);
             },
             [=](const BuildHistogramData& data, IGfxCommandList* pCommandList)
             {
@@ -134,17 +134,17 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             RenderGraphHandle avgLuminanceTexture;
         };
 
-        auto histogram_reduction_pass = pRenderGraph->AddPass<HistogramReductionData>("Histogram Reduction",
+        auto histogram_reduction_pass = pRenderGraph->AddPass<HistogramReductionData>("Histogram Reduction", RenderPassType::Compute,
             [&](HistogramReductionData& data, RenderGraphBuilder& builder)
             {
-                data.histogramBuffer = builder.Read(build_histogram_pass->histogramBuffer, GfxResourceState::ShaderResourceNonPS);
+                data.histogramBuffer = builder.Read(build_histogram_pass->histogramBuffer);
 
                 RenderGraphTexture::Desc desc;
                 desc.width = desc.height = 1;
                 desc.format = GfxFormat::R16F;
                 desc.usage = GfxTextureUsageUnorderedAccess;
                 data.avgLuminanceTexture = builder.Create<RenderGraphTexture>(desc, "Average Luminance");
-                data.avgLuminanceTexture = builder.Write(data.avgLuminanceTexture, GfxResourceState::UnorderedAccess);
+                data.avgLuminanceTexture = builder.Write(data.avgLuminanceTexture);
             },
             [=](const HistogramReductionData& data, IGfxCommandList* pCommandList)
             {
@@ -162,13 +162,13 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
         RenderGraphHandle exposure;
     };
 
-    auto exposure_pass = pRenderGraph->AddPass<ExposureData>("Exposure",
+    auto exposure_pass = pRenderGraph->AddPass<ExposureData>("Exposure", RenderPassType::Compute,
         [&](ExposureData& data, RenderGraphBuilder& builder)
         {
             if (avgLuminanceRT.IsValid())
             {
                 uint32_t mip = m_exposuremode == ExposureMode::Automatic ? m_luminanceMips - 1 : 0;
-                data.avgLuminance = builder.Read(avgLuminanceRT, GfxResourceState::ShaderResourceNonPS, mip);
+                data.avgLuminance = builder.Read(avgLuminanceRT, mip);
             }
 
             RenderGraphTexture::Desc desc;
@@ -176,7 +176,7 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             desc.format = GfxFormat::R16F;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.exposure = builder.Create<RenderGraphTexture>(desc, "Exposure");
-            data.exposure = builder.Write(data.exposure, GfxResourceState::UnorderedAccess);
+            data.exposure = builder.Write(data.exposure);
         },
         [=](const ExposureData& data, IGfxCommandList* pCommandList)
         {

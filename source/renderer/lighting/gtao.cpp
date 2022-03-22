@@ -81,10 +81,10 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
 
     RENDER_GRAPH_EVENT(pRenderGraph, "GTAO");
 
-    auto gtao_filter_depth_pass = pRenderGraph->AddPass<GTAOFilterDepthPassData>("GTAO filter depth",
+    auto gtao_filter_depth_pass = pRenderGraph->AddPass<GTAOFilterDepthPassData>("GTAO filter depth", RenderPassType::Compute,
         [&](GTAOFilterDepthPassData& data, RenderGraphBuilder& builder)
         {
-            data.inputDepth = builder.Read(depthRT, GfxResourceState::ShaderResourceNonPS);
+            data.inputDepth = builder.Read(depthRT);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -94,27 +94,27 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.usage = GfxTextureUsageUnorderedAccess;
             RenderGraphHandle gtao_depth = builder.Create<RenderGraphTexture>(desc, "GTAO depth(HZB)");
 
-            data.outputDepthMip0 = builder.Write(gtao_depth, GfxResourceState::UnorderedAccess, 0);
-            data.outputDepthMip1 = builder.Write(gtao_depth, GfxResourceState::UnorderedAccess, 1);
-            data.outputDepthMip2 = builder.Write(gtao_depth, GfxResourceState::UnorderedAccess, 2);
-            data.outputDepthMip3 = builder.Write(gtao_depth, GfxResourceState::UnorderedAccess, 3);
-            data.outputDepthMip4 = builder.Write(gtao_depth, GfxResourceState::UnorderedAccess, 4);
+            data.outputDepthMip0 = builder.Write(gtao_depth, 0);
+            data.outputDepthMip1 = builder.Write(gtao_depth, 1);
+            data.outputDepthMip2 = builder.Write(gtao_depth, 2);
+            data.outputDepthMip3 = builder.Write(gtao_depth, 3);
+            data.outputDepthMip4 = builder.Write(gtao_depth, 4);
         },
         [=](const GTAOFilterDepthPassData& data, IGfxCommandList* pCommandList)
         {
             FilterDepth(pCommandList, data, width, height);
         });
 
-    auto gtao_pass = pRenderGraph->AddPass<GTAOPassData>("GTAO",
+    auto gtao_pass = pRenderGraph->AddPass<GTAOPassData>("GTAO", RenderPassType::Compute,
         [&](GTAOPassData& data, RenderGraphBuilder& builder)
         {
-            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip0, GfxResourceState::ShaderResourceNonPS, 0);
-            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip1, GfxResourceState::ShaderResourceNonPS, 1);
-            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip2, GfxResourceState::ShaderResourceNonPS, 2);
-            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip3, GfxResourceState::ShaderResourceNonPS, 3);
-            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip4, GfxResourceState::ShaderResourceNonPS, 4);
+            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip0, 0);
+            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip1, 1);
+            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip2, 2);
+            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip3, 3);
+            data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip4, 4);
 
-            data.inputNormal = builder.Read(normalRT, GfxResourceState::ShaderResourceNonPS);
+            data.inputNormal = builder.Read(normalRT);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -122,22 +122,22 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.format = m_bEnableGTSO ? GfxFormat::R32UI : GfxFormat::R8UI;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO AOTerm");
-            data.outputAOTerm = builder.Write(data.outputAOTerm, GfxResourceState::UnorderedAccess);
+            data.outputAOTerm = builder.Write(data.outputAOTerm);
 
             desc.format = GfxFormat::R8UNORM;
             data.outputEdge = builder.Create<RenderGraphTexture>(desc, "GTAO Edge");
-            data.outputEdge = builder.Write(data.outputEdge, GfxResourceState::UnorderedAccess);
+            data.outputEdge = builder.Write(data.outputEdge);
         },
         [=](const GTAOPassData& data, IGfxCommandList* pCommandList)
         {
             Draw(pCommandList, data, width, height);
         });
 
-    auto gtao_denoise_pass = pRenderGraph->AddPass<GTAODenoisePassData>("GTAO denoise",
+    auto gtao_denoise_pass = pRenderGraph->AddPass<GTAODenoisePassData>("GTAO denoise", RenderPassType::Compute,
         [&](GTAODenoisePassData& data, RenderGraphBuilder& builder)
         {
-            data.inputAOTerm = builder.Read(gtao_pass->outputAOTerm, GfxResourceState::ShaderResourceNonPS);
-            data.inputEdge = builder.Read(gtao_pass->outputEdge, GfxResourceState::ShaderResourceNonPS);
+            data.inputAOTerm = builder.Read(gtao_pass->outputAOTerm);
+            data.inputEdge = builder.Read(gtao_pass->outputEdge);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -145,7 +145,7 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
             desc.format = m_bEnableGTSO ? GfxFormat::R32UI : GfxFormat::R8UI;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO denoised AO");
-            data.outputAOTerm = builder.Write(data.outputAOTerm, GfxResourceState::UnorderedAccess);
+            data.outputAOTerm = builder.Write(data.outputAOTerm);
         },
         [=](const GTAODenoisePassData& data, IGfxCommandList* pCommandList)
         {

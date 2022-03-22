@@ -70,10 +70,10 @@ RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHa
 
     eastl::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y).c_str();
 
-    auto downsample_pass = pRenderGraph->AddPass<DownsamplePassData>(name,
+    auto downsample_pass = pRenderGraph->AddPass<DownsamplePassData>(name, RenderPassType::Compute,
         [&](DownsamplePassData& data, RenderGraphBuilder& builder)
         {
-            data.input = builder.Read(input, GfxResourceState::ShaderResourceNonPS);
+            data.input = builder.Read(input);
 
             RenderGraphTexture::Desc desc;
             desc.width = m_mipSize[mip].x;
@@ -81,7 +81,7 @@ RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHa
             desc.format = GfxFormat::R11G11B10F;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, name);
-            data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
+            data.output = builder.Write(data.output);
         },
         [=](const DownsamplePassData& data, IGfxCommandList* pCommandList)
         {
@@ -104,11 +104,11 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
 
     eastl::string name = fmt::format("Bloom UpsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y).c_str();
 
-    auto upsample_pass = pRenderGraph->AddPass<UpsamplePassData>(name,
+    auto upsample_pass = pRenderGraph->AddPass<UpsamplePassData>(name, RenderPassType::Compute,
         [&](UpsamplePassData& data, RenderGraphBuilder& builder)
         {
-            data.lowInput = builder.Read(lowInput, GfxResourceState::ShaderResourceNonPS);
-            data.highInput = builder.Read(highInput, GfxResourceState::ShaderResourceNonPS);
+            data.lowInput = builder.Read(lowInput);
+            data.highInput = builder.Read(highInput);
 
             RenderGraphTexture::Desc desc;
             desc.width = m_mipSize[mip].x;
@@ -116,7 +116,7 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
             desc.format = GfxFormat::R11G11B10F;
             desc.usage = GfxTextureUsageUnorderedAccess;
             data.output = builder.Create<RenderGraphTexture>(desc, name);
-            data.output = builder.Write(data.output, GfxResourceState::UnorderedAccess);
+            data.output = builder.Write(data.output);
         },
         [=](const UpsamplePassData& data, IGfxCommandList* pCommandList)
         {
