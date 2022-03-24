@@ -27,8 +27,8 @@ private:
 
     void ReprojectDepth(IGfxCommandList* pCommandList, IGfxDescriptor* prevLinearDepthSRV, IGfxTexture* reprojectedDepthTexture, IGfxDescriptor* reprojectedDepthUAV);
     void DilateDepth(IGfxCommandList* pCommandList, IGfxDescriptor* reprojectedDepthSRV, IGfxDescriptor* hzbMip0UAV);
-    void BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture);
-    void InitHZB(IGfxCommandList* pCommandList, IGfxDescriptor* inputDepthSRV, IGfxDescriptor* hzbMip0UAV);
+    void BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture, bool min_max = false);
+    void InitHZB(IGfxCommandList* pCommandList, IGfxDescriptor* inputDepthSRV, IGfxDescriptor* hzbMip0UAV, bool min_max = false);
 
     void ResetCounterBuffer(IGfxCommandList* pCommandList);
 
@@ -39,6 +39,9 @@ private:
     IGfxPipelineState* m_pDepthDilationPSO = nullptr;
     IGfxPipelineState* m_pDepthMipFilterPSO = nullptr;
     IGfxPipelineState* m_pInitHZBPSO = nullptr;
+
+    IGfxPipelineState* m_pInitSceneHZBPSO = nullptr;
+    IGfxPipelineState* m_pDepthMipFilterMinMaxPSO = nullptr;
     
     eastl::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
 

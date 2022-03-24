@@ -77,3 +77,19 @@ void init_hzb(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     ouputDepthTexture[dispatchThreadID.xy] = inputDepthTexture.SampleLevel(minReductionSampler, uv, 0);
 }
+
+[numthreads(8, 8, 1)]
+void init_scene_hzb(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    Texture2D<float> inputDepthTexture = ResourceDescriptorHeap[c_inputSRV];
+    RWTexture2D<float2> ouputDepthTexture = ResourceDescriptorHeap[c_outputUAV];
+    SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
+    SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
+
+    float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_hzbWidth, c_hzbHeight);
+
+    float min = inputDepthTexture.SampleLevel(minReductionSampler, uv, 0);
+    float max = inputDepthTexture.SampleLevel(maxReductionSampler, uv, 0);
+
+    ouputDepthTexture[dispatchThreadID.xy] = float2(min, max);
+}
