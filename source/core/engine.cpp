@@ -4,6 +4,7 @@
 #include "enkiTS/TaskScheduler.h"
 #include "rpmalloc/rpmalloc.h"
 #include "rpmalloc/rpnew.h"
+#include "fmt/format.h"
 
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
@@ -24,8 +25,16 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
     StartProfiler();
 
     enki::TaskSchedulerConfig config;
-    config.profilerCallbacks.threadStart = [](uint32_t) { rpmalloc_thread_initialize(); };
-    config.profilerCallbacks.threadStop = [](uint32_t) { rpmalloc_thread_finalize(1); };
+    config.profilerCallbacks.threadStart = [](uint32_t i) 
+    { 
+        rpmalloc_thread_initialize();
+        MicroProfileOnThreadCreate(fmt::format("Worker Thread {}", i).c_str());
+    };
+    config.profilerCallbacks.threadStop = [](uint32_t) 
+    { 
+        MicroProfileOnThreadExit();
+        rpmalloc_thread_finalize(1); 
+    };
 
     m_pTaskScheduler.reset(new enki::TaskScheduler());
     m_pTaskScheduler->Initialize(config);
@@ -50,8 +59,6 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
 
 void Engine::Shut()
 {
-    ShutdownProfiler();
-
     m_pTaskScheduler->WaitforAllAndShutdown();
     m_pTaskScheduler.reset();
 
@@ -59,6 +66,8 @@ void Engine::Shut()
     m_pEditor.reset();
     m_pGUI.reset();
     m_pRenderer.reset();
+
+    ShutdownProfiler();
 }
 
 void Engine::Tick()

@@ -8,7 +8,7 @@ inline void StartProfiler()
     MicroProfileSetEnableAllGroups(true);
     MicroProfileSetForceMetaCounters(true);
 
-    MicroProfileOnThreadCreate("CPU Main");
+    MicroProfileOnThreadCreate("Main Thread");
 }
 
 inline void ShutdownProfiler()
