@@ -7,7 +7,9 @@
 #include "utils/string.h"
 #include "utils/profiler.h"
 #include "utils/log.h"
+#include "utils/parallel_for.h"
 #include "tinyxml2/tinyxml2.h"
+#include "EASTL/atomic.h"
 
 World::World()
 {
@@ -58,19 +60,9 @@ void World::Tick(float delta_time)
 
     m_pCamera->Tick(delta_time);
 
-    eastl::vector<IVisibleObject*> visibleObjects;
-    const float4* planes = m_pCamera->GetFrustumPlanes();
-
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
     {
-        IVisibleObject* object = (*iter).get();
-
-        object->Tick(delta_time);
-
-        if (object->FrustumCull(planes, 6))
-        {
-            visibleObjects.push_back(object);
-        }
+        (*iter)->Tick(delta_time);
     }
 
     for (auto iter = m_lights.begin(); iter != m_lights.end(); ++iter)
@@ -78,6 +70,20 @@ void World::Tick(float delta_time)
         (*iter)->Tick(delta_time);
     }
 
+    eastl::vector<IVisibleObject*> visibleObjects(m_objects.size());
+    eastl::atomic<uint32_t> visibleCount {0};
+
+    ParallelFor((uint32_t)m_objects.size(), [&](uint32_t i) 
+        {
+            if (m_objects[i]->FrustumCull(m_pCamera->GetFrustumPlanes(), 6))
+            {
+                uint32_t index = visibleCount.fetch_add(1);
+                visibleObjects[index] = m_objects[i].get();
+            }
+        });
+
+    visibleObjects.resize(visibleCount);
+    
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
     for (auto iter = visibleObjects.begin(); iter != visibleObjects.end(); ++iter)
