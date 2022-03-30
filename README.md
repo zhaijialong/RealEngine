@@ -1,6 +1,6 @@
 # RealEngine
 
-My toy engine, mainly for rendering expariment and prototyping. 
+My toy engine, mainly for rendering experiment and prototyping. 
 It requires a GPU which supports DX12 Ultimate with latest driver.
 It is not supposed to be used in production, and prefers clean design and code over being heavily optimized.
 
