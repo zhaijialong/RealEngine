@@ -191,24 +191,23 @@ bool ShaderCache::IsFileIncluded(const IGfxShader* shader, const eastl::string& 
         std::regex r("#include\\s*\"\\s*\\S+.\\S+\\s*\"");
 
         std::smatch result;
-        if (std::regex_search(source, result, r))
+        while (std::regex_search(source, result, r))
         {
-            for (size_t i = 0; i < result.size(); ++i)
+            eastl::string include = result[0].str().c_str();
+
+            size_t first = include.find_first_of('\"');
+            size_t last = include.find_last_of('\"');
+            eastl::string header = include.substr(first + 1, last - first - 1);
+
+            std::filesystem::path path(desc.file.c_str());
+            std::filesystem::path header_path = path.parent_path() / header.c_str();
+
+            if (std::filesystem::absolute(header_path).string().c_str() == file)
             {
-                eastl::string include = result[i].str().c_str();
-
-                size_t first = include.find_first_of('\"');
-                size_t last = include.find_last_of('\"');
-                eastl::string header = include.substr(first + 1, last - first - 1);
-
-                std::filesystem::path path(desc.file.c_str());
-                std::filesystem::path header_path = path.parent_path() / header.c_str();
-
-                if (std::filesystem::absolute(header_path).string().c_str() == file)
-                {
-                    return true;
-                }
+                return true;
             }
+
+            source = result.suffix();
         }
     }
 
