@@ -11,6 +11,8 @@ cbuffer CB1 : register(b1)
     uint c_depthRT;
     uint c_directLightingRT;
     uint c_aoRT;
+    uint c_indirectSprcularRT;
+
     uint c_outputRT;
 };
 
@@ -62,8 +64,14 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     //todo : realtime GI
     float3 indirect_diffuse = DiffuseIBL(N);
+
+#if SPECULAR_GI
+    Texture2D indirectSprcularRT = ResourceDescriptorHeap[c_indirectSprcularRT];
+    float3 indirect_specular = SpecularIBL(indirectSprcularRT[pos].xyz, N, V, roughness, specular);
+#else
     float3 indirect_specular = SpecularIBL(N, V, roughness, specular);
-    
+#endif
+
 #if GTAO && GTSO
     bentNormal = normalize(mul(CameraCB.mtxViewInverse, float4(bentNormal, 0.0)).xyz);
     float3 R = reflect(-V, N);

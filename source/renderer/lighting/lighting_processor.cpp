@@ -12,7 +12,7 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pReflection = eastl::make_unique<HybridStochasticReflection>(pRenderer);
 }
 
-RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle velocity, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");
 
@@ -25,13 +25,13 @@ RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGra
     RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
     RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, velocity, width, height);
     RenderGraphHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, depth, shadow, width, height);
-    RenderGraphHandle indirect_specular = m_pReflection->Render(pRenderGraph, width, height);
+    RenderGraphHandle indirect_specular = m_pReflection->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
     //RenderGraphHandle indirect_diffuse = todo : diffuse GI
 
-    return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, width, height);
+    return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, indirect_specular, width, height);
 }
 
-RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting, RenderGraphHandle indirect_specular, uint32_t width, uint32_t height)
 {
     struct CompositeLightData
     {
@@ -59,13 +59,17 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             data.normalRT = builder.Read(pBasePass->GetNormalRT());
             data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT());
             data.depthRT = builder.Read(depth);
+            data.directLighting = builder.Read(direct_lighting);
 
             if (ao.IsValid())
             {
                 data.ao = builder.Read(ao);
             }
 
-            data.directLighting = builder.Read(direct_lighting);
+            if (indirect_specular.IsValid())
+            {
+                data.indirectSpecular = builder.Read(indirect_specular);
+            }            
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -84,6 +88,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             RenderGraphTexture* directLightingRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.directLighting);
             RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
             RenderGraphTexture* aoRT = nullptr;
+            RenderGraphTexture* indirectSpecularRT = nullptr;
 
             eastl::vector<eastl::string> defines;
             if (data.ao.IsValid())
@@ -96,6 +101,12 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
                 {
                     defines.push_back("GTSO=1");
                 }
+            }
+
+            if (data.indirectSpecular.IsValid())
+            {
+                indirectSpecularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.indirectSpecular);
+                defines.push_back("SPECULAR_GI=1");
             }
 
             switch (m_pRenderer->GetOutputType())
@@ -147,6 +158,8 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
                 uint depthRT;
                 uint directLightingRT;
                 uint aoRT;
+                uint indirectSprcularRT;
+
                 uint outputRT;
             };
 
@@ -160,6 +173,10 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             if (aoRT)
             {
                 cb1.aoRT = aoRT->GetSRV()->GetHeapIndex();
+            }
+            if (indirectSpecularRT)
+            {
+                cb1.indirectSprcularRT = indirectSpecularRT->GetSRV()->GetHeapIndex();
             }
             cb1.outputRT = outputRT->GetUAV()->GetHeapIndex();
 

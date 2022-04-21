@@ -10,10 +10,11 @@ class LightingProcessor
 public:
     LightingProcessor(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle velocity, uint32_t width, uint32_t height);
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle velocity, uint32_t width, uint32_t height);
     
 private:
-    RenderGraphHandle CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting, uint32_t width, uint32_t height);
+    RenderGraphHandle CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting, 
+        RenderGraphHandle indirect_specular, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer;

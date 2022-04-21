@@ -1020,9 +1020,6 @@
     <ClInclude Include="source\renderer\lighting\reflection_denoiser.h">
       <Filter>source\renderer\lighting</Filter>
     </ClInclude>
-    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-sssr\ffx_sssr.h">
-      <Filter>shaders\hybrid_stochastic_reflection\ffx-sssr</Filter>
-    </ClInclude>
     <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_config.h">
       <Filter>shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr</Filter>
     </ClInclude>
@@ -1037,6 +1034,9 @@
     </ClInclude>
     <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_common.h">
       <Filter>shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\ffx_sssr.h">
+      <Filter>shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1154,9 +1154,6 @@
     <Filter Include="shaders\hybrid_stochastic_reflection">
       <UniqueIdentifier>{2ca06c54-0668-4983-b1c7-5c9d37bbb113}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders\hybrid_stochastic_reflection\ffx-sssr">
-      <UniqueIdentifier>{c738fd1a-6920-4e8f-941b-c670e8bd5322}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr">
       <UniqueIdentifier>{e8781113-f22e-46b9-8709-10ade299657e}</UniqueIdentifier>
     </Filter>
@@ -1225,6 +1222,9 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\tone_mapping.hlsli">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\screen_space_ray_trace.hlsli">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
@@ -1342,6 +1342,9 @@
     </FxCompile>
     <FxCompile Include="shaders\ray_traced_shadow\ray_trace.hlsl">
       <Filter>shaders\ray_traced_shadow</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\hybrid_stochastic_reflection\ssr.hlsl">
+      <Filter>shaders\hybrid_stochastic_reflection</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

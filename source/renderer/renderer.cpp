@@ -225,8 +225,10 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
     RenderGraphHandle firstPhaseHZBHandle = m_pHZB->Get1stPhaseCullingHZBMip(0);
     RenderGraphHandle secondPhaseHZBHandle = m_pHZB->Get2ndPhaseCullingHZBMip(0);
+    RenderGraphHandle sceneHZBHanlde = m_pHZB->GetSceneHZBMip(0);
     RenderGraphTexture* firstPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(firstPhaseHZBHandle);
     RenderGraphTexture* secondPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(secondPhaseHZBHandle);
+    RenderGraphTexture* sceneHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(sceneHZBHanlde);
 
     RenderGraphHandle occlusionCulledMeshletsBufferHandle = m_pBasePass->GetSecondPhaseMeshletListBuffer();
     RenderGraphHandle occlusionCulledMeshletsCounterBufferHandle = m_pBasePass->GetSecondPhaseMeshletListCounterBuffer();
@@ -254,6 +256,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.HZBHeight = m_pHZB->GetHZBHeight();
     sceneCB.firstPhaseCullingHZBSRV = firstPhaseHZBTexture->GetSRV()->GetHeapIndex();
     sceneCB.secondPhaseCullingHZBSRV = secondPhaseHZBTexture->GetSRV()->GetHeapIndex();
+    sceneCB.sceneHZBSRV = sceneHZBTexture->IsUsed() ? sceneHZBTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
     sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
     sceneCB.debugTextCounterBufferUAV = m_pGpuDebugPrint->GetTextCounterBufferUAV()->GetHeapIndex();

@@ -9,7 +9,7 @@ cbuffer PathTracingConstants : register(b1)
     uint c_specularRT;
     uint c_normalRT;
     uint c_emissiveRT;
-    uint c_depthTRT;
+    uint c_depthRT;
 
     uint c_maxRayLength;
     uint c_outputTexture;
@@ -29,7 +29,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D specularRT = ResourceDescriptorHeap[c_specularRT];
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     Texture2D<float3> emissiveRT = ResourceDescriptorHeap[c_emissiveRT];
-    Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthTRT];
+    Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthRT];
     RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 
     float depth = depthRT[dispatchThreadID.xy];

@@ -255,23 +255,28 @@ bool OcclusionCull(Texture2D<float> hzbTexture, uint2 hzbSize, float3 center, fl
     return visible;
 }
 
+float3 SpecularIBL(float3 radiance, float3 N, float3 V, float roughness, float3 specular)
+{
+    Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.preintegratedGFTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    
+    float NdotV = saturate(dot(N, V));
+    float2 preintegratedGF = brdfTexture.Sample(linearSampler, float2(NdotV, roughness)).xy;
+    
+    return radiance * (specular * preintegratedGF.x + preintegratedGF.y);
+}
+
 float3 SpecularIBL(float3 N, float3 V, float roughness, float3 specular)
 {
     TextureCube envTexture = ResourceDescriptorHeap[SceneCB.skySpecularIBLTexture];
-    Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.preintegratedGFTexture];
-    
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
-    SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     
     const float MAX_LOD = 7.0; //8 mips
 
     float3 R = reflect(-V, N);
     float3 prefilteredColor = envTexture.SampleLevel(linearSampler, R, roughness * MAX_LOD).rgb;
     
-    float NdotV = saturate(dot(N, V));
-    float2 preintegratedGF = brdfTexture.Sample(pointSampler, float2(NdotV, roughness)).xy;
-
-    return prefilteredColor * (specular * preintegratedGF.x + preintegratedGF.y);
+    return SpecularIBL(prefilteredColor, N, V, roughness, specular);
 }
 
 float3 DiffuseIBL(float3 N)

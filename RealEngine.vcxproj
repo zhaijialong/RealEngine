@@ -323,13 +323,13 @@
     <ClInclude Include="shaders\ffx_a.h" />
     <ClInclude Include="shaders\ffx_cas.h" />
     <ClInclude Include="shaders\ffx_spd.h" />
+    <ClInclude Include="shaders\ffx_sssr.h" />
     <ClInclude Include="shaders\fxaa.hlsli" />
     <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_common.h" />
     <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_config.h" />
     <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_prefilter.h" />
     <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_reproject.h" />
     <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-reflection-dnsr\ffx_denoiser_reflections_resolve_temporal.h" />
-    <ClInclude Include="shaders\hybrid_stochastic_reflection\ffx-sssr\ffx_sssr.h" />
     <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_filter.h" />
     <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_prepare.h" />
     <ClInclude Include="shaders\ray_traced_shadow\ffx-shadows-dnsr\ffx_denoiser_shadows_tileclassification.h" />
@@ -458,6 +458,7 @@
     <None Include="shaders\model_constants.hlsli" />
     <None Include="shaders\random.hlsli" />
     <None Include="shaders\ray_trace.hlsli" />
+    <None Include="shaders\screen_space_ray_trace.hlsli" />
     <None Include="shaders\stats.hlsli" />
     <None Include="shaders\tone_mapping.hlsli" />
     <None Include="shaders\XeGTAO.hlsli" />
@@ -513,6 +514,10 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\hybrid_stochastic_reflection\ssr.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

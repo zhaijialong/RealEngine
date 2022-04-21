@@ -163,4 +163,22 @@ namespace rt
 
         return material;
     }
+    
+    float3 Shade(HitInfo hitInfo, MaterialData material, float3 V)
+    {
+        RayDesc ray;
+        ray.Origin = hitInfo.position + material.worldNormal * 0.01;
+        ray.Direction = SceneCB.lightDir;
+        ray.TMin = 0.00001;
+        ray.TMax = 1000.0;
+        float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
+        float3 direct_lighting = BRDF(SceneCB.lightDir, V, material.worldNormal, material.diffuse, material.specular, material.roughness) * visibility;
+        
+        float3 indirect_diffuse = DiffuseIBL(material.worldNormal) * material.diffuse;
+        float3 indirect_specular = SpecularIBL(material.worldNormal, V, material.roughness, material.specular);
+
+        float3 radiance = material.emissive + direct_lighting + indirect_diffuse + indirect_specular;
+        return radiance;
+    }
+
 }

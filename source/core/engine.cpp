@@ -62,12 +62,12 @@ void Engine::Shut()
     m_pTaskScheduler->WaitforAllAndShutdown();
     m_pTaskScheduler.reset();
 
+    ShutdownProfiler();
+
     m_pWorld.reset();
     m_pEditor.reset();
     m_pGUI.reset();
     m_pRenderer.reset();
-
-    ShutdownProfiler();
 }
 
 void Engine::Tick()
