@@ -6,6 +6,7 @@
 HybridStochasticReflection::HybridStochasticReflection(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
+    m_pDenoiser = eastl::make_unique<ReflectionDenoiser>(pRenderer);
 
     GfxComputePipelineDesc desc;
     desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/ssr.hlsl", "main", "cs_6_6", {});
@@ -18,6 +19,8 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         [&]()
         {
             ImGui::Checkbox("Enable##HSR", &m_bEnable);
+            ImGui::Checkbox("Half Resolution##HSR", &m_bHalfResolution);
+            ImGui::Checkbox("Enable Denoiser##HSR", &m_bEnableDenoiser);
         });
 
     if (!m_bEnable)
@@ -63,23 +66,21 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         {
             RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
             RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
-            RenderGraphTexture* sceneHZB = (RenderGraphTexture*)pRenderGraph->GetResource(data.sceneHZB);
             RenderGraphTexture* velocity = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocity);
             RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
-            SSR(pCommandList, normal->GetSRV(), depth->GetSRV(), sceneHZB->GetSRV(), velocity->GetSRV(), output->GetUAV(), width, height);
+            SSR(pCommandList, normal->GetSRV(), depth->GetSRV(), velocity->GetSRV(), output->GetUAV(), width, height);
         });
     
     return ssr_pass->output;
 }
 
-void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* hzb, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, uint32_t width, uint32_t height)
+void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pSSRPSO);
 
-    uint constants[6] = {
+    uint constants[5] = {
         normal->GetHeapIndex(),
         depth->GetHeapIndex(),
-        hzb->GetHeapIndex(),
         velocity->GetHeapIndex(),
         m_pRenderer->GetPrevSceneColorTexture()->GetSRV()->GetHeapIndex(),
         outputUAV->GetHeapIndex()

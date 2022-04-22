@@ -1346,6 +1346,24 @@
     <FxCompile Include="shaders\hybrid_stochastic_reflection\ssr.hlsl">
       <Filter>shaders\hybrid_stochastic_reflection</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\hybrid_stochastic_reflection\classify_tiles.hlsl">
+      <Filter>shaders\hybrid_stochastic_reflection</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\hybrid_stochastic_reflection\denoiser_prefilter.hlsl">
+      <Filter>shaders\hybrid_stochastic_reflection</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\hybrid_stochastic_reflection\denoiser_reproject.hlsl">
+      <Filter>shaders\hybrid_stochastic_reflection</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\hybrid_stochastic_reflection\denoiser_resolve_temporal.hlsl">
+      <Filter>shaders\hybrid_stochastic_reflection</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\hybrid_stochastic_reflection\ray_trace.hlsl">
+      <Filter>shaders\hybrid_stochastic_reflection</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\hybrid_stochastic_reflection\prepare_indirect_args.hlsl">
+      <Filter>shaders\hybrid_stochastic_reflection</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">

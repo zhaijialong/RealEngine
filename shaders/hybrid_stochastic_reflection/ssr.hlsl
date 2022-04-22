@@ -8,7 +8,6 @@ cbuffer CB : register(b1)
 {
     uint c_normalRT;
     uint c_depthRT;
-    uint c_sceneHZB;
     uint c_velocityRT;
     uint c_prevSceneColorTexture;
     uint c_outputTexture;
