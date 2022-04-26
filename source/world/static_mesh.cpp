@@ -53,6 +53,11 @@ bool StaticMesh::Create()
 
 void StaticMesh::Tick(float delta_time)
 {
+    if (m_pMaterial->IsAlphaBlend())
+    {
+        return; //todo
+    }
+
     UpdateConstants();
 
     GfxRayTracingInstanceFlag flags = m_pMaterial->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
