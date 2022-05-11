@@ -65,25 +65,27 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 diffuse, float3 specular, float
 }
 
 template<typename T>
-T LinearToSrgbChannel(T lin)
+T LinearToSrgbChannel(T color)
 {
-    if (lin < 0.00313067)
-        return lin * 12.92;
-    return pow(lin, (1.0 / 2.4)) * 1.055 - 0.055;
+    return color < 0.00313067 ? color * 12.92 : pow(color, (1.0 / 2.4)) * 1.055 - 0.055;
 }
 
 template<typename T>
-T LinearToSrgb(T lin)
+T SrgbToLinearChannel(T color)
 {
-    return T(LinearToSrgbChannel(lin.r), LinearToSrgbChannel(lin.g), LinearToSrgbChannel(lin.b));
+    return color > 0.04045 ? pow(color * (1.0 / 1.055) + 0.0521327, 2.4) : color * (1.0 / 12.92);
 }
 
 template<typename T>
-T SrgbToLinear(T Color)
+T LinearToSrgb(T color)
 {
-    Color = max(6.10352e-5, Color);
-    //return Color > 0.04045 ? pow(Color * (1.0 / 1.055) + 0.0521327, 2.4) : Color * (1.0 / 12.92);
-    return lerp(Color * (1.0 / 12.92), pow(Color * (1.0 / 1.055) + 0.0521327, 2.4), Color > 0.04045);
+    return T(LinearToSrgbChannel(color.r), LinearToSrgbChannel(color.g), LinearToSrgbChannel(color.b));
+}
+
+template<typename T>
+T SrgbToLinear(T color)
+{
+    return T(SrgbToLinearChannel(color.r), SrgbToLinearChannel(color.g), SrgbToLinearChannel(color.b));
 }
 
 float3 RGBToYCbCr(float3 color)
