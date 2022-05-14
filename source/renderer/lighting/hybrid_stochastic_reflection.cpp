@@ -9,6 +9,12 @@ HybridStochasticReflection::HybridStochasticReflection(Renderer* pRenderer)
     m_pDenoiser = eastl::make_unique<ReflectionDenoiser>(pRenderer);
 
     GfxComputePipelineDesc desc;
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/classify_tiles.hlsl", "main", "cs_6_6", {});
+    m_pTileClassificationPSO = pRenderer->GetPipelineState(desc, "HSR classify tiles PSO");
+
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/prepare_indirect_args.hlsl", "main", "cs_6_6", {});
+    m_pPrepareIndirectArgsPSO = pRenderer->GetPipelineState(desc, "HSR prepare indirect args PSO");
+
     desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/ssr.hlsl", "main", "cs_6_6", {});
     m_pSSRPSO = pRenderer->GetPipelineState(desc, "SSR PSO");
 }
@@ -21,6 +27,11 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             ImGui::Checkbox("Enable##HSR", &m_bEnable);
             ImGui::Checkbox("Half Resolution##HSR", &m_bHalfResolution);
             ImGui::Checkbox("Enable Denoiser##HSR", &m_bEnableDenoiser);
+
+            ImGui::Text("Samples Per Quad : "); ImGui::SameLine();
+            ImGui::RadioButton("1##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 1); ImGui::SameLine();
+            ImGui::RadioButton("2##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 2); ImGui::SameLine();
+            ImGui::RadioButton("4##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 4); ImGui::SameLine();
         });
 
     if (!m_bEnable)
@@ -30,7 +41,85 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
 
     RENDER_GRAPH_EVENT(pRenderGraph, "HybridStochasticReflection");
 
-    HZB* pHZB = m_pRenderer->GetHZB();
+    struct TileClassificationData
+    {
+        RenderGraphHandle depth;
+        RenderGraphHandle normal;
+
+        RenderGraphHandle rayListBuffer;
+        RenderGraphHandle tileListBuffer;
+        RenderGraphHandle rayCounterBuffer;
+    };
+
+    auto tile_classification_pass = pRenderGraph->AddPass<TileClassificationData>("HSR - tile classification", RenderPassType::Compute,
+        [&](TileClassificationData& data, RenderGraphBuilder& builder)
+        {
+            data.depth = builder.Read(depth);
+            data.normal = builder.Read(normal);
+
+            RenderGraphBuffer::Desc desc;
+            desc.stride = sizeof(uint32_t);
+            desc.size = sizeof(uint32_t) * 2;
+            desc.format = GfxFormat::R32UI;
+            desc.usage = GfxBufferUsageTypedBuffer;
+            data.rayCounterBuffer = builder.Create<RenderGraphBuffer>(desc, "HSR ray counter");
+            data.rayCounterBuffer = builder.Write(data.rayCounterBuffer);
+
+            desc.size = sizeof(uint32_t) * width * height;
+            data.rayListBuffer = builder.Create<RenderGraphBuffer>(desc, "HSR ray list");
+            data.rayListBuffer = builder.Write(data.rayListBuffer);
+
+            uint32_t tile_count_x = (width + 7) / 8;
+            uint32_t tile_count_y = (height + 7) / 8;
+            desc.size = sizeof(uint32_t) * tile_count_x * tile_count_y;
+            data.tileListBuffer = builder.Create<RenderGraphBuffer>(desc, "HSR tile list");
+            data.tileListBuffer = builder.Write(data.tileListBuffer);
+        },
+        [=](const TileClassificationData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
+            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
+            RenderGraphBuffer* rayListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayListBuffer);
+            RenderGraphBuffer* tileListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileListBuffer);
+            RenderGraphBuffer* rayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayCounterBuffer);
+
+            uint32_t clear_value[4] = { 0, 0, 0, 0 };
+            pCommandList->ClearUAV(rayCounterBuffer->GetBuffer(), rayCounterBuffer->GetUAV(), clear_value);
+            pCommandList->UavBarrier(rayCounterBuffer->GetBuffer());
+
+            ClassifyTiles(pCommandList, depth->GetSRV(), normal->GetSRV(), rayListBuffer->GetUAV(), tileListBuffer->GetUAV(), rayCounterBuffer->GetUAV(), width, height);
+        });
+
+    struct PrepareIndirectArgsData
+    {
+        RenderGraphHandle rayCounterBuffer;
+        RenderGraphHandle indirectArgsBuffer;
+        RenderGraphHandle denoiserArgsBuffer;
+    };
+
+    auto prepare_indirect_args_pass = pRenderGraph->AddPass<PrepareIndirectArgsData>("HSR - prepare indirect args", RenderPassType::Compute,
+        [&](PrepareIndirectArgsData& data, RenderGraphBuilder& builder)
+        {
+            data.rayCounterBuffer = builder.Read(tile_classification_pass->rayCounterBuffer);
+
+            RenderGraphBuffer::Desc desc;
+            desc.size = sizeof(uint32_t) * 3; //todo : add more space for denoiser args
+            desc.stride = sizeof(uint32_t);
+            desc.format = GfxFormat::R32UI;
+            desc.usage = GfxBufferUsageTypedBuffer;
+            data.indirectArgsBuffer = builder.Create<RenderGraphBuffer>(desc, "HSR indirect args");
+            data.indirectArgsBuffer = builder.Write(data.indirectArgsBuffer);
+
+            data.denoiserArgsBuffer = builder.Create<RenderGraphBuffer>(desc, "HSR denoiser indirect args");
+            data.denoiserArgsBuffer = builder.Write(data.denoiserArgsBuffer);
+        },
+        [=](const PrepareIndirectArgsData& data, IGfxCommandList* pCommandList)
+        {
+            RenderGraphBuffer* rayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayCounterBuffer);
+            RenderGraphBuffer* indirectArgsBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgsBuffer);
+            RenderGraphBuffer* denoiserArgsBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.denoiserArgsBuffer);
+            PrepareIndirectArgs(pCommandList, rayCounterBuffer->GetSRV(), indirectArgsBuffer->GetUAV(), denoiserArgsBuffer->GetUAV());
+        });
 
     struct SSRData
     {
@@ -40,9 +129,13 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle velocity;
         RenderGraphHandle prevSceneColor;
         RenderGraphHandle output;
+
+        RenderGraphHandle rayCounterBufferSRV;
+        RenderGraphHandle rayListBufferSRV;
+        RenderGraphHandle indirectArgsBuffer;
     };
 
-    auto ssr_pass = pRenderGraph->AddPass<SSRData>("SSR", RenderPassType::Compute,
+    auto ssr_pass = pRenderGraph->AddPass<SSRData>("HSR - SSR", RenderPassType::Compute,
         [&](SSRData& data, RenderGraphBuilder& builder)
         {
             data.normal = builder.Read(normal);
@@ -50,6 +143,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             data.velocity = builder.Read(velocity);
             data.prevSceneColor = builder.Read(m_pRenderer->GetPrevSceneColorHandle());
 
+            HZB* pHZB = m_pRenderer->GetHZB();
             for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
             {
                 data.sceneHZB = builder.Read(pHZB->GetSceneHZBMip(i), i);
@@ -61,6 +155,10 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             desc.format = GfxFormat::R11G11B10F;
             data.output = builder.Create<RenderGraphTexture>(desc, "SSR output");
             data.output = builder.Write(data.output);
+
+            data.rayCounterBufferSRV = builder.Read(tile_classification_pass->rayCounterBuffer);
+            data.rayListBufferSRV = builder.Read(tile_classification_pass->rayListBuffer);
+            data.indirectArgsBuffer = builder.ReadIndirectArg(prepare_indirect_args_pass->indirectArgsBuffer);
         },
         [=](const SSRData& data, IGfxCommandList* pCommandList)
         {
@@ -68,17 +166,55 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
             RenderGraphTexture* velocity = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocity);
             RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
-            SSR(pCommandList, normal->GetSRV(), depth->GetSRV(), velocity->GetSRV(), output->GetUAV(), width, height);
+            RenderGraphBuffer* rayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayCounterBufferSRV);
+            RenderGraphBuffer* rayListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayListBufferSRV);
+            RenderGraphBuffer* indirectArgsBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgsBuffer);
+            SSR(pCommandList, normal->GetSRV(), depth->GetSRV(), velocity->GetSRV(), output->GetUAV(), rayCounterBuffer->GetSRV(), rayListBuffer->GetSRV(), indirectArgsBuffer->GetBuffer());
         });
     
-    return ssr_pass->output;
+    if (m_bEnableDenoiser)
+    {
+        return m_pDenoiser->Render(pRenderGraph, prepare_indirect_args_pass->denoiserArgsBuffer, tile_classification_pass->tileListBuffer, ssr_pass->output, width, height);
+    }
+    else
+    {
+        return ssr_pass->output;
+    }
 }
 
-void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, uint32_t width, uint32_t height)
+void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* rayListUAV, IGfxDescriptor* tileListUAV, IGfxDescriptor* rayCounterUAV, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pTileClassificationPSO);
+
+    uint32_t constants[6] = {
+        depth->GetHeapIndex(),
+        normal->GetHeapIndex(),
+        rayListUAV->GetHeapIndex(),
+        tileListUAV->GetHeapIndex(),
+        rayCounterUAV->GetHeapIndex(),
+        m_samplesPerQuad
+    };
+    pCommandList->SetComputeConstants(1, constants, sizeof(constants));
+
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+}
+
+void HybridStochasticReflection::PrepareIndirectArgs(IGfxCommandList* pCommandList, IGfxDescriptor* rayCounterSRV, IGfxDescriptor* indirectArgsUAV, IGfxDescriptor* denoiserArgsUAV)
+{
+    pCommandList->SetPipelineState(m_pPrepareIndirectArgsPSO);
+
+    uint32_t constants[3] = { rayCounterSRV->GetHeapIndex(), indirectArgsUAV->GetHeapIndex(), denoiserArgsUAV->GetHeapIndex()};
+    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
+    pCommandList->Dispatch(1, 1, 1);
+}
+
+void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, IGfxDescriptor* rayCounter, IGfxDescriptor* rayList, IGfxBuffer* indirectArgs)
 {
     pCommandList->SetPipelineState(m_pSSRPSO);
 
-    uint constants[5] = {
+    uint constants[7] = {
+        rayCounter->GetHeapIndex(),
+        rayList->GetHeapIndex(),
         normal->GetHeapIndex(),
         depth->GetHeapIndex(),
         velocity->GetHeapIndex(),
@@ -87,5 +223,5 @@ void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, IGfxDescript
     };
 
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->DispatchIndirect(indirectArgs, 0);
 }

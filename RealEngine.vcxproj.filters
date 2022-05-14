@@ -1227,6 +1227,9 @@
     <None Include="shaders\screen_space_ray_trace.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\hybrid_stochastic_reflection\hsr_common.hlsli">
+      <Filter>shaders\hybrid_stochastic_reflection</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

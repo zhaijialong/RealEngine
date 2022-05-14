@@ -1,3 +1,4 @@
+#include "hsr_common.hlsli"
 #include "../random.hlsli"
 #include "../importance_sampling.hlsli"
 #include "../ray_trace.hlsli"
@@ -6,11 +7,13 @@
 
 cbuffer CB : register(b1)
 {
+    uint c_rayCounterBufferSRV;
+    uint c_rayListBufferSRV;
     uint c_normalRT;
     uint c_depthRT;
     uint c_velocityRT;
     uint c_prevSceneColorTexture;
-    uint c_outputTexture;
+    uint c_outputTexture;    
 }
 
 //based on FFX_SSSR_ValidateHit
@@ -53,31 +56,39 @@ bool ValidateHit(ssrt::HitInfo hitInfo, float2 uv, float3 ray_direction)
 }
 
 [numthreads(8, 8, 1)]
-void main(uint3 dispatchThreadID : SV_DispatchThreadID)
+void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
 {
+    uint ray_index = group_id * 64 + group_index;
+    
+    Buffer<uint> rayCounterBuffer = ResourceDescriptorHeap[c_rayCounterBufferSRV];
+    if (ray_index > rayCounterBuffer[0])
+    {
+        return;
+    }
+    
+    Buffer<uint> rayListBuffer = ResourceDescriptorHeap[c_rayListBufferSRV];
+    uint packed_coords = rayListBuffer[ray_index];
+    
+    int2 coords;
+    bool copy_horizontal;
+    bool copy_vertical;
+    bool copy_diagonal;
+    UnpackRayCoords(packed_coords, coords, copy_horizontal, copy_vertical, copy_diagonal);
+    
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthRT];
     RWTexture2D<float3> outputTexture = ResourceDescriptorHeap[c_outputTexture];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
 
-    float2 uv = GetScreenUV(dispatchThreadID.xy);
+    float2 uv = GetScreenUV(coords);
     
-    float depth = depthRT[dispatchThreadID.xy];
-    if (depth == 0.0)
-    {
-        outputTexture[dispatchThreadID.xy] = float3(0.0, 0.0, 0.0);
-        return;
-    }
-    
-    SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
-    //depth = depthRT.SampleLevel(maxReductionSampler, uv, 0);
-
-    float3 position = GetWorldPosition(dispatchThreadID.xy, depth);
+    float depth = depthRT[coords];
+    float3 position = GetWorldPosition(coords, depth);
     float3 V = normalize(CameraCB.cameraPos - position);
-    float3 N = OctNormalDecode(normalRT[dispatchThreadID.xy].xyz);
-    float roughness = normalRT[dispatchThreadID.xy].w;
+    float3 N = OctNormalDecode(normalRT[coords].xyz);
+    float roughness = normalRT[coords].w;
 
-    BNDS<1> bnds = BNDS<1>::Create(dispatchThreadID.xy, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
+    BNDS<1> bnds = BNDS<1>::Create(coords, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
 
     float3 H = SampleGGXVNDF(bnds.RandomFloat2(0), roughness, N, V);
     float3 direction = reflect(-V, H);
@@ -124,5 +135,22 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         }        
     }
     
-    outputTexture[dispatchThreadID.xy] = radiance;
+    outputTexture[coords] = radiance;
+
+    uint2 copy_target = coords ^ 0b1; // Flip last bit to find the mirrored coords along the x and y axis within a quad.
+    if (copy_horizontal) 
+    {
+        uint2 copy_coords = uint2(copy_target.x, coords.y);
+        outputTexture[copy_coords] = radiance;
+    }
+    if (copy_vertical) 
+    {
+        uint2 copy_coords = uint2(coords.x, copy_target.y);
+        outputTexture[copy_coords] = radiance;
+    }
+    if (copy_diagonal) 
+    {
+        uint2 copy_coords = copy_target;
+        outputTexture[copy_coords] = radiance;
+    }
 }

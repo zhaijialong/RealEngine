@@ -63,17 +63,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     windowClass.lpszClassName = L"REWindowClass";
     RegisterClassEx(&windowClass);
 
-    const unsigned int window_width = 1920;
-    const unsigned int window_height = 1080;
+    RECT desktopRect;
+    GetClientRect(GetDesktopWindow(), &desktopRect);
+
+    const unsigned int desktop_width = desktopRect.right - desktopRect.left;
+    const unsigned int desktop_height = desktopRect.bottom - desktopRect.top;
+
+    const unsigned int window_width = desktop_width > 1920 ? 1920 : 1600;
+    const unsigned int window_height = desktop_height > 1080 ? 1080 : 900;
 
     RECT windowRect = { 0, 0, window_width, window_height };
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
-    RECT desktopRect;
-    GetClientRect(GetDesktopWindow(), &desktopRect);
-
-    int x = ((desktopRect.right - desktopRect.left) - (windowRect.right - windowRect.left)) / 2;
-    int y = ((desktopRect.bottom - desktopRect.top) - (windowRect.bottom - windowRect.top)) / 2;
+    int x = (desktop_width - (windowRect.right - windowRect.left)) / 2;
+    int y = (desktop_height - (windowRect.bottom - windowRect.top)) / 2;
 
     HWND hwnd = CreateWindow(
         windowClass.lpszClassName,

@@ -76,5 +76,5 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* diffu
     cb.shadowRT = shadow->GetHeapIndex();
     cb.outputRT = output->GetHeapIndex();
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
-    pCommandList->Dispatch((width + 7) / 8, (width + 7) / 8, 1);
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
