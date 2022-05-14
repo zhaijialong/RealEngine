@@ -76,14 +76,7 @@ void GpuDrivenDebugPrint::Draw(IGfxCommandList* pCommandList)
     uint32_t root_consts[4] = { 0 , m_pTextCounterBuffer->GetSRV()->GetHeapIndex(), m_pTextBuffer->GetSRV()->GetHeapIndex(), m_pFontTexture->GetSRV()->GetHeapIndex() };
     pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
 
-    if (m_pRenderer->GetDevice()->GetVendor() == GfxVendor::AMD)
-    {
-        pCommandList->DispatchMesh(100, 1, 1); //todo : rx6600 crashes if indirect dispatchmesh used
-    }
-    else
-    {
-        pCommandList->DispatchMeshIndirect(m_pDrawArugumentsBuffer->GetBuffer(), 0);
-    }
+    pCommandList->DispatchMeshIndirect(m_pDrawArugumentsBuffer->GetBuffer(), 0);
 }
 
 void GpuDrivenDebugPrint::CreateFontTexture()

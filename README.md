@@ -32,24 +32,8 @@ It is not supposed to be used in production, and prefers clean design and code o
 
 ## AMD related issues
 
-tested on RX6600(win11, Adrenalin 21.12.1)
+tested on RX6600(win11, Adrenalin 22.10.01.03)
 
-* indirect DispatchMesh results in GPU hang after a few seconds
-    ```cpp
-    void GpuDrivenDebugPrint::Draw(IGfxCommandList* pCommandList)
-    {
-        ...
-
-        if (m_pRenderer->GetDevice()->GetVendor() == GfxVendor::AMD)
-        {
-            pCommandList->DispatchMesh(100, 1, 1);
-        }
-        else
-        {
-            pCommandList->DispatchMeshIndirect(m_pDrawArugumentsBuffer->GetBuffer(), 0);
-        }
-    }
-    ```
 * using `SV_IsFrontFace` in an AS-MS-PS combine results in `DXGI_ERROR_DRIVER_INTERNAL_ERROR` when creating the PSO
     ```
     D3D12: Removing Device.
