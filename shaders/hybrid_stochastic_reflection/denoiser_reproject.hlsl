@@ -20,7 +20,7 @@ void main(int2 group_thread_id : SV_GroupThreadID,
     uint2 remapped_dispatch_thread_id = dispatch_group_id * 8 + remapped_group_thread_id;
     
     Texture2D inputTexture = ResourceDescriptorHeap[c_inputTexture];
-    RWTexture2D<float3> ouputTexture = ResourceDescriptorHeap[c_ouputTexture];
+    RWTexture2D<float4> ouputTexture = ResourceDescriptorHeap[c_ouputTexture];
 
-    ouputTexture[remapped_dispatch_thread_id] = inputTexture[remapped_dispatch_thread_id].xyz;
+    ouputTexture[remapped_dispatch_thread_id] = inputTexture[remapped_dispatch_thread_id];
 }

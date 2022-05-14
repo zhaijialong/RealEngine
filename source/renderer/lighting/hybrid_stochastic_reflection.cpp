@@ -103,7 +103,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             data.rayCounterBuffer = builder.Read(tile_classification_pass->rayCounterBuffer);
 
             RenderGraphBuffer::Desc desc;
-            desc.size = sizeof(uint32_t) * 3; //todo : add more space for denoiser args
+            desc.size = sizeof(uint32_t) * 3;
             desc.stride = sizeof(uint32_t);
             desc.format = GfxFormat::R32UI;
             desc.usage = GfxBufferUsageTypedBuffer;
@@ -152,7 +152,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             RenderGraphTexture::Desc desc;
             desc.width = width;
             desc.height = height;
-            desc.format = GfxFormat::R11G11B10F;
+            desc.format = GfxFormat::RGBA16F;
             data.output = builder.Create<RenderGraphTexture>(desc, "SSR output");
             data.output = builder.Write(data.output);
 

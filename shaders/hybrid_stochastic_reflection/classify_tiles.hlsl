@@ -49,13 +49,16 @@ bool IsBaseRay(uint2 dispatch_thread_id, uint samples_per_quad)
 
 groupshared uint s_TileCount;
 
-[wavesize(64)]
 [numthreads(8, 8, 1)]
 void main(uint2 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     s_TileCount = 0;
-    
-#define HSR_REMAP_LANE 0
+
+#if GFX_VENDOR_AMD
+#define HSR_REMAP_LANE 0 //todo : remap seems not working correctly on AMD
+#else
+#define HSR_REMAP_LANE 1
+#endif
 
 #if HSR_REMAP_LANE
     // Remap lanes to ensure four neighboring lanes are arranged in a quad pattern
@@ -131,7 +134,7 @@ void main(uint2 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex, uint3 dis
 
     GroupMemoryBarrierWithGroupSync(); // Wait until g_TileCount
     
-    if (is_first_lane_of_wave && s_TileCount > 0)
+    if (groupIndex == 0 && s_TileCount > 0)
     {
         uint tile_offset;
         IncrementDenoiserTileCounter(tile_offset);

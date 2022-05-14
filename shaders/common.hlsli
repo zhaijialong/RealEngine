@@ -153,16 +153,6 @@ float GetNdcDepth(float linearDepth)
     return A + B / linearDepth;
 }
 
-float3 GetWorldPosition(uint2 screenPos, float depth)
-{
-    float2 screenUV = ((float2)screenPos + 0.5) * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight);
-    float4 clipPos = float4((screenUV * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
-    float4 worldPos = mul(CameraCB.mtxViewProjectionInverse, clipPos);
-    worldPos.xyz /= worldPos.w;
-    
-    return worldPos.xyz;
-}
-
 float3 GetNdcPosition(float4 clipPos)
 {
     return clipPos.xyz / max(clipPos.w, 0.0000001);
@@ -191,6 +181,20 @@ float2 GetScreenUV(float2 ndcPos)
 float2 GetScreenPosition(float2 ndcPos)
 {
     return GetScreenUV(ndcPos) * float2(SceneCB.viewWidth, SceneCB.viewHeight);
+}
+
+float3 GetWorldPosition(float2 screenUV, float depth)
+{
+    float4 clipPos = float4((screenUV * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
+    float4 worldPos = mul(CameraCB.mtxViewProjectionInverse, clipPos);
+    worldPos.xyz /= worldPos.w;
+    
+    return worldPos.xyz;
+}
+
+float3 GetWorldPosition(uint2 screenPos, float depth)
+{
+    return GetWorldPosition(GetScreenUV(screenPos), depth);
 }
 
 float4 RGBA8UnormToFloat4(uint packed)

@@ -58,6 +58,7 @@ namespace rt
     struct HitInfo
     {
         float3 position;
+        float rayT;
         float3 barycentricCoordinates;
         uint instanceID;
         uint primitiveIndex;
@@ -89,6 +90,7 @@ namespace rt
         }
 
         hitInfo.position = q.WorldRayOrigin() + q.WorldRayDirection() * q.CommittedRayT();
+        hitInfo.rayT = q.CommittedRayT();
         hitInfo.barycentricCoordinates = GetBarycentricCoordinates(q.CommittedTriangleBarycentrics());
         hitInfo.instanceID = q.CommittedInstanceID();
         hitInfo.primitiveIndex = q.CommittedPrimitiveIndex();

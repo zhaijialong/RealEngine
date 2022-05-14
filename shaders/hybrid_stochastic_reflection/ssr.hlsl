@@ -77,7 +77,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthRT];
-    RWTexture2D<float3> outputTexture = ResourceDescriptorHeap[c_outputTexture];
+    RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
 
     float2 uv = GetScreenUV(coords);
@@ -94,7 +94,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     float3 direction = reflect(-V, H);
 
     float3 radiance = float3(0, 0, 0);
-
+    float rayLength = 0.0;
 
     ssrt::Ray ray;
     ray.origin = position + N * 0.05;
@@ -112,6 +112,9 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
         float2 prevUV = hitInfo.screenUV - velocity * float2(0.5, -0.5); //velocity is in ndc space
         
         radiance = prevSceneColorTexture.SampleLevel(linearSampler, prevUV, 0).xyz;
+        
+        float3 hitPosition = GetWorldPosition(hitInfo.screenUV, hitInfo.depth);
+        rayLength = length(hitPosition - position);
     }
     else
     {
@@ -127,30 +130,33 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
         {
             rt::MaterialData material = rt::GetMaterial(hitInfo);
             radiance = rt::Shade(hitInfo, material, -direction);
+            rayLength = hitInfo.rayT;
         }
         else
         {
             TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
             radiance = skyTexture.SampleLevel(linearSampler, direction, 0).xyz;
+            rayLength = ray.TMax; // is this ok ?
         }        
     }
     
-    outputTexture[coords] = radiance;
+    float4 output = float4(radiance, rayLength);
+    outputTexture[coords] = output;
 
     uint2 copy_target = coords ^ 0b1; // Flip last bit to find the mirrored coords along the x and y axis within a quad.
     if (copy_horizontal) 
     {
         uint2 copy_coords = uint2(copy_target.x, coords.y);
-        outputTexture[copy_coords] = radiance;
+        outputTexture[copy_coords] = output;
     }
     if (copy_vertical) 
     {
         uint2 copy_coords = uint2(coords.x, copy_target.y);
-        outputTexture[copy_coords] = radiance;
+        outputTexture[copy_coords] = output;
     }
     if (copy_diagonal) 
     {
         uint2 copy_coords = copy_target;
-        outputTexture[copy_coords] = radiance;
+        outputTexture[copy_coords] = output;
     }
 }

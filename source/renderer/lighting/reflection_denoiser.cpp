@@ -38,7 +38,7 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             RenderGraphTexture::Desc desc;
             desc.width = width;
             desc.height = height;
-            desc.format = GfxFormat::R11G11B10F;
+            desc.format = GfxFormat::RGBA16F;
             data.output = builder.Create<RenderGraphTexture>(desc, "ReflectionDenoiser reproject output");
             data.output = builder.Write(data.output);
         },
