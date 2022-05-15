@@ -1,101 +1,145 @@
 #include "hsr_common.hlsli"
 
-cbuffer Constants : register(b0)
+cbuffer Constants : register(b1)
 {
     uint c_tileListBuffer;
-    uint c_inputTexture;
-    uint c_ouputTexture;
+    float c_temporalStability;
+    
+    uint c_depthTexture;
+    uint c_normalTexture;
+    uint c_velocityTexture;
+    uint c_prevLinearDepthTexture;
+    uint c_prevNormalTexture;
+
+    uint c_inputRadianceTexture;
+    uint c_historyRadianceTexture;
+    uint c_historyVarianceTexture;
+    uint c_historySampleNumTexture;
+    
+    uint c_outputRadianceUAV;
+    uint c_outputVarianceUAV;
+    uint c_outputAvgRadianceUAV;
+    uint c_outputSampleNumUAV;
 };
 
 float FFX_DNSR_Reflections_LoadDepth(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
+    return depthTexture[pixel_coordinate];
 }
 
-float FFX_DNSR_Reflections_LoadDepthHistory(int2 pixel_coordinate)
+float FFX_DNSR_Reflections_LoadLinearDepthHistory(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
+    return prevLinearDepthTexture[pixel_coordinate];
 }
 
-float FFX_DNSR_Reflections_SampleDepthHistory(float2 uv)
+float FFX_DNSR_Reflections_SampleLinearDepthHistory(float2 uv)
 {
-    return 0.0;
+    Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    return prevLinearDepthTexture.SampleLevel(linearSampler, uv, 0);
 }
 
 float16_t3 FFX_DNSR_Reflections_LoadRadiance(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D inputRadianceTexture = ResourceDescriptorHeap[c_inputRadianceTexture];
+    return (float16_t3)inputRadianceTexture[pixel_coordinate].xyz;
 }
 
 float16_t3 FFX_DNSR_Reflections_LoadRadianceHistory(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D historyRadianceTexture = ResourceDescriptorHeap[c_historyRadianceTexture];
+    return (float16_t3) historyRadianceTexture[pixel_coordinate].xyz;;
 }
 
 float16_t3 FFX_DNSR_Reflections_SampleRadianceHistory(float2 uv)
 {
-    return 0.0;
+    Texture2D historyRadianceTexture = ResourceDescriptorHeap[c_historyRadianceTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    return (float16_t3)historyRadianceTexture.SampleLevel(linearSampler, uv, 0).xyz;
 }
 
 float16_t FFX_DNSR_Reflections_SampleNumSamplesHistory(float2 uv)
 {
-    return 0.0;
+    Texture2D<float> historySampleNumTexture = ResourceDescriptorHeap[c_historySampleNumTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    return (float16_t)historySampleNumTexture.SampleLevel(linearSampler, uv, 0);
 }
 
 float16_t3 FFX_DNSR_Reflections_LoadWorldSpaceNormal(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
+    return (float16_t3)OctNormalDecode(normalTexture[pixel_coordinate].xyz);
 }
 
 float16_t3 FFX_DNSR_Reflections_LoadWorldSpaceNormalHistory(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
+    return (float16_t3)OctNormalDecode(prevNormalTexture[pixel_coordinate].xyz);
 }
 
 float16_t3 FFX_DNSR_Reflections_SampleWorldSpaceNormalHistory(float2 uv)
 {
-    return 0.0;
+    Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    return (float16_t3)OctNormalDecode(prevNormalTexture.SampleLevel(linearSampler, uv, 0).xyz);
 }
 
 float16_t FFX_DNSR_Reflections_LoadRoughness(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
+    return (float16_t)normalTexture[pixel_coordinate].w;
 }
 
 float16_t FFX_DNSR_Reflections_SampleRoughnessHistory(float2 uv)
 {
-    return 0.0;
+    Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    return (float16_t)prevNormalTexture.SampleLevel(linearSampler, uv, 0).w;
 }
 
 float2 FFX_DNSR_Reflections_LoadMotionVector(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D velocityTexture = ResourceDescriptorHeap[c_velocityTexture];
+    return velocityTexture[pixel_coordinate].xy * float2(0.5, -0.5); //velocity.xy is in ndc space;
 }
 
 float16_t FFX_DNSR_Reflections_SampleVarianceHistory(float2 uv)
 {
-    return 0.0;
+    Texture2D<float> historyVarianceTexture = ResourceDescriptorHeap[c_historyVarianceTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    return (float16_t)historyVarianceTexture.SampleLevel(linearSampler, uv, 0);
 }
 
 float16_t FFX_DNSR_Reflections_LoadRayLength(int2 pixel_coordinate)
 {
-    return 0.0;
+    Texture2D inputRadianceTexture = ResourceDescriptorHeap[c_inputRadianceTexture];
+    return (float16_t)inputRadianceTexture[pixel_coordinate].w;
 }
 
 void FFX_DNSR_Reflections_StoreRadianceReprojected(int2 pixel_coordinate, float16_t3 value)
 {
+    RWTexture2D<float3> outputRadianceUAV = ResourceDescriptorHeap[c_outputRadianceUAV];
+    outputRadianceUAV[pixel_coordinate] = value;
 }
 
 void FFX_DNSR_Reflections_StoreAverageRadiance(int2 pixel_coordinate, float16_t3 value)
 {
+    RWTexture2D<float3> outputAvgRadianceUAV = ResourceDescriptorHeap[c_outputAvgRadianceUAV];
+    outputAvgRadianceUAV[pixel_coordinate] = value;
 }
 
 void FFX_DNSR_Reflections_StoreVariance(int2 pixel_coordinate, float16_t value)
 {
+    RWTexture2D<float> outputVarianceUAV = ResourceDescriptorHeap[c_outputVarianceUAV];
+    outputVarianceUAV[pixel_coordinate] = value;
 }
 
 void FFX_DNSR_Reflections_StoreNumSamples(int2 pixel_coordinate, float16_t value)
 {
+    RWTexture2D<float> outputSampleNumUAV = ResourceDescriptorHeap[c_outputSampleNumUAV];
+    outputSampleNumUAV[pixel_coordinate] = value;
 }
 
 #include "ffx-reflection-dnsr/ffx_denoiser_reflections_reproject.h"
@@ -112,8 +156,10 @@ void main(int2 group_thread_id : SV_GroupThreadID,
     uint2 remapped_group_thread_id = FFX_DNSR_Reflections_RemapLane8x8(group_index);
     uint2 remapped_dispatch_thread_id = dispatch_group_id * 8 + remapped_group_thread_id;
     
-    Texture2D inputTexture = ResourceDescriptorHeap[c_inputTexture];
-    RWTexture2D<float4> ouputTexture = ResourceDescriptorHeap[c_ouputTexture];
-
-    ouputTexture[remapped_dispatch_thread_id] = inputTexture[remapped_dispatch_thread_id];
+    Texture2D inputTexture = ResourceDescriptorHeap[c_inputRadianceTexture];
+    RWTexture2D<float4> ouputTexture = ResourceDescriptorHeap[c_outputRadianceUAV];
+    //ouputTexture[remapped_dispatch_thread_id] = inputTexture[remapped_dispatch_thread_id];
+    
+    
+    FFX_DNSR_Reflections_Reproject(remapped_dispatch_thread_id, remapped_group_thread_id, uint2(SceneCB.viewWidth, SceneCB.viewHeight), c_temporalStability, 32);
 }

@@ -182,8 +182,7 @@ void FFX_DNSR_Reflections_PickReprojection(int2            dispatch_thread_id,  
             && abs(hit_roughness - roughness) < abs(surface_roughness - roughness) + 1.0e-3        //
         ) {
             history_normal                 = hit_normal;
-            float hit_history_depth        = FFX_DNSR_Reflections_SampleDepthHistory(hit_reprojection_uv);
-            float hit_history_linear_depth = FFX_DNSR_Reflections_GetLinearDepth(hit_reprojection_uv, hit_history_depth);
+            float hit_history_linear_depth = FFX_DNSR_Reflections_SampleLinearDepthHistory(hit_reprojection_uv);
             history_linear_depth           = hit_history_linear_depth;
             reprojection_uv                = hit_reprojection_uv;
             reprojection                   = hit_history;
@@ -192,8 +191,7 @@ void FFX_DNSR_Reflections_PickReprojection(int2            dispatch_thread_id,  
             if (dot2(surface_history - local_neighborhood.mean) <
                 FFX_DNSR_REFLECTIONS_REPROJECT_SURFACE_DISCARD_VARIANCE_WEIGHT * length(local_neighborhood.variance)) {
                 history_normal                     = surface_normal;
-                float surface_history_depth        = FFX_DNSR_Reflections_SampleDepthHistory(surface_reprojection_uv);
-                float surface_history_linear_depth = FFX_DNSR_Reflections_GetLinearDepth(surface_reprojection_uv, surface_history_depth);
+                float surface_history_linear_depth = FFX_DNSR_Reflections_SampleLinearDepthHistory(surface_reprojection_uv);
                 history_linear_depth               = surface_history_linear_depth;
                 reprojection_uv                    = surface_reprojection_uv;
                 reprojection                       = surface_history;
@@ -220,8 +218,7 @@ void FFX_DNSR_Reflections_PickReprojection(int2            dispatch_thread_id,  
             for (int x = -search_radius; x <= search_radius; x++) {
                 float2      uv                   = reprojection_uv + float2(x, y) * dudv;
                 float16_t3 history_normal       = FFX_DNSR_Reflections_SampleWorldSpaceNormalHistory(uv);
-                float       history_depth        = FFX_DNSR_Reflections_SampleDepthHistory(uv);
-                float       history_linear_depth = FFX_DNSR_Reflections_GetLinearDepth(uv, history_depth);
+                float       history_linear_depth = FFX_DNSR_Reflections_SampleLinearDepthHistory(uv);
                 float16_t  weight               = FFX_DNSR_Reflections_GetDisocclusionFactor(normal, history_normal, linear_depth, history_linear_depth);
                 if (weight > disocclusion_factor) {
                     disocclusion_factor = weight;
@@ -249,10 +246,10 @@ void FFX_DNSR_Reflections_PickReprojection(int2            dispatch_thread_id,  
         float16_t3 normal10               = FFX_DNSR_Reflections_LoadWorldSpaceNormalHistory(reproject_texel_coords + int2(1, 0));
         float16_t3 normal01               = FFX_DNSR_Reflections_LoadWorldSpaceNormalHistory(reproject_texel_coords + int2(0, 1));
         float16_t3 normal11               = FFX_DNSR_Reflections_LoadWorldSpaceNormalHistory(reproject_texel_coords + int2(1, 1));
-        float       depth00                = FFX_DNSR_Reflections_GetLinearDepth(reprojection_uv, FFX_DNSR_Reflections_LoadDepthHistory(reproject_texel_coords + int2(0, 0)));
-        float       depth10                = FFX_DNSR_Reflections_GetLinearDepth(reprojection_uv, FFX_DNSR_Reflections_LoadDepthHistory(reproject_texel_coords + int2(1, 0)));
-        float       depth01                = FFX_DNSR_Reflections_GetLinearDepth(reprojection_uv, FFX_DNSR_Reflections_LoadDepthHistory(reproject_texel_coords + int2(0, 1)));
-        float       depth11                = FFX_DNSR_Reflections_GetLinearDepth(reprojection_uv, FFX_DNSR_Reflections_LoadDepthHistory(reproject_texel_coords + int2(1, 1)));
+        float       depth00                = FFX_DNSR_Reflections_LoadLinearDepthHistory(reproject_texel_coords + int2(0, 0));
+        float       depth10                = FFX_DNSR_Reflections_LoadLinearDepthHistory(reproject_texel_coords + int2(1, 0));
+        float       depth01                = FFX_DNSR_Reflections_LoadLinearDepthHistory(reproject_texel_coords + int2(0, 1));
+        float       depth11                = FFX_DNSR_Reflections_LoadLinearDepthHistory(reproject_texel_coords + int2(1, 1));
         float16_t4 w                      = 1.0;
         // Initialize with occlusion weights
         w.x = FFX_DNSR_Reflections_GetDisocclusionFactor(normal, normal00, linear_depth, depth00) > FFX_DNSR_REFLECTIONS_DISOCCLUSION_THRESHOLD / 2.0 ? 1.0 : 0.0;
