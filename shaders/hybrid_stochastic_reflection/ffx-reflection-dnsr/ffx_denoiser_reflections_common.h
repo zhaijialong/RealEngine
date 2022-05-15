@@ -26,12 +26,12 @@ THE SOFTWARE.
 #include "ffx_denoiser_reflections_config.h"
 
 uint FFX_DNSR_Reflections_BitfieldExtract(uint src, uint off, uint bits) {
-    uint mask = (1 << bits) - 1;
+    uint mask = (1u << bits) - 1;
     return (src >> off) & mask;
 }
 
 uint FFX_DNSR_Reflections_BitfieldInsert(uint src, uint ins, uint bits) {
-    uint mask = (1 << bits) - 1;
+    uint mask = (1u << bits) - 1;
     return (ins & mask) | (src & (~mask));
 }
 
@@ -50,33 +50,37 @@ uint2 FFX_DNSR_Reflections_RemapLane8x8(uint lane) {
                  FFX_DNSR_Reflections_BitfieldInsert(FFX_DNSR_Reflections_BitfieldExtract(lane, 3u, 3u), FFX_DNSR_Reflections_BitfieldExtract(lane, 1u, 2u), 2u));
 }
 
-min16float FFX_DNSR_Reflections_Luminance(min16float3 color) { return max(dot(color, float3(0.299, 0.587, 0.114)), 0.001); }
+float16_t FFX_DNSR_Reflections_Luminance(float16_t3 color) { return max(dot(color, float16_t3(0.299, 0.587, 0.114)), 0.001); }
 
-min16float FFX_DNSR_Reflections_ComputeTemporalVariance(min16float3 history_radiance, min16float3 radiance) {
-    min16float history_luminance = FFX_DNSR_Reflections_Luminance(history_radiance);
-    min16float luminance         = FFX_DNSR_Reflections_Luminance(radiance);
-    min16float diff              = abs(history_luminance - luminance) / max(max(history_luminance, luminance), 0.5);
+float16_t FFX_DNSR_Reflections_ComputeTemporalVariance(float16_t3 history_radiance, float16_t3 radiance) {
+    float16_t history_luminance = FFX_DNSR_Reflections_Luminance(history_radiance);
+    float16_t luminance         = FFX_DNSR_Reflections_Luminance(radiance);
+    float16_t diff              = abs(history_luminance - luminance) / max(max(history_luminance, luminance), 0.5);
     return diff * diff;
 }
 
-uint FFX_DNSR_Reflections_PackFloat16(min16float2 v) {
+uint FFX_DNSR_Reflections_PackFloat16(float16_t2 v) {
     uint2 p = f32tof16(float2(v));
     return p.x | (p.y << 16);
 }
 
-min16float2 FFX_DNSR_Reflections_UnpackFloat16(uint a) {
+float16_t2 FFX_DNSR_Reflections_UnpackFloat16(uint a) {
     float2 tmp = f16tof32(uint2(a & 0xFFFF, a >> 16));
-    return min16float2(tmp);
+    return float16_t2(tmp);
 }
 
-uint2 FFX_DNSR_Reflections_PackFloat16_4(min16float4 v) { return uint2(FFX_DNSR_Reflections_PackFloat16(v.xy), FFX_DNSR_Reflections_PackFloat16(v.zw)); }
+uint2 FFX_DNSR_Reflections_PackFloat16_4(float16_t4 v) { return uint2(FFX_DNSR_Reflections_PackFloat16(v.xy), FFX_DNSR_Reflections_PackFloat16(v.zw)); }
 
-min16float4 FFX_DNSR_Reflections_UnpackFloat16_4(uint2 a) { return min16float4(FFX_DNSR_Reflections_UnpackFloat16(a.x), FFX_DNSR_Reflections_UnpackFloat16(a.y)); }
+float16_t4 FFX_DNSR_Reflections_UnpackFloat16_4(uint2 a) { return float16_t4(FFX_DNSR_Reflections_UnpackFloat16(a.x), FFX_DNSR_Reflections_UnpackFloat16(a.y)); }
 
 // Rounds value to the nearest multiple of 8
 uint2 FFX_DNSR_Reflections_RoundUp8(uint2 value) {
     uint2 round_down = value & ~0b111;
-    return (round_down == value) ? value : value + 8;
+    //return (round_down == value) ? value : value + 8;
+    uint2 tmp;
+    tmp.x = (round_down.x == value.x) ? value.x : value.x + 8;
+    tmp.x = (round_down.y == value.y) ? value.y : value.y + 8;
+    return tmp;
 }
 
 // From "Temporal Reprojection Anti-Aliasing"
@@ -102,23 +106,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ********************************************************************/
-min16float3 FFX_DNSR_Reflections_ClipAABB(min16float3 aabb_min, min16float3 aabb_max, min16float3 prev_sample) {
+float16_t3 FFX_DNSR_Reflections_ClipAABB(float16_t3 aabb_min, float16_t3 aabb_max, float16_t3 prev_sample) {
     // Main idea behind clipping - it prevents clustering when neighbor color space
     // is distant from history sample
 
     // Here we find intersection between color vector and aabb color box
 
     // Note: only clips towards aabb center
-    float3 aabb_center = 0.5 * (aabb_max + aabb_min);
-    float3 extent_clip = 0.5 * (aabb_max - aabb_min) + 0.001;
+    float16_t3 aabb_center = 0.5 * (aabb_max + aabb_min);
+    float16_t3 extent_clip = 0.5 * (aabb_max - aabb_min) + 0.001;
 
     // Find color vector
-    float3 color_vector = prev_sample - aabb_center;
+    float16_t3 color_vector = prev_sample - aabb_center;
     // Transform into clip space
-    float3 color_vector_clip = color_vector / extent_clip;
+    float16_t3 color_vector_clip = color_vector / extent_clip;
     // Find max absolute component
     color_vector_clip       = abs(color_vector_clip);
-    min16float max_abs_unit = max(max(color_vector_clip.x, color_vector_clip.y), color_vector_clip.z);
+    float16_t max_abs_unit = max(max(color_vector_clip.x, color_vector_clip.y), color_vector_clip.z);
 
     if (max_abs_unit > 1.0) {
         return aabb_center + color_vector / max_abs_unit; // clip towards color vector
@@ -133,8 +137,8 @@ min16float3 FFX_DNSR_Reflections_ClipAABB(min16float3 aabb_min, min16float3 aabb
 #        define FFX_DNSR_REFLECTIONS_LOCAL_NEIGHBORHOOD_RADIUS 4
 #    endif
 
-min16float FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight(min16float i) {
-    const min16float radius = FFX_DNSR_REFLECTIONS_LOCAL_NEIGHBORHOOD_RADIUS + 1.0;
+float16_t FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight(float16_t i) {
+    const float16_t radius = FFX_DNSR_REFLECTIONS_LOCAL_NEIGHBORHOOD_RADIUS + 1.0;
     return exp(-FFX_DNSR_REFLECTIONS_GAUSSIAN_K * (i * i) / (radius * radius));
 }
 

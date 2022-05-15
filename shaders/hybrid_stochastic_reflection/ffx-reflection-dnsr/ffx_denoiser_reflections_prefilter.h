@@ -33,17 +33,17 @@ groupshared uint  g_ffx_dnsr_shared_3[16][16];
 groupshared float g_ffx_dnsr_shared_depth[16][16];
 
 struct FFX_DNSR_Reflections_NeighborhoodSample {
-    min16float3 radiance;
-    min16float  variance;
-    min16float3 normal;
+    float16_t3 radiance;
+    float16_t  variance;
+    float16_t3 normal;
     float       depth;
 };
 
 FFX_DNSR_Reflections_NeighborhoodSample FFX_DNSR_Reflections_LoadFromGroupSharedMemory(int2 idx) {
     uint2       packed_radiance          = uint2(g_ffx_dnsr_shared_0[idx.y][idx.x], g_ffx_dnsr_shared_1[idx.y][idx.x]);
-    min16float4 unpacked_radiance        = FFX_DNSR_Reflections_UnpackFloat16_4(packed_radiance);
+    float16_t4 unpacked_radiance        = FFX_DNSR_Reflections_UnpackFloat16_4(packed_radiance);
     uint2       packed_normal_variance   = uint2(g_ffx_dnsr_shared_2[idx.y][idx.x], g_ffx_dnsr_shared_3[idx.y][idx.x]);
-    min16float4 unpacked_normal_variance = FFX_DNSR_Reflections_UnpackFloat16_4(packed_normal_variance);
+    float16_t4 unpacked_normal_variance = FFX_DNSR_Reflections_UnpackFloat16_4(packed_normal_variance);
 
     FFX_DNSR_Reflections_NeighborhoodSample sample;
     sample.radiance = unpacked_radiance.xyz;
@@ -53,11 +53,11 @@ FFX_DNSR_Reflections_NeighborhoodSample FFX_DNSR_Reflections_LoadFromGroupShared
     return sample;
 }
 
-void FFX_DNSR_Reflections_StoreInGroupSharedMemory(int2 group_thread_id, min16float3 radiance, min16float variance, min16float3 normal, float depth) {
+void FFX_DNSR_Reflections_StoreInGroupSharedMemory(int2 group_thread_id, float16_t3 radiance, float16_t variance, float16_t3 normal, float depth) {
     g_ffx_dnsr_shared_0[group_thread_id.y][group_thread_id.x]     = FFX_DNSR_Reflections_PackFloat16(radiance.xy);
     g_ffx_dnsr_shared_1[group_thread_id.y][group_thread_id.x]     = FFX_DNSR_Reflections_PackFloat16(radiance.zz);
     g_ffx_dnsr_shared_2[group_thread_id.y][group_thread_id.x]     = FFX_DNSR_Reflections_PackFloat16(normal.xy);
-    g_ffx_dnsr_shared_3[group_thread_id.y][group_thread_id.x]     = FFX_DNSR_Reflections_PackFloat16(min16float2(normal.z, variance));
+    g_ffx_dnsr_shared_3[group_thread_id.y][group_thread_id.x]     = FFX_DNSR_Reflections_PackFloat16(float16_t2(normal.z, variance));
     g_ffx_dnsr_shared_depth[group_thread_id.y][group_thread_id.x] = depth;
 }
 
@@ -66,9 +66,9 @@ void FFX_DNSR_Reflections_InitializeGroupSharedMemory(int2 dispatch_thread_id, i
     int2 offset[4] = {int2(0, 0), int2(8, 0), int2(0, 8), int2(8, 8)};
 
     // Intermediate storage registers to cache the result of all loads
-    min16float3 radiance[4];
-    min16float  variance[4];
-    min16float3 normal[4];
+    float16_t3 radiance[4];
+    float16_t  variance[4];
+    float16_t3 normal[4];
     float       depth[4];
 
     // Start in the upper left corner of the 16x16 region.
@@ -85,39 +85,39 @@ void FFX_DNSR_Reflections_InitializeGroupSharedMemory(int2 dispatch_thread_id, i
     }
 }
 
-min16float FFX_DNSR_Reflections_GetEdgeStoppingNormalWeight(min16float3 normal_p, min16float3 normal_q) {
+float16_t FFX_DNSR_Reflections_GetEdgeStoppingNormalWeight(float16_t3 normal_p, float16_t3 normal_q) {
     return pow(max(dot(normal_p, normal_q), 0.0), FFX_DNSR_REFLECTIONS_PREFILTER_NORMAL_SIGMA);
 }
 
-min16float FFX_DNSR_Reflections_GetEdgeStoppingDepthWeight(float center_depth, float neighbor_depth) {
+float16_t FFX_DNSR_Reflections_GetEdgeStoppingDepthWeight(float center_depth, float neighbor_depth) {
     return exp(-abs(center_depth - neighbor_depth) * center_depth * FFX_DNSR_REFLECTIONS_PREFILTER_DEPTH_SIGMA);
 }
 
-min16float FFX_DNSR_Reflections_GetRadianceWeight(min16float3 center_radiance, min16float3 neighbor_radiance, min16float variance) {
+float16_t FFX_DNSR_Reflections_GetRadianceWeight(float16_t3 center_radiance, float16_t3 neighbor_radiance, float16_t variance) {
     return max(exp(-(FFX_DNSR_REFLECTIONS_RADIANCE_WEIGHT_BIAS + variance * FFX_DNSR_REFLECTIONS_RADIANCE_WEIGHT_VARIANCE_K)
                     * length(center_radiance - neighbor_radiance.xyz))
             , 1.0e-2);
 }
 
-void FFX_DNSR_Reflections_Resolve(int2 group_thread_id, min16float3 avg_radiance, FFX_DNSR_Reflections_NeighborhoodSample center,
-                                  out min16float3 resolved_radiance, out min16float resolved_variance) {
+void FFX_DNSR_Reflections_Resolve(int2 group_thread_id, float16_t3 avg_radiance, FFX_DNSR_Reflections_NeighborhoodSample center,
+                                  out float16_t3 resolved_radiance, out float16_t resolved_variance) {
     // Initial weight is important to remove fireflies.
     // That removes quite a bit of energy but makes everything much more stable.
-    min16float  accumulated_weight   = FFX_DNSR_Reflections_GetRadianceWeight(avg_radiance, center.radiance.xyz, center.variance);
-    min16float3 accumulated_radiance = center.radiance.xyz * accumulated_weight;
-    min16float  accumulated_variance = center.variance * accumulated_weight * accumulated_weight;
+    float16_t  accumulated_weight   = FFX_DNSR_Reflections_GetRadianceWeight(avg_radiance, center.radiance.xyz, center.variance);
+    float16_t3 accumulated_radiance = center.radiance.xyz * accumulated_weight;
+    float16_t  accumulated_variance = center.variance * accumulated_weight * accumulated_weight;
     // First 15 numbers of Halton(2,3) streteched to [-3,3]. Skipping the center, as we already have that in center_radiance and center_variance.
     const uint sample_count     = 15;
     const int2 sample_offsets[] = {int2(0, 1),  int2(-2, 1),  int2(2, -3), int2(-3, 0),  int2(1, 2), int2(-1, -2), int2(3, 0), int2(-3, 3),
                                    int2(0, -3), int2(-1, -1), int2(2, 1),  int2(-2, -2), int2(1, 0), int2(0, 2),   int2(3, -1)};
-    min16float variance_weight = max(FFX_DNSR_REFLECTIONS_PREFILTER_VARIANCE_BIAS,
+    float16_t variance_weight = max(FFX_DNSR_REFLECTIONS_PREFILTER_VARIANCE_BIAS,
                                      1.0 - exp(-(center.variance * FFX_DNSR_REFLECTIONS_PREFILTER_VARIANCE_WEIGHT))
                                     );
     for (int i = 0; i < sample_count; ++i) {
         int2                                    new_idx  = group_thread_id + sample_offsets[i];
         FFX_DNSR_Reflections_NeighborhoodSample neighbor = FFX_DNSR_Reflections_LoadFromGroupSharedMemory(new_idx);
 
-        min16float weight = 1.0;
+        float16_t weight = 1.0;
         weight *= FFX_DNSR_Reflections_GetEdgeStoppingNormalWeight(float3(center.normal), float3(neighbor.normal));
         weight *= FFX_DNSR_Reflections_GetEdgeStoppingDepthWeight(center.depth, neighbor.depth);
         weight *= FFX_DNSR_Reflections_GetRadianceWeight(avg_radiance, neighbor.radiance.xyz, center.variance);
@@ -136,7 +136,7 @@ void FFX_DNSR_Reflections_Resolve(int2 group_thread_id, min16float3 avg_radiance
 }
 
 void FFX_DNSR_Reflections_Prefilter(int2 dispatch_thread_id, int2 group_thread_id, uint2 screen_size) {
-    min16float center_roughness = FFX_DNSR_Reflections_LoadRoughness(dispatch_thread_id);
+    float16_t center_roughness = FFX_DNSR_Reflections_LoadRoughness(dispatch_thread_id);
     FFX_DNSR_Reflections_InitializeGroupSharedMemory(dispatch_thread_id, group_thread_id, screen_size);
     GroupMemoryBarrierWithGroupSync();
 
@@ -144,14 +144,14 @@ void FFX_DNSR_Reflections_Prefilter(int2 dispatch_thread_id, int2 group_thread_i
 
     FFX_DNSR_Reflections_NeighborhoodSample center = FFX_DNSR_Reflections_LoadFromGroupSharedMemory(group_thread_id);
 
-    min16float3 resolved_radiance = center.radiance;
-    min16float  resolved_variance = center.variance;
+    float16_t3 resolved_radiance = center.radiance;
+    float16_t  resolved_variance = center.variance;
 
     // Check if we have to denoise or if a simple copy is enough
     bool needs_denoiser = center.variance > 0.0 && FFX_DNSR_Reflections_IsGlossyReflection(center_roughness) && !FFX_DNSR_Reflections_IsMirrorReflection(center_roughness);
     if (needs_denoiser) {
         float2      uv8          = (float2(dispatch_thread_id.xy) + (0.5).xx) / FFX_DNSR_Reflections_RoundUp8(screen_size);
-        min16float3 avg_radiance = FFX_DNSR_Reflections_SampleAverageRadiance(uv8);
+        float16_t3 avg_radiance = FFX_DNSR_Reflections_SampleAverageRadiance(uv8);
         FFX_DNSR_Reflections_Resolve(group_thread_id, avg_radiance, center, resolved_radiance, resolved_variance);
     }
 
