@@ -145,6 +145,7 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
     m_cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
     m_cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
 
+    m_cameraCB.mtxPrevViewProjection = m_prevViewProjectionJitter;
     m_cameraCB.mtxPrevViewProjectionInverse = inverse(m_prevViewProjectionJitter);
 
     m_cameraCB.culling.viewPos = m_frustumViewPos;

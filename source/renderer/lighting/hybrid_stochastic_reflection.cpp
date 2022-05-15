@@ -25,7 +25,6 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         [&]()
         {
             ImGui::Checkbox("Enable##HSR", &m_bEnable);
-            ImGui::Checkbox("Half Resolution##HSR", &m_bHalfResolution);
             ImGui::Checkbox("Enable Denoiser##HSR", &m_bEnableDenoiser);
 
             ImGui::Text("Samples Per Quad : "); ImGui::SameLine();
@@ -40,6 +39,8 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
     }
 
     RENDER_GRAPH_EVENT(pRenderGraph, "HybridStochasticReflection");
+
+    m_pDenoiser->ImportTextures(pRenderGraph, width, height);
 
     struct TileClassificationData
     {

@@ -2,34 +2,6 @@
 
 #include "../common.hlsli"
 
-uint FFX_DNSR_Reflections_BitfieldExtract(uint src, uint off, uint bits)
-{
-    uint mask = (1u << bits) - 1;
-    return (src >> off) & mask;
-}
-
-uint FFX_DNSR_Reflections_BitfieldInsert(uint src, uint ins, uint bits)
-{
-    uint mask = (1u << bits) - 1;
-    return (ins & mask) | (src & (~mask));
-}
-
-//  LANE TO 8x8 MAPPING
-//  ===================
-//  00 01 08 09 10 11 18 19
-//  02 03 0a 0b 12 13 1a 1b
-//  04 05 0c 0d 14 15 1c 1d
-//  06 07 0e 0f 16 17 1e 1f
-//  20 21 28 29 30 31 38 39
-//  22 23 2a 2b 32 33 3a 3b
-//  24 25 2c 2d 34 35 3c 3d
-//  26 27 2e 2f 36 37 3e 3f
-uint2 FFX_DNSR_Reflections_RemapLane8x8(uint lane)
-{
-    return uint2(FFX_DNSR_Reflections_BitfieldInsert(FFX_DNSR_Reflections_BitfieldExtract(lane, 2u, 3u), lane, 1u),
-                 FFX_DNSR_Reflections_BitfieldInsert(FFX_DNSR_Reflections_BitfieldExtract(lane, 3u, 3u), FFX_DNSR_Reflections_BitfieldExtract(lane, 1u, 2u), 2u));
-}
-
 uint PackRayCoords(uint2 ray_coord, bool copy_horizontal, bool copy_vertical, bool copy_diagonal)
 {
     uint ray_x_15bit = ray_coord.x & 0b111111111111111;
@@ -62,4 +34,32 @@ bool FFX_DNSR_Reflections_IsGlossyReflection(float roughness)
 bool FFX_DNSR_Reflections_IsMirrorReflection(float roughness)
 {
     return roughness < 0.03;
+}
+
+float3 FFX_DNSR_Reflections_ScreenSpaceToViewSpace(float3 screen_uv_coord)
+{
+    screen_uv_coord.y = (1 - screen_uv_coord.y);
+    screen_uv_coord.xy = 2 * screen_uv_coord.xy - 1;
+    float4 view_pos = mul(CameraCB.mtxProjectionInverse, float4(screen_uv_coord, 1));
+    view_pos.xyz /= view_pos.w;
+    return view_pos.xyz;
+}
+
+float3 FFX_DNSR_Reflections_ViewSpaceToWorldSpace(float4 view_space_coord)
+{
+    return mul(CameraCB.mtxViewInverse, view_space_coord).xyz;
+}
+
+float3 FFX_DNSR_Reflections_WorldSpaceToScreenSpacePrevious(float3 world_space_pos)
+{
+    float4 projected = mul(CameraCB.mtxPrevViewProjection, float4(world_space_pos, 1));
+    projected.xyz /= projected.w;
+    projected.xy = 0.5 * projected.xy + 0.5;
+    projected.y = (1 - projected.y);
+    return projected.xyz;
+}
+
+float FFX_DNSR_Reflections_GetLinearDepth(float2 uv, float depth)
+{
+    return GetLinearDepth(depth);
 }

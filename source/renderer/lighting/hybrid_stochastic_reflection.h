@@ -23,7 +23,6 @@ private:
     IGfxPipelineState* m_pSSRPSO = nullptr;
 
     bool m_bEnable = true;
-    bool m_bHalfResolution = true;
     bool m_bEnableDenoiser = true;
 
     uint m_samplesPerQuad = 1;

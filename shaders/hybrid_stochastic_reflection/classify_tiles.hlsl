@@ -1,4 +1,5 @@
 #include "hsr_common.hlsli"
+#include "ffx-reflection-dnsr/ffx_denoiser_reflections_common.h"
 
 cbuffer Constants : register(b1)
 {
