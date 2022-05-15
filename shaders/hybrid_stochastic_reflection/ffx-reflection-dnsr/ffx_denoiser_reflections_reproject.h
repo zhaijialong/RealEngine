@@ -112,9 +112,9 @@ float2 FFX_DNSR_Reflections_GetHitPositionReprojection(int2 dispatch_thread_id, 
 }
 
 float16_t FFX_DNSR_Reflections_GetDisocclusionFactor(float16_t3 normal, float16_t3 history_normal, float linear_depth, float history_linear_depth) {
-    float16_t factor = 1.0                                                            //
-                        * exp(-abs(1.0 - max(0.0, dot(normal, history_normal))) * FFX_DNSR_REFLECTIONS_DISOCCLUSION_NORMAL_WEIGHT) //
-                        * exp(-abs(history_linear_depth - linear_depth) / linear_depth * FFX_DNSR_REFLECTIONS_DISOCCLUSION_DEPTH_WEIGHT);
+    float16_t factor = (float16_t)1.0                                                            //
+                        * (float16_t)exp(-abs(1.0 - max(0.0, dot(normal, history_normal))) * FFX_DNSR_REFLECTIONS_DISOCCLUSION_NORMAL_WEIGHT) //
+                        * (float16_t)exp(-abs(history_linear_depth - linear_depth) / linear_depth * FFX_DNSR_REFLECTIONS_DISOCCLUSION_DEPTH_WEIGHT);
     return factor;
 }
 
@@ -132,7 +132,7 @@ FFX_DNSR_Reflections_Moments FFX_DNSR_Reflections_EstimateLocalNeighborhoodInGro
         for (int i = -FFX_DNSR_REFLECTIONS_LOCAL_NEIGHBORHOOD_RADIUS; i <= FFX_DNSR_REFLECTIONS_LOCAL_NEIGHBORHOOD_RADIUS; ++i) {
             int2        new_idx  = group_thread_id + int2(i, j);
             float16_t3 radiance = FFX_DNSR_Reflections_LoadFromGroupSharedMemory(new_idx).radiance;
-            float16_t  weight   = FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight(i) * FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight(j);
+            float16_t  weight   = FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight((float16_t)i) * FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight((float16_t)j);
             accumulated_weight  += weight;
             estimate.mean       += radiance * weight;
             estimate.variance   += radiance * radiance * weight;
@@ -257,10 +257,10 @@ void FFX_DNSR_Reflections_PickReprojection(int2            dispatch_thread_id,  
         w.z = FFX_DNSR_Reflections_GetDisocclusionFactor(normal, normal01, linear_depth, depth01) > FFX_DNSR_REFLECTIONS_DISOCCLUSION_THRESHOLD / 2.0 ? 1.0 : 0.0;
         w.w = FFX_DNSR_Reflections_GetDisocclusionFactor(normal, normal11, linear_depth, depth11) > FFX_DNSR_REFLECTIONS_DISOCCLUSION_THRESHOLD / 2.0 ? 1.0 : 0.0;
         // And then mix in bilinear weights
-        w.x           = w.x * (1.0 - uvx) * (1.0 - uvy);
-        w.y           = w.y * (uvx) * (1.0 - uvy);
-        w.z           = w.z * (1.0 - uvx) * (uvy);
-        w.w           = w.w * (uvx) * (uvy);
+        w.x           = w.x * float16_t(1.0 - uvx) * float16_t(1.0 - uvy);
+        w.y           = w.y * float16_t(uvx) * float16_t(1.0 - uvy);
+        w.z           = w.z * float16_t(1.0 - uvx) * float16_t(uvy);
+        w.w           = w.w * float16_t(uvx) * float16_t(uvy);
         float16_t ws = max(w.x + w.y + w.z + w.w, 1.0e-3);
         // normalize
         w /= ws;
@@ -303,7 +303,7 @@ void FFX_DNSR_Reflections_Reproject(int2 dispatch_thread_id, int2 group_thread_i
         if (all(reprojection_uv > 0.0) && all(reprojection_uv < 1.0)) {
             float16_t prev_variance = FFX_DNSR_Reflections_SampleVarianceHistory(reprojection_uv);
             num_samples              = FFX_DNSR_Reflections_SampleNumSamplesHistory(reprojection_uv) * disocclusion_factor;
-            float16_t s_max_samples = max(8.0, max_samples * FFX_DNSR_REFLECTIONS_SAMPLES_FOR_ROUGHNESS(roughness));
+            float16_t s_max_samples = max(8.0, float16_t(max_samples) * FFX_DNSR_REFLECTIONS_SAMPLES_FOR_ROUGHNESS(roughness));
             num_samples              = min(s_max_samples, num_samples + 1);
             float16_t new_variance  = FFX_DNSR_Reflections_ComputeTemporalVariance(radiance.xyz, reprojection.xyz);
             if (disocclusion_factor < FFX_DNSR_REFLECTIONS_DISOCCLUSION_THRESHOLD) {
@@ -330,7 +330,7 @@ void FFX_DNSR_Reflections_Reproject(int2 dispatch_thread_id, int2 group_thread_i
     float16_t weight = FFX_DNSR_Reflections_GetLuminanceWeight(radiance.xyz);
     radiance.xyz *= weight;
     if (any(dispatch_thread_id >= screen_size) || any(isinf(radiance)) || any(isnan(radiance)) || weight > 1.0e3) {
-        radiance = (0.0).xxxx;
+        radiance = (0.0).xxx;
         weight   = 0.0;
     }
 
@@ -358,7 +358,7 @@ void FFX_DNSR_Reflections_Reproject(int2 dispatch_thread_id, int2 group_thread_i
     if (all(group_thread_id == 0)) {
         float16_t4 sum          = FFX_DNSR_Reflections_LoadFromGroupSharedMemoryRaw(int2(0, 0));
         float16_t  weight_acc   = max(sum.w, 1.0e-3);
-        float3      radiance_avg = sum.xyz / weight_acc;
+        float16_t3      radiance_avg = sum.xyz / weight_acc;
         FFX_DNSR_Reflections_StoreAverageRadiance(dispatch_thread_id.xy / 8, radiance_avg);
     }
 }
