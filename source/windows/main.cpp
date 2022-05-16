@@ -72,7 +72,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     const unsigned int window_width = desktop_width > 1920 ? 1920 : 1600;
     const unsigned int window_height = desktop_height > 1080 ? 1080 : 900;
 
-    RECT windowRect = { 0, 0, window_width, window_height };
+    RECT windowRect = { 0, 0, (LONG)window_width, (LONG)window_height };
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     int x = (desktop_width - (windowRect.right - windowRect.left)) / 2;

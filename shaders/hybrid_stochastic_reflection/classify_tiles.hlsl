@@ -5,10 +5,12 @@ cbuffer Constants : register(b1)
 {
     uint c_depthTexture;
     uint c_normalTexture;
+    uint c_historyVarianceTexture;
     uint c_rayListBufferUAV;
     uint c_tileListBufferUAV;
     uint c_rayCounterBufferUAV;
     uint c_samplesPerQuad;
+    uint c_bEnableVarianceGuidedTracing;
 };
 
 void IncrementRayCounter(uint value, out uint original_value)
@@ -87,12 +89,13 @@ void main(uint2 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex, uint3 dis
     bool is_base_ray = IsBaseRay(dispatch_thread_id, c_samplesPerQuad);
     needs_ray = needs_ray && (!needs_denoiser || is_base_ray); // Make sure to not deactivate mirror reflection rays.
     
-    /* todo
-    if (g_temporal_variance_guided_tracing_enabled && needs_denoiser && !needs_ray)
+    if (c_bEnableVarianceGuidedTracing && needs_denoiser && !needs_ray)
     {
-        bool has_temporal_variance = g_variance_history.Load(int3(dispatch_thread_id, 0)) > g_temporal_variance_threshold;
+        Texture2D<float> historyVarianceTexture = ResourceDescriptorHeap[c_historyVarianceTexture];
+        const float variance_threshold = 0.001;
+        bool has_temporal_variance = historyVarianceTexture[dispatch_thread_id] > variance_threshold;
         needs_ray = needs_ray || has_temporal_variance;
-    }*/
+    }
     
     GroupMemoryBarrierWithGroupSync(); // Wait until g_TileCount is cleared 
     

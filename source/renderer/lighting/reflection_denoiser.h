@@ -9,6 +9,10 @@ public:
     ReflectionDenoiser(Renderer* pRenderer);
 
     void ImportTextures(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
+
+    RenderGraphHandle GetHistoryVariance() const { return m_varianceHistory; }
+    IGfxDescriptor* GetHistoryVarianceSRV() const { return m_pVarianceHistory->GetSRV(); }
+
     IGfxDescriptor* GetOutputRadianceSRV() const { return m_pRadianceHistory->GetSRV(); }
 
     RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle indirectArgs, RenderGraphHandle tileListBuffer, RenderGraphHandle input, 

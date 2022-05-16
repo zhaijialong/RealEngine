@@ -12,7 +12,8 @@ public:
     IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetOutputRadianceSRV(); }
 
 private:
-    void ClassifyTiles(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* rayListUAV, IGfxDescriptor* tileListUAV, IGfxDescriptor* rayCounterUAV, uint32_t width, uint32_t height);
+    void ClassifyTiles(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* historyVariance,
+        IGfxDescriptor* rayListUAV, IGfxDescriptor* tileListUAV, IGfxDescriptor* rayCounterUAV, uint32_t width, uint32_t height);
     void PrepareIndirectArgs(IGfxCommandList* pCommandList, IGfxDescriptor* rayCounterSRV, IGfxDescriptor* indirectArgsUAV, IGfxDescriptor* denoiserArgsUAV);
     void SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, IGfxDescriptor* rayCounter, IGfxDescriptor* rayList, IGfxBuffer* indirectArgs);
 

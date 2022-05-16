@@ -218,8 +218,6 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
 
             data.outputRadiance = builder.Write(m_radianceHistory);
             data.outputVariance = builder.Write(m_varianceHistory);
-
-            builder.MakeTarget(); //todo
         },
         [=](const ResovleTemporalPassData& data, IGfxCommandList* pCommandList)
         {

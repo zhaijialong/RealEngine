@@ -46,7 +46,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
     {
         RenderGraphHandle depth;
         RenderGraphHandle normal;
-
+        RenderGraphHandle historyVariance;
         RenderGraphHandle rayListBuffer;
         RenderGraphHandle tileListBuffer;
         RenderGraphHandle rayCounterBuffer;
@@ -57,6 +57,11 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         {
             data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
+
+            if (m_bEnableDenoiser)
+            {
+                data.historyVariance = builder.Read(m_pDenoiser->GetHistoryVariance());
+            }
 
             RenderGraphBuffer::Desc desc;
             desc.stride = sizeof(uint32_t);
@@ -88,7 +93,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             pCommandList->ClearUAV(rayCounterBuffer->GetBuffer(), rayCounterBuffer->GetUAV(), clear_value);
             pCommandList->UavBarrier(rayCounterBuffer->GetBuffer());
 
-            ClassifyTiles(pCommandList, depth->GetSRV(), normal->GetSRV(), rayListBuffer->GetUAV(), tileListBuffer->GetUAV(), rayCounterBuffer->GetUAV(), width, height);
+            ClassifyTiles(pCommandList, depth->GetSRV(), normal->GetSRV(), m_pDenoiser->GetHistoryVarianceSRV(), rayListBuffer->GetUAV(), tileListBuffer->GetUAV(), rayCounterBuffer->GetUAV(), width, height);
         });
 
     struct PrepareIndirectArgsData
@@ -183,17 +188,20 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
     }
 }
 
-void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* rayListUAV, IGfxDescriptor* tileListUAV, IGfxDescriptor* rayCounterUAV, uint32_t width, uint32_t height)
+void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* historyVariance,
+    IGfxDescriptor* rayListUAV, IGfxDescriptor* tileListUAV, IGfxDescriptor* rayCounterUAV, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pTileClassificationPSO);
 
-    uint32_t constants[6] = {
+    uint32_t constants[8] = {
         depth->GetHeapIndex(),
         normal->GetHeapIndex(),
+        historyVariance->GetHeapIndex(),
         rayListUAV->GetHeapIndex(),
         tileListUAV->GetHeapIndex(),
         rayCounterUAV->GetHeapIndex(),
-        m_samplesPerQuad
+        m_samplesPerQuad,
+        m_bEnableDenoiser
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
 
