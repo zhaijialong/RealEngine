@@ -90,7 +90,7 @@ float16_t FFX_DNSR_Reflections_GetEdgeStoppingNormalWeight(float16_t3 normal_p, 
 }
 
 float16_t FFX_DNSR_Reflections_GetEdgeStoppingDepthWeight(float center_depth, float neighbor_depth) {
-    return exp(-abs(center_depth - neighbor_depth) * center_depth * FFX_DNSR_REFLECTIONS_PREFILTER_DEPTH_SIGMA);
+    return (float16_t)exp(-abs(center_depth - neighbor_depth) * center_depth * FFX_DNSR_REFLECTIONS_PREFILTER_DEPTH_SIGMA);
 }
 
 float16_t FFX_DNSR_Reflections_GetRadianceWeight(float16_t3 center_radiance, float16_t3 neighbor_radiance, float16_t variance) {
@@ -118,7 +118,7 @@ void FFX_DNSR_Reflections_Resolve(int2 group_thread_id, float16_t3 avg_radiance,
         FFX_DNSR_Reflections_NeighborhoodSample neighbor = FFX_DNSR_Reflections_LoadFromGroupSharedMemory(new_idx);
 
         float16_t weight = 1.0;
-        weight *= FFX_DNSR_Reflections_GetEdgeStoppingNormalWeight(float3(center.normal), float3(neighbor.normal));
+        weight *= FFX_DNSR_Reflections_GetEdgeStoppingNormalWeight(center.normal, neighbor.normal);
         weight *= FFX_DNSR_Reflections_GetEdgeStoppingDepthWeight(center.depth, neighbor.depth);
         weight *= FFX_DNSR_Reflections_GetRadianceWeight(avg_radiance, neighbor.radiance.xyz, center.variance);
         weight *= variance_weight;

@@ -24,7 +24,7 @@ void ReflectionDenoiser::ImportTextures(RenderGraph* pRenderGraph, uint32_t widt
     {
         m_bHistoryInvalid = true;
         m_pRadianceHistory.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "ReflectionDenoiser::m_pRadianceHistory"));
-        m_pVarianceHistory.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "ReflectionDenoiser::m_pRadianceHistory"));
+        m_pVarianceHistory.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "ReflectionDenoiser::m_pVarianceHistory"));
 
         m_pSampleCountInput.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "ReflectionDenoiser::m_pSampleCount0"));
         m_pSampleCountOutput.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "ReflectionDenoiser::m_pSampleCount1"));
@@ -32,14 +32,14 @@ void ReflectionDenoiser::ImportTextures(RenderGraph* pRenderGraph, uint32_t widt
 
     eastl::swap(m_pSampleCountInput, m_pSampleCountOutput);
 
-    m_radianceHistory = pRenderGraph->Import(m_pRadianceHistory->GetTexture(), GfxResourceState::UnorderedAccess);
+    m_radianceHistory = pRenderGraph->Import(m_pRadianceHistory->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
     m_varianceHistory = pRenderGraph->Import(m_pVarianceHistory->GetTexture(), GfxResourceState::UnorderedAccess);
     m_sampleCountInput = pRenderGraph->Import(m_pSampleCountInput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
     m_sampleCountOutput = pRenderGraph->Import(m_pSampleCountOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 }
 
 RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphHandle indirectArgs, RenderGraphHandle tileListBuffer, RenderGraphHandle input, 
-    RenderGraphHandle depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height)
+    RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "ReflectionDenoiser");
 
@@ -96,7 +96,7 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             desc.width = (width + 7) / 8;
             desc.height = (height + 7) / 8;
             desc.format = GfxFormat::RGBA16F;
-            data.outputAvgRadiance = builder.Create<RenderGraphTexture>(desc, "ReflectionDenoiser average variance");
+            data.outputAvgRadiance = builder.Create<RenderGraphTexture>(desc, "ReflectionDenoiser average radiance");
             data.outputAvgRadiance = builder.Write(data.outputAvgRadiance);
 
             data.outputSampleCount = builder.Write(m_sampleCountOutput);
@@ -125,6 +125,9 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
         RenderGraphHandle indirectArgs;
         RenderGraphHandle tileListBuffer;
 
+        RenderGraphHandle linearDepth;
+        RenderGraphHandle normal;
+
         RenderGraphHandle inputRadiance;
         RenderGraphHandle inputVariance;
         RenderGraphHandle avgRadiance;
@@ -138,6 +141,8 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
         {
             data.indirectArgs = builder.ReadIndirectArg(indirectArgs);
             data.tileListBuffer = builder.Read(tileListBuffer);
+            data.linearDepth = builder.Read(linear_depth);
+            data.normal = builder.Read(normal);
 
             data.inputRadiance = builder.Read(input);
             data.inputVariance = builder.Read(reproject_pass->outputVariance);
@@ -156,7 +161,22 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
         },
         [=](const PrefilterPassData& data, IGfxCommandList* pCommandList)
         {
-            Prefilter(pCommandList);
+            RenderGraphBuffer* indirectArgs = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgs);
+            RenderGraphBuffer* tileListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileListBuffer);
+
+            RenderGraphTexture* linearDepth = (RenderGraphTexture*)pRenderGraph->GetResource(data.linearDepth);
+            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
+
+            RenderGraphTexture* inputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRadiance);
+            RenderGraphTexture* inputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputVariance);
+            RenderGraphTexture* avgRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgRadiance);
+
+            RenderGraphTexture* outputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputRadiance);
+            RenderGraphTexture* outputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputVariance);
+
+            Prefilter(pCommandList, indirectArgs->GetBuffer(), tileListBuffer->GetSRV(), linearDepth->GetSRV(), normal->GetSRV(),
+                inputRadiance->GetSRV(), inputVariance->GetSRV(), 
+                avgRadiance->GetSRV(), outputRadiance->GetUAV(), outputVariance->GetUAV());
         });
 
     struct ResovleTemporalPassData
@@ -164,6 +184,7 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
         RenderGraphHandle indirectArgs;
         RenderGraphHandle tileListBuffer;
 
+        RenderGraphHandle normal;
         RenderGraphHandle inputRadiance;
         RenderGraphHandle reprojectedRadiance;
         RenderGraphHandle avgRadiance;
@@ -180,6 +201,7 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             data.indirectArgs = builder.ReadIndirectArg(indirectArgs);
             data.tileListBuffer = builder.Read(tileListBuffer);
 
+            data.normal = builder.Read(normal);
             data.inputRadiance = builder.Read(prefilter_pass->outputRadiance);
             data.inputVariance = builder.Read(prefilter_pass->outputVariance);
             data.reprojectedRadiance = builder.Read(reproject_pass->outputRadiance);
@@ -196,13 +218,21 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             RenderGraphBuffer* indirectArgs = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgs);
             RenderGraphBuffer* tileListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileListBuffer);
 
-            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.reprojectedRadiance);
-            IGfxDescriptor* outputRadianceUAV = m_pRadianceHistory->GetUAV();
+            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
+            RenderGraphTexture* inputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRadiance);
+            RenderGraphTexture* inputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputVariance);
+            RenderGraphTexture* reprojectedRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.reprojectedRadiance);
+            RenderGraphTexture* avgRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgRadiance);
 
-            ResolveTemporal(pCommandList, indirectArgs->GetBuffer(), tileListBuffer->GetSRV(), input->GetSRV(), outputRadianceUAV);
+            IGfxDescriptor* sampleCount = m_pSampleCountOutput->GetSRV();
+            IGfxDescriptor* outputRadianceUAV = m_pRadianceHistory->GetUAV();
+            IGfxDescriptor* outputVarianceUAV = m_pVarianceHistory->GetUAV();
+
+			ResolveTemporal(pCommandList, indirectArgs->GetBuffer(), tileListBuffer->GetSRV(), normal->GetSRV(), inputRadiance->GetSRV(), inputVariance->GetSRV(),
+                reprojectedRadiance->GetSRV(), avgRadiance->GetSRV(), sampleCount, outputRadianceUAV, outputVarianceUAV);
         });
 
-    return reproject_pass->outputRadiance;
+    return resolve_temporal_pass->outputRadiance;
 }
 
 void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList, 
@@ -235,7 +265,7 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, IGfxBuffer* in
 
     Constants constants;
     constants.tileListBuffer = tileList->GetHeapIndex();
-    constants.temporalStability = 0.7f; //todo
+    constants.temporalStability = m_temporalStability;
     constants.depthTexture = depth->GetHeapIndex();
     constants.normalTexture = normal->GetHeapIndex();
     constants.velocityTexture = velocity->GetHeapIndex();
@@ -259,19 +289,70 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, IGfxBuffer* in
     }
 }
 
-void ReflectionDenoiser::Prefilter(IGfxCommandList* pCommandList)
+void ReflectionDenoiser::Prefilter(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList,
+    IGfxDescriptor* linear_depth, IGfxDescriptor* normal, IGfxDescriptor* inputRadiance, IGfxDescriptor* inputVariance, IGfxDescriptor* avgRadiance,
+    IGfxDescriptor* outputRadianceUAV, IGfxDescriptor* outputVariancceUAV)
 {
-    //todo
     pCommandList->SetPipelineState(m_pPrefilterPSO);
-    pCommandList->Dispatch(1, 1, 1);
+
+    struct Constants
+    {
+        uint tileListBuffer;
+        uint linearDepthTexture;
+        uint normalTexture;
+        uint radianceTexture;
+        uint varianceTexture;
+        uint avgRadianceTexture;
+        uint outputRadianceUAV;
+        uint outputVarianceUAV;
+    };
+
+    Constants constants;
+    constants.tileListBuffer = tileList->GetHeapIndex();
+    constants.linearDepthTexture = linear_depth->GetHeapIndex();
+    constants.normalTexture = normal->GetHeapIndex();
+    constants.radianceTexture = inputRadiance->GetHeapIndex();
+    constants.varianceTexture = inputVariance->GetHeapIndex();
+    constants.avgRadianceTexture = avgRadiance->GetHeapIndex();
+    constants.outputRadianceUAV = outputRadianceUAV->GetHeapIndex();
+    constants.outputVarianceUAV = outputVariancceUAV->GetHeapIndex();
+
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
+    pCommandList->DispatchIndirect(indirectArgs, 0);
 }
 
-void ReflectionDenoiser::ResolveTemporal(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList, IGfxDescriptor* input, IGfxDescriptor* output)
+void ReflectionDenoiser::ResolveTemporal(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList,
+    IGfxDescriptor* normal, IGfxDescriptor* inputRadiance, IGfxDescriptor* inputVariance, IGfxDescriptor* reprojectedRadiance, IGfxDescriptor* avgRadiance,
+    IGfxDescriptor* sampleCount, IGfxDescriptor* outputRadianceUAV, IGfxDescriptor* outputVariancceUAV)
 {
     pCommandList->SetPipelineState(m_pResolveTemporalPSO);
 
-    uint32_t constants[3] = { tileList->GetHeapIndex(), input->GetHeapIndex(), output->GetHeapIndex() };
-    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
+    struct Constants
+    {
+        uint tileListBuffer;
+        float temporalStability;
+        uint normalTexture;
+        uint inputRadianceTexture;
+        uint reprojectedRadianceTexture;
+        uint avgRadianceTexture;
+        uint inputVarianceTexture;
+        uint sampleCountTexture;
+        uint outputRadianceUAV;
+        uint outputVarianceUAV;
+    };
 
+    Constants constants;
+    constants.tileListBuffer = tileList->GetHeapIndex();
+    constants.temporalStability = m_temporalStability;
+    constants.normalTexture = normal->GetHeapIndex();
+    constants.inputRadianceTexture = inputRadiance->GetHeapIndex();
+    constants.reprojectedRadianceTexture = reprojectedRadiance->GetHeapIndex();
+    constants.avgRadianceTexture = avgRadiance->GetHeapIndex();
+    constants.inputVarianceTexture = inputVariance->GetHeapIndex();
+    constants.sampleCountTexture = sampleCount->GetHeapIndex();
+    constants.outputRadianceUAV = outputRadianceUAV->GetHeapIndex();
+    constants.outputVarianceUAV = outputVariancceUAV->GetHeapIndex();
+
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
     pCommandList->DispatchIndirect(indirectArgs, 0);
 }

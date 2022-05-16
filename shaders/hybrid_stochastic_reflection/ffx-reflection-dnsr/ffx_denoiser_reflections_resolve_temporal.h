@@ -56,7 +56,7 @@ FFX_DNSR_Reflections_Moments FFX_DNSR_Reflections_EstimateLocalNeighborhoodInGro
         for (int i = -FFX_DNSR_REFLECTIONS_LOCAL_NEIGHBORHOOD_RADIUS; i <= FFX_DNSR_REFLECTIONS_LOCAL_NEIGHBORHOOD_RADIUS; ++i) {
             int2        new_idx  = group_thread_id + int2(i, j);
             float16_t3 radiance = FFX_DNSR_Reflections_LoadFromGroupSharedMemory(new_idx).radiance;
-            float16_t  weight   = FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight(i) * FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight(j);
+            float16_t  weight   = FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight((float16_t)i) * FFX_DNSR_Reflections_LocalNeighborhoodKernelWeight((float16_t)j);
             accumulated_weight  += weight;
             estimate.mean       += radiance * weight;
             estimate.variance   += radiance * radiance * weight;
@@ -116,7 +116,7 @@ void FFX_DNSR_Reflections_ResolveTemporal(int2 dispatch_thread_id, int2 group_th
         float16_t3                  old_signal         = FFX_DNSR_Reflections_LoadRadianceReprojected(dispatch_thread_id);
         FFX_DNSR_Reflections_Moments local_neighborhood = FFX_DNSR_Reflections_EstimateLocalNeighborhoodInGroup(group_thread_id);
         // Clip history based on the curren local statistics
-        float16_t3                  color_std          = (sqrt(local_neighborhood.variance.xyz) + length(local_neighborhood.mean.xyz - avg_radiance)) * history_clip_weight * 1.4;
+        float16_t3                  color_std          = float16_t3((sqrt(local_neighborhood.variance.xyz) + length(local_neighborhood.mean.xyz - avg_radiance)) * history_clip_weight * 1.4);
                             local_neighborhood.mean.xyz = lerp(local_neighborhood.mean.xyz, avg_radiance, 0.2);
         float16_t3                  radiance_min       = local_neighborhood.mean.xyz - color_std;
         float16_t3                  radiance_max       = local_neighborhood.mean.xyz + color_std;
@@ -124,7 +124,7 @@ void FFX_DNSR_Reflections_ResolveTemporal(int2 dispatch_thread_id, int2 group_th
         float16_t                   accumulation_speed = 1.0 / max(num_samples, 1.0);
         float16_t                   weight             = (1.0 - accumulation_speed);
         // Blend with average for small sample count
-        new_signal.xyz                                  = lerp(new_signal.xyz, avg_radiance, 1.0 / max(num_samples + 1.0f, 1.0));
+        new_signal.xyz                                  = (float16_t3)lerp(new_signal.xyz, avg_radiance, 1.0 / max(num_samples + 1.0f, 1.0));
         // Clip outliers
         {
             float16_t3                  radiance_min       = avg_radiance.xyz - color_std * 1.0;

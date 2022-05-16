@@ -103,7 +103,7 @@ void main(uint2 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex, uint3 dis
     
     bool require_copy = !needs_ray && needs_denoiser; // Our pixel only requires a copy if we want to run a denoiser on it but don't want to shoot a ray for it.
     
-#if HSR_REMAP_LANE    
+#if 0 //HSR_REMAP_LANE
     bool x_require_copy = WaveReadLaneAt(require_copy, WaveGetLaneIndex() ^ 0b01);
     bool y_require_copy = WaveReadLaneAt(require_copy, WaveGetLaneIndex() ^ 0b10);
     bool d_require_copy = WaveReadLaneAt(require_copy, WaveGetLaneIndex() ^ 0b11);

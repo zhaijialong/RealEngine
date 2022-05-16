@@ -145,9 +145,7 @@ void FFX_DNSR_Reflections_StoreNumSamples(int2 pixel_coordinate, float16_t value
 #include "ffx-reflection-dnsr/ffx_denoiser_reflections_reproject.h"
 
 [numthreads(8, 8, 1)]
-void main(int2 group_thread_id : SV_GroupThreadID,
-                uint group_index : SV_GroupIndex,
-                uint group_id : SV_GroupID)
+void main(int2 group_thread_id : SV_GroupThreadID, uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
 {
     Buffer<uint> tileListBuffer = ResourceDescriptorHeap[c_tileListBuffer];
     uint packed_coords = tileListBuffer[group_id];
@@ -155,11 +153,6 @@ void main(int2 group_thread_id : SV_GroupThreadID,
     int2 dispatch_group_id = dispatch_thread_id / 8;
     uint2 remapped_group_thread_id = FFX_DNSR_Reflections_RemapLane8x8(group_index);
     uint2 remapped_dispatch_thread_id = dispatch_group_id * 8 + remapped_group_thread_id;
-    
-    Texture2D inputTexture = ResourceDescriptorHeap[c_inputRadianceTexture];
-    RWTexture2D<float4> ouputTexture = ResourceDescriptorHeap[c_outputRadianceUAV];
-    //ouputTexture[remapped_dispatch_thread_id] = inputTexture[remapped_dispatch_thread_id];
-    
     
     FFX_DNSR_Reflections_Reproject(remapped_dispatch_thread_id, remapped_group_thread_id, uint2(SceneCB.viewWidth, SceneCB.viewHeight), c_temporalStability, 32);
 }

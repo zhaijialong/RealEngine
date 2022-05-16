@@ -176,7 +176,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             }
             if (indirectSpecularRT)
             {
-                cb1.indirectSprcularRT = indirectSpecularRT->GetSRV()->GetHeapIndex();
+                cb1.indirectSprcularRT = indirectSpecularRT->IsImported() ? m_pReflection->GetOutputRadianceSRV()->GetHeapIndex() : indirectSpecularRT->GetSRV()->GetHeapIndex();
             }
             cb1.outputRT = outputRT->GetUAV()->GetHeapIndex();
 

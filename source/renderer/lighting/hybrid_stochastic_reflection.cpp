@@ -175,7 +175,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
     
     if (m_bEnableDenoiser)
     {
-        return m_pDenoiser->Render(pRenderGraph, prepare_indirect_args_pass->denoiserArgsBuffer, tile_classification_pass->tileListBuffer, ssr_pass->output, depth, normal, velocity, width, height);
+        return m_pDenoiser->Render(pRenderGraph, prepare_indirect_args_pass->denoiserArgsBuffer, tile_classification_pass->tileListBuffer, ssr_pass->output, depth, linear_depth, normal, velocity, width, height);
     }
     else
     {

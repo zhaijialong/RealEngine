@@ -75,12 +75,12 @@ float16_t4 FFX_DNSR_Reflections_UnpackFloat16_4(uint2 a) { return float16_t4(FFX
 
 // Rounds value to the nearest multiple of 8
 uint2 FFX_DNSR_Reflections_RoundUp8(uint2 value) {
-    uint2 round_down = value & ~0b111;
+    //uint2 round_down = value & ~0b111;
     //return (round_down == value) ? value : value + 8;
-    uint2 tmp;
-    tmp.x = (round_down.x == value.x) ? value.x : value.x + 8;
-    tmp.x = (round_down.y == value.y) ? value.y : value.y + 8;
-    return tmp;
+    return uint2(
+        (value.x & ~0b111) == value.x ? value.x : value.x + 8,
+        (value.y & ~0b111) == value.y ? value.y : value.y + 8
+    );
 }
 
 // From "Temporal Reprojection Anti-Aliasing"
