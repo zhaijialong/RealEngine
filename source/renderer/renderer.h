@@ -48,7 +48,7 @@ public:
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
-    IGfxShader* GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines);
+    IGfxShader* GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags = 0);
     IGfxPipelineState* GetPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name);
     IGfxPipelineState* GetPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name);
     IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name);

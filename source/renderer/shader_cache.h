@@ -29,13 +29,13 @@ class ShaderCache
 public:
     ShaderCache(Renderer* pRenderer);
 
-    IGfxShader* GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines);
+    IGfxShader* GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags);
     eastl::string GetCachedFileContent(const eastl::string& file);
 
     void ReloadShaders();
 
 private:
-    IGfxShader* CreateShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines);
+    IGfxShader* CreateShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags);
     void RecompileShader(IGfxShader* shader);
 
     eastl::vector<IGfxShader*> GetShaderList(const eastl::string& file);

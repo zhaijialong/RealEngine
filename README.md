@@ -39,3 +39,4 @@ tested on RX6600(win11, Adrenalin 22.10.01.03)
     D3D12: Removing Device.
     D3D12 WARNING: ID3D12Device::RemoveDevice: Device removal has been triggered for the following reason (DXGI_ERROR_DRIVER_INTERNAL_ERROR: There is strong evidence that the driver has performed an undefined operation; but it may be because the application performed an illegal or undefined operation to begin with.). [ EXECUTION WARNING #233: DEVICE_REMOVAL_PROCESS_POSSIBLY_AT_FAULT]
     ```
+* `denoiser_reproject.hlsl` compiled with `-O0 ` crashes when creating the PSO

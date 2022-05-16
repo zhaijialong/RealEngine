@@ -366,12 +366,22 @@ struct GfxRenderPassDesc
     GfxRenderPassDepthAttachment depth;
 };
 
+enum GfxShaderCompilerFlagBit
+{
+    GfxShaderCompilerFlagO0,
+    GfxShaderCompilerFlagO1,
+    GfxShaderCompilerFlagO2,
+    GfxShaderCompilerFlagO3
+};
+using GfxShaderCompilerFlags = uint32_t;
+
 struct GfxShaderDesc
 {
     eastl::string file;
     eastl::string entry_point;
     eastl::string profile;
     eastl::vector<eastl::string> defines;
+    GfxShaderCompilerFlags flags = 0;
 };
 
 enum class GfxCullMode

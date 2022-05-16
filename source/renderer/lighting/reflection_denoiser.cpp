@@ -5,8 +5,16 @@ ReflectionDenoiser::ReflectionDenoiser(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
+    GfxShaderCompilerFlags flags = 0;
+#ifdef _DEBUG
+    if (m_pRenderer->GetDevice()->GetVendor() == GfxVendor::AMD)
+    {
+        flags = GfxShaderCompilerFlagO1; //todo : AMD crashes with -O0
+    }
+#endif
+
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_reproject.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_reproject.hlsl", "main", "cs_6_6", {}, flags);
     m_pReprojectPSO = pRenderer->GetPipelineState(desc, "HSR denoiser reproject PSO");
 
     desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_prefilter.hlsl", "main", "cs_6_6", {});

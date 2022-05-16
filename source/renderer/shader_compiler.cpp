@@ -92,7 +92,7 @@ ShaderCompiler::~ShaderCompiler()
 }
 
 bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& file, const eastl::string& entry_point,
-    const eastl::string& profile, const eastl::vector<eastl::string>& defines,
+    const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags,
     eastl::vector<uint8_t>& output_blob)
 {
     DxcBuffer sourceBuffer;
@@ -142,8 +142,32 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
 #ifdef _DEBUG
     arguments.push_back(L"-Zi");
     arguments.push_back(L"-Qembed_debug");
-    arguments.push_back(L"-O0");
 #endif
+
+    if (flags & GfxShaderCompilerFlagO3)
+    {
+        arguments.push_back(L"-O3");
+    }
+    else if (flags & GfxShaderCompilerFlagO2)
+    {
+        arguments.push_back(L"-O2");
+    }
+    else if (flags & GfxShaderCompilerFlagO1)
+    {
+        arguments.push_back(L"-O1");
+    }
+    else if (flags & GfxShaderCompilerFlagO0)
+    {
+        arguments.push_back(L"-O0");
+    }
+    else
+    {
+#ifdef _DEBUG
+        arguments.push_back(L"-O0");
+#else
+        arguments.push_back(L"-O3");
+#endif
+    }
 
     CComPtr<IDxcResult> pResults;
     m_pDxcCompiler->Compile(&sourceBuffer, arguments.data(), (UINT32)arguments.size(), m_pDxcIncludeHandler, IID_PPV_ARGS(&pResults));
