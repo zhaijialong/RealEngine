@@ -221,8 +221,17 @@ namespace debug
             PrintInt(screenPos, color, (int)number);
             PrintChar(screenPos, color, '.');
             
-            uint frac_value = frac(number) * 100000;
-            PrintInt(screenPos, color, frac_value);
+            float frac_value = frac(number);
+            float presicion = 100000;
+            while (frac_value < 0.1 && frac_value > 0.0)
+            {
+                PrintChar(screenPos, color, '0');
+                frac_value *= 10;
+                presicion *= 0.1;
+            }
+
+            frac_value *= presicion;
+            PrintInt(screenPos,	color, frac_value);
         }
     }
     
