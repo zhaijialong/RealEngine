@@ -124,6 +124,10 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             RenderGraphTexture* outputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputVariance);
             RenderGraphTexture* outputAvgRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputAvgRadiance);
 
+            float clear_value[4] = { 0.0f, 0.0f,  0.0f, 0.0f };
+            pCommandList->ClearUAV(outputAvgRadiance->GetTexture(), outputAvgRadiance->GetUAV(), clear_value);
+            pCommandList->UavBarrier(outputAvgRadiance->GetTexture());
+
             Reproject(pCommandList, indirectArgs->GetBuffer(), tileListBuffer->GetSRV(), depth->GetSRV(), normal->GetSRV(), velocity->GetSRV(), inputRadiance->GetSRV(),
                 outputRadiance->GetUAV(), outputVariance->GetUAV(), outputAvgRadiance->GetUAV());
         });
