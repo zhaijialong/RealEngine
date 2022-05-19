@@ -81,8 +81,8 @@ float16_t3 FFX_DNSR_Reflections_LoadWorldSpaceNormalHistory(int2 pixel_coordinat
 float16_t3 FFX_DNSR_Reflections_SampleWorldSpaceNormalHistory(float2 uv)
 {
     Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
-    return (float16_t3)OctNormalDecode(prevNormalTexture.SampleLevel(linearSampler, uv, 0).xyz);
+    SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+    return (float16_t3)OctNormalDecode(prevNormalTexture.SampleLevel(pointSampler, uv, 0).xyz);
 }
 
 float16_t FFX_DNSR_Reflections_LoadRoughness(int2 pixel_coordinate)
