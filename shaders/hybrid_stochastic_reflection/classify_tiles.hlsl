@@ -5,12 +5,12 @@ cbuffer Constants : register(b1)
 {
     uint c_depthTexture;
     uint c_normalTexture;
+    uint c_samplesPerQuad;
+    uint c_bEnableVarianceGuidedTracing;
     uint c_historyVarianceTexture;
     uint c_rayListBufferUAV;
     uint c_tileListBufferUAV;
     uint c_rayCounterBufferUAV;
-    uint c_samplesPerQuad;
-    uint c_bEnableVarianceGuidedTracing;
 };
 
 void IncrementRayCounter(uint value, out uint original_value)

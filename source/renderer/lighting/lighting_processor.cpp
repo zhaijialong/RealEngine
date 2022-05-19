@@ -160,6 +160,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
                 uint aoRT;
                 uint indirectSprcularRT;
 
+                float hsrMaxRoughness;
                 uint outputRT;
             };
 
@@ -178,6 +179,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             {
                 cb1.indirectSprcularRT = indirectSpecularRT->IsImported() ? m_pReflection->GetOutputRadianceSRV()->GetHeapIndex() : indirectSpecularRT->GetSRV()->GetHeapIndex();
             }
+            cb1.hsrMaxRoughness = m_pReflection->GetMaxRoughness();
             cb1.outputRT = outputRT->GetUAV()->GetHeapIndex();
 
             pCommandList->SetComputeConstants(1, &cb1, sizeof(cb1));

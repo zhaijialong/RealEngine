@@ -200,12 +200,12 @@ void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, IG
     uint32_t constants[8] = {
         depth->GetHeapIndex(),
         normal->GetHeapIndex(),
+        m_samplesPerQuad,
+        m_bEnableDenoiser,
         historyVariance->GetHeapIndex(),
         rayListUAV->GetHeapIndex(),
         tileListUAV->GetHeapIndex(),
         rayCounterUAV->GetHeapIndex(),
-        m_samplesPerQuad,
-        m_bEnableDenoiser
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
 

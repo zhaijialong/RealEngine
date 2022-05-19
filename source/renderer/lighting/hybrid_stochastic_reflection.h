@@ -10,6 +10,7 @@ public:
     RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height);
 
     IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetOutputRadianceSRV(); }
+    float GetMaxRoughness() const { return m_maxRoughness; }
 
 private:
     void ClassifyTiles(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* historyVariance,
@@ -30,6 +31,6 @@ private:
     bool m_bEnableDenoiser = true;
 
     uint m_samplesPerQuad = 1;
-    float m_maxRoughness = 1.0f;
+    float m_maxRoughness = 0.6f;
     float m_temporalStability = 0.7f;
 };

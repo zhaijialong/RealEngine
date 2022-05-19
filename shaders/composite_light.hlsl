@@ -13,6 +13,7 @@ cbuffer CB1 : register(b1)
     uint c_aoRT;
     uint c_indirectSprcularRT;
 
+    float c_hsrMaxRoughness;
     uint c_outputRT;
 };
 
@@ -64,12 +65,14 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     //todo : realtime GI
     float3 indirect_diffuse = DiffuseIBL(N);
+    float3 indirect_specular = SpecularIBL(N, V, roughness, specular);
 
 #if SPECULAR_GI
-    Texture2D indirectSprcularRT = ResourceDescriptorHeap[c_indirectSprcularRT];
-    float3 indirect_specular = SpecularIBL(indirectSprcularRT[pos].xyz, N, V, roughness, specular);
-#else
-    float3 indirect_specular = SpecularIBL(N, V, roughness, specular);
+    if(roughness < c_hsrMaxRoughness)
+    {
+        Texture2D indirectSprcularRT = ResourceDescriptorHeap[c_indirectSprcularRT];
+        indirect_specular = SpecularIBL(indirectSprcularRT[pos].xyz, N, V, roughness, specular);
+    }
 #endif
 
 #if GTAO && GTSO
