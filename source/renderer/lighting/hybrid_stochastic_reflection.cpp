@@ -30,7 +30,10 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             ImGui::Text("Samples Per Quad : "); ImGui::SameLine();
             ImGui::RadioButton("1##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 1); ImGui::SameLine();
             ImGui::RadioButton("2##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 2); ImGui::SameLine();
-            ImGui::RadioButton("4##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 4); ImGui::SameLine();
+            ImGui::RadioButton("4##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 4);
+
+            ImGui::SliderFloat("Max Roughness##HSR", &m_maxRoughness, 0.0, 1.0);
+            ImGui::SliderFloat("Temporal Stability##HSR", &m_temporalStability, 0.0, 1.0);
         });
 
     if (!m_bEnable)
@@ -192,6 +195,7 @@ void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, IG
     IGfxDescriptor* rayListUAV, IGfxDescriptor* tileListUAV, IGfxDescriptor* rayCounterUAV, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pTileClassificationPSO);
+    SetRootConstants(pCommandList);
 
     uint32_t constants[8] = {
         depth->GetHeapIndex(),
@@ -220,6 +224,7 @@ void HybridStochasticReflection::PrepareIndirectArgs(IGfxCommandList* pCommandLi
 void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, IGfxDescriptor* rayCounter, IGfxDescriptor* rayList, IGfxBuffer* indirectArgs)
 {
     pCommandList->SetPipelineState(m_pSSRPSO);
+    SetRootConstants(pCommandList);
 
     uint constants[7] = {
         rayCounter->GetHeapIndex(),
@@ -233,4 +238,19 @@ void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, IGfxDescript
 
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
     pCommandList->DispatchIndirect(indirectArgs, 0);
+}
+
+void HybridStochasticReflection::SetRootConstants(IGfxCommandList* pCommandList)
+{
+    struct Rootconstants
+    {
+        float maxRoughness;
+        float temporalStability;
+    };
+
+    Rootconstants root_constants;
+    root_constants.maxRoughness = m_maxRoughness;
+    root_constants.temporalStability = m_temporalStability;
+
+    pCommandList->SetComputeConstants(0, &root_constants, sizeof(root_constants));
 }

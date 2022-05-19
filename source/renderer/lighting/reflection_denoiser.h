@@ -35,8 +35,6 @@ private:
     IGfxPipelineState* m_pPrefilterPSO = nullptr;
     IGfxPipelineState* m_pResolveTemporalPSO = nullptr;
 
-    float m_temporalStability = 0.7f;
-
     bool m_bHistoryInvalid = true;
     eastl::unique_ptr<Texture2D> m_pRadianceHistory;
     eastl::unique_ptr<Texture2D> m_pVarianceHistory;

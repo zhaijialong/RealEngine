@@ -124,7 +124,7 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             RenderGraphTexture* outputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputVariance);
             RenderGraphTexture* outputAvgRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputAvgRadiance);
 
-            float clear_value[4] = { 0.0f, 0.0f,  0.0f, 0.0f };
+            float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             pCommandList->ClearUAV(outputAvgRadiance->GetTexture(), outputAvgRadiance->GetUAV(), clear_value);
             pCommandList->UavBarrier(outputAvgRadiance->GetTexture());
 
@@ -254,7 +254,6 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, IGfxBuffer* in
     struct Constants
     {
         uint tileListBuffer;
-        float temporalStability;
 
         uint depthTexture;
         uint normalTexture;
@@ -275,7 +274,6 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, IGfxBuffer* in
 
     Constants constants;
     constants.tileListBuffer = tileList->GetHeapIndex();
-    constants.temporalStability = m_temporalStability;
     constants.depthTexture = depth->GetHeapIndex();
     constants.normalTexture = normal->GetHeapIndex();
     constants.velocityTexture = velocity->GetHeapIndex();
@@ -340,7 +338,6 @@ void ReflectionDenoiser::ResolveTemporal(IGfxCommandList* pCommandList, IGfxBuff
     struct Constants
     {
         uint tileListBuffer;
-        float temporalStability;
         uint normalTexture;
         uint inputRadianceTexture;
         uint reprojectedRadianceTexture;
@@ -353,7 +350,6 @@ void ReflectionDenoiser::ResolveTemporal(IGfxCommandList* pCommandList, IGfxBuff
 
     Constants constants;
     constants.tileListBuffer = tileList->GetHeapIndex();
-    constants.temporalStability = m_temporalStability;
     constants.normalTexture = normal->GetHeapIndex();
     constants.inputRadianceTexture = inputRadiance->GetHeapIndex();
     constants.reprojectedRadianceTexture = reprojectedRadiance->GetHeapIndex();

@@ -3,7 +3,6 @@
 cbuffer Constants : register(b1)
 {
     uint c_tileListBuffer;
-    float c_temporalStability;
     
     uint c_depthTexture;
     uint c_normalTexture;

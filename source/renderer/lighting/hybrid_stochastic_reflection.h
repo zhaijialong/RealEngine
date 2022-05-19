@@ -17,6 +17,7 @@ private:
     void PrepareIndirectArgs(IGfxCommandList* pCommandList, IGfxDescriptor* rayCounterSRV, IGfxDescriptor* indirectArgsUAV, IGfxDescriptor* denoiserArgsUAV);
     void SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, IGfxDescriptor* rayCounter, IGfxDescriptor* rayList, IGfxBuffer* indirectArgs);
 
+    void SetRootConstants(IGfxCommandList* pCommandList);
 private:
     Renderer* m_pRenderer;
     eastl::unique_ptr<ReflectionDenoiser> m_pDenoiser;
@@ -29,4 +30,6 @@ private:
     bool m_bEnableDenoiser = true;
 
     uint m_samplesPerQuad = 1;
+    float m_maxRoughness = 1.0f;
+    float m_temporalStability = 0.7f;
 };

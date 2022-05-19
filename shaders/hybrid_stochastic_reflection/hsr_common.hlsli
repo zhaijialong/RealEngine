@@ -2,6 +2,12 @@
 
 #include "../common.hlsli"
 
+cbuffer Rootconstants : register(b0)
+{
+    float c_maxRoughness;
+    float c_temporalStability;
+};
+
 uint PackRayCoords(uint2 ray_coord, bool copy_horizontal, bool copy_vertical, bool copy_diagonal)
 {
     uint ray_x_15bit = ray_coord.x & 0b111111111111111;
@@ -27,8 +33,7 @@ void UnpackRayCoords(uint packed, out uint2 ray_coord, out bool copy_horizontal,
 
 bool FFX_DNSR_Reflections_IsGlossyReflection(float roughness)
 {
-    const float roughness_threshold = 1.0; //todo : don't shoot a ray on very rough surfaces
-    return roughness <= roughness_threshold;
+    return roughness <= c_maxRoughness;
 }
 
 bool FFX_DNSR_Reflections_IsMirrorReflection(float roughness)
