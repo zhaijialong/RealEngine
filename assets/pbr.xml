@@ -1,7 +1,9 @@
 <scene>
-    <model file="model/biped_robot/scene.gltf" scale="0.01,0.01,0.01"/>
-    <model file="model/reap_the_whirlwind/scene.gltf"  position="-5.0,0.0,0.0" scale="0.003,0.003,0.003"/>
-    <model file="model/MetalRoughSpheres/MetalRoughSpheres.gltf" position="8.0,0.0,5.0" />
+    <model file="model/backdrop.gltf" position="0.0,16.1,85.0"/>
+    <model file="model/cylinder.gltf" position="-15.0,-2.25,3.0"/>
+    <model file="model/biped_robot/scene.gltf" position="0.0,-1.6,0.0" scale="0.01,0.01,0.01"/>
+    <model file="model/reap_the_whirlwind/scene.gltf"  position="-5.0,-1.64,0.0" scale="0.003,0.003,0.003"/>
+    <model file="model/MetalRoughSpheres/MetalRoughSpheres.gltf" position="8.0,3.5,5.0" />
     <model file="model/DamagedHelmet/DamagedHelmet.gltf" position="0.0,0.0,-5.0" />
     <model file="model/SciFiHelmet/SciFiHelmet.gltf" position="5.0,0.0,-5.0"/>
     <skysphere />
