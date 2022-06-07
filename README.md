@@ -18,7 +18,8 @@ It is not supposed to be used in production, and prefers clean design and code o
 
 * render graph(~~barriers~~, ~~resource aliasing~~, async compute)
 * ~~GTAO~~
-* diffuse & specular GI
+* ~~specular GI~~
+* diffuse GI
 * clustered shading
 * ~~Bloom~~
 * ~~Auto Exposure~~

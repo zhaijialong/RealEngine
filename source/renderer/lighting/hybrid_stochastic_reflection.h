@@ -40,5 +40,5 @@ private:
 
     uint m_samplesPerQuad = 1;
     float m_maxRoughness = 0.6f;
-    float m_temporalStability = 0.7f;
+    float m_temporalStability = 0.5f;
 };
