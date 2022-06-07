@@ -17,12 +17,15 @@ enum class RendererOutput
     Diffuse,
     Specular,
     WorldNormal,
+    Roughness,
     Emissive,
     AO,
     DirectLighting,
     IndirectSpecular,
     IndirectDiffuse,
     PathTracing,
+
+    Max
 };
 
 class Renderer

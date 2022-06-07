@@ -123,6 +123,9 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             case RendererOutput::WorldNormal:
                 defines.push_back("OUTPUT_WORLDNORMAL=1");
                 break;
+            case RendererOutput::Roughness:
+                defines.push_back("OUTPUT_ROUGHNESS=1");
+                break;
             case RendererOutput::Emissive:
                 defines.push_back("OUTPUT_EMISSIVE=1");
                 break;

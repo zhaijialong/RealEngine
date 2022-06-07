@@ -93,6 +93,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     outTexture[dispatchThreadID.xy] = float4(specular, 1.0);
 #elif OUTPUT_WORLDNORMAL
     outTexture[dispatchThreadID.xy] = float4(N * 0.5 + 0.5, 1.0);
+#elif OUTPUT_ROUGHNESS
+    outTexture[dispatchThreadID.xy] = float4(roughness, roughness, roughness, 1.0);
 #elif OUTPUT_EMISSIVE
     outTexture[dispatchThreadID.xy] = float4(emissive, 1.0);
 #elif OUTPUT_AO
