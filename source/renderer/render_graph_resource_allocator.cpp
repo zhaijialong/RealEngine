@@ -181,8 +181,10 @@ IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uin
 
 void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
 {
+#define ALIGN(address, alignment) (((address) + (alignment) - 1) & ~((alignment) - 1)) 
+
     GfxHeapDesc heapDesc;
-    heapDesc.size = eastl::max(size, 64u * 1024);
+    heapDesc.size = ALIGN(size, 64u * 1024);
 
     eastl::string heapName = fmt::format("RG Heap {:.1f} MB", heapDesc.size / (1024.0f * 1024.0f)).c_str();
 

@@ -13,7 +13,10 @@ cbuffer CB : register(b1)
     uint c_depthRT;
     uint c_velocityRT;
     uint c_prevSceneColorTexture;
-    uint c_outputTexture;    
+    uint c_outputTexture;
+
+    uint c_hwRayCounterBufferUAV;
+    uint c_hwRayListBufferUAV;
 }
 
 //based on FFX_SSSR_ValidateHit
@@ -102,7 +105,9 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     ray.maxInteration = 32;
 
     ssrt::HitInfo hitInfo;
-    if (ssrt::HierarchicalRaymarch(ray, hitInfo) && ValidateHit(hitInfo, uv, direction))
+    bool valid_hit = ssrt::HierarchicalRaymarch(ray, hitInfo) && ValidateHit(hitInfo, uv, direction);
+    
+    if (valid_hit)
     {
         Texture2D prevSceneColorTexture = ResourceDescriptorHeap[c_prevSceneColorTexture];
         Texture2D velocityRT = ResourceDescriptorHeap[c_velocityRT];
@@ -115,48 +120,44 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
         
         float3 hitPosition = GetWorldPosition(hitInfo.screenUV, hitInfo.depth);
         rayLength = length(hitPosition - position);
-    }
-    else
-    {
-        //todo : split to a seperate pass
-        RayDesc ray;
-        ray.Origin = position + N * 0.001;
-        ray.Direction = direction;
-        ray.TMin = 0.001;
-        ray.TMax = 1000.0;
+        
+        float4 output = float4(radiance, rayLength);
+        outputTexture[coords] = output;
 
-        rt::HitInfo hitInfo;
-        if (rt::TraceRay(ray, hitInfo))
+        uint2 copy_target = coords ^ 0b1; // Flip last bit to find the mirrored coords along the x and y axis within a quad.
+        if (copy_horizontal)
         {
-            rt::MaterialData material = rt::GetMaterial(hitInfo);
-            radiance = rt::Shade(hitInfo, material, -direction);
-            rayLength = hitInfo.rayT;
+            uint2 copy_coords = uint2(copy_target.x, coords.y);
+            outputTexture[copy_coords] = output;
         }
-        else
+        if (copy_vertical)
         {
-            TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
-            radiance = skyTexture.SampleLevel(linearSampler, direction, 0).xyz;
-            rayLength = ray.TMax; // is this ok ?
-        }        
+            uint2 copy_coords = uint2(coords.x, copy_target.y);
+            outputTexture[copy_coords] = output;
+        }
+        if (copy_diagonal)
+        {
+            uint2 copy_coords = copy_target;
+            outputTexture[copy_coords] = output;
+        }
+    }
+
+    bool need_hw_ray = !valid_hit;
+    uint local_ray_index_in_wave = WavePrefixCountBits(need_hw_ray);
+    uint wave_ray_count = WaveActiveCountBits(need_hw_ray);
+    uint base_ray_index;
+    if (WaveIsFirstLane())
+    {
+        RWBuffer<uint> hwRayCounterBufferUAV = ResourceDescriptorHeap[c_hwRayCounterBufferUAV];
+        InterlockedAdd(hwRayCounterBufferUAV[0], wave_ray_count, base_ray_index);
     }
     
-    float4 output = float4(radiance, rayLength);
-    outputTexture[coords] = output;
-
-    uint2 copy_target = coords ^ 0b1; // Flip last bit to find the mirrored coords along the x and y axis within a quad.
-    if (copy_horizontal) 
+    base_ray_index = WaveReadLaneFirst(base_ray_index);
+    
+    if (need_hw_ray)
     {
-        uint2 copy_coords = uint2(copy_target.x, coords.y);
-        outputTexture[copy_coords] = output;
-    }
-    if (copy_vertical) 
-    {
-        uint2 copy_coords = uint2(coords.x, copy_target.y);
-        outputTexture[copy_coords] = output;
-    }
-    if (copy_diagonal) 
-    {
-        uint2 copy_coords = copy_target;
-        outputTexture[copy_coords] = output;
+        int ray_index = base_ray_index + local_ray_index_in_wave;
+        RWBuffer<uint> hwRayListBufferUAV = ResourceDescriptorHeap[c_hwRayListBufferUAV];
+        hwRayListBufferUAV[ray_index] = packed_coords;
     }
 }

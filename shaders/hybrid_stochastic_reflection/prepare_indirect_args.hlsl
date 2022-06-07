@@ -10,7 +10,6 @@ void main()
 {
     Buffer<uint> rayCounterBufferSRV = ResourceDescriptorHeap[c_rayCounterBufferSRV];
     RWBuffer<uint> indirectArgsBufferUAV = ResourceDescriptorHeap[c_indirectArgsBufferUAV];
-    RWBuffer<uint> denoiserArgsBufferUAV = ResourceDescriptorHeap[c_denoiserArgsBufferUAV];
     
     uint ray_count = rayCounterBufferSRV[0];
     uint tile_count = rayCounterBufferSRV[1];
@@ -19,7 +18,10 @@ void main()
     indirectArgsBufferUAV[1] = 1;
     indirectArgsBufferUAV[2] = 1;
     
+#if DENOISER_ARG
+    RWBuffer<uint> denoiserArgsBufferUAV = ResourceDescriptorHeap[c_denoiserArgsBufferUAV];
     denoiserArgsBufferUAV[0] = tile_count;
     denoiserArgsBufferUAV[1] = 1;
     denoiserArgsBufferUAV[2] = 1;
+#endif
 }
