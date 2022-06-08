@@ -6,6 +6,8 @@ cbuffer Rootconstants : register(b0)
 {
     float c_maxRoughness;
     float c_temporalStability;
+    uint c_bEnableSWRay;
+    uint c_bEnableHWRay;
 };
 
 uint PackRayCoords(uint2 ray_coord, bool copy_horizontal, bool copy_vertical, bool copy_diagonal)

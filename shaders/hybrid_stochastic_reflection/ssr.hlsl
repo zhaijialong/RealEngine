@@ -105,7 +105,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     ray.maxInteration = 32;
 
     ssrt::HitInfo hitInfo;
-    bool valid_hit = ssrt::HierarchicalRaymarch(ray, hitInfo) && ValidateHit(hitInfo, uv, direction);
+    bool valid_hit = c_bEnableSWRay && ssrt::HierarchicalRaymarch(ray, hitInfo) && ValidateHit(hitInfo, uv, direction);
     
     if (valid_hit)
     {

@@ -31,6 +31,8 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         [&]()
         {
             ImGui::Checkbox("Enable##HSR", &m_bEnable);
+            ImGui::Checkbox("Enable SW Ray##HSR", &m_bEnableSWRay);
+            ImGui::Checkbox("Enable HW Ray##HSR", &m_bEnableHWRay);
             ImGui::Checkbox("Enable Denoiser##HSR", &m_bEnableDenoiser);
 
             ImGui::Text("Samples Per Quad : "); ImGui::SameLine();
@@ -362,11 +364,15 @@ void HybridStochasticReflection::SetRootConstants(IGfxCommandList* pCommandList)
     {
         float maxRoughness;
         float temporalStability;
+        uint bEnableSWRay;
+        uint bEnableHWRay;
     };
 
     Rootconstants root_constants;
     root_constants.maxRoughness = m_maxRoughness;
     root_constants.temporalStability = m_temporalStability;
+    root_constants.bEnableSWRay = m_bEnableSWRay;
+    root_constants.bEnableHWRay = m_bEnableHWRay;
 
     pCommandList->SetComputeConstants(0, &root_constants, sizeof(root_constants));
 }

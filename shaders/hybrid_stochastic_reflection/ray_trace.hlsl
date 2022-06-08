@@ -57,7 +57,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     ray.TMax = 1000.0;
     
     rt::HitInfo hitInfo;
-    if (rt::TraceRay(ray, hitInfo))
+    if (c_bEnableHWRay && rt::TraceRay(ray, hitInfo))
     {
         rt::MaterialData material = rt::GetMaterial(hitInfo);
         radiance = rt::Shade(hitInfo, material, -direction);

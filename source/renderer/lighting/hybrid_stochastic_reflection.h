@@ -36,6 +36,8 @@ private:
     IGfxPipelineState* m_pRaytracePSO = nullptr;
 
     bool m_bEnable = true;
+    bool m_bEnableSWRay = true;
+    bool m_bEnableHWRay = true;
     bool m_bEnableDenoiser = true;
 
     uint m_samplesPerQuad = 1;
