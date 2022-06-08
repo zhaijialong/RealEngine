@@ -132,6 +132,7 @@ void Renderer::UploadResources()
 
     uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
     IGfxCommandList* pUploadCommandList = m_pUploadCommandList[frame_index].get();
+    pUploadCommandList->ResetAllocator();
     pUploadCommandList->Begin();
 
     {
