@@ -138,16 +138,9 @@ void Editor::DrawMenu()
                 }
             }
 
-            if (ImGui::MenuItem("Render Graph", "", &m_bShowRenderGraph))
+            if (ImGui::MenuItem("Render Graph", ""))
             {
-                if (m_bShowRenderGraph)
-                {
-                    CreateRenderGraph();
-                }
-                else
-                {
-                    m_pRenderGraph.reset();
-                }
+                ShowRenderGraph();
             }
 
             ImGui::MenuItem("Imgui Demo", "", &m_bShowImguiDemo);
@@ -220,14 +213,6 @@ void Editor::DrawMenu()
         ImGui::Begin("GPU Memory Stats", &m_bShowGpuMemoryStats);
         const GfxTextureDesc& desc = m_pGpuMemoryStats->GetTexture()->GetDesc();
         ImGui::Image((ImTextureID)m_pGpuMemoryStats->GetSRV(), ImVec2((float)desc.width, (float)desc.height));
-        ImGui::End();
-    }
-
-    if (m_bShowRenderGraph && m_pRenderGraph)
-    {
-        ImGui::Begin("Render Graph", &m_bShowRenderGraph, ImGuiWindowFlags_HorizontalScrollbar);
-        const GfxTextureDesc& desc = m_pRenderGraph->GetTexture()->GetDesc();
-        ImGui::Image((ImTextureID)m_pRenderGraph->GetSRV(), ImVec2((float)desc.width, (float)desc.height));
         ImGui::End();
     }
 
@@ -373,7 +358,7 @@ void Editor::CreateGpuMemoryStats()
     }
 }
 
-void Editor::CreateRenderGraph()
+void Editor::ShowRenderGraph()
 {
     Engine* pEngine = Engine::GetInstance();
     Renderer* pRenderer = pEngine->GetRenderer();
@@ -384,17 +369,11 @@ void Editor::CreateRenderGraph()
     if (pRenderer->GetRenderGraph()->Export(graph_file))
     {
         eastl::string dot_exe = Engine::GetInstance()->GetWorkPath() + "tools/graphviz/dot.exe";
-        eastl::string cmd = dot_exe + " -Tpng -O " + graph_file;
+        eastl::string cmd = dot_exe + " -Tsvg -O " + graph_file;
         if (ExecuteCommand(cmd.c_str()) == 0)
         {
-            eastl::string png_file = graph_file + ".png";
-            
-            TextureLoader loader;
-            loader.Load(png_file, true);
-            loader.Resize(8000, 2000);
-
-            m_pRenderGraph.reset(pRenderer->CreateTexture2D(loader.GetWidth(), loader.GetHeight(), 1, loader.GetFormat(), 0, png_file));
-            pRenderer->UploadTexture(m_pRenderGraph->GetTexture(), loader.GetData());
+            eastl::string png_file = "explorer " + graph_file + ".svg";
+            ExecuteCommand(png_file.c_str());
         }
     }
 }

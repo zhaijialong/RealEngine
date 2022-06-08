@@ -21,14 +21,13 @@ private:
     void DrawFrameStats();
 
     void CreateGpuMemoryStats();
-    void CreateRenderGraph();
+    void ShowRenderGraph();
     void FlushPendingTextureDeletions();
 
     void DrawWindow(const eastl::string& window, bool* open);
 
 private:
     bool m_bShowGpuMemoryStats = false;
-    bool m_bShowRenderGraph = false;
     bool m_bShowImguiDemo = false;
     bool m_bShowGpuDrivenStats = false;
     bool m_bViewFrustumLocked = false;
@@ -52,7 +51,6 @@ private:
     eastl::vector<IGfxDescriptor*> m_pendingDeletions;
 
     eastl::unique_ptr<Texture2D> m_pGpuMemoryStats;
-    eastl::unique_ptr<Texture2D> m_pRenderGraph;
 
     enum class SelectEditMode
     {

@@ -8,7 +8,7 @@ It is not supposed to be used in production, and prefers clean design and code o
 
 * utilize latest DX12 features, such as raytracing, mesh shaders, HLSL 2021, etc.
 * render graph based architecture, with automatically barriers and transient resources management
-  ![rendergraph](bin/rendergraph.png)
+  ![rendergraph](bin/rendergraph.svg)
 * fully bindless resources with SM6.6
 * two-phase occlusion culling (like Ubi's GPU driven pipeline). no matter how many different meshes and textures, always two drawcalls(indirect DispatchMesh) per PSO.
 * hybrid rendering with raytracing
