@@ -19,9 +19,6 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
         {
             if (ImGui::Checkbox("Enable##TAA", &m_bEnable))
             {
-                Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
-                camera->EnableJitter(m_bEnable);
-
                 if (!m_bEnable)
                 {
                     m_pHistoryColorInput.reset();
@@ -32,7 +29,7 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
             }
         });
 
-    if (!m_bEnable)
+    if (!m_bEnable || m_pRenderer->GetOutputType() == RendererOutput::PathTracing)
     {
         return sceneColorRT;
     }

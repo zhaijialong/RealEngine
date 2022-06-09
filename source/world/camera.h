@@ -40,7 +40,7 @@ public:
     float GetFov() const { return m_fov; }
     void SetFov(float fov);
 
-    void EnableJitter(bool value) { m_bEnableJitter = value; };
+    void EnableJitter(bool value);
     float2 GetJitter() const { return m_jitter; }
     float2 GetPrevJitter() const { return m_prevJitter; }
 

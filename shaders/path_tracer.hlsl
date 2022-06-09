@@ -35,6 +35,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     float depth = depthRT[dispatchThreadID.xy];
     if (depth == 0.0)
     {
+        //todo : path tracing sky
         outputTexture[dispatchThreadID.xy] = float4(0.0, 0.0, 0.0, 1.0);
         return;
     }

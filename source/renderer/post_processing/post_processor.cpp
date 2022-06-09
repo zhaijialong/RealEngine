@@ -32,3 +32,8 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
 
     return outputHandle;
 }
+
+bool PostProcessor::RequiresCameraJitter()
+{
+    return m_pTAA->IsEnabled();
+}

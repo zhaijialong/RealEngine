@@ -15,6 +15,8 @@ public:
     RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
         RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height);
 
+    bool RequiresCameraJitter();
+
 private:
     Renderer* m_pRenderer = nullptr;
 

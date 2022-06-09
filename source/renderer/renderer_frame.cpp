@@ -28,9 +28,9 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     else
     {
         sceneColorRT = m_pLightingProcessor->Render(m_pRenderGraph.get(), sceneDepthRT, linearDepthRT, velocityRT, m_nWindowWidth, m_nWindowHeight);
-    }
 
-    ForwardPass(sceneColorRT, sceneDepthRT);
+        ForwardPass(sceneColorRT, sceneDepthRT);
+    }
 
     RenderGraphHandle output = m_pPostProcessor->Render(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, linearDepthRT, velocityRT, m_nWindowWidth, m_nWindowHeight);
 

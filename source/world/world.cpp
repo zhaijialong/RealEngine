@@ -14,7 +14,6 @@
 World::World()
 {
     m_pCamera = eastl::make_unique<Camera>();
-    m_pCamera->EnableJitter(true);
 }
 
 void World::LoadScene(const eastl::string& file)

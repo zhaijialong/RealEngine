@@ -64,6 +64,17 @@ void Camera::SetFov(float fov)
     SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
 }
 
+void Camera::EnableJitter(bool value)
+{
+    if (m_bEnableJitter != value)
+    {
+        m_bEnableJitter = value;
+
+        UpdateJitter();
+        UpdateMatrix();
+    }
+}
+
 void Camera::Tick(float delta_time)
 {
     GUI("Settings", "Camera", [&]() { OnGui(); });

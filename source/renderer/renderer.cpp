@@ -222,6 +222,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     Camera* camera = world->GetCamera();
     ILight* light = world->GetPrimaryLight();
 
+    bool enable_jitter = m_pPostProcessor->RequiresCameraJitter() || (m_outputType == RendererOutput::PathTracing);
+    camera->EnableJitter(enable_jitter);
     camera->SetupCameraCB(pCommandList);
 
     RenderGraphHandle firstPhaseHZBHandle = m_pHZB->Get1stPhaseCullingHZBMip(0);
