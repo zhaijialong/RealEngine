@@ -110,6 +110,7 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
 
                 float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
                 pCommandList->ClearUAV(m_pHistoryAccumulation->GetTexture(), m_pHistoryAccumulation->GetUAV(), clear_value);
+                pCommandList->UavBarrier(m_pHistoryAccumulation->GetTexture());
             }
 
             RenderGraphTexture* currentFrame = (RenderGraphTexture*)pRenderGraph->GetResource(data.currentFrame);

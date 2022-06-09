@@ -1,5 +1,4 @@
 #include "eastl_allocator.h"
-#define STB_SPRINTF_IMPLEMENTATION
 #include "stb/stb_sprintf.h"
 #include "rpmalloc/rpmalloc.h"
 #include <stdio.h> //vsnwprintf

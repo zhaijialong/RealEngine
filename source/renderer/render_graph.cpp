@@ -116,10 +116,6 @@ void RenderGraph::Execute(IGfxCommandList* pCommandList, IGfxCommandList* pCompu
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
         RenderGraphPassBase* pass = m_passes[i];
-        if (pass->IsCulled())
-        {
-            continue;
-        }
 
         pass->Execute(*this, pCommandList);
     }

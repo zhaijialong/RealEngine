@@ -118,6 +118,7 @@ void RenderGraphPassBase::Execute(const RenderGraph& graph, IGfxCommandList* pCo
         BeginMPGpuEvent(pCommandList, m_eventNames[i]);
     }
 
+    if (!IsCulled())
     {
         GPU_EVENT(pCommandList, m_name);
 
