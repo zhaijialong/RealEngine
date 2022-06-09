@@ -177,7 +177,6 @@ void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
         {
             DispatchBatch(pCommandList, m_animationBatchs[i]);
         }
-        m_animationBatchs.clear();
 
         m_pGpuScene->EndAnimationUpdate(pCommandList);
     }
@@ -417,6 +416,11 @@ void Renderer::EndFrame()
     m_pStagingBufferAllocator[frame_index]->Reset();
     m_cbAllocator->Reset();
     m_pGpuScene->ResetFrameData();
+
+    m_animationBatchs.clear();
+    m_forwardPassBatchs.clear();
+    m_velocityPassBatchs.clear();
+    m_idPassBatchs.clear();
 
     m_pDevice->EndFrame();
 }

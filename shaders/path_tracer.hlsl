@@ -22,6 +22,18 @@ float ProbabilityToSampleDiffuse(float3 diffuse, float3 specular)
     return lumDiffuse / max(lumDiffuse + lumSpecular, 0.0001);
 }
 
+float3 SkyColor(uint2 screenPos)
+{
+    float3 position = GetWorldPosition(screenPos, 0);
+    float3 dir = normalize(position - CameraCB.cameraPos);
+    
+    TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    float3 sky_color = skyTexture.SampleLevel(linearSampler, dir, 0).xyz;
+
+    return sky_color;
+}
+
 [numthreads(8, 8, 1)]
 void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
@@ -35,8 +47,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     float depth = depthRT[dispatchThreadID.xy];
     if (depth == 0.0)
     {
-        //todo : path tracing sky
-        outputTexture[dispatchThreadID.xy] = float4(0.0, 0.0, 0.0, 1.0);
+        outputTexture[dispatchThreadID.xy] = float4(SkyColor(dispatchThreadID.xy), 1.0);
         return;
     }
 

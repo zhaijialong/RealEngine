@@ -64,7 +64,6 @@ void Renderer::ForwardPass(RenderGraphHandle& color, RenderGraphHandle& depth)
             {
                 DrawBatch(pCommandList, m_forwardPassBatchs[i]);
             }
-            m_forwardPassBatchs.clear();
         });
 
     color = forward_pass->outSceneColorRT;
@@ -99,7 +98,6 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
             {
                 DrawBatch(pCommandList, m_velocityPassBatchs[i]);
             }
-            m_velocityPassBatchs.clear();
         });
 
     struct CameraVelocityPassData
@@ -203,7 +201,6 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
                 {
                     DrawBatch(pCommandList, m_idPassBatchs[i]);
                 }
-                m_idPassBatchs.clear();
             });
 
         depth = id_pass->sceneDepthTexture;
@@ -236,10 +233,6 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
 
                 pCommandList->CopyTextureToBuffer(m_pObjectIDBuffer.get(), srcTexture->GetTexture(), 0, 0);
             });
-    }
-    else
-    {
-        m_idPassBatchs.clear();
     }
 }
 
