@@ -19,8 +19,7 @@ public:
         m_pPass = pass;
     }
 
-    void MakeTarget() { m_pPass->MakeTarget(); }
-    void EnableAsyncCompute() { m_pPass->EnableAsyncCompute(); }
+    void SkipCulling() { m_pPass->MakeTarget(); }
 
     template<typename Resource>
     RenderGraphHandle Create(const typename Resource::Desc& desc, const eastl::string& name)
@@ -68,6 +67,7 @@ public:
             }
             break;
         case RenderPassType::Compute:
+        case RenderPassType::AsyncCompute:
             state = GfxResourceState::ShaderResourceNonPS;
             break;
         case RenderPassType::Copy:
@@ -107,6 +107,7 @@ public:
         {
         case RenderPassType::Graphics:
         case RenderPassType::Compute:
+        case RenderPassType::AsyncCompute:
             state = GfxResourceState::UnorderedAccess;
             break;
         case RenderPassType::Copy:

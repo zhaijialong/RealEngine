@@ -215,7 +215,7 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
             {
                 data.srcTexture = builder.Read(id_pass->idTexture);
 
-                builder.MakeTarget();
+                builder.SkipCulling();
             },
             [&](const CopyIDPassData& data, IGfxCommandList* pCommandList)
             {
@@ -262,7 +262,7 @@ void Renderer::CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle 
             data.srcSceneColorTexture = builder.Read(sceneColor);
             data.dstSceneColorTexture = builder.Write(m_prevSceneColorHandle);
 
-            builder.MakeTarget();
+            builder.SkipCulling();
         },
         [&](const CopyPassData& data, IGfxCommandList* pCommandList)
         {
