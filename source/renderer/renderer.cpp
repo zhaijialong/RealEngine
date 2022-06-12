@@ -59,6 +59,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
 
+    m_pAsyncComputeFence.reset(m_pDevice->CreateFence("Renderer::m_pAsyncComputeFence"));
+
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         eastl::string name = fmt::format("Renderer::m_pComputeCommandLists[{}]", i).c_str();
@@ -156,10 +158,8 @@ void Renderer::UploadResources()
     }
 
     pUploadCommandList->End();
+    pUploadCommandList->Signal(m_pUploadFence.get(), ++m_nCurrentUploadFenceValue);
     pUploadCommandList->Submit();
-
-    m_nCurrentUploadFenceValue++;
-    pUploadCommandList->Signal(m_pUploadFence.get(), m_nCurrentUploadFenceValue);
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->Wait(m_pUploadFence.get(), m_nCurrentUploadFenceValue);
@@ -403,15 +403,14 @@ void Renderer::EndFrame()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->End();
 
-    ++m_nCurrentFrameFenceValue;
-    m_nFrameFenceValue[frame_index] = m_nCurrentFrameFenceValue;
+    m_nFrameFenceValue[frame_index] = ++m_nCurrentFrameFenceValue;
 
+    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
     pCommandList->Submit();
     {
         CPU_EVENT("Render", "IGfxSwapchain::Present");
         m_pSwapchain->Present();
     }
-    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
 
     m_pStagingBufferAllocator[frame_index]->Reset();
     m_cbAllocator->Reset();

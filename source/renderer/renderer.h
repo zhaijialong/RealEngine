@@ -155,6 +155,9 @@ private:
     uint64_t m_nCurrentFrameFenceValue = 0;
     uint64_t m_nFrameFenceValue[GFX_MAX_INFLIGHT_FRAMES] = {};
     eastl::unique_ptr<IGfxCommandList> m_pCommandLists[GFX_MAX_INFLIGHT_FRAMES];
+
+    eastl::unique_ptr<IGfxFence> m_pAsyncComputeFence;
+    uint64_t m_nCurrentAsyncComputeFenceValue = 0;
     eastl::unique_ptr<IGfxCommandList> m_pComputeCommandLists[GFX_MAX_INFLIGHT_FRAMES];
 
     eastl::unique_ptr<IGfxFence> m_pUploadFence;

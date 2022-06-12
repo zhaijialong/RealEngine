@@ -123,16 +123,22 @@ void D3D12CommandList::End()
 
 void D3D12CommandList::Wait(IGfxFence* fence, uint64_t value)
 {
-    m_pCommandQueue->Wait((ID3D12Fence*)fence->GetHandle(), value);
+    m_pendingWaits.emplace_back(fence, value);
 }
 
 void D3D12CommandList::Signal(IGfxFence* fence, uint64_t value)
 {
-    m_pCommandQueue->Signal((ID3D12Fence*)fence->GetHandle(), value);
+    m_pendingSignals.emplace_back(fence, value);
 }
 
 void D3D12CommandList::Submit()
 {
+    for (size_t i = 0; i < m_pendingWaits.size(); ++i)
+    {
+        m_pCommandQueue->Wait((ID3D12Fence*)m_pendingWaits[i].first->GetHandle(), m_pendingWaits[i].second);
+    }
+    m_pendingWaits.clear();
+
     ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
     m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
 
@@ -143,6 +149,12 @@ void D3D12CommandList::Submit()
         MicroProfileThreadLogGpuFree(m_pProfileLog);
     }
 #endif
+
+    for (size_t i = 0; i < m_pendingSignals.size(); ++i)
+    {
+        m_pCommandQueue->Signal((ID3D12Fence*)m_pendingSignals[i].first->GetHandle(), m_pendingSignals[i].second);
+    }
+    m_pendingSignals.clear();
 }
 
 void D3D12CommandList::BeginEvent(const eastl::string& event_name)

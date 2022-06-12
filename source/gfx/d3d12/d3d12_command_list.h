@@ -85,6 +85,8 @@ private:
     IGfxPipelineState* m_pCurrentPSO = nullptr;
 
     eastl::vector<D3D12_RESOURCE_BARRIER> m_pendingBarriers;
+    eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingWaits;
+    eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
     struct MicroProfileThreadLogGpu* m_pProfileLog = nullptr;
