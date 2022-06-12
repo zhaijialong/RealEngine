@@ -104,14 +104,6 @@ void D3D12CommandList::Begin()
             m_pCommandList->SetGraphicsRootSignature(pRootSignature);
         }
     }
-
-#if MICROPROFILE_GPU_TIMERS_D3D12
-    if (m_nProfileQueue != -1)
-    {
-        m_pProfileLog = MicroProfileThreadLogGpuAlloc();
-        MicroProfileGpuBegin(m_pCommandList, m_pProfileLog);
-    }
-#endif
 }
 
 void D3D12CommandList::End()
@@ -142,6 +134,26 @@ void D3D12CommandList::Submit()
     ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
     m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
 
+    for (size_t i = 0; i < m_pendingSignals.size(); ++i)
+    {
+        m_pCommandQueue->Signal((ID3D12Fence*)m_pendingSignals[i].first->GetHandle(), m_pendingSignals[i].second);
+    }
+    m_pendingSignals.clear();
+}
+
+void D3D12CommandList::BeginProfiling()
+{
+#if MICROPROFILE_GPU_TIMERS_D3D12
+    if (m_nProfileQueue != -1)
+    {
+        m_pProfileLog = MicroProfileThreadLogGpuAlloc();
+        MicroProfileGpuBegin(m_pCommandList, m_pProfileLog);
+    }
+#endif
+}
+
+void D3D12CommandList::EndProfiling()
+{
 #if MICROPROFILE_GPU_TIMERS_D3D12	
     if (m_nProfileQueue != -1)
     {
@@ -149,12 +161,6 @@ void D3D12CommandList::Submit()
         MicroProfileThreadLogGpuFree(m_pProfileLog);
     }
 #endif
-
-    for (size_t i = 0; i < m_pendingSignals.size(); ++i)
-    {
-        m_pCommandQueue->Signal((ID3D12Fence*)m_pendingSignals[i].first->GetHandle(), m_pendingSignals[i].second);
-    }
-    m_pendingSignals.clear();
 }
 
 void D3D12CommandList::BeginEvent(const eastl::string& event_name)

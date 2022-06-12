@@ -23,6 +23,8 @@ public:
     virtual void Signal(IGfxFence* fence, uint64_t value) = 0;
     virtual void Submit() = 0;
 
+    virtual void BeginProfiling() = 0;
+    virtual void EndProfiling() = 0;
     virtual void BeginEvent(const eastl::string& event_name) = 0;
     virtual void EndEvent() = 0;
 

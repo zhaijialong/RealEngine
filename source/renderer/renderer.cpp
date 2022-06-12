@@ -118,9 +118,12 @@ void Renderer::BeginFrame()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->ResetAllocator();
     pCommandList->Begin();
+    pCommandList->BeginProfiling();
 
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
     pComputeCommandList->ResetAllocator();
+    pComputeCommandList->Begin();
+    pComputeCommandList->BeginProfiling();
 }
 
 void Renderer::UploadResources()
@@ -182,37 +185,53 @@ void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
     }
 }
 
-void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList)
+void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList)
 {
-    GPU_EVENT(pCommandList, "BuildRayTracingAS");
+    pCommandList->End();
+    pCommandList->Signal(m_pAsyncComputeFence.get(), ++m_nCurrentAsyncComputeFenceValue);
+    pCommandList->Submit();
 
-    if (!m_pendingBLASBuilds.empty())
+    pComputeCommandList->Wait(m_pAsyncComputeFence.get(), m_nCurrentAsyncComputeFenceValue);
+
     {
-        GPU_EVENT(pCommandList, "BuildBLAS");
+        GPU_EVENT(pComputeCommandList, "BuildRayTracingAS");
 
-        for (size_t i = 0; i < m_pendingBLASBuilds.size(); ++i)
+        if (!m_pendingBLASBuilds.empty())
         {
-            pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
-        }
-        m_pendingBLASBuilds.clear();
+            GPU_EVENT(pComputeCommandList, "BuildBLAS");
 
-        pCommandList->UavBarrier(nullptr);
+            for (size_t i = 0; i < m_pendingBLASBuilds.size(); ++i)
+            {
+                pComputeCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
+            }
+            m_pendingBLASBuilds.clear();
+
+            pComputeCommandList->UavBarrier(nullptr);
+        }
+
+        if (!m_pendingBLASUpdates.empty())
+        {
+            GPU_EVENT(pComputeCommandList, "UpdateBLAS");
+
+            for (size_t i = 0; i < m_pendingBLASUpdates.size(); ++i)
+            {
+                pComputeCommandList->UpdateRayTracingBLAS(m_pendingBLASUpdates[i].blas, m_pendingBLASUpdates[i].vertex_buffer, m_pendingBLASUpdates[i].vertex_buffer_offset);
+            }
+            m_pendingBLASUpdates.clear();
+
+            pComputeCommandList->UavBarrier(nullptr);
+        }
+
+        m_pGpuScene->BuildRayTracingAS(pComputeCommandList);
     }
 
-    if(!m_pendingBLASUpdates.empty())
-    {
-        GPU_EVENT(pCommandList, "UpdateBLAS");
+    pComputeCommandList->End();
+    pComputeCommandList->Signal(m_pAsyncComputeFence.get(), ++m_nCurrentAsyncComputeFenceValue);
+    pComputeCommandList->Submit();
 
-        for (size_t i = 0; i < m_pendingBLASUpdates.size(); ++i)
-        {
-            pCommandList->UpdateRayTracingBLAS(m_pendingBLASUpdates[i].blas, m_pendingBLASUpdates[i].vertex_buffer, m_pendingBLASUpdates[i].vertex_buffer_offset);
-        }
-        m_pendingBLASUpdates.clear();
-
-        pCommandList->UavBarrier(nullptr);
-    }
-
-    m_pGpuScene->BuildRayTracingAS(pCommandList);
+    pCommandList->Begin();
+    pCommandList->Wait(m_pAsyncComputeFence.get(), m_nCurrentAsyncComputeFenceValue); //todo : no need to wait here actually
+    SetupGlobalConstants(pCommandList);
 }
 
 void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
@@ -342,7 +361,7 @@ void Renderer::Render()
 
     SetupGlobalConstants(pCommandList);
     FlushComputePass(pCommandList);
-    BuildRayTracingAS(pCommandList);
+    BuildRayTracingAS(pCommandList, pComputeCommandList);
 
     m_pSkyCubeMap->Update(pCommandList);
 
@@ -400,6 +419,10 @@ void Renderer::EndFrame()
     CPU_EVENT("Render", "Renderer::EndFrame");
 
     uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
+
+    IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
+    pComputeCommandList->EndProfiling();
+
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->End();
 
@@ -407,6 +430,7 @@ void Renderer::EndFrame()
 
     pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
     pCommandList->Submit();
+    pCommandList->EndProfiling();
     {
         CPU_EVENT("Render", "IGfxSwapchain::Present");
         m_pSwapchain->Present();

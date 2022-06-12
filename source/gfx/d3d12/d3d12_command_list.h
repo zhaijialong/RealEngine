@@ -23,6 +23,8 @@ public:
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
     virtual void Submit() override;
 
+    virtual void BeginProfiling() override;
+    virtual void EndProfiling() override;
     virtual void BeginEvent(const eastl::string& event_name) override;
     virtual void EndEvent() override;
 

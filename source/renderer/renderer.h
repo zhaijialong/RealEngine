@@ -130,7 +130,7 @@ private:
     void CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle normal, RenderGraphHandle sceneColor);
 
     void FlushComputePass(IGfxCommandList* pCommandList);
-    void BuildRayTracingAS(IGfxCommandList* pCommandList);
+    void BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
     void SetupGlobalConstants(IGfxCommandList* pCommandList);
     void ImportPrevFrameTextures();
     void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle);
