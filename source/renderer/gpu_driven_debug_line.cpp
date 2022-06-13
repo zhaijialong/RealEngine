@@ -15,7 +15,7 @@ GpuDrivenDebugLine::GpuDrivenDebugLine(Renderer* pRenderer)
     psoDesc.depthstencil_state.depth_func = GfxCompareFunc::Greater;
     psoDesc.depthstencil_state.depth_write = false;
     psoDesc.rt_format[0] = pRenderer->GetSwapchain()->GetBackBuffer()->GetDesc().format;
-    psoDesc.depthstencil_format = GfxFormat::D32FS8;
+    psoDesc.depthstencil_format = GfxFormat::D32F;
     psoDesc.primitive_type = GfxPrimitiveType::LineList;
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "GpuDrivenDebugLine::m_pPSO");
 

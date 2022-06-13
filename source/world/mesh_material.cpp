@@ -65,7 +65,7 @@ IGfxPipelineState* MeshMaterial::GetPSO()
         psoDesc.rt_format[1] = GfxFormat::RGBA8SRGB;
         psoDesc.rt_format[2] = GfxFormat::RGBA8UNORM;
         psoDesc.rt_format[3] = GfxFormat::R11G11B10F;
-        psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        psoDesc.depthstencil_format = GfxFormat::D32F;
 
         m_pPSO = pRenderer->GetPipelineState(psoDesc, "model PSO");
     }
@@ -127,7 +127,7 @@ IGfxPipelineState* MeshMaterial::GetVelocityPSO()
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
         psoDesc.rt_format[0] = GfxFormat::RG16F;
-        psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        psoDesc.depthstencil_format = GfxFormat::D32F;
 
         m_pVelocityPSO = pRenderer->GetPipelineState(psoDesc, "model velocity PSO");
     }
@@ -156,7 +156,7 @@ IGfxPipelineState* MeshMaterial::GetIDPSO()
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
         psoDesc.rt_format[0] = GfxFormat::R32UI;
-        psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        psoDesc.depthstencil_format = GfxFormat::D32F;
 
         m_pIDPSO = pRenderer->GetPipelineState(psoDesc, "model ID PSO");
     }
@@ -185,7 +185,7 @@ IGfxPipelineState* MeshMaterial::GetOutlinePSO()
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
         psoDesc.rt_format[0] = GfxFormat::RGBA16F;
-        psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        psoDesc.depthstencil_format = GfxFormat::D32F;
 
         m_pOutlinePSO = pRenderer->GetPipelineState(psoDesc, "model outline PSO");
     }
@@ -243,7 +243,7 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         psoDesc.rt_format[1] = GfxFormat::RGBA8SRGB;
         psoDesc.rt_format[2] = GfxFormat::RGBA8UNORM;
         psoDesc.rt_format[3] = GfxFormat::R11G11B10F;
-        psoDesc.depthstencil_format = GfxFormat::D32FS8;
+        psoDesc.depthstencil_format = GfxFormat::D32F;
 
         m_pMeshletPSO = pRenderer->GetPipelineState(psoDesc, "model meshlet PSO");
     }

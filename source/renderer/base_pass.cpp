@@ -225,7 +225,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             desc.format = GfxFormat::R11G11B10F;
             data.outEmissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
 
-            desc.format = GfxFormat::D32FS8;
+            desc.format = GfxFormat::D32F;
             data.outDepthRT = builder.Create<RenderGraphTexture>(desc, "SceneDepth RT");
 
             data.outDiffuseRT = builder.WriteColor(0, data.outDiffuseRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
