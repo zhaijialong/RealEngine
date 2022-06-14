@@ -15,6 +15,7 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_pCommandList; }
+    virtual GfxCommandQueue GetQueue() const override { return m_queueType; }
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;

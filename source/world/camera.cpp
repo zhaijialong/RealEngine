@@ -171,7 +171,11 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
         m_cameraCB.culling.planes[i] = m_frustumPlanes[i];
     }
 
-    pCommandList->SetGraphicsConstants(3, &m_cameraCB, sizeof(CameraConstant));
+    if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
+    {
+        pCommandList->SetGraphicsConstants(3, &m_cameraCB, sizeof(CameraConstant));
+    }
+
     pCommandList->SetComputeConstants(3, &m_cameraCB, sizeof(CameraConstant));
 }
 

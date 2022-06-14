@@ -99,8 +99,9 @@ public:
     RenderBatch& AddForwardPassBatch() { return m_forwardPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddVelocityPassBatch() { return m_velocityPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddObjectIDPassBatch() { return m_idPassBatchs.emplace_back(*m_cbAllocator); }
-
     ComputeBatch& AddAnimationBatch() { return m_animationBatchs.emplace_back(*m_cbAllocator); }
+
+    void SetupGlobalConstants(IGfxCommandList* pCommandList);
 
     class HZB* GetHZB() const { return m_pHZB.get(); }
     class BasePass* GetBassPass() const { return m_pBasePass.get(); }
@@ -131,7 +132,6 @@ private:
 
     void FlushComputePass(IGfxCommandList* pCommandList);
     void BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
-    void SetupGlobalConstants(IGfxCommandList* pCommandList);
     void ImportPrevFrameTextures();
     void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle);
     void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle);

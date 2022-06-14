@@ -16,6 +16,8 @@ class IGfxCommandList : public IGfxResource
 public:
     virtual ~IGfxCommandList() {}
 
+    virtual GfxCommandQueue GetQueue() const = 0;
+
     virtual void ResetAllocator() = 0;
     virtual void Begin() = 0;
     virtual void End() = 0;

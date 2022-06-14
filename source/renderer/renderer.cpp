@@ -313,7 +313,11 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.scramblingRankingTexture128SPP = m_pScramblingRankingTexture128SPP->GetSRV()->GetHeapIndex();
     sceneCB.scramblingRankingTexture256SPP = m_pScramblingRankingTexture256SPP->GetSRV()->GetHeapIndex();
 
-    pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
+    if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
+    {
+        pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
+    }
+
     pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
 }
 
