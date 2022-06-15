@@ -193,6 +193,9 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxComm
         pGraphicsCommandList->Signal(m_pAsyncComputeFence.get(), ++m_nCurrentAsyncComputeFenceValue);
         pGraphicsCommandList->Submit();
 
+        pGraphicsCommandList->Begin();
+        SetupGlobalConstants(pGraphicsCommandList);
+
         pComputeCommandList->Wait(m_pAsyncComputeFence.get(), m_nCurrentAsyncComputeFenceValue);
     }
 
@@ -227,18 +230,6 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxComm
         }
 
         m_pGpuScene->BuildRayTracingAS(pCommandList);
-    }
-
-    if (m_bEnableAsyncCompute)
-    {
-        pComputeCommandList->End();
-        pComputeCommandList->Submit();
-
-        pComputeCommandList->Begin();
-        SetupGlobalConstants(pComputeCommandList);
-
-        pGraphicsCommandList->Begin();
-        SetupGlobalConstants(pGraphicsCommandList);
     }
 }
 

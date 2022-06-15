@@ -63,7 +63,9 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle rayCounterBuffer;
     };
 
-    auto tile_classification_pass = pRenderGraph->AddPass<TileClassificationData>("HSR - tile classification", RenderPassType::Compute,
+    RenderPassType pass_type = m_pRenderer->IsAsyncComputeEnabled() ? RenderPassType::AsyncCompute : RenderPassType::Compute;
+
+    auto tile_classification_pass = pRenderGraph->AddPass<TileClassificationData>("HSR - tile classification", pass_type,
         [&](TileClassificationData& data, RenderGraphBuilder& builder)
         {
             data.depth = builder.Read(depth);
@@ -114,7 +116,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle denoiserArgsBuffer;
     };
 
-    auto prepare_indirect_args_pass = pRenderGraph->AddPass<PrepareIndirectArgsData>("HSR - prepare indirect args", RenderPassType::Compute,
+    auto prepare_indirect_args_pass = pRenderGraph->AddPass<PrepareIndirectArgsData>("HSR - prepare indirect args", pass_type,
         [&](PrepareIndirectArgsData& data, RenderGraphBuilder& builder)
         {
             data.rayCounterBuffer = builder.Read(tile_classification_pass->rayCounterBuffer);
@@ -155,7 +157,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle hwRayListBufferUAV;
     };
 
-    auto ssr_pass = pRenderGraph->AddPass<SSRData>("HSR - SSR", RenderPassType::Compute,
+    auto ssr_pass = pRenderGraph->AddPass<SSRData>("HSR - SSR", pass_type,
         [&](SSRData& data, RenderGraphBuilder& builder)
         {
             data.normal = builder.Read(normal);
@@ -218,7 +220,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle indirectArgsBuffer;
     };
 
-    auto prepare_rt_indirect_args_pass = pRenderGraph->AddPass<PrepareRaytraceIndirectArgsData>("HSR - prepare indirect args", RenderPassType::Compute,
+    auto prepare_rt_indirect_args_pass = pRenderGraph->AddPass<PrepareRaytraceIndirectArgsData>("HSR - prepare indirect args", pass_type,
         [&](PrepareRaytraceIndirectArgsData& data, RenderGraphBuilder& builder)
         {
             data.rayCounterBuffer = builder.Read(ssr_pass->hwRayCounterBufferUAV);

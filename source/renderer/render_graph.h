@@ -61,8 +61,11 @@ private:
 
     eastl::vector<eastl::string> m_eventNames;
 
-    eastl::unique_ptr<IGfxFence> m_pAsyncComputeFence;
-    uint64_t m_nAsyncComputeFenceValue = 0;
+    eastl::unique_ptr<IGfxFence> m_pComputeQueueFence;
+    uint64_t m_nComputeQueueFenceValue = 0;
+
+    eastl::unique_ptr<IGfxFence> m_pGraphicsQueueFence;
+    uint64_t m_nGraphicsQueueFenceValue = 0;
 
     eastl::vector<RenderGraphPassBase*> m_passes;
     eastl::vector<RenderGraphResource*> m_resources;

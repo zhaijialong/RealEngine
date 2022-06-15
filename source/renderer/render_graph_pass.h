@@ -19,13 +19,28 @@ enum class RenderPassType
     Resolve
 };
 
+struct RenderGraphAsyncResolveContext
+{
+    eastl::vector<DAGNodeID> computeQueuePasses;
+    eastl::vector<DAGNodeID> preGraphicsQueuePasses;
+    eastl::vector<DAGNodeID> postGraphicsQueuePasses;
+    uint64_t computeFence = 0;
+    uint64_t graphicsFence = 0;
+};
+
 struct RenderGraphPassExecuteContext
 {
     Renderer* renderer;
     IGfxCommandList* graphicsCommandList;
     IGfxCommandList* computeCommandList;
-    IGfxFence* fence;
-    uint64_t fenceValue;
+    IGfxFence* computeQueueFence;
+    IGfxFence* graphicsQueueFence;
+
+    uint64_t initialComputeFenceValue;
+    uint64_t lastSignaledComputeValue;
+
+    uint64_t initialGraphicsFenceValue;
+    uint64_t lastSignaledGraphicsValue;
 };
 
 class RenderGraphPassBase : public DAGNode
@@ -34,7 +49,7 @@ public:
     RenderGraphPassBase(const eastl::string& name, RenderPassType type, DirectedAcyclicGraph& graph);
 
     void Resolve(const DirectedAcyclicGraph& graph);
-    void ResolveAsyncCompute(const DirectedAcyclicGraph& graph);
+    void ResolveAsyncCompute(const DirectedAcyclicGraph& graph, RenderGraphAsyncResolveContext& context);
     void Execute(const RenderGraph& graph, RenderGraphPassExecuteContext& context);
 
     virtual eastl::string GetGraphvizName() const override { return m_name.c_str(); }
@@ -85,8 +100,8 @@ protected:
     DAGNodeID m_waitGraphicsPass = UINT32_MAX;
     DAGNodeID m_signalGraphicsPass = UINT32_MAX;
 
-    bool m_bSignalAsyncCompute = false;
-    bool m_bWaitAsyncCompute = false;
+    uint64_t m_signalValue = -1;
+    uint64_t m_waitValue = -1;
 };
 
 template<class T>

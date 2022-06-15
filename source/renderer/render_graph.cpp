@@ -6,7 +6,8 @@ RenderGraph::RenderGraph(Renderer* pRenderer) :
     m_resourceAllocator(pRenderer->GetDevice())
 {
     IGfxDevice* device = pRenderer->GetDevice();
-    m_pAsyncComputeFence.reset(device->CreateFence("RenderGraph::m_pAsyncComputeFence"));
+    m_pComputeQueueFence.reset(device->CreateFence("RenderGraph::m_pComputeQueueFence"));
+    m_pGraphicsQueueFence.reset(device->CreateFence("RenderGraph::m_pGraphicsQueueFence"));
 }
 
 void RenderGraph::BeginEvent(const eastl::string& name)
@@ -52,12 +53,14 @@ void RenderGraph::Compile()
 
     m_graph.Cull();
 
+    RenderGraphAsyncResolveContext context;
+
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
         RenderGraphPassBase* pass = m_passes[i];
         if (!pass->IsCulled())
         {
-            pass->ResolveAsyncCompute(m_graph);
+            pass->ResolveAsyncCompute(m_graph, context);
         }
     }
 
@@ -126,8 +129,10 @@ void RenderGraph::Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IG
     context.renderer = pRenderer;
     context.graphicsCommandList = pCommandList;
     context.computeCommandList = pComputeCommandList;
-    context.fence = m_pAsyncComputeFence.get();
-    context.fenceValue = m_nAsyncComputeFenceValue;
+    context.computeQueueFence = m_pComputeQueueFence.get();
+    context.graphicsQueueFence = m_pGraphicsQueueFence.get();
+    context.initialComputeFenceValue = m_nComputeQueueFenceValue;
+    context.initialGraphicsFenceValue = m_nGraphicsQueueFenceValue;
 
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
@@ -136,7 +141,8 @@ void RenderGraph::Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IG
         pass->Execute(*this, context);
     }
 
-    m_nAsyncComputeFenceValue = context.fenceValue;
+    m_nComputeQueueFenceValue = context.lastSignaledComputeValue;
+    m_nGraphicsQueueFenceValue = context.lastSignaledGraphicsValue;
 
     for (size_t i = 0; i < m_outputResources.size(); ++i)
     {
