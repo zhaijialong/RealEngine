@@ -28,7 +28,8 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         RenderGraphHandle shadow;
     };
 
-    auto rtshadow_pass = pRenderGraph->AddPass<RTShadowData>("RTShadow raytrace", RenderPassType::AsyncCompute,
+    auto rtshadow_pass = pRenderGraph->AddPass<RTShadowData>("RTShadow raytrace", 
+        m_pRenderer->IsAsyncComputeEnabled() ? RenderPassType::AsyncCompute : RenderPassType::Compute,
         [&](RTShadowData& data, RenderGraphBuilder& builder)
         {
             data.depth = builder.Read(depthRT);

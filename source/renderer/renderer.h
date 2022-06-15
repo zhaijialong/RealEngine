@@ -89,6 +89,9 @@ public:
     void SetGpuDrivenStatsEnabled(bool value) { m_bGpuDrivenStatsEnabled = value; }
     void SetShowMeshletsEnabled(bool value) { m_bShowMeshlets = value; }
 
+    bool IsAsyncComputeEnabled() const { return m_bEnableAsyncCompute; }
+    void SetAsyncComputeEnabled(bool value) { m_bEnableAsyncCompute = value; }
+
     void UploadTexture(IGfxTexture* texture, const void* data);
     void UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size);
     void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas);
@@ -227,6 +230,7 @@ private:
 
     bool m_bGpuDrivenStatsEnabled = false;
     bool m_bShowMeshlets = false;
+    bool m_bEnableAsyncCompute = true;
 
     bool m_bEnableObjectIDRendering = false;
     uint32_t m_nMouseX = 0;

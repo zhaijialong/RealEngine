@@ -185,54 +185,61 @@ void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
     }
 }
 
-void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList)
+void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxCommandList* pComputeCommandList)
 {
-    pCommandList->End();
-    pCommandList->Signal(m_pAsyncComputeFence.get(), ++m_nCurrentAsyncComputeFenceValue);
-    pCommandList->Submit();
+    if (m_bEnableAsyncCompute)
+    {
+        pGraphicsCommandList->End();
+        pGraphicsCommandList->Signal(m_pAsyncComputeFence.get(), ++m_nCurrentAsyncComputeFenceValue);
+        pGraphicsCommandList->Submit();
 
-    pComputeCommandList->Wait(m_pAsyncComputeFence.get(), m_nCurrentAsyncComputeFenceValue);
+        pComputeCommandList->Wait(m_pAsyncComputeFence.get(), m_nCurrentAsyncComputeFenceValue);
+    }
 
     {
-        GPU_EVENT(pComputeCommandList, "BuildRayTracingAS");
+        IGfxCommandList* pCommandList = m_bEnableAsyncCompute ? pComputeCommandList : pGraphicsCommandList;
+        GPU_EVENT(pCommandList, "BuildRayTracingAS");
 
         if (!m_pendingBLASBuilds.empty())
         {
-            GPU_EVENT(pComputeCommandList, "BuildBLAS");
+            GPU_EVENT(pCommandList, "BuildBLAS");
 
             for (size_t i = 0; i < m_pendingBLASBuilds.size(); ++i)
             {
-                pComputeCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
+                pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
             }
             m_pendingBLASBuilds.clear();
 
-            pComputeCommandList->UavBarrier(nullptr);
+            pCommandList->UavBarrier(nullptr);
         }
 
         if (!m_pendingBLASUpdates.empty())
         {
-            GPU_EVENT(pComputeCommandList, "UpdateBLAS");
+            GPU_EVENT(pCommandList, "UpdateBLAS");
 
             for (size_t i = 0; i < m_pendingBLASUpdates.size(); ++i)
             {
-                pComputeCommandList->UpdateRayTracingBLAS(m_pendingBLASUpdates[i].blas, m_pendingBLASUpdates[i].vertex_buffer, m_pendingBLASUpdates[i].vertex_buffer_offset);
+                pCommandList->UpdateRayTracingBLAS(m_pendingBLASUpdates[i].blas, m_pendingBLASUpdates[i].vertex_buffer, m_pendingBLASUpdates[i].vertex_buffer_offset);
             }
             m_pendingBLASUpdates.clear();
 
-            pComputeCommandList->UavBarrier(nullptr);
+            pCommandList->UavBarrier(nullptr);
         }
 
-        m_pGpuScene->BuildRayTracingAS(pComputeCommandList);
+        m_pGpuScene->BuildRayTracingAS(pCommandList);
     }
 
-    pComputeCommandList->End();
-    pComputeCommandList->Submit();
+    if (m_bEnableAsyncCompute)
+    {
+        pComputeCommandList->End();
+        pComputeCommandList->Submit();
 
-    pComputeCommandList->Begin();
-    SetupGlobalConstants(pComputeCommandList);
+        pComputeCommandList->Begin();
+        SetupGlobalConstants(pComputeCommandList);
 
-    pCommandList->Begin();
-    SetupGlobalConstants(pCommandList);
+        pGraphicsCommandList->Begin();
+        SetupGlobalConstants(pGraphicsCommandList);
+    }
 }
 
 void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
