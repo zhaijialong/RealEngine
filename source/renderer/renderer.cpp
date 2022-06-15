@@ -226,11 +226,12 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList*
     }
 
     pComputeCommandList->End();
-    pComputeCommandList->Signal(m_pAsyncComputeFence.get(), ++m_nCurrentAsyncComputeFenceValue);
     pComputeCommandList->Submit();
 
+    pComputeCommandList->Begin();
+    SetupGlobalConstants(pComputeCommandList);
+
     pCommandList->Begin();
-    pCommandList->Wait(m_pAsyncComputeFence.get(), m_nCurrentAsyncComputeFenceValue); //todo : no need to wait here actually
     SetupGlobalConstants(pCommandList);
 }
 
@@ -373,7 +374,7 @@ void Renderer::Render()
     Camera* camera = world->GetCamera();
     camera->DrawViewFrustum(pCommandList);
 
-    m_pRenderGraph->Execute(pCommandList, pComputeCommandList);
+    m_pRenderGraph->Execute(this, pCommandList, pComputeCommandList);
 
     RenderBackbufferPass(pCommandList, outputColorHandle, outputDepthHandle);
 }
@@ -425,6 +426,7 @@ void Renderer::EndFrame()
     uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
 
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
+    pComputeCommandList->End();
     pComputeCommandList->EndProfiling();
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();

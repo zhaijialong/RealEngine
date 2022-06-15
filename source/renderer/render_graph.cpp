@@ -52,6 +52,15 @@ void RenderGraph::Compile()
 
     m_graph.Cull();
 
+    for (size_t i = 0; i < m_passes.size(); ++i)
+    {
+        RenderGraphPassBase* pass = m_passes[i];
+        if (!pass->IsCulled())
+        {
+            pass->ResolveAsyncCompute(m_graph);
+        }
+    }
+
     eastl::vector<DAGEdge*> edges;
 
     for (size_t i = 0; i < m_resourceNodes.size(); ++i)
@@ -108,17 +117,26 @@ void RenderGraph::Compile()
     }
 }
 
-void RenderGraph::Execute(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList)
+void RenderGraph::Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList)
 {
     CPU_EVENT("Render", "RenderGraph::Execute");
     GPU_EVENT(pCommandList, "RenderGraph");
+
+    RenderGraphPassExecuteContext context = {};
+    context.renderer = pRenderer;
+    context.graphicsCommandList = pCommandList;
+    context.computeCommandList = pComputeCommandList;
+    context.fence = m_pAsyncComputeFence.get();
+    context.fenceValue = m_nAsyncComputeFenceValue;
 
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
         RenderGraphPassBase* pass = m_passes[i];
 
-        pass->Execute(*this, pCommandList);
+        pass->Execute(*this, context);
     }
+
+    m_nAsyncComputeFenceValue = context.fenceValue;
 
     for (size_t i = 0; i < m_outputResources.size(); ++i)
     {

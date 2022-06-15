@@ -25,7 +25,7 @@ public:
 
     void Clear();
     void Compile();
-    void Execute(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
+    void Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
 
     void Present(const RenderGraphHandle& handle, GfxResourceState filnal_state);
 

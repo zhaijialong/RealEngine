@@ -3,7 +3,6 @@
 
 void RenderGraphResource::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
 {
-    //todo : for resources used in async compute, we should extend its lifetime range
     if (pass->GetId() <= m_firstPass)
     {
         m_firstPass = pass->GetId();
@@ -13,6 +12,22 @@ void RenderGraphResource::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pa
     {
         m_lastPass = pass->GetId();
         m_lastState = edge->GetUsage();
+    }
+
+    //for resources used in async compute, we should extend its lifetime range
+    if (pass->GetType() == RenderPassType::AsyncCompute)
+    {
+        DAGNodeID waitPass = pass->GetWaitGraphicsPassID();
+        if (waitPass <= m_firstPass)
+        {
+            m_firstPass = waitPass;
+        }
+
+        DAGNodeID signalPass = pass->GetSignalGraphicsPassID();
+        if (signalPass >= m_lastPass)
+        {
+            m_lastPass = signalPass;
+        }
     }
 }
 
