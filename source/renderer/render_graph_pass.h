@@ -48,7 +48,7 @@ class RenderGraphPassBase : public DAGNode
 public:
     RenderGraphPassBase(const eastl::string& name, RenderPassType type, DirectedAcyclicGraph& graph);
 
-    void Resolve(const DirectedAcyclicGraph& graph);
+    void ResolveBarriers(const DirectedAcyclicGraph& graph);
     void ResolveAsyncCompute(const DirectedAcyclicGraph& graph, RenderGraphAsyncResolveContext& context);
     void Execute(const RenderGraph& graph, RenderGraphPassExecuteContext& context);
 

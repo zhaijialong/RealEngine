@@ -251,7 +251,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle indirectArgsBuffer;
     };
 
-    auto raytrace_pass = pRenderGraph->AddPass<RaytraceData>("HSR - raytrace", RenderPassType::Compute,
+    auto raytrace_pass = pRenderGraph->AddPass<RaytraceData>("HSR - raytrace", RenderPassType::Compute, //todo : async compute not working correctly here
         [&](RaytraceData& data, RenderGraphBuilder& builder)
         {
             data.normal = builder.Read(normal);

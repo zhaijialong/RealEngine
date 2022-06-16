@@ -3,31 +3,19 @@
 
 void RenderGraphResource::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
 {
-    if (pass->GetId() <= m_firstPass)
-    {
-        m_firstPass = pass->GetId();
-    }
-
     if (pass->GetId() >= m_lastPass)
     {
-        m_lastPass = pass->GetId();
         m_lastState = edge->GetUsage();
     }
+
+    m_firstPass = eastl::min(m_firstPass, pass->GetId());
+    m_lastPass = eastl::max(m_lastPass, pass->GetId());
 
     //for resources used in async compute, we should extend its lifetime range
     if (pass->GetType() == RenderPassType::AsyncCompute)
     {
-        DAGNodeID waitPass = pass->GetWaitGraphicsPassID();
-        if (waitPass <= m_firstPass)
-        {
-            m_firstPass = waitPass;
-        }
-
-        DAGNodeID signalPass = pass->GetSignalGraphicsPassID();
-        if (signalPass >= m_lastPass)
-        {
-            m_lastPass = signalPass;
-        }
+        m_firstPass = eastl::min(m_firstPass, pass->GetWaitGraphicsPassID());
+        m_lastPass = eastl::max(m_lastPass, pass->GetSignalGraphicsPassID());
     }
 }
 

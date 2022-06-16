@@ -115,7 +115,7 @@ void RenderGraph::Compile()
         RenderGraphPassBase* pass = m_passes[i];
         if (!pass->IsCulled())
         {
-            pass->Resolve(m_graph);
+            pass->ResolveBarriers(m_graph);
         }
     }
 }

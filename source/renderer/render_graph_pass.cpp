@@ -10,7 +10,8 @@ RenderGraphPassBase::RenderGraphPassBase(const eastl::string& name, RenderPassTy
     m_type = type;
 }
 
-void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
+//todo : https://docs.microsoft.com/en-us/windows/win32/direct3d12/executing-and-synchronizing-command-lists#accessing-resources-from-multiple-command-queues
+void RenderGraphPassBase::ResolveBarriers(const DirectedAcyclicGraph& graph)
 {
     eastl::vector<DAGEdge*> edges;
 

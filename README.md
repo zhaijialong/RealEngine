@@ -16,7 +16,7 @@ It is not supposed to be used in production, and prefers clean design and code o
 
 ## planned features
 
-* render graph(~~barriers~~, ~~resource aliasing~~, async compute)
+* ~~render graph~~(~~barriers~~, ~~resource aliasing~~, ~~async compute~~)
 * ~~GTAO~~
 * ~~specular GI~~
 * diffuse GI
