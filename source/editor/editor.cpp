@@ -69,6 +69,8 @@ void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& sec
 
 void Editor::DrawMenu()
 {
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
@@ -85,13 +87,11 @@ void Editor::DrawMenu()
         {
             if (ImGui::MenuItem("VSync", "", &m_bVsync))
             {
-                Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
                 pRenderer->GetSwapchain()->SetVSyncEnabled(m_bVsync);
             }
 
             if (ImGui::MenuItem("GPU Driven Stats", "", &m_bShowGpuDrivenStats))
             {
-                Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
                 pRenderer->SetGpuDrivenStatsEnabled(m_bShowGpuDrivenStats);
             }
 
@@ -106,13 +106,17 @@ void Editor::DrawMenu()
 
             if (ImGui::MenuItem("Show Meshlets", "", &m_bShowMeshlets))
             {
-                Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
                 pRenderer->SetShowMeshletsEnabled(m_bShowMeshlets);
+            }
+
+            bool async_compute = pRenderer->IsAsyncComputeEnabled();
+            if (ImGui::MenuItem("Async Compute", "", &async_compute))
+            {
+                pRenderer->SetAsyncComputeEnabled(async_compute);
             }
 
             if (ImGui::MenuItem("Reload Shaders"))
             {
-                Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
                 pRenderer->ReloadShaders();
             }
 

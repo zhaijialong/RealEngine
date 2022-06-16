@@ -47,7 +47,8 @@ void ReflectionDenoiser::ImportTextures(RenderGraph* pRenderGraph, uint32_t widt
 }
 
 RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphHandle indirectArgs, RenderGraphHandle tileListBuffer, RenderGraphHandle input, 
-    RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height)
+    RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height,
+    float maxRoughness, float temporalStability)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "ReflectionDenoiser");
 
@@ -127,6 +128,9 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             pCommandList->ClearUAV(outputAvgRadiance->GetTexture(), outputAvgRadiance->GetUAV(), clear_value);
             pCommandList->UavBarrier(outputAvgRadiance->GetTexture());
+
+            float root_constants[2] = { maxRoughness, temporalStability };
+            pCommandList->SetComputeConstants(0, root_constants, sizeof(root_constants));
 
             Reproject(pCommandList, indirectArgs->GetBuffer(), tileListBuffer->GetSRV(), depth->GetSRV(), normal->GetSRV(), velocity->GetSRV(), inputRadiance->GetSRV(),
                 outputRadiance->GetUAV(), outputVariance->GetUAV(), outputAvgRadiance->GetUAV());

@@ -59,6 +59,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
         m_pCommandLists[i].reset(m_pDevice->CreateCommandList(GfxCommandQueue::Graphics, name));
     }
 
+    m_pAsyncComputeFence.reset(m_pDevice->CreateFence("Renderer::m_pAsyncComputeFence"));
+
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         eastl::string name = fmt::format("Renderer::m_pComputeCommandLists[{}]", i).c_str();
@@ -116,9 +118,12 @@ void Renderer::BeginFrame()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->ResetAllocator();
     pCommandList->Begin();
+    pCommandList->BeginProfiling();
 
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
     pComputeCommandList->ResetAllocator();
+    pComputeCommandList->Begin();
+    pComputeCommandList->BeginProfiling();
 }
 
 void Renderer::UploadResources()
@@ -156,10 +161,8 @@ void Renderer::UploadResources()
     }
 
     pUploadCommandList->End();
+    pUploadCommandList->Signal(m_pUploadFence.get(), ++m_nCurrentUploadFenceValue);
     pUploadCommandList->Submit();
-
-    m_nCurrentUploadFenceValue++;
-    pUploadCommandList->Signal(m_pUploadFence.get(), m_nCurrentUploadFenceValue);
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->Wait(m_pUploadFence.get(), m_nCurrentUploadFenceValue);
@@ -182,37 +185,52 @@ void Renderer::FlushComputePass(IGfxCommandList* pCommandList)
     }
 }
 
-void Renderer::BuildRayTracingAS(IGfxCommandList* pCommandList)
+void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxCommandList* pComputeCommandList)
 {
-    GPU_EVENT(pCommandList, "BuildRayTracingAS");
-
-    if (!m_pendingBLASBuilds.empty())
+    if (m_bEnableAsyncCompute)
     {
-        GPU_EVENT(pCommandList, "BuildBLAS");
+        pGraphicsCommandList->End();
+        pGraphicsCommandList->Signal(m_pAsyncComputeFence.get(), ++m_nCurrentAsyncComputeFenceValue);
+        pGraphicsCommandList->Submit();
 
-        for (size_t i = 0; i < m_pendingBLASBuilds.size(); ++i)
-        {
-            pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
-        }
-        m_pendingBLASBuilds.clear();
+        pGraphicsCommandList->Begin();
+        SetupGlobalConstants(pGraphicsCommandList);
 
-        pCommandList->UavBarrier(nullptr);
+        pComputeCommandList->Wait(m_pAsyncComputeFence.get(), m_nCurrentAsyncComputeFenceValue);
     }
 
-    if(!m_pendingBLASUpdates.empty())
     {
-        GPU_EVENT(pCommandList, "UpdateBLAS");
+        IGfxCommandList* pCommandList = m_bEnableAsyncCompute ? pComputeCommandList : pGraphicsCommandList;
+        GPU_EVENT(pCommandList, "BuildRayTracingAS");
 
-        for (size_t i = 0; i < m_pendingBLASUpdates.size(); ++i)
+        if (!m_pendingBLASBuilds.empty())
         {
-            pCommandList->UpdateRayTracingBLAS(m_pendingBLASUpdates[i].blas, m_pendingBLASUpdates[i].vertex_buffer, m_pendingBLASUpdates[i].vertex_buffer_offset);
+            GPU_EVENT(pCommandList, "BuildBLAS");
+
+            for (size_t i = 0; i < m_pendingBLASBuilds.size(); ++i)
+            {
+                pCommandList->BuildRayTracingBLAS(m_pendingBLASBuilds[i]);
+            }
+            m_pendingBLASBuilds.clear();
+
+            pCommandList->UavBarrier(nullptr);
         }
-        m_pendingBLASUpdates.clear();
 
-        pCommandList->UavBarrier(nullptr);
+        if (!m_pendingBLASUpdates.empty())
+        {
+            GPU_EVENT(pCommandList, "UpdateBLAS");
+
+            for (size_t i = 0; i < m_pendingBLASUpdates.size(); ++i)
+            {
+                pCommandList->UpdateRayTracingBLAS(m_pendingBLASUpdates[i].blas, m_pendingBLASUpdates[i].vertex_buffer, m_pendingBLASUpdates[i].vertex_buffer_offset);
+            }
+            m_pendingBLASUpdates.clear();
+
+            pCommandList->UavBarrier(nullptr);
+        }
+
+        m_pGpuScene->BuildRayTracingAS(pCommandList);
     }
-
-    m_pGpuScene->BuildRayTracingAS(pCommandList);
 }
 
 void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
@@ -294,7 +312,11 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.scramblingRankingTexture128SPP = m_pScramblingRankingTexture128SPP->GetSRV()->GetHeapIndex();
     sceneCB.scramblingRankingTexture256SPP = m_pScramblingRankingTexture256SPP->GetSRV()->GetHeapIndex();
 
-    pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
+    if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
+    {
+        pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
+    }
+
     pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
 }
 
@@ -342,7 +364,7 @@ void Renderer::Render()
 
     SetupGlobalConstants(pCommandList);
     FlushComputePass(pCommandList);
-    BuildRayTracingAS(pCommandList);
+    BuildRayTracingAS(pCommandList, pComputeCommandList);
 
     m_pSkyCubeMap->Update(pCommandList);
 
@@ -350,7 +372,7 @@ void Renderer::Render()
     Camera* camera = world->GetCamera();
     camera->DrawViewFrustum(pCommandList);
 
-    m_pRenderGraph->Execute(pCommandList, pComputeCommandList);
+    m_pRenderGraph->Execute(this, pCommandList, pComputeCommandList);
 
     RenderBackbufferPass(pCommandList, outputColorHandle, outputDepthHandle);
 }
@@ -400,18 +422,23 @@ void Renderer::EndFrame()
     CPU_EVENT("Render", "Renderer::EndFrame");
 
     uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
+
+    IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
+    pComputeCommandList->End();
+    pComputeCommandList->EndProfiling();
+
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->End();
 
-    ++m_nCurrentFrameFenceValue;
-    m_nFrameFenceValue[frame_index] = m_nCurrentFrameFenceValue;
+    m_nFrameFenceValue[frame_index] = ++m_nCurrentFrameFenceValue;
 
+    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
     pCommandList->Submit();
+    pCommandList->EndProfiling();
     {
         CPU_EVENT("Render", "IGfxSwapchain::Present");
         m_pSwapchain->Present();
     }
-    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
 
     m_pStagingBufferAllocator[frame_index]->Reset();
     m_cbAllocator->Reset();

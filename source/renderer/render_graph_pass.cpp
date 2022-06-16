@@ -1,5 +1,7 @@
 #include "render_graph_pass.h"
 #include "render_graph.h"
+#include "renderer.h"
+#include "EASTL/algorithm.h"
 
 RenderGraphPassBase::RenderGraphPassBase(const eastl::string& name, RenderPassType type, DirectedAcyclicGraph& graph) :
     DAGNode(graph)
@@ -8,7 +10,8 @@ RenderGraphPassBase::RenderGraphPassBase(const eastl::string& name, RenderPassTy
     m_type = type;
 }
 
-void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
+//todo : https://docs.microsoft.com/en-us/windows/win32/direct3d12/executing-and-synchronizing-command-lists#accessing-resources-from-multiple-command-queues
+void RenderGraphPassBase::ResolveBarriers(const DirectedAcyclicGraph& graph)
 {
     eastl::vector<DAGEdge*> edges;
 
@@ -110,16 +113,138 @@ void RenderGraphPassBase::Resolve(const DirectedAcyclicGraph& graph)
     }
 }
 
-void RenderGraphPassBase::Execute(const RenderGraph& graph, IGfxCommandList* pCommandList)
+void RenderGraphPassBase::ResolveAsyncCompute(const DirectedAcyclicGraph& graph, RenderGraphAsyncResolveContext& context)
 {
+    if (m_type == RenderPassType::AsyncCompute)
+    {
+        eastl::vector<DAGEdge*> edges;
+
+        eastl::vector<DAGEdge*> resource_incoming;
+        eastl::vector<DAGEdge*> resource_outgoing;
+
+        graph.GetIncomingEdges(this, edges);
+        for (size_t i = 0; i < edges.size(); ++i)
+        {
+            RenderGraphEdge* edge = (RenderGraphEdge*)edges[i];
+            RE_ASSERT(edge->GetToNode() == this->GetId());
+
+            RenderGraphResourceNode* resource_node = (RenderGraphResourceNode*)graph.GetNode(edge->GetFromNode());
+
+            graph.GetIncomingEdges(resource_node, resource_incoming);
+            RE_ASSERT(resource_incoming.size() <= 1);
+
+            if(!resource_incoming.empty())
+            {
+                RenderGraphPassBase* prePass = (RenderGraphPassBase*)graph.GetNode(resource_incoming[0]->GetFromNode());
+                if (!prePass->IsCulled() && prePass->GetType() != RenderPassType::AsyncCompute)
+                {
+                    context.preGraphicsQueuePasses.push_back(prePass->GetId());
+                }
+            }
+        }
+
+        graph.GetOutgoingEdges(this, edges);
+        for (size_t i = 0; i < edges.size(); ++i)
+        {
+            RenderGraphEdge* edge = (RenderGraphEdge*)edges[i];
+            RE_ASSERT(edge->GetFromNode() == this->GetId());
+
+            RenderGraphResourceNode* resource_node = (RenderGraphResourceNode*)graph.GetNode(edge->GetToNode());
+            graph.GetOutgoingEdges(resource_node, resource_outgoing);
+
+            for (size_t i = 0; i < resource_outgoing.size(); i++)
+            {
+                RenderGraphPassBase* postPass = (RenderGraphPassBase*)graph.GetNode(resource_outgoing[i]->GetToNode());
+                if (!postPass->IsCulled() && postPass->GetType() != RenderPassType::AsyncCompute)
+                {
+                    context.postGraphicsQueuePasses.push_back(postPass->GetId());
+                }
+            }
+        }
+
+        context.computeQueuePasses.push_back(GetId());
+    }
+    else
+    {
+        if (!context.computeQueuePasses.empty())
+        {
+            if (!context.preGraphicsQueuePasses.empty())
+            {
+                DAGNodeID graphicsPassToWaitID = *eastl::max_element(context.preGraphicsQueuePasses.begin(), context.preGraphicsQueuePasses.end());
+
+                RenderGraphPassBase* graphicsPassToWait = (RenderGraphPassBase*)graph.GetNode(graphicsPassToWaitID);
+                if (graphicsPassToWait->m_signalValue == -1)
+                {
+                    graphicsPassToWait->m_signalValue = ++context.graphicsFence;
+                }
+
+                RenderGraphPassBase* computePass = (RenderGraphPassBase*)graph.GetNode(context.computeQueuePasses[0]);
+                computePass->m_waitValue = graphicsPassToWait->m_signalValue;
+
+                for (size_t i = 0; i < context.computeQueuePasses.size(); ++i)
+                {
+                    RenderGraphPassBase* computePass = (RenderGraphPassBase*)graph.GetNode(context.computeQueuePasses[i]);
+                    computePass->m_waitGraphicsPass = graphicsPassToWaitID;
+                }
+            }
+
+            if (!context.postGraphicsQueuePasses.empty())
+            {
+                DAGNodeID graphicsPassToSignalID = *eastl::min_element(context.postGraphicsQueuePasses.begin(), context.postGraphicsQueuePasses.end());
+
+                RenderGraphPassBase* computePass = (RenderGraphPassBase*)graph.GetNode(context.computeQueuePasses.back());
+                if (computePass->m_signalValue == -1)
+                {
+                    computePass->m_signalValue = ++context.computeFence;
+                }
+
+                RenderGraphPassBase* graphicsPassToSignal = (RenderGraphPassBase*)graph.GetNode(graphicsPassToSignalID);
+                graphicsPassToSignal->m_waitValue = computePass->m_signalValue;
+
+                for (size_t i = 0; i < context.computeQueuePasses.size(); ++i)
+                {
+                    RenderGraphPassBase* computePass = (RenderGraphPassBase*)graph.GetNode(context.computeQueuePasses[i]);
+                    computePass->m_signalGraphicsPass = graphicsPassToSignalID;
+                }
+            }            
+
+            context.computeQueuePasses.clear();
+            context.preGraphicsQueuePasses.clear();
+            context.postGraphicsQueuePasses.clear();
+        }
+    }
+}
+
+void RenderGraphPassBase::Execute(const RenderGraph& graph, RenderGraphPassExecuteContext& context)
+{
+    IGfxCommandList* pCommandList = m_type == RenderPassType::AsyncCompute ? context.computeCommandList : context.graphicsCommandList;
+
+    if (m_waitValue != -1)
+    {
+        pCommandList->End();
+        pCommandList->Submit();
+
+        pCommandList->Begin();
+        context.renderer->SetupGlobalConstants(pCommandList);
+
+        if (m_type == RenderPassType::AsyncCompute)
+        {
+            pCommandList->Wait(context.graphicsQueueFence, context.initialGraphicsFenceValue + m_waitValue);
+        }
+        else
+        {
+            pCommandList->Wait(context.computeQueueFence, context.initialComputeFenceValue + m_waitValue);
+        }
+    }
+
     for (size_t i = 0; i < m_eventNames.size(); ++i)
     {
-        pCommandList->BeginEvent(m_eventNames[i]);
-        BeginMPGpuEvent(pCommandList, m_eventNames[i]);
+        context.graphicsCommandList->BeginEvent(m_eventNames[i]);
+        BeginMPGpuEvent(context.graphicsCommandList, m_eventNames[i]);
     }
 
     if (!IsCulled())
-    {
+    {        
         GPU_EVENT(pCommandList, m_name);
 
         Begin(graph, pCommandList);
@@ -129,8 +254,27 @@ void RenderGraphPassBase::Execute(const RenderGraph& graph, IGfxCommandList* pCo
 
     for (uint32_t i = 0; i < m_nEndEventNum; ++i)
     {
-        pCommandList->EndEvent();
-        EndMPGpuEvent(pCommandList);
+        context.graphicsCommandList->EndEvent();
+        EndMPGpuEvent(context.graphicsCommandList);
+    }
+
+    if (m_signalValue != -1)
+    {
+        pCommandList->End();
+        if (m_type == RenderPassType::AsyncCompute)
+        {
+            pCommandList->Signal(context.computeQueueFence, context.initialComputeFenceValue + m_signalValue);
+            context.lastSignaledComputeValue = context.initialComputeFenceValue + m_signalValue;
+        }
+        else
+        {
+            pCommandList->Signal(context.graphicsQueueFence, context.initialGraphicsFenceValue + m_signalValue);
+            context.lastSignaledGraphicsValue = context.initialGraphicsFenceValue + m_signalValue;
+        }
+        pCommandList->Submit();
+
+        pCommandList->Begin();
+        context.renderer->SetupGlobalConstants(pCommandList);
     }
 }
 

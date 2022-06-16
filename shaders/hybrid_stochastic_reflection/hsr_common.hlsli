@@ -2,7 +2,7 @@
 
 #include "../common.hlsli"
 
-cbuffer Rootconstants : register(b0)
+cbuffer RootConstants : register(b0)
 {
     float c_maxRoughness;
     float c_temporalStability;

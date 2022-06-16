@@ -63,7 +63,9 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle rayCounterBuffer;
     };
 
-    auto tile_classification_pass = pRenderGraph->AddPass<TileClassificationData>("HSR - tile classification", RenderPassType::Compute,
+    RenderPassType pass_type = m_pRenderer->IsAsyncComputeEnabled() ? RenderPassType::AsyncCompute : RenderPassType::Compute;
+
+    auto tile_classification_pass = pRenderGraph->AddPass<TileClassificationData>("HSR - tile classification", pass_type,
         [&](TileClassificationData& data, RenderGraphBuilder& builder)
         {
             data.depth = builder.Read(depth);
@@ -114,7 +116,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle denoiserArgsBuffer;
     };
 
-    auto prepare_indirect_args_pass = pRenderGraph->AddPass<PrepareIndirectArgsData>("HSR - prepare indirect args", RenderPassType::Compute,
+    auto prepare_indirect_args_pass = pRenderGraph->AddPass<PrepareIndirectArgsData>("HSR - prepare indirect args", pass_type,
         [&](PrepareIndirectArgsData& data, RenderGraphBuilder& builder)
         {
             data.rayCounterBuffer = builder.Read(tile_classification_pass->rayCounterBuffer);
@@ -155,7 +157,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle hwRayListBufferUAV;
     };
 
-    auto ssr_pass = pRenderGraph->AddPass<SSRData>("HSR - SSR", RenderPassType::Compute,
+    auto ssr_pass = pRenderGraph->AddPass<SSRData>("HSR - SSR", pass_type,
         [&](SSRData& data, RenderGraphBuilder& builder)
         {
             data.normal = builder.Read(normal);
@@ -218,7 +220,7 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle indirectArgsBuffer;
     };
 
-    auto prepare_rt_indirect_args_pass = pRenderGraph->AddPass<PrepareRaytraceIndirectArgsData>("HSR - prepare indirect args", RenderPassType::Compute,
+    auto prepare_rt_indirect_args_pass = pRenderGraph->AddPass<PrepareRaytraceIndirectArgsData>("HSR - prepare indirect args", pass_type,
         [&](PrepareRaytraceIndirectArgsData& data, RenderGraphBuilder& builder)
         {
             data.rayCounterBuffer = builder.Read(ssr_pass->hwRayCounterBufferUAV);
@@ -249,7 +251,9 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle indirectArgsBuffer;
     };
 
-    auto raytrace_pass = pRenderGraph->AddPass<RaytraceData>("HSR - raytrace", RenderPassType::Compute,
+    bool isAMD = m_pRenderer->GetDevice()->GetVendor() == GfxVendor::AMD; //todo : AMD crashes with async compute here
+
+    auto raytrace_pass = pRenderGraph->AddPass<RaytraceData>("HSR - raytrace", isAMD ? RenderPassType::Compute : pass_type,
         [&](RaytraceData& data, RenderGraphBuilder& builder)
         {
             data.normal = builder.Read(normal);
@@ -272,7 +276,8 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
 
     if (m_bEnableDenoiser)
     {
-        return m_pDenoiser->Render(pRenderGraph, prepare_indirect_args_pass->denoiserArgsBuffer, tile_classification_pass->tileListBuffer, raytrace_pass->output, depth, linear_depth, normal, velocity, width, height);
+        return m_pDenoiser->Render(pRenderGraph, prepare_indirect_args_pass->denoiserArgsBuffer, tile_classification_pass->tileListBuffer, raytrace_pass->output, 
+            depth, linear_depth, normal, velocity, width, height, m_maxRoughness, m_temporalStability);
     }
     else
     {
@@ -360,7 +365,7 @@ void HybridStochasticReflection::Raytrace(IGfxCommandList* pCommandList, IGfxDes
 
 void HybridStochasticReflection::SetRootConstants(IGfxCommandList* pCommandList)
 {
-    struct Rootconstants
+    struct RootConstants
     {
         float maxRoughness;
         float temporalStability;
@@ -368,7 +373,7 @@ void HybridStochasticReflection::SetRootConstants(IGfxCommandList* pCommandList)
         uint bEnableHWRay;
     };
 
-    Rootconstants root_constants;
+    RootConstants root_constants;
     root_constants.maxRoughness = m_maxRoughness;
     root_constants.temporalStability = m_temporalStability;
     root_constants.bEnableSWRay = m_bEnableSWRay;

@@ -6,7 +6,8 @@ RenderGraph::RenderGraph(Renderer* pRenderer) :
     m_resourceAllocator(pRenderer->GetDevice())
 {
     IGfxDevice* device = pRenderer->GetDevice();
-    m_pAsyncComputeFence.reset(device->CreateFence("RenderGraph::m_pAsyncComputeFence"));
+    m_pComputeQueueFence.reset(device->CreateFence("RenderGraph::m_pComputeQueueFence"));
+    m_pGraphicsQueueFence.reset(device->CreateFence("RenderGraph::m_pGraphicsQueueFence"));
 }
 
 void RenderGraph::BeginEvent(const eastl::string& name)
@@ -51,6 +52,17 @@ void RenderGraph::Compile()
     CPU_EVENT("Render", "RenderGraph::Compile");
 
     m_graph.Cull();
+
+    RenderGraphAsyncResolveContext context;
+
+    for (size_t i = 0; i < m_passes.size(); ++i)
+    {
+        RenderGraphPassBase* pass = m_passes[i];
+        if (!pass->IsCulled())
+        {
+            pass->ResolveAsyncCompute(m_graph, context);
+        }
+    }
 
     eastl::vector<DAGEdge*> edges;
 
@@ -103,22 +115,34 @@ void RenderGraph::Compile()
         RenderGraphPassBase* pass = m_passes[i];
         if (!pass->IsCulled())
         {
-            pass->Resolve(m_graph);
+            pass->ResolveBarriers(m_graph);
         }
     }
 }
 
-void RenderGraph::Execute(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList)
+void RenderGraph::Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList)
 {
     CPU_EVENT("Render", "RenderGraph::Execute");
     GPU_EVENT(pCommandList, "RenderGraph");
+
+    RenderGraphPassExecuteContext context = {};
+    context.renderer = pRenderer;
+    context.graphicsCommandList = pCommandList;
+    context.computeCommandList = pComputeCommandList;
+    context.computeQueueFence = m_pComputeQueueFence.get();
+    context.graphicsQueueFence = m_pGraphicsQueueFence.get();
+    context.initialComputeFenceValue = m_nComputeQueueFenceValue;
+    context.initialGraphicsFenceValue = m_nGraphicsQueueFenceValue;
 
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
         RenderGraphPassBase* pass = m_passes[i];
 
-        pass->Execute(*this, pCommandList);
+        pass->Execute(*this, context);
     }
+
+    m_nComputeQueueFenceValue = context.lastSignaledComputeValue;
+    m_nGraphicsQueueFenceValue = context.lastSignaledGraphicsValue;
 
     for (size_t i = 0; i < m_outputResources.size(); ++i)
     {

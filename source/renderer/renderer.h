@@ -89,6 +89,9 @@ public:
     void SetGpuDrivenStatsEnabled(bool value) { m_bGpuDrivenStatsEnabled = value; }
     void SetShowMeshletsEnabled(bool value) { m_bShowMeshlets = value; }
 
+    bool IsAsyncComputeEnabled() const { return m_bEnableAsyncCompute; }
+    void SetAsyncComputeEnabled(bool value) { m_bEnableAsyncCompute = value; }
+
     void UploadTexture(IGfxTexture* texture, const void* data);
     void UploadBuffer(IGfxBuffer* buffer, uint32_t offset, const void* data, uint32_t data_size);
     void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas);
@@ -99,8 +102,9 @@ public:
     RenderBatch& AddForwardPassBatch() { return m_forwardPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddVelocityPassBatch() { return m_velocityPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddObjectIDPassBatch() { return m_idPassBatchs.emplace_back(*m_cbAllocator); }
-
     ComputeBatch& AddAnimationBatch() { return m_animationBatchs.emplace_back(*m_cbAllocator); }
+
+    void SetupGlobalConstants(IGfxCommandList* pCommandList);
 
     class HZB* GetHZB() const { return m_pHZB.get(); }
     class BasePass* GetBassPass() const { return m_pBasePass.get(); }
@@ -130,8 +134,7 @@ private:
     void CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle normal, RenderGraphHandle sceneColor);
 
     void FlushComputePass(IGfxCommandList* pCommandList);
-    void BuildRayTracingAS(IGfxCommandList* pCommandList);
-    void SetupGlobalConstants(IGfxCommandList* pCommandList);
+    void BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
     void ImportPrevFrameTextures();
     void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle);
     void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle);
@@ -155,6 +158,9 @@ private:
     uint64_t m_nCurrentFrameFenceValue = 0;
     uint64_t m_nFrameFenceValue[GFX_MAX_INFLIGHT_FRAMES] = {};
     eastl::unique_ptr<IGfxCommandList> m_pCommandLists[GFX_MAX_INFLIGHT_FRAMES];
+
+    eastl::unique_ptr<IGfxFence> m_pAsyncComputeFence;
+    uint64_t m_nCurrentAsyncComputeFenceValue = 0;
     eastl::unique_ptr<IGfxCommandList> m_pComputeCommandLists[GFX_MAX_INFLIGHT_FRAMES];
 
     eastl::unique_ptr<IGfxFence> m_pUploadFence;
@@ -224,6 +230,7 @@ private:
 
     bool m_bGpuDrivenStatsEnabled = false;
     bool m_bShowMeshlets = false;
+    bool m_bEnableAsyncCompute = true;
 
     bool m_bEnableObjectIDRendering = false;
     uint32_t m_nMouseX = 0;
