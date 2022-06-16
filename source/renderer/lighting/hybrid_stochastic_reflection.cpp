@@ -251,7 +251,9 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         RenderGraphHandle indirectArgsBuffer;
     };
 
-    auto raytrace_pass = pRenderGraph->AddPass<RaytraceData>("HSR - raytrace", pass_type,
+    bool isAMD = m_pRenderer->GetDevice()->GetVendor() == GfxVendor::AMD; //todo : AMD crashes with async compute here
+
+    auto raytrace_pass = pRenderGraph->AddPass<RaytraceData>("HSR - raytrace", isAMD ? RenderPassType::Compute : pass_type,
         [&](RaytraceData& data, RenderGraphBuilder& builder)
         {
             data.normal = builder.Read(normal);
