@@ -85,6 +85,7 @@ private:
     ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
     ID3D12GraphicsCommandList6* m_pCommandList = nullptr;
 
+    uint32_t m_commandCount = 0;
     IGfxPipelineState* m_pCurrentPSO = nullptr;
 
     eastl::vector<D3D12_RESOURCE_BARRIER> m_pendingBarriers;

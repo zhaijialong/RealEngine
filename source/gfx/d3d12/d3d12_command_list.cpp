@@ -87,6 +87,7 @@ void D3D12CommandList::ResetAllocator()
 
 void D3D12CommandList::Begin()
 {
+    m_commandCount = 0;
     m_pCurrentPSO = nullptr;
     m_pCommandList->Reset(m_pCommandAllocator, nullptr);
 
@@ -131,8 +132,11 @@ void D3D12CommandList::Submit()
     }
     m_pendingWaits.clear();
 
-    ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
-    m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
+    if (m_commandCount > 0)
+    {
+        ID3D12CommandList* ppCommandLists[] = { m_pCommandList };
+        m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
+    }
 
     for (size_t i = 0; i < m_pendingSignals.size(); ++i)
     {
@@ -203,6 +207,7 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mi
     src.PlacedFootprint.Footprint.RowPitch = dst_texture->GetRowPitch(mip_level);
 
     m_pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
@@ -232,6 +237,7 @@ void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* 
     src.SubresourceIndex = CalcSubresource(desc, mip_level, array_slice);
 
     m_pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size)
@@ -240,6 +246,7 @@ void D3D12CommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuff
 
     m_pCommandList->CopyBufferRegion((ID3D12Resource*)dst->GetHandle(), dst_offset,
         (ID3D12Resource*)src->GetHandle(), src_offset, size);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array)
@@ -257,6 +264,7 @@ void D3D12CommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t 
     src_texture.SubresourceIndex = CalcSubresource(src->GetDesc(), src_mip, src_array);
 
     m_pCommandList->CopyTextureRegion(&dst_texture, 0, 0, 0, &src_texture, nullptr);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
@@ -268,6 +276,7 @@ void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, con
 
     m_pCommandList->ClearUnorderedAccessViewFloat(shaderVisibleDescriptor.gpu_handle, nonShaderVisibleDescriptor.cpu_handle,
         (ID3D12Resource*)resource->GetHandle(), clear_value, 0, nullptr);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
@@ -279,6 +288,7 @@ void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, con
 
     m_pCommandList->ClearUnorderedAccessViewUint(shaderVisibleDescriptor.gpu_handle, nonShaderVisibleDescriptor.cpu_handle,
         (ID3D12Resource*)resource->GetHandle(), clear_value, 0, nullptr);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
@@ -290,6 +300,7 @@ void D3D12CommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t
     parameter.Value = data;
 
     m_pCommandList->WriteBufferImmediate(1, &parameter, nullptr);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
@@ -454,12 +465,15 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
         render_pass.depth.texture != nullptr ? &dsDesc : nullptr,
         D3D12_RENDER_PASS_FLAG_NONE);
 
+    ++m_commandCount;
+
     SetViewport(0, 0, width, height);
 }
 
 void D3D12CommandList::EndRenderPass()
 {
     m_pCommandList->EndRenderPass();
+    ++m_commandCount;
 }
 
 void D3D12CommandList::SetPipelineState(IGfxPipelineState* state)
@@ -552,11 +566,13 @@ void D3D12CommandList::SetComputeConstants(uint32_t slot, const void* data, size
 void D3D12CommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
 {
     m_pCommandList->DrawInstanced(vertex_count, instance_count, 0, 0);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_offset)
 {
     m_pCommandList->DrawIndexedInstanced(index_count, instance_count, index_offset, 0, 0);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
@@ -564,23 +580,27 @@ void D3D12CommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, 
     FlushPendingBarrier();
 
     m_pCommandList->Dispatch(group_count_x, group_count_y, group_count_z);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
     m_pCommandList->DispatchMesh(group_count_x, group_count_y, group_count_z);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::DrawIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
     ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetDrawSignature();
     m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
     ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetDrawIndexedSignature();
     m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
@@ -589,12 +609,14 @@ void D3D12CommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
 
     ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetDispatchSignature();
     m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
     ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetDispatchMeshSignature();
     m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::MultiDrawIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
@@ -603,6 +625,7 @@ void D3D12CommandList::MultiDrawIndirect(uint32_t max_count, IGfxBuffer* args_bu
     m_pCommandList->ExecuteIndirect(signature, max_count, 
         (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset, 
         (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::MultiDrawIndexedIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
@@ -611,6 +634,7 @@ void D3D12CommandList::MultiDrawIndexedIndirect(uint32_t max_count, IGfxBuffer* 
     m_pCommandList->ExecuteIndirect(signature, max_count,
         (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset,
         (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
@@ -619,6 +643,7 @@ void D3D12CommandList::MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* arg
     m_pCommandList->ExecuteIndirect(signature, max_count,
         (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset,
         (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
@@ -627,6 +652,7 @@ void D3D12CommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer*
     m_pCommandList->ExecuteIndirect(signature, max_count,
         (ID3D12Resource*)args_buffer->GetHandle(), args_buffer_offset,
         (ID3D12Resource*)count_buffer->GetHandle(), count_buffer_offset);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
@@ -634,6 +660,7 @@ void D3D12CommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
     FlushPendingBarrier();
 
     m_pCommandList->BuildRaytracingAccelerationStructure(((D3D12RayTracingBLAS*)blas)->GetBuildDesc(), 0, nullptr);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
@@ -645,6 +672,7 @@ void D3D12CommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer
     ((D3D12RayTracingBLAS*)blas)->GetUpdateDesc(desc, geometry, vertex_buffer, vertex_buffer_offset);
 
     m_pCommandList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
+    ++m_commandCount;
 }
 
 void D3D12CommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
@@ -655,6 +683,7 @@ void D3D12CommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRa
     ((D3D12RayTracingTLAS*)tlas)->GetBuildDesc(desc, instances, instance_count);
 
     m_pCommandList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
+    ++m_commandCount;
 }
 
 #if MICROPROFILE_GPU_TIMERS
@@ -672,6 +701,7 @@ void D3D12CommandList::FlushPendingBarrier()
 {
     if (!m_pendingBarriers.empty())
     {
+        ++m_commandCount;
         m_pCommandList->ResourceBarrier((UINT)m_pendingBarriers.size(), m_pendingBarriers.data());
         m_pendingBarriers.clear();
     }
