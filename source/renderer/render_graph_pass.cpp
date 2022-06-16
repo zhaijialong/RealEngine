@@ -172,7 +172,10 @@ void RenderGraphPassBase::ResolveAsyncCompute(const DirectedAcyclicGraph& graph,
                 DAGNodeID graphicsPassToWaitID = *eastl::max_element(context.preGraphicsQueuePasses.begin(), context.preGraphicsQueuePasses.end());
 
                 RenderGraphPassBase* graphicsPassToWait = (RenderGraphPassBase*)graph.GetNode(graphicsPassToWaitID);
-                graphicsPassToWait->m_signalValue = ++context.graphicsFence;
+                if (graphicsPassToWait->m_signalValue == -1)
+                {
+                    graphicsPassToWait->m_signalValue = ++context.graphicsFence;
+                }
 
                 RenderGraphPassBase* computePass = (RenderGraphPassBase*)graph.GetNode(context.computeQueuePasses[0]);
                 computePass->m_waitValue = graphicsPassToWait->m_signalValue;
@@ -189,7 +192,10 @@ void RenderGraphPassBase::ResolveAsyncCompute(const DirectedAcyclicGraph& graph,
                 DAGNodeID graphicsPassToSignalID = *eastl::min_element(context.postGraphicsQueuePasses.begin(), context.postGraphicsQueuePasses.end());
 
                 RenderGraphPassBase* computePass = (RenderGraphPassBase*)graph.GetNode(context.computeQueuePasses.back());
-                computePass->m_signalValue = ++context.computeFence;
+                if (computePass->m_signalValue == -1)
+                {
+                    computePass->m_signalValue = ++context.computeFence;
+                }
 
                 RenderGraphPassBase* graphicsPassToSignal = (RenderGraphPassBase*)graph.GetNode(graphicsPassToSignalID);
                 graphicsPassToSignal->m_waitValue = computePass->m_signalValue;
