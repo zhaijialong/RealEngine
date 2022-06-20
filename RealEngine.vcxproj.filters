@@ -346,6 +346,9 @@
     <ClCompile Include="source\renderer\lighting\reflection_denoiser.cpp">
       <Filter>source\renderer\lighting</Filter>
     </ClCompile>
+    <ClCompile Include="source\world\i_visible_object.cpp">
+      <Filter>source\world</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">

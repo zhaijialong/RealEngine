@@ -4,6 +4,7 @@
 #include "mesh_material.h"
 #include "resource_cache.h"
 #include "core/engine.h"
+#include "utils/gui_util.h"
 
 SkeletalMeshData::~SkeletalMeshData()
 {
@@ -300,4 +301,14 @@ void SkeletalMesh::Draw(RenderBatch& batch, const SkeletalMeshData* mesh, IGfxPi
 
     batch.SetIndexBuffer(m_pRenderer->GetSceneStaticBuffer(), mesh->indexBufferAddress, mesh->indexBufferFormat);
     batch.DrawIndexed(mesh->indexCount);
+}
+
+void SkeletalMesh::OnGui()
+{
+    IVisibleObject::OnGui();
+
+    GUI("Inspector", "SkeletalMesh", []()
+        {
+            ImGui::Text("TODO");
+        });
 }

@@ -44,6 +44,7 @@ Editor::~Editor()
 void Editor::Tick()
 {
     FlushPendingTextureDeletions();
+    m_commands.clear();
 
     ImGuiIO& io = ImGui::GetIO();
     if (!io.WantCaptureMouse && io.MouseClicked[0])
@@ -58,8 +59,6 @@ void Editor::Tick()
     DrawToolBar();
     DrawGizmo();
     DrawFrameStats();
-
-    m_commands.clear();
 }
 
 void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command)
@@ -332,6 +331,8 @@ void Editor::DrawGizmo()
     pSelectedObject->SetPosition(pos);
     pSelectedObject->SetRotation(rotation);
     pSelectedObject->SetScale(scale);
+
+    pSelectedObject->OnGui();
 }
 
 void Editor::DrawFrameStats()

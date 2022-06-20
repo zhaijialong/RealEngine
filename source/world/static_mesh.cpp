@@ -2,6 +2,7 @@
 #include "mesh_material.h"
 #include "resource_cache.h"
 #include "core/engine.h"
+#include "utils/gui_util.h"
 
 StaticMesh::StaticMesh(const eastl::string& name)
 {
@@ -159,4 +160,14 @@ void StaticMesh::Dispatch(RenderBatch& batch, IGfxPipelineState* pso)
     batch.radius = m_instanceData.radius;
     batch.meshletCount = m_nMeshletCount;
     batch.instanceIndex = m_nInstanceIndex;
+}
+
+void StaticMesh::OnGui()
+{
+    IVisibleObject::OnGui();
+
+    GUI("Inspector", "StaticMesh", []()
+        {
+            ImGui::Text("TODO");
+        });
 }
