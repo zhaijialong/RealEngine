@@ -45,6 +45,7 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
 
     m_pRenderer = eastl::make_unique<Renderer>();
     m_pRenderer->CreateDevice(window_handle, window_width, window_height);
+    m_pRenderer->SetAsyncComputeEnabled(m_configIni.GetBoolValue("Render", "AsyncCompute"));
 
     m_pWorld = eastl::make_unique<World>();
     m_pWorld->LoadScene(m_assetPath + m_configIni.GetValue("World", "Scene"));

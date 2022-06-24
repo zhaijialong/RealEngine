@@ -230,7 +230,7 @@ private:
 
     bool m_bGpuDrivenStatsEnabled = false;
     bool m_bShowMeshlets = false;
-    bool m_bEnableAsyncCompute = true;
+    bool m_bEnableAsyncCompute = false;
 
     bool m_bEnableObjectIDRendering = false;
     uint32_t m_nMouseX = 0;
