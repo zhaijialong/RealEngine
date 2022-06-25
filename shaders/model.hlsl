@@ -90,6 +90,7 @@ GBufferOutput ps_main(model::VertexOutput input
     switch (shadingModel)
     {
         case ShadingModel::Anisotropy:
+            T = normalize(T - dot(T, N) * N); // reproject on normal plane
             output.customDataRT = float4(OctNormalEncode(T), model::GetMaterialConstant(input.instanceIndex).anisotropy);
             break;
         default:
