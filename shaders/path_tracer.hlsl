@@ -79,7 +79,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
         float NdotL = saturate(dot(N, wi));
-        float3 direct_light = BRDF(wi, wo, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor * NdotL;
+        float3 direct_light = DefaultBRDF(wi, wo, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor * NdotL;
         radiance += (direct_light + emissive) * throughput / pdf;
 
         if (i == c_maxRayLength)

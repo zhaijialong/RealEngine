@@ -1,5 +1,6 @@
 #include "importance_sampling.hlsli"
 #include "random.hlsli"
+#include "brdf.hlsli"
 
 // https://www.shadertoy.com/view/3tlBW7
 // https://github.com/Nadrin/PBR

@@ -1236,6 +1236,9 @@
     <None Include="shaders\shading_model.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\brdf.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

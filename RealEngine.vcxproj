@@ -449,6 +449,7 @@
   <ItemGroup>
     <None Include="shaders\atmosphere.hlsli" />
     <None Include="shaders\bloom.hlsli" />
+    <None Include="shaders\brdf.hlsli" />
     <None Include="shaders\common.hlsli" />
     <None Include="shaders\exposure.hlsli" />
     <None Include="shaders\global_constants.hlsli" />

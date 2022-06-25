@@ -39,6 +39,7 @@ GBufferOutput ps_main(model::VertexOutput input
     model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(instanceIndex, input.uv);
     model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(instanceIndex, input.uv);
     float3 N = input.normal;
+    float3 T = input.tangent;
 #if NORMAL_TEXTURE
     N = model::GetMaterialNormal(instanceIndex, input.uv, input.tangent, input.bitangent, N);
 #endif
@@ -85,15 +86,15 @@ GBufferOutput ps_main(model::VertexOutput input
     output.specularRT = float4(specular, EncodeShadingModel(shadingModel));
     output.normalRT = float4(OctNormalEncode(N), roughness);
     output.emissiveRT = emissive;
-
     
-    if (shadingModel == ShadingModel::Anisotropy)
+    switch (shadingModel)
     {
-        output.customDataRT = float4(1, 0, 0, 0);
-    }
-    else
-    {
-        output.customDataRT = float4(0, 0, 0, 0);
+        case ShadingModel::Anisotropy:
+            output.customDataRT = float4(OctNormalEncode(T), model::GetMaterialConstant(input.instanceIndex).anisotropy);
+            break;
+        default:
+            output.customDataRT = float4(0, 0, 0, 0);
+            break;
     }
 
     return output;

@@ -284,6 +284,7 @@ void MeshMaterial::UpdateConstants()
     m_materialCB.diffuse = m_diffuseColor;
     m_materialCB.specular = m_specularColor;
     m_materialCB.glossiness = m_glossiness;
+    m_materialCB.anisotropy = m_anisotropy;
 
     m_materialCB.bPbrMetallicRoughness = m_bPbrMetallicRoughness;
     m_materialCB.bPbrSpecularGlossiness = m_bPbrSpecularGlossiness;
@@ -296,5 +297,14 @@ void MeshMaterial::OnGui()
     GUI("Inspector", "Material", [&]()
         {
             ImGui::Combo("Shading Model##Material", (int*)&m_shadingModel, "Default\0Anisotropy\0\0", (int)ShadingModel::Max);
+
+            switch (m_shadingModel)
+            {
+            case ShadingModel::Anisotropy:
+                ImGui::SliderFloat("Anisotropy##Material", &m_anisotropy, -1.0f, 1.0f);
+                break;
+            default:
+                break;
+            }
         });
 }

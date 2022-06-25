@@ -42,6 +42,7 @@ private:
     IGfxPipelineState* m_pVertexSkinningPSO = nullptr;
 
     ShadingModel m_shadingModel = ShadingModel::Default;
+    float m_anisotropy = 0.5f;
 
     //pbr_specular_glossiness
     Texture2D* m_pDiffuseTexture = nullptr;

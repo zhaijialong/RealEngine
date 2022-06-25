@@ -21,10 +21,11 @@ RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGra
     RenderGraphHandle specular = pBasePass->GetSpecularRT();
     RenderGraphHandle normal = pBasePass->GetNormalRT();
     RenderGraphHandle emissive = pBasePass->GetEmissiveRT();
+    RenderGraphHandle customData = pBasePass->GetCustomDataRT();
 
     RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
     RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, velocity, width, height);
-    RenderGraphHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, depth, shadow, width, height);
+    RenderGraphHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
     RenderGraphHandle indirect_specular = m_pReflection->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
     //RenderGraphHandle indirect_diffuse = todo : diffuse GI
 

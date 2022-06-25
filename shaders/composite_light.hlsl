@@ -107,7 +107,15 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     outTexture[dispatchThreadID.xy].xyz = float3(float(hash & 255), float((hash >> 8) & 255), float((hash >> 16) & 255)) / 255.0;
     outTexture[dispatchThreadID.xy].w = 1.0;
 #elif OUTPUT_CUSTOM_DATA
-    outTexture[dispatchThreadID.xy] = customDataRT[pos];
+    if(shadingModel == ShadingModel::Anisotropy)
+    {
+        float3 T = OctNormalDecode(customDataRT[pos].xyz);
+        outTexture[dispatchThreadID.xy] = float4(T * 0.5 + 0.5, 1.0);
+    }
+    else
+    {
+        outTexture[dispatchThreadID.xy] = customDataRT[pos];
+    }
 #elif OUTPUT_AO
     outTexture[dispatchThreadID.xy] = float4(ao, ao, ao, 1.0);
 #elif OUTPUT_DIRECT_LIGHTING

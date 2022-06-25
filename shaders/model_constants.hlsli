@@ -23,6 +23,9 @@ struct ModelMaterialConstant
     
     float3 emissive;
     uint shadingModel;
+    
+    float anisotropy;
+    float3 _padding;
 
     uint bPbrMetallicRoughness;
     uint bPbrSpecularGlossiness;

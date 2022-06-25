@@ -11,13 +11,15 @@ ClusteredShading::ClusteredShading(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "ClusteredShading PSO");
 }
 
-RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGraphHandle diffuse, RenderGraphHandle specular, RenderGraphHandle normal, RenderGraphHandle depth, RenderGraphHandle shadow, uint32_t width, uint32_t height)
+RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGraphHandle diffuse, RenderGraphHandle specular, RenderGraphHandle normal, 
+    RenderGraphHandle customData, RenderGraphHandle depth, RenderGraphHandle shadow, uint32_t width, uint32_t height)
 {
     struct ClusteredShadingData
     {
         RenderGraphHandle diffuseRT;
         RenderGraphHandle specularRT;
         RenderGraphHandle normalRT;
+        RenderGraphHandle customDataRT;
         RenderGraphHandle depthRT;
         RenderGraphHandle shadow;
         RenderGraphHandle output;
@@ -29,6 +31,7 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
             data.diffuseRT = builder.Read(diffuse);
             data.specularRT = builder.Read(specular);
             data.normalRT = builder.Read(normal);
+            data.customDataRT = builder.Read(customData);
             data.depthRT = builder.Read(depth);
             data.shadow = builder.Read(shadow);
 
@@ -44,16 +47,18 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
             RenderGraphTexture* diffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.diffuseRT);
             RenderGraphTexture* specularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.specularRT);
             RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalRT);
+            RenderGraphTexture* customDataRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.customDataRT);
             RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthRT);
             RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.shadow);
             RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
-            Draw(pCommandList, diffuseRT->GetSRV(), specularRT->GetSRV(), normalRT->GetSRV(), depthRT->GetSRV(), shadowRT->GetSRV(), outputRT->GetUAV(), width, height);
+            Draw(pCommandList, diffuseRT->GetSRV(), specularRT->GetSRV(), normalRT->GetSRV(), customDataRT->GetSRV(), depthRT->GetSRV(), shadowRT->GetSRV(), outputRT->GetUAV(), width, height);
         });
 
     return clustered_shading->output;
 }
 
-void ClusteredShading::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* diffuse, IGfxDescriptor* specular, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* shadow, IGfxDescriptor* output, uint32_t width, uint32_t height)
+void ClusteredShading::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* diffuse, IGfxDescriptor* specular, IGfxDescriptor* normal, 
+    IGfxDescriptor* customData, IGfxDescriptor* depth, IGfxDescriptor* shadow, IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 
@@ -62,9 +67,9 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* diffu
         uint diffuseRT;
         uint specularRT;
         uint normalRT;
+        uint customDataRT;
         uint depthRT;
         uint shadowRT;
-
         uint outputRT;
     };
 
@@ -72,6 +77,7 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* diffu
     cb.diffuseRT = diffuse->GetHeapIndex();
     cb.specularRT = specular->GetHeapIndex();
     cb.normalRT = normal->GetHeapIndex();
+    cb.customDataRT = customData->GetHeapIndex();
     cb.depthRT = depth->GetHeapIndex();
     cb.shadowRT = shadow->GetHeapIndex();
     cb.outputRT = output->GetHeapIndex();

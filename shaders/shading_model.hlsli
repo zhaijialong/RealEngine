@@ -8,14 +8,12 @@ enum class ShadingModel : uint
     Max,
 };
 
-#ifndef __cplusplus
-float EncodeShadingModel(ShadingModel shadingModel)
+inline float EncodeShadingModel(ShadingModel shadingModel)
 {
     return (float)shadingModel / 255.0f;
 }
 
-ShadingModel DecodeShadingModel(float shadingModel)
+inline ShadingModel DecodeShadingModel(float shadingModel)
 {
     return (ShadingModel)round(shadingModel * 255.0);
 }
-#endif //#ifndef __cplusplus

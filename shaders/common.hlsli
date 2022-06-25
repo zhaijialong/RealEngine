@@ -7,63 +7,6 @@ static const float M_PI = 3.141592653f;
 static const uint INVALID_RESOURCE_INDEX = 0xFFFFFFFF;
 static const uint INVALID_ADDRESS = 0xFFFFFFFF;
 
-float3 DiffuseBRDF(float3 diffuse)
-{
-    return diffuse / M_PI;
-}
-
-float D_GGX(float3 N, float3 H, float a)
-{
-    float a2 = a * a;
-    float NdotH = saturate(dot(N, H));
-    
-    float denom = (NdotH * NdotH * (a2 - 1.0) + 1.0);
-    denom = M_PI * denom * denom;
-    
-    return a2 * rcp(denom);
-}
-
-//http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html
-float V_SmithGGX(float3 N, float3 V, float3 L, float a)
-{
-    float a2 = a * a;
-    float NdotV = saturate(dot(N, V));
-    float NdotL = saturate(dot(N, L));
-
-    float G_V = NdotV + sqrt((NdotV - NdotV * a2) * NdotV + a2);
-    float G_L = NdotL + sqrt((NdotL - NdotL * a2) * NdotL + a2);
-    return rcp(G_V * G_L);
-}
-
-float3 F_Schlick(float3 V, float3 H, float3 F0)
-{
-    float VdotH = saturate(dot(V, H));
-    return F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
-}
-
-float3 SpecularBRDF(float3 N, float3 V, float3 L, float3 specular, float roughness, out float3 F)
-{
-    roughness = max(roughness, 0.03);
-
-    float a = roughness * roughness;
-    float3 H = normalize(V + L);
-
-    float D = D_GGX(N, H, a);
-    float Vis = V_SmithGGX(N, V, L, a);
-    F = F_Schlick(V, H, specular);
-
-    return D * Vis * F;
-}
-
-float3 BRDF(float3 L, float3 V, float3 N, float3 diffuse, float3 specular, float roughness)
-{
-    float3 F;
-    float3 specular_brdf = SpecularBRDF(N, V, L, specular, roughness, F);
-    float3 diffuse_brdf = DiffuseBRDF(diffuse) * (1.0 - F);
-
-    return diffuse_brdf + specular_brdf;
-}
-
 template<typename T>
 T LinearToSrgbChannel(T color)
 {

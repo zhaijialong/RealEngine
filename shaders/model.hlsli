@@ -26,10 +26,8 @@ struct VertexOutput
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD;
     float3 normal : NORMAL;
-#if NORMAL_TEXTURE
     float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
-#endif
     
     float3 worldPos : WORLD_POSITION;
     uint meshlet : COLOR0;
@@ -71,6 +69,8 @@ VertexOutput GetVertexOutput(uint instance_id,  uint vertex_id)
     output.worldPos = worldPos.xyz;
     output.uv = v.uv;
     output.normal = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(v.normal, 0.0f)).xyz);
+    output.tangent = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(v.tangent.xyz, 0.0f)).xyz);
+    output.bitangent = normalize(cross(output.normal, output.tangent) * v.tangent.w);  
     
     if (vertex_id == 0)
     {
@@ -78,14 +78,8 @@ VertexOutput GetVertexOutput(uint instance_id,  uint vertex_id)
     }
     
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
-    
-#if NORMAL_TEXTURE
-    output.tangent = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(v.tangent.xyz, 0.0f)).xyz);
-    output.bitangent = normalize(cross(output.normal, output.tangent) * v.tangent.w);    
-    
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));
     //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.bitangent * 0.05, float3(0, 1, 0));
-#endif
     
     return output;
 }
