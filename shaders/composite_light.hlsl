@@ -1,5 +1,7 @@
 #include "common.hlsli"
+#include "shading_model.hlsli"
 #include "gtso.hlsli"
+#include "random.hlsli"
 
 cbuffer CB1 : register(b1)
 {
@@ -13,6 +15,7 @@ cbuffer CB1 : register(b1)
     uint c_aoRT;
     uint c_indirectSprcularRT;
 
+    uint c_customDataRT;
     float c_hsrMaxRoughness;
     uint c_outputRT;
 };
@@ -33,11 +36,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D specularRT = ResourceDescriptorHeap[c_specularRT];
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     Texture2D<float3> emissiveRT = ResourceDescriptorHeap[c_emissiveRT];
+    Texture2D customDataRT = ResourceDescriptorHeap[c_customDataRT];
     
     float4 diffuse = diffuseRT[pos];
     float3 specular = specularRT[pos].xyz;
     float4 normal = normalRT[pos];
     float3 emissive = emissiveRT[pos];
+    ShadingModel shadingModel = DecodeShadingModel(specularRT[pos].w);
     
     float3 N = OctNormalDecode(normal.xyz);
     float roughness = normal.w;
@@ -97,6 +102,12 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     outTexture[dispatchThreadID.xy] = float4(roughness, roughness, roughness, 1.0);
 #elif OUTPUT_EMISSIVE
     outTexture[dispatchThreadID.xy] = float4(emissive, 1.0);
+#elif OUTPUT_SHADING_MODEL
+    uint hash = WangHash((uint)shadingModel);
+    outTexture[dispatchThreadID.xy].xyz = float3(float(hash & 255), float((hash >> 8) & 255), float((hash >> 16) & 255)) / 255.0;
+    outTexture[dispatchThreadID.xy].w = 1.0;
+#elif OUTPUT_CUSTOM_DATA
+    outTexture[dispatchThreadID.xy] = customDataRT[pos];
 #elif OUTPUT_AO
     outTexture[dispatchThreadID.xy] = float4(ao, ao, ao, 1.0);
 #elif OUTPUT_DIRECT_LIGHTING

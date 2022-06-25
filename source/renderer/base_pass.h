@@ -18,6 +18,7 @@ public:
     RenderGraphHandle GetSpecularRT() const { return m_specularRT; }
     RenderGraphHandle GetNormalRT() const { return m_normalRT; }
     RenderGraphHandle GetEmissiveRT() const { return m_emissiveRT; }
+    RenderGraphHandle GetCustomDataRT() const { return m_customDataRT; }
     RenderGraphHandle GetDepthRT() const { return m_depthRT; }
 
     RenderGraphHandle GetSecondPhaseMeshletListBuffer() const { return m_secondPhaseMeshletListBuffer; }
@@ -68,6 +69,7 @@ private:
     RenderGraphHandle m_specularRT;
     RenderGraphHandle m_normalRT;
     RenderGraphHandle m_emissiveRT;
+    RenderGraphHandle m_customDataRT;
     RenderGraphHandle m_depthRT;
 
     RenderGraphHandle m_secondPhaseObjectListBuffer;

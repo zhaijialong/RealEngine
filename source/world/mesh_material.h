@@ -2,6 +2,7 @@
 
 #include "renderer/renderer.h"
 #include "model_constants.hlsli"
+#include "shading_model.hlsli"
 
 class MeshMaterial
 {
@@ -21,6 +22,7 @@ public:
 
     void UpdateConstants();
     const ModelMaterialConstant* GetConstants() const { return &m_materialCB; }
+    void OnGui();
 
     bool IsFrontFaceCCW() const { return m_bFrontFaceCCW; }
     bool IsAlphaTest() const { return m_bAlphaTest; }
@@ -36,10 +38,10 @@ private:
     IGfxPipelineState* m_pVelocityPSO = nullptr;
     IGfxPipelineState* m_pIDPSO = nullptr;
     IGfxPipelineState* m_pOutlinePSO = nullptr;
-
     IGfxPipelineState* m_pMeshletPSO = nullptr;
-
     IGfxPipelineState* m_pVertexSkinningPSO = nullptr;
+
+    ShadingModel m_shadingModel = ShadingModel::Default;
 
     //pbr_specular_glossiness
     Texture2D* m_pDiffuseTexture = nullptr;

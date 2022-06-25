@@ -28,9 +28,10 @@ struct BasePassData
     RenderGraphHandle occlusionCulledMeshletsCounterBuffer; //only used in first phase
 
     RenderGraphHandle outDiffuseRT;  //srgb : diffuse(xyz) + ao(a)
-    RenderGraphHandle outSpecularRT; //srgb : specular(xyz), a: not used
+    RenderGraphHandle outSpecularRT; //srgb : specular(xyz) + shading model(a)
     RenderGraphHandle outNormalRT;   //rgba8norm : normal(xyz) + roughness(a)
     RenderGraphHandle outEmissiveRT; //r11g11b10 : emissive
+    RenderGraphHandle outCustomRT;     //rgba8norm : custom data
     RenderGraphHandle outDepthRT;
 };
 
@@ -221,6 +222,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
 
             desc.format = GfxFormat::RGBA8UNORM;
             data.outNormalRT = builder.Create<RenderGraphTexture>(desc, "Normal RT");
+            data.outCustomRT = builder.Create<RenderGraphTexture>(desc, "CustomData RT");
 
             desc.format = GfxFormat::R11G11B10F;
             data.outEmissiveRT = builder.Create<RenderGraphTexture>(desc, "Emissive RT");
@@ -232,6 +234,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
             data.outSpecularRT = builder.WriteColor(1, data.outSpecularRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.outNormalRT = builder.WriteColor(2, data.outNormalRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.outEmissiveRT = builder.WriteColor(3, data.outEmissiveRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
+            data.outCustomRT = builder.WriteColor(4, data.outCustomRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0f));
             data.outDepthRT = builder.WriteDepth(data.outDepthRT, 0, GfxRenderPassLoadOp::Clear, GfxRenderPassLoadOp::Clear);
 
             for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
@@ -265,6 +268,7 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
     m_specularRT = gbuffer_pass->outSpecularRT;
     m_normalRT = gbuffer_pass->outNormalRT;
     m_emissiveRT = gbuffer_pass->outEmissiveRT;
+    m_customDataRT = gbuffer_pass->outCustomRT;
     m_depthRT = gbuffer_pass->outDepthRT;
 
     m_secondPhaseObjectListBuffer = instance_culling_pass->secondPhaseObjectListBuffer;
@@ -411,6 +415,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
             data.outSpecularRT = builder.WriteColor(1, m_specularRT, 0, GfxRenderPassLoadOp::Load);
             data.outNormalRT = builder.WriteColor(2, m_normalRT, 0, GfxRenderPassLoadOp::Load);
             data.outEmissiveRT = builder.WriteColor(3, m_emissiveRT, 0, GfxRenderPassLoadOp::Load);
+            data.outCustomRT = builder.WriteColor(4, m_customDataRT, 0, GfxRenderPassLoadOp::Load);
             data.outDepthRT = builder.WriteDepth(m_depthRT, 0, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load);
 
             for (uint32_t i = 0; i < pHZB->GetHZBMipCount(); ++i)
@@ -435,6 +440,7 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
     m_specularRT = gbuffer_pass->outSpecularRT;
     m_normalRT = gbuffer_pass->outNormalRT;
     m_emissiveRT = gbuffer_pass->outEmissiveRT;
+    m_customDataRT = gbuffer_pass->outCustomRT;
     m_depthRT = gbuffer_pass->outDepthRT;
 }
 

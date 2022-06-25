@@ -463,6 +463,7 @@
     <None Include="shaders\random.hlsli" />
     <None Include="shaders\ray_trace.hlsli" />
     <None Include="shaders\screen_space_ray_trace.hlsli" />
+    <None Include="shaders\shading_model.hlsli" />
     <None Include="shaders\stats.hlsli" />
     <None Include="shaders\tone_mapping.hlsli" />
     <None Include="shaders\XeGTAO.hlsli" />

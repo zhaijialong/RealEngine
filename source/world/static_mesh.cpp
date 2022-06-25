@@ -170,4 +170,6 @@ void StaticMesh::OnGui()
         {
             ImGui::Text("TODO");
         });
+
+    m_pMaterial->OnGui();
 }

@@ -1,6 +1,7 @@
 #include "mesh_material.h"
 #include "resource_cache.h"
 #include "core/engine.h"
+#include "utils/gui_util.h"
 
 MeshMaterial::~MeshMaterial()
 {
@@ -65,6 +66,7 @@ IGfxPipelineState* MeshMaterial::GetPSO()
         psoDesc.rt_format[1] = GfxFormat::RGBA8SRGB;
         psoDesc.rt_format[2] = GfxFormat::RGBA8UNORM;
         psoDesc.rt_format[3] = GfxFormat::R11G11B10F;
+        psoDesc.rt_format[4] = GfxFormat::RGBA8UNORM;
         psoDesc.depthstencil_format = GfxFormat::D32F;
 
         m_pPSO = pRenderer->GetPipelineState(psoDesc, "model PSO");
@@ -243,6 +245,7 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         psoDesc.rt_format[1] = GfxFormat::RGBA8SRGB;
         psoDesc.rt_format[2] = GfxFormat::RGBA8UNORM;
         psoDesc.rt_format[3] = GfxFormat::R11G11B10F;
+        psoDesc.rt_format[4] = GfxFormat::RGBA8UNORM;
         psoDesc.depthstencil_format = GfxFormat::D32F;
 
         m_pMeshletPSO = pRenderer->GetPipelineState(psoDesc, "model meshlet PSO");
@@ -265,6 +268,7 @@ IGfxPipelineState* MeshMaterial::GetVertexSkinningPSO()
 
 void MeshMaterial::UpdateConstants()
 {
+    m_materialCB.shadingModel = (uint)m_shadingModel;
     m_materialCB.albedoTexture = m_pAlbedoTexture ? m_pAlbedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_materialCB.metallicRoughnessTexture = m_pMetallicRoughnessTexture ? m_pMetallicRoughnessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_materialCB.normalTexture = m_pNormalTexture ? m_pNormalTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
@@ -285,4 +289,12 @@ void MeshMaterial::UpdateConstants()
     m_materialCB.bPbrSpecularGlossiness = m_bPbrSpecularGlossiness;
     m_materialCB.bRGNormalTexture = m_pNormalTexture && (m_pNormalTexture->GetTexture()->GetDesc().format == GfxFormat::BC5UNORM);
     m_materialCB.bDoubleSided = m_bDoubleSided;
+}
+
+void MeshMaterial::OnGui()
+{
+    GUI("Inspector", "Material", [&]()
+        {
+            ImGui::Combo("Shading Model##Material", (int*)&m_shadingModel, "Default\0Anisotropy\0\0", (int)ShadingModel::Max);
+        });
 }

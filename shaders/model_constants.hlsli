@@ -22,7 +22,7 @@ struct ModelMaterialConstant
     float3 specular;
     
     float3 emissive;
-    float _padding;
+    uint shadingModel;
 
     uint bPbrMetallicRoughness;
     uint bPbrSpecularGlossiness;

@@ -1233,6 +1233,9 @@
     <None Include="shaders\hybrid_stochastic_reflection\hsr_common.hlsli">
       <Filter>shaders\hybrid_stochastic_reflection</Filter>
     </None>
+    <None Include="shaders\shading_model.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

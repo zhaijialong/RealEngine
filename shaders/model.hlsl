@@ -1,5 +1,6 @@
 #include "model.hlsli"
 #include "random.hlsli"
+#include "shading_model.hlsli"
 
 model::VertexOutput vs_main(uint vertex_id : SV_VertexID)
 {
@@ -13,6 +14,7 @@ struct GBufferOutput
     float4 specularRT : SV_TARGET1;
     float4 normalRT : SV_TARGET2;
     float3 emissiveRT : SV_TARGET3;
+    float4 customDataRT : SV_TARGET4;
 };
 
 GBufferOutput ps_main(model::VertexOutput input
@@ -31,6 +33,8 @@ GBufferOutput ps_main(model::VertexOutput input
 #else
     uint instanceIndex = input.instanceIndex;
 #endif
+    
+    ShadingModel shadingModel = (ShadingModel)model::GetMaterialConstant(input.instanceIndex).shadingModel;
 
     model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(instanceIndex, input.uv);
     model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(instanceIndex, input.uv);
@@ -78,9 +82,19 @@ GBufferOutput ps_main(model::VertexOutput input
     
     GBufferOutput output;
     output.diffuseRT = float4(diffuse, ao);
-    output.specularRT = float4(specular, 0);
+    output.specularRT = float4(specular, EncodeShadingModel(shadingModel));
     output.normalRT = float4(OctNormalEncode(N), roughness);
     output.emissiveRT = emissive;
+
     
+    if (shadingModel == ShadingModel::Anisotropy)
+    {
+        output.customDataRT = float4(1, 0, 0, 0);
+    }
+    else
+    {
+        output.customDataRT = float4(0, 0, 0, 0);
+    }
+
     return output;
 }

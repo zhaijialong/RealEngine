@@ -19,6 +19,8 @@ enum class RendererOutput
     WorldNormal,
     Roughness,
     Emissive,
+    ShadingModel,
+    CustomData,
     AO,
     DirectLighting,
     IndirectSpecular,

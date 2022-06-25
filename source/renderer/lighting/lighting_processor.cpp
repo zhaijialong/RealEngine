@@ -39,6 +39,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
         RenderGraphHandle specularRT;
         RenderGraphHandle normalRT;
         RenderGraphHandle emissiveRT;
+        RenderGraphHandle customDataRT;
         RenderGraphHandle depthRT;
         RenderGraphHandle ao;
 
@@ -58,6 +59,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             data.specularRT = builder.Read(pBasePass->GetSpecularRT());
             data.normalRT = builder.Read(pBasePass->GetNormalRT());
             data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT());
+            data.customDataRT = builder.Read(pBasePass->GetCustomDataRT());
             data.depthRT = builder.Read(depth);
             data.directLighting = builder.Read(direct_lighting);
 
@@ -84,6 +86,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             RenderGraphTexture* specularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.specularRT);
             RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalRT);
             RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.emissiveRT);
+            RenderGraphTexture* customDataRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.customDataRT);
             RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthRT);
             RenderGraphTexture* directLightingRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.directLighting);
             RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
@@ -129,6 +132,12 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             case RendererOutput::Emissive:
                 defines.push_back("OUTPUT_EMISSIVE=1");
                 break;
+            case RendererOutput::ShadingModel:
+                defines.push_back("OUTPUT_SHADING_MODEL=1");
+                break;
+            case RendererOutput::CustomData:
+                defines.push_back("OUTPUT_CUSTOM_DATA=1");
+                break;
             case RendererOutput::AO:
                 defines.push_back("OUTPUT_AO=1");
                 break;
@@ -163,6 +172,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
                 uint aoRT;
                 uint indirectSprcularRT;
 
+                uint customDataRT;
                 float hsrMaxRoughness;
                 uint outputRT;
             };
@@ -172,6 +182,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             cb1.specularRT = specularRT->GetSRV()->GetHeapIndex();
             cb1.normalRT = normalRT->GetSRV()->GetHeapIndex();
             cb1.emissiveRT = emissiveRT->GetSRV()->GetHeapIndex();
+            cb1.customDataRT = customDataRT->GetSRV()->GetHeapIndex();
             cb1.depthRT = depthRT->GetSRV()->GetHeapIndex();
             cb1.directLightingRT = directLightingRT->GetSRV()->GetHeapIndex();
             if (aoRT)

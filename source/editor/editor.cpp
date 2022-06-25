@@ -278,7 +278,7 @@ void Editor::DrawToolBar()
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     int renderOutput = (int)pRenderer->GetOutputType();
     ImGui::Combo("##RenderOutput", &renderOutput, 
-        "Default\0Diffuse\0Specular(F0)\0World Normal\0Roughness\0Emissive\0AO\0Direct Lighting\0Indirect Specular\0Indirect Diffuse\0Path Tracing\0\0", (int)RendererOutput::Max);
+        "Default\0Diffuse\0Specular(F0)\0World Normal\0Roughness\0Emissive\0Shading Model\0Custom Data\0AO\0Direct Lighting\0Indirect Specular\0Indirect Diffuse\0Path Tracing\0\0", (int)RendererOutput::Max);
     pRenderer->SetOutputType((RendererOutput)renderOutput);
     ImGui::PopItemWidth();
 
