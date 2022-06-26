@@ -80,6 +80,17 @@ float3 OctNormalDecode(float3 f)
     return normalize(n);
 }
 
+float4 EncodeAnisotropy(float3 T, float anisotropy)
+{
+    return float4(OctNormalEncode(T), anisotropy * 0.5 + 0.5);
+}
+
+void DecodeAnisotropy(float4 data, out float3 T, out float anisotropy)
+{
+    T = OctNormalDecode(data.xyz);
+    anisotropy = data.w * 2.0 - 1.0;
+}
+
 float GetLinearDepth(float ndcDepth)
 {
     float C1 = CameraCB.linearZParams.x;

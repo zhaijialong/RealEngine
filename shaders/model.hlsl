@@ -91,7 +91,8 @@ GBufferOutput ps_main(model::VertexOutput input
         case ShadingModel::Anisotropy:
         {
             float3 T = model::GetAnisotropyTangent(instanceIndex, input.uv, input.tangent, input.bitangent, N);
-            output.customDataRT = float4(OctNormalEncode(T), model::GetMaterialConstant(input.instanceIndex).anisotropy);
+            float anisotropy = model::GetMaterialConstant(input.instanceIndex).anisotropy;
+            output.customDataRT = EncodeAnisotropy(T, anisotropy);
             break;
         }
         default:

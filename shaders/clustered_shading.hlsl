@@ -49,8 +49,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     {
         case ShadingModel::Anisotropy:
         {
-            float3 T = OctNormalDecode(customData.xyz);
-            float anisotropy = customData.w;
+            float3 T;
+            float anisotropy;
+            DecodeAnisotropy(customData, T, anisotropy);
             BRDF = AnisotropyBRDF(SceneCB.lightDir, V, N, T, diffuse, specular, roughness, anisotropy);
             break;
         }
