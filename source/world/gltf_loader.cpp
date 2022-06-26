@@ -120,6 +120,14 @@ GLTFLoader::GLTFLoader(World* world, tinyxml2::XMLElement* element)
     float4x4 R = rotation_matrix(rotation_quat(m_rotation));
     float4x4 S = scaling_matrix(m_scale);
     m_mtxWorld = mul(T, mul(R, S));
+
+
+    //todo : remove this once GLTF anisotropy extension is released
+    const tinyxml2::XMLAttribute* anisotropyT = element->FindAttribute("anisotropyT");
+    if (anisotropyT)
+    {
+        m_anisotropicTexture = Engine::GetInstance()->GetAssetPath() + anisotropyT->Value();
+    }
 }
 
 void GLTFLoader::Load()
@@ -262,6 +270,12 @@ MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
     material->m_bAlphaTest = gltf_material->alpha_mode == cgltf_alpha_mode_mask;
     material->m_bAlphaBlend = gltf_material->alpha_mode == cgltf_alpha_mode_blend;
     material->m_bDoubleSided = gltf_material->double_sided;
+
+    if (!m_anisotropicTexture.empty())
+    {
+        material->m_shadingModel = ShadingModel::Anisotropy;
+        material->m_pAnisotropicTangentTexture = ResourceCache::GetInstance()->GetTexture2D(m_anisotropicTexture, false);
+    }
 
     return material;
 }

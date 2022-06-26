@@ -13,6 +13,7 @@ MeshMaterial::~MeshMaterial()
     cache->ReleaseTexture2D(m_pNormalTexture);
     cache->ReleaseTexture2D(m_pEmissiveTexture);
     cache->ReleaseTexture2D(m_pAOTexture);
+    cache->ReleaseTexture2D(m_pAnisotropicTangentTexture);
 }
 
 IGfxPipelineState* MeshMaterial::GetPSO()
@@ -48,6 +49,11 @@ IGfxPipelineState* MeshMaterial::GetPSO()
             {
                 defines.push_back("RG_NORMAL_TEXTURE=1");
             }
+        }
+
+        if (m_pAnisotropicTangentTexture)
+        {
+            defines.push_back("ANISOTROPIC_TANGENT_TEXTURE=1");
         }
 
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
@@ -228,6 +234,11 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
             }
         }
 
+        if (m_pAnisotropicTangentTexture)
+        {
+            defines.push_back("ANISOTROPIC_TANGENT_TEXTURE=1");
+        }
+
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
         if (m_pEmissiveTexture) defines.push_back("EMISSIVE_TEXTURE=1");
         if (m_pAOTexture) defines.push_back("AO_TEXTURE=1");
@@ -285,6 +296,7 @@ void MeshMaterial::UpdateConstants()
     m_materialCB.specular = m_specularColor;
     m_materialCB.glossiness = m_glossiness;
     m_materialCB.anisotropy = m_anisotropy;
+    m_materialCB.anisotropyTexture = m_pAnisotropicTangentTexture ? m_pAnisotropicTangentTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
 
     m_materialCB.bPbrMetallicRoughness = m_bPbrMetallicRoughness;
     m_materialCB.bPbrSpecularGlossiness = m_bPbrSpecularGlossiness;
@@ -297,6 +309,8 @@ void MeshMaterial::OnGui()
     GUI("Inspector", "Material", [&]()
         {
             ImGui::Combo("Shading Model##Material", (int*)&m_shadingModel, "Default\0Anisotropy\0\0", (int)ShadingModel::Max);
+            ImGui::SliderFloat("Metallic##Material", &m_metallic, .0f, 1.0f);
+            ImGui::SliderFloat("Roughness##Material", &m_roughness, .0f, 1.0f);
 
             switch (m_shadingModel)
             {

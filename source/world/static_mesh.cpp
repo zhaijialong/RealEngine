@@ -97,6 +97,11 @@ void StaticMesh::UpdateConstants()
     m_instanceData.center = mul(mtxWorld, float4(m_center, 1.0)).xyz();
     m_instanceData.radius = m_radius * m_instanceData.scale;
 
+    m_instanceData.bShowBoundingSphere = m_bShowBoundingSphere;
+    m_instanceData.bShowTangent = m_bShowTangent;
+    m_instanceData.bShowBitangent = m_bShowBitangent;
+    m_instanceData.bShowNormal = m_bShowNormal;
+
     m_instanceData.mtxPrevWorld = m_instanceData.mtxWorld;
     m_instanceData.mtxWorld = mtxWorld;
     m_instanceData.mtxWorldInverseTranspose = transpose(inverse(mtxWorld));
@@ -166,9 +171,12 @@ void StaticMesh::OnGui()
 {
     IVisibleObject::OnGui();
 
-    GUI("Inspector", "StaticMesh", []()
+    GUI("Inspector", "StaticMesh", [&]()
         {
-            ImGui::Text("TODO");
+            ImGui::Checkbox("Show BoundingSphere##StaticMesh", &m_bShowBoundingSphere);
+            ImGui::Checkbox("Show Tangent##StaticMesh", &m_bShowTangent);
+            ImGui::Checkbox("Show Bitangent##StaticMesh", &m_bShowBitangent);
+            ImGui::Checkbox("Show Normal##StaticMesh", &m_bShowNormal);
         });
 
     m_pMaterial->OnGui();

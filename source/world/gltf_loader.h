@@ -52,4 +52,6 @@ private:
     float3 m_rotation = float3(0, 0, 0);
     float3 m_scale = float3(1, 1, 1);
     float4x4 m_mtxWorld;
+
+    eastl::string m_anisotropicTexture;
 };

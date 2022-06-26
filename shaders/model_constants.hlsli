@@ -25,7 +25,8 @@ struct ModelMaterialConstant
     uint shadingModel;
     
     float anisotropy;
-    float3 _padding;
+    uint anisotropyTexture;
+    float2 _padding;
 
     uint bPbrMetallicRoughness;
     uint bPbrSpecularGlossiness;

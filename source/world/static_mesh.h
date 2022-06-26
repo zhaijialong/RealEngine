@@ -50,4 +50,9 @@ private:
 
     float3 m_center = { 0.0f, 0.0f, 0.0f };
     float m_radius = 0.0f;
+
+    bool m_bShowBoundingSphere = false;
+    bool m_bShowTangent = false;
+    bool m_bShowBitangent = false;
+    bool m_bShowNormal = false;
 };

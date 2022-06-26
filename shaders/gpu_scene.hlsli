@@ -32,6 +32,11 @@ struct InstanceData
     float3 center;
     float radius;
     
+    uint bShowBoundingSphere;
+    uint bShowTangent;
+    uint bShowBitangent;
+    uint bShowNormal;
+    
     float4x4 mtxWorld;
     float4x4 mtxWorldInverseTranspose;
     float4x4 mtxPrevWorld;

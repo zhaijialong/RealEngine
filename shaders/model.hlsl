@@ -34,12 +34,11 @@ GBufferOutput ps_main(model::VertexOutput input
     uint instanceIndex = input.instanceIndex;
 #endif
     
-    ShadingModel shadingModel = (ShadingModel)model::GetMaterialConstant(input.instanceIndex).shadingModel;
+    ShadingModel shadingModel = (ShadingModel)model::GetMaterialConstant(instanceIndex).shadingModel;
 
     model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(instanceIndex, input.uv);
     model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(instanceIndex, input.uv);
     float3 N = input.normal;
-    float3 T = input.tangent;
 #if NORMAL_TEXTURE
     N = model::GetMaterialNormal(instanceIndex, input.uv, input.tangent, input.bitangent, N);
 #endif
@@ -70,9 +69,9 @@ GBufferOutput ps_main(model::VertexOutput input
 #endif //PBR_SPECULAR_GLOSSINESS
     
 #if ALPHA_TEST
-    clip(alpha - model::GetMaterialConstant(input.instanceIndex).alphaCutoff);
-#endif
-    
+    clip(alpha - model::GetMaterialConstant(instanceIndex).alphaCutoff);
+#endif 
+
     if (SceneCB.bShowMeshlets)
     {
         uint hash = WangHash(input.meshlet);
@@ -90,9 +89,11 @@ GBufferOutput ps_main(model::VertexOutput input
     switch (shadingModel)
     {
         case ShadingModel::Anisotropy:
-            T = normalize(T - dot(T, N) * N); // reproject on normal plane
+        {
+            float3 T = model::GetAnisotropyTangent(instanceIndex, input.uv, input.tangent, input.bitangent, N);
             output.customDataRT = float4(OctNormalEncode(T), model::GetMaterialConstant(input.instanceIndex).anisotropy);
             break;
+        }
         default:
             output.customDataRT = float4(0, 0, 0, 0);
             break;

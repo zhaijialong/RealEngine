@@ -72,15 +72,26 @@ VertexOutput GetVertexOutput(uint instance_id,  uint vertex_id)
     output.tangent = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(v.tangent.xyz, 0.0f)).xyz);
     output.bitangent = normalize(cross(output.normal, output.tangent) * v.tangent.w);  
     
-    if (vertex_id == 0)
+    if (vertex_id == 0 && instanceData.bShowBoundingSphere)
     {
-        //debug::DrawSphere(instanceData.center, instanceData.radius, float3(1, 0, 0));
+        debug::DrawSphere(instanceData.center, instanceData.radius, float3(1, 0, 0));
     }
     
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));
-    //debug::DrawLine(worldPos.xyz, worldPos.xyz + output.bitangent * 0.05, float3(0, 1, 0));
-    
+    if (instanceData.bShowTangent)
+    {
+        debug::DrawLine(worldPos.xyz, worldPos.xyz + output.tangent * 0.05, float3(1, 0, 0));
+    }
+        
+    if(instanceData.bShowBitangent)
+    {
+        debug::DrawLine(worldPos.xyz, worldPos.xyz + output.bitangent * 0.05, float3(0, 1, 0));
+    }
+        
+    if(instanceData.bShowNormal)
+    {
+        debug::DrawLine(worldPos.xyz, worldPos.xyz + output.normal * 0.05, float3(0, 0, 1));
+    }
+
     return output;
 }
 
@@ -390,6 +401,35 @@ float3 GetMaterialEmissive(uint instanceIndex, float2 uv)
         emissive *= emissiveTexture.Sample(linearSampler, uv).xyz;
     }
     return emissive;
+}
+    
+bool IsAnisotropyTextureEnabled(uint instanceIndex)
+{
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).anisotropyTexture != INVALID_RESOURCE_INDEX;
+#else
+    #if ANISOTROPIC_TANGENT_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
+}
+    
+float3 GetAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N)
+{
+     float3 anisotropicT = T;
+    if(IsAnisotropyTextureEnabled(instanceIndex))
+    {
+        Texture2D anisotropyTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).anisotropyTexture);
+        SamplerState linearSampler = GetMaterialSampler();
+        float2 anisotropy = anisotropyTexture.Sample(linearSampler, uv).xy * 2.0 - 1.0;
+        anisotropicT = T * anisotropy.x + B * anisotropy.y;
+    }
+
+    anisotropicT = normalize(anisotropicT - dot(anisotropicT, N) * N); // reproject on normal plane
+
+    return anisotropicT;
 }
 
 void AlphaTest(uint instanceIndex, float2 uv)

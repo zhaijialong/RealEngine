@@ -42,7 +42,6 @@ private:
     IGfxPipelineState* m_pVertexSkinningPSO = nullptr;
 
     ShadingModel m_shadingModel = ShadingModel::Default;
-    float m_anisotropy = 0.5f;
 
     //pbr_specular_glossiness
     Texture2D* m_pDiffuseTexture = nullptr;
@@ -64,6 +63,10 @@ private:
     float3 m_emissiveColor = float3(0.0f, 0.0f, 0.0f);
     float m_alphaCutoff = 0.0f;
     bool m_bAlphaTest = false;
+
+    //anisotropy
+    Texture2D* m_pAnisotropicTangentTexture = nullptr;
+    float m_anisotropy = 0.5f;
 
     bool m_bAlphaBlend = false;
     bool m_bSkeletalAnim = false;
