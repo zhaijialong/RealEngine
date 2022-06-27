@@ -51,7 +51,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         return;
     }
 
-    PRNG rng = PRNG::Create(dispatchThreadID.x + dispatchThreadID.y * SceneCB.viewWidth);
+    PRNG rng = PRNG::Create(dispatchThreadID.x + dispatchThreadID.y * SceneCB.renderSize.x);
 
     float3 position = GetWorldPosition(dispatchThreadID.xy, depth);
     float3 wo = normalize(CameraCB.cameraPos - position);

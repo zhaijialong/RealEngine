@@ -42,7 +42,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     float3 N = OctNormalDecode(normalRT[coords].xyz);
     float roughness = normalRT[coords].w;
     
-    BNDS<1> bnds = BNDS<1>::Create(coords, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
+    BNDS<1> bnds = BNDS<1>::Create(coords, SceneCB.renderSize);
 
     float3 H = SampleGGXVNDF(bnds.RandomFloat2(0), roughness, N, V);
     float3 direction = reflect(-V, H);

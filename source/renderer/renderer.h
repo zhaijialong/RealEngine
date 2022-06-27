@@ -30,6 +30,16 @@ enum class RendererOutput
     Max
 };
 
+enum class TemporalSuperResolution
+{
+    None,
+    FSR2,
+    //DLSS,
+    //XeSS,
+
+    Max,
+};
+
 class Renderer
 {
 public:
@@ -40,8 +50,6 @@ public:
     void RenderFrame();
     void WaitGpuFinished();
 
-    uint32_t GetBackbufferWidth() const { return m_pSwapchain->GetDesc().width; }
-    uint32_t GetBackbufferHeight() const { return m_pSwapchain->GetDesc().height; }
     uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
     class ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
     class ShaderCache* GetShaderCache() const { return m_pShaderCache.get(); }
@@ -50,6 +58,16 @@ public:
 
     RendererOutput GetOutputType() const { return m_outputType; }
     void SetOutputType(RendererOutput output) { m_outputType = output; }
+
+    TemporalSuperResolution GetTemporalUpscaleMode() const { return m_tsrMode; }
+    void SetTemporalUpscaleMode(TemporalSuperResolution mode) { m_tsrMode = mode; }
+    float GetTemporalUpscaleRatio() const { return m_upscaleRatio; }
+    void SetTemporalUpscaleRatio(float ratio);
+
+    uint32_t GetDisplayWidth() const { return m_nDisplayWidth; }
+    uint32_t GetDisplayHeight() const { return m_nDisplayHeight; }
+    uint32_t GetRenderWidth() const { return m_nRenderWidth; }
+    uint32_t GetRenderHeight() const { return m_nRenderHeight; }
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
@@ -150,9 +168,15 @@ private:
     eastl::unique_ptr<class ShaderCache> m_pShaderCache;
     eastl::unique_ptr<class PipelineStateCache> m_pPipelineCache;
     eastl::unique_ptr<class GpuScene> m_pGpuScene;
-    uint32_t m_nWindowWidth;
-    uint32_t m_nWindowHeight;
+
     RendererOutput m_outputType = RendererOutput::Default;
+    TemporalSuperResolution m_tsrMode = TemporalSuperResolution::None;
+
+    uint32_t m_nDisplayWidth;
+    uint32_t m_nDisplayHeight;
+    uint32_t m_nRenderWidth;
+    uint32_t m_nRenderHeight;
+    float m_upscaleRatio = 1.0f;
 
     eastl::unique_ptr<LinearAllocator> m_cbAllocator;
 

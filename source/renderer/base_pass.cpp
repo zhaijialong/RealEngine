@@ -214,8 +214,8 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         [&](BasePassData& data, RenderGraphBuilder& builder)
         {
             RenderGraphTexture::Desc desc;
-            desc.width = m_pRenderer->GetBackbufferWidth();
-            desc.height = m_pRenderer->GetBackbufferHeight();
+            desc.width = m_pRenderer->GetRenderWidth();
+            desc.height = m_pRenderer->GetRenderHeight();
             desc.format = GfxFormat::RGBA8SRGB;
             data.outDiffuseRT = builder.Create<RenderGraphTexture>(desc, "Diffuse RT");
             data.outSpecularRT = builder.Create<RenderGraphTexture>(desc, "Specular RT");

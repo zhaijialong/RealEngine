@@ -176,6 +176,7 @@
     <ClCompile Include="source\renderer\post_processing\automatic_exposure.cpp" />
     <ClCompile Include="source\renderer\post_processing\bloom.cpp" />
     <ClCompile Include="source\renderer\post_processing\cas.cpp" />
+    <ClCompile Include="source\renderer\post_processing\fsr2.cpp" />
     <ClCompile Include="source\renderer\post_processing\fxaa.cpp" />
     <ClCompile Include="source\renderer\post_processing\post_processor.cpp" />
     <ClCompile Include="source\renderer\post_processing\taa.cpp" />
@@ -405,6 +406,7 @@
     <ClInclude Include="source\renderer\post_processing\automatic_exposure.h" />
     <ClInclude Include="source\renderer\post_processing\bloom.h" />
     <ClInclude Include="source\renderer\post_processing\cas.h" />
+    <ClInclude Include="source\renderer\post_processing\fsr2.h" />
     <ClInclude Include="source\renderer\post_processing\fxaa.h" />
     <ClInclude Include="source\renderer\post_processing\post_processor.h" />
     <ClInclude Include="source\renderer\post_processing\taa.h" />

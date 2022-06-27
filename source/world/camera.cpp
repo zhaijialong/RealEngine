@@ -220,8 +220,8 @@ void Camera::UpdateMatrix()
 
     if (m_bEnableJitter)
     {
-        uint32_t width = Engine::GetInstance()->GetRenderer()->GetBackbufferWidth();
-        uint32_t height = Engine::GetInstance()->GetRenderer()->GetBackbufferHeight();
+        uint32_t width = Engine::GetInstance()->GetRenderer()->GetRenderWidth();
+        uint32_t height = Engine::GetInstance()->GetRenderer()->GetRenderHeight();
 
         float4x4 mtxJitter = translation_matrix(float3(2.0f * m_jitter.x / (float)width, -2.0f * m_jitter.y / (float)height, 0.0f));
 

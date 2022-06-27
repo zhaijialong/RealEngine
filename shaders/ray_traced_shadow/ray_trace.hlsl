@@ -12,7 +12,7 @@ cbuffer RaytraceConstants : register(b0)
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    if (dispatchThreadID.x >= SceneCB.viewWidth || dispatchThreadID.y >= SceneCB.viewHeight)
+    if (dispatchThreadID.x >= SceneCB.renderSize.x || dispatchThreadID.y >= SceneCB.renderSize.y)
     {
         return;
     }
@@ -36,8 +36,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     #define SPP 1
     
-    PRNG rng = PRNG::Create(pos.x + pos.y * SceneCB.viewWidth);
-    BNDS<SPP> bnds = BNDS<SPP>::Create(pos.xy, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
+    PRNG rng = PRNG::Create(pos.x + pos.y * SceneCB.renderSize.x);
+    BNDS<SPP> bnds = BNDS<SPP>::Create(pos.xy, SceneCB.renderSize);
 
     float visibility = 0;
 

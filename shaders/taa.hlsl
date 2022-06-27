@@ -96,7 +96,7 @@ float4 GetHistory(float2 uv)
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
     float historyWeight = historyInputTexture.SampleLevel(linearSampler, uv, 0).a;
 
-    float4 rtMetrics = float4(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight, SceneCB.viewWidth, SceneCB.viewHeight);
+    float4 rtMetrics = float4(SceneCB.rcpDisplaySize, SceneCB.displaySize);
     float3 historyColor = BicubicFilter(historyInputTexture, uv, rtMetrics);
 
     return float4(saturate(historyColor), historyWeight);
@@ -108,7 +108,7 @@ float GetVelocityConfidenceFactor(float2 velocity)
     const uint FRAME_VELOCITY_IN_PIXELS_DIFF = 128;
 
     //velocity.xy is in ndc space
-    float2 velocityInPixels = velocity * 0.5 * float2(SceneCB.viewWidth, SceneCB.viewHeight);
+    float2 velocityInPixels = velocity * 0.5 * float2(SceneCB.displaySize);
 
     return saturate(1.0 - length(velocityInPixels) / FRAME_VELOCITY_IN_PIXELS_DIFF);
 }
@@ -125,7 +125,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 inputColor = Tonemap(inputTexture[screenPos].xyz);
 
     float2 velocity = GetVelocity(screenPos);
-    float2 prevUV = GetScreenUV(screenPos) - velocity * float2(0.5, -0.5); //velocity.xy is in ndc space
+    float2 prevUV = GetScreenUV(screenPos, SceneCB.rcpDisplaySize) - velocity * float2(0.5, -0.5); //velocity.xy is in ndc space
 
     bool firstFrame = c_historyInputRT == c_inputRT;
     bool outOfBound = any(prevUV < 0.0) || any(prevUV > 1.0);
@@ -133,7 +133,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     bool historyValid = !firstFrame && !outOfBound && (velocityConfidenceFactor > 0.0);
     
     const int2 screenPosMin = int2(0, 0);
-    const int2 screenPosMax = int2(SceneCB.viewWidth, SceneCB.viewHeight) - 1;
+    const int2 screenPosMax = int2(SceneCB.displaySize) - 1;
     float3 c0 = Tonemap(inputTexture[clamp(screenPos + int2(-1, -1), screenPosMin, screenPosMax)].xyz);
     float3 c1 = Tonemap(inputTexture[clamp(screenPos + int2(0, -1), screenPosMin, screenPosMax)].xyz);
     float3 c2 = Tonemap(inputTexture[clamp(screenPos + int2(1, -1), screenPosMin, screenPosMax)].xyz);

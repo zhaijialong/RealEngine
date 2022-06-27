@@ -95,10 +95,10 @@ void main_ms(
         float s1 = charBox.z / width;
         float t1 = charBox.w / height;
 
-        vertices[v0].pos = float4(GetNdcPosition(float2(x0, y0)), 0.0, 1.0);
-        vertices[v1].pos = float4(GetNdcPosition(float2(x0, y1)), 0.0, 1.0);
-        vertices[v2].pos = float4(GetNdcPosition(float2(x1, y0)), 0.0, 1.0);
-        vertices[v3].pos = float4(GetNdcPosition(float2(x1, y1)), 0.0, 1.0);
+        vertices[v0].pos = float4(GetNdcPosition(float2(x0, y0), SceneCB.rcpDisplaySize), 0.0, 1.0);
+        vertices[v1].pos = float4(GetNdcPosition(float2(x0, y1), SceneCB.rcpDisplaySize), 0.0, 1.0);
+        vertices[v2].pos = float4(GetNdcPosition(float2(x1, y0), SceneCB.rcpDisplaySize), 0.0, 1.0);
+        vertices[v3].pos = float4(GetNdcPosition(float2(x1, y1), SceneCB.rcpDisplaySize), 0.0, 1.0);
         
         vertices[v0].uv = float2(s0, t0);
         vertices[v1].uv = float2(s0, t1);

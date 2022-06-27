@@ -38,8 +38,10 @@ Renderer::~Renderer()
 
 void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height)
 {
-    m_nWindowWidth = window_width;
-    m_nWindowHeight = window_height;
+    m_nDisplayWidth = window_width;
+    m_nDisplayHeight = window_height;
+    m_nRenderWidth = window_width;
+    m_nRenderHeight = window_height;
 
     GfxDeviceDesc desc;
     desc.max_frame_lag = GFX_MAX_INFLIGHT_FRAMES;
@@ -268,10 +270,10 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.lightDir = light->GetLightDirection();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
     sceneCB.lightRadius = light->GetLightRadius();
-    sceneCB.viewWidth = m_nWindowWidth;
-    sceneCB.viewHeight = m_nWindowHeight;
-    sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
-    sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
+    sceneCB.renderSize = uint2(m_nRenderWidth, m_nRenderHeight);
+    sceneCB.rcpRenderSize = float2(1.0f / m_nRenderWidth, 1.0f / m_nRenderHeight);
+    sceneCB.displaySize = uint2(m_nDisplayWidth, m_nDisplayHeight);
+    sceneCB.rcpDisplaySize = float2(1.0f / m_nDisplayWidth, 1.0f / m_nDisplayHeight);
     sceneCB.HZBWidth = m_pHZB->GetHZBWidth();
     sceneCB.HZBHeight = m_pHZB->GetHZBHeight();
     sceneCB.firstPhaseCullingHZBSRV = firstPhaseHZBTexture->GetSRV()->GetHeapIndex();
@@ -323,12 +325,12 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 void Renderer::ImportPrevFrameTextures()
 {
     if (m_pPrevLinearDepthTexture == nullptr ||
-        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nWindowWidth ||
-        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nWindowHeight)
+        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nRenderWidth ||
+        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nRenderHeight)
     {
-        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::R32F, 0, "Prev LinearDepth"));
-        m_pPrevNormalTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::RGBA8UNORM, 0, "Prev Normal"));
-        m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::RGBA16F, 0, "Prev SceneColor"));
+        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::R32F, 0, "Prev LinearDepth"));
+        m_pPrevNormalTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA8UNORM, 0, "Prev Normal"));
+        m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA16F, 0, "Prev SceneColor"));
     }
 
     m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), GfxResourceState::CopyDst);
@@ -599,8 +601,8 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
     {
         m_pSwapchain->Resize(width, height);
 
-        m_nWindowWidth = width;
-        m_nWindowHeight = height;
+        m_nDisplayWidth = width;
+        m_nDisplayHeight = height;
     }
 }
 
@@ -900,4 +902,17 @@ void Renderer::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex
 RenderBatch& Renderer::AddBasePassBatch()
 {
     return m_pBasePass->AddBatch();
+}
+
+void Renderer::SetTemporalUpscaleRatio(float ratio)
+{
+    if (!nearly_equal(m_upscaleRatio, ratio))
+    {
+        m_upscaleRatio = ratio;
+
+        m_nRenderWidth = uint32_t(m_nDisplayWidth * ratio);
+        m_nRenderHeight = uint32_t(m_nDisplayHeight * ratio);
+
+        //todo : mip bias
+    }
 }

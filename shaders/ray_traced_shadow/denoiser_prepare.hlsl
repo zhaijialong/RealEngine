@@ -8,7 +8,7 @@ cbuffer CB : register(b0)
 
 int2 FFX_DNSR_Shadows_GetBufferDimensions()
 {
-    return int2(SceneCB.viewWidth, SceneCB.viewHeight);
+    return SceneCB.renderSize;
 }
 
 bool FFX_DNSR_Shadows_HitsLight(uint2 did, uint2 gtid, uint2 gid)

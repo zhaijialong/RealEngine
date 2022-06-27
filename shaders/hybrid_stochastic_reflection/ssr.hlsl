@@ -31,7 +31,7 @@ bool ValidateHit(ssrt::HitInfo hitInfo, float2 uv, float3 ray_direction)
     }
     
     // Don't lookup radiance from the background.
-    int2 screenPos = int2(SceneCB.viewWidth, SceneCB.viewHeight) * hitInfo.screenUV;
+    int2 screenPos = SceneCB.renderSize * hitInfo.screenUV;
     Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthRT];
     float depth = depthRT[screenPos];
     if (depth == 0.0)
@@ -83,7 +83,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
 
-    float2 uv = GetScreenUV(coords);
+    float2 uv = GetScreenUV(coords, SceneCB.rcpRenderSize);
     
     float depth = depthRT[coords];
     float3 position = GetWorldPosition(coords, depth);
@@ -91,7 +91,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     float3 N = OctNormalDecode(normalRT[coords].xyz);
     float roughness = normalRT[coords].w;
 
-    BNDS<1> bnds = BNDS<1>::Create(coords, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
+    BNDS<1> bnds = BNDS<1>::Create(coords, SceneCB.renderSize);
 
     float3 H = SampleGGXVNDF(bnds.RandomFloat2(0), roughness, N, V);
     float3 direction = reflect(-V, H);

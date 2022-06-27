@@ -71,5 +71,5 @@ void main(int2 group_thread_id : SV_GroupThreadID, uint group_index : SV_GroupIn
     uint2 remapped_dispatch_thread_id = dispatch_group_id * 8 + remapped_group_thread_id;
 
     FFX_DNSR_Reflections_ResolveTemporal(remapped_dispatch_thread_id, remapped_group_thread_id, 
-        uint2(SceneCB.viewWidth, SceneCB.viewHeight), float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight), c_temporalStability);
+        SceneCB.renderSize, SceneCB.rcpRenderSize, c_temporalStability);
 }

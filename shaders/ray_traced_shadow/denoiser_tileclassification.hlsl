@@ -18,8 +18,8 @@ cbuffer CB : register(b1)
 float4x4 FFX_DNSR_Shadows_GetViewProjectionInverse() { return CameraCB.mtxViewProjectionInverse; }
 float4x4 FFX_DNSR_Shadows_GetReprojectionMatrix() { return CameraCB.mtxProjection; }
 float4x4 FFX_DNSR_Shadows_GetProjectionInverse() { return CameraCB.mtxProjectionInverse; }
-float2 FFX_DNSR_Shadows_GetInvBufferDimensions() { return float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight); }
-int2 FFX_DNSR_Shadows_GetBufferDimensions() { return int2(SceneCB.viewWidth, SceneCB.viewHeight); }
+float2 FFX_DNSR_Shadows_GetInvBufferDimensions() { return SceneCB.rcpRenderSize; }
+int2 FFX_DNSR_Shadows_GetBufferDimensions() { return SceneCB.renderSize; }
 int FFX_DNSR_Shadows_IsFirstFrame() { return c_bFirstFrame; }
 float3 FFX_DNSR_Shadows_GetEye() { return CameraCB.cameraPos; }
 
