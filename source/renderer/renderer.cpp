@@ -461,7 +461,7 @@ void Renderer::WaitGpuFinished()
 
 void Renderer::RequestMouseHitTest(uint32_t x, uint32_t y)
 {
-    m_nMouseX = x;
+    m_nMouseX = x; //todo : upscale ratio
     m_nMouseY = y;
     m_bEnableObjectIDRendering = true;
 }
@@ -603,6 +603,21 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
 
         m_nDisplayWidth = width;
         m_nDisplayHeight = height;
+        m_nRenderWidth = uint32_t(width * m_upscaleRatio);
+        m_nRenderHeight = uint32_t(height * m_upscaleRatio);
+    }
+}
+
+void Renderer::SetTemporalUpscaleRatio(float ratio)
+{
+    if (!nearly_equal(m_upscaleRatio, ratio))
+    {
+        m_upscaleRatio = ratio;
+
+        m_nRenderWidth = uint32_t(m_nDisplayWidth * ratio);
+        m_nRenderHeight = uint32_t(m_nDisplayHeight * ratio);
+
+        //todo : mip bias
     }
 }
 
@@ -902,17 +917,4 @@ void Renderer::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex
 RenderBatch& Renderer::AddBasePassBatch()
 {
     return m_pBasePass->AddBatch();
-}
-
-void Renderer::SetTemporalUpscaleRatio(float ratio)
-{
-    if (!nearly_equal(m_upscaleRatio, ratio))
-    {
-        m_upscaleRatio = ratio;
-
-        m_nRenderWidth = uint32_t(m_nDisplayWidth * ratio);
-        m_nRenderHeight = uint32_t(m_nDisplayHeight * ratio);
-
-        //todo : mip bias
-    }
 }
