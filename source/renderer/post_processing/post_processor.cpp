@@ -30,9 +30,8 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
     switch (upscaleMode)
     {
     case TemporalSuperResolution::FSR2:
-        outputHandle = m_pFSR2->Render(pRenderGraph, outputHandle, renderWidth, renderHeight);
+        outputHandle = m_pFSR2->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
         break;
-    case TemporalSuperResolution::None:
     default:
         RE_ASSERT(renderWidth == displayWidth && renderHeight == displayHeight);
         outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, sceneDepthRT, linearDepthRT, velocityRT, displayWidth, displayHeight);
@@ -62,16 +61,34 @@ void PostProcessor::UpdateUpsacleMode()
     GUI("PostProcess", "Temporal Super Resolution", [&]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
+            ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR 2.0\0\0", (int)TemporalSuperResolution::Max);
+            m_pRenderer->SetTemporalUpscaleMode(mode);
+
             float ratio = m_pRenderer->GetTemporalUpscaleRatio();
 
-            ImGui::Combo("Mode##TemporalUpscaler", (int*)&mode, "None\0FSR 2.0\0\0", (int)TemporalSuperResolution::Max);
-
-            if (mode != TemporalSuperResolution::None)
+            switch (mode)
             {
-                ImGui::SliderFloat("Upscale Ratio##TemporalUpscaler", &ratio, 1.0, 3.0);
+            case TemporalSuperResolution::FSR2:
+            {
+                static FfxFsr2QualityMode qualityMode = FFX_FSR2_QUALITY_MODE_QUALITY;
+                ImGui::Combo("Mode##FSR2", (int*)&qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5);
+                
+                if (qualityMode == 0)
+                {
+                    ImGui::SliderFloat("Upscale Ratio##TemporalUpscaler", &ratio, 1.0, 3.0);
+                }
+                else
+                {
+                    ratio = ffxFsr2GetUpscaleRatioFromQualityMode(qualityMode);
+                }
+
+                break;
+            }
+            default:
+                ratio = 1.0f;
+                break;
             }
 
-            m_pRenderer->SetTemporalUpscaleMode(mode);
             m_pRenderer->SetTemporalUpscaleRatio(ratio);
         });
 }

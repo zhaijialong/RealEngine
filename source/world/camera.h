@@ -55,6 +55,8 @@ public:
     void DrawViewFrustum(IGfxCommandList* pCommandList);
 
     bool IsMoved() const { return m_bMoved; }
+    float GetZNear() const { return m_znear; }
+    float GetZFar() const { return m_zfar; }
 
 private:
     void UpdateJitter();
