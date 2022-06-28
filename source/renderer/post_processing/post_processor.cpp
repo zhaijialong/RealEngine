@@ -26,9 +26,11 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
     RenderGraphHandle outputHandle = sceneColorRT;
     RenderGraphHandle exposure = m_pAutomaticExposure->Render(pRenderGraph, outputHandle, renderWidth, renderHeight);
 
-    switch (m_pRenderer->GetTemporalUpscaleMode())
+    TemporalSuperResolution upscaleMode = m_pRenderer->GetTemporalUpscaleMode();
+    switch (upscaleMode)
     {
     case TemporalSuperResolution::FSR2:
+        outputHandle = m_pFSR2->Render(pRenderGraph, outputHandle, renderWidth, renderHeight);
         break;
     case TemporalSuperResolution::None:
     default:
@@ -41,25 +43,33 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
 
     outputHandle = m_pToneMapper->Render(pRenderGraph, outputHandle, exposure, bloom, m_pBloom->GetIntensity(), displayWidth, displayHeight);
     outputHandle = m_pFXAA->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
-    outputHandle = m_pCAS->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
+
+    if (upscaleMode == TemporalSuperResolution::None)
+    {
+        outputHandle = m_pCAS->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
+    }
 
     return outputHandle;
 }
 
 bool PostProcessor::RequiresCameraJitter()
 {
-    return m_pTAA->IsEnabled();
+    return m_pTAA->IsEnabled() || m_pRenderer->GetTemporalUpscaleMode() != TemporalSuperResolution::None;
 }
 
 void PostProcessor::UpdateUpsacleMode()
 {
-    GUI("Settings", "Temporal Super Resolution", [&]()
+    GUI("PostProcess", "Temporal Super Resolution", [&]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             float ratio = m_pRenderer->GetTemporalUpscaleRatio();
 
             ImGui::Combo("Mode##TemporalUpscaler", (int*)&mode, "None\0FSR 2.0\0\0", (int)TemporalSuperResolution::Max);
-            ImGui::SliderFloat("Upscale Ratio##TemporalUpscaler", &ratio, 0.5, 1.0);
+
+            if (mode != TemporalSuperResolution::None)
+            {
+                ImGui::SliderFloat("Upscale Ratio##TemporalUpscaler", &ratio, 1.0, 3.0);
+            }
 
             m_pRenderer->SetTemporalUpscaleMode(mode);
             m_pRenderer->SetTemporalUpscaleRatio(ratio);

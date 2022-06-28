@@ -1430,6 +1430,9 @@
     <FxCompile Include="shaders\hybrid_stochastic_reflection\prepare_indirect_args.hlsl">
       <Filter>shaders\hybrid_stochastic_reflection</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\fsr2_tmp.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">

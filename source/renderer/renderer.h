@@ -59,8 +59,8 @@ public:
     RendererOutput GetOutputType() const { return m_outputType; }
     void SetOutputType(RendererOutput output) { m_outputType = output; }
 
-    TemporalSuperResolution GetTemporalUpscaleMode() const { return m_tsrMode; }
-    void SetTemporalUpscaleMode(TemporalSuperResolution mode) { m_tsrMode = mode; }
+    TemporalSuperResolution GetTemporalUpscaleMode() const { return m_upscaleMode; }
+    void SetTemporalUpscaleMode(TemporalSuperResolution mode) { m_upscaleMode = mode; }
     float GetTemporalUpscaleRatio() const { return m_upscaleRatio; }
     void SetTemporalUpscaleRatio(float ratio);
 
@@ -156,8 +156,8 @@ private:
     void FlushComputePass(IGfxCommandList* pCommandList);
     void BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
     void ImportPrevFrameTextures();
-    void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle);
-    void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle);
+    void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth);
+    void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth, bool needUpscaleDepth);
     void MouseHitTest();
 
 private:
@@ -170,7 +170,7 @@ private:
     eastl::unique_ptr<class GpuScene> m_pGpuScene;
 
     RendererOutput m_outputType = RendererOutput::Default;
-    TemporalSuperResolution m_tsrMode = TemporalSuperResolution::None;
+    TemporalSuperResolution m_upscaleMode = TemporalSuperResolution::None;
 
     uint32_t m_nDisplayWidth;
     uint32_t m_nDisplayHeight;
@@ -254,6 +254,8 @@ private:
     RenderGraphHandle m_prevNormalHandle;
     RenderGraphHandle m_prevSceneColorHandle;
 
+    eastl::unique_ptr<Texture2D> m_pUpscaledDepthTexture;
+
     bool m_bGpuDrivenStatsEnabled = false;
     bool m_bShowMeshlets = false;
     bool m_bEnableAsyncCompute = false;
@@ -265,7 +267,8 @@ private:
     eastl::unique_ptr<IGfxBuffer> m_pObjectIDBuffer;
     uint32_t m_nObjectIDRowPitch = 0;
 
-    IGfxPipelineState* m_pCopyPSO = nullptr;
+    IGfxPipelineState* m_pCopyColorPSO = nullptr;
+    IGfxPipelineState* m_pCopyColorDepthPSO = nullptr;
 
     eastl::unique_ptr<class HZB> m_pHZB;
     eastl::unique_ptr<class BasePass> m_pBasePass;
