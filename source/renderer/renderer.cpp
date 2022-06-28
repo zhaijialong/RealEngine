@@ -328,14 +328,49 @@ void Renderer::ImportPrevFrameTextures()
         m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nRenderWidth ||
         m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nRenderHeight)
     {
-        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::R32F, 0, "Prev LinearDepth"));
-        m_pPrevNormalTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA8UNORM, 0, "Prev Normal"));
-        m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA16F, 0, "Prev SceneColor"));
+        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::R32F, GfxTextureUsageUnorderedAccess, "Prev LinearDepth"));
+        m_pPrevNormalTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA8UNORM, GfxTextureUsageUnorderedAccess, "Prev Normal"));
+        m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "Prev SceneColor"));
+
+        m_bHistoryValid = false;
+    }
+    else
+    {
+        m_bHistoryValid = true;
     }
 
-    m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), GfxResourceState::CopyDst);
-    m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), GfxResourceState::CopyDst);
-    m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), GfxResourceState::CopyDst);
+    m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
+    m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
+    m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
+
+    if (!m_bHistoryValid)
+    {
+        struct ClearHistoryPassData
+        {
+            RenderGraphHandle linearDepth;
+            RenderGraphHandle normal;
+            RenderGraphHandle color;
+        };
+
+        auto clear_pass = m_pRenderGraph->AddPass<ClearHistoryPassData>("Clear Hisotry Textures", RenderPassType::Compute,
+            [&](ClearHistoryPassData& data, RenderGraphBuilder& builder)
+            {
+                data.linearDepth = builder.Write(m_prevLinearDepthHandle);
+                data.normal = builder.Write(m_prevNormalHandle);
+                data.color = builder.Write(m_prevSceneColorHandle);
+            },
+            [=](const ClearHistoryPassData& data, IGfxCommandList* pCommandList)
+            {
+                float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                pCommandList->ClearUAV(m_pPrevLinearDepthTexture->GetTexture(), m_pPrevLinearDepthTexture->GetUAV(), clear_value);
+                pCommandList->ClearUAV(m_pPrevNormalTexture->GetTexture(), m_pPrevNormalTexture->GetUAV(), clear_value);
+                pCommandList->ClearUAV(m_pPrevSceneColorTexture->GetTexture(), m_pPrevSceneColorTexture->GetUAV(), clear_value);
+            });
+
+        m_prevLinearDepthHandle = clear_pass->linearDepth;
+        m_prevNormalHandle = clear_pass->normal;
+        m_prevSceneColorHandle = clear_pass->color;
+    }
 }
 
 void Renderer::Render()

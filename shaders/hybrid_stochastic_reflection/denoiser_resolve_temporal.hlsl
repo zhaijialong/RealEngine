@@ -41,7 +41,14 @@ float16_t FFX_DNSR_Reflections_LoadRoughness(int2 pixel_coordinate)
 float16_t FFX_DNSR_Reflections_LoadVariance(int2 pixel_coordinate) 
 { 
     Texture2D<float> inputVarianceTexture = ResourceDescriptorHeap[c_inputVarianceTexture];
-    return (float16_t)inputVarianceTexture[pixel_coordinate].x;
+    float16_t variance = (float16_t)inputVarianceTexture[pixel_coordinate].x;
+    
+    if (isnan(variance))
+    {
+        variance = 1.0; //to fix artifacts after resolution changed
+    }
+    
+    return variance;
 }
 
 float16_t FFX_DNSR_Reflections_LoadNumSamples(int2 pixel_coordinate) 

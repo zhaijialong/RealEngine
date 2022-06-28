@@ -93,13 +93,6 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
 {
     pCommandList->SetPipelineState(m_pPSO);
 
-    IGfxDescriptor* historyInput = m_pHistoryColorInput->GetSRV();
-    if (m_bHistoryInvalid)
-    {
-        historyInput = input;
-        m_bHistoryInvalid = false;
-    }
-
     struct CB
     {
         uint inputRT;
@@ -113,11 +106,20 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
     };
 
     CB cb;
-    cb.inputRT = input->GetHeapIndex();
-    cb.historyInputRT = historyInput->GetHeapIndex();
+    cb.inputRT = input->GetHeapIndex();    
     cb.velocityRT = velocity->GetHeapIndex();
     cb.linearDepthRT = linearDepth->GetHeapIndex();
-    cb.prevLinearDepthRT = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
+    if (m_bHistoryInvalid)
+    {
+        cb.historyInputRT = input->GetHeapIndex();
+        cb.prevLinearDepthRT = linearDepth->GetHeapIndex();
+        m_bHistoryInvalid = false;
+    }
+    else
+    {
+        cb.historyInputRT = m_pHistoryColorInput->GetSRV()->GetHeapIndex();
+        cb.prevLinearDepthRT = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
+    }
     cb.historyOutputRT = m_pHistoryColorOutput->GetUAV()->GetHeapIndex();
     cb.outputRT = output->GetHeapIndex();
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));

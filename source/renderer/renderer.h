@@ -130,6 +130,7 @@ public:
     class BasePass* GetBassPass() const { return m_pBasePass.get(); }
     class SkyCubeMap* GetSkyCubeMap() const { return m_pSkyCubeMap.get(); }
 
+    bool IsHistoryTextureValid() const { return m_bHistoryValid; }
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
     Texture2D* GetPrevNormalTexture() const { return m_pPrevNormalTexture.get(); }
     Texture2D* GetPrevSceneColorTexture() const { return m_pPrevSceneColorTexture.get(); }
@@ -253,6 +254,7 @@ private:
     RenderGraphHandle m_prevLinearDepthHandle;
     RenderGraphHandle m_prevNormalHandle;
     RenderGraphHandle m_prevSceneColorHandle;
+    bool m_bHistoryValid = false;
 
     eastl::unique_ptr<Texture2D> m_pUpscaledDepthTexture;
 

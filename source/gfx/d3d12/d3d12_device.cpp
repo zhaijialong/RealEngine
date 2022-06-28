@@ -451,7 +451,7 @@ bool D3D12Device::Init()
     m_pResDescriptorAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true, 65536, "Resource Heap");
     m_pSamplerAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true, 32, "Sampler Heap");
 
-    m_pNonShaderVisibleUavAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, false, 1024, "Non shader visible UAV Heap");
+    m_pNonShaderVisibleUavAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, false, 4096, "Non shader visible UAV Heap");
 
     CreateRootSignature();
     CreateIndirectCommandSignatures();
