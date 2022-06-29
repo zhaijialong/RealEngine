@@ -68,8 +68,8 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             dispatchDesc.output = ffxGetResourceDX12(&m_context, (ID3D12Resource*)outputRT->GetTexture()->GetHandle(), L"FSR2_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
             dispatchDesc.jitterOffset.x = camera->GetJitter().x;
             dispatchDesc.jitterOffset.y = camera->GetJitter().y;
-            dispatchDesc.motionVectorScale.x = (float)m_pRenderer->GetRenderWidth();
-            dispatchDesc.motionVectorScale.y = (float)m_pRenderer->GetRenderHeight();
+            dispatchDesc.motionVectorScale.x = -0.5f * (float)m_pRenderer->GetRenderWidth();
+            dispatchDesc.motionVectorScale.y = 0.5f * (float)m_pRenderer->GetRenderHeight();
             dispatchDesc.reset = false;
             dispatchDesc.enableSharpening = true;
             dispatchDesc.sharpness = m_sharpness;
