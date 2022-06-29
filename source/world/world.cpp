@@ -229,8 +229,8 @@ void World::CreateCamera(tinyxml2::XMLElement* element)
     }
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    uint32_t window_width = pRenderer->GetBackbufferWidth();
-    uint32_t window_height = pRenderer->GetBackbufferHeight();
+    uint32_t window_width = pRenderer->GetRenderWidth();
+    uint32_t window_height = pRenderer->GetRenderHeight();
 
     m_pCamera->SetPerpective((float)window_width / window_height,
         element->FindAttribute("fov")->FloatValue(),

@@ -78,7 +78,7 @@ void main(uint2 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex, uint3 dis
     float depth = depthTexture[dispatch_thread_id];
     
     bool is_first_lane_of_wave = WaveIsFirstLane();
-    bool needs_ray = !(dispatch_thread_id.x >= SceneCB.viewWidth || dispatch_thread_id.y >= SceneCB.viewHeight);
+    bool needs_ray = !(dispatch_thread_id.x >= SceneCB.renderSize.x || dispatch_thread_id.y >= SceneCB.renderSize.y);
     
     bool is_reflective_surface = depth > 0.0;
     bool is_glossy_reflection = FFX_DNSR_Reflections_IsGlossyReflection(roughness);

@@ -12,6 +12,7 @@ public:
 
     RenderGraphHandle GetHistoryVariance() const { return m_varianceHistory; }
     IGfxDescriptor* GetHistoryVarianceSRV() const { return m_pVarianceHistory->GetSRV(); }
+    bool IsHistoryValid() const { return !m_bHistoryInvalid; }
 
     IGfxDescriptor* GetOutputRadianceSRV() const { return m_pRadianceHistory->GetSRV(); }
 
@@ -21,7 +22,7 @@ public:
 
 private:
     void Reproject(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList, 
-        IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* velocity, IGfxDescriptor* inputRadiance, 
+        IGfxDescriptor* depth, IGfxDescriptor* linearDepth, IGfxDescriptor* normal, IGfxDescriptor* velocity, IGfxDescriptor* inputRadiance, 
         IGfxDescriptor* outputRadianceUAV, IGfxDescriptor* outputVariancceUAV, IGfxDescriptor* outputAvgRadianceUAV);
     void Prefilter(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList,
         IGfxDescriptor* linear_depth, IGfxDescriptor* normal, IGfxDescriptor* inputRadiance, IGfxDescriptor* inputVariance, IGfxDescriptor* avgRadiance,

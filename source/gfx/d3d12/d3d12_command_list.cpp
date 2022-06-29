@@ -87,29 +87,14 @@ void D3D12CommandList::ResetAllocator()
 
 void D3D12CommandList::Begin()
 {
-    m_commandCount = 0;
-    m_pCurrentPSO = nullptr;
     m_pCommandList->Reset(m_pCommandAllocator, nullptr);
 
-    if (m_queueType == GfxCommandQueue::Graphics || m_queueType == GfxCommandQueue::Compute)
-    {
-        D3D12Device* pDevice = (D3D12Device*)m_pDevice;
-        ID3D12DescriptorHeap* heaps[2] = { pDevice->GetResourceDescriptorHeap(), pDevice->GetSamplerDescriptorHeap() };
-        m_pCommandList->SetDescriptorHeaps(2, heaps);
-
-        ID3D12RootSignature* pRootSignature = pDevice->GetRootSignature();
-        m_pCommandList->SetComputeRootSignature(pRootSignature);
-
-        if(m_queueType == GfxCommandQueue::Graphics)
-        {
-            m_pCommandList->SetGraphicsRootSignature(pRootSignature);
-        }
-    }
+    ClearState();
 }
 
 void D3D12CommandList::End()
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     m_pCommandList->Close();
 }
@@ -143,6 +128,27 @@ void D3D12CommandList::Submit()
         m_pCommandQueue->Signal((ID3D12Fence*)m_pendingSignals[i].first->GetHandle(), m_pendingSignals[i].second);
     }
     m_pendingSignals.clear();
+}
+
+void D3D12CommandList::ClearState()
+{
+    m_commandCount = 0;
+    m_pCurrentPSO = nullptr;
+
+    if (m_queueType == GfxCommandQueue::Graphics || m_queueType == GfxCommandQueue::Compute)
+    {
+        D3D12Device* pDevice = (D3D12Device*)m_pDevice;
+        ID3D12DescriptorHeap* heaps[2] = { pDevice->GetResourceDescriptorHeap(), pDevice->GetSamplerDescriptorHeap() };
+        m_pCommandList->SetDescriptorHeaps(2, heaps);
+
+        ID3D12RootSignature* pRootSignature = pDevice->GetRootSignature();
+        m_pCommandList->SetComputeRootSignature(pRootSignature);
+
+        if (m_queueType == GfxCommandQueue::Graphics)
+        {
+            m_pCommandList->SetGraphicsRootSignature(pRootSignature);
+        }
+    }
 }
 
 void D3D12CommandList::BeginProfiling()
@@ -181,7 +187,7 @@ void D3D12CommandList::EndEvent()
 
 void D3D12CommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     const GfxTextureDesc& desc = dst_texture->GetDesc();
 
@@ -212,7 +218,7 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mi
 
 void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     GfxTextureDesc desc = src_texture->GetDesc();
 
@@ -242,7 +248,7 @@ void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* 
 
 void D3D12CommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     m_pCommandList->CopyBufferRegion((ID3D12Resource*)dst->GetHandle(), dst_offset,
         (ID3D12Resource*)src->GetHandle(), src_offset, size);
@@ -251,7 +257,7 @@ void D3D12CommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuff
 
 void D3D12CommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     D3D12_TEXTURE_COPY_LOCATION dst_texture;
     dst_texture.pResource = (ID3D12Resource*)dst->GetHandle();
@@ -269,7 +275,7 @@ void D3D12CommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t 
 
 void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     D3D12Descriptor shaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetShaderVisibleDescriptor();
     D3D12Descriptor nonShaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetNonShaderVisibleDescriptor();
@@ -281,7 +287,7 @@ void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, con
 
 void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     D3D12Descriptor shaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetShaderVisibleDescriptor();
     D3D12Descriptor nonShaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetNonShaderVisibleDescriptor();
@@ -293,7 +299,7 @@ void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, con
 
 void D3D12CommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     D3D12_WRITEBUFFERIMMEDIATE_PARAMETER parameter;
     parameter.Dest = buffer->GetGpuAddress() + offset;
@@ -393,7 +399,7 @@ void D3D12CommandList::AliasingBarrier(IGfxResource* resource_before, IGfxResour
 
 void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     D3D12_RENDER_PASS_RENDER_TARGET_DESC rtDesc[8] = {};
     D3D12_RENDER_PASS_DEPTH_STENCIL_DESC dsDesc = {};
@@ -577,7 +583,7 @@ void D3D12CommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count
 
 void D3D12CommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     m_pCommandList->Dispatch(group_count_x, group_count_y, group_count_z);
     ++m_commandCount;
@@ -605,7 +611,7 @@ void D3D12CommandList::DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset)
 
 void D3D12CommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     ID3D12CommandSignature* signature = ((D3D12Device*)m_pDevice)->GetDispatchSignature();
     m_pCommandList->ExecuteIndirect(signature, 1, (ID3D12Resource*)buffer->GetHandle(), offset, nullptr, 0);
@@ -657,7 +663,7 @@ void D3D12CommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer*
 
 void D3D12CommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     m_pCommandList->BuildRaytracingAccelerationStructure(((D3D12RayTracingBLAS*)blas)->GetBuildDesc(), 0, nullptr);
     ++m_commandCount;
@@ -665,7 +671,7 @@ void D3D12CommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 
 void D3D12CommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     D3D12_RAYTRACING_GEOMETRY_DESC geometry;
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc;
@@ -677,7 +683,7 @@ void D3D12CommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer
 
 void D3D12CommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
 {
-    FlushPendingBarrier();
+    FlushBarriers();
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
     ((D3D12RayTracingTLAS*)tlas)->GetBuildDesc(desc, instances, instance_count);
@@ -697,7 +703,7 @@ MicroProfileThreadLogGpu* D3D12CommandList::GetProfileLog() const
 }
 #endif
 
-void D3D12CommandList::FlushPendingBarrier()
+void D3D12CommandList::FlushBarriers()
 {
     if (!m_pendingBarriers.empty())
     {

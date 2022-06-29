@@ -18,10 +18,11 @@ struct SceneConstant
     float3 lightColor;
     float lightRadius;
     
-    uint viewWidth;
-    uint viewHeight;
-    float rcpViewWidth;
-    float rcpViewHeight;
+    uint2 renderSize;
+    float2 rcpRenderSize;
+    
+    uint2 displaySize;
+    float2 rcpDisplaySize;
     
     uint HZBWidth;
     uint HZBHeight;

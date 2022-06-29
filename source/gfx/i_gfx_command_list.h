@@ -24,6 +24,7 @@ public:
     virtual void Wait(IGfxFence* fence, uint64_t value) = 0;
     virtual void Signal(IGfxFence* fence, uint64_t value) = 0;
     virtual void Submit() = 0;
+    virtual void ClearState() = 0;
 
     virtual void BeginProfiling() = 0;
     virtual void EndProfiling() = 0;
@@ -42,6 +43,7 @@ public:
     virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) = 0;
     virtual void UavBarrier(IGfxResource* resource) = 0;
     virtual void AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after) = 0;
+    virtual void FlushBarriers() = 0;
 
     virtual void BeginRenderPass(const GfxRenderPassDesc& render_pass) = 0;
     virtual void EndRenderPass() = 0;

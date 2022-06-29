@@ -23,6 +23,7 @@ public:
     virtual void Wait(IGfxFence* fence, uint64_t value) override;
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
     virtual void Submit() override;
+    virtual void ClearState() override;
 
     virtual void BeginProfiling() override;
     virtual void EndProfiling() override;
@@ -41,6 +42,7 @@ public:
     virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) override;
     virtual void UavBarrier(IGfxResource* resource) override;
     virtual void AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after) override;
+    virtual void FlushBarriers() override;
 
     virtual void BeginRenderPass(const GfxRenderPassDesc& render_pass) override;
     virtual void EndRenderPass() override;
@@ -77,7 +79,6 @@ public:
 #endif
 
 private:
-    void FlushPendingBarrier();
 
 private:
     GfxCommandQueue m_queueType;

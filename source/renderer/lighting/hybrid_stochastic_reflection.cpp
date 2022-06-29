@@ -208,7 +208,12 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
 
             uint32_t clear_value[4] = { 0, 0, 0, 0 };
             pCommandList->ClearUAV(hwRayCounterBuffer->GetBuffer(), hwRayCounterBuffer->GetUAV(), clear_value);
+
+            float clear_value1[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            pCommandList->ClearUAV(output->GetTexture(), output->GetUAV(), clear_value1); //todo : this clear should not be needed
+
             pCommandList->UavBarrier(hwRayCounterBuffer->GetBuffer());
+            pCommandList->UavBarrier(output->GetTexture());
 
             SSR(pCommandList, normal->GetSRV(), depth->GetSRV(), velocity->GetSRV(), output->GetUAV(), 
                 rayCounterBuffer->GetSRV(), rayListBuffer->GetSRV(), indirectArgsBuffer->GetBuffer(), hwRayCounterBuffer->GetUAV(), hwRayListBuffer->GetUAV());
@@ -291,11 +296,13 @@ void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, IG
     pCommandList->SetPipelineState(m_pTileClassificationPSO);
     SetRootConstants(pCommandList);
 
+    bool enableVarianceGuidedTracing = m_bEnableDenoiser && m_pDenoiser->IsHistoryValid();
+
     uint32_t constants[8] = {
         depth->GetHeapIndex(),
         normal->GetHeapIndex(),
         m_samplesPerQuad,
-        m_bEnableDenoiser,
+        enableVarianceGuidedTracing,
         historyVariance->GetHeapIndex(),
         rayListUAV->GetHeapIndex(),
         tileListUAV->GetHeapIndex(),

@@ -28,7 +28,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     
     // https://alexanderameye.github.io/notes/rendering-outlines/
     // Move vertex along normal vector in clip space.
-    output.pos.xy += normalize(clipNormal.xy) * float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight) * output.pos.w * width * 2;
+    output.pos.xy += normalize(clipNormal.xy) * SceneCB.rcpRenderSize * output.pos.w * width * 2;
 
 #if ALPHA_TEST
     output.uv = v.uv;

@@ -9,8 +9,8 @@ cbuffer cb : register(b0)
     uint c_tileMetaDataBuffer;
 };
 
-float2 FFX_DNSR_Shadows_GetInvBufferDimensions() { return float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight); }
-int2 FFX_DNSR_Shadows_GetBufferDimensions() { return int2(SceneCB.viewWidth, SceneCB.viewHeight); }
+float2 FFX_DNSR_Shadows_GetInvBufferDimensions() { return SceneCB.rcpRenderSize; }
+int2 FFX_DNSR_Shadows_GetBufferDimensions() { return SceneCB.renderSize; }
 float4x4 FFX_DNSR_Shadows_GetProjectionInverse() { return CameraCB.mtxProjectionInverse; }
 float FFX_DNSR_Shadows_GetDepthSimilaritySigma() { return 1.0; }
 

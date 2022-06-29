@@ -38,8 +38,10 @@ Renderer::~Renderer()
 
 void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height)
 {
-    m_nWindowWidth = window_width;
-    m_nWindowHeight = window_height;
+    m_nDisplayWidth = window_width;
+    m_nDisplayHeight = window_height;
+    m_nRenderWidth = window_width;
+    m_nRenderHeight = window_height;
 
     GfxDeviceDesc desc;
     desc.max_frame_lag = GFX_MAX_INFLIGHT_FRAMES;
@@ -268,10 +270,10 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.lightDir = light->GetLightDirection();
     sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
     sceneCB.lightRadius = light->GetLightRadius();
-    sceneCB.viewWidth = m_nWindowWidth;
-    sceneCB.viewHeight = m_nWindowHeight;
-    sceneCB.rcpViewWidth = 1.0f / m_nWindowWidth;
-    sceneCB.rcpViewHeight = 1.0f / m_nWindowHeight;
+    sceneCB.renderSize = uint2(m_nRenderWidth, m_nRenderHeight);
+    sceneCB.rcpRenderSize = float2(1.0f / m_nRenderWidth, 1.0f / m_nRenderHeight);
+    sceneCB.displaySize = uint2(m_nDisplayWidth, m_nDisplayHeight);
+    sceneCB.rcpDisplaySize = float2(1.0f / m_nDisplayWidth, 1.0f / m_nDisplayHeight);
     sceneCB.HZBWidth = m_pHZB->GetHZBWidth();
     sceneCB.HZBHeight = m_pHZB->GetHZBHeight();
     sceneCB.firstPhaseCullingHZBSRV = firstPhaseHZBTexture->GetSRV()->GetHeapIndex();
@@ -323,17 +325,52 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 void Renderer::ImportPrevFrameTextures()
 {
     if (m_pPrevLinearDepthTexture == nullptr ||
-        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nWindowWidth ||
-        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nWindowHeight)
+        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nRenderWidth ||
+        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nRenderHeight)
     {
-        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::R32F, 0, "Prev LinearDepth"));
-        m_pPrevNormalTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::RGBA8UNORM, 0, "Prev Normal"));
-        m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nWindowWidth, m_nWindowHeight, 1, GfxFormat::RGBA16F, 0, "Prev SceneColor"));
+        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::R32F, GfxTextureUsageUnorderedAccess, "Prev LinearDepth"));
+        m_pPrevNormalTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA8UNORM, GfxTextureUsageUnorderedAccess, "Prev Normal"));
+        m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "Prev SceneColor"));
+
+        m_bHistoryValid = false;
+    }
+    else
+    {
+        m_bHistoryValid = true;
     }
 
-    m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), GfxResourceState::CopyDst);
-    m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), GfxResourceState::CopyDst);
-    m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), GfxResourceState::CopyDst);
+    m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
+    m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
+    m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
+
+    if (!m_bHistoryValid)
+    {
+        struct ClearHistoryPassData
+        {
+            RenderGraphHandle linearDepth;
+            RenderGraphHandle normal;
+            RenderGraphHandle color;
+        };
+
+        auto clear_pass = m_pRenderGraph->AddPass<ClearHistoryPassData>("Clear Hisotry Textures", RenderPassType::Compute,
+            [&](ClearHistoryPassData& data, RenderGraphBuilder& builder)
+            {
+                data.linearDepth = builder.Write(m_prevLinearDepthHandle);
+                data.normal = builder.Write(m_prevNormalHandle);
+                data.color = builder.Write(m_prevSceneColorHandle);
+            },
+            [=](const ClearHistoryPassData& data, IGfxCommandList* pCommandList)
+            {
+                float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                pCommandList->ClearUAV(m_pPrevLinearDepthTexture->GetTexture(), m_pPrevLinearDepthTexture->GetUAV(), clear_value);
+                pCommandList->ClearUAV(m_pPrevNormalTexture->GetTexture(), m_pPrevNormalTexture->GetUAV(), clear_value);
+                pCommandList->ClearUAV(m_pPrevSceneColorTexture->GetTexture(), m_pPrevSceneColorTexture->GetUAV(), clear_value);
+            });
+
+        m_prevLinearDepthHandle = clear_pass->linearDepth;
+        m_prevNormalHandle = clear_pass->normal;
+        m_prevSceneColorHandle = clear_pass->color;
+    }
 }
 
 void Renderer::Render()
@@ -377,7 +414,7 @@ void Renderer::Render()
     RenderBackbufferPass(pCommandList, outputColorHandle, outputDepthHandle);
 }
 
-void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle)
+void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth)
 {
     GPU_EVENT(pCommandList, "Backbuffer Pass");
 
@@ -387,17 +424,30 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHa
 
     pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
 
-    RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(depthRTHandle);
+    RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(depth);
+
+    bool needUpscaleDepth = (m_upscaleMode != TemporalSuperResolution::None) && !nearly_equal(m_upscaleRatio, 1.f);
+    if (needUpscaleDepth)
+    {
+        if (m_pUpscaledDepthTexture == nullptr ||
+            m_pUpscaledDepthTexture->GetTexture()->GetDesc().width != m_nDisplayWidth ||
+            m_pUpscaledDepthTexture->GetTexture()->GetDesc().height != m_nDisplayHeight)
+        {
+            m_pUpscaledDepthTexture.reset(CreateTexture2D(m_nDisplayWidth, m_nDisplayHeight, 1, GfxFormat::D32F, GfxTextureUsageDepthStencil, "Renderer::m_pUpscaledDepthTexture"));
+        }
+    }
 
     GfxRenderPassDesc render_pass;
     render_pass.color[0].texture = m_pSwapchain->GetBackBuffer();
     render_pass.color[0].load_op = GfxRenderPassLoadOp::DontCare;
-    render_pass.depth.texture = depthRT->GetTexture();
+    render_pass.depth.texture = needUpscaleDepth ? m_pUpscaledDepthTexture->GetTexture() : depthRT->GetTexture();
+    render_pass.depth.load_op = needUpscaleDepth ? GfxRenderPassLoadOp::DontCare : GfxRenderPassLoadOp::Load;
+    render_pass.depth.stencil_load_op = GfxRenderPassLoadOp::DontCare;
     render_pass.depth.store_op = GfxRenderPassStoreOp::DontCare;
     render_pass.depth.stencil_store_op = GfxRenderPassStoreOp::DontCare;
     pCommandList->BeginRenderPass(render_pass);
 
-    CopyToBackbuffer(pCommandList, colorRTHandle);
+    CopyToBackbuffer(pCommandList, color, depth, needUpscaleDepth);
     m_pGpuDebugLine->Draw(pCommandList);
     m_pGpuDebugPrint->Draw(pCommandList);
     Engine::GetInstance()->GetGUI()->Render(pCommandList);
@@ -406,14 +456,16 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHa
     pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
 }
 
-void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle)
+void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth, bool needUpscaleDepth)
 {
     GPU_EVENT(pCommandList, "CopyToBackbuffer");
 
-    RenderGraphTexture* inputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(colorRTHandle);
-    uint32_t constants[2] = { inputRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex() };
+    RenderGraphTexture* colorRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(color);
+    RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(depth);
+
+    uint32_t constants[3] = { colorRT->GetSRV()->GetHeapIndex(), depthRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex() };
     pCommandList->SetGraphicsConstants(0, constants, sizeof(constants));
-    pCommandList->SetPipelineState(m_pCopyPSO);
+    pCommandList->SetPipelineState(needUpscaleDepth ? m_pCopyColorDepthPSO : m_pCopyColorPSO);
     pCommandList->Draw(3);
 }
 
@@ -459,7 +511,7 @@ void Renderer::WaitGpuFinished()
 
 void Renderer::RequestMouseHitTest(uint32_t x, uint32_t y)
 {
-    m_nMouseX = x;
+    m_nMouseX = x; //todo : upscale ratio
     m_nMouseY = y;
     m_bEnableObjectIDRendering = true;
 }
@@ -470,8 +522,17 @@ void Renderer::MouseHitTest()
     {
         WaitGpuFinished();
 
+        uint32_t x = m_nMouseX;
+        uint32_t y = m_nMouseY;
+
+        if (m_upscaleMode != TemporalSuperResolution::None)
+        {
+            x = (uint32_t)roundf((float)m_nMouseX / m_upscaleRatio);
+            y = (uint32_t)roundf((float)m_nMouseY / m_upscaleRatio);
+        }
+
         uint8_t* data = (uint8_t*)m_pObjectIDBuffer->GetCpuAddress();
-        uint32_t data_offset = m_nObjectIDRowPitch * m_nMouseY + m_nMouseX * sizeof(uint32_t);
+        uint32_t data_offset = m_nObjectIDRowPitch * y + x * sizeof(uint32_t);
         memcpy(&m_nMouseHitObjectID, data + data_offset, sizeof(uint32_t));
 
         m_bEnableObjectIDRendering = false;
@@ -588,7 +649,15 @@ void Renderer::CreateCommonResources()
     psoDesc.ps = GetShader("copy.hlsl", "ps_main", "ps_6_6", {});
     psoDesc.depthstencil_state.depth_write = false;
     psoDesc.rt_format[0] = m_pSwapchain->GetDesc().backbuffer_format;
-    m_pCopyPSO = GetPipelineState(psoDesc, "Copy PSO");
+    m_pCopyColorPSO = GetPipelineState(psoDesc, "Copy PSO");
+
+    psoDesc.ps = GetShader("copy.hlsl", "ps_main", "ps_6_6", { "OUTPUT_DEPTH=1" });
+    psoDesc.depthstencil_state.depth_write = true;
+    psoDesc.depthstencil_state.depth_test = true;
+    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::Always;
+    psoDesc.rt_format[0] = m_pSwapchain->GetDesc().backbuffer_format;
+    psoDesc.depthstencil_format = GfxFormat::D32F;
+    m_pCopyColorDepthPSO = GetPipelineState(psoDesc, "Copy PSO");
 }
 
 void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
@@ -599,8 +668,23 @@ void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)
     {
         m_pSwapchain->Resize(width, height);
 
-        m_nWindowWidth = width;
-        m_nWindowHeight = height;
+        m_nDisplayWidth = width;
+        m_nDisplayHeight = height;
+        m_nRenderWidth = (uint32_t)((float)m_nDisplayWidth / m_upscaleRatio);
+        m_nRenderHeight = (uint32_t)((float)m_nDisplayHeight / m_upscaleRatio);
+    }
+}
+
+void Renderer::SetTemporalUpscaleRatio(float ratio)
+{
+    if (!nearly_equal(m_upscaleRatio, ratio))
+    {
+        m_upscaleRatio = ratio;
+
+        m_nRenderWidth = (uint32_t)((float)m_nDisplayWidth / ratio);
+        m_nRenderHeight = (uint32_t)((float)m_nDisplayHeight / ratio);
+
+        //todo : mip bias
     }
 }
 

@@ -30,6 +30,16 @@ enum class RendererOutput
     Max
 };
 
+enum class TemporalSuperResolution
+{
+    None,
+    FSR2,
+    //DLSS,
+    //XeSS,
+
+    Max,
+};
+
 class Renderer
 {
 public:
@@ -40,8 +50,6 @@ public:
     void RenderFrame();
     void WaitGpuFinished();
 
-    uint32_t GetBackbufferWidth() const { return m_pSwapchain->GetDesc().width; }
-    uint32_t GetBackbufferHeight() const { return m_pSwapchain->GetDesc().height; }
     uint64_t GetFrameID() const { return m_pDevice->GetFrameID(); }
     class ShaderCompiler* GetShaderCompiler() const { return m_pShaderCompiler.get(); }
     class ShaderCache* GetShaderCache() const { return m_pShaderCache.get(); }
@@ -50,6 +58,16 @@ public:
 
     RendererOutput GetOutputType() const { return m_outputType; }
     void SetOutputType(RendererOutput output) { m_outputType = output; }
+
+    TemporalSuperResolution GetTemporalUpscaleMode() const { return m_upscaleMode; }
+    void SetTemporalUpscaleMode(TemporalSuperResolution mode) { m_upscaleMode = mode; }
+    float GetTemporalUpscaleRatio() const { return m_upscaleRatio; }
+    void SetTemporalUpscaleRatio(float ratio);
+
+    uint32_t GetDisplayWidth() const { return m_nDisplayWidth; }
+    uint32_t GetDisplayHeight() const { return m_nDisplayHeight; }
+    uint32_t GetRenderWidth() const { return m_nRenderWidth; }
+    uint32_t GetRenderHeight() const { return m_nRenderHeight; }
 
     IGfxDevice* GetDevice() const { return m_pDevice.get(); }
     IGfxSwapchain* GetSwapchain() const { return m_pSwapchain.get(); }
@@ -112,6 +130,7 @@ public:
     class BasePass* GetBassPass() const { return m_pBasePass.get(); }
     class SkyCubeMap* GetSkyCubeMap() const { return m_pSkyCubeMap.get(); }
 
+    bool IsHistoryTextureValid() const { return m_bHistoryValid; }
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
     Texture2D* GetPrevNormalTexture() const { return m_pPrevNormalTexture.get(); }
     Texture2D* GetPrevSceneColorTexture() const { return m_pPrevSceneColorTexture.get(); }
@@ -138,8 +157,8 @@ private:
     void FlushComputePass(IGfxCommandList* pCommandList);
     void BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
     void ImportPrevFrameTextures();
-    void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle, RenderGraphHandle depthRTHandle);
-    void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle colorRTHandle);
+    void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth);
+    void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth, bool needUpscaleDepth);
     void MouseHitTest();
 
 private:
@@ -150,9 +169,15 @@ private:
     eastl::unique_ptr<class ShaderCache> m_pShaderCache;
     eastl::unique_ptr<class PipelineStateCache> m_pPipelineCache;
     eastl::unique_ptr<class GpuScene> m_pGpuScene;
-    uint32_t m_nWindowWidth;
-    uint32_t m_nWindowHeight;
+
     RendererOutput m_outputType = RendererOutput::Default;
+    TemporalSuperResolution m_upscaleMode = TemporalSuperResolution::None;
+
+    uint32_t m_nDisplayWidth;
+    uint32_t m_nDisplayHeight;
+    uint32_t m_nRenderWidth;
+    uint32_t m_nRenderHeight;
+    float m_upscaleRatio = 1.0f;
 
     eastl::unique_ptr<LinearAllocator> m_cbAllocator;
 
@@ -229,6 +254,9 @@ private:
     RenderGraphHandle m_prevLinearDepthHandle;
     RenderGraphHandle m_prevNormalHandle;
     RenderGraphHandle m_prevSceneColorHandle;
+    bool m_bHistoryValid = false;
+
+    eastl::unique_ptr<Texture2D> m_pUpscaledDepthTexture;
 
     bool m_bGpuDrivenStatsEnabled = false;
     bool m_bShowMeshlets = false;
@@ -241,7 +269,8 @@ private:
     eastl::unique_ptr<IGfxBuffer> m_pObjectIDBuffer;
     uint32_t m_nObjectIDRowPitch = 0;
 
-    IGfxPipelineState* m_pCopyPSO = nullptr;
+    IGfxPipelineState* m_pCopyColorPSO = nullptr;
+    IGfxPipelineState* m_pCopyColorDepthPSO = nullptr;
 
     eastl::unique_ptr<class HZB> m_pHZB;
     eastl::unique_ptr<class BasePass> m_pBasePass;

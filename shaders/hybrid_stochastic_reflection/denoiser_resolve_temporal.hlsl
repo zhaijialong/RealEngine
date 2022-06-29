@@ -41,7 +41,14 @@ float16_t FFX_DNSR_Reflections_LoadRoughness(int2 pixel_coordinate)
 float16_t FFX_DNSR_Reflections_LoadVariance(int2 pixel_coordinate) 
 { 
     Texture2D<float> inputVarianceTexture = ResourceDescriptorHeap[c_inputVarianceTexture];
-    return (float16_t)inputVarianceTexture[pixel_coordinate].x;
+    float16_t variance = (float16_t)inputVarianceTexture[pixel_coordinate].x;
+    
+    if (isnan(variance))
+    {
+        variance = 1.0; //to fix artifacts after resolution changed
+    }
+    
+    return variance;
 }
 
 float16_t FFX_DNSR_Reflections_LoadNumSamples(int2 pixel_coordinate) 
@@ -71,5 +78,5 @@ void main(int2 group_thread_id : SV_GroupThreadID, uint group_index : SV_GroupIn
     uint2 remapped_dispatch_thread_id = dispatch_group_id * 8 + remapped_group_thread_id;
 
     FFX_DNSR_Reflections_ResolveTemporal(remapped_dispatch_thread_id, remapped_group_thread_id, 
-        uint2(SceneCB.viewWidth, SceneCB.viewHeight), float2(SceneCB.rcpViewWidth, SceneCB.rcpViewHeight), c_temporalStability);
+        SceneCB.renderSize, SceneCB.rcpRenderSize, c_temporalStability);
 }

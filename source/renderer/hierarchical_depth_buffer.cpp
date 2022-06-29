@@ -249,8 +249,8 @@ RenderGraphHandle HZB::GetSceneHZBMip(uint32_t mip) const
 
 void HZB::CalcHZBSize()
 {
-    uint32_t mipsX = (uint32_t)eastl::max(ceilf(log2f((float)m_pRenderer->GetBackbufferWidth())), 1.0f);
-    uint32_t mipsY = (uint32_t)eastl::max(ceilf(log2f((float)m_pRenderer->GetBackbufferHeight())), 1.0f);
+    uint32_t mipsX = (uint32_t)eastl::max(ceilf(log2f((float)m_pRenderer->GetRenderWidth())), 1.0f);
+    uint32_t mipsY = (uint32_t)eastl::max(ceilf(log2f((float)m_pRenderer->GetRenderHeight())), 1.0f);
 
     m_nHZBMipCount = eastl::max(mipsX, mipsY);
     RE_ASSERT(m_nHZBMipCount <= MAX_HZB_MIP_COUNT);

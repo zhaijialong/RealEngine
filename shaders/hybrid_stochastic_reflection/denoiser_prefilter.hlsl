@@ -64,5 +64,5 @@ void main(int2 group_thread_id : SV_GroupThreadID, uint group_index : SV_GroupIn
     uint2 remapped_group_thread_id = FFX_DNSR_Reflections_RemapLane8x8(group_index);
     uint2 remapped_dispatch_thread_id = dispatch_group_id * 8 + remapped_group_thread_id;
 
-    FFX_DNSR_Reflections_Prefilter(remapped_dispatch_thread_id, remapped_group_thread_id, uint2(SceneCB.viewWidth, SceneCB.viewHeight));
+    FFX_DNSR_Reflections_Prefilter(remapped_dispatch_thread_id, remapped_group_thread_id, SceneCB.renderSize);
 }
