@@ -69,6 +69,7 @@ struct SceneConstant
     float frameTime;
     uint frameIndex;
 
+    float mipBias;
     uint skyCubeTexture;
     uint skySpecularIBLTexture;
     uint skyDiffuseIBLTexture;

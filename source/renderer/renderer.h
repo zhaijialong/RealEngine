@@ -160,6 +160,7 @@ private:
     void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth);
     void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth, bool needUpscaleDepth);
     void MouseHitTest();
+    void UpdateMipBias();
 
 private:
     eastl::unique_ptr<IGfxDevice> m_pDevice;
@@ -178,6 +179,7 @@ private:
     uint32_t m_nRenderWidth;
     uint32_t m_nRenderHeight;
     float m_upscaleRatio = 1.0f;
+    float m_mipBias = 0.0f;
 
     eastl::unique_ptr<LinearAllocator> m_cbAllocator;
 

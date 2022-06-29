@@ -303,6 +303,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.preintegratedGFTexture = m_pPreintegratedGFTexture->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
     sceneCB.frameIndex = (uint32_t)GetFrameID();
+    sceneCB.mipBias = m_mipBias;
     sceneCB.sobolSequenceTexture = m_pSobolSequenceTexture->GetSRV()->GetHeapIndex();
     sceneCB.scramblingRankingTexture1SPP = m_pScramblingRankingTexture1SPP->GetSRV()->GetHeapIndex();
     sceneCB.scramblingRankingTexture2SPP = m_pScramblingRankingTexture2SPP->GetSRV()->GetHeapIndex();
@@ -684,8 +685,41 @@ void Renderer::SetTemporalUpscaleRatio(float ratio)
         m_nRenderWidth = (uint32_t)((float)m_nDisplayWidth / ratio);
         m_nRenderHeight = (uint32_t)((float)m_nDisplayHeight / ratio);
 
-        //todo : mip bias
+        UpdateMipBias();
     }
+}
+
+void Renderer::UpdateMipBias()
+{
+    if (m_nRenderWidth == m_nDisplayWidth)
+    {
+        m_mipBias = 0.0f;
+    }
+    else
+    {
+        m_mipBias = log2f((float)m_nRenderWidth / (float)m_nDisplayWidth) - 1.0f;
+    }
+
+    GfxSamplerDesc desc;
+    desc.min_filter = GfxFilter::Linear;
+    desc.mag_filter = GfxFilter::Linear;
+    desc.mip_filter = GfxFilter::Linear;
+    desc.address_u = GfxSamplerAddressMode::Repeat;
+    desc.address_v = GfxSamplerAddressMode::Repeat;
+    desc.address_w = GfxSamplerAddressMode::Repeat;
+    desc.mip_bias = m_mipBias;
+    desc.enable_anisotropy = true;
+    desc.max_anisotropy = 2.0f;
+    m_pAniso2xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso2xSampler"));
+
+    desc.max_anisotropy = 4.0f;
+    m_pAniso4xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso4xSampler"));
+
+    desc.max_anisotropy = 8.0f;
+    m_pAniso8xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso8xSampler"));
+
+    desc.max_anisotropy = 16.0f;
+    m_pAniso16xSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pAniso16xSampler"));
 }
 
 IndexBuffer* Renderer::CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const eastl::string& name, GfxMemoryType memory_type)
