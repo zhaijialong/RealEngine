@@ -21,7 +21,27 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
 {
     GUI("PostProcess", "FSR 2.0", [&]()
         {
-            ImGui::SliderFloat("Sharpness##CAS", &m_sharpness, 0.0f, 1.0f, "%.2f");
+            TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
+            if (mode == TemporalSuperResolution::FSR2)
+            {
+                float ratio = m_pRenderer->GetTemporalUpscaleRatio();
+
+                static FfxFsr2QualityMode qualityMode = FFX_FSR2_QUALITY_MODE_QUALITY;
+                ImGui::Combo("Mode##FSR2", (int*)&qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5);
+
+                if (qualityMode == 0)
+                {
+                    ImGui::SliderFloat("Upscale Ratio##FSR2", &ratio, 1.0, 3.0);
+                }
+                else
+                {
+                    ratio = ffxFsr2GetUpscaleRatioFromQualityMode(qualityMode);
+                }
+
+                m_pRenderer->SetTemporalUpscaleRatio(ratio);
+
+                ImGui::SliderFloat("Sharpness##FSR2", &m_sharpness, 0.0f, 1.0f, "%.2f");
+            }
         });
 
     struct FSR2Data
@@ -66,8 +86,8 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             dispatchDesc.depth = ffxGetResourceDX12(&m_context, (ID3D12Resource*)depthRT->GetTexture()->GetHandle(), L"FSR2_InputDepth");
             dispatchDesc.motionVectors = ffxGetResourceDX12(&m_context, (ID3D12Resource*)velocityRT->GetTexture()->GetHandle(), L"FSR2_InputMotionVectors");
             dispatchDesc.exposure = ffxGetResourceDX12(&m_context, (ID3D12Resource*)exposureRT->GetTexture()->GetHandle(), L"FSR2_InputExposure");
-            dispatchDesc.reactive = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_InputReactiveMap");
-            dispatchDesc.transparencyAndComposition = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_TransparencyAndCompositionMap");
+            dispatchDesc.reactive = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_InputReactiveMap"); //todo : "applications should write alpha to the reactive mask"
+            dispatchDesc.transparencyAndComposition = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_TransparencyAndCompositionMap"); //todo : "raytraced reflections or animated textures"
             dispatchDesc.output = ffxGetResourceDX12(&m_context, (ID3D12Resource*)outputRT->GetTexture()->GetHandle(), L"FSR2_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
             dispatchDesc.jitterOffset.x = camera->GetJitter().x;
             dispatchDesc.jitterOffset.y = camera->GetJitter().y;
@@ -114,7 +134,7 @@ void FSR2::CreateFsr2Context(uint32_t displayWidth, uint32_t displayHeight)
     FFX_ASSERT(errorCode == FFX_OK);
 
     m_desc.device = ffxGetDeviceDX12(device);
-    m_desc.maxRenderSize.width = displayWidth; //todo : it can be set to renderSize which decreases memory usage
+    m_desc.maxRenderSize.width = displayWidth; //it can be set to renderSize which decreases memory usage, but needs to recreate the FSR context when ratio changed
     m_desc.maxRenderSize.height = displayHeight;
     m_desc.displaySize.width = displayWidth;
     m_desc.displaySize.height = displayHeight;

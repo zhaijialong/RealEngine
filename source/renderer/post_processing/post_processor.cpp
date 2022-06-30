@@ -64,31 +64,9 @@ void PostProcessor::UpdateUpsacleMode()
             ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR 2.0\0\0", (int)TemporalSuperResolution::Max);
             m_pRenderer->SetTemporalUpscaleMode(mode);
 
-            float ratio = m_pRenderer->GetTemporalUpscaleRatio();
-
-            switch (mode)
+            if (mode == TemporalSuperResolution::None)
             {
-            case TemporalSuperResolution::FSR2:
-            {
-                static FfxFsr2QualityMode qualityMode = FFX_FSR2_QUALITY_MODE_QUALITY;
-                ImGui::Combo("Mode##FSR2", (int*)&qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5);
-                
-                if (qualityMode == 0)
-                {
-                    ImGui::SliderFloat("Upscale Ratio##TemporalUpscaler", &ratio, 1.0, 3.0);
-                }
-                else
-                {
-                    ratio = ffxFsr2GetUpscaleRatioFromQualityMode(qualityMode);
-                }
-
-                break;
+                m_pRenderer->SetTemporalUpscaleRatio(1.0f);
             }
-            default:
-                ratio = 1.0f;
-                break;
-            }
-
-            m_pRenderer->SetTemporalUpscaleRatio(ratio);
         });
 }
