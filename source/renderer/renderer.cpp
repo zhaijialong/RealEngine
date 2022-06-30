@@ -512,7 +512,7 @@ void Renderer::WaitGpuFinished()
 
 void Renderer::RequestMouseHitTest(uint32_t x, uint32_t y)
 {
-    m_nMouseX = x; //todo : upscale ratio
+    m_nMouseX = x;
     m_nMouseY = y;
     m_bEnableObjectIDRendering = true;
 }

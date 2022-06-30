@@ -17,7 +17,7 @@ FSR2::~FSR2()
 }
 
 RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle input, RenderGraphHandle depth, RenderGraphHandle velocity, 
-    uint32_t displayWidth, uint32_t displayHeight)
+    RenderGraphHandle exposure, uint32_t displayWidth, uint32_t displayHeight)
 {
     GUI("PostProcess", "FSR 2.0", [&]()
         {
@@ -29,6 +29,7 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
         RenderGraphHandle input;
         RenderGraphHandle depth;
         RenderGraphHandle velocity;
+        RenderGraphHandle exposure;
         RenderGraphHandle output;
     };
 
@@ -38,6 +39,7 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             data.input = builder.Read(input);
             data.depth = builder.Read(depth);
             data.velocity = builder.Read(velocity);
+            data.exposure = builder.Read(exposure);
 
             RenderGraphTexture::Desc desc;
             desc.width = displayWidth;
@@ -53,6 +55,7 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             RenderGraphTexture* inputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
             RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
             RenderGraphTexture* velocityRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocity);
+            RenderGraphTexture* exposureRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.exposure);
             RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
 
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
@@ -62,7 +65,7 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             dispatchDesc.color = ffxGetResourceDX12(&m_context, (ID3D12Resource*)inputRT->GetTexture()->GetHandle(), L"FSR2_InputColor");
             dispatchDesc.depth = ffxGetResourceDX12(&m_context, (ID3D12Resource*)depthRT->GetTexture()->GetHandle(), L"FSR2_InputDepth");
             dispatchDesc.motionVectors = ffxGetResourceDX12(&m_context, (ID3D12Resource*)velocityRT->GetTexture()->GetHandle(), L"FSR2_InputMotionVectors");
-            dispatchDesc.exposure = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_InputExposure");
+            dispatchDesc.exposure = ffxGetResourceDX12(&m_context, (ID3D12Resource*)exposureRT->GetTexture()->GetHandle(), L"FSR2_InputExposure");
             dispatchDesc.reactive = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_InputReactiveMap");
             dispatchDesc.transparencyAndComposition = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_TransparencyAndCompositionMap");
             dispatchDesc.output = ffxGetResourceDX12(&m_context, (ID3D12Resource*)outputRT->GetTexture()->GetHandle(), L"FSR2_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -115,7 +118,7 @@ void FSR2::CreateFsr2Context(uint32_t displayWidth, uint32_t displayHeight)
     m_desc.maxRenderSize.height = displayHeight;
     m_desc.displaySize.width = displayWidth;
     m_desc.displaySize.height = displayHeight;
-    m_desc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE | FFX_FSR2_ENABLE_DEPTH_INVERTED | FFX_FSR2_ENABLE_AUTO_EXPOSURE;
+    m_desc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE | FFX_FSR2_ENABLE_DEPTH_INVERTED;
 
     ffxFsr2ContextCreate(&m_context, &m_desc);
 }

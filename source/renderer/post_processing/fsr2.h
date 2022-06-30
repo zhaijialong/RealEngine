@@ -10,7 +10,7 @@ public:
     ~FSR2();
 
     RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle input, RenderGraphHandle depth, RenderGraphHandle velocity,
-        uint32_t displayWidth, uint32_t displayHeight);
+        RenderGraphHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
 
 private:
     void OnWindowResize(void* window, uint32_t width, uint32_t height);

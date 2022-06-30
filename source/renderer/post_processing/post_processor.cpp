@@ -30,7 +30,7 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
     switch (upscaleMode)
     {
     case TemporalSuperResolution::FSR2:
-        outputHandle = m_pFSR2->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
+        outputHandle = m_pFSR2->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, displayWidth, displayHeight);
         break;
     default:
         RE_ASSERT(renderWidth == displayWidth && renderHeight == displayHeight);
