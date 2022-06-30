@@ -6,7 +6,6 @@ cbuffer CB : register(b1)
     uint c_historyInputRT;
     uint c_velocityRT;
     uint c_linearDepthRT;
-    uint c_prevLinearDepthRT;
 
     uint c_historyOutputRT;
     uint c_outputRT;
