@@ -17,7 +17,7 @@ public:
 private:
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
     
-    void CreateFsr2Context(uint32_t displayWidth, uint32_t displayHeight);
+    void CreateFsr2Context();
     void DestroyFsr2Context();
 
 private:
@@ -25,6 +25,7 @@ private:
 
     FfxFsr2ContextDescription m_desc = {};
     FfxFsr2Context m_context;
+    bool m_needCreateContext = true;
 
     FfxFsr2QualityMode m_qualityMode = FFX_FSR2_QUALITY_MODE_QUALITY;
     float m_customUpscaleRatio = 1.0f;

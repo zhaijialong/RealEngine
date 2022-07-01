@@ -6,7 +6,6 @@
 FSR2::FSR2(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
-    CreateFsr2Context(pRenderer->GetDisplayWidth(), pRenderer->GetDisplayHeight());
 
     Engine::GetInstance()->WindowResizeSignal.connect(&FSR2::OnWindowResize, this);
 }
@@ -26,11 +25,17 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             {
                 float ratio = m_pRenderer->GetTemporalUpscaleRatio();
 
-                ImGui::Combo("Mode##FSR2", (int*)&m_qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5);
+                if (ImGui::Combo("Mode##FSR2", (int*)&m_qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5))
+                {
+                    m_needCreateContext = true;
+                }
 
                 if (m_qualityMode == 0)
                 {
-                    ImGui::SliderFloat("Upscale Ratio##FSR2", &m_customUpscaleRatio, 1.0, 3.0);
+                    if (ImGui::SliderFloat("Upscale Ratio##FSR2", &m_customUpscaleRatio, 1.0, 3.0))
+                    {
+                        m_needCreateContext = true;
+                    }
                 }
 
                 ImGui::SliderFloat("Sharpness##FSR2", &m_sharpness, 0.0f, 1.0f, "%.2f");
@@ -65,6 +70,12 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
         },
         [=](const FSR2Data& data, IGfxCommandList* pCommandList)
         {
+            if (m_needCreateContext)
+            {
+                DestroyFsr2Context();
+                CreateFsr2Context();
+            }
+
             pCommandList->FlushBarriers();
 
             RenderGraphTexture* inputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
@@ -123,33 +134,43 @@ void FSR2::OnWindowResize(void* window, uint32_t width, uint32_t height)
     if (m_desc.displaySize.width != width ||
         m_desc.displaySize.height != height)
     {
-        m_pRenderer->WaitGpuFinished();
-        DestroyFsr2Context();
-        CreateFsr2Context(width, height);
+        m_needCreateContext = true;
     }
 }
 
-void FSR2::CreateFsr2Context(uint32_t displayWidth, uint32_t displayHeight)
+void FSR2::CreateFsr2Context()
 {
-    ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
+    if (m_needCreateContext)
+    {
+        ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
 
-    const size_t scratchBufferSize = ffxFsr2GetScratchMemorySizeDX12();
-    void* scratchBuffer = RE_ALLOC(scratchBufferSize);
-    FfxErrorCode errorCode = ffxFsr2GetInterfaceDX12(&m_desc.callbacks, device, scratchBuffer, scratchBufferSize);
-    FFX_ASSERT(errorCode == FFX_OK);
+        const size_t scratchBufferSize = ffxFsr2GetScratchMemorySizeDX12();
+        void* scratchBuffer = RE_ALLOC(scratchBufferSize);
+        FfxErrorCode errorCode = ffxFsr2GetInterfaceDX12(&m_desc.callbacks, device, scratchBuffer, scratchBufferSize);
+        FFX_ASSERT(errorCode == FFX_OK);
 
-    m_desc.device = ffxGetDeviceDX12(device);
-    m_desc.maxRenderSize.width = displayWidth; //it can be set to renderSize which decreases memory usage, but needs to recreate the FSR context when ratio changed
-    m_desc.maxRenderSize.height = displayHeight;
-    m_desc.displaySize.width = displayWidth;
-    m_desc.displaySize.height = displayHeight;
-    m_desc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE | FFX_FSR2_ENABLE_DEPTH_INVERTED;
+        m_desc.device = ffxGetDeviceDX12(device);
+        m_desc.maxRenderSize.width = m_pRenderer->GetRenderWidth();
+        m_desc.maxRenderSize.height = m_pRenderer->GetRenderHeight();
+        m_desc.displaySize.width = m_pRenderer->GetDisplayWidth();
+        m_desc.displaySize.height = m_pRenderer->GetDisplayHeight();
+        m_desc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE | FFX_FSR2_ENABLE_DEPTH_INVERTED;
 
-    ffxFsr2ContextCreate(&m_context, &m_desc);
+        ffxFsr2ContextCreate(&m_context, &m_desc);
+
+        m_needCreateContext = false;
+    }
 }
 
 void FSR2::DestroyFsr2Context()
 {
-    ffxFsr2ContextDestroy(&m_context);
-    RE_FREE(m_desc.callbacks.scratchBuffer);
+    if (m_desc.callbacks.scratchBuffer)
+    {
+        m_pRenderer->WaitGpuFinished();
+
+        ffxFsr2ContextDestroy(&m_context);
+
+        RE_FREE(m_desc.callbacks.scratchBuffer);
+        m_desc.callbacks.scratchBuffer = nullptr;
+    }
 }
