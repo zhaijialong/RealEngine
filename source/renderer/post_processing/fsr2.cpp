@@ -123,6 +123,7 @@ void FSR2::OnWindowResize(void* window, uint32_t width, uint32_t height)
     if (m_desc.displaySize.width != width ||
         m_desc.displaySize.height != height)
     {
+        m_pRenderer->WaitGpuFinished();
         DestroyFsr2Context();
         CreateFsr2Context(width, height);
     }

@@ -15,10 +15,7 @@
 DLSS::DLSS(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
-    m_pDlssInitCommandList.reset(pRenderer->GetDevice()->CreateCommandList(GfxCommandQueue::Graphics, "DLSS::m_pDlssInitCommandList"));
-
-    m_ngxInitialized = InitializeNGX();
-    m_dlssAvailable = InitializeDLSSFeatures(pRenderer->GetDisplayWidth(), pRenderer->GetDisplayHeight());
+    m_dlssAvailable = InitializeNGX();
 
     Engine::GetInstance()->WindowResizeSignal.connect(&DLSS::OnWindowResize, this);
 }
@@ -82,6 +79,12 @@ RenderGraphHandle DLSS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
         },
         [=](const DLSSPassData& data, IGfxCommandList* pCommandList)
         {
+            if (m_needInitializeDlss)
+            {
+                ReleaseDLSSFeatures();
+                InitializeDLSSFeatures(pCommandList);
+            }
+
             pCommandList->FlushBarriers();
 
             RenderGraphTexture* inputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
@@ -139,8 +142,7 @@ float DLSS::GetUpscaleRatio() const
 
 void DLSS::OnWindowResize(void* window, uint32_t width, uint32_t height)
 {
-    ReleaseDLSSFeatures();
-    m_dlssAvailable = InitializeDLSSFeatures(width, height);
+    m_needInitializeDlss = true;
 }
 
 bool DLSS::InitializeNGX()
@@ -183,45 +185,48 @@ void DLSS::ShutdownNGX()
     NVSDK_NGX_D3D12_Shutdown(); //but still lots of "D3D12 WARNING: Live Object" ...
 }
 
-bool DLSS::InitializeDLSSFeatures(uint32_t displayWidth, uint32_t displayHeight)
+bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList)
 {
-    if (!m_ngxInitialized)
+    if (!m_dlssAvailable)
     {
         return false;
     }
 
-    unsigned int optimalWidth;
-    unsigned int optimalHeight;
-    unsigned int maxWidth;
-    unsigned int maxHeight;
-    unsigned int minWidth;
-    unsigned int minHeight;
-    float sharpness;
-    NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, displayWidth, displayHeight, (NVSDK_NGX_PerfQuality_Value)m_qualityMode,
-        &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
+    if (m_needInitializeDlss)
+    {
+        uint32_t displayWidth = m_pRenderer->GetDisplayWidth();
+        uint32_t displayHeight = m_pRenderer->GetDisplayHeight();
 
-    NVSDK_NGX_DLSS_Create_Params dlssCreateParams = {};
-    dlssCreateParams.Feature.InWidth = displayWidth; // optimalWidth;
-    dlssCreateParams.Feature.InHeight = displayHeight;// optimalHeight;
-    dlssCreateParams.Feature.InTargetWidth = displayWidth;
-    dlssCreateParams.Feature.InTargetHeight = displayHeight;
-    dlssCreateParams.Feature.InPerfQualityValue = (NVSDK_NGX_PerfQuality_Value)m_qualityMode;
-    dlssCreateParams.InFeatureCreateFlags = NVSDK_NGX_DLSS_Feature_Flags_IsHDR |
-        NVSDK_NGX_DLSS_Feature_Flags_MVLowRes |
-        NVSDK_NGX_DLSS_Feature_Flags_DepthInverted |
-        NVSDK_NGX_DLSS_Feature_Flags_DoSharpening;
+        unsigned int optimalWidth;
+        unsigned int optimalHeight;
+        unsigned int maxWidth;
+        unsigned int maxHeight;
+        unsigned int minWidth;
+        unsigned int minHeight;
+        float sharpness;
+        NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, displayWidth, displayHeight, (NVSDK_NGX_PerfQuality_Value)m_qualityMode,
+            &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
 
-    m_pDlssInitCommandList->ResetAllocator();
-    m_pDlssInitCommandList->Begin();
+        NVSDK_NGX_DLSS_Create_Params dlssCreateParams = {};
+        dlssCreateParams.Feature.InWidth = displayWidth; // optimalWidth;
+        dlssCreateParams.Feature.InHeight = displayHeight;// optimalHeight;
+        dlssCreateParams.Feature.InTargetWidth = displayWidth;
+        dlssCreateParams.Feature.InTargetHeight = displayHeight;
+        dlssCreateParams.Feature.InPerfQualityValue = (NVSDK_NGX_PerfQuality_Value)m_qualityMode;
+        dlssCreateParams.InFeatureCreateFlags = NVSDK_NGX_DLSS_Feature_Flags_IsHDR |
+            NVSDK_NGX_DLSS_Feature_Flags_MVLowRes |
+            NVSDK_NGX_DLSS_Feature_Flags_DepthInverted |
+            NVSDK_NGX_DLSS_Feature_Flags_DoSharpening;
 
-    ID3D12GraphicsCommandList* d3d12CommandList = (ID3D12GraphicsCommandList*)m_pDlssInitCommandList->GetHandle();
-    //"D3D12 WARNING: ID3D12Device::CreateCommittedResource: Ignoring InitialState D3D12_RESOURCE_STATE_COPY_DEST. Buffers are effectively created in state D3D12_RESOURCE_STATE_COMMON"
-    NVSDK_NGX_Result result = NGX_D3D12_CREATE_DLSS_EXT(d3d12CommandList, 0, 0, &m_dlssFeature, m_ngxParameters, &dlssCreateParams);
-    RE_ASSERT(NVSDK_NGX_SUCCEED(result));
+        ID3D12GraphicsCommandList* d3d12CommandList = (ID3D12GraphicsCommandList*)pCommandList->GetHandle();
+        //"D3D12 WARNING: ID3D12Device::CreateCommittedResource: Ignoring InitialState D3D12_RESOURCE_STATE_COPY_DEST. Buffers are effectively created in state D3D12_RESOURCE_STATE_COMMON"
+        NVSDK_NGX_Result result = NGX_D3D12_CREATE_DLSS_EXT(d3d12CommandList, 0, 0, &m_dlssFeature, m_ngxParameters, &dlssCreateParams);
+        RE_ASSERT(NVSDK_NGX_SUCCEED(result));
 
-    m_pDlssInitCommandList->UavBarrier(nullptr);
-    m_pDlssInitCommandList->End();
-    m_pDlssInitCommandList->Submit();
+        pCommandList->UavBarrier(nullptr);
+
+        m_needInitializeDlss = false;
+    }
 
     return true;
 }
@@ -230,6 +235,9 @@ void DLSS::ReleaseDLSSFeatures()
 {
     if (m_dlssFeature)
     {
+        m_pRenderer->WaitGpuFinished();
+
         NVSDK_NGX_D3D12_ReleaseFeature(m_dlssFeature);
+        m_dlssFeature = nullptr;
     }
 }
