@@ -15,6 +15,7 @@ public:
         RenderGraphHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
 
     bool IsSupported() const { return m_ngxInitialized && m_dlssAvailable; }
+    float GetUpscaleRatio() const;
 
 private:
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
@@ -36,5 +37,6 @@ private:
     bool m_dlssAvailable = false;
 
     int m_qualityMode = 2;// NVSDK_NGX_PerfQuality_Value_MaxQuality;
+    float m_customUpscaleRatio = 1.0f;
     float m_sharpness = 0.5f;
 };

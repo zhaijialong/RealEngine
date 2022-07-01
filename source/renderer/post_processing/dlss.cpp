@@ -42,23 +42,17 @@ RenderGraphHandle DLSS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             if (mode == TemporalSuperResolution::DLSS)
             {
-                //todo : Ultra Performance does not work
-                ImGui::Combo("Mode##DLSS", &m_qualityMode, "Performance\0Balanced\0Quality\0Ultra Performance\0\0", 4);
+                //todo : Ultra Performance crashes
+                ImGui::Combo("Mode##DLSS", &m_qualityMode, "Performance (2.0x)\0Balanced (1.7x)\0Quality (1.5x)\0Ultra Performance (3.0x)\0Custom\0", 5);
+
+                if (m_qualityMode == 4)
+                {
+                    ImGui::SliderFloat("Upscale Ratio##DLSS", &m_customUpscaleRatio, 1.0, 2.0); //todo : 3.0 crashes
+                }
+
                 ImGui::SliderFloat("Sharpness##DLSS", &m_sharpness, 0.0f, 1.0f, "%.2f");
 
-                unsigned int optimalWidth;
-                unsigned int optimalHeight;
-                unsigned int maxWidth;
-                unsigned int maxHeight;
-                unsigned int minWidth;
-                unsigned int minHeight;
-                float sharpness;
-                NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, m_pRenderer->GetDisplayWidth(), m_pRenderer->GetDisplayHeight(), 
-                    (NVSDK_NGX_PerfQuality_Value)m_qualityMode,
-                    &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
-
-                float upscaleRatio = (float)m_pRenderer->GetDisplayWidth() / (float)optimalWidth;
-                m_pRenderer->SetTemporalUpscaleRatio(upscaleRatio);
+                m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio());
             }
         });
 
@@ -122,6 +116,27 @@ RenderGraphHandle DLSS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
     return dlss_pass->output;
 }
 
+float DLSS::GetUpscaleRatio() const
+{
+    if (m_qualityMode == 4)
+    {
+        return m_customUpscaleRatio;
+    }
+
+    unsigned int optimalWidth;
+    unsigned int optimalHeight;
+    unsigned int maxWidth;
+    unsigned int maxHeight;
+    unsigned int minWidth;
+    unsigned int minHeight;
+    float sharpness;
+    NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, m_pRenderer->GetDisplayWidth(), m_pRenderer->GetDisplayHeight(),
+        (NVSDK_NGX_PerfQuality_Value)m_qualityMode,
+        &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
+
+    return (float)m_pRenderer->GetDisplayWidth() / (float)optimalWidth;
+}
+
 void DLSS::OnWindowResize(void* window, uint32_t width, uint32_t height)
 {
     ReleaseDLSSFeatures();
@@ -175,7 +190,6 @@ bool DLSS::InitializeDLSSFeatures(uint32_t displayWidth, uint32_t displayHeight)
         return false;
     }
 
-    /*
     unsigned int optimalWidth;
     unsigned int optimalHeight;
     unsigned int maxWidth;
@@ -183,9 +197,8 @@ bool DLSS::InitializeDLSSFeatures(uint32_t displayWidth, uint32_t displayHeight)
     unsigned int minWidth;
     unsigned int minHeight;
     float sharpness;
-    NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, displayWidth, displayHeight, m_qualityMode,
+    NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, displayWidth, displayHeight, (NVSDK_NGX_PerfQuality_Value)m_qualityMode,
         &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
-    */
 
     NVSDK_NGX_DLSS_Create_Params dlssCreateParams = {};
     dlssCreateParams.Feature.InWidth = displayWidth; // optimalWidth;

@@ -12,6 +12,8 @@ public:
     RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle input, RenderGraphHandle depth, RenderGraphHandle velocity,
         RenderGraphHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
 
+    float GetUpscaleRatio() const;
+
 private:
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
     
@@ -24,5 +26,7 @@ private:
     FfxFsr2ContextDescription m_desc = {};
     FfxFsr2Context m_context;
 
+    FfxFsr2QualityMode m_qualityMode = FFX_FSR2_QUALITY_MODE_QUALITY;
+    float m_customUpscaleRatio = 1.0f;
     float m_sharpness = 0.5;
 };

@@ -74,9 +74,17 @@ void PostProcessor::UpdateUpsacleMode()
 
             m_pRenderer->SetTemporalUpscaleMode(mode);
 
-            if (mode == TemporalSuperResolution::None)
+            switch (mode)
             {
+            case TemporalSuperResolution::FSR2:
+                m_pRenderer->SetTemporalUpscaleRatio(m_pFSR2->GetUpscaleRatio());
+                break;
+            case TemporalSuperResolution::DLSS:
+                m_pRenderer->SetTemporalUpscaleRatio(m_pDLSS->GetUpscaleRatio());
+                break;
+            default:
                 m_pRenderer->SetTemporalUpscaleRatio(1.0f);
+                break;
             }
         });
 }

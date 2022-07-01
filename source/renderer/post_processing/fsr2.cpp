@@ -26,21 +26,16 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             {
                 float ratio = m_pRenderer->GetTemporalUpscaleRatio();
 
-                static FfxFsr2QualityMode qualityMode = FFX_FSR2_QUALITY_MODE_QUALITY;
-                ImGui::Combo("Mode##FSR2", (int*)&qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5);
+                ImGui::Combo("Mode##FSR2", (int*)&m_qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5);
 
-                if (qualityMode == 0)
+                if (m_qualityMode == 0)
                 {
-                    ImGui::SliderFloat("Upscale Ratio##FSR2", &ratio, 1.0, 3.0);
+                    ImGui::SliderFloat("Upscale Ratio##FSR2", &m_customUpscaleRatio, 1.0, 3.0);
                 }
-                else
-                {
-                    ratio = ffxFsr2GetUpscaleRatioFromQualityMode(qualityMode);
-                }
-
-                m_pRenderer->SetTemporalUpscaleRatio(ratio);
 
                 ImGui::SliderFloat("Sharpness##FSR2", &m_sharpness, 0.0f, 1.0f, "%.2f");
+
+                m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio());
             }
         });
 
@@ -112,6 +107,15 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
         });
 
     return fsr2_pass->output;
+}
+
+float FSR2::GetUpscaleRatio() const
+{
+    if (m_qualityMode == 0)
+    {
+        return m_customUpscaleRatio;
+    }
+    return ffxFsr2GetUpscaleRatioFromQualityMode(m_qualityMode);
 }
 
 void FSR2::OnWindowResize(void* window, uint32_t width, uint32_t height)
