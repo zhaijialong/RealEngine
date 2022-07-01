@@ -33,3 +33,4 @@ debug.log
 bin/rendergraph
 *.aps
 bin/RealEngine.lib
+bin/nvngx_dlss.dll

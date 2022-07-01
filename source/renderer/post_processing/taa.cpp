@@ -11,8 +11,8 @@ TAA::TAA(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "TAA PSO");
 }
 
-RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
-    RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height)
+RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle linearDepthRT,
+    RenderGraphHandle velocityRT, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "TAA",
         [&]()
@@ -49,7 +49,6 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
         RenderGraphHandle historyInputRT;
         RenderGraphHandle velocityRT;
         RenderGraphHandle linearDepthRT;
-        RenderGraphHandle prevLinearDepthRT;
 
         RenderGraphHandle outputRT;
         RenderGraphHandle historyOutputRT;
@@ -65,7 +64,6 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
             data.historyInputRT = builder.Read(historyInputRT);
             data.velocityRT = builder.Read(velocityRT);
             data.linearDepthRT = builder.Read(linearDepthRT);
-            data.prevLinearDepthRT = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -99,7 +97,6 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
         uint historyInputRT;
         uint velocityRT;
         uint linearDepthRT;
-        uint prevLinearDepthRT;
 
         uint historyOutputRT;
         uint outputRT;
@@ -112,13 +109,11 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
     if (m_bHistoryInvalid)
     {
         cb.historyInputRT = input->GetHeapIndex();
-        cb.prevLinearDepthRT = linearDepth->GetHeapIndex();
         m_bHistoryInvalid = false;
     }
     else
     {
         cb.historyInputRT = m_pHistoryColorInput->GetSRV()->GetHeapIndex();
-        cb.prevLinearDepthRT = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
     }
     cb.historyOutputRT = m_pHistoryColorOutput->GetUAV()->GetHeapIndex();
     cb.outputRT = output->GetHeapIndex();

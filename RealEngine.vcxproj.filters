@@ -364,6 +364,9 @@
     <ClCompile Include="source\renderer\post_processing\fsr2.cpp">
       <Filter>source\renderer\post_processing</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\post_processing\dlss.cpp">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -1087,6 +1090,9 @@
       <Filter>external\FSR2\dx12</Filter>
     </ClInclude>
     <ClInclude Include="source\renderer\post_processing\fsr2.h">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\post_processing\dlss.h">
       <Filter>source\renderer\post_processing</Filter>
     </ClInclude>
   </ItemGroup>

@@ -28,7 +28,7 @@ It is not supposed to be used in production, and prefers clean design and code o
 * ~~meshlet~~
 * ~~RTX~~
 * ~~a reference pathtracer~~
-* ~~FSR2~~/DLSS/XeSS
+* ~~FSR2~~/~~DLSS~~/XeSS
 * Direct Storage
 * maybe  volumetric cloud/fog, water/ocean simulation, large-scale landscape, or any random things
 
@@ -44,3 +44,9 @@ tested on RX6600(win11, Adrenalin 22.10.01.03)
     ```
 * `denoiser_reproject.hlsl` compiled with `-O0 ` crashes when creating the PSO
 * `HSR - raytrace` pass with async compute results in GPU hang
+
+## optional DLSS support
+
+DLSS is supported under Nvidia's [license](https://github.com/NVIDIA/DLSS/blob/main/LICENSE.txt).
+
+To use DLSS, you need to copy `nvngx_dlss.dll` to the executable folder.

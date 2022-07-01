@@ -8,8 +8,8 @@ class TAA
 public:
     TAA(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
-        RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height);
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle linearDepthRT,
+        RenderGraphHandle velocityRT, uint32_t width, uint32_t height);
 
     bool IsEnabled() const { return m_bEnable; }
 

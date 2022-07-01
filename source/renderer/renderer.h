@@ -34,8 +34,8 @@ enum class TemporalSuperResolution
 {
     None,
     FSR2,
-    //DLSS,
     //XeSS,
+    DLSS,
 
     Max,
 };

@@ -7,6 +7,7 @@
 #include "fxaa.h"
 #include "cas.h"
 #include "fsr2.h"
+#include "dlss.h"
 
 class PostProcessor
 {
@@ -32,4 +33,5 @@ private:
     eastl::unique_ptr<FXAA> m_pFXAA;
     eastl::unique_ptr<CAS> m_pCAS;
     eastl::unique_ptr<FSR2> m_pFSR2;
+    eastl::unique_ptr<DLSS> m_pDLSS;
 };
