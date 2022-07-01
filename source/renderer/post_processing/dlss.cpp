@@ -42,6 +42,7 @@ RenderGraphHandle DLSS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             if (mode == TemporalSuperResolution::DLSS)
             {
+                //todo : Ultra Performance does not work
                 ImGui::Combo("Mode##DLSS", &m_qualityMode, "Performance\0Balanced\0Quality\0Ultra Performance\0\0", 4);
                 ImGui::SliderFloat("Sharpness##DLSS", &m_sharpness, 0.0f, 1.0f, "%.2f");
 
