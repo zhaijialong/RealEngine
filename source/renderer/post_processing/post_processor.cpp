@@ -13,6 +13,7 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
     m_pFXAA = eastl::make_unique<FXAA>(pRenderer);
     m_pCAS = eastl::make_unique<CAS>(pRenderer);
     m_pFSR2 = eastl::make_unique<FSR2>(pRenderer);
+    m_pDLSS = eastl::make_unique<DLSS>(pRenderer);
 }
 
 RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
@@ -32,9 +33,12 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
     case TemporalSuperResolution::FSR2:
         outputHandle = m_pFSR2->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, displayWidth, displayHeight);
         break;
+    case TemporalSuperResolution::DLSS:
+        outputHandle = m_pDLSS->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, displayWidth, displayHeight);
+        break;
     default:
         RE_ASSERT(renderWidth == displayWidth && renderHeight == displayHeight);
-        outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, sceneDepthRT, linearDepthRT, velocityRT, displayWidth, displayHeight);
+        outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, linearDepthRT, velocityRT, displayWidth, displayHeight);
         break;
     }
 
@@ -61,7 +65,13 @@ void PostProcessor::UpdateUpsacleMode()
     GUI("PostProcess", "Temporal Super Resolution", [&]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
-            ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR 2.0\0\0", (int)TemporalSuperResolution::Max);
+            ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR 2.0\0DLSS\0\0", (int)TemporalSuperResolution::Max);
+
+            if (mode == TemporalSuperResolution::DLSS && !m_pDLSS->IsSupported())
+            {
+                mode = TemporalSuperResolution::None;
+            }
+
             m_pRenderer->SetTemporalUpscaleMode(mode);
 
             if (mode == TemporalSuperResolution::None)
