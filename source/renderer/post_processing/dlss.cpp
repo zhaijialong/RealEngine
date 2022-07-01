@@ -39,12 +39,17 @@ RenderGraphHandle DLSS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             if (mode == TemporalSuperResolution::DLSS)
             {
-                //todo : Ultra Performance crashes
-                ImGui::Combo("Mode##DLSS", &m_qualityMode, "Performance (2.0x)\0Balanced (1.7x)\0Quality (1.5x)\0Ultra Performance (3.0x)\0Custom\0", 5);
+                if (ImGui::Combo("Mode##DLSS", &m_qualityMode, "Performance (2.0x)\0Balanced (1.7x)\0Quality (1.5x)\0Ultra Performance (3.0x)\0Custom\0", 5))
+                {
+                    m_needInitializeDlss = true;
+                }
 
                 if (m_qualityMode == 4)
                 {
-                    ImGui::SliderFloat("Upscale Ratio##DLSS", &m_customUpscaleRatio, 1.0, 2.0); //todo : 3.0 crashes
+                    if (ImGui::SliderFloat("Upscale Ratio##DLSS", &m_customUpscaleRatio, 1.0f, 3.0f))
+                    {
+                        m_needInitializeDlss = true;
+                    }
                 }
 
                 ImGui::SliderFloat("Sharpness##DLSS", &m_sharpness, 0.0f, 1.0f, "%.2f");
@@ -185,6 +190,32 @@ void DLSS::ShutdownNGX()
     NVSDK_NGX_D3D12_Shutdown(); //but still lots of "D3D12 WARNING: Live Object" ...
 }
 
+int DLSS::GetQualityMode() const
+{
+    if (m_qualityMode == 4)
+    {
+        float upscaleRatio = m_pRenderer->GetTemporalUpscaleRatio();
+        if (upscaleRatio <= 1.5f)
+        {
+            return NVSDK_NGX_PerfQuality_Value_MaxQuality;
+        }
+        else if (upscaleRatio <= 1.7f)
+        {
+            return NVSDK_NGX_PerfQuality_Value_Balanced;
+        }
+        else if (upscaleRatio <= 2.0f)
+        {
+            return NVSDK_NGX_PerfQuality_Value_MaxPerf;
+        }
+        else
+        {
+            return NVSDK_NGX_PerfQuality_Value_UltraPerformance;
+        }
+    }
+
+    return m_qualityMode;
+}
+
 bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList)
 {
     if (!m_dlssAvailable)
@@ -197,6 +228,8 @@ bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList)
         uint32_t displayWidth = m_pRenderer->GetDisplayWidth();
         uint32_t displayHeight = m_pRenderer->GetDisplayHeight();
 
+        NVSDK_NGX_PerfQuality_Value qualityMode = (NVSDK_NGX_PerfQuality_Value)GetQualityMode();
+
         unsigned int optimalWidth;
         unsigned int optimalHeight;
         unsigned int maxWidth;
@@ -204,15 +237,16 @@ bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList)
         unsigned int minWidth;
         unsigned int minHeight;
         float sharpness;
-        NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, displayWidth, displayHeight, (NVSDK_NGX_PerfQuality_Value)m_qualityMode,
+        NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, displayWidth, displayHeight, qualityMode,
             &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
+        RE_ASSERT(optimalWidth != 0 && optimalHeight != 0);
 
         NVSDK_NGX_DLSS_Create_Params dlssCreateParams = {};
-        dlssCreateParams.Feature.InWidth = displayWidth; // optimalWidth;
-        dlssCreateParams.Feature.InHeight = displayHeight;// optimalHeight;
+        dlssCreateParams.Feature.InWidth = m_pRenderer->GetRenderWidth();
+        dlssCreateParams.Feature.InHeight = m_pRenderer->GetRenderHeight();
         dlssCreateParams.Feature.InTargetWidth = displayWidth;
         dlssCreateParams.Feature.InTargetHeight = displayHeight;
-        dlssCreateParams.Feature.InPerfQualityValue = (NVSDK_NGX_PerfQuality_Value)m_qualityMode;
+        dlssCreateParams.Feature.InPerfQualityValue = qualityMode;
         dlssCreateParams.InFeatureCreateFlags = NVSDK_NGX_DLSS_Feature_Flags_IsHDR |
             NVSDK_NGX_DLSS_Feature_Flags_MVLowRes |
             NVSDK_NGX_DLSS_Feature_Flags_DepthInverted |

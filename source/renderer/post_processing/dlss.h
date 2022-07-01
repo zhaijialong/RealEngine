@@ -26,6 +26,8 @@ private:
     bool InitializeDLSSFeatures(IGfxCommandList* pCommandList);
     void ReleaseDLSSFeatures();
 
+    int GetQualityMode() const;
+
 private:
     Renderer* m_pRenderer = nullptr;
 
