@@ -186,29 +186,26 @@ bool DLSS::InitializeDLSSFeatures(uint32_t displayWidth, uint32_t displayHeight)
         &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
     */
 
-    const unsigned int CreationNodeMask = 1;
-    const unsigned int VisibilityNodeMask = 1;
-    const int DlssCreateFeatureFlags = NVSDK_NGX_DLSS_Feature_Flags_IsHDR |
-        NVSDK_NGX_DLSS_Feature_Flags_MVLowRes |
-        NVSDK_NGX_DLSS_Feature_Flags_DepthInverted | 
-        NVSDK_NGX_DLSS_Feature_Flags_DoSharpening;
-
     NVSDK_NGX_DLSS_Create_Params dlssCreateParams = {};
     dlssCreateParams.Feature.InWidth = displayWidth; // optimalWidth;
     dlssCreateParams.Feature.InHeight = displayHeight;// optimalHeight;
     dlssCreateParams.Feature.InTargetWidth = displayWidth;
     dlssCreateParams.Feature.InTargetHeight = displayHeight;
     dlssCreateParams.Feature.InPerfQualityValue = (NVSDK_NGX_PerfQuality_Value)m_qualityMode;
-    dlssCreateParams.InFeatureCreateFlags = DlssCreateFeatureFlags;
+    dlssCreateParams.InFeatureCreateFlags = NVSDK_NGX_DLSS_Feature_Flags_IsHDR |
+        NVSDK_NGX_DLSS_Feature_Flags_MVLowRes |
+        NVSDK_NGX_DLSS_Feature_Flags_DepthInverted |
+        NVSDK_NGX_DLSS_Feature_Flags_DoSharpening;
 
     m_pDlssInitCommandList->ResetAllocator();
     m_pDlssInitCommandList->Begin();
 
     ID3D12GraphicsCommandList* d3d12CommandList = (ID3D12GraphicsCommandList*)m_pDlssInitCommandList->GetHandle();
     //"D3D12 WARNING: ID3D12Device::CreateCommittedResource: Ignoring InitialState D3D12_RESOURCE_STATE_COPY_DEST. Buffers are effectively created in state D3D12_RESOURCE_STATE_COMMON"
-    NVSDK_NGX_Result result = NGX_D3D12_CREATE_DLSS_EXT(d3d12CommandList, CreationNodeMask, VisibilityNodeMask, &m_dlssFeature, m_ngxParameters, &dlssCreateParams);
+    NVSDK_NGX_Result result = NGX_D3D12_CREATE_DLSS_EXT(d3d12CommandList, 0, 0, &m_dlssFeature, m_ngxParameters, &dlssCreateParams);
     RE_ASSERT(NVSDK_NGX_SUCCEED(result));
 
+    m_pDlssInitCommandList->UavBarrier(nullptr);
     m_pDlssInitCommandList->End();
     m_pDlssInitCommandList->Submit();
 
