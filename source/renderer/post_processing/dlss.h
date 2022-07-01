@@ -34,4 +34,7 @@ private:
     NVSDK_NGX_Handle* m_dlssFeature = nullptr;
     bool m_ngxInitialized = false;
     bool m_dlssAvailable = false;
+
+    int m_qualityMode = 2;// NVSDK_NGX_PerfQuality_Value_MaxQuality;
+    float m_sharpness = 0.5f;
 };
