@@ -437,7 +437,7 @@ bool IsAnisotropyTextureEnabled(uint instanceIndex)
 #endif
 }
     
-float3 GetAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N)
+float3 GetMaterialAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N)
 {
      float3 anisotropicT = T;
     if(IsAnisotropyTextureEnabled(instanceIndex))
@@ -452,6 +452,58 @@ float3 GetAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, float3 B, f
     anisotropicT = normalize(anisotropicT - dot(anisotropicT, N) * N); // reproject on normal plane
 
     return anisotropicT;
+}
+
+bool IsSheenColorTextureEnabled(uint instanceIndex)
+{
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).sheenColorTexture != INVALID_RESOURCE_INDEX;
+#else
+    #if SHEEN_COLOR_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
+}
+
+float3 GetMaterialSheenColor(uint instanceIndex, float2 uv)
+{
+    float3 sheenColor = GetMaterialConstant(instanceIndex).sheenColor;
+    if(IsSheenColorTextureEnabled(instanceIndex))
+    {
+        Texture2D sheenColorTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenColorTexture);
+        UVTransform transform = GetMaterialConstant(instanceIndex).sheenColorTextureTransform;
+        SamplerState linearSampler = GetMaterialSampler();
+        sheenColor *= sheenColorTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xyz; 
+    }
+    return sheenColor;
+}
+
+bool IsSheenRoughnessTextureEnabled(uint instanceIndex)
+{
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).sheenRoughnessTexture != INVALID_RESOURCE_INDEX;
+#else
+    #if SHEEN_ROUGHNESS_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
+}
+
+float GetMaterialSheenRoughness(uint instanceIndex, float2 uv)
+{
+    float sheenRoughness = GetMaterialConstant(instanceIndex).sheenRoughness;
+    if (IsSheenRoughnessTextureEnabled(instanceIndex))
+    {
+        Texture2D sheenRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenRoughnessTexture);
+        UVTransform transform = GetMaterialConstant(instanceIndex).sheenRoughnessTextureTransform;
+        SamplerState linearSampler = GetMaterialSampler();
+        sheenRoughness *= sheenRoughnessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).w;
+    }
+    return sheenRoughness;
 }
 
 void AlphaTest(uint instanceIndex, float2 uv)

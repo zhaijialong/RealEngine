@@ -101,3 +101,39 @@ float3 AnisotropyBRDF(float3 L, float3 V, float3 N, float3 T, float3 diffuse, fl
     
     return DiffuseBRDF(diffuse) * (1.0 - F) + D * Vis * F;
 }
+
+
+// Estevez and Kulla 2017, "Production Friendly Microfacet Sheen BRDF"
+float D_Charlie(float NdotH, float alpha)
+{
+    float invR = 1.0 / alpha;
+    float cos2h = NdotH * NdotH;
+    float sin2h = 1.0 - cos2h;
+    return (2.0 + invR) * pow(sin2h, invR * 0.5) / (2.0 * M_PI);
+}
+
+// Michael Ashikhmin, Simon Premoze, "Distribution-based BRDFs", 2007
+float V_Ashikhmin(float NdotL, float NdotV)
+{
+    return 1.0 / (4.0 * (NdotL + NdotV - NdotL * NdotV));
+}
+
+float3 SheenBRDF(float3 L, float3 V, float3 N, float3 sheenColor, float sheenRoughness)
+{
+    float alpha = sheenRoughness * sheenRoughness;
+    
+    float3 H = normalize(V + L);
+    float NdotH = saturate(dot(N, H));
+    float NdotV = saturate(dot(N, V));
+    float NdotL = saturate(dot(N, L));
+    
+    return sheenColor * D_Charlie(NdotH, alpha) * V_Ashikhmin(NdotL, NdotV);
+}
+
+float SheenE(float cosTheta, float sheenRoughness)
+{
+    Texture2D sheenETexture = ResourceDescriptorHeap[SceneCB.sheenETexture];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    
+    return sheenETexture.SampleLevel(linearSampler, float2(cosTheta, sheenRoughness * sheenRoughness), 0).x;
+}

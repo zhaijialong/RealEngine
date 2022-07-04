@@ -301,6 +301,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.skySpecularIBLTexture = m_pSkyCubeMap->GetSpecularCubeTexture()->GetSRV()->GetHeapIndex();
     sceneCB.skyDiffuseIBLTexture = m_pSkyCubeMap->GetDiffuseCubeTexture()->GetSRV()->GetHeapIndex();
     sceneCB.preintegratedGFTexture = m_pPreintegratedGFTexture->GetSRV()->GetHeapIndex();
+    sceneCB.sheenETexture = m_pSheenETexture->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
     sceneCB.frameIndex = (uint32_t)GetFrameID();
     sceneCB.mipBias = m_mipBias;
@@ -633,6 +634,7 @@ void Renderer::CreateCommonResources()
 
     eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
     m_pPreintegratedGFTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
+    m_pSheenETexture.reset(CreateTexture2D(asset_path + "textures/Sheen_ash_E.dds", false));
 
     m_pSobolSequenceTexture.reset(CreateTexture2D(asset_path + "textures/blue_noise/sobol_256_4d.png", false));
     m_pScramblingRankingTexture1SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_1spp.png", false));

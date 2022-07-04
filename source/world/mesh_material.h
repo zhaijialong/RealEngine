@@ -68,6 +68,12 @@ private:
     Texture2D* m_pAnisotropicTangentTexture = nullptr;
     float m_anisotropy = 0.5f;
 
+    //KHR_materials_sheen
+    Texture2D* m_pSheenColorTexture = nullptr;
+    Texture2D* m_pSheenRoughnessTexture = nullptr;
+    float3 m_sheenColor = float3(0.0f, 0.0f, 0.0f);
+    float m_sheenRoughness = 0.0f;
+
     bool m_bAlphaBlend = false;
     bool m_bSkeletalAnim = false;
     bool m_bFrontFaceCCW = true;

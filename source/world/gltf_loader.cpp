@@ -299,6 +299,18 @@ MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
         material->m_pAnisotropicTangentTexture = ResourceCache::GetInstance()->GetTexture2D(m_anisotropicTexture, false);
     }
 
+    if (gltf_material->has_sheen)
+    {
+        material->m_shadingModel = ShadingModel::Sheen;
+        material->m_pSheenColorTexture = LoadTexture(gltf_material->sheen.sheen_color_texture, true);
+        material->m_sheenColor = float3(gltf_material->sheen.sheen_color_factor);
+        material->m_pSheenRoughnessTexture = LoadTexture(gltf_material->sheen.sheen_roughness_texture, false);
+        material->m_sheenRoughness = gltf_material->sheen.sheen_roughness_factor;
+
+        material->m_materialCB.sheenColorTextureTransform = LoadTextureTransform(gltf_material->sheen.sheen_color_texture);
+        material->m_materialCB.sheenRoughnessTextureTransform = LoadTextureTransform(gltf_material->sheen.sheen_roughness_texture);
+    }
+
     return material;
 }
 

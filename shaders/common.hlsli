@@ -7,6 +7,11 @@ static const float M_PI = 3.141592653f;
 static const uint INVALID_RESOURCE_INDEX = 0xFFFFFFFF;
 static const uint INVALID_ADDRESS = 0xFFFFFFFF;
 
+float max3(float3 v)
+{
+    return max(max(v.x, v.y), v.z);
+}
+
 template<typename T>
 T LinearToSrgbChannel(T color)
 {

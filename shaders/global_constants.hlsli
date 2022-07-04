@@ -73,6 +73,8 @@ struct SceneConstant
     uint skyCubeTexture;
     uint skySpecularIBLTexture;
     uint skyDiffuseIBLTexture;
+    
+    uint sheenETexture;
 };
 
 struct CullingData
