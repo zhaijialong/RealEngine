@@ -1,5 +1,15 @@
 #pragma once
 
+struct UVTransform
+{
+    float2 offset;
+    float2 scale;
+    
+    float rotation;
+    uint bEnable;
+    float2 _padding;
+};
+
 struct ModelMaterialConstant
 {
     uint albedoTexture;
@@ -27,6 +37,15 @@ struct ModelMaterialConstant
     float anisotropy;
     uint anisotropyTexture;
     float2 _padding;
+    
+    UVTransform albedoTextureTransform;
+    UVTransform metallicRoughnessTextureTransform;
+    UVTransform normalTextureTransform;
+    UVTransform emissiveTextureTransform;
+    UVTransform aoTextureTransform;
+    UVTransform diffuseTextureTransform;
+    UVTransform specularGlossinessTextureTransform;
+    UVTransform anisotropyTextureTransform;
 
     uint bPbrMetallicRoughness;
     uint bPbrSpecularGlossiness;

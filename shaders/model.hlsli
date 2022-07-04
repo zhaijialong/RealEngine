@@ -173,6 +173,20 @@ SamplerState GetMaterialSampler()
     return SamplerDescriptorHeap[SceneCB.aniso8xSampler];
 }
 
+float2 ApplyUVTransform(float2 uv, UVTransform transform)
+{
+    if(transform.bEnable)
+    {
+        float3x3 translation = float3x3(1, 0, 0, 0, 1, 0, transform.offset.x, transform.offset.y, 1);
+        float3x3 rotation = float3x3(cos(transform.rotation), sin(transform.rotation), 0, -sin(transform.rotation), cos(transform.rotation), 0, 0, 0, 1);
+        float3x3 scale = float3x3(transform.scale.x, 0, 0, 0, transform.scale.y, 0, 0, 0, 1);
+
+        return mul(mul(mul(float3(uv, 1), scale), rotation), translation).xy;
+    }
+
+    return uv;
+}
+
 bool IsAlbedoTextureEnabled(uint instanceIndex)
 {
 #ifdef DYNAMIC_MATERIAL_SWITCH
@@ -227,7 +241,8 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv)
     if(IsAlbedoTextureEnabled(instanceIndex))
     {
         Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).albedoTexture);
-        float4 albedo = albedoTexture.Sample(linearSampler, uv);
+        UVTransform transform = GetMaterialConstant(instanceIndex).albedoTextureTransform;
+        float4 albedo = albedoTexture.Sample(linearSampler, ApplyUVTransform(uv, transform));
         pbrMetallicRoughness.albedo *= albedo.xyz;
         pbrMetallicRoughness.alpha = albedo.w;
     }
@@ -235,7 +250,8 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv)
     if(IsMetallicRoughnessTextureEnabled(instanceIndex))
     {
         Texture2D metallicRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).metallicRoughnessTexture);
-        float4 metallicRoughness = metallicRoughnessTexture.Sample(linearSampler, uv);
+        UVTransform transform = GetMaterialConstant(instanceIndex).metallicRoughnessTextureTransform;
+        float4 metallicRoughness = metallicRoughnessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform));
         pbrMetallicRoughness.metallic *= metallicRoughness.b;
         pbrMetallicRoughness.roughness *= metallicRoughness.g;
 
@@ -287,7 +303,8 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 u
     if(IsDiffuseTextureEnabled(instanceIndex))
     {
         Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).diffuseTexture);
-        float4 diffuse = diffuseTexture.Sample(linearSampler, uv);
+        UVTransform transform = GetMaterialConstant(instanceIndex).diffuseTextureTransform;
+        float4 diffuse = diffuseTexture.Sample(linearSampler, ApplyUVTransform(uv, transform));
         pbrSpecularGlossiness.diffuse *= diffuse.xyz;
         pbrSpecularGlossiness.alpha = diffuse.w;
     }
@@ -295,7 +312,8 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 u
     if(IsSpecularGlossinessTextureEnabled(instanceIndex))
     {
         Texture2D specularGlossinessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).specularGlossinessTexture);
-        float4 specularGlossiness = specularGlossinessTexture.Sample(linearSampler, uv);
+        UVTransform transform = GetMaterialConstant(instanceIndex).specularGlossinessTextureTransform;
+        float4 specularGlossiness = specularGlossinessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform));
         pbrSpecularGlossiness.specular *= specularGlossiness.xyz;
         pbrSpecularGlossiness.glossiness *= specularGlossiness.w;
     }
@@ -332,9 +350,10 @@ bool IsRGNormalTextureEnabled(uint instanceIndex)
 float3 GetMaterialNormal(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N)
 {
     Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).normalTexture);
+    UVTransform transform = GetMaterialConstant(instanceIndex).normalTextureTransform;
     SamplerState linearSampler = GetMaterialSampler();
     
-    float3 normal = normalTexture.Sample(linearSampler, uv).xyz;
+    float3 normal = normalTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xyz;
     
     if(IsRGNormalTextureEnabled(instanceIndex))
     {
@@ -371,8 +390,9 @@ float GetMaterialAO(uint instanceIndex, float2 uv)
     if(IsAOTextureEnabled(instanceIndex) && !IsAOMetallicRoughnessTextureEnabled(instanceIndex))
     {
         Texture2D aoTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).aoTexture);
+        UVTransform transform = GetMaterialConstant(instanceIndex).aoTextureTransform;
         SamplerState linearSampler = GetMaterialSampler();
-        ao = aoTexture.Sample(linearSampler, uv).x;
+        ao = aoTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).x;
     }
 
     return ao;
@@ -397,8 +417,9 @@ float3 GetMaterialEmissive(uint instanceIndex, float2 uv)
     if(IsEmissiveTextureEnabled(instanceIndex))
     {
         Texture2D emissiveTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).emissiveTexture);
+        UVTransform transform = GetMaterialConstant(instanceIndex).emissiveTextureTransform;
         SamplerState linearSampler = GetMaterialSampler();
-        emissive *= emissiveTexture.Sample(linearSampler, uv).xyz;
+        emissive *= emissiveTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xyz;
     }
     return emissive;
 }
@@ -422,8 +443,9 @@ float3 GetAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, float3 B, f
     if(IsAnisotropyTextureEnabled(instanceIndex))
     {
         Texture2D anisotropyTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).anisotropyTexture);
+        UVTransform transform = GetMaterialConstant(instanceIndex).anisotropyTextureTransform;
         SamplerState linearSampler = GetMaterialSampler();
-        float2 anisotropy = anisotropyTexture.Sample(linearSampler, uv).xy * 2.0 - 1.0;
+        float2 anisotropy = anisotropyTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xy * 2.0 - 1.0;
         anisotropicT = T * anisotropy.x + B * anisotropy.y;
     }
 
