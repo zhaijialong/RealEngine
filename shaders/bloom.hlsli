@@ -11,6 +11,11 @@ float3 Sample(Texture2D texture, float2 uv, float threshold)
     float3 color = texture.SampleLevel(linearSampler, uv, 0).xyz;
 
 #if FIRST_PASS
+    if(any(isnan(color)))
+    {
+        return 0.0;
+    }
+
     float luminance = Luminance(color);
     float a = saturate(luminance - threshold);
     color *= a * a;
