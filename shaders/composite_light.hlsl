@@ -44,7 +44,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 emissive = emissiveRT[pos];
     ShadingModel shadingModel = DecodeShadingModel(specularRT[pos].w);
     
-    float3 N = OctNormalDecode(normal.xyz);
+    float3 N = DecodeNormal(normal.xyz);
     float roughness = normal.w;
     float ao = diffuse.w;
     
@@ -109,7 +109,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 #elif OUTPUT_CUSTOM_DATA
     if(shadingModel == ShadingModel::Anisotropy)
     {
-        float3 T = OctNormalDecode(customDataRT[pos].xyz);
+        float3 T = DecodeNormal(customDataRT[pos].xyz);
         outTexture[dispatchThreadID.xy] = float4(T * 0.5 + 0.5, 1.0);
     }
     else

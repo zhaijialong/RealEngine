@@ -32,7 +32,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 worldPos = GetWorldPosition(pos, depth);
 
     Texture2D normalRT = ResourceDescriptorHeap[c_normalSRV];
-    float3 N = OctNormalDecode(normalRT[pos].xyz);
+    float3 N = DecodeNormal(normalRT[pos].xyz);
 
     #define SPP 1
     

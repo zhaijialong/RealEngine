@@ -41,7 +41,7 @@ bool ValidateHit(ssrt::HitInfo hitInfo, float2 uv, float3 ray_direction)
 
     // We check if we hit the surface from the back, these should be rejected.
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
-    float3 hit_normal = OctNormalDecode(normalRT[screenPos].xyz);
+    float3 hit_normal = DecodeNormal(normalRT[screenPos].xyz);
     if (dot(hit_normal, ray_direction) > 0)
     {
         return false;
@@ -88,7 +88,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     float depth = depthRT[coords];
     float3 position = GetWorldPosition(coords, depth);
     float3 V = normalize(CameraCB.cameraPos - position);
-    float3 N = OctNormalDecode(normalRT[coords].xyz);
+    float3 N = DecodeNormal(normalRT[coords].xyz);
     float roughness = normalRT[coords].w;
 
     BNDS<1> bnds = BNDS<1>::Create(coords, SceneCB.renderSize);

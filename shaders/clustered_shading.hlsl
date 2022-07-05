@@ -32,7 +32,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 diffuse = diffuseRT[pos].xyz;
     float3 specular = specularRT[pos].xyz;
     ShadingModel shadingModel = DecodeShadingModel(specularRT[pos].w);
-    float3 N = OctNormalDecode(normalRT[pos].xyz);
+    float3 N = DecodeNormal(normalRT[pos].xyz);
     float roughness = normalRT[pos].w;
     float4 customData = customDataRT[pos];
 

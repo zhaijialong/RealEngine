@@ -38,7 +38,7 @@ float FFX_DNSR_Shadows_ReadPreviousLinearDepth(int2 p)
 float3 FFX_DNSR_Shadows_ReadNormals(int2 p)
 {
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
-    return OctNormalDecode(normalTexture[p].xyz);
+    return DecodeNormal(normalTexture[p].xyz);
 }
 
 float2 FFX_DNSR_Shadows_ReadVelocity(int2 p)

@@ -23,7 +23,7 @@ float FFX_DNSR_Shadows_ReadDepth(int2 p)
 float16_t3 FFX_DNSR_Shadows_ReadNormals(int2 p)
 {
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
-    return (float16_t3)OctNormalDecode(normalTexture[p].xyz);
+    return (float16_t3)DecodeNormal(normalTexture[p].xyz);
 }
 
 bool FFX_DNSR_Shadows_IsShadowReciever(uint2 p)

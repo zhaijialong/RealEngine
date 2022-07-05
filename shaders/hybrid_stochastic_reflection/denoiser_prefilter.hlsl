@@ -40,7 +40,7 @@ void FFX_DNSR_Reflections_LoadNeighborhood(
 
     radiance = (float16_t3)radianceTexture[pixel_coordinate].xyz;
     variance = (float16_t)varianceTexture[pixel_coordinate].x;
-    normal = (float16_t3)OctNormalDecode(normalTexture[pixel_coordinate].xyz);
+    normal = (float16_t3)DecodeNormal(normalTexture[pixel_coordinate].xyz);
     depth = (float16_t)linearDepthTexture[pixel_coordinate].x;
 }
 

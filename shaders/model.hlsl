@@ -83,7 +83,7 @@ GBufferOutput ps_main(model::VertexOutput input
     GBufferOutput output;
     output.diffuseRT = float4(diffuse, ao);
     output.specularRT = float4(specular, EncodeShadingModel(shadingModel));
-    output.normalRT = float4(OctNormalEncode(N), roughness);
+    output.normalRT = float4(EncodeNormal(N), roughness);
     output.emissiveRT = emissive;
     
     switch (shadingModel)

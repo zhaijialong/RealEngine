@@ -61,38 +61,46 @@ float2 DecodeRGB8Unorm(float3 v)
     uint2 int12 = uint2(int8.x | ((int8.z & 0xF0) << 4), int8.y | ((int8.z & 0xF) << 8));
     return int12 / 4095.0;
 }
- 
-float3 OctNormalEncode(float3 n)
+
+float2 OctEncode(float3 n)
 {
     n /= (abs(n.x) + abs(n.y) + abs(n.z));
     //n.xy = n.z >= 0.0 ? n.xy : (1.0 - abs(n.yx)) * (n.xy >= 0.0 ? 1.0 : -1.0);
     n.xy = n.z >= 0.0 ? n.xy : (1.0 - abs(n.yx)) * lerp(-1.0, 1.0, n.xy >= 0.0);
-    
-    n.xy = n.xy * 0.5 + 0.5;
-    return EncodeRGB8Unorm(n.xy);
+
+    return n.xy;
 }
- 
+
 // https://twitter.com/Stubbesaurus/status/937994790553227264
-float3 OctNormalDecode(float3 f)
+float3 OctDecode(float2 f)
 {
-    float2 e = DecodeRGB8Unorm(f);
-    e = e * 2.0 - 1.0;
- 
-    float3 n = float3(e.x, e.y, 1.0 - abs(e.x) - abs(e.y));
+    float3 n = float3(f.x, f.y, 1.0 - abs(f.x) - abs(f.y));
     float t = saturate(-n.z);
     //n.xy += n.xy >= 0.0 ? -t : t;
     n.xy += lerp(t, -t, n.xy >= 0.0);
     return normalize(n);
 }
+ 
+float3 EncodeNormal(float3 n)
+{
+    float2 v = OctEncode(n) * 0.5 + 0.5;
+    return EncodeRGB8Unorm(v);
+}
+
+float3 DecodeNormal(float3 f)
+{
+    float2 v = DecodeRGB8Unorm(f) * 2.0 - 1.0;
+    return OctDecode(v);
+}
 
 float4 EncodeAnisotropy(float3 T, float anisotropy)
 {
-    return float4(OctNormalEncode(T), anisotropy * 0.5 + 0.5);
+    return float4(EncodeNormal(T), anisotropy * 0.5 + 0.5);
 }
 
 void DecodeAnisotropy(float4 data, out float3 T, out float anisotropy)
 {
-    T = OctNormalDecode(data.xyz);
+    T = DecodeNormal(data.xyz);
     anisotropy = data.w * 2.0 - 1.0;
 }
 

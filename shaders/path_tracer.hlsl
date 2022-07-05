@@ -58,7 +58,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 diffuse = diffuseRT[dispatchThreadID.xy].xyz;
     float3 specular = specularRT[dispatchThreadID.xy].xyz;
-    float3 N = OctNormalDecode(normalRT[dispatchThreadID.xy].xyz);
+    float3 N = DecodeNormal(normalRT[dispatchThreadID.xy].xyz);
     float roughness = normalRT[dispatchThreadID.xy].w;
     float3 emissive = emissiveRT[dispatchThreadID.xy];
 
