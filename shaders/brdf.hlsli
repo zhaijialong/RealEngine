@@ -2,6 +2,8 @@
 
 #include "common.hlsli"
 
+#define MIN_ROUGHNESS (0.03)
+
 float3 DiffuseBRDF(float3 diffuse)
 {
     return diffuse / M_PI;
@@ -65,7 +67,7 @@ float3 F_Schlick(float3 V, float3 H, float3 F0)
 
 float3 SpecularBRDF(float3 N, float3 V, float3 L, float3 specular, float roughness, out float3 F)
 {
-    roughness = max(roughness, 0.03);
+    roughness = max(roughness, MIN_ROUGHNESS);
 
     float a = roughness * roughness;
     float3 H = normalize(V + L);
@@ -89,8 +91,8 @@ float3 DefaultBRDF(float3 L, float3 V, float3 N, float3 diffuse, float3 specular
 float3 AnisotropyBRDF(float3 L, float3 V, float3 N, float3 T, float3 diffuse, float3 specular, float roughness, float anisotropy)
 {
     float a = roughness * roughness;
-    float ax = max(a * (1.0 + anisotropy), 0.03);
-    float ay = max(a * (1.0 - anisotropy), 0.03);
+    float ax = max(a * (1.0 + anisotropy), MIN_ROUGHNESS);
+    float ay = max(a * (1.0 - anisotropy), MIN_ROUGHNESS);
     
     float3 B = cross(N, T);
     float3 H = normalize(V + L);    
@@ -120,6 +122,7 @@ float V_Ashikhmin(float NdotL, float NdotV)
 
 float3 SheenBRDF(float3 L, float3 V, float3 N, float3 sheenColor, float sheenRoughness)
 {
+    sheenRoughness = max(sheenRoughness, MIN_ROUGHNESS);
     float alpha = sheenRoughness * sheenRoughness;
     
     float3 H = normalize(V + L);
