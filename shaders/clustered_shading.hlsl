@@ -60,12 +60,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
             float3 sheenColor = customData.xyz;
             float sheenRoughness = customData.w;
             float3 sheenBRDF = SheenBRDF(SceneCB.lightDir, V, N, sheenColor, sheenRoughness);
-            
-            float NdotV = saturate(dot(N, V));
-            float NdotL = saturate(dot(N, SceneCB.lightDir));
-            float sheenAlbedoScaling = min(1.0 - max3(sheenColor) * SheenE(NdotV, sheenRoughness), 1.0 - max3(sheenColor) * SheenE(NdotL, sheenRoughness));
+            float sheenScaling = SheenScaling(SceneCB.lightDir, V, N, sheenColor, sheenRoughness);
 
-            BRDF = sheenBRDF + sheenAlbedoScaling * DefaultBRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness);
+            BRDF = sheenBRDF + sheenScaling * DefaultBRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness);
             break;
         }
         case ShadingModel::Default:
