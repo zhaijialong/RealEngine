@@ -311,6 +311,20 @@ MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
         material->m_materialCB.sheenRoughnessTextureTransform = LoadTextureTransform(gltf_material->sheen.sheen_roughness_texture);
     }
 
+    if (gltf_material->has_clearcoat)
+    {
+        material->m_shadingModel = ShadingModel::ClearCoat;
+        material->m_pClearCoatTexture = LoadTexture(gltf_material->clearcoat.clearcoat_normal_texture, false);
+        material->m_pClearCoatRoughnessTexture = LoadTexture(gltf_material->clearcoat.clearcoat_roughness_texture, false);
+        material->m_pClearCoatNormalTexture = LoadTexture(gltf_material->clearcoat.clearcoat_normal_texture, false);
+        material->m_clearCoat = gltf_material->clearcoat.clearcoat_factor;
+        material->m_clearCoatRoughness = gltf_material->clearcoat.clearcoat_roughness_factor;
+
+        material->m_materialCB.clearCoatTextureTransform = LoadTextureTransform(gltf_material->clearcoat.clearcoat_texture);
+        material->m_materialCB.clearCoatRoughnessTextureTransform = LoadTextureTransform(gltf_material->clearcoat.clearcoat_roughness_texture);
+        material->m_materialCB.clearCoatNormalTextureTransform = LoadTextureTransform(gltf_material->clearcoat.clearcoat_normal_texture);
+    }
+
     return material;
 }
 

@@ -30,6 +30,9 @@ public:
     bool IsVertexSkinned() const { return m_bSkeletalAnim; }
 
 private:
+    void AddMaterialDefines(eastl::vector<eastl::string>& defines);
+
+private:
     eastl::string m_name;
     ModelMaterialConstant m_materialCB = {};
 
@@ -73,6 +76,13 @@ private:
     Texture2D* m_pSheenRoughnessTexture = nullptr;
     float3 m_sheenColor = float3(0.0f, 0.0f, 0.0f);
     float m_sheenRoughness = 0.0f;
+
+    //KHR_materials_clearcoat
+    Texture2D* m_pClearCoatTexture = nullptr;
+    Texture2D* m_pClearCoatRoughnessTexture = nullptr;
+    Texture2D* m_pClearCoatNormalTexture = nullptr;
+    float m_clearCoat = 0.0f;
+    float m_clearCoatRoughness = 0.0f;
 
     bool m_bAlphaBlend = false;
     bool m_bSkeletalAnim = false;

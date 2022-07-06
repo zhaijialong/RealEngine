@@ -97,9 +97,19 @@ GBufferOutput ps_main(model::VertexOutput input
         }
         case ShadingModel::Sheen:
         {
-            float3 sheenColor = model::GetMaterialSheenColor(instanceIndex, input.uv);
-            float sheenRoughness = model::GetMaterialSheenRoughness(instanceIndex, input.uv);
-            output.customDataRT = float4(sheenColor, sheenRoughness);
+            output.customDataRT = model::GetMaterialSheenColorAndRoughness(instanceIndex, input.uv);
+            break;
+        }
+        case ShadingModel::ClearCoat:
+        {
+            float2 clearCoatAndRoughness = model::GetMaterialClearCoatAndRoughness(instanceIndex, input.uv);
+#if CLEAR_COAT_NORMAL_TEXTURE
+            float3 clearCoatNormal =  model::GetMaterialClearCoatNormal(instanceIndex, input.uv, input.tangent, input.bitangent, input.normal);
+#else
+            float3 clearCoatNormal = input.normal;
+#endif
+            output.normalRT = float4(EncodeNormal(clearCoatNormal), clearCoatAndRoughness.g);
+            output.customDataRT = float4(clearCoatAndRoughness.x, roughness, EncodeNormalLQ(N));
             break;
         }
         default:

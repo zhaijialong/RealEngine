@@ -467,17 +467,18 @@ bool IsSheenColorTextureEnabled(uint instanceIndex)
 #endif
 }
 
-float3 GetMaterialSheenColor(uint instanceIndex, float2 uv)
+bool IsSheenColorRoughnessTextureEnabled(uint instanceIndex)
 {
-    float3 sheenColor = GetMaterialConstant(instanceIndex).sheenColor;
-    if(IsSheenColorTextureEnabled(instanceIndex))
-    {
-        Texture2D sheenColorTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenColorTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).sheenColorTextureTransform;
-        SamplerState linearSampler = GetMaterialSampler();
-        sheenColor *= sheenColorTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xyz; 
-    }
-    return sheenColor;
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).sheenColorTexture != INVALID_RESOURCE_INDEX &&
+        GetMaterialConstant(instanceIndex).sheenColorTexture == GetMaterialConstant(instanceIndex).sheenRoughnessTexture;
+#else
+    #if SHEEN_COLOR_ROUGHNESS_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
 }
 
 bool IsSheenRoughnessTextureEnabled(uint instanceIndex)
@@ -493,17 +494,153 @@ bool IsSheenRoughnessTextureEnabled(uint instanceIndex)
 #endif
 }
 
-float GetMaterialSheenRoughness(uint instanceIndex, float2 uv)
+float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv)
 {
+    float3 sheenColor = GetMaterialConstant(instanceIndex).sheenColor;
     float sheenRoughness = GetMaterialConstant(instanceIndex).sheenRoughness;
-    if (IsSheenRoughnessTextureEnabled(instanceIndex))
+    
+    if(IsSheenColorTextureEnabled(instanceIndex))
+    {
+        Texture2D sheenColorTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenColorTexture);
+        UVTransform transform = GetMaterialConstant(instanceIndex).sheenColorTextureTransform;
+        SamplerState linearSampler = GetMaterialSampler();
+        float4 sheenTexture = sheenColorTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)); 
+        sheenColor *= sheenTexture.xyz;
+            
+        if (IsSheenColorRoughnessTextureEnabled(instanceIndex))
+        {
+            sheenRoughness *= sheenTexture.w;
+        }
+    }
+        
+    if (IsSheenRoughnessTextureEnabled(instanceIndex) && !IsSheenColorRoughnessTextureEnabled(instanceIndex))
     {
         Texture2D sheenRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenRoughnessTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).sheenRoughnessTextureTransform;
         SamplerState linearSampler = GetMaterialSampler();
         sheenRoughness *= sheenRoughnessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).w;
     }
-    return sheenRoughness;
+
+    return float4(sheenColor, sheenRoughness);
+}
+
+bool IsClearCoatTextureEnabled(uint instanceIndex)
+{
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).clearCoatTexture != INVALID_RESOURCE_INDEX;
+#else
+    #if CLEAR_COAT_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
+}
+
+bool IsClearCoatRoughnessCombinedTextureEnabled(uint instanceIndex)
+{
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).clearCoatTexture != INVALID_RESOURCE_INDEX &&
+        GetMaterialConstant(instanceIndex).clearCoatTexture == GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture;
+#else
+    #if CLEAR_COAT_ROUGHNESS_COMBINED_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
+}
+
+bool IsClearCoatRoughnessTextureEnabled(uint instanceIndex)
+{
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture != INVALID_RESOURCE_INDEX;
+#else
+    #if CLEAR_COAT_ROUGHNESS_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
+}
+
+float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv)
+{
+    float clearCoat = GetMaterialConstant(instanceIndex).clearCoat;
+    float clearCoatRoughness = GetMaterialConstant(instanceIndex).clearCoatRoughness;
+
+    if(IsClearCoatTextureEnabled(instanceIndex))
+    {
+        Texture2D clearCoatTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatTexture);
+        UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatTextureTransform;
+        SamplerState linearSampler = GetMaterialSampler();
+        float4 clearCoatTex = clearCoatTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)); 
+        clearCoat *= clearCoatTex.r;
+            
+        if (IsClearCoatRoughnessCombinedTextureEnabled(instanceIndex))
+        {
+            clearCoatRoughness *= clearCoatTex.g;
+        }
+    }
+
+    if (IsClearCoatRoughnessTextureEnabled(instanceIndex) && !IsClearCoatRoughnessCombinedTextureEnabled(instanceIndex))
+    {
+        Texture2D clearCoatRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture);
+        UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatRoughnessTextureTransform;
+        SamplerState linearSampler = GetMaterialSampler();
+        clearCoatRoughness *= clearCoatRoughnessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).g;
+    }
+        
+    return float2(clearCoat, clearCoatRoughness);
+}
+
+bool IsClearCoatNormalTextureEnabled(uint instanceIndex)
+{
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).clearCoatNormalTexture != INVALID_RESOURCE_INDEX;
+#else
+    #if CLEAR_COAT_NORMAL_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
+}
+
+bool IsRGClearCoatNormalTextureEnabled(uint instanceIndex)
+{
+#ifdef DYNAMIC_MATERIAL_SWITCH
+    return GetMaterialConstant(instanceIndex).bRGClearCoatNormalTexture;
+#else
+    #if RG_CLEAR_COAT_NORMAL_TEXTURE
+        return true;
+    #else
+        return false;
+    #endif
+#endif
+}
+
+float3 GetMaterialClearCoatNormal(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N)
+{
+    Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatNormalTexture);
+    UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatNormalTextureTransform;
+    SamplerState linearSampler = GetMaterialSampler();
+    
+    float3 normal = normalTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xyz;
+    
+    if(IsRGClearCoatNormalTextureEnabled(instanceIndex))
+    {
+        normal.xy = normal.xy * 2.0 - 1.0;
+        normal.z = sqrt(1.0 - normal.x * normal.x - normal.y * normal.y);
+    }
+    else
+    {
+        normal = normal * 2.0 - 1.0;
+    }
+
+    N = normalize(normal.x * T + normal.y * B + normal.z * N);  
+
+    return N;
 }
 
 void AlphaTest(uint instanceIndex, float2 uv)

@@ -42,6 +42,15 @@ struct ModelMaterialConstant
     uint sheenColorTexture;
     float3 sheenColor;
     
+    uint clearCoatTexture;
+    float clearCoat;
+    uint clearCoatRoughnessTexture;
+    float clearCoatRoughness;
+    
+    uint clearCoatNormalTexture;
+    uint bRGClearCoatNormalTexture;
+    uint3 _padding;
+
     UVTransform albedoTextureTransform;
     UVTransform metallicRoughnessTextureTransform;
     UVTransform normalTextureTransform;
@@ -52,6 +61,9 @@ struct ModelMaterialConstant
     UVTransform anisotropyTextureTransform;
     UVTransform sheenColorTextureTransform;
     UVTransform sheenRoughnessTextureTransform;
+    UVTransform clearCoatTextureTransform;
+    UVTransform clearCoatRoughnessTextureTransform;
+    UVTransform clearCoatNormalTextureTransform;
 
     uint bPbrMetallicRoughness;
     uint bPbrSpecularGlossiness;

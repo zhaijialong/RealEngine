@@ -112,6 +112,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         float3 T = DecodeNormal(customDataRT[pos].xyz);
         outTexture[dispatchThreadID.xy] = float4(T * 0.5 + 0.5, 1.0);
     }
+    else if(shadingModel == ShadingModel::ClearCoat)
+    {
+        outTexture[dispatchThreadID.xy] = float4(customDataRT[pos].xxx, 1);
+    }
     else
     {
         outTexture[dispatchThreadID.xy] = customDataRT[pos];

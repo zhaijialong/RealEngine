@@ -93,6 +93,16 @@ float3 DecodeNormal(float3 f)
     return OctDecode(v);
 }
 
+float2 EncodeNormalLQ(float3 n)
+{
+    return OctEncode(n) * 0.5 + 0.5;
+}
+
+float3 DecodeNormalLQ(float2 f)
+{
+    return OctDecode(f * 2.0 - 1.0);
+}
+
 float4 EncodeAnisotropy(float3 T, float anisotropy)
 {
     return float4(EncodeNormal(T), anisotropy * 0.5 + 0.5);

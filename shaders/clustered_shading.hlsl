@@ -65,6 +65,23 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
             BRDF = sheenBRDF + sheenScaling * DefaultBRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness);
             break;
         }
+        case ShadingModel::ClearCoat:
+        {
+            float clearCoat = customData.x;
+            float clearCoatRoughness = roughness;
+            float3 clearCoatNormal = N;
+            float3 clearCoatSpecular = float3(0.04, 0.04, 0.04);
+            
+            float3 clearCoatF;
+            float3 clearCoatBRDF = SpecularBRDF(clearCoatNormal, V, SceneCB.lightDir, clearCoatSpecular, clearCoatRoughness, clearCoatF);
+
+            float baseRoughness = customData.y;
+            float3 baseNormal = DecodeNormalLQ(customData.zw);
+            float3 baseBRDF = DefaultBRDF(SceneCB.lightDir, V, baseNormal, diffuse, specular, baseRoughness);
+            
+            BRDF = baseBRDF * (1.0 - clearCoat * clearCoatF) + clearCoatBRDF * clearCoat;
+            break;
+        }
         case ShadingModel::Default:
         default:
             BRDF = DefaultBRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness);
