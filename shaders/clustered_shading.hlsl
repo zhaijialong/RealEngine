@@ -44,53 +44,63 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D<float> shadowRT = ResourceDescriptorHeap[c_shadowRT];
     float visibility = shadowRT[pos.xy];
     
-    float3 BRDF;
-    switch (shadingModel)
-    {
-        case ShadingModel::Anisotropy:
-        {
-            float3 T;
-            float anisotropy;
-            DecodeAnisotropy(customData, T, anisotropy);
-            BRDF = AnisotropyBRDF(SceneCB.lightDir, V, N, T, diffuse, specular, roughness, anisotropy);
-            break;
-        }
-        case ShadingModel::Sheen:
-        {
-            float3 sheenColor = customData.xyz;
-            float sheenRoughness = customData.w;
-            float3 sheenBRDF = SheenBRDF(SceneCB.lightDir, V, N, sheenColor, sheenRoughness);
-            float sheenScaling = SheenScaling(SceneCB.lightDir, V, N, sheenColor, sheenRoughness);
+    float3 direct_light = 0.0;
 
-            BRDF = sheenBRDF + sheenScaling * DefaultBRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness);
-            break;
-        }
-        case ShadingModel::ClearCoat:
+    if(visibility > 0)
+    {
+        float NdotL = saturate(dot(N, SceneCB.lightDir));
+        
+        switch (shadingModel)
         {
-            float clearCoat;
-            float baseRoughness;
-            float3 baseNormal;
-            DecodeClearCoat(customData, clearCoat, baseRoughness, baseNormal);
+            case ShadingModel::Anisotropy:
+            {
+                float3 T;
+                float anisotropy;
+                DecodeAnisotropy(customData, T, anisotropy);
+                float3 brdf = AnisotropyBRDF(SceneCB.lightDir, V, N, T, diffuse, specular, roughness, anisotropy);
+                direct_light = brdf * visibility * SceneCB.lightColor * NdotL;
+                break;
+            }
+            case ShadingModel::Sheen:
+            {
+                float3 sheenColor = customData.xyz;
+                float sheenRoughness = customData.w;
+                float3 sheenBRDF = SheenBRDF(SceneCB.lightDir, V, N, sheenColor, sheenRoughness);
+                float sheenScaling = SheenScaling(V, N, sheenColor, sheenRoughness);
+
+                float3 brdf = sheenBRDF + sheenScaling * DefaultBRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness);
+                direct_light = brdf * visibility * SceneCB.lightColor * NdotL;
+                break;
+            }
+            case ShadingModel::ClearCoat:
+            {
+                float clearCoat;
+                float baseRoughness;
+                float3 baseNormal;
+                DecodeClearCoat(customData, clearCoat, baseRoughness, baseNormal);
             
-            float clearCoatRoughness = roughness;
-            float3 clearCoatNormal = N;
-            float3 clearCoatSpecular = float3(0.04, 0.04, 0.04);
+                float clearCoatRoughness = roughness;
+                float3 clearCoatNormal = N;
+                float3 clearCoatSpecular = float3(0.04, 0.04, 0.04);
             
-            float3 clearCoatF;
-            float3 clearCoatBRDF = SpecularBRDF(clearCoatNormal, V, SceneCB.lightDir, clearCoatSpecular, clearCoatRoughness, clearCoatF);
-            float3 baseBRDF = DefaultBRDF(SceneCB.lightDir, V, baseNormal, diffuse, specular, baseRoughness);
+                float3 clearCoatF;
+                float3 clearCoatBRDF = SpecularBRDF(clearCoatNormal, V, SceneCB.lightDir, clearCoatSpecular, clearCoatRoughness, clearCoatF);
+                float3 baseBRDF = DefaultBRDF(SceneCB.lightDir, V, baseNormal, diffuse, specular, baseRoughness);
             
-            BRDF = baseBRDF * (1.0 - clearCoat * clearCoatF) + clearCoatBRDF * clearCoat;
-            break;
+                float baseNdotL = saturate(dot(baseNormal, SceneCB.lightDir));
+                float3 brdf = baseBRDF * (1.0 - clearCoat * clearCoatF) * baseNdotL + clearCoatBRDF * clearCoat * NdotL;
+                direct_light = brdf * visibility * SceneCB.lightColor;
+                break;
+            }
+            case ShadingModel::Default:
+            default:
+            {
+                float3 brdf = DefaultBRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness);
+                direct_light = brdf * visibility * SceneCB.lightColor * NdotL;
+                break;
+            }
         }
-        case ShadingModel::Default:
-        default:
-            BRDF = DefaultBRDF(SceneCB.lightDir, V, N, diffuse, specular, roughness);
-            break;
     }
-    
-    float NdotL = saturate(dot(N, SceneCB.lightDir));
-    float3 direct_light = BRDF * visibility * SceneCB.lightColor * NdotL;
 
     RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_outputRT];
     outTexture[pos] = float4(direct_light, 1.0);

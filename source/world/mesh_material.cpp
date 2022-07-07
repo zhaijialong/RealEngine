@@ -264,6 +264,14 @@ void MeshMaterial::OnGui()
             case ShadingModel::Anisotropy:
                 ImGui::SliderFloat("Anisotropy##Material", &m_anisotropy, -1.0f, 1.0f);
                 break;
+            case ShadingModel::Sheen:
+                ImGui::ColorEdit3("Sheen Color##Material", (float*)&m_sheenColor);
+                ImGui::SliderFloat("Sheen Roughness##Material", &m_sheenRoughness, 0.0f, 1.0f);
+                break;
+            case ShadingModel::ClearCoat:
+                ImGui::SliderFloat("ClearCoat##Material", &m_clearCoat, 0.0f, 1.0f);
+                ImGui::SliderFloat("ClearCoat Roughness##Material", &m_clearCoatRoughness, 0.0f, 1.0f);
+                break;
             default:
                 break;
             }

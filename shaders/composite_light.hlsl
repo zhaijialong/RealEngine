@@ -1,5 +1,5 @@
-#include "common.hlsli"
 #include "shading_model.hlsli"
+#include "brdf.hlsli"
 #include "gtso.hlsli"
 #include "random.hlsli"
 
@@ -42,6 +42,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 specular = specularRT[pos].xyz;
     float4 normal = normalRT[pos];
     float3 emissive = emissiveRT[pos];
+    float4 customData = customDataRT[pos];
     ShadingModel shadingModel = DecodeShadingModel(specularRT[pos].w);
     
     float3 N = DecodeNormal(normal.xyz);
@@ -70,7 +71,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     //todo : realtime GI
     float3 indirect_diffuse = DiffuseIBL(N);
-    float3 indirect_specular = SpecularIBL(N, V, roughness, specular); //todo : anisotropy/sheen/clearcoat
+    float3 indirect_specular = SpecularIBL(N, V, roughness, specular); //todo : anisotropy
 
 #if SPECULAR_GI
     if(roughness < c_hsrMaxRoughness)
@@ -79,6 +80,32 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         indirect_specular = SpecularIBL(indirectSprcularRT[pos].xyz, N, V, roughness, specular);
     }
 #endif
+    
+    if (shadingModel == ShadingModel::Sheen)
+    {
+        float3 sheenColor = customData.xyz;
+        float sheenRoughness = customData.w;
+        float sheenScaling = SheenScaling(V, N, sheenColor, sheenRoughness);
+        
+        indirect_diffuse *= sheenScaling;
+        indirect_specular *= sheenScaling;
+        
+        indirect_specular += SpecularIBL(N, V, sheenRoughness, specular) * sheenColor;
+    }
+    else if (shadingModel == ShadingModel::ClearCoat)
+    {
+        float clearCoat;
+        float baseRoughness;
+        float3 baseNormal;
+        DecodeClearCoat(customData, clearCoat, baseRoughness, baseNormal);
+        
+        indirect_diffuse *= clearCoat;
+        indirect_specular *= clearCoat;
+        
+        float3 clearCoatF = 0.04 + (1 - 0.04) * pow(1 - saturate(dot(N, V)), 5.0);
+        indirect_specular += SpecularIBL(baseNormal, V, baseRoughness, specular) * (1.0 - clearCoat * clearCoatF);
+        indirect_diffuse += DiffuseIBL(baseNormal) * (1.0 - clearCoat * clearCoatF);
+    }
 
 #if GTAO && GTSO
     bentNormal = normalize(mul(CameraCB.mtxViewInverse, float4(bentNormal, 0.0)).xyz);

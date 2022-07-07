@@ -141,10 +141,9 @@ float SheenE(float cosTheta, float sheenRoughness)
     return sheenETexture.SampleLevel(linearSampler, float2(cosTheta, sheenRoughness * sheenRoughness), 0).x;
 }
 
-float SheenScaling(float3 L, float3 V, float3 N, float3 sheenColor, float sheenRoughness)
+float SheenScaling(float3 V, float3 N, float3 sheenColor, float sheenRoughness)
 {
     float NdotV = saturate(dot(N, V));
-    float NdotL = saturate(dot(N, L));
     
-    return min(1.0 - max3(sheenColor) * SheenE(NdotV, sheenRoughness), 1.0 - max3(sheenColor) * SheenE(NdotL, sheenRoughness));
+    return 1.0 - max3(sheenColor) * SheenE(NdotV, sheenRoughness);
 }
