@@ -253,9 +253,11 @@ void MeshMaterial::OnGui()
 {
     GUI("Inspector", "Material", [&]()
         {
-            ImGui::Combo("Shading Model##Material", (int*)&m_shadingModel, "Default\0Anisotropy\0Sheen\0ClearCoat\0\0", (int)ShadingModel::Max);
+            bool resetPSO = ImGui::Combo("Shading Model##Material", (int*)&m_shadingModel, "Default\0Anisotropy\0Sheen\0ClearCoat\0\0", (int)ShadingModel::Max);
             ImGui::SliderFloat("Metallic##Material", &m_metallic, .0f, 1.0f);
             ImGui::SliderFloat("Roughness##Material", &m_roughness, .0f, 1.0f);
+
+            //todo : more material parameters
 
             switch (m_shadingModel)
             {
@@ -265,11 +267,33 @@ void MeshMaterial::OnGui()
             default:
                 break;
             }
+
+            if (resetPSO)
+            {
+                m_pPSO = nullptr;
+                m_pMeshletPSO = nullptr;
+            }
         });
 }
 
 void MeshMaterial::AddMaterialDefines(eastl::vector<eastl::string>& defines)
 {
+    switch (m_shadingModel)
+    {
+    case ShadingModel::Anisotropy:
+        defines.push_back("SHADING_MODEL_ANISOTROPY=1");
+        break;
+    case ShadingModel::Sheen:
+        defines.push_back("SHADING_MODEL_SHEEN=1");
+        break;
+    case ShadingModel::ClearCoat:
+        defines.push_back("SHADING_MODEL_CLEAR_COAT=1");
+        break;
+    default:
+        defines.push_back("SHADING_MODEL_DEFAULT=1");
+        break;
+    }
+
     if (m_bPbrMetallicRoughness) defines.push_back("PBR_METALLIC_ROUGHNESS=1");
     if (m_pAlbedoTexture) defines.push_back("ALBEDO_TEXTURE=1");
     if (m_pMetallicRoughnessTexture)
@@ -333,6 +357,4 @@ void MeshMaterial::AddMaterialDefines(eastl::vector<eastl::string>& defines)
             defines.push_back("RG_CLEAR_COAT_NORMAL_TEXTURE=1");
         }
     }
-
-    //todo : SHADING_MODEL_ANISOTROPY/SHEEN/CLEAR_COAT
 }

@@ -86,36 +86,24 @@ GBufferOutput ps_main(model::VertexOutput input
     output.normalRT = float4(EncodeNormal(N), roughness);
     output.emissiveRT = emissive;
     
-    switch (shadingModel)
-    {
-        case ShadingModel::Anisotropy:
-        {
-            float3 T = model::GetMaterialAnisotropyTangent(instanceIndex, input.uv, input.tangent, input.bitangent, N);
-            float anisotropy = model::GetMaterialConstant(instanceIndex).anisotropy;
-            output.customDataRT = EncodeAnisotropy(T, anisotropy);
-            break;
-        }
-        case ShadingModel::Sheen:
-        {
-            output.customDataRT = model::GetMaterialSheenColorAndRoughness(instanceIndex, input.uv);
-            break;
-        }
-        case ShadingModel::ClearCoat:
-        {
-            float2 clearCoatAndRoughness = model::GetMaterialClearCoatAndRoughness(instanceIndex, input.uv);
-#if CLEAR_COAT_NORMAL_TEXTURE
-            float3 clearCoatNormal =  model::GetMaterialClearCoatNormal(instanceIndex, input.uv, input.tangent, input.bitangent, input.normal);
+#if SHADING_MODEL_ANISOTROPY
+    float3 T = model::GetMaterialAnisotropyTangent(instanceIndex, input.uv, input.tangent, input.bitangent, N);
+    float anisotropy = model::GetMaterialConstant(instanceIndex).anisotropy;
+    output.customDataRT = EncodeAnisotropy(T, anisotropy);
+#elif SHADING_MODEL_SHEEN
+    output.customDataRT = model::GetMaterialSheenColorAndRoughness(instanceIndex, input.uv);
+#elif SHADING_MODEL_CLEAR_COAT
+    float2 clearCoatAndRoughness = model::GetMaterialClearCoatAndRoughness(instanceIndex, input.uv);
+    #if CLEAR_COAT_NORMAL_TEXTURE
+        float3 clearCoatNormal =  model::GetMaterialClearCoatNormal(instanceIndex, input.uv, input.tangent, input.bitangent, input.normal);
+    #else
+        float3 clearCoatNormal = input.normal;
+    #endif
+    output.normalRT = float4(EncodeNormal(clearCoatNormal), clearCoatAndRoughness.g);
+    output.customDataRT = float4(clearCoatAndRoughness.x, roughness, EncodeNormalLQ(N));
 #else
-            float3 clearCoatNormal = input.normal;
+    output.customDataRT = float4(0, 0, 0, 0);
 #endif
-            output.normalRT = float4(EncodeNormal(clearCoatNormal), clearCoatAndRoughness.g);
-            output.customDataRT = float4(clearCoatAndRoughness.x, roughness, EncodeNormalLQ(N));
-            break;
-        }
-        default:
-            output.customDataRT = float4(0, 0, 0, 0);
-            break;
-    }
 
     return output;
 }

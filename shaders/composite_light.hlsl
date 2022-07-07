@@ -70,7 +70,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     //todo : realtime GI
     float3 indirect_diffuse = DiffuseIBL(N);
-    float3 indirect_specular = SpecularIBL(N, V, roughness, specular); //todo : anisotropy
+    float3 indirect_specular = SpecularIBL(N, V, roughness, specular); //todo : anisotropy/sheen/clearcoat
 
 #if SPECULAR_GI
     if(roughness < c_hsrMaxRoughness)
