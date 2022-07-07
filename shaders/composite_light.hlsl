@@ -114,7 +114,11 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
     else if(shadingModel == ShadingModel::ClearCoat)
     {
-        outTexture[dispatchThreadID.xy] = float4(customDataRT[pos].xxx, 1);
+        float clearCoat;
+        float baseRoughness;
+        float3 baseNormal;
+        DecodeClearCoat(customDataRT[pos], clearCoat, baseRoughness, baseNormal);
+        outTexture[dispatchThreadID.xy] = float4(clearCoat.xxx, 1);
     }
     else
     {

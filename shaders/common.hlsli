@@ -49,29 +49,14 @@ float Luminance(float3 color)
 
 float4 UnpackRGBA8Unorm(uint packed)
 {
-    uint16_t4 unpacked = unpack_u8u16((uint8_t4_packed) packed);
+    uint16_t4 unpacked = unpack_u8u16((uint8_t4_packed)packed);
     return unpacked / 255.0f;
 }
 
 uint PackRGBA8Unorm(float4 input)
 {
     uint16_t4 unpacked = uint16_t4(input * 255.0 + 0.5);
-    return (uint) pack_u8(unpacked);
-}
-
-//pack float2[0,1] in rgb8unorm, each float is 12 bits
-float3 EncodeRGB8Unorm(float2 v)
-{
-    uint2 int12 = (uint2)round(v * 4095);
-    uint3 int8 = uint3(int12.x & 0xFF, int12.y & 0xFF, ((int12.x >> 4) & 0xF0) | ((int12.y >> 8) & 0xF));
-    return int8 / 255.0;
-}
-
-float2 DecodeRGB8Unorm(float3 v)
-{
-    uint3 int8 = (uint3)round(v * 255.0);
-    uint2 int12 = uint2(int8.x | ((int8.z & 0xF0) << 4), int8.y | ((int8.z & 0xF) << 8));
-    return int12 / 4095.0;
+    return (uint)pack_u8(unpacked);
 }
 
 float2 OctEncode(float3 n)
@@ -96,23 +81,19 @@ float3 OctDecode(float2 f)
 float3 EncodeNormal(float3 n)
 {
     float2 v = OctEncode(n) * 0.5 + 0.5;
-    return EncodeRGB8Unorm(v);
+    
+    uint2 int12 = (uint2)round(v * 4095);
+    uint3 int8 = uint3(int12.x & 0xFF, int12.y & 0xFF, ((int12.x >> 4) & 0xF0) | ((int12.y >> 8) & 0xF));
+    return int8 / 255.0;
 }
 
 float3 DecodeNormal(float3 f)
 {
-    float2 v = DecodeRGB8Unorm(f) * 2.0 - 1.0;
-    return OctDecode(v);
-}
+    uint3 int8 = (uint3)round(f * 255.0);
+    uint2 int12 = uint2(int8.x | ((int8.z & 0xF0) << 4), int8.y | ((int8.z & 0xF) << 8));
+    float2 n = int12 / 4095.0;
 
-float2 EncodeNormalLQ(float3 n)
-{
-    return OctEncode(n) * 0.5 + 0.5;
-}
-
-float3 DecodeNormalLQ(float2 f)
-{
-    return OctDecode(f * 2.0 - 1.0);
+    return OctDecode(n * 2.0 - 1.0);
 }
 
 float4 EncodeAnisotropy(float3 T, float anisotropy)
@@ -124,6 +105,36 @@ void DecodeAnisotropy(float4 data, out float3 T, out float anisotropy)
 {
     T = DecodeNormal(data.xyz);
     anisotropy = data.w * 2.0 - 1.0;
+}
+
+//clearCoat : 6 bits, roughness : 6 bits, normal : 10*2 bits
+float4 EncodeClearCoat(float clearCoat, float roughness, float3 normal)
+{
+    uint clearCoatU6 = (uint)round(clearCoat * 63.0);
+    uint roughnessU6 = (uint)round(roughness * 63.0);
+
+    float2 encodedNormal = OctEncode(normal) * 0.5 + 0.5;
+    uint2 normalU10 = (uint2)round(encodedNormal * 1023.0);
+    
+    uint4 dataU8 = uint4(clearCoatU6 | ((normalU10.x >> 2) & 0xC0),
+                         roughnessU6 | ((normalU10.y >> 2) & 0xC0),
+                         normalU10.x & 0xFF,
+                         normalU10.y & 0xFF);
+    
+    return dataU8 / 255.0;
+}
+
+void DecodeClearCoat(float4 data, out float clearCoat, out float roughness, out float3 normal)
+{
+    uint4 dataU8 = (uint4)round(data * 255.0);
+
+    uint clearCoatU6 = dataU8.x & 0x3F;
+    uint roughnessU6 = dataU8.y & 0x3F;
+    uint2 normalU10 = uint2(dataU8.z | ((dataU8.x & 0xC0) << 2), dataU8.w | ((dataU8.y & 0xC0) << 2));
+    
+    clearCoat = clearCoatU6 / 63.0;
+    roughness = roughnessU6 / 63.0;
+    normal = OctDecode((normalU10 / 1023.0) * 2.0 - 1.0);
 }
 
 float GetLinearDepth(float ndcDepth)

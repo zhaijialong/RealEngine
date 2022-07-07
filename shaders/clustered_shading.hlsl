@@ -67,16 +67,17 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         }
         case ShadingModel::ClearCoat:
         {
-            float clearCoat = customData.x;
+            float clearCoat;
+            float baseRoughness;
+            float3 baseNormal;
+            DecodeClearCoat(customData, clearCoat, baseRoughness, baseNormal);
+            
             float clearCoatRoughness = roughness;
             float3 clearCoatNormal = N;
             float3 clearCoatSpecular = float3(0.04, 0.04, 0.04);
             
             float3 clearCoatF;
             float3 clearCoatBRDF = SpecularBRDF(clearCoatNormal, V, SceneCB.lightDir, clearCoatSpecular, clearCoatRoughness, clearCoatF);
-
-            float baseRoughness = customData.y;
-            float3 baseNormal = DecodeNormalLQ(customData.zw);
             float3 baseBRDF = DefaultBRDF(SceneCB.lightDir, V, baseNormal, diffuse, specular, baseRoughness);
             
             BRDF = baseBRDF * (1.0 - clearCoat * clearCoatF) + clearCoatBRDF * clearCoat;

@@ -100,7 +100,7 @@ GBufferOutput ps_main(model::VertexOutput input
         float3 clearCoatNormal = input.normal;
     #endif
     output.normalRT = float4(EncodeNormal(clearCoatNormal), clearCoatAndRoughness.g);
-    output.customDataRT = float4(clearCoatAndRoughness.x, roughness, EncodeNormalLQ(N));
+    output.customDataRT = EncodeClearCoat(clearCoatAndRoughness.x, roughness, N);
 #else
     output.customDataRT = float4(0, 0, 0, 0);
 #endif
