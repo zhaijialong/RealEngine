@@ -105,7 +105,7 @@ void main_ms(
         vertices[v2].uv = float2(s1, t0);
         vertices[v3].uv = float2(s1, t1);
     
-        float3 color = RGBA8UnormToFloat4(text.color).xyz;
+        float3 color = UnpackRGBA8Unorm(text.color).xyz;
     
         vertices[v0].color = color;
         vertices[v1].color = color;

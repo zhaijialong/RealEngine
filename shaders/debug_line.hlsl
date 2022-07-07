@@ -17,7 +17,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     
     VSOutput output;
     output.position = mul(CameraCB.mtxViewProjectionNoJitter, float4(vertexBuffer[vertex_id].position, 1.0));
-    output.color = RGBA8UnormToFloat4(vertexBuffer[vertex_id].color);
+    output.color = UnpackRGBA8Unorm(vertexBuffer[vertex_id].color);
 
     return output;
 }

@@ -19,7 +19,7 @@ namespace debug
         argumentsBuffer.InterlockedAdd(0, 2, vertex_count); //increment vertex_count by 2
     
         LineVertex p;
-        p.color = Float4ToRGBA8Unorm(float4(color, 1.0));
+        p.color = PackRGBA8Unorm(float4(color, 1.0));
     
         p.position = start;
         vertexBuffer[vertex_count] = p;
@@ -115,7 +115,7 @@ namespace debug
         
         textBuffer[text_count].screenPosition = screenPos;
         textBuffer[text_count].text = text;
-        textBuffer[text_count].color = Float4ToRGBA8Unorm(float4(color, 1.0));
+        textBuffer[text_count].color = PackRGBA8Unorm(float4(color, 1.0));
         
         screenPos.x += bakedCharBuffer[text].xadvance;
     }

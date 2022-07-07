@@ -4,7 +4,7 @@
 
 void DecodeVisibilityBentNormal(const uint packedValue, out float visibility, out float3 bentNormal)
 {
-    float4 decoded = RGBA8UnormToFloat4(packedValue);
+    float4 decoded = UnpackRGBA8Unorm(packedValue);
     bentNormal = decoded.xyz * 2.0.xxx - 1.0.xxx;
     visibility = decoded.w;
 }

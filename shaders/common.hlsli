@@ -47,6 +47,18 @@ float Luminance(float3 color)
     return dot(color, float3(0.2126729, 0.7151522, 0.0721750));
 }
 
+float4 UnpackRGBA8Unorm(uint packed)
+{
+    uint16_t4 unpacked = unpack_u8u16((uint8_t4_packed) packed);
+    return unpacked / 255.0f;
+}
+
+uint PackRGBA8Unorm(float4 input)
+{
+    uint16_t4 unpacked = uint16_t4(input * 255.0 + 0.5);
+    return (uint) pack_u8(unpacked);
+}
+
 //pack float2[0,1] in rgb8unorm, each float is 12 bits
 float3 EncodeRGB8Unorm(float2 v)
 {
@@ -172,22 +184,6 @@ float3 GetWorldPosition(float2 screenUV, float depth)
 float3 GetWorldPosition(uint2 screenPos, float depth)
 {
     return GetWorldPosition(GetScreenUV(screenPos, SceneCB.rcpRenderSize), depth);
-}
-
-float4 RGBA8UnormToFloat4(uint packed)
-{
-    //uint16_t4 unpacked = unpack_u8u16((uint8_t4_packed)packed);
-    uint32_t4 unpacked = unpack_u8u32((uint8_t4_packed)packed);
-
-    return unpacked / 255.0f;
-}
-
-uint Float4ToRGBA8Unorm(float4 input)
-{
-    //uint16_t4 unpacked = uint16_t4(input * 255.0 + 0.5);
-    uint32_t4 unpacked = uint32_t4(input * 255.0 + 0.5);
-    
-    return (uint)pack_u8(unpacked);
 }
 
 // 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere. Michael Mara, Morgan McGuire. 2013
