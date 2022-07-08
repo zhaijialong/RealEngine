@@ -290,13 +290,16 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.maxReductionSampler = m_pMaxReductionSampler->GetHeapIndex();
     sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
     sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
-    sceneCB.linearRepeatSampler = m_pLinearRepeatSampler->GetHeapIndex();
-    sceneCB.linearClampSampler = m_pLinearClampSampler->GetHeapIndex();
+    sceneCB.bilinearRepeatSampler = m_pBilinearRepeatSampler->GetHeapIndex();
+    sceneCB.bilinearClampSampler = m_pBilinearClampSampler->GetHeapIndex();
+    sceneCB.bilinearBlackBoarderSampler = m_pBilinearBlackBoarderSampler->GetHeapIndex();
+    sceneCB.bilinearWhiteBoarderSampler = m_pBilinearWhiteBoarderSampler->GetHeapIndex();
+    sceneCB.trilinearRepeatSampler = m_pTrilinearRepeatSampler->GetHeapIndex();
+    sceneCB.trilinearClampSampler = m_pTrilinearClampSampler->GetHeapIndex();
     sceneCB.aniso2xSampler = m_pAniso2xSampler->GetHeapIndex();
     sceneCB.aniso4xSampler = m_pAniso4xSampler->GetHeapIndex();
     sceneCB.aniso8xSampler = m_pAniso8xSampler->GetHeapIndex();
     sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
-    sceneCB.linearBlackBoarderSampler = m_pLinearBlackBoarderSampler->GetHeapIndex();
     sceneCB.skyCubeTexture = m_pSkyCubeMap->GetCubeTexture()->GetSRV()->GetHeapIndex();
     sceneCB.skySpecularIBLTexture = m_pSkyCubeMap->GetSpecularCubeTexture()->GetSRV()->GetHeapIndex();
     sceneCB.skyDiffuseIBLTexture = m_pSkyCubeMap->GetDiffuseCubeTexture()->GetSRV()->GetHeapIndex();
@@ -573,8 +576,10 @@ void Renderer::CreateCommonResources()
 
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;
+    m_pBilinearRepeatSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pBilinearRepeatSampler"));
+
     desc.mip_filter = GfxFilter::Linear;
-    m_pLinearRepeatSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearRepeatSampler"));
+    m_pTrilinearRepeatSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pTrilinearRepeatSampler"));
 
     desc.min_filter = GfxFilter::Point;
     desc.mag_filter = GfxFilter::Point;
@@ -586,13 +591,19 @@ void Renderer::CreateCommonResources()
 
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;
-    desc.mip_filter = GfxFilter::Linear;
-    m_pLinearClampSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearClampSampler"));
+    m_pBilinearClampSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pBilinearClampSampler"));
 
+    desc.mip_filter = GfxFilter::Linear;
+    m_pTrilinearClampSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pTrilinearClampSampler"));
+
+    desc.mip_filter = GfxFilter::Point;
     desc.address_u = GfxSamplerAddressMode::ClampToBorder;
     desc.address_v = GfxSamplerAddressMode::ClampToBorder;
     desc.address_w = GfxSamplerAddressMode::ClampToBorder;
-    m_pLinearBlackBoarderSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pLinearBlackBoarderSampler"));
+    m_pBilinearBlackBoarderSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pBilinearBlackBoarderSampler"));
+
+    desc.border_color[0] = desc.border_color[1] = desc.border_color[2] = desc.border_color[3] = 1.0f;
+    m_pBilinearWhiteBoarderSampler.reset(m_pDevice->CreateSampler(desc, "Renderer::m_pBilinearWhiteBoarderSampler"));
 
     desc.min_filter = GfxFilter::Linear;
     desc.mag_filter = GfxFilter::Linear;

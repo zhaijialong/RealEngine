@@ -41,8 +41,13 @@ struct SceneConstant
     
     uint pointRepeatSampler;
     uint pointClampSampler;
-    uint linearRepeatSampler;
-    uint linearClampSampler;
+    uint bilinearRepeatSampler;
+    uint bilinearClampSampler;
+    
+    uint bilinearBlackBoarderSampler;
+    uint bilinearWhiteBoarderSampler;
+    uint trilinearRepeatSampler;
+    uint trilinearClampSampler;
     
     uint aniso2xSampler;
     uint aniso4xSampler;
@@ -51,7 +56,7 @@ struct SceneConstant
     
     uint minReductionSampler;
     uint maxReductionSampler;
-    uint linearBlackBoarderSampler;
+    uint _padding;
     uint preintegratedGFTexture;
 
     uint sobolSequenceTexture;

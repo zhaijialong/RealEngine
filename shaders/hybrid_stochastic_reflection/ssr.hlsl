@@ -81,7 +81,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthRT];
     RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
     float2 uv = GetScreenUV(coords, SceneCB.rcpRenderSize);
     

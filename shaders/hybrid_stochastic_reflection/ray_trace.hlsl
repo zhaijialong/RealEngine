@@ -66,7 +66,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     else
     {
         TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
-        SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+        SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
         radiance = skyTexture.SampleLevel(linearSampler, direction, 0).xyz;
         rayLength = ray.TMax;
     }

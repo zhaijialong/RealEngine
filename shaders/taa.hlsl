@@ -19,7 +19,7 @@ float3 TonemapInvert(float3 c) { return c * rcp(1.0 - max3(c.r, c.g, c.b)); }
 // Filmic SMAA Sharp Morphological and Temporal Antialiasing. Jorge Jimenez[2017]
 float3 BicubicFilter(Texture2D colorTex, float2 texcoord, float4 rtMetrics)
 {
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
     float2 position = rtMetrics.zw * texcoord;
     float2 centerPosition = floor(position - 0.5) + 0.5;
@@ -92,7 +92,7 @@ float4 GetHistory(float2 uv)
 {
     Texture2D historyInputTexture = ResourceDescriptorHeap[c_historyInputRT];
 
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     float historyWeight = historyInputTexture.SampleLevel(linearSampler, uv, 0).a;
 
     float4 rtMetrics = float4(SceneCB.rcpDisplaySize, SceneCB.displaySize);

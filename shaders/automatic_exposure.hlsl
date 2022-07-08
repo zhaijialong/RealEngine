@@ -18,7 +18,7 @@ cbuffer InitLuminanceConstants : register(b1)
 void init_luminance(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D inputTexture = ResourceDescriptorHeap[c_inputSRV];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
     float2 screenPos = (float2)dispatchThreadID.xy + 0.5;
     float2 uv = screenPos * float2(c_rcpWidth, c_rcpHeight);
@@ -56,7 +56,7 @@ groupshared AF1 spdIntermediateG[16][16];
 AF4 SpdLoadSourceImage(ASU2 p, AU1 slice)
 {
     Texture2D imgSrc = ResourceDescriptorHeap[c_imgSrc];
-    SamplerState srcSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState srcSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     AF2 textureCoord = p * c_invInputSize + c_invInputSize;
     AF4 result = imgSrc.SampleLevel(srcSampler, textureCoord, 0);

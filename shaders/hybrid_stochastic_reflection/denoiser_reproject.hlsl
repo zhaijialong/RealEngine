@@ -36,7 +36,7 @@ float FFX_DNSR_Reflections_LoadLinearDepthHistory(int2 pixel_coordinate)
 float FFX_DNSR_Reflections_SampleLinearDepthHistory(float2 uv)
 {
     Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     return prevLinearDepthTexture.SampleLevel(linearSampler, uv, 0);
 }
 
@@ -55,14 +55,14 @@ float16_t3 FFX_DNSR_Reflections_LoadRadianceHistory(int2 pixel_coordinate)
 float16_t3 FFX_DNSR_Reflections_SampleRadianceHistory(float2 uv)
 {
     Texture2D historyRadianceTexture = ResourceDescriptorHeap[c_historyRadianceTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     return (float16_t3)historyRadianceTexture.SampleLevel(linearSampler, uv, 0).xyz;
 }
 
 float16_t FFX_DNSR_Reflections_SampleNumSamplesHistory(float2 uv)
 {
     Texture2D<float> historySampleNumTexture = ResourceDescriptorHeap[c_historySampleNumTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     return (float16_t)historySampleNumTexture.SampleLevel(linearSampler, uv, 0);
 }
 
@@ -94,7 +94,7 @@ float16_t FFX_DNSR_Reflections_LoadRoughness(int2 pixel_coordinate)
 float16_t FFX_DNSR_Reflections_SampleRoughnessHistory(float2 uv)
 {
     Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     return (float16_t)prevNormalTexture.SampleLevel(linearSampler, uv, 0).w;
 }
 
@@ -107,7 +107,7 @@ float2 FFX_DNSR_Reflections_LoadMotionVector(int2 pixel_coordinate)
 float16_t FFX_DNSR_Reflections_SampleVarianceHistory(float2 uv)
 {
     Texture2D<float> historyVarianceTexture = ResourceDescriptorHeap[c_historyVarianceTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     return (float16_t)historyVarianceTexture.SampleLevel(linearSampler, uv, 0);
 }
 

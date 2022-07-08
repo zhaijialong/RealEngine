@@ -44,7 +44,7 @@ void build_histogram(uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : S
     if (all(dispatchThreadID.xy < uint2(BuildCB.width, BuildCB.height)))
     {
         Texture2D inputTexture = ResourceDescriptorHeap[BuildCB.inputTextureSRV];
-        SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+        SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
         float2 screenPos = (float2) dispatchThreadID.xy + 0.5;
         float2 uv = screenPos * float2(BuildCB.rcpWidth, BuildCB.rcpHeight);

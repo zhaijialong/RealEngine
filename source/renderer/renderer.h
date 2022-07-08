@@ -77,7 +77,7 @@ public:
     IGfxPipelineState* GetPipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name);
     void ReloadShaders();
     IGfxDescriptor* GetPointSampler() const { return m_pPointRepeatSampler.get(); }
-    IGfxDescriptor* GetLinearSampler() const { return m_pLinearRepeatSampler.get(); }
+    IGfxDescriptor* GetLinearSampler() const { return m_pBilinearRepeatSampler.get(); }
 
     IndexBuffer* CreateIndexBuffer(const void* data, uint32_t stride, uint32_t index_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly);
     StructuredBuffer* CreateStructuredBuffer(const void* data, uint32_t stride, uint32_t element_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
@@ -230,12 +230,15 @@ private:
     eastl::unique_ptr<IGfxDescriptor> m_pAniso16xSampler;
     eastl::unique_ptr<IGfxDescriptor> m_pPointRepeatSampler;
     eastl::unique_ptr<IGfxDescriptor> m_pPointClampSampler;
-    eastl::unique_ptr<IGfxDescriptor> m_pLinearRepeatSampler;
-    eastl::unique_ptr<IGfxDescriptor> m_pLinearClampSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pBilinearRepeatSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pBilinearClampSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pBilinearBlackBoarderSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pBilinearWhiteBoarderSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pTrilinearRepeatSampler;
+    eastl::unique_ptr<IGfxDescriptor> m_pTrilinearClampSampler;
     eastl::unique_ptr<IGfxDescriptor> m_pShadowSampler;
     eastl::unique_ptr<IGfxDescriptor> m_pMinReductionSampler;
     eastl::unique_ptr<IGfxDescriptor> m_pMaxReductionSampler;
-    eastl::unique_ptr<IGfxDescriptor> m_pLinearBlackBoarderSampler;
 
     eastl::unique_ptr<Texture2D> m_pSobolSequenceTexture;
     eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture1SPP;

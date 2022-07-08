@@ -15,7 +15,7 @@ cbuffer Constants : register(b1)
 float16_t3 FFX_DNSR_Reflections_SampleAverageRadiance(float2 uv) 
 {
     Texture2D avgRadianceTexture = ResourceDescriptorHeap[c_avgRadianceTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     return (float16_t3)avgRadianceTexture.SampleLevel(linearSampler, uv, 0.0f).xyz;
 }
 

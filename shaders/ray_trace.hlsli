@@ -24,7 +24,7 @@ namespace rt
             ModelMaterialConstant material = model::GetMaterialConstant(instanceID);
 
             Texture2D texture = model::GetMaterialTexture2D(material.albedoTexture != INVALID_RESOURCE_INDEX ? material.albedoTexture : material.diffuseTexture);
-            SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearRepeatSampler];
+            SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearRepeatSampler];
 
             float alpha = texture.SampleLevel(linearSampler, uv, 0).a;
             return alpha > material.alphaCutoff;

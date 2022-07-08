@@ -120,7 +120,7 @@ void main_ms(
 float4 main_ps(VertexOut input) : SV_Target
 {
     Texture2D<float> fontTexture = ResourceDescriptorHeap[c_fontTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     return float4(input.color, fontTexture.SampleLevel(linearSampler, input.uv, 0).x);
 }

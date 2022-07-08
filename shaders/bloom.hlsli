@@ -7,7 +7,7 @@
 
 float3 Sample(Texture2D texture, float2 uv, float threshold)
 {
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     float3 color = texture.SampleLevel(linearSampler, uv, 0).xyz;
 
 #if FIRST_PASS
@@ -70,7 +70,7 @@ float3 BloomDownsample(Texture2D texture, float2 uv, float2 pixelSize, float thr
 
 float3 BloomUpsample(Texture2D texture, float2 uv, float2 pixelSize)
 {
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearBlackBoarderSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearBlackBoarderSampler];
 
     // 3x3 tent filter
     float3 c0 = texture.SampleLevel(linearSampler, uv + float2(-1.0, 1.0) * pixelSize, 0).xyz * 1.0;

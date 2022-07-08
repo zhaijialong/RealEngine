@@ -56,7 +56,7 @@ void specular_filter(uint3 dispatchThreadID : SV_DispatchThreadID)
         return;
     }
     
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.trilinearClampSampler];
     TextureCube inputTexture = ResourceDescriptorHeap[c_inputTexture];
     float roughness = float(c_mip) / float(c_mipCount - 1);
 
@@ -106,7 +106,7 @@ void specular_filter(uint3 dispatchThreadID : SV_DispatchThreadID)
 [numthreads(8, 8, 1)]
 void diffuse_filter(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     TextureCube inputTexture = ResourceDescriptorHeap[c_inputTexture];
     RWTexture2DArray<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 

@@ -50,7 +50,7 @@ float2 FFX_DNSR_Shadows_ReadVelocity(int2 p)
 float FFX_DNSR_Shadows_ReadHistory(float2 p)
 {
     Texture2D historyTexture = ResourceDescriptorHeap[c_historyTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     return historyTexture.SampleLevel(linearSampler, p, 0).x;
 }
 

@@ -56,7 +56,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
 #if HDRI_TEXTURE
     Texture2D hdriTexture = ResourceDescriptorHeap[c_hdriTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
     float3 V = -dir;
     float u = (atan2(V.x, V.z) / M_PI + 1.0) * 0.5;

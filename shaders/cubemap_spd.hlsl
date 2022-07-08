@@ -28,7 +28,7 @@ groupshared AF1 spdIntermediateA[16][16];
 AF4 SpdLoadSourceImage(ASU2 p, AU1 slice)
 {
     Texture2DArray<float4> imgSrc = ResourceDescriptorHeap[c_imgSrc];
-    SamplerState srcSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState srcSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     AF2 textureCoord = p * c_invInputSize + c_invInputSize;
     AF4 result = imgSrc.SampleLevel(srcSampler, float3(textureCoord, slice), 0);

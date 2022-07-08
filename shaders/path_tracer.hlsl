@@ -28,7 +28,7 @@ float3 SkyColor(uint2 screenPos)
     float3 dir = normalize(position - CameraCB.cameraPos);
     
     TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     float3 sky_color = skyTexture.SampleLevel(linearSampler, dir, 0).xyz;
 
     return sky_color;
@@ -161,7 +161,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         else
         {
             TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
-            SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+            SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
             float3 sky_color = skyTexture.SampleLevel(linearSampler, wi, 0).xyz;
 
             radiance += sky_color * throughput / pdf;

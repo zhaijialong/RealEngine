@@ -248,7 +248,7 @@ bool OcclusionCull(Texture2D<float> hzbTexture, uint2 hzbSize, float3 center, fl
 float3 SpecularIBL(float3 radiance, float3 N, float3 V, float roughness, float3 specular)
 {
     Texture2D brdfTexture = ResourceDescriptorHeap[SceneCB.preintegratedGFTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     float NdotV = saturate(dot(N, V));
     float2 preintegratedGF = brdfTexture.Sample(linearSampler, float2(NdotV, roughness)).xy;
@@ -259,7 +259,7 @@ float3 SpecularIBL(float3 radiance, float3 N, float3 V, float roughness, float3 
 float3 SpecularIBL(float3 N, float3 V, float roughness, float3 specular)
 {
     TextureCube envTexture = ResourceDescriptorHeap[SceneCB.skySpecularIBLTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.trilinearClampSampler];
     
     const float MAX_LOD = 7.0; //8 mips
 
@@ -272,7 +272,7 @@ float3 SpecularIBL(float3 N, float3 V, float roughness, float3 specular)
 float3 DiffuseIBL(float3 N)
 {
     TextureCube envTexture = ResourceDescriptorHeap[SceneCB.skyDiffuseIBLTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
     return envTexture.SampleLevel(linearSampler, N, 0.0).xyz;
 }

@@ -136,7 +136,7 @@ float3 SheenBRDF(float3 L, float3 V, float3 N, float3 sheenColor, float sheenRou
 float SheenE(float cosTheta, float sheenRoughness)
 {
     Texture2D sheenETexture = ResourceDescriptorHeap[SceneCB.sheenETexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.linearClampSampler];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     return sheenETexture.SampleLevel(linearSampler, float2(cosTheta, sheenRoughness * sheenRoughness), 0).x;
 }
