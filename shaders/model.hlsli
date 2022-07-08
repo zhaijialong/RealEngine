@@ -170,7 +170,11 @@ Texture2D GetMaterialTexture2D(uint heapIndex)
 
 SamplerState GetMaterialSampler()
 {
+#ifdef RAY_TRACING
+    return SamplerDescriptorHeap[SceneCB.bilinearRepeatSampler];
+#else
     return SamplerDescriptorHeap[SceneCB.aniso8xSampler];
+#endif
 }
 
 float2 ApplyUVTransform(float2 uv, UVTransform transform)
@@ -185,6 +189,18 @@ float2 ApplyUVTransform(float2 uv, UVTransform transform)
     }
 
     return uv;
+}
+    
+float4 SampleMaterialTexture(Texture2D texture, float2 uv, UVTransform transform, float mipLOD)
+{
+    SamplerState linearSampler = GetMaterialSampler();
+    uv = ApplyUVTransform(uv, transform);
+
+#ifdef RAY_TRACING
+    return texture.SampleLevel(linearSampler, uv, mipLOD);
+#else
+    return texture.Sample(linearSampler, uv);
+#endif
 }
 
 bool IsAlbedoTextureEnabled(uint instanceIndex)
@@ -227,7 +243,7 @@ bool IsAOMetallicRoughnessTextureEnabled(uint instanceIndex)
 #endif
 }
 
-PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv)
+PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
     PbrMetallicRoughness pbrMetallicRoughness;
     pbrMetallicRoughness.albedo = GetMaterialConstant(instanceIndex).albedo.xyz;
@@ -236,13 +252,11 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv)
     pbrMetallicRoughness.roughness = GetMaterialConstant(instanceIndex).roughness;
     pbrMetallicRoughness.ao = 1.0;
     
-    SamplerState linearSampler = GetMaterialSampler();
-    
     if(IsAlbedoTextureEnabled(instanceIndex))
     {
         Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).albedoTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).albedoTextureTransform;
-        float4 albedo = albedoTexture.Sample(linearSampler, ApplyUVTransform(uv, transform));
+        float4 albedo = SampleMaterialTexture(albedoTexture, uv, transform, mipLOD);
         pbrMetallicRoughness.albedo *= albedo.xyz;
         pbrMetallicRoughness.alpha = albedo.w;
     }
@@ -251,7 +265,7 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv)
     {
         Texture2D metallicRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).metallicRoughnessTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).metallicRoughnessTextureTransform;
-        float4 metallicRoughness = metallicRoughnessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform));
+        float4 metallicRoughness = SampleMaterialTexture(metallicRoughnessTexture, uv, transform, mipLOD);
         pbrMetallicRoughness.metallic *= metallicRoughness.b;
         pbrMetallicRoughness.roughness *= metallicRoughness.g;
 
@@ -290,7 +304,7 @@ bool IsSpecularGlossinessTextureEnabled(uint instanceIndex)
 #endif
 }
 
-PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 uv)
+PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
     PbrSpecularGlossiness pbrSpecularGlossiness;
     pbrSpecularGlossiness.diffuse = GetMaterialConstant(instanceIndex).diffuse;
@@ -298,13 +312,11 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 u
     pbrSpecularGlossiness.glossiness = GetMaterialConstant(instanceIndex).glossiness;
     pbrSpecularGlossiness.alpha = 1.0;
     
-    SamplerState linearSampler = GetMaterialSampler();
-    
     if(IsDiffuseTextureEnabled(instanceIndex))
     {
         Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).diffuseTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).diffuseTextureTransform;
-        float4 diffuse = diffuseTexture.Sample(linearSampler, ApplyUVTransform(uv, transform));
+        float4 diffuse = SampleMaterialTexture(diffuseTexture, uv, transform, mipLOD);
         pbrSpecularGlossiness.diffuse *= diffuse.xyz;
         pbrSpecularGlossiness.alpha = diffuse.w;
     }
@@ -313,7 +325,7 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 u
     {
         Texture2D specularGlossinessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).specularGlossinessTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).specularGlossinessTextureTransform;
-        float4 specularGlossiness = specularGlossinessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform));
+        float4 specularGlossiness = SampleMaterialTexture(specularGlossinessTexture, uv, transform, mipLOD);
         pbrSpecularGlossiness.specular *= specularGlossiness.xyz;
         pbrSpecularGlossiness.glossiness *= specularGlossiness.w;
     }
@@ -347,13 +359,12 @@ bool IsRGNormalTextureEnabled(uint instanceIndex)
 #endif
 }
 
-float3 GetMaterialNormal(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N)
+float3 GetMaterialNormal(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N, float mipLOD = 0.0f)
 {
     Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).normalTexture);
     UVTransform transform = GetMaterialConstant(instanceIndex).normalTextureTransform;
-    SamplerState linearSampler = GetMaterialSampler();
     
-    float3 normal = normalTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xyz;
+    float3 normal = SampleMaterialTexture(normalTexture, uv, transform, mipLOD).xyz;
     
     if(IsRGNormalTextureEnabled(instanceIndex))
     {
@@ -383,7 +394,7 @@ bool IsAOTextureEnabled(uint instanceIndex)
 #endif
 }
 
-float GetMaterialAO(uint instanceIndex, float2 uv)
+float GetMaterialAO(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
     float ao = 1.0;
     
@@ -391,8 +402,7 @@ float GetMaterialAO(uint instanceIndex, float2 uv)
     {
         Texture2D aoTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).aoTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).aoTextureTransform;
-        SamplerState linearSampler = GetMaterialSampler();
-        ao = aoTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).x;
+        ao = SampleMaterialTexture(aoTexture, uv, transform, mipLOD).x;
     }
 
     return ao;
@@ -411,15 +421,14 @@ bool IsEmissiveTextureEnabled(uint instanceIndex)
 #endif
 }
 
-float3 GetMaterialEmissive(uint instanceIndex, float2 uv)
+float3 GetMaterialEmissive(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
     float3 emissive = GetMaterialConstant(instanceIndex).emissive;
     if(IsEmissiveTextureEnabled(instanceIndex))
     {
         Texture2D emissiveTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).emissiveTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).emissiveTextureTransform;
-        SamplerState linearSampler = GetMaterialSampler();
-        emissive *= emissiveTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xyz;
+        emissive *= SampleMaterialTexture(emissiveTexture, uv, transform, mipLOD).xyz;
     }
     return emissive;
 }
@@ -437,15 +446,14 @@ bool IsAnisotropyTextureEnabled(uint instanceIndex)
 #endif
 }
     
-float3 GetMaterialAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N)
+float3 GetMaterialAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N, float mipLOD = 0.0)
 {
      float3 anisotropicT = T;
     if(IsAnisotropyTextureEnabled(instanceIndex))
     {
         Texture2D anisotropyTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).anisotropyTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).anisotropyTextureTransform;
-        SamplerState linearSampler = GetMaterialSampler();
-        float2 anisotropy = anisotropyTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xy * 2.0 - 1.0;
+        float2 anisotropy = SampleMaterialTexture(anisotropyTexture, uv, transform, mipLOD).xy * 2.0 - 1.0;
         anisotropicT = T * anisotropy.x + B * anisotropy.y;
     }
 
@@ -494,7 +502,7 @@ bool IsSheenRoughnessTextureEnabled(uint instanceIndex)
 #endif
 }
 
-float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv)
+float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
     float3 sheenColor = GetMaterialConstant(instanceIndex).sheenColor;
     float sheenRoughness = GetMaterialConstant(instanceIndex).sheenRoughness;
@@ -503,8 +511,7 @@ float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv)
     {
         Texture2D sheenColorTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenColorTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).sheenColorTextureTransform;
-        SamplerState linearSampler = GetMaterialSampler();
-        float4 sheenTexture = sheenColorTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)); 
+        float4 sheenTexture = SampleMaterialTexture(sheenColorTexture, uv, transform, mipLOD);
         sheenColor *= sheenTexture.xyz;
             
         if (IsSheenColorRoughnessTextureEnabled(instanceIndex))
@@ -517,8 +524,7 @@ float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv)
     {
         Texture2D sheenRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenRoughnessTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).sheenRoughnessTextureTransform;
-        SamplerState linearSampler = GetMaterialSampler();
-        sheenRoughness *= sheenRoughnessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).w;
+        sheenRoughness *= SampleMaterialTexture(sheenRoughnessTexture, uv, transform, mipLOD).w;
     }
 
     return float4(sheenColor, sheenRoughness);
@@ -564,7 +570,7 @@ bool IsClearCoatRoughnessTextureEnabled(uint instanceIndex)
 #endif
 }
 
-float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv)
+float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
     float clearCoat = GetMaterialConstant(instanceIndex).clearCoat;
     float clearCoatRoughness = GetMaterialConstant(instanceIndex).clearCoatRoughness;
@@ -573,8 +579,7 @@ float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv)
     {
         Texture2D clearCoatTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatTextureTransform;
-        SamplerState linearSampler = GetMaterialSampler();
-        float4 clearCoatTex = clearCoatTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)); 
+        float4 clearCoatTex = SampleMaterialTexture(clearCoatTexture, uv, transform, mipLOD);
         clearCoat *= clearCoatTex.r;
             
         if (IsClearCoatRoughnessCombinedTextureEnabled(instanceIndex))
@@ -587,8 +592,7 @@ float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv)
     {
         Texture2D clearCoatRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatRoughnessTextureTransform;
-        SamplerState linearSampler = GetMaterialSampler();
-        clearCoatRoughness *= clearCoatRoughnessTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).g;
+        clearCoatRoughness *= SampleMaterialTexture(clearCoatRoughnessTexture, uv, transform, mipLOD).g;
     }
         
     return float2(clearCoat, clearCoatRoughness);
@@ -620,13 +624,12 @@ bool IsRGClearCoatNormalTextureEnabled(uint instanceIndex)
 #endif
 }
 
-float3 GetMaterialClearCoatNormal(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N)
+float3 GetMaterialClearCoatNormal(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N, float mipLOD = 0.0)
 {
     Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatNormalTexture);
     UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatNormalTextureTransform;
-    SamplerState linearSampler = GetMaterialSampler();
     
-    float3 normal = normalTexture.Sample(linearSampler, ApplyUVTransform(uv, transform)).xyz;
+    float3 normal = SampleMaterialTexture(normalTexture, uv, transform, mipLOD).xyz;
     
     if(IsRGClearCoatNormalTextureEnabled(instanceIndex))
     {

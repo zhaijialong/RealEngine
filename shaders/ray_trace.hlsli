@@ -4,6 +4,7 @@
 #include "brdf.hlsli"
 
 #define DYNAMIC_MATERIAL_SWITCH
+#define RAY_TRACING
 #include "model.hlsli"
 
 namespace rt
