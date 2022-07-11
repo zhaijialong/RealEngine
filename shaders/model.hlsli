@@ -99,45 +99,36 @@ struct Primitive
 {
     uint instanceID;
     uint primitiveIndex;
+    Vertex v0;
+    Vertex v1;
+    Vertex v2;
 
     static Primitive Create(uint instanceID, uint primitiveIndex)
     {
         Primitive primitive;
         primitive.instanceID = instanceID;
         primitive.primitiveIndex = primitiveIndex;
+            
+        uint3 primitiveIndices = GetPrimitiveIndices(instanceID, primitiveIndex);
+        primitive.v0 = GetVertex(instanceID, primitiveIndices.x);
+        primitive.v1 = GetVertex(instanceID, primitiveIndices.y);
+        primitive.v2 = GetVertex(instanceID, primitiveIndices.z);
+            
         return primitive;
     }
     
     float2 GetUV(float3 barycentricCoordinates)
     {
-        uint3 primitiveIndices = GetPrimitiveIndices(instanceID, primitiveIndex);
-        
-        Vertex v0 = GetVertex(instanceID, primitiveIndices.x);
-        Vertex v1 = GetVertex(instanceID, primitiveIndices.y);
-        Vertex v2 = GetVertex(instanceID, primitiveIndices.z);
-
         return v0.uv * barycentricCoordinates.x + v1.uv * barycentricCoordinates.y + v2.uv * barycentricCoordinates.z;
     }
 
     float3 GetNormal(float3 barycentricCoordinates)
     {
-        uint3 primitiveIndices = GetPrimitiveIndices(instanceID, primitiveIndex);
-        
-        Vertex v0 = GetVertex(instanceID, primitiveIndices.x);
-        Vertex v1 = GetVertex(instanceID, primitiveIndices.y);
-        Vertex v2 = GetVertex(instanceID, primitiveIndices.z);
-
         return v0.normal * barycentricCoordinates.x + v1.normal * barycentricCoordinates.y + v2.normal * barycentricCoordinates.z;
     }
 
     float4 GetTangent(float3 barycentricCoordinates)
     {
-        uint3 primitiveIndices = GetPrimitiveIndices(instanceID, primitiveIndex);
-        
-        Vertex v0 = GetVertex(instanceID, primitiveIndices.x);
-        Vertex v1 = GetVertex(instanceID, primitiveIndices.y);
-        Vertex v2 = GetVertex(instanceID, primitiveIndices.z);
-
         return v0.tangent * barycentricCoordinates.x + v1.tangent * barycentricCoordinates.y + v2.tangent * barycentricCoordinates.z;
     }
 };
@@ -205,7 +196,7 @@ float4 SampleMaterialTexture(Texture2D texture, float2 uv, UVTransform transform
 
 bool IsAlbedoTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).albedoTexture != INVALID_RESOURCE_INDEX;
 #else
     #if ALBEDO_TEXTURE
@@ -218,7 +209,7 @@ bool IsAlbedoTextureEnabled(uint instanceIndex)
 
 bool IsMetallicRoughnessTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).metallicRoughnessTexture != INVALID_RESOURCE_INDEX;
 #else
     #if METALLIC_ROUGHNESS_TEXTURE
@@ -231,7 +222,7 @@ bool IsMetallicRoughnessTextureEnabled(uint instanceIndex)
 
 bool IsAOMetallicRoughnessTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).metallicRoughnessTexture != INVALID_RESOURCE_INDEX &&
         GetMaterialConstant(instanceIndex).metallicRoughnessTexture == GetMaterialConstant(instanceIndex).aoTexture;
 #else
@@ -243,7 +234,7 @@ bool IsAOMetallicRoughnessTextureEnabled(uint instanceIndex)
 #endif
 }
 
-PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv, float mipLOD = 0.0)
+PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv, float albedoMipLOD = 0.0, float metallicMipLOD = 0.0)
 {
     PbrMetallicRoughness pbrMetallicRoughness;
     pbrMetallicRoughness.albedo = GetMaterialConstant(instanceIndex).albedo.xyz;
@@ -256,7 +247,7 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv,
     {
         Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).albedoTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).albedoTextureTransform;
-        float4 albedo = SampleMaterialTexture(albedoTexture, uv, transform, mipLOD);
+        float4 albedo = SampleMaterialTexture(albedoTexture, uv, transform, albedoMipLOD);
         pbrMetallicRoughness.albedo *= albedo.xyz;
         pbrMetallicRoughness.alpha = albedo.w;
     }
@@ -265,7 +256,7 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv,
     {
         Texture2D metallicRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).metallicRoughnessTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).metallicRoughnessTextureTransform;
-        float4 metallicRoughness = SampleMaterialTexture(metallicRoughnessTexture, uv, transform, mipLOD);
+        float4 metallicRoughness = SampleMaterialTexture(metallicRoughnessTexture, uv, transform, metallicMipLOD);
         pbrMetallicRoughness.metallic *= metallicRoughness.b;
         pbrMetallicRoughness.roughness *= metallicRoughness.g;
 
@@ -280,7 +271,7 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv,
 
 bool IsDiffuseTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).diffuseTexture != INVALID_RESOURCE_INDEX;
 #else
     #if DIFFUSE_TEXTURE
@@ -293,7 +284,7 @@ bool IsDiffuseTextureEnabled(uint instanceIndex)
 
 bool IsSpecularGlossinessTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).specularGlossinessTexture != INVALID_RESOURCE_INDEX;
 #else
     #if SPECULAR_GLOSSINESS_TEXTURE
@@ -304,7 +295,7 @@ bool IsSpecularGlossinessTextureEnabled(uint instanceIndex)
 #endif
 }
 
-PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 uv, float mipLOD = 0.0)
+PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 uv, float diffuseMipLOD = 0.0, float specularMipLOD = 0.0)
 {
     PbrSpecularGlossiness pbrSpecularGlossiness;
     pbrSpecularGlossiness.diffuse = GetMaterialConstant(instanceIndex).diffuse;
@@ -316,7 +307,7 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 u
     {
         Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).diffuseTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).diffuseTextureTransform;
-        float4 diffuse = SampleMaterialTexture(diffuseTexture, uv, transform, mipLOD);
+        float4 diffuse = SampleMaterialTexture(diffuseTexture, uv, transform, diffuseMipLOD);
         pbrSpecularGlossiness.diffuse *= diffuse.xyz;
         pbrSpecularGlossiness.alpha = diffuse.w;
     }
@@ -325,7 +316,7 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 u
     {
         Texture2D specularGlossinessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).specularGlossinessTexture);
         UVTransform transform = GetMaterialConstant(instanceIndex).specularGlossinessTextureTransform;
-        float4 specularGlossiness = SampleMaterialTexture(specularGlossinessTexture, uv, transform, mipLOD);
+        float4 specularGlossiness = SampleMaterialTexture(specularGlossinessTexture, uv, transform, specularMipLOD);
         pbrSpecularGlossiness.specular *= specularGlossiness.xyz;
         pbrSpecularGlossiness.glossiness *= specularGlossiness.w;
     }
@@ -335,7 +326,7 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 u
 
 bool IsNormalTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).normalTexture != INVALID_RESOURCE_INDEX;
 #else
     #if NORMAL_TEXTURE
@@ -348,7 +339,7 @@ bool IsNormalTextureEnabled(uint instanceIndex)
 
 bool IsRGNormalTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).bRGNormalTexture;
 #else
     #if RG_NORMAL_TEXTURE
@@ -383,7 +374,7 @@ float3 GetMaterialNormal(uint instanceIndex, float2 uv, float3 T, float3 B, floa
 
 bool IsAOTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).aoTexture != INVALID_RESOURCE_INDEX;
 #else
     #if AO_TEXTURE
@@ -410,7 +401,7 @@ float GetMaterialAO(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 
 bool IsEmissiveTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).emissiveTexture != INVALID_RESOURCE_INDEX;
 #else
     #if EMISSIVE_TEXTURE
@@ -435,7 +426,7 @@ float3 GetMaterialEmissive(uint instanceIndex, float2 uv, float mipLOD = 0.0)
     
 bool IsAnisotropyTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).anisotropyTexture != INVALID_RESOURCE_INDEX;
 #else
     #if ANISOTROPIC_TANGENT_TEXTURE
@@ -464,7 +455,7 @@ float3 GetMaterialAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, flo
 
 bool IsSheenColorTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).sheenColorTexture != INVALID_RESOURCE_INDEX;
 #else
     #if SHEEN_COLOR_TEXTURE
@@ -477,7 +468,7 @@ bool IsSheenColorTextureEnabled(uint instanceIndex)
 
 bool IsSheenColorRoughnessTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).sheenColorTexture != INVALID_RESOURCE_INDEX &&
         GetMaterialConstant(instanceIndex).sheenColorTexture == GetMaterialConstant(instanceIndex).sheenRoughnessTexture;
 #else
@@ -491,7 +482,7 @@ bool IsSheenColorRoughnessTextureEnabled(uint instanceIndex)
 
 bool IsSheenRoughnessTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).sheenRoughnessTexture != INVALID_RESOURCE_INDEX;
 #else
     #if SHEEN_ROUGHNESS_TEXTURE
@@ -532,7 +523,7 @@ float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv, float mi
 
 bool IsClearCoatTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).clearCoatTexture != INVALID_RESOURCE_INDEX;
 #else
     #if CLEAR_COAT_TEXTURE
@@ -545,7 +536,7 @@ bool IsClearCoatTextureEnabled(uint instanceIndex)
 
 bool IsClearCoatRoughnessCombinedTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).clearCoatTexture != INVALID_RESOURCE_INDEX &&
         GetMaterialConstant(instanceIndex).clearCoatTexture == GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture;
 #else
@@ -559,7 +550,7 @@ bool IsClearCoatRoughnessCombinedTextureEnabled(uint instanceIndex)
 
 bool IsClearCoatRoughnessTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture != INVALID_RESOURCE_INDEX;
 #else
     #if CLEAR_COAT_ROUGHNESS_TEXTURE
@@ -600,7 +591,7 @@ float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv, float mip
 
 bool IsClearCoatNormalTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).clearCoatNormalTexture != INVALID_RESOURCE_INDEX;
 #else
     #if CLEAR_COAT_NORMAL_TEXTURE
@@ -613,7 +604,7 @@ bool IsClearCoatNormalTextureEnabled(uint instanceIndex)
 
 bool IsRGClearCoatNormalTextureEnabled(uint instanceIndex)
 {
-#ifdef DYNAMIC_MATERIAL_SWITCH
+#ifdef RAY_TRACING
     return GetMaterialConstant(instanceIndex).bRGClearCoatNormalTexture;
 #else
     #if RG_CLEAR_COAT_NORMAL_TEXTURE

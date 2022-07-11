@@ -49,7 +49,7 @@ struct ModelMaterialConstant
     
     uint clearCoatNormalTexture;
     uint bRGClearCoatNormalTexture;
-    uint3 _padding;
+    uint2 _padding;
 
     UVTransform albedoTextureTransform;
     UVTransform metallicRoughnessTextureTransform;

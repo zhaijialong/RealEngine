@@ -276,3 +276,22 @@ float3 DiffuseIBL(float3 N)
 
     return envTexture.SampleLevel(linearSampler, N, 0.0).xyz;
 }
+
+// "Texture Level-of-Detail Strategies for Real-Time Ray Tracing"
+float ComputeTextureLOD(float3 p0, float3 p1, float3 p2, float2 uv0, float2 uv1, float2 uv2, uint textureIndex, float3 rayDirection, float3 surfaceNormal, float rayConeWidth)
+{
+    if (textureIndex == INVALID_RESOURCE_INDEX)
+    {
+        return 0.0;
+    }
+
+    Texture2D texture = ResourceDescriptorHeap[NonUniformResourceIndex(textureIndex)];
+    float textureWidth, textureHeight;
+    texture.GetDimensions(textureWidth, textureHeight);
+        
+    float P_a = length(cross(p1 - p0, p2 - p0)); // Eq. 4
+    float T_a = abs((uv1.x - uv0.x) * (uv2.y - uv0.y) - (uv2.x - uv0.x) * (uv1.y - uv1.y)) * textureWidth * textureHeight; // Eq. 4
+    float triangleLODConstant = 0.5 * log2(T_a / P_a); // Eq. 3
+        
+    return triangleLODConstant + log2(abs(rayConeWidth)) - log2(abs(dot(rayDirection, surfaceNormal))); //Eq. 34
+}

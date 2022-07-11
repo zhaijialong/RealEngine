@@ -66,6 +66,8 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 throughput = 1.0;
     float pdf = 1.0;
 
+    rt::RayCone cone = rt::RayCone::FromGBuffer(GetLinearDepth(depth));
+    
     for (uint i = 0; i < c_maxRayLength + 1; ++i)
     {
         //direct light
@@ -147,7 +149,8 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         rt::HitInfo hitInfo;
         if (rt::TraceRay(ray, hitInfo))
         {
-            rt::MaterialData material = rt::GetMaterial(hitInfo);
+            cone.Propagate(0.0, hitInfo.rayT);
+            rt::MaterialData material = rt::GetMaterial(ray, hitInfo, cone);
 
             position = hitInfo.position;
             wo = -wi;

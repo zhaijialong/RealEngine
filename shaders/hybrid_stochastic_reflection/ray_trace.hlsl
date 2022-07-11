@@ -56,10 +56,14 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     ray.TMin = 0.001;
     ray.TMax = 1000.0;
     
+    rt::RayCone cone = rt::RayCone::FromGBuffer(GetLinearDepth(depth));
     rt::HitInfo hitInfo;
+
     if (c_bEnableHWRay && rt::TraceRay(ray, hitInfo))
     {
-        rt::MaterialData material = rt::GetMaterial(hitInfo);
+        cone.Propagate(0.0, hitInfo.rayT); // using 0 since no curvature measure at second hit
+
+        rt::MaterialData material = rt::GetMaterial(ray, hitInfo, cone);
         radiance = rt::Shade(hitInfo, material, -direction);
         rayLength = hitInfo.rayT;
     }

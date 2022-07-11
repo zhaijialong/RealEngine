@@ -140,6 +140,7 @@ void Camera::Tick(float delta_time)
 void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
 {
     m_cameraCB.cameraPos = GetPosition();
+    m_cameraCB.verticalFOV = degree_to_randian(m_fov);
     m_cameraCB.nearZ = m_znear;
     m_cameraCB.farZ = m_zfar;
     m_cameraCB.linearZParams = CalcDepthLinearizationParams(m_projection);
