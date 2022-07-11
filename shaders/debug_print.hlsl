@@ -74,7 +74,6 @@ void main_ms(
         uint primitive1 = groupIndex * 2 + 1;
         
         float2 pos = text.screenPosition;
-        uint16_t4 charBox = unpack_u8u16((uint8_t4_packed)backedChar.bbox);
         
         //basically gpu version of stbtt_GetBakedQuad
         int round_x = floor((pos.x + backedChar.xoff) + 0.5f);
@@ -82,18 +81,18 @@ void main_ms(
         
         float x0 = round_x;
         float y0 = round_y;
-        float x1 = round_x + charBox.z - charBox.x;
-        float y1 = round_y + charBox.w - charBox.y;
+        float x1 = round_x + backedChar.x1 - backedChar.x0;
+        float y1 = round_y + backedChar.y1 - backedChar.y0;
     
         float width = 0;
         float height = 0;
         Texture2D<float> fontTexture = ResourceDescriptorHeap[c_fontTexture];
         fontTexture.GetDimensions(width, height);
     
-        float s0 = charBox.x / width;
-        float t0 = charBox.y / height;
-        float s1 = charBox.z / width;
-        float t1 = charBox.w / height;
+        float s0 = backedChar.x0 / width;
+        float t0 = backedChar.y0 / height;
+        float s1 = backedChar.x1 / width;
+        float t1 = backedChar.y1 / height;
 
         vertices[v0].pos = float4(GetNdcPosition(float2(x0, y0), SceneCB.rcpDisplaySize), 0.0, 1.0);
         vertices[v1].pos = float4(GetNdcPosition(float2(x0, y1), SceneCB.rcpDisplaySize), 0.0, 1.0);

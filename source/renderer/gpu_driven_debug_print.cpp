@@ -105,17 +105,10 @@ void GpuDrivenDebugPrint::CreateFontTexture()
     //packed version of stbtt_bakedchar
     struct BakedChar
     {
-        union
-        {
-            struct
-            {
-                uint8_t x0;
-                uint8_t y0;
-                uint8_t x1;
-                uint8_t y1;
-            };
-            uint32_t bbox;
-        };
+        uint8_t x0;
+        uint8_t y0;
+        uint8_t x1;
+        uint8_t y1;
 
         float xoff;
         float yoff;

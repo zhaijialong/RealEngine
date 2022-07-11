@@ -98,7 +98,11 @@ namespace debug
     //packed version of stbtt_bakedchar
     struct BakedChar
     {
-        uint bbox; //uint8_t x0, y0, x1, y1; // coordinates of bbox in bitmap
+        uint x0 : 8; // coordinates of bbox in bitmap
+        uint y0 : 8;
+        uint x1 : 8;
+        uint y1 : 8;
+
         float xoff;
         float yoff;
         float xadvance;
