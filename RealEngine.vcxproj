@@ -484,6 +484,7 @@
     <None Include="shaders\screen_space_ray_trace.hlsli" />
     <None Include="shaders\shading_model.hlsli" />
     <None Include="shaders\stats.hlsli" />
+    <None Include="shaders\texture.hlsli" />
     <None Include="shaders\tone_mapping.hlsli" />
     <None Include="shaders\XeGTAO.hlsli" />
     <None Include="source\renderer\render_graph.inl" />

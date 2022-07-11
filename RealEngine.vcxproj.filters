@@ -1299,6 +1299,9 @@
     <None Include="shaders\brdf.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\texture.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

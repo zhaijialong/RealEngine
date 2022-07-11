@@ -215,13 +215,6 @@ IGfxPipelineState* MeshMaterial::GetVertexSkinningPSO()
 void MeshMaterial::UpdateConstants()
 {
     m_materialCB.shadingModel = (uint)m_shadingModel;
-    m_materialCB.albedoTexture = m_pAlbedoTexture ? m_pAlbedoTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.metallicRoughnessTexture = m_pMetallicRoughnessTexture ? m_pMetallicRoughnessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.normalTexture = m_pNormalTexture ? m_pNormalTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.emissiveTexture = m_pEmissiveTexture ? m_pEmissiveTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.aoTexture = m_pAOTexture ? m_pAOTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.diffuseTexture = m_pDiffuseTexture ? m_pDiffuseTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.specularGlossinessTexture = m_pSpecularGlossinessTexture ? m_pSpecularGlossinessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_materialCB.albedo = m_albedoColor;
     m_materialCB.emissive = m_emissiveColor;
     m_materialCB.metallic = m_metallic;
@@ -231,14 +224,8 @@ void MeshMaterial::UpdateConstants()
     m_materialCB.specular = m_specularColor;
     m_materialCB.glossiness = m_glossiness;
     m_materialCB.anisotropy = m_anisotropy;
-    m_materialCB.anisotropyTexture = m_pAnisotropicTangentTexture ? m_pAnisotropicTangentTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.sheenColorTexture = m_pSheenColorTexture ? m_pSheenColorTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.sheenRoughnessTexture = m_pSheenRoughnessTexture ? m_pSheenRoughnessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_materialCB.sheenColor = m_sheenColor;
     m_materialCB.sheenRoughness = m_sheenRoughness;
-    m_materialCB.clearCoatTexture = m_pClearCoatTexture ? m_pClearCoatTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.clearCoatRoughnessTexture = m_pClearCoatRoughnessTexture ? m_pClearCoatRoughnessTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    m_materialCB.clearCoatNormalTexture = m_pClearCoatNormalTexture ? m_pClearCoatNormalTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     m_materialCB.clearCoat = m_clearCoat;
     m_materialCB.clearCoatRoughness = m_clearCoatRoughness;
 

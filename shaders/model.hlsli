@@ -177,25 +177,12 @@ SamplerState GetMaterialSampler()
     return SamplerDescriptorHeap[SceneCB.aniso8xSampler];
 #endif
 }
-
-float2 ApplyUVTransform(float2 uv, UVTransform transform)
-{
-    if(transform.bEnable)
-    {
-        float3x3 translation = float3x3(1, 0, 0, 0, 1, 0, transform.offset.x, transform.offset.y, 1);
-        float3x3 rotation = float3x3(cos(transform.rotation), sin(transform.rotation), 0, -sin(transform.rotation), cos(transform.rotation), 0, 0, 0, 1);
-        float3x3 scale = float3x3(transform.scale.x, 0, 0, 0, transform.scale.y, 0, 0, 0, 1);
-
-        return mul(mul(mul(float3(uv, 1), scale), rotation), translation).xy;
-    }
-
-    return uv;
-}
     
-float4 SampleMaterialTexture(Texture2D texture, float2 uv, UVTransform transform, float mipLOD)
+float4 SampleMaterialTexture(MaterialTextureInfo textureInfo, float2 uv, float mipLOD)
 {
+    Texture2D texture = GetMaterialTexture2D(textureInfo.index);
     SamplerState linearSampler = GetMaterialSampler();
-    uv = ApplyUVTransform(uv, transform);
+    uv = textureInfo.TransformUV(uv);
 
 #ifdef RAY_TRACING
     return texture.SampleLevel(linearSampler, uv, mipLOD);
@@ -207,7 +194,7 @@ float4 SampleMaterialTexture(Texture2D texture, float2 uv, UVTransform transform
 bool IsAlbedoTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).albedoTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).albedoTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if ALBEDO_TEXTURE
         return true;
@@ -220,7 +207,7 @@ bool IsAlbedoTextureEnabled(uint instanceIndex)
 bool IsMetallicRoughnessTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).metallicRoughnessTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).metallicRoughnessTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if METALLIC_ROUGHNESS_TEXTURE
         return true;
@@ -233,8 +220,8 @@ bool IsMetallicRoughnessTextureEnabled(uint instanceIndex)
 bool IsAOMetallicRoughnessTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).metallicRoughnessTexture != INVALID_RESOURCE_INDEX &&
-        GetMaterialConstant(instanceIndex).metallicRoughnessTexture == GetMaterialConstant(instanceIndex).aoTexture;
+    return GetMaterialConstant(instanceIndex).metallicRoughnessTexture.index != INVALID_RESOURCE_INDEX &&
+        GetMaterialConstant(instanceIndex).metallicRoughnessTexture.index == GetMaterialConstant(instanceIndex).aoTexture.index;
 #else
     #if AO_METALLIC_ROUGHNESS_TEXTURE
         return true;
@@ -246,27 +233,25 @@ bool IsAOMetallicRoughnessTextureEnabled(uint instanceIndex)
 
 PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv, float albedoMipLOD = 0.0, float metallicMipLOD = 0.0)
 {
+    ModelMaterialConstant material = GetMaterialConstant(instanceIndex);
+
     PbrMetallicRoughness pbrMetallicRoughness;
-    pbrMetallicRoughness.albedo = GetMaterialConstant(instanceIndex).albedo.xyz;
+    pbrMetallicRoughness.albedo = material.albedo.xyz;
     pbrMetallicRoughness.alpha = 1.0;
-    pbrMetallicRoughness.metallic = GetMaterialConstant(instanceIndex).metallic;
-    pbrMetallicRoughness.roughness = GetMaterialConstant(instanceIndex).roughness;
+    pbrMetallicRoughness.metallic = material.metallic;
+    pbrMetallicRoughness.roughness = material.roughness;
     pbrMetallicRoughness.ao = 1.0;
     
     if(IsAlbedoTextureEnabled(instanceIndex))
     {
-        Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).albedoTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).albedoTextureTransform;
-        float4 albedo = SampleMaterialTexture(albedoTexture, uv, transform, albedoMipLOD);
+        float4 albedo = SampleMaterialTexture(material.albedoTexture, uv, albedoMipLOD);
         pbrMetallicRoughness.albedo *= albedo.xyz;
         pbrMetallicRoughness.alpha = albedo.w;
     }
     
     if(IsMetallicRoughnessTextureEnabled(instanceIndex))
     {
-        Texture2D metallicRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).metallicRoughnessTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).metallicRoughnessTextureTransform;
-        float4 metallicRoughness = SampleMaterialTexture(metallicRoughnessTexture, uv, transform, metallicMipLOD);
+        float4 metallicRoughness = SampleMaterialTexture(material.metallicRoughnessTexture, uv, metallicMipLOD);
         pbrMetallicRoughness.metallic *= metallicRoughness.b;
         pbrMetallicRoughness.roughness *= metallicRoughness.g;
 
@@ -282,7 +267,7 @@ PbrMetallicRoughness GetMaterialMetallicRoughness(uint instanceIndex, float2 uv,
 bool IsDiffuseTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).diffuseTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).diffuseTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if DIFFUSE_TEXTURE
         return true;
@@ -295,7 +280,7 @@ bool IsDiffuseTextureEnabled(uint instanceIndex)
 bool IsSpecularGlossinessTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).specularGlossinessTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).specularGlossinessTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if SPECULAR_GLOSSINESS_TEXTURE
         return true;
@@ -307,26 +292,24 @@ bool IsSpecularGlossinessTextureEnabled(uint instanceIndex)
 
 PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 uv, float diffuseMipLOD = 0.0, float specularMipLOD = 0.0)
 {
+    ModelMaterialConstant material = GetMaterialConstant(instanceIndex);
+        
     PbrSpecularGlossiness pbrSpecularGlossiness;
-    pbrSpecularGlossiness.diffuse = GetMaterialConstant(instanceIndex).diffuse;
-    pbrSpecularGlossiness.specular = GetMaterialConstant(instanceIndex).specular;
-    pbrSpecularGlossiness.glossiness = GetMaterialConstant(instanceIndex).glossiness;
+    pbrSpecularGlossiness.diffuse = material.diffuse;
+    pbrSpecularGlossiness.specular = material.specular;
+    pbrSpecularGlossiness.glossiness = material.glossiness;
     pbrSpecularGlossiness.alpha = 1.0;
     
     if(IsDiffuseTextureEnabled(instanceIndex))
     {
-        Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).diffuseTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).diffuseTextureTransform;
-        float4 diffuse = SampleMaterialTexture(diffuseTexture, uv, transform, diffuseMipLOD);
+        float4 diffuse = SampleMaterialTexture(material.diffuseTexture, uv, diffuseMipLOD);
         pbrSpecularGlossiness.diffuse *= diffuse.xyz;
         pbrSpecularGlossiness.alpha = diffuse.w;
     }
     
     if(IsSpecularGlossinessTextureEnabled(instanceIndex))
     {
-        Texture2D specularGlossinessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).specularGlossinessTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).specularGlossinessTextureTransform;
-        float4 specularGlossiness = SampleMaterialTexture(specularGlossinessTexture, uv, transform, specularMipLOD);
+        float4 specularGlossiness = SampleMaterialTexture(material.specularGlossinessTexture, uv, specularMipLOD);
         pbrSpecularGlossiness.specular *= specularGlossiness.xyz;
         pbrSpecularGlossiness.glossiness *= specularGlossiness.w;
     }
@@ -337,7 +320,7 @@ PbrSpecularGlossiness GetMaterialSpecularGlossiness(uint instanceIndex, float2 u
 bool IsNormalTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).normalTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).normalTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if NORMAL_TEXTURE
         return true;
@@ -362,10 +345,8 @@ bool IsRGNormalTextureEnabled(uint instanceIndex)
 
 float3 GetMaterialNormal(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N, float mipLOD = 0.0f)
 {
-    Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).normalTexture);
-    UVTransform transform = GetMaterialConstant(instanceIndex).normalTextureTransform;
-    
-    float3 normal = SampleMaterialTexture(normalTexture, uv, transform, mipLOD).xyz;
+    ModelMaterialConstant material = GetMaterialConstant(instanceIndex);    
+    float3 normal = SampleMaterialTexture(material.normalTexture, uv, mipLOD).xyz;
     
     if(IsRGNormalTextureEnabled(instanceIndex))
     {
@@ -385,7 +366,7 @@ float3 GetMaterialNormal(uint instanceIndex, float2 uv, float3 T, float3 B, floa
 bool IsAOTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).aoTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).aoTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if AO_TEXTURE
         return true;
@@ -401,9 +382,8 @@ float GetMaterialAO(uint instanceIndex, float2 uv, float mipLOD = 0.0)
     
     if(IsAOTextureEnabled(instanceIndex) && !IsAOMetallicRoughnessTextureEnabled(instanceIndex))
     {
-        Texture2D aoTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).aoTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).aoTextureTransform;
-        ao = SampleMaterialTexture(aoTexture, uv, transform, mipLOD).x;
+        ModelMaterialConstant material = GetMaterialConstant(instanceIndex);
+        ao = SampleMaterialTexture(material.aoTexture, uv, mipLOD).x;
     }
 
     return ao;
@@ -412,7 +392,7 @@ float GetMaterialAO(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 bool IsEmissiveTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).emissiveTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).emissiveTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if EMISSIVE_TEXTURE
         return true;
@@ -424,12 +404,11 @@ bool IsEmissiveTextureEnabled(uint instanceIndex)
 
 float3 GetMaterialEmissive(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
-    float3 emissive = GetMaterialConstant(instanceIndex).emissive;
+    ModelMaterialConstant material = GetMaterialConstant(instanceIndex);
+    float3 emissive = material.emissive;
     if(IsEmissiveTextureEnabled(instanceIndex))
     {
-        Texture2D emissiveTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).emissiveTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).emissiveTextureTransform;
-        emissive *= SampleMaterialTexture(emissiveTexture, uv, transform, mipLOD).xyz;
+        emissive *= SampleMaterialTexture(material.emissiveTexture, uv, mipLOD).xyz;
     }
     return emissive;
 }
@@ -437,7 +416,7 @@ float3 GetMaterialEmissive(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 bool IsAnisotropyTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).anisotropyTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).anisotropyTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if ANISOTROPIC_TANGENT_TEXTURE
         return true;
@@ -452,9 +431,8 @@ float3 GetMaterialAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, flo
      float3 anisotropicT = T;
     if(IsAnisotropyTextureEnabled(instanceIndex))
     {
-        Texture2D anisotropyTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).anisotropyTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).anisotropyTextureTransform;
-        float2 anisotropy = SampleMaterialTexture(anisotropyTexture, uv, transform, mipLOD).xy * 2.0 - 1.0;
+        ModelMaterialConstant material = GetMaterialConstant(instanceIndex);
+        float2 anisotropy = SampleMaterialTexture(material.anisotropyTexture, uv, mipLOD).xy * 2.0 - 1.0;
         anisotropicT = T * anisotropy.x + B * anisotropy.y;
     }
 
@@ -466,7 +444,7 @@ float3 GetMaterialAnisotropyTangent(uint instanceIndex, float2 uv, float3 T, flo
 bool IsSheenColorTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).sheenColorTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).sheenColorTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if SHEEN_COLOR_TEXTURE
         return true;
@@ -479,8 +457,8 @@ bool IsSheenColorTextureEnabled(uint instanceIndex)
 bool IsSheenColorRoughnessTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).sheenColorTexture != INVALID_RESOURCE_INDEX &&
-        GetMaterialConstant(instanceIndex).sheenColorTexture == GetMaterialConstant(instanceIndex).sheenRoughnessTexture;
+    return GetMaterialConstant(instanceIndex).sheenColorTexture.index != INVALID_RESOURCE_INDEX &&
+        GetMaterialConstant(instanceIndex).sheenColorTexture.index == GetMaterialConstant(instanceIndex).sheenRoughnessTexture.index;
 #else
     #if SHEEN_COLOR_ROUGHNESS_TEXTURE
         return true;
@@ -493,7 +471,7 @@ bool IsSheenColorRoughnessTextureEnabled(uint instanceIndex)
 bool IsSheenRoughnessTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).sheenRoughnessTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).sheenRoughnessTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if SHEEN_ROUGHNESS_TEXTURE
         return true;
@@ -505,14 +483,13 @@ bool IsSheenRoughnessTextureEnabled(uint instanceIndex)
 
 float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
-    float3 sheenColor = GetMaterialConstant(instanceIndex).sheenColor;
-    float sheenRoughness = GetMaterialConstant(instanceIndex).sheenRoughness;
+    ModelMaterialConstant material = GetMaterialConstant(instanceIndex);
+    float3 sheenColor = material.sheenColor;
+    float sheenRoughness = material.sheenRoughness;
     
     if(IsSheenColorTextureEnabled(instanceIndex))
     {
-        Texture2D sheenColorTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenColorTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).sheenColorTextureTransform;
-        float4 sheenTexture = SampleMaterialTexture(sheenColorTexture, uv, transform, mipLOD);
+        float4 sheenTexture = SampleMaterialTexture(material.sheenColorTexture, uv, mipLOD);
         sheenColor *= sheenTexture.xyz;
             
         if (IsSheenColorRoughnessTextureEnabled(instanceIndex))
@@ -523,9 +500,7 @@ float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv, float mi
         
     if (IsSheenRoughnessTextureEnabled(instanceIndex) && !IsSheenColorRoughnessTextureEnabled(instanceIndex))
     {
-        Texture2D sheenRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).sheenRoughnessTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).sheenRoughnessTextureTransform;
-        sheenRoughness *= SampleMaterialTexture(sheenRoughnessTexture, uv, transform, mipLOD).w;
+        sheenRoughness *= SampleMaterialTexture(material.sheenRoughnessTexture, uv, mipLOD).w;
     }
 
     return float4(sheenColor, sheenRoughness);
@@ -534,7 +509,7 @@ float4 GetMaterialSheenColorAndRoughness(uint instanceIndex, float2 uv, float mi
 bool IsClearCoatTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).clearCoatTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).clearCoatTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if CLEAR_COAT_TEXTURE
         return true;
@@ -547,8 +522,8 @@ bool IsClearCoatTextureEnabled(uint instanceIndex)
 bool IsClearCoatRoughnessCombinedTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).clearCoatTexture != INVALID_RESOURCE_INDEX &&
-        GetMaterialConstant(instanceIndex).clearCoatTexture == GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture;
+    return GetMaterialConstant(instanceIndex).clearCoatTexture.index != INVALID_RESOURCE_INDEX &&
+        GetMaterialConstant(instanceIndex).clearCoatTexture.index == GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture.index;
 #else
     #if CLEAR_COAT_ROUGHNESS_COMBINED_TEXTURE
         return true;
@@ -561,7 +536,7 @@ bool IsClearCoatRoughnessCombinedTextureEnabled(uint instanceIndex)
 bool IsClearCoatRoughnessTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if CLEAR_COAT_ROUGHNESS_TEXTURE
         return true;
@@ -573,14 +548,13 @@ bool IsClearCoatRoughnessTextureEnabled(uint instanceIndex)
 
 float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv, float mipLOD = 0.0)
 {
-    float clearCoat = GetMaterialConstant(instanceIndex).clearCoat;
-    float clearCoatRoughness = GetMaterialConstant(instanceIndex).clearCoatRoughness;
+    ModelMaterialConstant material = GetMaterialConstant(instanceIndex);
+    float clearCoat = material.clearCoat;
+    float clearCoatRoughness = material.clearCoatRoughness;
 
     if(IsClearCoatTextureEnabled(instanceIndex))
     {
-        Texture2D clearCoatTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatTextureTransform;
-        float4 clearCoatTex = SampleMaterialTexture(clearCoatTexture, uv, transform, mipLOD);
+        float4 clearCoatTex = SampleMaterialTexture(material.clearCoatTexture, uv, mipLOD);
         clearCoat *= clearCoatTex.r;
             
         if (IsClearCoatRoughnessCombinedTextureEnabled(instanceIndex))
@@ -591,9 +565,7 @@ float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv, float mip
 
     if (IsClearCoatRoughnessTextureEnabled(instanceIndex) && !IsClearCoatRoughnessCombinedTextureEnabled(instanceIndex))
     {
-        Texture2D clearCoatRoughnessTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatRoughnessTexture);
-        UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatRoughnessTextureTransform;
-        clearCoatRoughness *= SampleMaterialTexture(clearCoatRoughnessTexture, uv, transform, mipLOD).g;
+        clearCoatRoughness *= SampleMaterialTexture(material.clearCoatRoughnessTexture, uv, mipLOD).g;
     }
         
     return float2(clearCoat, clearCoatRoughness);
@@ -602,7 +574,7 @@ float2 GetMaterialClearCoatAndRoughness(uint instanceIndex, float2 uv, float mip
 bool IsClearCoatNormalTextureEnabled(uint instanceIndex)
 {
 #ifdef RAY_TRACING
-    return GetMaterialConstant(instanceIndex).clearCoatNormalTexture != INVALID_RESOURCE_INDEX;
+    return GetMaterialConstant(instanceIndex).clearCoatNormalTexture.index != INVALID_RESOURCE_INDEX;
 #else
     #if CLEAR_COAT_NORMAL_TEXTURE
         return true;
@@ -627,10 +599,9 @@ bool IsRGClearCoatNormalTextureEnabled(uint instanceIndex)
 
 float3 GetMaterialClearCoatNormal(uint instanceIndex, float2 uv, float3 T, float3 B, float3 N, float mipLOD = 0.0)
 {
-    Texture2D normalTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).clearCoatNormalTexture);
-    UVTransform transform = GetMaterialConstant(instanceIndex).clearCoatNormalTextureTransform;
+    ModelMaterialConstant material = GetMaterialConstant(instanceIndex);
     
-    float3 normal = SampleMaterialTexture(normalTexture, uv, transform, mipLOD).xyz;
+    float3 normal = SampleMaterialTexture(material.clearCoatNormalTexture, uv, mipLOD).xyz;
     
     if(IsRGClearCoatNormalTextureEnabled(instanceIndex))
     {
@@ -650,13 +621,10 @@ float3 GetMaterialClearCoatNormal(uint instanceIndex, float2 uv, float3 T, float
 void AlphaTest(uint instanceIndex, float2 uv)
 {
     float alpha = 1.0;
-    SamplerState linearSampler = GetMaterialSampler();
 #if ALBEDO_TEXTURE
-    Texture2D albedoTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).albedoTexture);
-    alpha = albedoTexture.Sample(linearSampler, uv).a;
+    alpha = SampleMaterialTexture(GetMaterialConstant(instanceIndex).albedoTexture, uv, 0).a;
 #elif DIFFUSE_TEXTURE
-    Texture2D diffuseTexture = GetMaterialTexture2D(GetMaterialConstant(instanceIndex).diffuseTexture);
-    alpha = diffuseTexture.Sample(linearSampler, uv).a;
+    alpha = SampleMaterialTexture(GetMaterialConstant(instanceIndex).diffuseTexture, uv, 0).a;
 #endif
     clip(alpha - GetMaterialConstant(instanceIndex).alphaCutoff);
 }

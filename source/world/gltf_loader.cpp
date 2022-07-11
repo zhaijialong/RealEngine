@@ -232,19 +232,26 @@ Texture2D* GLTFLoader::LoadTexture(const cgltf_texture_view& texture_view, bool 
     return texture;
 }
 
-inline UVTransform LoadTextureTransform(const cgltf_texture_view& texture_view)
+inline MaterialTextureInfo LoadTextureInfo(const Texture2D* texture, const cgltf_texture_view& texture_view)
 {
-    UVTransform transform = {};
+    MaterialTextureInfo info;
 
-    if (texture_view.has_transform)
+    if (texture)
     {
-        transform.bEnable = true;
-        transform.offset = float2(texture_view.transform.offset);
-        transform.scale = float2(texture_view.transform.scale);
-        transform.rotation = texture_view.transform.rotation;
+        info.index = texture->GetSRV()->GetHeapIndex();
+        info.width = texture->GetTexture()->GetDesc().width;
+        info.height = texture->GetTexture()->GetDesc().height;
+
+        if (texture_view.has_transform)
+        {
+            info.bTransform = true;
+            info.offset = float2(texture_view.transform.offset);
+            info.scale = float2(texture_view.transform.scale);
+            info.rotation = texture_view.transform.rotation;
+        }
     }
 
-    return transform;
+    return info;
 }
 
 MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
@@ -261,9 +268,9 @@ MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
     {
         material->m_bPbrMetallicRoughness = true;
         material->m_pAlbedoTexture = LoadTexture(gltf_material->pbr_metallic_roughness.base_color_texture, true);
-        material->m_materialCB.albedoTextureTransform = LoadTextureTransform(gltf_material->pbr_metallic_roughness.base_color_texture);
+        material->m_materialCB.albedoTexture = LoadTextureInfo(material->m_pAlbedoTexture, gltf_material->pbr_metallic_roughness.base_color_texture);
         material->m_pMetallicRoughnessTexture = LoadTexture(gltf_material->pbr_metallic_roughness.metallic_roughness_texture, false);
-        material->m_materialCB.metallicRoughnessTextureTransform = LoadTextureTransform(gltf_material->pbr_metallic_roughness.metallic_roughness_texture);
+        material->m_materialCB.metallicRoughnessTexture = LoadTextureInfo(material->m_pMetallicRoughnessTexture, gltf_material->pbr_metallic_roughness.metallic_roughness_texture);
         material->m_albedoColor = float3(gltf_material->pbr_metallic_roughness.base_color_factor);
         material->m_metallic = gltf_material->pbr_metallic_roughness.metallic_factor;
         material->m_roughness = gltf_material->pbr_metallic_roughness.roughness_factor;
@@ -272,20 +279,20 @@ MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
     {
         material->m_bPbrSpecularGlossiness = true;
         material->m_pDiffuseTexture = LoadTexture(gltf_material->pbr_specular_glossiness.diffuse_texture, true);
-        material->m_materialCB.diffuseTextureTransform = LoadTextureTransform(gltf_material->pbr_specular_glossiness.diffuse_texture);
+        material->m_materialCB.diffuseTexture = LoadTextureInfo(material->m_pDiffuseTexture, gltf_material->pbr_specular_glossiness.diffuse_texture);
         material->m_pSpecularGlossinessTexture = LoadTexture(gltf_material->pbr_specular_glossiness.specular_glossiness_texture, true);
-        material->m_materialCB.specularGlossinessTextureTransform = LoadTextureTransform(gltf_material->pbr_specular_glossiness.specular_glossiness_texture);
+        material->m_materialCB.specularGlossinessTexture = LoadTextureInfo(material->m_pSpecularGlossinessTexture, gltf_material->pbr_specular_glossiness.specular_glossiness_texture);
         material->m_diffuseColor = float3(gltf_material->pbr_specular_glossiness.diffuse_factor);
         material->m_specularColor = float3(gltf_material->pbr_specular_glossiness.specular_factor);
         material->m_glossiness = gltf_material->pbr_specular_glossiness.glossiness_factor;
     }
 
     material->m_pNormalTexture = LoadTexture(gltf_material->normal_texture, false);
-    material->m_materialCB.normalTextureTransform = LoadTextureTransform(gltf_material->normal_texture);
+    material->m_materialCB.normalTexture = LoadTextureInfo(material->m_pNormalTexture, gltf_material->normal_texture);
     material->m_pEmissiveTexture = LoadTexture(gltf_material->emissive_texture, true);
-    material->m_materialCB.emissiveTextureTransform = LoadTextureTransform(gltf_material->emissive_texture);
+    material->m_materialCB.emissiveTexture = LoadTextureInfo(material->m_pEmissiveTexture, gltf_material->emissive_texture);
     material->m_pAOTexture = LoadTexture(gltf_material->occlusion_texture, false);
-    material->m_materialCB.aoTextureTransform = LoadTextureTransform(gltf_material->occlusion_texture);
+    material->m_materialCB.aoTexture = LoadTextureInfo(material->m_pAOTexture, gltf_material->occlusion_texture);
 
     material->m_emissiveColor = float3(gltf_material->emissive_factor);
     material->m_alphaCutoff = gltf_material->alpha_cutoff;
@@ -307,8 +314,8 @@ MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
         material->m_pSheenRoughnessTexture = LoadTexture(gltf_material->sheen.sheen_roughness_texture, false);
         material->m_sheenRoughness = gltf_material->sheen.sheen_roughness_factor;
 
-        material->m_materialCB.sheenColorTextureTransform = LoadTextureTransform(gltf_material->sheen.sheen_color_texture);
-        material->m_materialCB.sheenRoughnessTextureTransform = LoadTextureTransform(gltf_material->sheen.sheen_roughness_texture);
+        material->m_materialCB.sheenColorTexture = LoadTextureInfo(material->m_pSheenColorTexture, gltf_material->sheen.sheen_color_texture);
+        material->m_materialCB.sheenRoughnessTexture = LoadTextureInfo(material->m_pSheenRoughnessTexture, gltf_material->sheen.sheen_roughness_texture);
     }
 
     if (gltf_material->has_clearcoat)
@@ -320,9 +327,9 @@ MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
         material->m_clearCoat = gltf_material->clearcoat.clearcoat_factor;
         material->m_clearCoatRoughness = gltf_material->clearcoat.clearcoat_roughness_factor;
 
-        material->m_materialCB.clearCoatTextureTransform = LoadTextureTransform(gltf_material->clearcoat.clearcoat_texture);
-        material->m_materialCB.clearCoatRoughnessTextureTransform = LoadTextureTransform(gltf_material->clearcoat.clearcoat_roughness_texture);
-        material->m_materialCB.clearCoatNormalTextureTransform = LoadTextureTransform(gltf_material->clearcoat.clearcoat_normal_texture);
+        material->m_materialCB.clearCoatTexture = LoadTextureInfo(material->m_pClearCoatTexture, gltf_material->clearcoat.clearcoat_texture);
+        material->m_materialCB.clearCoatRoughnessTexture = LoadTextureInfo(material->m_pClearCoatRoughnessTexture, gltf_material->clearcoat.clearcoat_roughness_texture);
+        material->m_materialCB.clearCoatNormalTexture = LoadTextureInfo(material->m_pClearCoatNormalTexture, gltf_material->clearcoat.clearcoat_normal_texture);
     }
 
     return material;

@@ -23,7 +23,7 @@ namespace rt
 
             ModelMaterialConstant material = model::GetMaterialConstant(instanceID);
 
-            Texture2D texture = model::GetMaterialTexture2D(material.albedoTexture != INVALID_RESOURCE_INDEX ? material.albedoTexture : material.diffuseTexture);
+            Texture2D texture = model::GetMaterialTexture2D(material.albedoTexture.index != INVALID_RESOURCE_INDEX ? material.albedoTexture.index : material.diffuseTexture.index);
             SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearRepeatSampler];
 
             float alpha = texture.SampleLevel(linearSampler, uv, 0).a;
@@ -151,8 +151,8 @@ namespace rt
 
                 if (modelMaterial.bPbrMetallicRoughness)
                 {
-                    float albedoMipLOD = ComputeTextureLOD(modelMaterial.albedoTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
-                    float metallicMipLOD = ComputeTextureLOD(modelMaterial.metallicRoughnessTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
+                    float albedoMipLOD = modelMaterial.albedoTexture.ComputeTextureLOD(ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
+                    float metallicMipLOD = modelMaterial.metallicRoughnessTexture.ComputeTextureLOD(ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
 
                     model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(hitInfo.instanceID, uv, albedoMipLOD, metallicMipLOD);
 
@@ -162,8 +162,8 @@ namespace rt
                 }
                 else if (modelMaterial.bPbrSpecularGlossiness)
                 {
-                    float diffuseMipLOD = ComputeTextureLOD(modelMaterial.diffuseTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
-                    float specularMipLOD = ComputeTextureLOD(modelMaterial.specularGlossinessTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
+                    float diffuseMipLOD = modelMaterial.diffuseTexture.ComputeTextureLOD(ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
+                    float specularMipLOD = modelMaterial.specularGlossinessTexture.ComputeTextureLOD(ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
                     
                     model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(hitInfo.instanceID, uv, diffuseMipLOD, specularMipLOD);
 
@@ -172,16 +172,16 @@ namespace rt
                     material.roughness = 1.0 - pbrSpecularGlossiness.glossiness;
                 }
 
-                float mipLOD = ComputeTextureLOD(modelMaterial.emissiveTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
+                float mipLOD = modelMaterial.emissiveTexture.ComputeTextureLOD(ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
                 material.emissive = model::GetMaterialEmissive(hitInfo.instanceID, uv, mipLOD);
                 
                 float3 N = surfaceNormal;
-                if(modelMaterial.normalTexture != INVALID_RESOURCE_INDEX)
+                if(modelMaterial.normalTexture.index != INVALID_RESOURCE_INDEX)
                 {
                     float3 T = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetTangent(hitInfo.barycentricCoordinates).xyz, 0.0)).xyz);
                     float3 B = normalize(cross(N, T) * primitive.GetTangent(hitInfo.barycentricCoordinates).w);
 
-                    float mipLOD = ComputeTextureLOD(modelMaterial.normalTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
+                    float mipLOD = modelMaterial.normalTexture.ComputeTextureLOD(ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
                     N = model::GetMaterialNormal(hitInfo.instanceID, uv, T, B, N, mipLOD);
                 }
 

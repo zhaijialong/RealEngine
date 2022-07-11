@@ -287,16 +287,3 @@ float ComputeTriangleLODConstant(float3 p0, float3 p1, float3 p2, float2 uv0, fl
     return triangleLODConstant;
 }
 
-float ComputeTextureLOD(uint textureIndex, float3 rayDirection, float3 surfaceNormal, float rayConeWidth, float triangleLODConstant)
-{
-    if (textureIndex == INVALID_RESOURCE_INDEX)
-    {
-        return 0.0;
-    }
-
-    Texture2D texture = ResourceDescriptorHeap[NonUniformResourceIndex(textureIndex)];
-    float textureWidth, textureHeight;
-    texture.GetDimensions(textureWidth, textureHeight);
-        
-    return triangleLODConstant + 0.5 * log2(textureWidth * textureHeight) + log2(abs(rayConeWidth)) - log2(abs(dot(rayDirection, surfaceNormal))); //Eq. 34
-}
