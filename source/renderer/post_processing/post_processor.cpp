@@ -42,6 +42,12 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
         break;
     }
 
+    if (m_pRenderer->GetOutputType() != RendererOutput::Default &&
+        m_pRenderer->GetOutputType() != RendererOutput::PathTracing)
+    {
+        return outputHandle;
+    }
+
     RenderGraphHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
 
     outputHandle = m_pToneMapper->Render(pRenderGraph, outputHandle, exposure, bloom, m_pBloom->GetIntensity(), displayWidth, displayHeight);
