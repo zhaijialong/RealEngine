@@ -41,6 +41,7 @@ private:
     bool m_bEnableDenoiser = true;
 
     uint m_samplesPerQuad = 1;
+    float m_ssrThickness = 0.1f;
     float m_maxRoughness = 0.6f;
     float m_temporalStability = 0.5f;
 };

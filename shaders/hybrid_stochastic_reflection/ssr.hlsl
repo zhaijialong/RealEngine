@@ -47,10 +47,9 @@ bool ValidateHit(ssrt::HitInfo hitInfo, float2 uv, float3 ray_direction)
         return false;
     }
     
-    const float depth_thickness = 1.0;
     float distance = abs(GetLinearDepth(depth) - GetLinearDepth(hitInfo.depth));
-    float confidence = 1 - smoothstep(0, depth_thickness, distance);
-    if (confidence < 0.5)
+    float confidence = 1 - smoothstep(0, c_ssrThickness, distance);
+    if (confidence < 0.95)
     {
         return false;
     }
@@ -100,7 +99,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     float rayLength = 0.0;
 
     ssrt::Ray ray;
-    ray.origin = position + N * 0.05;
+    ray.origin = position + N * 0.01;
     ray.direction = direction;
     ray.maxInteration = 32;
 

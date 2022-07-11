@@ -7,6 +7,7 @@ cbuffer RootConstants : register(b0)
     float c_maxRoughness;
     float c_temporalStability;
     uint c_bEnableSWRay;
+    float c_ssrThickness;
     uint c_bEnableHWRay;
 };
 

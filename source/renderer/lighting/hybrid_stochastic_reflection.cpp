@@ -40,8 +40,9 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
             ImGui::RadioButton("2##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 2); ImGui::SameLine();
             ImGui::RadioButton("4##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 4);
 
-            ImGui::SliderFloat("Max Roughness##HSR", &m_maxRoughness, 0.0, 1.0);
-            ImGui::SliderFloat("Temporal Stability##HSR", &m_temporalStability, 0.0, 1.0);
+            ImGui::SliderFloat("Max Roughness##HSR", &m_maxRoughness, 0.0f, 1.0f);
+            ImGui::SliderFloat("SSR Thickness##HSR", &m_ssrThickness, 0.0f, 1.0f);
+            ImGui::SliderFloat("Temporal Stability##HSR", &m_temporalStability, 0.0f, 1.0f);
         });
 
     if (!m_bEnable)
@@ -377,6 +378,7 @@ void HybridStochasticReflection::SetRootConstants(IGfxCommandList* pCommandList)
         float maxRoughness;
         float temporalStability;
         uint bEnableSWRay;
+        float ssrThickness;
         uint bEnableHWRay;
     };
 
@@ -384,6 +386,7 @@ void HybridStochasticReflection::SetRootConstants(IGfxCommandList* pCommandList)
     root_constants.maxRoughness = m_maxRoughness;
     root_constants.temporalStability = m_temporalStability;
     root_constants.bEnableSWRay = m_bEnableSWRay;
+    root_constants.ssrThickness = m_ssrThickness;
     root_constants.bEnableHWRay = m_bEnableHWRay;
 
     pCommandList->SetComputeConstants(0, &root_constants, sizeof(root_constants));
