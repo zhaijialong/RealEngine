@@ -130,7 +130,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 #elif OUTPUT_EMISSIVE
     outTexture[dispatchThreadID.xy] = float4(emissive, 1.0);
 #elif OUTPUT_SHADING_MODEL
-    uint hash = MurmurHash((uint)shadingModel);
+    uint hash = MurmurHash(MurmurHash(MurmurHash((uint)shadingModel)));
     outTexture[dispatchThreadID.xy].xyz = float3(float(hash & 255), float((hash >> 8) & 255), float((hash >> 16) & 255)) / 255.0;
     outTexture[dispatchThreadID.xy].w = 1.0;
 #elif OUTPUT_CUSTOM_DATA

@@ -304,6 +304,7 @@ MeshMaterial* GLTFLoader::LoadMaterial(const cgltf_material* gltf_material)
     {
         material->m_shadingModel = ShadingModel::Anisotropy;
         material->m_pAnisotropicTangentTexture = ResourceCache::GetInstance()->GetTexture2D(m_anisotropicTexture, false);
+        material->m_materialCB.anisotropyTexture = LoadTextureInfo(material->m_pAnisotropicTangentTexture, {});
     }
 
     if (gltf_material->has_sheen)
