@@ -102,6 +102,7 @@ struct Primitive
     Vertex v0;
     Vertex v1;
     Vertex v2;
+    float lodConstant;
 
     static Primitive Create(uint instanceID, uint primitiveIndex)
     {
@@ -113,6 +114,15 @@ struct Primitive
         primitive.v0 = GetVertex(instanceID, primitiveIndices.x);
         primitive.v1 = GetVertex(instanceID, primitiveIndices.y);
         primitive.v2 = GetVertex(instanceID, primitiveIndices.z);
+        
+        InstanceData instanceData = GetInstanceData(instanceID);
+        float3 p0 = mul(instanceData.mtxWorld, float4(primitive.v0.pos, 1.0)).xyz;
+        float3 p1 = mul(instanceData.mtxWorld, float4(primitive.v1.pos, 1.0)).xyz;
+        float3 p2 = mul(instanceData.mtxWorld, float4(primitive.v2.pos, 1.0)).xyz;
+        float2 uv0 = primitive.v0.uv;
+        float2 uv1 = primitive.v1.uv;
+        float2 uv2 = primitive.v2.uv;
+        primitive.lodConstant = ComputeTriangleLODConstant(p0, p1, p2, uv0, uv1, uv2);
             
         return primitive;
     }

@@ -147,19 +147,12 @@ namespace rt
                 ModelMaterialConstant modelMaterial = model::GetMaterialConstant(hitInfo.instanceID);
                 
                 float2 uv = primitive.GetUV(hitInfo.barycentricCoordinates);
-                
-                float3 p0 = mul(instanceData.mtxWorld, float4(primitive.v0.pos, 1.0)).xyz;
-                float3 p1 = mul(instanceData.mtxWorld, float4(primitive.v1.pos, 1.0)).xyz;
-                float3 p2 = mul(instanceData.mtxWorld, float4(primitive.v2.pos, 1.0)).xyz;
-                float2 uv0 = primitive.v0.uv;
-                float2 uv1 = primitive.v1.uv;
-                float2 uv2 = primitive.v2.uv;
                 float3 surfaceNormal = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetNormal(hitInfo.barycentricCoordinates), 0.0)).xyz);
 
                 if (modelMaterial.bPbrMetallicRoughness)
                 {
-                    float albedoMipLOD = ComputeTextureLOD(p0, p1, p2, uv0, uv1, uv2, modelMaterial.albedoTexture, ray.Direction, surfaceNormal, cone.width);
-                    float metallicMipLOD = ComputeTextureLOD(p0, p1, p2, uv0, uv1, uv2, modelMaterial.metallicRoughnessTexture, ray.Direction, surfaceNormal, cone.width);
+                    float albedoMipLOD = ComputeTextureLOD(modelMaterial.albedoTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
+                    float metallicMipLOD = ComputeTextureLOD(modelMaterial.metallicRoughnessTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
 
                     model::PbrMetallicRoughness pbrMetallicRoughness = model::GetMaterialMetallicRoughness(hitInfo.instanceID, uv, albedoMipLOD, metallicMipLOD);
 
@@ -169,8 +162,8 @@ namespace rt
                 }
                 else if (modelMaterial.bPbrSpecularGlossiness)
                 {
-                    float diffuseMipLOD = ComputeTextureLOD(p0, p1, p2, uv0, uv1, uv2, modelMaterial.albedoTexture, ray.Direction, surfaceNormal, cone.width);
-                    float specularMipLOD = ComputeTextureLOD(p0, p1, p2, uv0, uv1, uv2, modelMaterial.metallicRoughnessTexture, ray.Direction, surfaceNormal, cone.width);
+                    float diffuseMipLOD = ComputeTextureLOD(modelMaterial.diffuseTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
+                    float specularMipLOD = ComputeTextureLOD(modelMaterial.specularGlossinessTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
                     
                     model::PbrSpecularGlossiness pbrSpecularGlossiness = model::GetMaterialSpecularGlossiness(hitInfo.instanceID, uv, diffuseMipLOD, specularMipLOD);
 
@@ -179,7 +172,7 @@ namespace rt
                     material.roughness = 1.0 - pbrSpecularGlossiness.glossiness;
                 }
 
-                float mipLOD = ComputeTextureLOD(p0, p1, p2, uv0, uv1, uv2, modelMaterial.emissiveTexture, ray.Direction, surfaceNormal, cone.width);
+                float mipLOD = ComputeTextureLOD(modelMaterial.emissiveTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
                 material.emissive = model::GetMaterialEmissive(hitInfo.instanceID, uv, mipLOD);
                 
                 float3 N = surfaceNormal;
@@ -188,7 +181,7 @@ namespace rt
                     float3 T = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(primitive.GetTangent(hitInfo.barycentricCoordinates).xyz, 0.0)).xyz);
                     float3 B = normalize(cross(N, T) * primitive.GetTangent(hitInfo.barycentricCoordinates).w);
 
-                    float mipLOD = ComputeTextureLOD(p0, p1, p2, uv0, uv1, uv2, modelMaterial.normalTexture, ray.Direction, surfaceNormal, cone.width);
+                    float mipLOD = ComputeTextureLOD(modelMaterial.normalTexture, ray.Direction, surfaceNormal, cone.width, primitive.lodConstant);
                     N = model::GetMaterialNormal(hitInfo.instanceID, uv, T, B, N, mipLOD);
                 }
 
