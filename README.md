@@ -30,6 +30,7 @@ It is not supposed to be used in production, and prefers clean design and code o
 * ~~a reference pathtracer~~
 * ~~FSR2~~/~~DLSS~~/XeSS
 * Direct Storage
+* visibility buffer
 * maybe  volumetric cloud/fog, water/ocean simulation, large-scale landscape, or any random things
 
 
