@@ -106,12 +106,18 @@ namespace rt
         float width;
         float spreadAngle;
         
-        static RayCone FromGBuffer(float linearDepth)
+        static RayCone FromCamera()
         {
             RayCone cone;
             cone.width = 0.0; // no width when the ray cone starts
-            cone.spreadAngle = atan(2.0 * tan(CameraCB.verticalFOV * 0.5) / SceneCB.renderSize.y); // Eq. 20
-            
+            cone.spreadAngle = CameraCB.spreadAngle;
+            return cone;
+        }
+        
+        static RayCone FromGBuffer(float linearDepth)
+        {
+            RayCone cone = FromCamera();
+
             float gbufferSpreadAngle = 0.0;
             cone.Propagate(gbufferSpreadAngle, linearDepth);
 

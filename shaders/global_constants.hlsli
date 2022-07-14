@@ -107,7 +107,7 @@ struct PhysicalCamera
 struct CameraConstant
 {
     float3 cameraPos;
-    float verticalFOV;
+    float spreadAngle;
     
     float nearZ;
     float farZ;

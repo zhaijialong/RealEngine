@@ -139,8 +139,10 @@ void Camera::Tick(float delta_time)
 
 void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
 {
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
     m_cameraCB.cameraPos = GetPosition();
-    m_cameraCB.verticalFOV = degree_to_randian(m_fov);
+    m_cameraCB.spreadAngle = atanf(2.0f * tanf(degree_to_randian(m_fov) * 0.5f) / pRenderer->GetRenderHeight()); // "Texture Level-of-Detail Strategies for Real-Time Ray Tracing", Eq.20
     m_cameraCB.nearZ = m_znear;
     m_cameraCB.farZ = m_zfar;
     m_cameraCB.linearZParams = CalcDepthLinearizationParams(m_projection);
