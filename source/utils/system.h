@@ -56,3 +56,8 @@ inline int ExecuteCommand(const char* cmd)
 
     return exit_code;
 }
+
+inline void SetCurrentThreadName(const eastl::string& name)
+{
+    SetThreadDescription(GetCurrentThread(), string_to_wstring(name).c_str());
+}

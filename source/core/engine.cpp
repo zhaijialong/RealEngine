@@ -1,6 +1,7 @@
 #include "engine.h"
 #include "utils/log.h"
 #include "utils/profiler.h"
+#include "utils/system.h"
 #include "enkiTS/TaskScheduler.h"
 #include "rpmalloc/rpmalloc.h"
 #include "rpmalloc/rpnew.h"
@@ -28,7 +29,10 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
     config.profilerCallbacks.threadStart = [](uint32_t i) 
     { 
         rpmalloc_thread_initialize();
-        MicroProfileOnThreadCreate(fmt::format("Worker Thread {}", i).c_str());
+
+        eastl::string thread_name = fmt::format("Worker Thread {}", i).c_str();
+        MicroProfileOnThreadCreate(thread_name.c_str());
+        SetCurrentThreadName(thread_name);
     };
     config.profilerCallbacks.threadStop = [](uint32_t) 
     { 
