@@ -35,6 +35,14 @@ uint WangHash(uint x)
     return x;
 }
 
+//https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/
+uint PCGHash(uint input)
+{
+    uint state = input * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
 //https://en.wikipedia.org/wiki/MurmurHash
 uint MurmurHash(uint x)
 {
@@ -65,17 +73,17 @@ struct PRNG
 {
     uint seed;
 
-    static PRNG Create(uint position)
+    static PRNG Create(uint2 screenPos, uint2 screenSize)
     {
         PRNG rng;
-        rng.seed = TEA(uint2(position, SceneCB.frameIndex), 3);
+        rng.seed = TEA(uint2(screenPos.x + screenPos.y * screenSize.x, SceneCB.frameIndex), 3);
 
         return rng;
     }
 
     uint RandomInt()
     {
-        seed = MurmurHash(seed);
+        seed = PCGHash(seed);
         return seed;
     }
 

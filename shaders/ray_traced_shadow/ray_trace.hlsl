@@ -35,8 +35,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 N = DecodeNormal(normalRT[pos].xyz);
 
     #define SPP 1
-    
-    PRNG rng = PRNG::Create(pos.x + pos.y * SceneCB.renderSize.x);
+
     BNDS<SPP> bnds = BNDS<SPP>::Create(pos.xy, SceneCB.renderSize);
 
     float visibility = 0;
