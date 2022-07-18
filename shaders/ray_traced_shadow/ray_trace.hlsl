@@ -43,7 +43,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     for (uint i = 0; i < SPP; ++i)
     {
         //float2 random = rng.RandomFloat2();
-        float2 random = bnds.RandomFloat2(i);
+        float2 random = bnds.RandomFloat2();
 
         RayDesc ray;
         ray.Origin = worldPos + N * 0.01;

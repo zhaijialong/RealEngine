@@ -24,6 +24,14 @@ uint LCG(uint x)
     return 1664525 * x + 1013904223;
 }
 
+//https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/
+uint PCG(uint input)
+{
+    uint state = input * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
 //https://www.reedbeta.com/blog/quick-and-easy-gpu-random-numbers-in-d3d11/
 uint WangHash(uint x)
 {
@@ -33,14 +41,6 @@ uint WangHash(uint x)
     x *= 0x27d4eb2d;
     x = x ^ (x >> 15);
     return x;
-}
-
-//https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/
-uint PCGHash(uint input)
-{
-    uint state = input * 747796405u + 2891336453u;
-    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
-    return (word >> 22u) ^ word;
 }
 
 //https://en.wikipedia.org/wiki/MurmurHash
@@ -83,7 +83,7 @@ struct PRNG
 
     uint RandomInt()
     {
-        seed = PCGHash(seed);
+        seed = PCG(seed);
         return seed;
     }
 
@@ -108,6 +108,7 @@ template<uint SPP>
 struct BNDS
 {
     uint2 pixel;
+    uint sampleIndex;
 
     static BNDS<SPP> Create(uint2 screenPos, uint2 screenSize)
     {
@@ -118,6 +119,7 @@ struct BNDS
         uint2 offsetId = screenPos + offset;
         rng.pixel.x = offsetId.x % screenSize.x;
 		rng.pixel.y = offsetId.y % screenSize.y;
+        rng.sampleIndex = 0;
 
         return rng;
     }
@@ -149,14 +151,23 @@ struct BNDS
         return v;
     }
 
-    float2 RandomFloat2(uint sampleIndex)
+    float RandomFloat()
     {
-        return float2(Sample(sampleIndex, 0), Sample(sampleIndex, 1));
+        return Sample(sampleIndex++, 0);
     }
 
-    float3 RandomFloat3(uint sampleIndex)
+    float2 RandomFloat2()
     {
-        return float3(Sample(sampleIndex, 0), Sample(sampleIndex, 1), Sample(sampleIndex, 2));
+        float2 r = float2(Sample(sampleIndex, 0), Sample(sampleIndex, 1));
+        sampleIndex++;
+        return r;
+    }
+
+    float3 RandomFloat3()
+    {
+        float3 r = float3(Sample(sampleIndex, 0), Sample(sampleIndex, 1), Sample(sampleIndex, 2));
+        sampleIndex++;
+        return r;
     }
 };
 
