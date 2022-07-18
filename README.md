@@ -29,8 +29,10 @@ It is not supposed to be used in production, and prefers clean design and code o
 * ~~RTX~~
 * ~~a reference pathtracer~~
 * ~~FSR2~~/~~DLSS~~/XeSS
-* Direct Storage
+* DOF
+* motion blur
 * visibility buffer
+* Direct Storage
 * maybe  volumetric cloud/fog, water/ocean simulation, large-scale landscape, or any random things
 
 

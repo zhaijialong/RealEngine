@@ -16,9 +16,9 @@ void DirectionalLight::Tick(float delta_time)
 
     GUI("Settings", "Sun Light", [&]()
         {
-            ImGui::SliderFloat3("Rotation##DirectionalLight", &m_rotation.x, -180.0f, 180.0);
-            ImGui::SliderFloat("Radius##DirectionalLight", &m_lightRadius, 0.0f, 0.1f);
-            ImGui::SliderFloat("Intensity##DirectionalLight", &m_lightIntensity, 0.0f, 100.0f);
+            ImGui::DragFloat3("Rotation##DirectionalLight", &m_rotation.x, 1.0f, -180.0f, 180.0f);
+            ImGui::DragFloat("Radius##DirectionalLight", &m_lightRadius, 0.01f, 0.0f, 0.1f);
+            ImGui::DragFloat("Intensity##DirectionalLight", &m_lightIntensity, 0.1f, 0.0f, 100.0f);
             ImGui::ColorEdit3("Color##DirectionalLight", &m_lightColor.x);
         });
 }
