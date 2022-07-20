@@ -1,6 +1,6 @@
 <scene>
     <model file="model/sponza/untitled.gltf" position="5.000,0.000,0.000" scale="0.01,0.01,0.01" />
     <skysphere />
-    <camera position="14.327,0.762,0.571" rotation="-12.6,261.8,0.0" fov="60.0" znear="0.1" zfar="1000.0"/>
+    <camera position="14.327,0.762,0.571" rotation="-12.6,261.8,0.0" fov="60.0" znear="0.01" zfar="1000.0"/>
     <light type="directional" primary="true" rotation="15.000,0.000,0.000" intensity="3.0"/>
 </scene>

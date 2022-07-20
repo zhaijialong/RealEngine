@@ -191,7 +191,7 @@ void HZB::GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT)
 
             RenderGraphTexture::Desc desc;
             desc.width = m_hzbSize.x;
-            desc.height = m_hzbSize.x;
+            desc.height = m_hzbSize.y;
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::RG16F;
             hzb = builder.Create<RenderGraphTexture>(desc, "SceneHZB");

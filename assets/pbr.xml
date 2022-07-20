@@ -10,6 +10,6 @@
     <model file="model/SheenCloth/SheenCloth.gltf" position="15.0,0.0,-5.0" scale="20,20,20"/>
     <model file="model/ClearCoatTest/ClearCoatTest.gltf" position="25.0,4.8,5.0" />
     <skysphere />
-    <camera position="1.65,1.825,-10.333" rotation="7.799,18.1,0.0" fov="60.0" znear="0.1" zfar="1000.0"/>
+    <camera position="1.65,1.825,-10.333" rotation="7.799,18.1,0.0" fov="60.0" znear="0.01" zfar="1000.0"/>
     <light type="directional" primary="true" rotation="-45.000,45.000,0.000" intensity="1.0"/>
 </scene>
