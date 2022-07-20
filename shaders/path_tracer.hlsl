@@ -65,6 +65,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 radiance = 0.0;
     float3 throughput = 1.0;
     float pdf = 1.0;
+    float roughness_bias = 0.5 * roughness; //reduce fireflies
 
     rt::RayCone cone = rt::RayCone::FromGBuffer(GetLinearDepth(depth));
     
@@ -91,7 +92,8 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
         //indirect light
         float probDiffuse = ProbabilityToSampleDiffuse(diffuse, specular);
-        if (rng.RandomFloat() < probDiffuse)
+        bool chooseDiffuse = rng.RandomFloat() < probDiffuse;
+        if (chooseDiffuse)
         {
             wi = SampleCosHemisphere(rng.RandomFloat2(), N); //pdf : NdotL / M_PI
 
@@ -135,12 +137,6 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
             pdf *= samplePDF  * (1.0 - probDiffuse);
         }
 
-        //firefly rejection
-        if (max(max(throughput.x, throughput.y), throughput.z) / pdf > 100.0)
-        {
-            break;
-        }
-
         ray.Origin = position + N * 0.001;
         ray.Direction = wi;
         ray.TMin = 0.001;
@@ -158,8 +154,10 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
             diffuse = material.diffuse;
             specular = material.specular;
             N = material.worldNormal;
-            roughness = material.roughness;
+            roughness = lerp(material.roughness, 1, roughness_bias);
             emissive = material.emissive;
+            
+            roughness_bias = lerp(roughness_bias, 1, 0.5 * material.roughness);
         }
         else
         {
