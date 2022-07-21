@@ -10,6 +10,7 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pRTShdow = eastl::make_unique<RTShadow>(pRenderer);
     m_pClusteredShading = eastl::make_unique<ClusteredShading>(pRenderer);
     m_pReflection = eastl::make_unique<HybridStochasticReflection>(pRenderer);
+    m_pReSTIRGI = eastl::make_unique<ReSTIRGI>(pRenderer);
 }
 
 RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle velocity, uint32_t width, uint32_t height)
@@ -27,12 +28,13 @@ RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGra
     RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, velocity, width, height);
     RenderGraphHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
     RenderGraphHandle indirect_specular = m_pReflection->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
-    //RenderGraphHandle indirect_diffuse = todo : diffuse GI
+    RenderGraphHandle indirect_diffuse = m_pReSTIRGI->Render(pRenderGraph, depth, normal, width, height);
 
-    return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, indirect_specular, width, height);
+    return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, indirect_specular, indirect_diffuse, width, height);
 }
 
-RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting, RenderGraphHandle indirect_specular, uint32_t width, uint32_t height)
+RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting,
+    RenderGraphHandle indirect_specular, RenderGraphHandle indirect_diffuse, uint32_t width, uint32_t height)
 {
     struct CompositeLightData
     {
@@ -72,7 +74,12 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             if (indirect_specular.IsValid())
             {
                 data.indirectSpecular = builder.Read(indirect_specular);
-            }            
+            }
+
+            if (indirect_diffuse.IsValid())
+            {
+                data.indirectDiffuse = builder.Read(indirect_diffuse);
+            }
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -93,6 +100,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
             RenderGraphTexture* aoRT = nullptr;
             RenderGraphTexture* indirectSpecularRT = nullptr;
+            RenderGraphTexture* indirectDiffuseRT = nullptr;
 
             eastl::vector<eastl::string> defines;
             if (data.ao.IsValid())
@@ -111,6 +119,12 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             {
                 indirectSpecularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.indirectSpecular);
                 defines.push_back("SPECULAR_GI=1");
+            }
+
+            if (data.indirectDiffuse.IsValid())
+            {
+                indirectDiffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.indirectDiffuse);
+                defines.push_back("DIFFUSE_GI=1");
             }
 
             switch (m_pRenderer->GetOutputType())
@@ -173,6 +187,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
                 uint aoRT;
                 uint indirectSprcularRT;
 
+                uint indirectDiffuseRT;
                 uint customDataRT;
                 float hsrMaxRoughness;
                 uint outputRT;
@@ -193,6 +208,10 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             if (indirectSpecularRT)
             {
                 cb1.indirectSprcularRT = indirectSpecularRT->IsImported() ? m_pReflection->GetOutputRadianceSRV()->GetHeapIndex() : indirectSpecularRT->GetSRV()->GetHeapIndex();
+            }
+            if (indirectDiffuseRT)
+            {
+                cb1.indirectDiffuseRT = indirectDiffuseRT->GetSRV()->GetHeapIndex();
             }
             cb1.hsrMaxRoughness = m_pReflection->GetMaxRoughness();
             cb1.outputRT = outputRT->GetUAV()->GetHeapIndex();

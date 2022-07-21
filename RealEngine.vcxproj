@@ -169,6 +169,7 @@
     <ClCompile Include="source\renderer\lighting\hybrid_stochastic_reflection.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
     <ClCompile Include="source\renderer\lighting\ray_traced_shadow.cpp" />
+    <ClCompile Include="source\renderer\lighting\restir_gi.cpp" />
     <ClCompile Include="source\renderer\lighting\shadow_denoiser.cpp" />
     <ClCompile Include="source\renderer\lighting\reflection_denoiser.cpp" />
     <ClCompile Include="source\renderer\path_tracer.cpp" />
@@ -400,6 +401,7 @@
     <ClInclude Include="source\renderer\lighting\hybrid_stochastic_reflection.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
     <ClInclude Include="source\renderer\lighting\ray_traced_shadow.h" />
+    <ClInclude Include="source\renderer\lighting\restir_gi.h" />
     <ClInclude Include="source\renderer\lighting\shadow_denoiser.h" />
     <ClInclude Include="source\renderer\lighting\reflection_denoiser.h" />
     <ClInclude Include="source\renderer\path_tracer.h" />
@@ -647,6 +649,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="shaders\ray_traced_shadow\ray_trace.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\restir_gi\ray_trace.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

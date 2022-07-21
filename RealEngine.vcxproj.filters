@@ -367,6 +367,9 @@
     <ClCompile Include="source\renderer\post_processing\dlss.cpp">
       <Filter>source\renderer\post_processing</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\lighting\restir_gi.cpp">
+      <Filter>source\renderer\lighting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -1095,6 +1098,9 @@
     <ClInclude Include="source\renderer\post_processing\dlss.h">
       <Filter>source\renderer\post_processing</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\lighting\restir_gi.h">
+      <Filter>source\renderer\lighting</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -1219,6 +1225,9 @@
     </Filter>
     <Filter Include="external\FSR2\dx12">
       <UniqueIdentifier>{38f18f85-ce5e-484a-9bc7-77e426e01cd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\restir_gi">
+      <UniqueIdentifier>{5d5ea258-d68e-41fb-8c88-84ff22863722}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1438,6 +1447,9 @@
     </FxCompile>
     <FxCompile Include="shaders\hybrid_stochastic_reflection\prepare_indirect_args.hlsl">
       <Filter>shaders\hybrid_stochastic_reflection</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\restir_gi\ray_trace.hlsl">
+      <Filter>shaders\restir_gi</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
