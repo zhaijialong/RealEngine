@@ -89,7 +89,8 @@ struct PRNG
 
     float RandomFloat()
     {
-        return (float)RandomInt() / float(0xFFFFFFFF);
+        return asfloat(0x3F800000 | RandomInt() >> 9) - 1.0; //[0, 1)
+        //return (float)RandomInt() / float(0xFFFFFFFF); //[0, 1]
     }
 
     float2 RandomFloat2()
