@@ -36,7 +36,7 @@ void UnpackRayCoords(uint packed, out uint2 ray_coord, out bool copy_horizontal,
 
 bool FFX_DNSR_Reflections_IsGlossyReflection(float roughness)
 {
-    return roughness <= c_maxRoughness;
+    return roughness < c_maxRoughness + 0.0001;
 }
 
 bool FFX_DNSR_Reflections_IsMirrorReflection(float roughness)

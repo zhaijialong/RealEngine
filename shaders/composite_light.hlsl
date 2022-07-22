@@ -76,10 +76,15 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 #if DIFFUSE_GI
     Texture2D indirectDiffuseRT = ResourceDescriptorHeap[c_indirectDiffuseRT];
     indirect_diffuse = indirectDiffuseRT[pos].xyz;
+    
+    if(roughness >= c_hsrMaxRoughness + 0.0001)
+    {
+        indirect_specular = SpecularIBL(indirect_diffuse, N, V, roughness, specular);
+    }
 #endif
 
 #if SPECULAR_GI
-    if(roughness < c_hsrMaxRoughness)
+    if(roughness < c_hsrMaxRoughness + 0.0001)
     {
         Texture2D indirectSprcularRT = ResourceDescriptorHeap[c_indirectSprcularRT];
         indirect_specular = SpecularIBL(indirectSprcularRT[pos].xyz, N, V, roughness, specular);

@@ -45,7 +45,15 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         cone.Propagate(0.0, hitInfo.rayT); // using 0 since no curvature measure at second hit
         rt::MaterialData material = rt::GetMaterial(ray, hitInfo, cone);
         
-        radiance = rt::Shade(hitInfo, material, -direction);
+        RayDesc ray;
+        ray.Origin = hitInfo.position + material.worldNormal * 0.01;
+        ray.Direction = SceneCB.lightDir;
+        ray.TMin = 0.00001;
+        ray.TMax = 1000.0;
+        float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
+        float3 direct_lighting = DefaultBRDF(SceneCB.lightDir, -direction, material.worldNormal, material.diffuse, material.specular, material.roughness) * visibility;
+        
+        radiance = direct_lighting; //todo : second bounce
     }
     else
     {
