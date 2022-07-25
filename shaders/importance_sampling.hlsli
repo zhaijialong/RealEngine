@@ -49,17 +49,25 @@ float3 SampleConeUniform(float2 randVal, float radius, float3 N)
     return TangentToWorld(v, N);
 }
 
+// PDF = 1 / (2 * PI)
+float3 SampleUniformHemisphere(float2 randVal, float3 N)
+{
+    float phi = 2.0 * M_PI * randVal.y;
+    float cos_theta = 1.0 - randVal.x;
+    float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+    float3 v = float3(cos(phi) * sin_theta, sin(phi) * sin_theta, cos_theta);
+    
+    return TangentToWorld(v, N);
+}
+
 // PDF = cos / PI = NdotL / PI
 float3 SampleCosHemisphere(float2 randVal, float3 N)
 {
-    float r = sqrt(randVal.x);
     float phi = 2.0 * M_PI * randVal.y;
-
-    float sinPhi, cosPhi;
-    sincos(phi, sinPhi, cosPhi);
-
-    float3 v = float3(r * cos(phi), r * sin(phi), sqrt(1.0 - randVal.x));
-
+    float cos_theta = sqrt(1.0 - randVal.x);
+    float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+    float3 v = float3(cos(phi) * sin_theta, sin(phi) * sin_theta, cos_theta);
+    
     return TangentToWorld(v, N);
 }
 

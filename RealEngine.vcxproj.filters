@@ -1311,6 +1311,9 @@
     <None Include="shaders\texture.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\restir_gi\reservoir.hlsli">
+      <Filter>shaders\restir_gi</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">
@@ -1448,7 +1451,19 @@
     <FxCompile Include="shaders\hybrid_stochastic_reflection\prepare_indirect_args.hlsl">
       <Filter>shaders\hybrid_stochastic_reflection</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\restir_gi\ray_trace.hlsl">
+    <FxCompile Include="shaders\restir_gi\initial_sampling.hlsl">
+      <Filter>shaders\restir_gi</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\restir_gi\spatial_resampling.hlsl">
+      <Filter>shaders\restir_gi</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\restir_gi\temporal_resampling.hlsl">
+      <Filter>shaders\restir_gi</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\restir_gi\sample_validation.hlsl">
+      <Filter>shaders\restir_gi</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\restir_gi\restir_resolve.hlsl">
       <Filter>shaders\restir_gi</Filter>
     </FxCompile>
   </ItemGroup>

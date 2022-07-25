@@ -27,7 +27,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 N = DecodeNormal(normalTexture[dispatchThreadID.xy].xyz);
     
     BNDS<1> bnds = BNDS<1>::Create(dispatchThreadID.xy, SceneCB.renderSize);
-    float3 direction = SampleCosHemisphere(bnds.RandomFloat2(), N);
+    float3 direction = SampleUniformHemisphere(bnds.RandomFloat2(), N); //uniform sample hemisphere, following the ReSTIR GI paper
     
     RayDesc ray;
     ray.Origin = worldPos + N * 0.01;
