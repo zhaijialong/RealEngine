@@ -62,10 +62,10 @@ Reservoir LoadTemporalReservoir(uint2 pos)
     R.z.x_s = R.z.x_v + rayDirection * hitT;
     R.z.n_s = OctDecode(reservoirSampleNormalTexture[pos].xy * 2.0 - 1.0);
     R.z.Lo = reservoirSampleRadianceTexture[pos].xyz;
-    
-    R.w_sum = reservoirTexture[pos].x;
-    R.M = reservoirTexture[pos].y;
-    R.W = reservoirTexture[pos].z;
+
+    R.M = reservoirTexture[pos].x;
+    R.W = reservoirTexture[pos].y;
+    R.w_sum = R.W * R.M * Luminance(R.z.Lo);
     
     return R;
 }
@@ -77,7 +77,7 @@ void StoreTemporalReservoir(uint2 pos, Reservoir R)
     RWTexture2D<float2> reservoirRayDirectionTexture = ResourceDescriptorHeap[c_outputReservoirRayDirection];
     RWTexture2D<float2> reservoirSampleNormalTexture = ResourceDescriptorHeap[c_outputReservoirSampleNormal];
     RWTexture2D<float3> reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_outputReservoirSampleRadiance];
-    RWTexture2D<float4> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
+    RWTexture2D<float2> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
     
     float3 ray = R.z.x_s - R.z.x_v;
     float3 rayDirection = normalize(ray);
@@ -88,7 +88,7 @@ void StoreTemporalReservoir(uint2 pos, Reservoir R)
     reservoirRayDirectionTexture[pos] = OctEncode(rayDirection) * 0.5 + 0.5;
     reservoirSampleNormalTexture[pos] = OctEncode(R.z.n_s) * 0.5 + 0.5;
     reservoirSampleRadianceTexture[pos] = R.z.Lo;
-    reservoirTexture[pos] = float4(R.w_sum, R.M, R.W, 0.0);
+    reservoirTexture[pos] = float2(R.M, R.W);
 }
 
 [numthreads(8, 8, 1)]
@@ -104,19 +104,22 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
     
     PRNG rng = PRNG::Create(pos, SceneCB.renderSize);
-    Sample S = LoadInitialSample(pos, depth); // Algorithm 3, line 2
+    Sample S = LoadInitialSample(pos, depth);
     
-
-    Reservoir R = LoadTemporalReservoir(pos); // Algorithm 3, line 3
+    //todo : reproject && validate
+    Reservoir R = LoadTemporalReservoir(pos);
     
     float target_p_q = Luminance(S.Lo);
     float p_q = 1.0 / (2.0 * M_PI);
-    float w =  target_p_q / p_q;              // Algorithm 3, line 4
+    float w = target_p_q / p_q;
 
-    R.Update(S, w, rng.RandomFloat());        // Algorithm 3, line 5
+    R.Update(S, w, rng.RandomFloat());
     
-    R.M = min(R.M, 30.0);
-    R.W = R.w_sum / (R.M * Luminance(R.z.Lo));// Algorithm 3, line 6
+    float target_p_R = Luminance(R.z.Lo);
+    R.W = R.w_sum / max(0.00001, R.M * target_p_R);
 
-    StoreTemporalReservoir(pos, R);           // Algorithm 3, line 7
+    R.M = min(R.M, 30.0);
+    R.w_sum = R.W * R.M * target_p_R;
+    
+    StoreTemporalReservoir(pos, R);
 }

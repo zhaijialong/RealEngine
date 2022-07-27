@@ -26,6 +26,7 @@ private:
 
     IGfxPipelineState* m_pInitialSamplingPSO = nullptr;
     IGfxPipelineState* m_pTemporalResamplingPSO = nullptr;
+    IGfxPipelineState* m_pResolvePSO = nullptr;
 
     struct TemporalReservoirBuffer
     {
@@ -34,7 +35,7 @@ private:
         eastl::unique_ptr<Texture2D> rayDirection; //rg16unorm
         eastl::unique_ptr<Texture2D> sampleNormal; //rg16unorm
         eastl::unique_ptr<Texture2D> sampleRadiance; //r11g11b10f
-        eastl::unique_ptr<Texture2D> reservoir; //rgba16f - w_sum/M/W
+        eastl::unique_ptr<Texture2D> reservoir; //rg16f - M/W
     };
 
     TemporalReservoirBuffer m_temporalReservoir[2];
