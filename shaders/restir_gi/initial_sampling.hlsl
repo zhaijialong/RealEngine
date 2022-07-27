@@ -6,7 +6,9 @@ cbuffer CB : register(b0)
 {
     uint c_depthTexture;
     uint c_normalTexture;
-    uint c_outputUAV;
+    uint c_outputIrradianceUAV;
+    uint c_outputHitNormalUAV;
+    uint c_outputRayUAV;
 }
 
 [numthreads(8, 8, 1)]
@@ -14,12 +16,16 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
-    RWTexture2D<float4> outputUAV = ResourceDescriptorHeap[c_outputUAV];
+    RWTexture2D<float4> outputIrradianceUAV = ResourceDescriptorHeap[c_outputIrradianceUAV];
+    RWTexture2D<float2> outputHitNormalUAV = ResourceDescriptorHeap[c_outputHitNormalUAV];
+    RWTexture2D<float4> outputRayUAV = ResourceDescriptorHeap[c_outputRayUAV];
     
     float depth = depthTexture[dispatchThreadID.xy];    
     if (depth == 0.0)
     {
-        outputUAV[dispatchThreadID.xy] = 0.xxxx;
+        outputIrradianceUAV[dispatchThreadID.xy] = 0.xxxx;
+        outputHitNormalUAV[dispatchThreadID.xy] = 0.xx;
+        outputRayUAV[dispatchThreadID.xy] = 0.xxxx;
         return;
     }
 
@@ -28,7 +34,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     BNDS<1> bnds = BNDS<1>::Create(dispatchThreadID.xy, SceneCB.renderSize);
     float3 direction = SampleUniformHemisphere(bnds.RandomFloat2(), N); //uniform sample hemisphere, following the ReSTIR GI paper
-    
+    float pdf = 1.0 / (2.0 * M_PI);
+
     RayDesc ray;
     ray.Origin = worldPos + N * 0.01;
     ray.Direction = direction;
@@ -36,9 +43,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     ray.TMax = 1000.0;
 
     rt::RayCone cone = rt::RayCone::FromGBuffer(GetLinearDepth(depth));
-    rt::HitInfo hitInfo;
+    rt::HitInfo hitInfo = (rt::HitInfo)0;
     
     float3 radiance = 0.0;
+    float3 hitNormal = 0.0;
     
     if (rt::TraceRay(ray, hitInfo))
     {
@@ -54,6 +62,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         float3 direct_lighting = DefaultBRDF(SceneCB.lightDir, -direction, material.worldNormal, material.diffuse, material.specular, material.roughness) * visibility;
         
         radiance = direct_lighting; //todo : second bounce
+        hitNormal = material.worldNormal;        
     }
     else
     {
@@ -62,5 +71,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         radiance = skyTexture.SampleLevel(linearSampler, direction, 0).xyz;
     }
     
-    outputUAV[dispatchThreadID.xy] = float4(radiance, 1);
+    outputIrradianceUAV[dispatchThreadID.xy] = float4(radiance, 1);
+    outputHitNormalUAV[dispatchThreadID.xy] = OctEncode(hitNormal) * 0.5 + 0.5;
+    outputRayUAV[dispatchThreadID.xy] = float4(direction * hitInfo.rayT, pdf);
 }
