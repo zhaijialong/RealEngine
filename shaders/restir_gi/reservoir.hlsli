@@ -16,16 +16,16 @@ struct Sample
 struct Reservoir
 {
     Sample z;
-    float w;
+    float w_sum;
     float M;
     float W;
     
     void Update(Sample s_new, float w_new, float random)
     {
-        w += w_new;
+        w_sum += w_new;
         M += 1;
         
-        if (random < w_new / w)
+        if (random < w_new / w_sum)
         {
             z = s_new;
         }

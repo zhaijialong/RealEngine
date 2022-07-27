@@ -8,20 +8,24 @@ class ReSTIRGI
 public:
     ReSTIRGI(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle normal, uint32_t width, uint32_t height);
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height);
 
 private:
     void InitialSampling(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, 
         IGfxDescriptor* outputIrradiance, IGfxDescriptor* outputHitNormal, IGfxDescriptor* outputRay, uint32_t width, uint32_t height);
-    void TemporalResampling();
+    void TemporalResampling(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* velocity,
+        IGfxDescriptor* candidateIrradiance, IGfxDescriptor* candidateHitNormal, IGfxDescriptor* candidateRay, uint32_t width, uint32_t height);
     void SpatialResampling();
 
-    void InitTemporalBuffers(uint32_t width, uint32_t height);
+    void Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* irradiance, IGfxDescriptor* output, uint32_t width, uint32_t height);
+
+    bool InitTemporalBuffers(uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer;
 
     IGfxPipelineState* m_pInitialSamplingPSO = nullptr;
+    IGfxPipelineState* m_pTemporalResamplingPSO = nullptr;
 
     struct TemporalReservoirBuffer
     {
@@ -36,6 +40,7 @@ private:
     TemporalReservoirBuffer m_temporalReservoir[2];
 
     bool m_bEnable = true;
-    bool m_bEnableReSTIR = false;
-    bool m_bEnableDenoiser = true;
+    bool m_bSecondBounce = false;
+    bool m_bEnableReSTIR = true;
+    bool m_bEnableDenoiser = false;
 };
