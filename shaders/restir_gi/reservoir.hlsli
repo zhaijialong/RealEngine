@@ -25,7 +25,7 @@ struct Reservoir
         w_sum += w_new;
         M += 1;
         
-        if (random < w_new / w_sum)
+        if (random < w_new / max(w_sum, 0.00001)) //avoid divide by 0
         {
             z = s_new;
         }
