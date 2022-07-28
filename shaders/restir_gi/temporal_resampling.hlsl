@@ -6,17 +6,15 @@ cbuffer CB : register(b1)
     uint c_depth;
     uint c_normal;
     uint c_velocity;
+    uint c_prevLinearDepth;
+    uint c_prevNormal;
     uint c_candidateIrradiance;
     uint c_candidateHitNormal;
     uint c_candidateRay;
-    uint c_historyReservoirPosition;
-    uint c_historyReservoirNormal;
     uint c_historyReservoirRayDirection;
     uint c_historyReservoirSampleNormal;
     uint c_historyReservoirSampleRadiance;
     uint c_historyReservoir;
-    uint c_outputReservoirPosition;
-    uint c_outputReservoirNormal;
     uint c_outputReservoirRayDirection;
     uint c_outputReservoirSampleNormal;
     uint c_outputReservoirSampleRadiance;
@@ -45,19 +43,26 @@ Sample LoadInitialSample(uint2 pos, float depth)
 
 Reservoir LoadTemporalReservoir(uint2 pos)
 {
-    Texture2D reservoirPositionTexture = ResourceDescriptorHeap[c_historyReservoirPosition];
-    Texture2D reservoirNormalTexture = ResourceDescriptorHeap[c_historyReservoirNormal];
+    Texture2D prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepth];
+    Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormal];
+    
     Texture2D reservoirRayDirectionTexture = ResourceDescriptorHeap[c_historyReservoirRayDirection];
     Texture2D reservoirSampleNormalTexture = ResourceDescriptorHeap[c_historyReservoirSampleNormal];
     Texture2D reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_historyReservoirSampleRadiance];
     Texture2D reservoirTexture = ResourceDescriptorHeap[c_historyReservoir];
     
+    float depth = GetNdcDepth(prevLinearDepthTexture[pos].x);
+    float2 screenUV = GetScreenUV(pos, SceneCB.rcpRenderSize);
+    float4 clipPos = float4((screenUV * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
+    float4 worldPos = mul(CameraCB.mtxPrevViewProjectionInverse, clipPos);
+    worldPos.xyz /= worldPos.w;
+    
     float3 rayDirection = OctDecode(reservoirRayDirectionTexture[pos].xy * 2.0 - 1.0);
-    float hitT = reservoirPositionTexture[pos].w;
+    float hitT = reservoirSampleRadianceTexture[pos].w;
 
     Reservoir R;
-    R.z.x_v = reservoirPositionTexture[pos].xyz;
-    R.z.n_v = OctDecode(reservoirNormalTexture[pos].xy * 2.0 - 1.0);
+    R.z.x_v = worldPos;
+    R.z.n_v = DecodeNormal(prevNormalTexture[pos].xyz);
     R.z.x_s = R.z.x_v + rayDirection * hitT;
     R.z.n_s = OctDecode(reservoirSampleNormalTexture[pos].xy * 2.0 - 1.0);
     R.z.Lo = reservoirSampleRadianceTexture[pos].xyz;
@@ -71,22 +76,18 @@ Reservoir LoadTemporalReservoir(uint2 pos)
 
 void StoreTemporalReservoir(uint2 pos, Reservoir R)
 {
-    RWTexture2D<float4> reservoirPositionTexture = ResourceDescriptorHeap[c_outputReservoirPosition];
-    RWTexture2D<float2> reservoirNormalTexture = ResourceDescriptorHeap[c_outputReservoirNormal];
     RWTexture2D<float2> reservoirRayDirectionTexture = ResourceDescriptorHeap[c_outputReservoirRayDirection];
     RWTexture2D<float2> reservoirSampleNormalTexture = ResourceDescriptorHeap[c_outputReservoirSampleNormal];
-    RWTexture2D<float3> reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_outputReservoirSampleRadiance];
+    RWTexture2D<float4> reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_outputReservoirSampleRadiance];
     RWTexture2D<float2> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
     
     float3 ray = R.z.x_s - R.z.x_v;
     float3 rayDirection = normalize(ray);
     float hitT = length(ray);
-    
-    reservoirPositionTexture[pos] = float4(R.z.x_v, hitT);
-    reservoirNormalTexture[pos] = OctEncode(R.z.n_v) * 0.5 + 0.5;
+
     reservoirRayDirectionTexture[pos] = OctEncode(rayDirection) * 0.5 + 0.5;
     reservoirSampleNormalTexture[pos] = OctEncode(R.z.n_s) * 0.5 + 0.5;
-    reservoirSampleRadianceTexture[pos] = R.z.Lo;
+    reservoirSampleRadianceTexture[pos] = float4(R.z.Lo, hitT);
     reservoirTexture[pos] = float2(R.M, R.W);
 }
 

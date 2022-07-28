@@ -31,11 +31,9 @@ private:
 
     struct TemporalReservoirBuffer
     {
-        eastl::unique_ptr<Texture2D> position; // rgba32f - xyz : position, a : hitT
-        eastl::unique_ptr<Texture2D> normal; //rg16unorm
         eastl::unique_ptr<Texture2D> rayDirection; //rg16unorm
         eastl::unique_ptr<Texture2D> sampleNormal; //rg16unorm
-        eastl::unique_ptr<Texture2D> sampleRadiance; //r11g11b10f
+        eastl::unique_ptr<Texture2D> sampleRadiance; //rgba16f, w: hitT
         eastl::unique_ptr<Texture2D> reservoir; //rg16f - M/W
     };
 

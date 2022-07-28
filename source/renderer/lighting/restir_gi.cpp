@@ -85,20 +85,18 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         RenderGraphHandle depth;
         RenderGraphHandle normal;
         RenderGraphHandle velocity;
+        RenderGraphHandle prevLinearDepth;
+        RenderGraphHandle prevNormal;
 
         RenderGraphHandle candidateIrradiance;
         RenderGraphHandle candidateHitNormal;
         RenderGraphHandle candidateRay;
 
-        RenderGraphHandle historyReservoirPosition;
-        RenderGraphHandle historyReservoirNormal;
         RenderGraphHandle historyReservoirRayDirection;
         RenderGraphHandle historyReservoirSampleNormal;
         RenderGraphHandle historyReservoirSampleRadiance;
         RenderGraphHandle historyReservoir;
 
-        RenderGraphHandle outputReservoirPosition;
-        RenderGraphHandle outputReservoirNormal;
         RenderGraphHandle outputReservoirRayDirection;
         RenderGraphHandle outputReservoirSampleNormal;
         RenderGraphHandle outputReservoirSampleRadiance;
@@ -111,21 +109,19 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
             data.velocity = builder.Read(velocity);
+            data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
+            data.prevNormal = builder.Read(m_pRenderer->GetPrevNormalHandle());
             data.candidateIrradiance = builder.Read(raytrace_pass->outputIrradiance);
             data.candidateHitNormal = builder.Read(raytrace_pass->outputHitNormal);
             data.candidateRay = builder.Read(raytrace_pass->outputRay);
 
             GfxResourceState textureState = initialFrame ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS;
 
-            data.historyReservoirPosition = builder.Read(builder.Import(m_temporalReservoir[0].position->GetTexture(), GfxResourceState::UnorderedAccess));
-            data.historyReservoirNormal = builder.Read(builder.Import(m_temporalReservoir[0].normal->GetTexture(), GfxResourceState::UnorderedAccess));
             data.historyReservoirRayDirection = builder.Read(builder.Import(m_temporalReservoir[0].rayDirection->GetTexture(), textureState));
             data.historyReservoirSampleNormal = builder.Read(builder.Import(m_temporalReservoir[0].sampleNormal->GetTexture(), GfxResourceState::UnorderedAccess));
             data.historyReservoirSampleRadiance = builder.Read(builder.Import(m_temporalReservoir[0].sampleRadiance->GetTexture(), textureState));
             data.historyReservoir = builder.Read(builder.Import(m_temporalReservoir[0].reservoir->GetTexture(), textureState));
 
-            data.outputReservoirPosition = builder.Write(builder.Import(m_temporalReservoir[1].position->GetTexture(), textureState));
-            data.outputReservoirNormal = builder.Write(builder.Import(m_temporalReservoir[1].normal->GetTexture(), textureState));
             data.outputReservoirRayDirection = builder.Write(builder.Import(m_temporalReservoir[1].rayDirection->GetTexture(), textureState));
             data.outputReservoirSampleNormal = builder.Write(builder.Import(m_temporalReservoir[1].sampleNormal->GetTexture(), textureState));
             data.outputReservoirSampleRadiance = builder.Write(builder.Import(m_temporalReservoir[1].sampleRadiance->GetTexture(), textureState));
@@ -207,17 +203,15 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, IGfxDescriptor*
         uint depth;
         uint normal;
         uint velocity;
+        uint prevLinearDepth;
+        uint prevNormal;
         uint candidateIrradiance;
         uint candidateHitNormal;
         uint candidateRay;
-        uint historyReservoirPosition;
-        uint historyReservoirNormal;
         uint historyReservoirRayDirection;
         uint historyReservoirSampleNormal;
         uint historyReservoirSampleRadiance;
         uint historyReservoir;
-        uint outputReservoirPosition;
-        uint outputReservoirNormal;
         uint outputReservoirRayDirection;
         uint outputReservoirSampleNormal;
         uint outputReservoirSampleRadiance;
@@ -228,17 +222,15 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, IGfxDescriptor*
     cb.depth = depth->GetHeapIndex();
     cb.normal = normal->GetHeapIndex();
     cb.velocity = velocity->GetHeapIndex();
+    cb.prevLinearDepth = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
+    cb.prevNormal = m_pRenderer->GetPrevNormalTexture()->GetSRV()->GetHeapIndex();
     cb.candidateIrradiance = candidateIrradiance->GetHeapIndex();
     cb.candidateHitNormal = candidateHitNormal->GetHeapIndex();
     cb.candidateRay = candidateRay->GetHeapIndex();
-    cb.historyReservoirPosition = m_temporalReservoir[0].position->GetSRV()->GetHeapIndex();
-    cb.historyReservoirNormal = m_temporalReservoir[0].normal->GetSRV()->GetHeapIndex();
     cb.historyReservoirRayDirection = m_temporalReservoir[0].rayDirection->GetSRV()->GetHeapIndex();
     cb.historyReservoirSampleNormal = m_temporalReservoir[0].sampleNormal->GetSRV()->GetHeapIndex();
     cb.historyReservoirSampleRadiance = m_temporalReservoir[0].sampleRadiance->GetSRV()->GetHeapIndex();
     cb.historyReservoir = m_temporalReservoir[0].reservoir->GetSRV()->GetHeapIndex();
-    cb.outputReservoirPosition = m_temporalReservoir[1].position->GetUAV()->GetHeapIndex();
-    cb.outputReservoirNormal = m_temporalReservoir[1].normal->GetUAV()->GetHeapIndex();
     cb.outputReservoirRayDirection = m_temporalReservoir[1].rayDirection->GetUAV()->GetHeapIndex();
     cb.outputReservoirSampleNormal = m_temporalReservoir[1].sampleNormal->GetUAV()->GetHeapIndex();
     cb.outputReservoirSampleRadiance = m_temporalReservoir[1].sampleRadiance->GetUAV()->GetHeapIndex();
@@ -268,21 +260,17 @@ bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)
 {
     bool initialFrame = false;
 
-    if (m_temporalReservoir[0].position == nullptr ||
-        m_temporalReservoir[0].position->GetTexture()->GetDesc().width != width ||
-        m_temporalReservoir[0].position->GetTexture()->GetDesc().height != height)
+    if (m_temporalReservoir[0].reservoir == nullptr ||
+        m_temporalReservoir[0].reservoir->GetTexture()->GetDesc().width != width ||
+        m_temporalReservoir[0].reservoir->GetTexture()->GetDesc().height != height)
     {
         for (int i = 0; i < 2; ++i)
         {
-            m_temporalReservoir[i].position.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA32F, GfxTextureUsageUnorderedAccess, 
-                fmt::format("ReSTIR GI/temporal reservoir poisition {}", i).c_str()));
-            m_temporalReservoir[i].normal.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16UNORM, GfxTextureUsageUnorderedAccess,
-                fmt::format("ReSTIR GI/temporal reservoir normal {}", i).c_str()));
             m_temporalReservoir[i].rayDirection.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16UNORM, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GItemporal reservoir rayDirection {}", i).c_str()));
             m_temporalReservoir[i].sampleNormal.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16UNORM, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir sampleNormal {}", i).c_str()));
-            m_temporalReservoir[i].sampleRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess,
+            m_temporalReservoir[i].sampleRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir sampleRadiance {}", i).c_str()));
             m_temporalReservoir[i].reservoir.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir {}", i).c_str()));
