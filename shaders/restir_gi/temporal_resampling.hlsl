@@ -61,7 +61,7 @@ Reservoir LoadTemporalReservoir(uint2 pos)
     float hitT = reservoirSampleRadianceTexture[pos].w;
 
     Reservoir R;
-    R.z.x_v = worldPos;
+    R.z.x_v = worldPos.xyz;
     R.z.n_v = DecodeNormal(prevNormalTexture[pos].xyz);
     R.z.x_s = R.z.x_v + rayDirection * hitT;
     R.z.n_s = OctDecode(reservoirSampleNormalTexture[pos].xy * 2.0 - 1.0);
