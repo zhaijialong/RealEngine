@@ -26,7 +26,6 @@ cbuffer CB : register(b1)
 Sample LoadInitialSample(uint2 pos, float depth)
 {
     Texture2D normalTexture = ResourceDescriptorHeap[c_normal];
-    Texture2D velocityTexture = ResourceDescriptorHeap[c_velocity];
     Texture2D candidateIrradianceTexture = ResourceDescriptorHeap[c_candidateIrradiance];
     Texture2D candidateHitNormalTexture = ResourceDescriptorHeap[c_candidateHitNormal];
     Texture2D candidateRayTexture = ResourceDescriptorHeap[c_candidateRay];
@@ -106,20 +105,35 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     PRNG rng = PRNG::Create(pos, SceneCB.renderSize);
     Sample S = LoadInitialSample(pos, depth);
     
-    //todo : reproject && validate
-    Reservoir R = LoadTemporalReservoir(pos);
+    Reservoir R = (Reservoir)0;
+    
+    Texture2D velocityTexture = ResourceDescriptorHeap[c_velocity];
+    float2 velocity = velocityTexture[pos].xy;
+    float2 prevUV = GetScreenUV(pos, SceneCB.rcpRenderSize) - velocity * float2(0.5, -0.5);
+    bool outOfBound = any(prevUV < 0.0) || any(prevUV > 1.0);
+    
+    if (!outOfBound)
+    {
+        uint2 prevPos = (uint2)floor(prevUV * SceneCB.renderSize);
+        R = LoadTemporalReservoir(prevPos);
+        
+        bool invalid = false;
+        invalid |= length(S.x_v - R.z.x_v) > 0.1 * GetLinearDepth(depth);
+        invalid |= saturate(dot(S.n_v, R.z.n_v)) < 0.8;
+        
+        if (invalid)
+        {
+            R.w_sum = R.M = 0;
+        }
+    }
     
     float target_p_q = Luminance(S.Lo);
     float p_q = 1.0 / (2.0 * M_PI);
     float w = target_p_q / p_q;
 
     R.Update(S, w, rng.RandomFloat());
-    
-    float target_p_R = Luminance(R.z.Lo);
-    R.W = R.w_sum / max(0.00001, R.M * target_p_R);
-
+    R.W = R.w_sum / max(0.00001, R.M * Luminance(R.z.Lo));
     R.M = min(R.M, 30.0);
-    R.w_sum = R.W * R.M * target_p_R;
     
     StoreTemporalReservoir(pos, R);
 }
