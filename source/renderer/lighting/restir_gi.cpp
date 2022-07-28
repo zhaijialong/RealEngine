@@ -119,7 +119,7 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
 
             data.historyReservoirPosition = builder.Read(builder.Import(m_temporalReservoir[0].position->GetTexture(), GfxResourceState::UnorderedAccess));
             data.historyReservoirNormal = builder.Read(builder.Import(m_temporalReservoir[0].normal->GetTexture(), GfxResourceState::UnorderedAccess));
-            data.historyReservoirRayDirection = builder.Read(builder.Import(m_temporalReservoir[0].rayDirection->GetTexture(), GfxResourceState::UnorderedAccess));
+            data.historyReservoirRayDirection = builder.Read(builder.Import(m_temporalReservoir[0].rayDirection->GetTexture(), textureState));
             data.historyReservoirSampleNormal = builder.Read(builder.Import(m_temporalReservoir[0].sampleNormal->GetTexture(), GfxResourceState::UnorderedAccess));
             data.historyReservoirSampleRadiance = builder.Read(builder.Import(m_temporalReservoir[0].sampleRadiance->GetTexture(), textureState));
             data.historyReservoir = builder.Read(builder.Import(m_temporalReservoir[0].reservoir->GetTexture(), textureState));
@@ -148,6 +148,8 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
     {
         RenderGraphHandle reservoir;
         RenderGraphHandle irradiance;
+        RenderGraphHandle rayDirection;
+        RenderGraphHandle normal;
         RenderGraphHandle output;
     };
 
@@ -156,6 +158,8 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         {
             data.reservoir = builder.Read(temporal_reuse_pass->outputReservoir);
             data.irradiance = builder.Read(temporal_reuse_pass->outputReservoirSampleRadiance);
+            data.rayDirection = builder.Read(temporal_reuse_pass->outputReservoirRayDirection);
+            data.normal = builder.Read(normal);
 
             RenderGraphTexture::Desc desc;
             desc.width = width;
@@ -167,8 +171,10 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         {
             IGfxDescriptor* reservoir = m_temporalReservoir[1].reservoir->GetSRV();
             IGfxDescriptor* irradiance = m_temporalReservoir[1].sampleRadiance->GetSRV();
+            IGfxDescriptor* rayDirection = m_temporalReservoir[1].rayDirection->GetSRV();
+            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
             RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
-            Resolve(pCommandList, reservoir, irradiance, output->GetUAV(), width, height);
+            Resolve(pCommandList, reservoir, irradiance, rayDirection, normal->GetSRV(), output->GetUAV(), width, height);
         });
 
     return resolve_pass->output;
@@ -242,11 +248,18 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, IGfxDescriptor*
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* irradiance, IGfxDescriptor* output, uint32_t width, uint32_t height)
+void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* irradiance, IGfxDescriptor* rayDirection, IGfxDescriptor* normal,
+    IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pResolvePSO);
 
-    uint32_t constants[3] = { reservoir->GetHeapIndex(), irradiance->GetHeapIndex(), output->GetHeapIndex() };
+    uint32_t constants[5] = { 
+        reservoir->GetHeapIndex(),
+        irradiance->GetHeapIndex(),
+        rayDirection->GetHeapIndex(),
+        normal->GetHeapIndex(),
+        output->GetHeapIndex() 
+    };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }

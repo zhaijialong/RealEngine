@@ -17,7 +17,8 @@ private:
         IGfxDescriptor* candidateIrradiance, IGfxDescriptor* candidateHitNormal, IGfxDescriptor* candidateRay, uint32_t width, uint32_t height);
     void SpatialResampling();
 
-    void Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* irradiance, IGfxDescriptor* output, uint32_t width, uint32_t height);
+    void Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* irradiance, IGfxDescriptor* rayDirection, IGfxDescriptor* normal,
+        IGfxDescriptor* output, uint32_t width, uint32_t height);
 
     bool InitTemporalBuffers(uint32_t width, uint32_t height);
 
