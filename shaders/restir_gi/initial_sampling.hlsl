@@ -61,7 +61,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
         float3 direct_lighting = DefaultBRDF(SceneCB.lightDir, -direction, material.worldNormal, material.diffuse, material.specular, material.roughness) * visibility;
         
-        radiance = direct_lighting; //todo : second bounce
+        radiance = material.emissive + direct_lighting; //todo : second bounce
         hitNormal = material.worldNormal;        
     }
     else

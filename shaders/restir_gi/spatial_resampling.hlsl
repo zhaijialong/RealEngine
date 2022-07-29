@@ -59,7 +59,13 @@ void StoreReservoir(uint2 pos, Reservoir R)
 // ReSTIR GI paper Eq.11
 float GetJacobian(Reservoir q, Reservoir r)
 {
-    return 1;
+    float3 v1 = q.z.x_v - q.z.x_s;
+    float3 v2 = r.z.x_v - q.z.x_s;
+    float3 n = q.z.n_s;
+    
+    float a = saturate(dot(normalize(v1), n)) / max(0.00001, saturate(dot(normalize(v2), n)));
+    float b = square(length(v1)) / max(0.00001, square(length(v2)));
+    return a * b;
 }
 
 [numthreads(8, 8, 1)]
@@ -83,7 +89,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Reservoir Rs = LoadReservoir(pos, depth, normal);
     
     const uint maxIterations = 9;
-    const float searchRadius = 16.0f; //todo
+    const float searchRadius = 8.0f; //todo
     float Z = 0.0;
     
     for (uint i = 0; i < maxIterations; ++i)
@@ -102,6 +108,11 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         Reservoir Rn = LoadReservoir(qn, depth_qn, normal_qn);
 
         float jacobian = GetJacobian(Rn, Rs);
+        if (jacobian < 0.01 || isnan(jacobian))
+        {
+            continue;
+        }
+        
         float target_p = Luminance(Rn.z.Lo) / jacobian;
 
         //todo : if Rn's sample point is not visible to xv at q , target_p = 0
@@ -116,7 +127,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     if (Z > 0)
     {
-        Rs.W = Rs.w_sum / max(0.000001, Z * Luminance(Rs.z.Lo));
+        Rs.W = Rs.w_sum / max(0.00001, Z * Luminance(Rs.z.Lo));
     }
     
     StoreReservoir(pos, Rs);

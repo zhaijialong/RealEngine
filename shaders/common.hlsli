@@ -12,6 +12,16 @@ float max3(float3 v)
     return max(max(v.x, v.y), v.z);
 }
 
+float min3(float3 v)
+{
+    return min(min(v.x, v.y), v.z);
+}
+
+float square(float x)
+{
+    return x * x;
+}
+
 template<typename T>
 T LinearToSrgbChannel(T color)
 {
