@@ -44,7 +44,7 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
     {
         RenderGraphHandle depth;
         RenderGraphHandle normal;
-        RenderGraphHandle outputIrradiance; // w : hitT
+        RenderGraphHandle outputRadiance; // w : hitT
         RenderGraphHandle outputHitNormal;
         RenderGraphHandle outputRay;
     };
@@ -59,7 +59,7 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            data.outputIrradiance = builder.Write(builder.Create<RenderGraphTexture>(desc, "ReSTIR GI/candidate irradiance"));
+            data.outputRadiance = builder.Write(builder.Create<RenderGraphTexture>(desc, "ReSTIR GI/candidate radiance"));
 
             desc.format = GfxFormat::RG16UNORM;
             data.outputHitNormal = builder.Write(builder.Create<RenderGraphTexture>(desc, "ReSTIR GI/candidate hitNormal"));
@@ -69,15 +69,15 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         {
             RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
             RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
-            RenderGraphTexture* outputIrradiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputIrradiance);
+            RenderGraphTexture* outputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputRadiance);
             RenderGraphTexture* outputHitNormal = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputHitNormal);
             RenderGraphTexture* outputRay = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputRay);
-            InitialSampling(pCommandList, depth->GetSRV(), normal->GetSRV(), outputIrradiance->GetUAV(), outputHitNormal->GetUAV(), outputRay->GetUAV(), width, height);
+            InitialSampling(pCommandList, depth->GetSRV(), normal->GetSRV(), outputRadiance->GetUAV(), outputHitNormal->GetUAV(), outputRay->GetUAV(), width, height);
         });
 
     if (!m_bEnableReSTIR)
     {
-        return raytrace_pass->outputIrradiance;
+        return raytrace_pass->outputRadiance;
     }
 
     bool initialFrame = InitTemporalBuffers(width, height);
@@ -91,7 +91,7 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         RenderGraphHandle prevLinearDepth;
         RenderGraphHandle prevNormal;
 
-        RenderGraphHandle candidateIrradiance;
+        RenderGraphHandle candidateRadiance;
         RenderGraphHandle candidateHitNormal;
         RenderGraphHandle candidateRay;
 
@@ -114,7 +114,7 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             data.velocity = builder.Read(velocity);
             data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
             data.prevNormal = builder.Read(m_pRenderer->GetPrevNormalHandle());
-            data.candidateIrradiance = builder.Read(raytrace_pass->outputIrradiance);
+            data.candidateRadiance = builder.Read(raytrace_pass->outputRadiance);
             data.candidateHitNormal = builder.Read(raytrace_pass->outputHitNormal);
             data.candidateRay = builder.Read(raytrace_pass->outputRay);
 
@@ -135,10 +135,10 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
             RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
             RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
             RenderGraphTexture* velocity = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocity);
-            RenderGraphTexture* candidateIrradiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.candidateIrradiance);
+            RenderGraphTexture* candidateRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.candidateRadiance);
             RenderGraphTexture* candidateHitNormal = (RenderGraphTexture*)pRenderGraph->GetResource(data.candidateHitNormal);
             RenderGraphTexture* candidateRay = (RenderGraphTexture*)pRenderGraph->GetResource(data.candidateRay);
-            TemporalResampling(pCommandList, depth->GetSRV(), normal->GetSRV(), velocity->GetSRV(), candidateIrradiance->GetSRV(),
+            TemporalResampling(pCommandList, depth->GetSRV(), normal->GetSRV(), velocity->GetSRV(), candidateRadiance->GetSRV(),
                 candidateHitNormal->GetSRV(), candidateRay->GetSRV(), width, height);
         });
 
@@ -178,8 +178,6 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
 
             desc.format = GfxFormat::RG16F;
             data.outputReservoir = builder.Write(builder.Create<RenderGraphTexture>(desc, "ReSTIR GI/spatial reservoir"));
-
-            builder.SkipCulling(); //todo
         },
         [=](const SpatialReusePassData& data, IGfxCommandList* pCommandList)
         {
@@ -195,7 +193,7 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
     struct ResolvePassData
     {
         RenderGraphHandle reservoir;
-        RenderGraphHandle irradiance;
+        RenderGraphHandle radiance;
         RenderGraphHandle rayDirection;
         RenderGraphHandle normal;
         RenderGraphHandle output;
@@ -205,7 +203,7 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         [&](ResolvePassData& data, RenderGraphBuilder& builder)
         {
             data.reservoir = builder.Read(spatial_reuse_pass->outputReservoir);
-            data.irradiance = builder.Read(spatial_reuse_pass->outputReservoirSampleRadiance);
+            data.radiance = builder.Read(spatial_reuse_pass->outputReservoirSampleRadiance);
             data.rayDirection = builder.Read(spatial_reuse_pass->outputReservoirRayDirection);
             data.normal = builder.Read(normal);
 
@@ -218,25 +216,25 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         [=](const ResolvePassData& data, IGfxCommandList* pCommandList)
         {
             RenderGraphTexture* reservoir = (RenderGraphTexture*)pRenderGraph->GetResource(data.reservoir);
-            RenderGraphTexture* irradiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.irradiance);
+            RenderGraphTexture* radiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.radiance);
             RenderGraphTexture* rayDirection = (RenderGraphTexture*)pRenderGraph->GetResource(data.rayDirection);
             RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
             RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
-            Resolve(pCommandList, reservoir->GetSRV(), irradiance->GetSRV(), rayDirection->GetSRV(), normal->GetSRV(), output->GetUAV(), width, height);
+            Resolve(pCommandList, reservoir->GetSRV(), radiance->GetSRV(), rayDirection->GetSRV(), normal->GetSRV(), output->GetUAV(), width, height);
         });
 
     return resolve_pass->output;
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal,
-    IGfxDescriptor* outputIrradiance, IGfxDescriptor* outputHitNormal, IGfxDescriptor* outputRay, uint32_t width, uint32_t height)
+    IGfxDescriptor* outputRadiance, IGfxDescriptor* outputHitNormal, IGfxDescriptor* outputRay, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pInitialSamplingPSO);
 
     uint32_t constants[5] = { 
         depth->GetHeapIndex(), 
         normal->GetHeapIndex(),
-        outputIrradiance->GetHeapIndex(),
+        outputRadiance->GetHeapIndex(),
         outputHitNormal->GetHeapIndex(),
         outputRay->GetHeapIndex()
     };
@@ -246,7 +244,7 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, IGfxDescriptor* de
 }
 
 void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* velocity, 
-    IGfxDescriptor* candidateIrradiance, IGfxDescriptor* candidateHitNormal, IGfxDescriptor* candidateRay, uint32_t width, uint32_t height)
+    IGfxDescriptor* candidateRadiance, IGfxDescriptor* candidateHitNormal, IGfxDescriptor* candidateRay, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pTemporalResamplingPSO);
 
@@ -257,7 +255,7 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, IGfxDescriptor*
         uint velocity;
         uint prevLinearDepth;
         uint prevNormal;
-        uint candidateIrradiance;
+        uint candidateRadiance;
         uint candidateHitNormal;
         uint candidateRay;
         uint historyReservoirRayDirection;
@@ -276,7 +274,7 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, IGfxDescriptor*
     cb.velocity = velocity->GetHeapIndex();
     cb.prevLinearDepth = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
     cb.prevNormal = m_pRenderer->GetPrevNormalTexture()->GetSRV()->GetHeapIndex();
-    cb.candidateIrradiance = candidateIrradiance->GetHeapIndex();
+    cb.candidateRadiance = candidateRadiance->GetHeapIndex();
     cb.candidateHitNormal = candidateHitNormal->GetHeapIndex();
     cb.candidateRay = candidateRay->GetHeapIndex();
     cb.historyReservoirRayDirection = m_temporalReservoir[0].rayDirection->GetSRV()->GetHeapIndex();
@@ -325,14 +323,14 @@ void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, IGfxDescriptor* 
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* irradiance, IGfxDescriptor* rayDirection, IGfxDescriptor* normal,
+void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* radiance, IGfxDescriptor* rayDirection, IGfxDescriptor* normal,
     IGfxDescriptor* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pResolvePSO);
 
     uint32_t constants[5] = { 
         reservoir->GetHeapIndex(),
-        irradiance->GetHeapIndex(),
+        radiance->GetHeapIndex(),
         rayDirection->GetHeapIndex(),
         normal->GetHeapIndex(),
         output->GetHeapIndex() 
@@ -352,7 +350,7 @@ bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)
         for (int i = 0; i < 2; ++i)
         {
             m_temporalReservoir[i].rayDirection.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16UNORM, GfxTextureUsageUnorderedAccess,
-                fmt::format("ReSTIR GItemporal reservoir rayDirection {}", i).c_str()));
+                fmt::format("ReSTIR GI/temporal reservoir rayDirection {}", i).c_str()));
             m_temporalReservoir[i].sampleNormal.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16UNORM, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir sampleNormal {}", i).c_str()));
             m_temporalReservoir[i].sampleRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess,

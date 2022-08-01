@@ -8,7 +8,7 @@ cbuffer CB : register(b1)
     uint c_velocity;
     uint c_prevLinearDepth;
     uint c_prevNormal;
-    uint c_candidateIrradiance;
+    uint c_candidateRadiance;
     uint c_candidateHitNormal;
     uint c_candidateRay;
     uint c_historyReservoirRayDirection;
@@ -24,19 +24,19 @@ cbuffer CB : register(b1)
 Sample LoadInitialSample(uint2 pos, float depth)
 {
     Texture2D normalTexture = ResourceDescriptorHeap[c_normal];
-    Texture2D candidateIrradianceTexture = ResourceDescriptorHeap[c_candidateIrradiance];
+    Texture2D candidateRadianceTexture = ResourceDescriptorHeap[c_candidateRadiance];
     Texture2D candidateHitNormalTexture = ResourceDescriptorHeap[c_candidateHitNormal];
     Texture2D candidateRayTexture = ResourceDescriptorHeap[c_candidateRay];
     
     float3 candidateRay = OctDecode(candidateRayTexture[pos].xy * 2.0 - 1.0);
-    float candidateRayT = candidateIrradianceTexture[pos].w;
+    float candidateRayT = candidateRadianceTexture[pos].w;
     
     Sample S;
     S.x_v = GetWorldPosition(pos, depth);
     S.n_v = DecodeNormal(normalTexture[pos].xyz);
     S.x_s = S.x_v + candidateRay * candidateRayT;
     S.n_s = OctDecode(candidateHitNormalTexture[pos].xy * 2.0 - 1.0);
-    S.Lo = candidateIrradianceTexture[pos].xyz;
+    S.Lo = candidateRadianceTexture[pos].xyz;
     
     return S;
 }

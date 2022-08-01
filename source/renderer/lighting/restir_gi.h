@@ -12,13 +12,13 @@ public:
 
 private:
     void InitialSampling(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, 
-        IGfxDescriptor* outputIrradiance, IGfxDescriptor* outputHitNormal, IGfxDescriptor* outputRay, uint32_t width, uint32_t height);
+        IGfxDescriptor* outputRadiance, IGfxDescriptor* outputHitNormal, IGfxDescriptor* outputRay, uint32_t width, uint32_t height);
     void TemporalResampling(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* velocity,
-        IGfxDescriptor* candidateIrradiance, IGfxDescriptor* candidateHitNormal, IGfxDescriptor* candidateRay, uint32_t width, uint32_t height);
+        IGfxDescriptor* candidateRadiance, IGfxDescriptor* candidateHitNormal, IGfxDescriptor* candidateRay, uint32_t width, uint32_t height);
     void SpatialResampling(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, 
         IGfxDescriptor* outputReservoirRayDirection, IGfxDescriptor* outputReservoirSampleRadiance, IGfxDescriptor* outputReservoir, uint32_t width, uint32_t height);
 
-    void Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* irradiance, IGfxDescriptor* rayDirection, IGfxDescriptor* normal,
+    void Resolve(IGfxCommandList* pCommandList, IGfxDescriptor* reservoir, IGfxDescriptor* radiance, IGfxDescriptor* rayDirection, IGfxDescriptor* normal,
         IGfxDescriptor* output, uint32_t width, uint32_t height);
 
     bool InitTemporalBuffers(uint32_t width, uint32_t height);

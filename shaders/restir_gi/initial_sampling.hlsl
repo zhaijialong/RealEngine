@@ -6,7 +6,7 @@ cbuffer CB : register(b0)
 {
     uint c_depthTexture;
     uint c_normalTexture;
-    uint c_outputIrradianceUAV;
+    uint c_outputRadianceUAV;
     uint c_outputHitNormalUAV;
     uint c_outputRayUAV;
 }
@@ -16,14 +16,14 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
-    RWTexture2D<float4> outputIrradianceUAV = ResourceDescriptorHeap[c_outputIrradianceUAV];
+    RWTexture2D<float4> outputRadianceUAV = ResourceDescriptorHeap[c_outputRadianceUAV];
     RWTexture2D<float2> outputHitNormalUAV = ResourceDescriptorHeap[c_outputHitNormalUAV];
     RWTexture2D<float2> outputRayUAV = ResourceDescriptorHeap[c_outputRayUAV];
     
     float depth = depthTexture[dispatchThreadID.xy];    
     if (depth == 0.0)
     {
-        outputIrradianceUAV[dispatchThreadID.xy] = 0.xxxx;
+        outputRadianceUAV[dispatchThreadID.xy] = 0.xxxx;
         outputHitNormalUAV[dispatchThreadID.xy] = 0.xx;
         outputRayUAV[dispatchThreadID.xy] = 0.xx;
         return;
@@ -71,7 +71,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         radiance = skyTexture.SampleLevel(linearSampler, direction, 0).xyz;
     }
     
-    outputIrradianceUAV[dispatchThreadID.xy] = float4(radiance, hitInfo.rayT);
+    outputRadianceUAV[dispatchThreadID.xy] = float4(radiance, hitInfo.rayT);
     outputHitNormalUAV[dispatchThreadID.xy] = OctEncode(hitNormal) * 0.5 + 0.5;
     outputRayUAV[dispatchThreadID.xy] = OctEncode(direction) * 0.5 + 0.5;
 }

@@ -88,8 +88,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     PRNG rng = PRNG::Create(pos, SceneCB.renderSize);
     Reservoir Rs = LoadReservoir(pos, depth, normal);
     
-    const uint maxIterations = 9;
-    const float searchRadius = 8.0f; //todo
+    const uint maxIterations = 8;
+    const float searchRadius = 30.0f; //todo
     float Z = 0.0;
     
     for (uint i = 0; i < maxIterations; ++i)
