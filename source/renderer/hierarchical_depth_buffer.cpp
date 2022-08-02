@@ -57,8 +57,8 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
         },
         [=](const DepthReprojectionData& data, IGfxCommandList* pCommandList)
         {
-            //RenderGraphTexture* prevLinearDepth = (RenderGraphTexture*)graph->GetResource(data.prevLinearDepth);
-            RenderGraphTexture* reprojectedDepth = (RenderGraphTexture*)graph->GetResource(data.reprojectedDepth);
+            //RenderGraphTexture* prevLinearDepth = graph->GetTexture(data.prevLinearDepth);
+            RenderGraphTexture* reprojectedDepth = graph->GetTexture(data.reprojectedDepth);
             ReprojectDepth(pCommandList, m_pRenderer->GetPrevLinearDepthTexture()->GetSRV(), reprojectedDepth->GetTexture(), reprojectedDepth->GetUAV());
         });
 
@@ -86,8 +86,8 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
         },
         [=](const DepthDilationData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* reprojectedDepth = (RenderGraphTexture*)graph->GetResource(data.reprojectedDepth);
-            RenderGraphTexture* dilatedDepth = (RenderGraphTexture*)graph->GetResource(data.dilatedDepth);
+            RenderGraphTexture* reprojectedDepth = graph->GetTexture(data.reprojectedDepth);
+            RenderGraphTexture* dilatedDepth = graph->GetTexture(data.dilatedDepth);
             DilateDepth(pCommandList, reprojectedDepth->GetSRV(), dilatedDepth->GetUAV());
         });
 
@@ -111,7 +111,7 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
         {
             ResetCounterBuffer(pCommandList);
 
-            RenderGraphTexture* hzb = (RenderGraphTexture*)graph->GetResource(data.hzb);
+            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
             BuildHZB(pCommandList, hzb);
         });
 }
@@ -144,8 +144,8 @@ void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depth
         },
         [=](const InitHZBData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* inputDepth = (RenderGraphTexture*)graph->GetResource(data.inputDepthRT);
-            RenderGraphTexture* hzb = (RenderGraphTexture*)graph->GetResource(data.hzb);
+            RenderGraphTexture* inputDepth = graph->GetTexture(data.inputDepthRT);
+            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
             InitHZB(pCommandList, inputDepth->GetSRV(), hzb->GetUAV());
         });
 
@@ -167,7 +167,7 @@ void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depth
         },
         [=](const BuildHZBData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* hzb = (RenderGraphTexture*)graph->GetResource(data.hzb);
+            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
             BuildHZB(pCommandList, hzb);
         });
 }
@@ -200,8 +200,8 @@ void HZB::GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT)
         },
         [=](const InitHZBData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* inputDepth = (RenderGraphTexture*)graph->GetResource(data.inputDepthRT);
-            RenderGraphTexture* hzb = (RenderGraphTexture*)graph->GetResource(data.hzb);
+            RenderGraphTexture* inputDepth = graph->GetTexture(data.inputDepthRT);
+            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
 
             InitHZB(pCommandList, inputDepth->GetSRV(), hzb->GetUAV(), true);
         });
@@ -224,7 +224,7 @@ void HZB::GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT)
         },
         [=](const BuildHZBData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* hzb = (RenderGraphTexture*)graph->GetResource(data.hzb);
+            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
             BuildHZB(pCommandList, hzb, true);
         });
 }

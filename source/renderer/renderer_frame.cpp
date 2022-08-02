@@ -121,8 +121,8 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
 
             pCommandList->SetPipelineState(pPSO);
 
-            RenderGraphTexture* velocity = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.velocity);
-            RenderGraphTexture* depth = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.depth);
+            RenderGraphTexture* velocity = m_pRenderGraph->GetTexture(data.velocity);
+            RenderGraphTexture* depth = m_pRenderGraph->GetTexture(data.depth);
             uint32_t cb[2] = { velocity->GetUAV()->GetHeapIndex(), depth->GetSRV()->GetHeapIndex()};
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
@@ -161,8 +161,8 @@ RenderGraphHandle Renderer::LinearizeDepthPass(RenderGraphHandle depth)
 
             pCommandList->SetPipelineState(pPSO);
 
-            RenderGraphTexture* inputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.inputDepthRT);
-            RenderGraphTexture* outputRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.outputLinearDepthRT);
+            RenderGraphTexture* inputRT = m_pRenderGraph->GetTexture(data.inputDepthRT);
+            RenderGraphTexture* outputRT = m_pRenderGraph->GetTexture(data.outputLinearDepthRT);
             uint32_t cb[2] = { inputRT->GetSRV()->GetHeapIndex(), outputRT->GetUAV()->GetHeapIndex() };
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
@@ -220,7 +220,7 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
             },
             [&](const CopyIDPassData& data, IGfxCommandList* pCommandList)
             {
-                RenderGraphTexture* srcTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcTexture);
+                RenderGraphTexture* srcTexture = m_pRenderGraph->GetTexture(data.srcTexture);
 
                 m_nObjectIDRowPitch = srcTexture->GetTexture()->GetRowPitch(0);
                 uint32_t size = m_nObjectIDRowPitch * srcTexture->GetTexture()->GetDesc().height;
@@ -267,9 +267,9 @@ void Renderer::CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle 
         },
         [&](const CopyPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* srcLinearDepthTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcLinearDepthTexture);
-            RenderGraphTexture* srcNormalTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcNormalTexture);
-            RenderGraphTexture* srcSceneColorTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(data.srcSceneColorTexture);
+            RenderGraphTexture* srcLinearDepthTexture = m_pRenderGraph->GetTexture(data.srcLinearDepthTexture);
+            RenderGraphTexture* srcNormalTexture = m_pRenderGraph->GetTexture(data.srcNormalTexture);
+            RenderGraphTexture* srcSceneColorTexture = m_pRenderGraph->GetTexture(data.srcSceneColorTexture);
 
             pCommandList->CopyTexture(m_pPrevLinearDepthTexture->GetTexture(), 0, 0, srcLinearDepthTexture->GetTexture(), 0, 0);
             pCommandList->CopyTexture(m_pPrevNormalTexture->GetTexture(), 0, 0, srcNormalTexture->GetTexture(), 0, 0);
