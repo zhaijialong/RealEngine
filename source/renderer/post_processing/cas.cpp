@@ -50,8 +50,8 @@ RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle input
         },
         [=](const CASPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* inRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inRT);
-            RenderGraphTexture* outRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outRT);
+            RenderGraphTexture* inRT = pRenderGraph->GetTexture(data.inRT);
+            RenderGraphTexture* outRT = pRenderGraph->GetTexture(data.outRT);
 
             Draw(pCommandList, inRT->GetSRV(), outRT->GetUAV(), width, height);
         });

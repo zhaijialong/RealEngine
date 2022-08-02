@@ -44,8 +44,8 @@ RenderGraphHandle FXAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
         },
         [=](const FXAAData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* input = pRenderGraph->GetTexture(data.input);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
 
             Draw(pCommandList, input->GetSRV(), output->GetUAV(), width, height);
         });

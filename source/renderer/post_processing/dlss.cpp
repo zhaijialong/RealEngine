@@ -92,11 +92,11 @@ RenderGraphHandle DLSS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
 
             pCommandList->FlushBarriers();
 
-            RenderGraphTexture* inputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
-            RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
-            RenderGraphTexture* velocityRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocity);
-            RenderGraphTexture* exposureRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.exposure);
-            RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* inputRT = pRenderGraph->GetTexture(data.input);
+            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depth);
+            RenderGraphTexture* velocityRT = pRenderGraph->GetTexture(data.velocity);
+            RenderGraphTexture* exposureRT = pRenderGraph->GetTexture(data.exposure);
+            RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.output);
 
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 

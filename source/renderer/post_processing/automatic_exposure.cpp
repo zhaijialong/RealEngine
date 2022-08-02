@@ -71,8 +71,8 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             },
             [=](const InitLuminanceData& data, IGfxCommandList* pCommandList)
             {
-                RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
-                RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+                RenderGraphTexture* input = pRenderGraph->GetTexture(data.input);
+                RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
                 InitLuminance(pCommandList, input->GetSRV(), output->GetUAV());
             });
 
@@ -93,7 +93,7 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             },
             [=](const LuminanceReductionData& data, IGfxCommandList* pCommandList)
             {
-                RenderGraphTexture* texture = (RenderGraphTexture*)pRenderGraph->GetResource(data.luminanceRT);
+                RenderGraphTexture* texture = pRenderGraph->GetTexture(data.luminanceRT);
                 ReduceLuminance(pCommandList, texture);
             });
 
@@ -122,8 +122,8 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             },
             [=](const BuildHistogramData& data, IGfxCommandList* pCommandList)
             {
-                RenderGraphTexture* inputTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputTexture);
-                RenderGraphBuffer* histogramBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.histogramBuffer);
+                RenderGraphTexture* inputTexture = pRenderGraph->GetTexture(data.inputTexture);
+                RenderGraphBuffer* histogramBuffer = pRenderGraph->GetBuffer(data.histogramBuffer);
                 BuildHistogram(pCommandList, inputTexture->GetSRV(), histogramBuffer->GetBuffer(), histogramBuffer->GetUAV(), width, height);
             });
 
@@ -146,8 +146,8 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             },
             [=](const HistogramReductionData& data, IGfxCommandList* pCommandList)
             {
-                RenderGraphBuffer* histogramBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.histogramBuffer);
-                RenderGraphTexture* avgLuminanceTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgLuminanceTexture);
+                RenderGraphBuffer* histogramBuffer = pRenderGraph->GetBuffer(data.histogramBuffer);
+                RenderGraphTexture* avgLuminanceTexture = pRenderGraph->GetTexture(data.avgLuminanceTexture);
                 ReduceHistogram(pCommandList, histogramBuffer->GetSRV(), avgLuminanceTexture->GetUAV());
             });
 
@@ -180,11 +180,11 @@ RenderGraphHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RenderGra
             IGfxDescriptor* avgLuminanceSRV = nullptr;
             if (data.avgLuminance.IsValid())
             {
-                RenderGraphTexture* avgLuminance = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgLuminance);
+                RenderGraphTexture* avgLuminance = pRenderGraph->GetTexture(data.avgLuminance);
                 avgLuminanceSRV = avgLuminance->GetSRV();
             }
 
-            RenderGraphTexture* exposure = (RenderGraphTexture*)pRenderGraph->GetResource(data.exposure);
+            RenderGraphTexture* exposure = pRenderGraph->GetTexture(data.exposure);
             Exposure(pCommandList, avgLuminanceSRV, exposure->GetUAV());
         });
 
