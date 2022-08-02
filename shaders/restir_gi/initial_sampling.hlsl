@@ -69,6 +69,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
         SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
         radiance = skyTexture.SampleLevel(linearSampler, direction, 0).xyz;
+        hitNormal = -direction;
+
     }
     
     outputRadianceUAV[dispatchThreadID.xy] = float4(radiance, hitInfo.rayT);

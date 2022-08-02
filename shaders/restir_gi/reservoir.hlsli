@@ -20,7 +20,7 @@ struct Reservoir
     float M;
     float W;
     
-    void Update(Sample s_new, float w_new, float random)
+    bool Update(Sample s_new, float w_new, float random)
     {
         w_sum += w_new;
         M += 1;
@@ -28,13 +28,18 @@ struct Reservoir
         if (random < w_new / max(w_sum, 0.00001)) //avoid divide by 0
         {
             z = s_new;
+            return true;
         }
+        
+        return false;
     }
     
-    void Merge(Reservoir r, float target_pdf, float random)
+    bool Merge(Reservoir r, float target_pdf, float random)
     {
         float M0 = M;
-        Update(r.z, target_pdf * r.W * r.M, random);
+        bool updated = Update(r.z, target_pdf * r.W * r.M, random);
         M = M0 + r.M;
+        
+        return updated;
     }
 };

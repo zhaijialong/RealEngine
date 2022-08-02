@@ -91,6 +91,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     const uint maxIterations = 8;
     const float searchRadius = 30.0f; //todo
     float Z = 0.0;
+    float selected_target_p = 1.0;
     
     for (uint i = 0; i < maxIterations; ++i)
     {
@@ -117,7 +118,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
         //todo : if Rn's sample point is not visible to xv at q , target_p = 0
         
-        Rs.Merge(Rn, target_p, rng.RandomFloat());
+        if(Rs.Merge(Rn, target_p, rng.RandomFloat()))
+        {
+            selected_target_p = target_p;
+        }
 
         if (target_p > 0)
         {
@@ -127,7 +131,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     if (Z > 0)
     {
-        Rs.W = Rs.w_sum / max(0.00001, Z * Luminance(Rs.z.Lo));
+        Rs.W = Rs.w_sum / max(0.00001, Z * selected_target_p);
     }
     
     StoreReservoir(pos, Rs);
