@@ -90,14 +90,14 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
         },
         [=](const CompositeLightData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* diffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.diffuseRT);
-            RenderGraphTexture* specularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.specularRT);
-            RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalRT);
-            RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.emissiveRT);
-            RenderGraphTexture* customDataRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.customDataRT);
-            RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthRT);
-            RenderGraphTexture* directLightingRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.directLighting);
-            RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* diffuseRT = pRenderGraph->GetTexture(data.diffuseRT);
+            RenderGraphTexture* specularRT = pRenderGraph->GetTexture(data.specularRT);
+            RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.normalRT);
+            RenderGraphTexture* emissiveRT = pRenderGraph->GetTexture(data.emissiveRT);
+            RenderGraphTexture* customDataRT = pRenderGraph->GetTexture(data.customDataRT);
+            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depthRT);
+            RenderGraphTexture* directLightingRT = pRenderGraph->GetTexture(data.directLighting);
+            RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.output);
             RenderGraphTexture* aoRT = nullptr;
             RenderGraphTexture* indirectSpecularRT = nullptr;
             RenderGraphTexture* indirectDiffuseRT = nullptr;
@@ -105,7 +105,7 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
             eastl::vector<eastl::string> defines;
             if (data.ao.IsValid())
             {
-                aoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.ao);
+                aoRT = pRenderGraph->GetTexture(data.ao);
 
                 defines.push_back("GTAO=1");
 
@@ -117,13 +117,13 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
 
             if (data.indirectSpecular.IsValid())
             {
-                indirectSpecularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.indirectSpecular);
+                indirectSpecularRT = pRenderGraph->GetTexture(data.indirectSpecular);
                 defines.push_back("SPECULAR_GI=1");
             }
 
             if (data.indirectDiffuse.IsValid())
             {
-                indirectDiffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.indirectDiffuse);
+                indirectDiffuseRT = pRenderGraph->GetTexture(data.indirectDiffuse);
                 defines.push_back("DIFFUSE_GI=1");
             }
 

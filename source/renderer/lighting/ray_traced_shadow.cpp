@@ -44,9 +44,9 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         },
         [=](const RTShadowData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
-            RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
-            RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.shadow);
+            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depth);
+            RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.normal);
+            RenderGraphTexture* shadowRT = pRenderGraph->GetTexture(data.shadow);
 
             RayTrace(pCommandList, depthRT->GetSRV(), normalRT->GetSRV(), shadowRT->GetUAV(), width, height);
         });

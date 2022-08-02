@@ -60,8 +60,8 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserPreparePassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* raytraceResult = (RenderGraphTexture*)pRenderGraph->GetResource(data.raytraceResult);
-            RenderGraphBuffer* shadowMaskBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.shadowMaskBuffer);
+            RenderGraphTexture* raytraceResult = pRenderGraph->GetTexture(data.raytraceResult);
+            RenderGraphBuffer* shadowMaskBuffer = pRenderGraph->GetBuffer(data.shadowMaskBuffer);
 
             Prepare(pCommandList, raytraceResult->GetSRV(), shadowMaskBuffer->GetUAV(), width, height);
         });
@@ -116,12 +116,12 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserTileClassificationData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* shadowMaskBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.shadowMaskBuffer);
-            RenderGraphTexture* depthTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthTexture);
-            RenderGraphTexture* normalTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalTexture);
-            RenderGraphTexture* velocityTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocityTexture);
-            RenderGraphBuffer* tileMetaDataBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileMetaDataBuffer);
-            RenderGraphTexture* reprojectionResultTexture = (RenderGraphTexture*)pRenderGraph->GetResource(data.reprojectionResultTexture);
+            RenderGraphBuffer* shadowMaskBuffer = pRenderGraph->GetBuffer(data.shadowMaskBuffer);
+            RenderGraphTexture* depthTexture = pRenderGraph->GetTexture(data.depthTexture);
+            RenderGraphTexture* normalTexture = pRenderGraph->GetTexture(data.normalTexture);
+            RenderGraphTexture* velocityTexture = pRenderGraph->GetTexture(data.velocityTexture);
+            RenderGraphBuffer* tileMetaDataBuffer = pRenderGraph->GetBuffer(data.tileMetaDataBuffer);
+            RenderGraphTexture* reprojectionResultTexture = pRenderGraph->GetTexture(data.reprojectionResultTexture);
 
             TileClassification(pCommandList, shadowMaskBuffer->GetSRV(), depthTexture->GetSRV(), normalTexture->GetSRV(), velocityTexture->GetSRV(),
                 tileMetaDataBuffer->GetUAV(), reprojectionResultTexture->GetUAV(), width, height);
@@ -147,11 +147,11 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputTexture);
+            RenderGraphTexture* input = pRenderGraph->GetTexture(data.inputTexture);
             IGfxDescriptor* outputUAV = m_pHistoryTexture->GetUAV();
-            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthTexture);
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalTexture);
-            RenderGraphBuffer* tileMetaData = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileMetaDataBuffer);
+            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depthTexture);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normalTexture);
+            RenderGraphBuffer* tileMetaData = pRenderGraph->GetBuffer(data.tileMetaDataBuffer);
 
             Filter(pCommandList, input->GetSRV(), outputUAV, depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 0, width, height);
         });
@@ -174,10 +174,10 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
         {
             IGfxDescriptor* input = m_pHistoryTexture->GetSRV();
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputTexture);
-            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthTexture);
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalTexture);
-            RenderGraphBuffer* tileMetaData = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileMetaDataBuffer);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.outputTexture);
+            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depthTexture);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normalTexture);
+            RenderGraphBuffer* tileMetaData = pRenderGraph->GetBuffer(data.tileMetaDataBuffer);
 
             Filter(pCommandList, input, output->GetUAV(), depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 1, width, height);
         });
@@ -199,11 +199,11 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputTexture);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputTexture);
-            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthTexture);
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalTexture);
-            RenderGraphBuffer* tileMetaData = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileMetaDataBuffer);
+            RenderGraphTexture* input = pRenderGraph->GetTexture(data.inputTexture);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.outputTexture);
+            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depthTexture);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normalTexture);
+            RenderGraphBuffer* tileMetaData = pRenderGraph->GetBuffer(data.tileMetaDataBuffer);
 
             Filter(pCommandList, input->GetSRV(), output->GetUAV(), depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 2, width, height);
         });

@@ -97,11 +97,11 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const TileClassificationData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
-            RenderGraphBuffer* rayListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayListBuffer);
-            RenderGraphBuffer* tileListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileListBuffer);
-            RenderGraphBuffer* rayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayCounterBuffer);
+            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depth);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
+            RenderGraphBuffer* rayListBuffer = pRenderGraph->GetBuffer(data.rayListBuffer);
+            RenderGraphBuffer* tileListBuffer = pRenderGraph->GetBuffer(data.tileListBuffer);
+            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBuffer);
 
             uint32_t clear_value[4] = { 0, 0, 0, 0 };
             pCommandList->ClearUAV(rayCounterBuffer->GetBuffer(), rayCounterBuffer->GetUAV(), clear_value);
@@ -135,9 +135,9 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const PrepareIndirectArgsData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* rayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayCounterBuffer);
-            RenderGraphBuffer* indirectArgsBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgsBuffer);
-            RenderGraphBuffer* denoiserArgsBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.denoiserArgsBuffer);
+            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBuffer);
+            RenderGraphBuffer* indirectArgsBuffer = pRenderGraph->GetBuffer(data.indirectArgsBuffer);
+            RenderGraphBuffer* denoiserArgsBuffer = pRenderGraph->GetBuffer(data.denoiserArgsBuffer);
             PrepareIndirectArgs(pCommandList, rayCounterBuffer->GetSRV(), indirectArgsBuffer->GetUAV(), denoiserArgsBuffer->GetUAV());
         });
 
@@ -197,15 +197,15 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const SSRData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
-            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
-            RenderGraphTexture* velocity = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocity);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
-            RenderGraphBuffer* rayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayCounterBufferSRV);
-            RenderGraphBuffer* rayListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayListBufferSRV);
-            RenderGraphBuffer* indirectArgsBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgsBuffer);
-            RenderGraphBuffer* hwRayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.hwRayCounterBufferUAV);
-            RenderGraphBuffer* hwRayListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.hwRayListBufferUAV);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
+            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depth);
+            RenderGraphTexture* velocity = pRenderGraph->GetTexture(data.velocity);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
+            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBufferSRV);
+            RenderGraphBuffer* rayListBuffer = pRenderGraph->GetBuffer(data.rayListBufferSRV);
+            RenderGraphBuffer* indirectArgsBuffer = pRenderGraph->GetBuffer(data.indirectArgsBuffer);
+            RenderGraphBuffer* hwRayCounterBuffer = pRenderGraph->GetBuffer(data.hwRayCounterBufferUAV);
+            RenderGraphBuffer* hwRayListBuffer = pRenderGraph->GetBuffer(data.hwRayListBufferUAV);
 
             uint32_t clear_value[4] = { 0, 0, 0, 0 };
             pCommandList->ClearUAV(hwRayCounterBuffer->GetBuffer(), hwRayCounterBuffer->GetUAV(), clear_value);
@@ -241,8 +241,8 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const PrepareRaytraceIndirectArgsData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* rayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayCounterBuffer);
-            RenderGraphBuffer* indirectArgsBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgsBuffer);
+            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBuffer);
+            RenderGraphBuffer* indirectArgsBuffer = pRenderGraph->GetBuffer(data.indirectArgsBuffer);
             PrepareRaytraceIndirectArgs(pCommandList, rayCounterBuffer->GetSRV(), indirectArgsBuffer->GetUAV());
         });
     
@@ -271,12 +271,12 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const RaytraceData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
-            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
-            RenderGraphBuffer* rayCounterBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayCounterBufferSRV);
-            RenderGraphBuffer* rayListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.rayListBufferSRV);
-            RenderGraphBuffer* indirectArgsBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgsBuffer);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
+            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depth);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
+            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBufferSRV);
+            RenderGraphBuffer* rayListBuffer = pRenderGraph->GetBuffer(data.rayListBufferSRV);
+            RenderGraphBuffer* indirectArgsBuffer = pRenderGraph->GetBuffer(data.indirectArgsBuffer);
             Raytrace(pCommandList, normal->GetSRV(), depth->GetSRV(), output->GetUAV(), rayCounterBuffer->GetSRV(), rayListBuffer->GetSRV(), indirectArgsBuffer->GetBuffer());
         });
 

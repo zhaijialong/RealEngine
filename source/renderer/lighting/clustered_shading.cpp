@@ -44,13 +44,13 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
         },
         [=](const ClusteredShadingData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* diffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.diffuseRT);
-            RenderGraphTexture* specularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.specularRT);
-            RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalRT);
-            RenderGraphTexture* customDataRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.customDataRT);
-            RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthRT);
-            RenderGraphTexture* shadowRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.shadow);
-            RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* diffuseRT = pRenderGraph->GetTexture(data.diffuseRT);
+            RenderGraphTexture* specularRT = pRenderGraph->GetTexture(data.specularRT);
+            RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.normalRT);
+            RenderGraphTexture* customDataRT = pRenderGraph->GetTexture(data.customDataRT);
+            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depthRT);
+            RenderGraphTexture* shadowRT = pRenderGraph->GetTexture(data.shadow);
+            RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.output);
             Draw(pCommandList, diffuseRT->GetSRV(), specularRT->GetSRV(), normalRT->GetSRV(), customDataRT->GetSRV(), depthRT->GetSRV(), shadowRT->GetSRV(), outputRT->GetUAV(), width, height);
         });
 
