@@ -59,12 +59,12 @@ void StoreReservoir(uint2 pos, Reservoir R)
 // ReSTIR GI paper Eq.11
 float GetJacobian(Reservoir q, Reservoir r)
 {
-    float3 v1 = q.z.x_v - q.z.x_s;
-    float3 v2 = r.z.x_v - q.z.x_s;
-    float3 n = q.z.n_s;
+    float3 q_to_hit = q.z.x_v - q.z.x_s;
+    float3 r_to_hit = r.z.x_v - q.z.x_s;
+    float3 hit_normal = q.z.n_s;
     
-    float a = saturate(dot(normalize(v1), n)) / max(0.00001, saturate(dot(normalize(v2), n)));
-    float b = square(length(v1)) / max(0.00001, square(length(v2)));
+    float a = saturate(dot(normalize(r_to_hit), hit_normal)) / max(0.00001, saturate(dot(normalize(q_to_hit), hit_normal)));
+    float b = square(length(q_to_hit)) / max(0.00001, square(length(r_to_hit)));
     return a * b;
 }
 
