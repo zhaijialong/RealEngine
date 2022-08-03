@@ -19,6 +19,12 @@ ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
 
     desc.cs = pRenderer->GetShader("restir_gi/restir_resolve.hlsl", "main", "cs_6_6", {});
     m_pResolvePSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/resolve PSO");
+
+    desc.cs = pRenderer->GetShader("restir_gi/denoiser_temporal.hlsl", "main", "cs_6_6", {});
+    m_pTemporalFilterPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/temporal filter PSO");
+
+    desc.cs = pRenderer->GetShader("restir_gi/denoiser_spatial.hlsl", "main", "cs_6_6", {});
+    m_pSpatialFilterPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/spatial filter PSO");
 }
 
 RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height)
@@ -225,7 +231,66 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
                 width, height);
         });
 
-    return resolve_pass->output;
+    if (!m_bEnableDenoiser)
+    {
+        return resolve_pass->output;
+    }
+
+    struct TemporalFilterPassData
+    {
+        RenderGraphHandle input;
+        RenderGraphHandle history;
+        RenderGraphHandle output;
+    };
+
+    auto temporal_filter_pass = pRenderGraph->AddPass<TemporalFilterPassData>("ReSTIR GI - temporal filter", RenderPassType::Compute,
+        [&](TemporalFilterPassData& data, RenderGraphBuilder& builder)
+        {
+            data.input = builder.Read(resolve_pass->output);
+            data.history = builder.Read(builder.Import(m_pHistoryRadiance->GetTexture(), GfxResourceState::UnorderedAccess));
+
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::R11G11B10F;
+            data.output = builder.Write(builder.Create<RenderGraphTexture>(desc, "ReSTIR GI/temporal filter output"));
+        },
+        [=](const TemporalFilterPassData& data, IGfxCommandList* pCommandList)
+        {
+            TemporalFilter(pCommandList,
+                pRenderGraph->GetTexture(data.input),
+                pRenderGraph->GetTexture(data.output),
+                width, height);
+        });
+
+    struct SpatialFilterPassData
+    {
+        RenderGraphHandle input;
+        RenderGraphHandle output;
+        RenderGraphHandle outputHistory;
+    };
+
+    auto spatial_filter_pass = pRenderGraph->AddPass<SpatialFilterPassData>("ReSTIR GI - spatial filter", RenderPassType::Compute,
+        [&](SpatialFilterPassData& data, RenderGraphBuilder& builder)
+        {
+            data.input = builder.Read(temporal_filter_pass->output);
+            data.outputHistory = builder.Write(temporal_filter_pass->history);
+            
+            RenderGraphTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::R11G11B10F;
+            data.output = builder.Write(builder.Create<RenderGraphTexture>(desc, "ReSTIR GI/spatial filter output"));
+        },
+        [=](const SpatialFilterPassData& data, IGfxCommandList* pCommandList)
+        {
+            SpatialFilter(pCommandList,
+                pRenderGraph->GetTexture(data.input),
+                pRenderGraph->GetTexture(data.output),
+                width, height);
+        });
+
+    return spatial_filter_pass->output;
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RenderGraphTexture* depth, RenderGraphTexture* normal,
@@ -341,6 +406,34 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RenderGraphTexture* reserv
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
+void ReSTIRGI::TemporalFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pTemporalFilterPSO);
+
+    uint32_t constants[3] = {
+        input->GetSRV()->GetHeapIndex(),
+        m_pHistoryRadiance->GetSRV()->GetHeapIndex(),
+        output->GetUAV()->GetHeapIndex(),
+    };
+
+    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+}
+
+void ReSTIRGI::SpatialFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pSpatialFilterPSO);
+
+    uint32_t constants[3] = {
+        input->GetSRV()->GetHeapIndex(),
+        output->GetUAV()->GetHeapIndex(),
+        m_pHistoryRadiance->GetUAV()->GetHeapIndex(),
+    };
+
+    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+}
+
 bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)
 {
     bool initialFrame = false;
@@ -360,6 +453,9 @@ bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)
             m_temporalReservoir[i].reservoir.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir {}", i).c_str()));
         }
+
+        m_pHistoryRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess,
+            "ReSTIR GI/history radiance"));
 
         initialFrame = true;
     }

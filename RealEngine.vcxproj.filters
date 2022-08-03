@@ -1466,6 +1466,12 @@
     <FxCompile Include="shaders\restir_gi\restir_resolve.hlsl">
       <Filter>shaders\restir_gi</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\restir_gi\denoiser_spatial.hlsl">
+      <Filter>shaders\restir_gi</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\restir_gi\denoiser_temporal.hlsl">
+      <Filter>shaders\restir_gi</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">

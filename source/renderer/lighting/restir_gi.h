@@ -21,6 +21,9 @@ private:
     void Resolve(IGfxCommandList* pCommandList, RenderGraphTexture* reservoir, RenderGraphTexture* radiance, RenderGraphTexture* rayDirection, RenderGraphTexture* normal,
         RenderGraphTexture* output, uint32_t width, uint32_t height);
 
+    void TemporalFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
+    void SpatialFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
+
     bool InitTemporalBuffers(uint32_t width, uint32_t height);
 
 private:
@@ -30,6 +33,8 @@ private:
     IGfxPipelineState* m_pTemporalResamplingPSO = nullptr;
     IGfxPipelineState* m_pSpatialResamplingPSO = nullptr;
     IGfxPipelineState* m_pResolvePSO = nullptr;
+    IGfxPipelineState* m_pTemporalFilterPSO = nullptr;
+    IGfxPipelineState* m_pSpatialFilterPSO = nullptr;
 
     struct TemporalReservoirBuffer
     {
@@ -41,8 +46,10 @@ private:
 
     TemporalReservoirBuffer m_temporalReservoir[2];
 
+    eastl::unique_ptr<Texture2D> m_pHistoryRadiance;
+
     bool m_bEnable = true;
     bool m_bSecondBounce = false;
     bool m_bEnableReSTIR = true;
-    bool m_bEnableDenoiser = false;
+    bool m_bEnableDenoiser = true;
 };

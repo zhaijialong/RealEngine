@@ -130,7 +130,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     float target_p_q = Luminance(S.Lo);
     float p_q = 1.0 / (2.0 * M_PI);
-    float w = target_p_q / p_q;
+    float w = target_p_q /*/ p_q*/;
 
     R.Update(S, w, rng.RandomFloat());
     R.W = R.w_sum / max(0.00001, R.M * Luminance(R.z.Lo));
