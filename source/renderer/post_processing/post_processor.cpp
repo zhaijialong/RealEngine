@@ -43,7 +43,10 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
     }
 
     if (m_pRenderer->GetOutputType() != RendererOutput::Default &&
-        m_pRenderer->GetOutputType() != RendererOutput::PathTracing)
+        m_pRenderer->GetOutputType() != RendererOutput::PathTracing &&
+        m_pRenderer->GetOutputType() != RendererOutput::DirectLighting &&
+        m_pRenderer->GetOutputType() != RendererOutput::IndirectDiffuse &&
+        m_pRenderer->GetOutputType() != RendererOutput::IndirectSpecular)
     {
         return outputHandle;
     }
