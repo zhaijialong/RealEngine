@@ -59,12 +59,12 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         },
         [=](const PathTracingData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* diffuseRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.diffuseRT);
-            RenderGraphTexture* specularRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.specularRT);
-            RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.normalRT);
-            RenderGraphTexture* emissiveRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.emissiveRT);
-            RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.depthRT);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* diffuseRT = pRenderGraph->GetTexture(data.diffuseRT);
+            RenderGraphTexture* specularRT = pRenderGraph->GetTexture(data.specularRT);
+            RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.normalRT);
+            RenderGraphTexture* emissiveRT = pRenderGraph->GetTexture(data.emissiveRT);
+            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depthRT);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
             PathTrace(pCommandList, diffuseRT->GetSRV(), specularRT->GetSRV(), normalRT->GetSRV(), emissiveRT->GetSRV(), depthRT->GetSRV(), output->GetUAV(), width, height);
         });
 
@@ -113,8 +113,8 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
                 pCommandList->UavBarrier(m_pHistoryAccumulation->GetTexture());
             }
 
-            RenderGraphTexture* currentFrame = (RenderGraphTexture*)pRenderGraph->GetResource(data.currentFrame);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* currentFrame = pRenderGraph->GetTexture(data.currentFrame);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
             Accumulate(pCommandList, currentFrame->GetSRV(), m_pHistoryAccumulation->GetUAV(), output->GetUAV(), width, height);
         });
 

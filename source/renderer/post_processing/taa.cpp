@@ -76,10 +76,10 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
         },
         [=](const TAAPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* inputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRT);
-            RenderGraphTexture* velocityRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocityRT);
-            RenderGraphTexture* linearDepthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.linearDepthRT);
-            RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputRT);
+            RenderGraphTexture* inputRT = pRenderGraph->GetTexture(data.inputRT);
+            RenderGraphTexture* velocityRT = pRenderGraph->GetTexture(data.velocityRT);
+            RenderGraphTexture* linearDepthRT = pRenderGraph->GetTexture(data.linearDepthRT);
+            RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.outputRT);
 
             Draw(pCommandList, inputRT->GetSRV(), velocityRT->GetSRV(), linearDepthRT->GetSRV(), outputRT->GetUAV(), width, height);
         });

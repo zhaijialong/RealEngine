@@ -44,14 +44,14 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         },
         [=](const TonemapPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* hdrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.hdrRT);
-            RenderGraphTexture* ldrRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outLdrRT);
-            RenderGraphTexture* exposureRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.exposure);
+            RenderGraphTexture* hdrRT = pRenderGraph->GetTexture(data.hdrRT);
+            RenderGraphTexture* ldrRT = pRenderGraph->GetTexture(data.outLdrRT);
+            RenderGraphTexture* exposureRT = pRenderGraph->GetTexture(data.exposure);
 
             IGfxDescriptor* bloomSRV = nullptr;
             if (data.bloom.IsValid())
             {
-                RenderGraphTexture* bloom = (RenderGraphTexture*)pRenderGraph->GetResource(data.bloom);
+                RenderGraphTexture* bloom = pRenderGraph->GetTexture(data.bloom);
                 bloomSRV = bloom->GetSRV();
             }
 

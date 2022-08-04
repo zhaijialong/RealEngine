@@ -4,6 +4,7 @@
 #include "ray_traced_shadow.h"
 #include "clustered_shading.h"
 #include "hybrid_stochastic_reflection.h"
+#include "restir_gi.h"
 
 class LightingProcessor
 {
@@ -14,7 +15,7 @@ public:
     
 private:
     RenderGraphHandle CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting, 
-        RenderGraphHandle indirect_specular, uint32_t width, uint32_t height);
+        RenderGraphHandle indirect_specular, RenderGraphHandle indirect_diffuse, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer;
@@ -22,5 +23,6 @@ private:
     eastl::unique_ptr<GTAO> m_pGTAO;
     eastl::unique_ptr<RTShadow> m_pRTShdow;
     eastl::unique_ptr<HybridStochasticReflection> m_pReflection;
+    eastl::unique_ptr<ReSTIRGI> m_pReSTIRGI;
     eastl::unique_ptr<ClusteredShading> m_pClusteredShading;
 };

@@ -149,19 +149,19 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
         },
         [=](const ReprojectPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* indirectArgs = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgs);
-            RenderGraphBuffer* tileListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileListBuffer);
+            RenderGraphBuffer* indirectArgs = pRenderGraph->GetBuffer(data.indirectArgs);
+            RenderGraphBuffer* tileListBuffer = pRenderGraph->GetBuffer(data.tileListBuffer);
 
-            RenderGraphTexture* depth = (RenderGraphTexture*)pRenderGraph->GetResource(data.depth);
-            RenderGraphTexture* linearDepth = (RenderGraphTexture*)pRenderGraph->GetResource(data.linearDepth);
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
-            RenderGraphTexture* velocity = (RenderGraphTexture*)pRenderGraph->GetResource(data.velocity);
+            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depth);
+            RenderGraphTexture* linearDepth = pRenderGraph->GetTexture(data.linearDepth);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
+            RenderGraphTexture* velocity = pRenderGraph->GetTexture(data.velocity);
 
-            RenderGraphTexture* inputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRadiance);
+            RenderGraphTexture* inputRadiance = pRenderGraph->GetTexture(data.inputRadiance);
 
-            RenderGraphTexture* outputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputRadiance);
-            RenderGraphTexture* outputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputVariance);
-            RenderGraphTexture* outputAvgRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputAvgRadiance);
+            RenderGraphTexture* outputRadiance = pRenderGraph->GetTexture(data.outputRadiance);
+            RenderGraphTexture* outputVariance = pRenderGraph->GetTexture(data.outputVariance);
+            RenderGraphTexture* outputAvgRadiance = pRenderGraph->GetTexture(data.outputAvgRadiance);
 
             float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             pCommandList->ClearUAV(outputAvgRadiance->GetTexture(), outputAvgRadiance->GetUAV(), clear_value);
@@ -216,18 +216,18 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
         },
         [=](const PrefilterPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* indirectArgs = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgs);
-            RenderGraphBuffer* tileListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileListBuffer);
+            RenderGraphBuffer* indirectArgs = pRenderGraph->GetBuffer(data.indirectArgs);
+            RenderGraphBuffer* tileListBuffer = pRenderGraph->GetBuffer(data.tileListBuffer);
 
-            RenderGraphTexture* linearDepth = (RenderGraphTexture*)pRenderGraph->GetResource(data.linearDepth);
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
+            RenderGraphTexture* linearDepth = pRenderGraph->GetTexture(data.linearDepth);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
 
-            RenderGraphTexture* inputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRadiance);
-            RenderGraphTexture* inputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputVariance);
-            RenderGraphTexture* avgRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgRadiance);
+            RenderGraphTexture* inputRadiance = pRenderGraph->GetTexture(data.inputRadiance);
+            RenderGraphTexture* inputVariance = pRenderGraph->GetTexture(data.inputVariance);
+            RenderGraphTexture* avgRadiance = pRenderGraph->GetTexture(data.avgRadiance);
 
-            RenderGraphTexture* outputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputRadiance);
-            RenderGraphTexture* outputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputVariance);
+            RenderGraphTexture* outputRadiance = pRenderGraph->GetTexture(data.outputRadiance);
+            RenderGraphTexture* outputVariance = pRenderGraph->GetTexture(data.outputVariance);
 
             Prefilter(pCommandList, indirectArgs->GetBuffer(), tileListBuffer->GetSRV(), linearDepth->GetSRV(), normal->GetSRV(),
                 inputRadiance->GetSRV(), inputVariance->GetSRV(), 
@@ -268,14 +268,14 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
         },
         [=](const ResovleTemporalPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* indirectArgs = (RenderGraphBuffer*)pRenderGraph->GetResource(data.indirectArgs);
-            RenderGraphBuffer* tileListBuffer = (RenderGraphBuffer*)pRenderGraph->GetResource(data.tileListBuffer);
+            RenderGraphBuffer* indirectArgs = pRenderGraph->GetBuffer(data.indirectArgs);
+            RenderGraphBuffer* tileListBuffer = pRenderGraph->GetBuffer(data.tileListBuffer);
 
-            RenderGraphTexture* normal = (RenderGraphTexture*)pRenderGraph->GetResource(data.normal);
-            RenderGraphTexture* inputRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputRadiance);
-            RenderGraphTexture* inputVariance = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputVariance);
-            RenderGraphTexture* reprojectedRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.reprojectedRadiance);
-            RenderGraphTexture* avgRadiance = (RenderGraphTexture*)pRenderGraph->GetResource(data.avgRadiance);
+            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
+            RenderGraphTexture* inputRadiance = pRenderGraph->GetTexture(data.inputRadiance);
+            RenderGraphTexture* inputVariance = pRenderGraph->GetTexture(data.inputVariance);
+            RenderGraphTexture* reprojectedRadiance = pRenderGraph->GetTexture(data.reprojectedRadiance);
+            RenderGraphTexture* avgRadiance = pRenderGraph->GetTexture(data.avgRadiance);
 
             IGfxDescriptor* sampleCount = m_pSampleCountOutput->GetSRV();
             IGfxDescriptor* outputRadianceUAV = m_pRadianceHistory->GetUAV();

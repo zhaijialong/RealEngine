@@ -248,14 +248,14 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     RenderGraphHandle firstPhaseHZBHandle = m_pHZB->Get1stPhaseCullingHZBMip(0);
     RenderGraphHandle secondPhaseHZBHandle = m_pHZB->Get2ndPhaseCullingHZBMip(0);
     RenderGraphHandle sceneHZBHanlde = m_pHZB->GetSceneHZBMip(0);
-    RenderGraphTexture* firstPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(firstPhaseHZBHandle);
-    RenderGraphTexture* secondPhaseHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(secondPhaseHZBHandle);
-    RenderGraphTexture* sceneHZBTexture = (RenderGraphTexture*)m_pRenderGraph->GetResource(sceneHZBHanlde);
+    RenderGraphTexture* firstPhaseHZBTexture = m_pRenderGraph->GetTexture(firstPhaseHZBHandle);
+    RenderGraphTexture* secondPhaseHZBTexture = m_pRenderGraph->GetTexture(secondPhaseHZBHandle);
+    RenderGraphTexture* sceneHZBTexture = m_pRenderGraph->GetTexture(sceneHZBHanlde);
 
     RenderGraphHandle occlusionCulledMeshletsBufferHandle = m_pBasePass->GetSecondPhaseMeshletListBuffer();
     RenderGraphHandle occlusionCulledMeshletsCounterBufferHandle = m_pBasePass->GetSecondPhaseMeshletListCounterBuffer();
-    RenderGraphBuffer* occlusionCulledMeshletsBuffer = (RenderGraphBuffer*)m_pRenderGraph->GetResource(occlusionCulledMeshletsBufferHandle);
-    RenderGraphBuffer* occlusionCulledMeshletsCounterBuffer = (RenderGraphBuffer*)m_pRenderGraph->GetResource(occlusionCulledMeshletsCounterBufferHandle);
+    RenderGraphBuffer* occlusionCulledMeshletsBuffer = m_pRenderGraph->GetBuffer(occlusionCulledMeshletsBufferHandle);
+    RenderGraphBuffer* occlusionCulledMeshletsCounterBuffer = m_pRenderGraph->GetBuffer(occlusionCulledMeshletsCounterBufferHandle);
 
     SceneConstant sceneCB;
     sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
@@ -429,7 +429,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHa
 
     pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
 
-    RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(depth);
+    RenderGraphTexture* depthRT = m_pRenderGraph->GetTexture(depth);
 
     bool needUpscaleDepth = (m_upscaleMode != TemporalSuperResolution::None) && !nearly_equal(m_upscaleRatio, 1.f);
     if (needUpscaleDepth)
@@ -465,8 +465,8 @@ void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle
 {
     GPU_EVENT(pCommandList, "CopyToBackbuffer");
 
-    RenderGraphTexture* colorRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(color);
-    RenderGraphTexture* depthRT = (RenderGraphTexture*)m_pRenderGraph->GetResource(depth);
+    RenderGraphTexture* colorRT = m_pRenderGraph->GetTexture(color);
+    RenderGraphTexture* depthRT = m_pRenderGraph->GetTexture(depth);
 
     uint32_t constants[3] = { colorRT->GetSRV()->GetHeapIndex(), depthRT->GetSRV()->GetHeapIndex(), m_pPointClampSampler->GetHeapIndex() };
     pCommandList->SetGraphicsConstants(0, constants, sizeof(constants));
@@ -1031,4 +1031,11 @@ void Renderer::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex
 RenderBatch& Renderer::AddBasePassBatch()
 {
     return m_pBasePass->AddBatch();
+}
+
+StagingBufferAllocator* Renderer::GetStagingBufferAllocator() const
+{
+    uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
+    StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
+    return pAllocator;
 }

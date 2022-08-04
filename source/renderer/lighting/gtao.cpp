@@ -159,8 +159,8 @@ void GTAO::FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassD
     pCommandList->SetPipelineState(m_pPrefilterDepthPSO);
 
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputDepth);
-    RenderGraphTexture* hzbRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputDepthMip0);
+    RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.inputDepth);
+    RenderGraphTexture* hzbRT = pRenderGraph->GetTexture(data.outputDepthMip0);
 
     struct CB
     {
@@ -210,10 +210,10 @@ void GTAO::Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_
     }
 
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RenderGraphTexture* depthRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputFilteredDepth);
-    RenderGraphTexture* normalRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputNormal);
-    RenderGraphTexture* aoRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputAOTerm);
-    RenderGraphTexture* edgeRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputEdge);
+    RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.inputFilteredDepth);
+    RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.inputNormal);
+    RenderGraphTexture* aoRT = pRenderGraph->GetTexture(data.outputAOTerm);
+    RenderGraphTexture* edgeRT = pRenderGraph->GetTexture(data.outputEdge);
 
     struct CB
     {
@@ -241,9 +241,9 @@ void GTAO::Denoise(IGfxCommandList* pCommandList, const GTAODenoisePassData& dat
     pCommandList->SetPipelineState(m_bEnableGTSO ? m_pSODenoisePSO : m_pDenoisePSO);
 
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RenderGraphTexture* inputAO = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputAOTerm);
-    RenderGraphTexture* inputEdge = (RenderGraphTexture*)pRenderGraph->GetResource(data.inputEdge);
-    RenderGraphTexture* outputRT = (RenderGraphTexture*)pRenderGraph->GetResource(data.outputAOTerm);
+    RenderGraphTexture* inputAO = pRenderGraph->GetTexture(data.inputAOTerm);
+    RenderGraphTexture* inputEdge = pRenderGraph->GetTexture(data.inputEdge);
+    RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.outputAOTerm);
 
     uint32_t cb[3] =
     {

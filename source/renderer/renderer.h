@@ -129,6 +129,7 @@ public:
     class HZB* GetHZB() const { return m_pHZB.get(); }
     class BasePass* GetBassPass() const { return m_pBasePass.get(); }
     class SkyCubeMap* GetSkyCubeMap() const { return m_pSkyCubeMap.get(); }
+    StagingBufferAllocator* GetStagingBufferAllocator() const;
 
     bool IsHistoryTextureValid() const { return m_bHistoryValid; }
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }

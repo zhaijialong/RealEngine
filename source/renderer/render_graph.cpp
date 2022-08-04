@@ -160,7 +160,7 @@ void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filn
 {
     RE_ASSERT(handle.IsValid());
 
-    RenderGraphResource* resource = GetResource(handle);
+    RenderGraphResource* resource = GetTexture(handle);
     resource->SetOutput(true);
 
     RenderGraphResourceNode* node = m_resourceNodes[handle.node];
@@ -172,10 +172,20 @@ void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filn
     m_outputResources.push_back(target);
 }
 
-RenderGraphResource* RenderGraph::GetResource(const RenderGraphHandle& handle)
+RenderGraphTexture* RenderGraph::GetTexture(const RenderGraphHandle& handle)
 {
     RE_ASSERT(handle.IsValid());
-    return m_resources[handle.index];
+    RenderGraphResource* resource = m_resources[handle.index];
+    RE_ASSERT(dynamic_cast<RenderGraphTexture*>(resource) != nullptr);
+    return (RenderGraphTexture*)resource;
+}
+
+RenderGraphBuffer* RenderGraph::GetBuffer(const RenderGraphHandle& handle)
+{
+    RE_ASSERT(handle.IsValid());
+    RenderGraphResource* resource = m_resources[handle.index];
+    RE_ASSERT(dynamic_cast<RenderGraphBuffer*>(resource) != nullptr);
+    return (RenderGraphBuffer*)resource;
 }
 
 bool RenderGraph::Export(const eastl::string& file)

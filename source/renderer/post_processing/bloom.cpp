@@ -84,8 +84,8 @@ RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHa
         },
         [=](const DownsamplePassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = (RenderGraphTexture*)pRenderGraph->GetResource(data.input);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* input = pRenderGraph->GetTexture(data.input);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
             Downsample(pCommandList, input->GetSRV(), output->GetUAV(), mip);
         });
 
@@ -118,9 +118,9 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
         },
         [=](const UpsamplePassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* highInput = (RenderGraphTexture*)pRenderGraph->GetResource(data.highInput);
-            RenderGraphTexture* lowInput = (RenderGraphTexture*)pRenderGraph->GetResource(data.lowInput);
-            RenderGraphTexture* output = (RenderGraphTexture*)pRenderGraph->GetResource(data.output);
+            RenderGraphTexture* highInput = pRenderGraph->GetTexture(data.highInput);
+            RenderGraphTexture* lowInput = pRenderGraph->GetTexture(data.lowInput);
+            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
             Upsample(pCommandList, highInput->GetSRV(), lowInput->GetSRV(), output->GetUAV(), mip);
         });
 

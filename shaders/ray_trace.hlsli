@@ -87,6 +87,7 @@ namespace rt
 
         if (q.CommittedStatus() == COMMITTED_NOTHING)
         {
+            hitInfo.rayT = ray.TMax;
             return false;
         }
 

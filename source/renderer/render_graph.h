@@ -32,9 +32,10 @@ public:
     RenderGraphHandle Import(IGfxTexture* texture, GfxResourceState state);
     RenderGraphHandle Import(IGfxBuffer* buffer, GfxResourceState state);
 
-    RenderGraphResource* GetResource(const RenderGraphHandle& handle);
-    const DirectedAcyclicGraph& GetDAG() const { return m_graph; }
+    RenderGraphTexture* GetTexture(const RenderGraphHandle& handle);
+    RenderGraphBuffer* GetBuffer(const RenderGraphHandle& handle);
 
+    const DirectedAcyclicGraph& GetDAG() const { return m_graph; }
     bool Export(const eastl::string& file);
 
 private:
