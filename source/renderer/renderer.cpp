@@ -1032,3 +1032,10 @@ RenderBatch& Renderer::AddBasePassBatch()
 {
     return m_pBasePass->AddBatch();
 }
+
+StagingBufferAllocator* Renderer::GetStagingBufferAllocator() const
+{
+    uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
+    StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
+    return pAllocator;
+}

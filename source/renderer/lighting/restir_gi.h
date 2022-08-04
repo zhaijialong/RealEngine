@@ -2,13 +2,16 @@
 
 #include "../render_graph.h"
 #include "../resource/texture_2d.h"
+#include "reflection_denoiser.h"
 
 class ReSTIRGI
 {
 public:
     ReSTIRGI(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height);
+    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height);
+
+    IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetOutputRadianceSRV(); }
 
 private:
     void InitialSampling(IGfxCommandList* pCommandList, RenderGraphTexture* depth, RenderGraphTexture* normal,
@@ -21,8 +24,8 @@ private:
     void Resolve(IGfxCommandList* pCommandList, RenderGraphTexture* reservoir, RenderGraphTexture* radiance, RenderGraphTexture* rayDirection, RenderGraphTexture* normal,
         RenderGraphTexture* output, uint32_t width, uint32_t height);
 
-    void TemporalFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
-    void SpatialFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
+    //void TemporalFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
+    //void SpatialFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
 
     bool InitTemporalBuffers(uint32_t width, uint32_t height);
 
@@ -46,9 +49,10 @@ private:
 
     TemporalReservoirBuffer m_temporalReservoir[2];
 
-    eastl::unique_ptr<Texture2D> m_pHistoryRadiance;
+    //eastl::unique_ptr<Texture2D> m_pHistoryRadiance;
+    eastl::unique_ptr<ReflectionDenoiser> m_pDenoiser;
 
-    bool m_bEnable = true;
+    bool m_bEnable = false;
     bool m_bSecondBounce = false;
     bool m_bEnableReSTIR = true;
     bool m_bEnableDenoiser = true;
