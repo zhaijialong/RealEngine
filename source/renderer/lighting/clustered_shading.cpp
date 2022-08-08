@@ -44,21 +44,22 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
         },
         [=](const ClusteredShadingData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* diffuseRT = pRenderGraph->GetTexture(data.diffuseRT);
-            RenderGraphTexture* specularRT = pRenderGraph->GetTexture(data.specularRT);
-            RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.normalRT);
-            RenderGraphTexture* customDataRT = pRenderGraph->GetTexture(data.customDataRT);
-            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depthRT);
-            RenderGraphTexture* shadowRT = pRenderGraph->GetTexture(data.shadow);
-            RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.output);
-            Draw(pCommandList, diffuseRT->GetSRV(), specularRT->GetSRV(), normalRT->GetSRV(), customDataRT->GetSRV(), depthRT->GetSRV(), shadowRT->GetSRV(), outputRT->GetUAV(), width, height);
+            Draw(pCommandList, 
+                pRenderGraph->GetTexture(data.diffuseRT), 
+                pRenderGraph->GetTexture(data.specularRT),
+                pRenderGraph->GetTexture(data.normalRT),
+                pRenderGraph->GetTexture(data.customDataRT),
+                pRenderGraph->GetTexture(data.depthRT),
+                pRenderGraph->GetTexture(data.shadow),
+                pRenderGraph->GetTexture(data.output),
+                width, height);
         });
 
     return clustered_shading->output;
 }
 
-void ClusteredShading::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* diffuse, IGfxDescriptor* specular, IGfxDescriptor* normal, 
-    IGfxDescriptor* customData, IGfxDescriptor* depth, IGfxDescriptor* shadow, IGfxDescriptor* output, uint32_t width, uint32_t height)
+void ClusteredShading::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* diffuse, RenderGraphTexture* specular, RenderGraphTexture* normal, 
+    RenderGraphTexture* customData, RenderGraphTexture* depth, RenderGraphTexture* shadow, RenderGraphTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 
@@ -74,13 +75,13 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* diffu
     };
 
     CB cb;
-    cb.diffuseRT = diffuse->GetHeapIndex();
-    cb.specularRT = specular->GetHeapIndex();
-    cb.normalRT = normal->GetHeapIndex();
-    cb.customDataRT = customData->GetHeapIndex();
-    cb.depthRT = depth->GetHeapIndex();
-    cb.shadowRT = shadow->GetHeapIndex();
-    cb.outputRT = output->GetHeapIndex();
+    cb.diffuseRT = diffuse->GetSRV()->GetHeapIndex();
+    cb.specularRT = specular->GetSRV()->GetHeapIndex();
+    cb.normalRT = normal->GetSRV()->GetHeapIndex();
+    cb.customDataRT = customData->GetSRV()->GetHeapIndex();
+    cb.depthRT = depth->GetSRV()->GetHeapIndex();
+    cb.shadowRT = shadow->GetSRV()->GetHeapIndex();
+    cb.outputRT = output->GetUAV()->GetHeapIndex();
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }

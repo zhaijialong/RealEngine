@@ -174,7 +174,11 @@ void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filn
 
 RenderGraphTexture* RenderGraph::GetTexture(const RenderGraphHandle& handle)
 {
-    RE_ASSERT(handle.IsValid());
+    if (!handle.IsValid())
+    {
+        return nullptr;
+    }
+
     RenderGraphResource* resource = m_resources[handle.index];
     RE_ASSERT(dynamic_cast<RenderGraphTexture*>(resource) != nullptr);
     return (RenderGraphTexture*)resource;
@@ -182,7 +186,11 @@ RenderGraphTexture* RenderGraph::GetTexture(const RenderGraphHandle& handle)
 
 RenderGraphBuffer* RenderGraph::GetBuffer(const RenderGraphHandle& handle)
 {
-    RE_ASSERT(handle.IsValid());
+    if (!handle.IsValid())
+    {
+        return nullptr;
+    }
+
     RenderGraphResource* resource = m_resources[handle.index];
     RE_ASSERT(dynamic_cast<RenderGraphBuffer*>(resource) != nullptr);
     return (RenderGraphBuffer*)resource;

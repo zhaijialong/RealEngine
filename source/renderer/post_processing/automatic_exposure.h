@@ -13,13 +13,13 @@ public:
 
 private:
     void ComputeLuminanceSize(uint32_t width, uint32_t height);
-    void InitLuminance(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output);
+    void InitLuminance(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output);
     void ReduceLuminance(IGfxCommandList* pCommandList, RenderGraphTexture* texture);
 
-    void BuildHistogram(IGfxCommandList* pCommandList, IGfxDescriptor* inputTexture, IGfxBuffer* histogramBuffer, IGfxDescriptor* histogramBufferUAV, uint32_t width, uint32_t height);
-    void ReduceHistogram(IGfxCommandList* pCommandList, IGfxDescriptor* histogramBufferSRV, IGfxDescriptor* avgLuminanceUAV);
+    void BuildHistogram(IGfxCommandList* pCommandList, RenderGraphTexture* inputTexture, RenderGraphBuffer* histogramBuffer, uint32_t width, uint32_t height);
+    void ReduceHistogram(IGfxCommandList* pCommandList, RenderGraphBuffer* histogramBufferSRV, RenderGraphTexture* avgLuminanceUAV);
 
-    void Exposure(IGfxCommandList* pCommandList, IGfxDescriptor* avgLuminance, IGfxDescriptor* output);
+    void Exposure(IGfxCommandList* pCommandList, RenderGraphTexture* avgLuminance, RenderGraphTexture* output);
 
 private:
     Renderer* m_pRenderer;

@@ -105,11 +105,10 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         },
         [=](const ClearCounterPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* firstPhaseMeshletListCounterBuffer = pRenderGraph->GetBuffer(data.firstPhaseMeshletListCounterBuffer);
-            RenderGraphBuffer* secondPhaseObjectListCounterBuffer = pRenderGraph->GetBuffer(data.secondPhaseObjectListCounterBuffer);
-            RenderGraphBuffer* secondPhaseMeshletListCounterBuffer = pRenderGraph->GetBuffer(data.secondPhaseMeshletListCounterBuffer);
-
-            ResetCounter(pCommandList, firstPhaseMeshletListCounterBuffer, secondPhaseObjectListCounterBuffer, secondPhaseMeshletListCounterBuffer);
+            ResetCounter(pCommandList, 
+                pRenderGraph->GetBuffer(data.firstPhaseMeshletListCounterBuffer), 
+                pRenderGraph->GetBuffer(data.secondPhaseObjectListCounterBuffer),
+                pRenderGraph->GetBuffer(data.secondPhaseMeshletListCounterBuffer));
         });
 
     struct InstanceCullingData
@@ -145,15 +144,10 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         },
         [=](const InstanceCullingData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* cullingResultBuffer = pRenderGraph->GetBuffer(data.cullingResultBuffer);
-            RenderGraphBuffer* secondPhaseObjectListBuffer = pRenderGraph->GetBuffer(data.secondPhaseObjectListBuffer);
-            RenderGraphBuffer* secondPhaseObjectListCounterBuffer = pRenderGraph->GetBuffer(data.secondPhaseObjectListCounterBuffer);
-
-            uint32_t clear_value[4] = { 0, 0, 0, 0 };
-            pCommandList->ClearUAV(cullingResultBuffer->GetBuffer(), cullingResultBuffer->GetUAV(), clear_value);
-            pCommandList->UavBarrier(cullingResultBuffer->GetBuffer());
-
-            InstanceCulling1stPhase(pCommandList, cullingResultBuffer->GetUAV(), secondPhaseObjectListBuffer->GetUAV(), secondPhaseObjectListCounterBuffer->GetUAV());
+            InstanceCulling1stPhase(pCommandList, 
+                pRenderGraph->GetBuffer(data.cullingResultBuffer),
+                pRenderGraph->GetBuffer(data.secondPhaseObjectListBuffer),
+                pRenderGraph->GetBuffer(data.secondPhaseObjectListCounterBuffer));
         });
 
     struct BuildMeshletListData
@@ -178,11 +172,10 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         },
         [=](const BuildMeshletListData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* cullingResultBuffer = pRenderGraph->GetBuffer(data.cullingResultBuffer);
-            RenderGraphBuffer* meshletListBuffer = pRenderGraph->GetBuffer(data.meshletListBuffer);
-            RenderGraphBuffer* meshletListCounterBuffer = pRenderGraph->GetBuffer(data.meshletListCounterBuffer);
-
-            BuildMeshletList(pCommandList, cullingResultBuffer->GetSRV(), meshletListBuffer->GetUAV(), meshletListCounterBuffer->GetUAV());
+            BuildMeshletList(pCommandList, 
+                pRenderGraph->GetBuffer(data.cullingResultBuffer),
+                pRenderGraph->GetBuffer(data.meshletListBuffer),
+                pRenderGraph->GetBuffer(data.meshletListCounterBuffer));
         });
 
     struct BuildIndirectCommandPassData
@@ -205,9 +198,9 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         },
         [=](const BuildIndirectCommandPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* meshletListCounterBuffer = pRenderGraph->GetBuffer(data.meshletListCounterBuffer);
-            RenderGraphBuffer* commandBuffer = pRenderGraph->GetBuffer(data.indirectCommandBuffer);
-            BuildIndirectCommand(pCommandList, meshletListCounterBuffer->GetSRV(), commandBuffer->GetUAV());
+            BuildIndirectCommand(pCommandList, 
+                pRenderGraph->GetBuffer(data.meshletListCounterBuffer),
+                pRenderGraph->GetBuffer(data.indirectCommandBuffer));
         });
 
     auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass", RenderPassType::Graphics,
@@ -257,11 +250,10 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
         },
         [=](const BasePassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* commandBuffer = pRenderGraph->GetBuffer(data.indirectCommandBuffer);
-            RenderGraphBuffer* meshletListBuffer = pRenderGraph->GetBuffer(data.meshletListBuffer);
-            RenderGraphBuffer* meshletListCounterBuffer = pRenderGraph->GetBuffer(data.meshletListCounterBuffer);
-
-            Flush1stPhaseBatches(pCommandList, commandBuffer->GetBuffer(), meshletListBuffer->GetSRV(), meshletListCounterBuffer->GetSRV());
+            Flush1stPhaseBatches(pCommandList, 
+                pRenderGraph->GetBuffer(data.indirectCommandBuffer),
+                pRenderGraph->GetBuffer(data.meshletListBuffer),
+                pRenderGraph->GetBuffer(data.meshletListCounterBuffer));
         });
 
     m_diffuseRT = gbuffer_pass->outDiffuseRT;
@@ -348,16 +340,11 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         },
         [=](const InstanceCullingData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* indirectCommandBuffer = pRenderGraph->GetBuffer(data.indirectCommandBuffer);
-            RenderGraphBuffer* cullingResultBuffer = pRenderGraph->GetBuffer(data.cullingResultBuffer);
-            RenderGraphBuffer* objectListBuffer = pRenderGraph->GetBuffer(data.objectListBuffer);
-            RenderGraphBuffer* objectListCounterBuffer = pRenderGraph->GetBuffer(data.objectListCounterBuffer);
-            
-            uint32_t clear_value[4] = { 0, 0, 0, 0 };
-            pCommandList->ClearUAV(cullingResultBuffer->GetBuffer(), cullingResultBuffer->GetUAV(), clear_value);
-            pCommandList->UavBarrier(cullingResultBuffer->GetBuffer());
-
-            InstanceCulling2ndPhase(pCommandList, indirectCommandBuffer->GetBuffer(), cullingResultBuffer->GetUAV(), objectListBuffer->GetSRV(), objectListCounterBuffer->GetSRV());
+            InstanceCulling2ndPhase(pCommandList, 
+                pRenderGraph->GetBuffer(data.indirectCommandBuffer), 
+                pRenderGraph->GetBuffer(data.cullingResultBuffer), 
+                pRenderGraph->GetBuffer(data.objectListBuffer),
+                pRenderGraph->GetBuffer(data.objectListCounterBuffer));
         });
 
     struct BuildMeshletListData
@@ -376,11 +363,10 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         },
         [=](const BuildMeshletListData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* cullingResultBuffer = pRenderGraph->GetBuffer(data.cullingResultBuffer);
-            RenderGraphBuffer* meshletListBuffer = pRenderGraph->GetBuffer(data.meshletListBuffer);
-            RenderGraphBuffer* meshletListCounterBuffer = pRenderGraph->GetBuffer(data.meshletListCounterBuffer);
-
-            BuildMeshletList(pCommandList, cullingResultBuffer->GetSRV(), meshletListBuffer->GetUAV(), meshletListCounterBuffer->GetUAV());
+            BuildMeshletList(pCommandList, 
+                pRenderGraph->GetBuffer(data.cullingResultBuffer),
+                pRenderGraph->GetBuffer(data.meshletListBuffer),
+                pRenderGraph->GetBuffer(data.meshletListCounterBuffer));
         });
 
     struct BuildIndirectCommandPassData
@@ -403,9 +389,9 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         },
         [=](const BuildIndirectCommandPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* meshletListCounterBuffer = pRenderGraph->GetBuffer(data.meshletListCounterBuffer);
-            RenderGraphBuffer* commandBuffer = pRenderGraph->GetBuffer(data.indirectCommandBuffer);
-            BuildIndirectCommand(pCommandList, meshletListCounterBuffer->GetSRV(), commandBuffer->GetUAV());
+            BuildIndirectCommand(pCommandList, 
+                pRenderGraph->GetBuffer(data.meshletListCounterBuffer),
+                pRenderGraph->GetBuffer(data.indirectCommandBuffer));
         });
 
     auto gbuffer_pass = pRenderGraph->AddPass<BasePassData>("Base Pass", RenderPassType::Graphics,
@@ -429,11 +415,10 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
         },
         [=](const BasePassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* indirectCommandBuffer = pRenderGraph->GetBuffer(data.indirectCommandBuffer);
-            RenderGraphBuffer* meshletListBuffer = pRenderGraph->GetBuffer(data.meshletListBuffer);
-            RenderGraphBuffer* meshletListCounterBuffer = pRenderGraph->GetBuffer(data.meshletListCounterBuffer);
-
-            Flush2ndPhaseBatches(pCommandList, indirectCommandBuffer->GetBuffer(), meshletListBuffer->GetSRV(), meshletListCounterBuffer->GetSRV());
+            Flush2ndPhaseBatches(pCommandList, 
+                pRenderGraph->GetBuffer(data.indirectCommandBuffer), 
+                pRenderGraph->GetBuffer(data.meshletListBuffer), 
+                pRenderGraph->GetBuffer(data.meshletListCounterBuffer));
         });
 
     m_diffuseRT = gbuffer_pass->outDiffuseRT;
@@ -532,53 +517,67 @@ void BasePass::ResetCounter(IGfxCommandList* pCommandList, RenderGraphBuffer* fi
     pCommandList->UavBarrier(secondPhaseMeshletCounter->GetBuffer());
 }
 
-void BasePass::InstanceCulling1stPhase(IGfxCommandList* pCommandList, IGfxDescriptor* cullingResultUAV, IGfxDescriptor* secondPhaseObjectListUAV, IGfxDescriptor* secondPhaseObjectListCounterUAV)
+void BasePass::InstanceCulling1stPhase(IGfxCommandList* pCommandList, RenderGraphBuffer* cullingResultUAV, RenderGraphBuffer* secondPhaseObjectListUAV, RenderGraphBuffer* secondPhaseObjectListCounterUAV)
 {
+    uint32_t clear_value[4] = { 0, 0, 0, 0 };
+    pCommandList->ClearUAV(cullingResultUAV->GetBuffer(), cullingResultUAV->GetUAV(), clear_value);
+    pCommandList->UavBarrier(cullingResultUAV->GetBuffer());
+
     pCommandList->SetPipelineState(m_p1stPhaseInstanceCullingPSO);
 
     uint32_t instance_count = m_nTotalInstanceCount;
-    uint32_t root_consts[5] = { m_instanceIndexAddress, instance_count, cullingResultUAV->GetHeapIndex(), secondPhaseObjectListUAV->GetHeapIndex(), secondPhaseObjectListCounterUAV->GetHeapIndex() };
+    uint32_t root_consts[5] = { 
+        m_instanceIndexAddress, 
+        instance_count, 
+        cullingResultUAV->GetUAV()->GetHeapIndex(),
+        secondPhaseObjectListUAV->GetUAV()->GetHeapIndex(),
+        secondPhaseObjectListCounterUAV->GetUAV()->GetHeapIndex()
+    };
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
     uint32_t group_count = max((instance_count + 63) / 64, 1u); //avoid empty dispatch warning
     pCommandList->Dispatch(group_count, 1, 1);
 }
 
-void BasePass::InstanceCulling2ndPhase(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* cullingResultUAV, IGfxDescriptor* objectListBufferSRV, IGfxDescriptor* objectListCounterBufferSRV)
+void BasePass::InstanceCulling2ndPhase(IGfxCommandList* pCommandList, RenderGraphBuffer* pIndirectCommandBuffer, RenderGraphBuffer* cullingResultUAV, RenderGraphBuffer* objectListBufferSRV, RenderGraphBuffer* objectListCounterBufferSRV)
 {
+    uint32_t clear_value[4] = { 0, 0, 0, 0 };
+    pCommandList->ClearUAV(cullingResultUAV->GetBuffer(), cullingResultUAV->GetUAV(), clear_value);
+    pCommandList->UavBarrier(cullingResultUAV->GetBuffer());
+
     pCommandList->SetPipelineState(m_p2ndPhaseInstanceCullingPSO);
 
-    uint32_t root_consts[3] = { objectListBufferSRV->GetHeapIndex(), objectListCounterBufferSRV->GetHeapIndex(), cullingResultUAV->GetHeapIndex() };
+    uint32_t root_consts[3] = { objectListBufferSRV->GetSRV()->GetHeapIndex(), objectListCounterBufferSRV->GetSRV()->GetHeapIndex(), cullingResultUAV->GetUAV()->GetHeapIndex()};
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
-    pCommandList->DispatchIndirect(pIndirectCommandBuffer, 0);
+    pCommandList->DispatchIndirect(pIndirectCommandBuffer->GetBuffer(), 0);
 }
 
-void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* pMeshletListSRV, IGfxDescriptor* pMeshletListCounterSRV)
+void BasePass::Flush1stPhaseBatches(IGfxCommandList* pCommandList, RenderGraphBuffer* pIndirectCommandBuffer, RenderGraphBuffer* pMeshletListSRV, RenderGraphBuffer* pMeshletListCounterSRV)
 {
     for (size_t i = 0; i < m_indirectBatches.size(); ++i)
     {
         const IndirectBatch& batch = m_indirectBatches[i];
         pCommandList->SetPipelineState(batch.pso);
 
-        uint32_t root_consts[5] = { pMeshletListSRV->GetHeapIndex(), pMeshletListCounterSRV->GetHeapIndex(), batch.meshletListBufferOffset, (uint32_t)i, 1};
+        uint32_t root_consts[5] = { pMeshletListSRV->GetSRV()->GetHeapIndex(), pMeshletListCounterSRV->GetSRV()->GetHeapIndex(), batch.meshletListBufferOffset, (uint32_t)i, 1};
         pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
 
-        pCommandList->DispatchMeshIndirect(pIndirectCommandBuffer, sizeof(uint3) * (uint32_t)i);
+        pCommandList->DispatchMeshIndirect(pIndirectCommandBuffer->GetBuffer(), sizeof(uint3) * (uint32_t)i);
     }
 }
 
-void BasePass::Flush2ndPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* pIndirectCommandBuffer, IGfxDescriptor* pMeshletListSRV, IGfxDescriptor* pMeshletListCounterSRV)
+void BasePass::Flush2ndPhaseBatches(IGfxCommandList* pCommandList, RenderGraphBuffer* pIndirectCommandBuffer, RenderGraphBuffer* pMeshletListSRV, RenderGraphBuffer* pMeshletListCounterSRV)
 {
     for (size_t i = 0; i < m_indirectBatches.size(); ++i)
     {
         const IndirectBatch& batch = m_indirectBatches[i];
         pCommandList->SetPipelineState(batch.pso);
 
-        uint32_t root_consts[5] = { pMeshletListSRV->GetHeapIndex(), pMeshletListCounterSRV->GetHeapIndex(), batch.meshletListBufferOffset, (uint32_t)i, 0 };
+        uint32_t root_consts[5] = { pMeshletListSRV->GetSRV()->GetHeapIndex(), pMeshletListCounterSRV->GetSRV()->GetHeapIndex(), batch.meshletListBufferOffset, (uint32_t)i, 0};
         pCommandList->SetGraphicsConstants(0, root_consts, sizeof(root_consts));
 
-        pCommandList->DispatchMeshIndirect(pIndirectCommandBuffer, sizeof(uint3) * (uint32_t)i);
+        pCommandList->DispatchMeshIndirect(pIndirectCommandBuffer->GetBuffer(), sizeof(uint3) * (uint32_t)i);
     }
 
     for (size_t i = 0; i < m_nonGpuDrivenBatches.size(); ++i)
@@ -587,7 +586,7 @@ void BasePass::Flush2ndPhaseBatches(IGfxCommandList* pCommandList, IGfxBuffer* p
     }
 }
 
-void BasePass::BuildMeshletList(IGfxCommandList* pCommandList, IGfxDescriptor* cullingResultSRV, IGfxDescriptor* meshletListBufferUAV, IGfxDescriptor* meshletListCounterBufferUAV)
+void BasePass::BuildMeshletList(IGfxCommandList* pCommandList, RenderGraphBuffer* cullingResultSRV, RenderGraphBuffer* meshletListBufferUAV, RenderGraphBuffer* meshletListCounterBufferUAV)
 {
     pCommandList->SetPipelineState(m_pBuildMeshletListPSO);
 
@@ -595,24 +594,24 @@ void BasePass::BuildMeshletList(IGfxCommandList* pCommandList, IGfxDescriptor* c
     {
         uint32_t consts[7] = {
             (uint32_t)i,
-            cullingResultSRV->GetHeapIndex(),
+            cullingResultSRV->GetSRV()->GetHeapIndex(),
             m_indirectBatches[i].originMeshletListAddress,
             m_indirectBatches[i].originMeshletCount,
             m_indirectBatches[i].meshletListBufferOffset,
-            meshletListBufferUAV->GetHeapIndex(),
-            meshletListCounterBufferUAV->GetHeapIndex() };
+            meshletListBufferUAV->GetUAV()->GetHeapIndex(),
+            meshletListCounterBufferUAV->GetUAV()->GetHeapIndex()};
         pCommandList->SetComputeConstants(1, consts, sizeof(consts));
         pCommandList->Dispatch((m_indirectBatches[i].originMeshletCount + 63) / 64, 1, 1);
     }
 }
 
-void BasePass::BuildIndirectCommand(IGfxCommandList* pCommandList, IGfxDescriptor* pCounterBufferSRV, IGfxDescriptor* pCommandBufferUAV)
+void BasePass::BuildIndirectCommand(IGfxCommandList* pCommandList, RenderGraphBuffer* pCounterBufferSRV, RenderGraphBuffer* pCommandBufferUAV)
 {
     pCommandList->SetPipelineState(m_pBuildIndirectCommandPSO);
 
     uint32_t batch_count = (uint32_t)m_indirectBatches.size();
 
-    uint32_t consts[3] = { batch_count, pCounterBufferSRV->GetHeapIndex(), pCommandBufferUAV->GetHeapIndex() };
+    uint32_t consts[3] = { batch_count, pCounterBufferSRV->GetSRV()->GetHeapIndex(), pCommandBufferUAV->GetUAV()->GetHeapIndex()};
     pCommandList->SetComputeConstants(0, consts, sizeof(consts));
 
     uint32_t group_count = max((batch_count + 63) / 64, 1u); //avoid empty dispatch warning

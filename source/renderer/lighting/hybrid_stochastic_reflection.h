@@ -13,15 +13,15 @@ public:
     float GetMaxRoughness() const { return m_maxRoughness; }
 
 private:
-    void ClassifyTiles(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* historyVariance,
-        IGfxDescriptor* rayListUAV, IGfxDescriptor* tileListUAV, IGfxDescriptor* rayCounterUAV, uint32_t width, uint32_t height);
-    void PrepareIndirectArgs(IGfxCommandList* pCommandList, IGfxDescriptor* rayCounterSRV, IGfxDescriptor* indirectArgsUAV, IGfxDescriptor* denoiserArgsUAV);
-    void SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, 
-        IGfxDescriptor* rayCounter, IGfxDescriptor* rayList, IGfxBuffer* indirectArgs, IGfxDescriptor* hwRayCounterUAV, IGfxDescriptor* hwRayListUAV);
+    void ClassifyTiles(IGfxCommandList* pCommandList, RenderGraphTexture* depth, RenderGraphTexture* normal,
+        RenderGraphBuffer* rayListUAV, RenderGraphBuffer* tileListUAV, RenderGraphBuffer* rayCounterUAV, uint32_t width, uint32_t height);
+    void PrepareIndirectArgs(IGfxCommandList* pCommandList, RenderGraphBuffer* rayCounterSRV, RenderGraphBuffer* indirectArgsUAV, RenderGraphBuffer* denoiserArgsUAV);
+    void SSR(IGfxCommandList* pCommandList, RenderGraphTexture* normal, RenderGraphTexture* depth, RenderGraphTexture* velocity, RenderGraphTexture* outputUAV,
+        RenderGraphBuffer* rayCounter, RenderGraphBuffer* rayList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* hwRayCounterUAV, RenderGraphBuffer* hwRayListUAV);
 
-    void PrepareRaytraceIndirectArgs(IGfxCommandList* pCommandList, IGfxDescriptor* rayCounterSRV, IGfxDescriptor* indirectArgsUAV);
-    void Raytrace(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* outputUAV,
-        IGfxDescriptor* rayCounter, IGfxDescriptor* rayList, IGfxBuffer* indirectArgs);
+    void PrepareRaytraceIndirectArgs(IGfxCommandList* pCommandList, RenderGraphBuffer* rayCounterSRV, RenderGraphBuffer* indirectArgsUAV);
+    void Raytrace(IGfxCommandList* pCommandList, RenderGraphTexture* normal, RenderGraphTexture* depth, RenderGraphTexture* outputUAV,
+        RenderGraphBuffer* rayCounter, RenderGraphBuffer* rayList, RenderGraphBuffer* indirectArgs);
 
     void SetRootConstants(IGfxCommandList* pCommandList);
 private:

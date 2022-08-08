@@ -84,9 +84,10 @@ RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHa
         },
         [=](const DownsamplePassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = pRenderGraph->GetTexture(data.input);
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
-            Downsample(pCommandList, input->GetSRV(), output->GetUAV(), mip);
+            Downsample(pCommandList, 
+                pRenderGraph->GetTexture(data.input), 
+                pRenderGraph->GetTexture(data.output), 
+                mip);
         });
 
     return downsample_pass->output;
@@ -118,16 +119,17 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
         },
         [=](const UpsamplePassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* highInput = pRenderGraph->GetTexture(data.highInput);
-            RenderGraphTexture* lowInput = pRenderGraph->GetTexture(data.lowInput);
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
-            Upsample(pCommandList, highInput->GetSRV(), lowInput->GetSRV(), output->GetUAV(), mip);
+            Upsample(pCommandList, 
+                pRenderGraph->GetTexture(data.highInput), 
+                pRenderGraph->GetTexture(data.lowInput), 
+                pRenderGraph->GetTexture(data.output), 
+                mip);
         });
 
     return upsample_pass->output;
 }
 
-void Bloom::Downsample(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t mip)
+void Bloom::Downsample(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t mip)
 {
     pCommandList->SetPipelineState(mip == 1 ? m_pFirstDownsamplePSO : m_pDownsamplePSO);
 
@@ -146,8 +148,8 @@ void Bloom::Downsample(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGf
     uint32_t output_height = m_mipSize[mip].y;
 
     DownsampleConstants constants;
-    constants.inputTexture = input->GetHeapIndex();
-    constants.outputTexture = output->GetHeapIndex();
+    constants.inputTexture = input->GetSRV()->GetHeapIndex();
+    constants.outputTexture = output->GetUAV()->GetHeapIndex();
     constants.inputPixelSize = float2(1.0f / input_width, 1.0f / input_height);
     constants.outputPixelSize = float2(1.0f / output_width, 1.0f / output_height);
     constants.threshold = m_threshold;
@@ -156,7 +158,7 @@ void Bloom::Downsample(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGf
     pCommandList->Dispatch((output_width + 7) / 8, (output_height + 7) / 8, 1);
 }
 
-void Bloom::Upsample(IGfxCommandList* pCommandList, IGfxDescriptor* highInput, IGfxDescriptor* lowInput, IGfxDescriptor* output, uint32_t mip)
+void Bloom::Upsample(IGfxCommandList* pCommandList, RenderGraphTexture* highInput, RenderGraphTexture* lowInput, RenderGraphTexture* output, uint32_t mip)
 {
     pCommandList->SetPipelineState(m_pUpsamplePSO);
 
@@ -175,9 +177,9 @@ void Bloom::Upsample(IGfxCommandList* pCommandList, IGfxDescriptor* highInput, I
     uint32_t output_height = m_mipSize[mip].y;
 
     UpsampleConstants constants;
-    constants.inputLowTexture = lowInput->GetHeapIndex();
-    constants.inputHighTexture = highInput->GetHeapIndex();
-    constants.outputTexture = output->GetHeapIndex();
+    constants.inputLowTexture = lowInput->GetSRV()->GetHeapIndex();
+    constants.inputHighTexture = highInput->GetSRV()->GetHeapIndex();
+    constants.outputTexture = output->GetUAV()->GetHeapIndex();
     constants.inputPixelSize = float2(1.0f / input_width, 1.0f / input_height);
     constants.outputPixelSize = float2(1.0f / output_width, 1.0f / output_height);
 

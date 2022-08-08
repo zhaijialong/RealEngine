@@ -44,11 +44,11 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
         },
         [=](const RTShadowData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depth);
-            RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.normal);
-            RenderGraphTexture* shadowRT = pRenderGraph->GetTexture(data.shadow);
-
-            RayTrace(pCommandList, depthRT->GetSRV(), normalRT->GetSRV(), shadowRT->GetUAV(), width, height);
+            RayTrace(pCommandList, 
+                pRenderGraph->GetTexture(data.depth),
+                pRenderGraph->GetTexture(data.normal),
+                pRenderGraph->GetTexture(data.shadow),
+                width, height);
         });
 
     if (!m_bEnableDenoiser)
@@ -59,11 +59,11 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
     return m_pDenoiser->Render(pRenderGraph, rtshadow_pass->shadow, depthRT, normalRT, velocityRT, width, height);
 }
 
-void RTShadow::RayTrace(IGfxCommandList* pCommandList, IGfxDescriptor* depthSRV, IGfxDescriptor* normalSRV, IGfxDescriptor* shadowUAV, uint32_t width, uint32_t height)
+void RTShadow::RayTrace(IGfxCommandList* pCommandList, RenderGraphTexture* depthSRV, RenderGraphTexture* normalSRV, RenderGraphTexture* shadowUAV, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pRaytracePSO);
 
-    uint constants[3] = { depthSRV->GetHeapIndex(), normalSRV->GetHeapIndex(), shadowUAV->GetHeapIndex() };
+    uint constants[3] = { depthSRV->GetSRV()->GetHeapIndex(), normalSRV->GetSRV()->GetHeapIndex(), shadowUAV->GetUAV()->GetHeapIndex()};
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }

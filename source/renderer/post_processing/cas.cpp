@@ -50,16 +50,16 @@ RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle input
         },
         [=](const CASPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* inRT = pRenderGraph->GetTexture(data.inRT);
-            RenderGraphTexture* outRT = pRenderGraph->GetTexture(data.outRT);
-
-            Draw(pCommandList, inRT->GetSRV(), outRT->GetUAV(), width, height);
+            Draw(pCommandList,
+                pRenderGraph->GetTexture(data.inRT), 
+                pRenderGraph->GetTexture(data.outRT), 
+                width, height);
         });
 
     return cas_pass->outRT;
 }
 
-void CAS::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t width, uint32_t height)
+void CAS::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 
@@ -74,8 +74,8 @@ void CAS::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
     };
 
     CASConstants consts;
-    consts.input = input->GetHeapIndex();
-    consts.output = output->GetHeapIndex();
+    consts.input = input->GetSRV()->GetHeapIndex();
+    consts.output = output->GetUAV()->GetHeapIndex();
 
     CasSetup(reinterpret_cast<AU1*>(&consts.const0), reinterpret_cast<AU1*>(&consts.const1), m_sharpenVal, (AF1)width, (AF1)height, (AF1)width, (AF1)height);
 

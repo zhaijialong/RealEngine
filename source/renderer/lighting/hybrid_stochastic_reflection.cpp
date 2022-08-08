@@ -97,17 +97,13 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const TileClassificationData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depth);
-            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
-            RenderGraphBuffer* rayListBuffer = pRenderGraph->GetBuffer(data.rayListBuffer);
-            RenderGraphBuffer* tileListBuffer = pRenderGraph->GetBuffer(data.tileListBuffer);
-            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBuffer);
-
-            uint32_t clear_value[4] = { 0, 0, 0, 0 };
-            pCommandList->ClearUAV(rayCounterBuffer->GetBuffer(), rayCounterBuffer->GetUAV(), clear_value);
-            pCommandList->UavBarrier(rayCounterBuffer->GetBuffer());
-
-            ClassifyTiles(pCommandList, depth->GetSRV(), normal->GetSRV(), m_pDenoiser->GetHistoryVarianceSRV(), rayListBuffer->GetUAV(), tileListBuffer->GetUAV(), rayCounterBuffer->GetUAV(), width, height);
+            ClassifyTiles(pCommandList, 
+                pRenderGraph->GetTexture(data.depth), 
+                pRenderGraph->GetTexture(data.normal), 
+                pRenderGraph->GetBuffer(data.rayListBuffer),
+                pRenderGraph->GetBuffer(data.tileListBuffer),
+                pRenderGraph->GetBuffer(data.rayCounterBuffer),
+                width, height);
         });
 
     struct PrepareIndirectArgsData
@@ -135,10 +131,10 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const PrepareIndirectArgsData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBuffer);
-            RenderGraphBuffer* indirectArgsBuffer = pRenderGraph->GetBuffer(data.indirectArgsBuffer);
-            RenderGraphBuffer* denoiserArgsBuffer = pRenderGraph->GetBuffer(data.denoiserArgsBuffer);
-            PrepareIndirectArgs(pCommandList, rayCounterBuffer->GetSRV(), indirectArgsBuffer->GetUAV(), denoiserArgsBuffer->GetUAV());
+            PrepareIndirectArgs(pCommandList, 
+                pRenderGraph->GetBuffer(data.rayCounterBuffer),
+                pRenderGraph->GetBuffer(data.indirectArgsBuffer),
+                pRenderGraph->GetBuffer(data.denoiserArgsBuffer));
         });
 
     struct SSRData
@@ -197,27 +193,16 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const SSRData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
-            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depth);
-            RenderGraphTexture* velocity = pRenderGraph->GetTexture(data.velocity);
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
-            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBufferSRV);
-            RenderGraphBuffer* rayListBuffer = pRenderGraph->GetBuffer(data.rayListBufferSRV);
-            RenderGraphBuffer* indirectArgsBuffer = pRenderGraph->GetBuffer(data.indirectArgsBuffer);
-            RenderGraphBuffer* hwRayCounterBuffer = pRenderGraph->GetBuffer(data.hwRayCounterBufferUAV);
-            RenderGraphBuffer* hwRayListBuffer = pRenderGraph->GetBuffer(data.hwRayListBufferUAV);
-
-            uint32_t clear_value[4] = { 0, 0, 0, 0 };
-            pCommandList->ClearUAV(hwRayCounterBuffer->GetBuffer(), hwRayCounterBuffer->GetUAV(), clear_value);
-
-            float clear_value1[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-            pCommandList->ClearUAV(output->GetTexture(), output->GetUAV(), clear_value1); //todo : this clear should not be needed
-
-            pCommandList->UavBarrier(hwRayCounterBuffer->GetBuffer());
-            pCommandList->UavBarrier(output->GetTexture());
-
-            SSR(pCommandList, normal->GetSRV(), depth->GetSRV(), velocity->GetSRV(), output->GetUAV(), 
-                rayCounterBuffer->GetSRV(), rayListBuffer->GetSRV(), indirectArgsBuffer->GetBuffer(), hwRayCounterBuffer->GetUAV(), hwRayListBuffer->GetUAV());
+            SSR(pCommandList, 
+                pRenderGraph->GetTexture(data.normal),
+                pRenderGraph->GetTexture(data.depth),
+                pRenderGraph->GetTexture(data.velocity),
+                pRenderGraph->GetTexture(data.output),
+                pRenderGraph->GetBuffer(data.rayCounterBufferSRV),
+                pRenderGraph->GetBuffer(data.rayListBufferSRV),
+                pRenderGraph->GetBuffer(data.indirectArgsBuffer),
+                pRenderGraph->GetBuffer(data.hwRayCounterBufferUAV),
+                pRenderGraph->GetBuffer(data.hwRayListBufferUAV));
         });
 
     struct PrepareRaytraceIndirectArgsData
@@ -241,9 +226,9 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const PrepareRaytraceIndirectArgsData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBuffer);
-            RenderGraphBuffer* indirectArgsBuffer = pRenderGraph->GetBuffer(data.indirectArgsBuffer);
-            PrepareRaytraceIndirectArgs(pCommandList, rayCounterBuffer->GetSRV(), indirectArgsBuffer->GetUAV());
+            PrepareRaytraceIndirectArgs(pCommandList, 
+                pRenderGraph->GetBuffer(data.rayCounterBuffer),
+                pRenderGraph->GetBuffer(data.indirectArgsBuffer));
         });
     
     struct RaytraceData
@@ -271,13 +256,13 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
         },
         [=](const RaytraceData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normal);
-            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depth);
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
-            RenderGraphBuffer* rayCounterBuffer = pRenderGraph->GetBuffer(data.rayCounterBufferSRV);
-            RenderGraphBuffer* rayListBuffer = pRenderGraph->GetBuffer(data.rayListBufferSRV);
-            RenderGraphBuffer* indirectArgsBuffer = pRenderGraph->GetBuffer(data.indirectArgsBuffer);
-            Raytrace(pCommandList, normal->GetSRV(), depth->GetSRV(), output->GetUAV(), rayCounterBuffer->GetSRV(), rayListBuffer->GetSRV(), indirectArgsBuffer->GetBuffer());
+            Raytrace(pCommandList, 
+                pRenderGraph->GetTexture(data.normal),
+                pRenderGraph->GetTexture(data.depth),
+                pRenderGraph->GetTexture(data.output),
+                pRenderGraph->GetBuffer(data.rayCounterBufferSRV),
+                pRenderGraph->GetBuffer(data.rayListBufferSRV),
+                pRenderGraph->GetBuffer(data.indirectArgsBuffer));
         });
 
     if (m_bEnableDenoiser)
@@ -291,84 +276,98 @@ RenderGraphHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, 
     }
 }
 
-void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, IGfxDescriptor* depth, IGfxDescriptor* normal, IGfxDescriptor* historyVariance,
-    IGfxDescriptor* rayListUAV, IGfxDescriptor* tileListUAV, IGfxDescriptor* rayCounterUAV, uint32_t width, uint32_t height)
+void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, RenderGraphTexture* depth, RenderGraphTexture* normal,
+    RenderGraphBuffer* rayListUAV, RenderGraphBuffer* tileListUAV, RenderGraphBuffer* rayCounterUAV, uint32_t width, uint32_t height)
 {
+    uint32_t clear_value[4] = { 0, 0, 0, 0 };
+    pCommandList->ClearUAV(rayCounterUAV->GetBuffer(), rayCounterUAV->GetUAV(), clear_value);
+    pCommandList->UavBarrier(rayCounterUAV->GetBuffer());
+
     pCommandList->SetPipelineState(m_pTileClassificationPSO);
     SetRootConstants(pCommandList);
 
     bool enableVarianceGuidedTracing = m_bEnableDenoiser && m_pDenoiser->IsHistoryValid();
 
     uint32_t constants[8] = {
-        depth->GetHeapIndex(),
-        normal->GetHeapIndex(),
+        depth->GetSRV()->GetHeapIndex(),
+        normal->GetSRV()->GetHeapIndex(),
         m_samplesPerQuad,
         enableVarianceGuidedTracing,
-        historyVariance->GetHeapIndex(),
-        rayListUAV->GetHeapIndex(),
-        tileListUAV->GetHeapIndex(),
-        rayCounterUAV->GetHeapIndex(),
+        m_pDenoiser->GetHistoryVarianceSRV()->GetHeapIndex(),
+        rayListUAV->GetUAV()->GetHeapIndex(),
+        tileListUAV->GetUAV()->GetHeapIndex(),
+        rayCounterUAV->GetUAV()->GetHeapIndex(),
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
 
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void HybridStochasticReflection::PrepareIndirectArgs(IGfxCommandList* pCommandList, IGfxDescriptor* rayCounterSRV, IGfxDescriptor* indirectArgsUAV, IGfxDescriptor* denoiserArgsUAV)
+void HybridStochasticReflection::PrepareIndirectArgs(IGfxCommandList* pCommandList, RenderGraphBuffer* rayCounterSRV, RenderGraphBuffer* indirectArgsUAV, RenderGraphBuffer* denoiserArgsUAV)
 {
     pCommandList->SetPipelineState(m_pPrepareIndirectArgsPSO);
 
-    uint32_t constants[3] = { rayCounterSRV->GetHeapIndex(), indirectArgsUAV->GetHeapIndex(), denoiserArgsUAV->GetHeapIndex()};
+    uint32_t constants[3] = { rayCounterSRV->GetSRV()->GetHeapIndex(), indirectArgsUAV->GetUAV()->GetHeapIndex(), denoiserArgsUAV->GetUAV()->GetHeapIndex()};
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch(1, 1, 1);
 }
 
-void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* velocity, IGfxDescriptor* outputUAV, 
-    IGfxDescriptor* rayCounter, IGfxDescriptor* rayList, IGfxBuffer* indirectArgs, IGfxDescriptor* hwRayCounterUAV, IGfxDescriptor* hwRayListUAV)
+void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, RenderGraphTexture* normal, RenderGraphTexture* depth, RenderGraphTexture* velocity, RenderGraphTexture* outputUAV,
+    RenderGraphBuffer* rayCounter, RenderGraphBuffer* rayList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* hwRayCounterUAV, RenderGraphBuffer* hwRayListUAV)
 {
+    uint32_t clear_value[4] = { 0, 0, 0, 0 };
+    pCommandList->ClearUAV(hwRayCounterUAV->GetBuffer(), hwRayCounterUAV->GetUAV(), clear_value);
+
+    float clear_value1[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    pCommandList->ClearUAV(outputUAV->GetTexture(), outputUAV->GetUAV(), clear_value1); //todo : this clear should not be needed
+
+    pCommandList->UavBarrier(hwRayCounterUAV->GetBuffer());
+    pCommandList->UavBarrier(outputUAV->GetTexture());
+
     pCommandList->SetPipelineState(m_pSSRPSO);
     SetRootConstants(pCommandList);
 
     uint constants[9] = {
-        rayCounter->GetHeapIndex(),
-        rayList->GetHeapIndex(),
-        normal->GetHeapIndex(),
-        depth->GetHeapIndex(),
-        velocity->GetHeapIndex(),
+        rayCounter->GetSRV()->GetHeapIndex(),
+        rayList->GetSRV()->GetHeapIndex(),
+        normal->GetSRV()->GetHeapIndex(),
+        depth->GetSRV()->GetHeapIndex(),
+        velocity->GetSRV()->GetHeapIndex(),
         m_pRenderer->GetPrevSceneColorTexture()->GetSRV()->GetHeapIndex(),
-        outputUAV->GetHeapIndex(),
-        hwRayCounterUAV->GetHeapIndex(),
-        hwRayListUAV->GetHeapIndex(),
+        outputUAV->GetUAV()->GetHeapIndex(),
+        hwRayCounterUAV->GetUAV()->GetHeapIndex(),
+        hwRayListUAV->GetUAV()->GetHeapIndex(),
     };
 
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
-    pCommandList->DispatchIndirect(indirectArgs, 0);
+    pCommandList->DispatchIndirect(indirectArgs->GetBuffer(), 0);
 }
 
-void HybridStochasticReflection::PrepareRaytraceIndirectArgs(IGfxCommandList* pCommandList, IGfxDescriptor* rayCounterSRV, IGfxDescriptor* indirectArgsUAV)
+void HybridStochasticReflection::PrepareRaytraceIndirectArgs(IGfxCommandList* pCommandList, RenderGraphBuffer* rayCounterSRV, RenderGraphBuffer* indirectArgsUAV)
 {
     pCommandList->SetPipelineState(m_pPrepareRTArgsPSO);
 
-    uint32_t constants[2] = { rayCounterSRV->GetHeapIndex(), indirectArgsUAV->GetHeapIndex() };
+    uint32_t constants[2] = { rayCounterSRV->GetSRV()->GetHeapIndex(), indirectArgsUAV->GetUAV()->GetHeapIndex()};
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch(1, 1, 1);
 }
 
-void HybridStochasticReflection::Raytrace(IGfxCommandList* pCommandList, IGfxDescriptor* normal, IGfxDescriptor* depth, IGfxDescriptor* outputUAV, IGfxDescriptor* rayCounter, IGfxDescriptor* rayList, IGfxBuffer* indirectArgs)
+void HybridStochasticReflection::Raytrace(IGfxCommandList* pCommandList, RenderGraphTexture* normal, RenderGraphTexture* depth, RenderGraphTexture* outputUAV,
+    RenderGraphBuffer* rayCounter, RenderGraphBuffer* rayList, RenderGraphBuffer* indirectArgs)
 {
     pCommandList->SetPipelineState(m_pRaytracePSO);
     SetRootConstants(pCommandList);
 
     uint constants[5] = {
-        rayCounter->GetHeapIndex(),
-        rayList->GetHeapIndex(),
-        normal->GetHeapIndex(),
-        depth->GetHeapIndex(),
-        outputUAV->GetHeapIndex(),
+        rayCounter->GetSRV()->GetHeapIndex(),
+        rayList->GetSRV()->GetHeapIndex(),
+        normal->GetSRV()->GetHeapIndex(),
+        depth->GetSRV()->GetHeapIndex(),
+        outputUAV->GetUAV()->GetHeapIndex(),
     };
 
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
-    pCommandList->DispatchIndirect(indirectArgs, 0);
+    pCommandList->DispatchIndirect(indirectArgs->GetBuffer(), 0);
 }
 
 void HybridStochasticReflection::SetRootConstants(IGfxCommandList* pCommandList)

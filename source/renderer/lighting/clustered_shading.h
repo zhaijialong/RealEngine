@@ -11,8 +11,8 @@ public:
         RenderGraphHandle customData, RenderGraphHandle depth, RenderGraphHandle shadow, uint32_t width, uint32_t height);
 
 private:
-    void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* diffuse, IGfxDescriptor* specular, IGfxDescriptor* normal,
-        IGfxDescriptor* customData, IGfxDescriptor* depth, IGfxDescriptor* shadow, IGfxDescriptor* output, uint32_t width, uint32_t height);
+    void Draw(IGfxCommandList* pCommandList, RenderGraphTexture* diffuse, RenderGraphTexture* specular, RenderGraphTexture* normal,
+        RenderGraphTexture* customData, RenderGraphTexture* depth, RenderGraphTexture* shadow, RenderGraphTexture* output, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

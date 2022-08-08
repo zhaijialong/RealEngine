@@ -15,8 +15,8 @@ private:
     RenderGraphHandle DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHandle input, uint32_t mip);
     RenderGraphHandle UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHandle highInput, RenderGraphHandle lowInput, uint32_t mip);
 
-    void Downsample(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t mip);
-    void Upsample(IGfxCommandList* pCommandList, IGfxDescriptor* highInput, IGfxDescriptor* lowInput, IGfxDescriptor* output, uint32_t mip);
+    void Downsample(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t mip);
+    void Upsample(IGfxCommandList* pCommandList, RenderGraphTexture* highInput, RenderGraphTexture* lowInput, RenderGraphTexture* output, uint32_t mip);
 
 private:
     Renderer* m_pRenderer;

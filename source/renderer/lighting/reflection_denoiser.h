@@ -21,15 +21,14 @@ public:
         float maxRoughness, float temporalStability);
 
 private:
-    void Reproject(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList, 
-        IGfxDescriptor* depth, IGfxDescriptor* linearDepth, IGfxDescriptor* normal, IGfxDescriptor* velocity, IGfxDescriptor* inputRadiance, 
-        IGfxDescriptor* outputRadianceUAV, IGfxDescriptor* outputVariancceUAV, IGfxDescriptor* outputAvgRadianceUAV);
-    void Prefilter(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList,
-        IGfxDescriptor* linear_depth, IGfxDescriptor* normal, IGfxDescriptor* inputRadiance, IGfxDescriptor* inputVariance, IGfxDescriptor* avgRadiance,
-        IGfxDescriptor* outputRadianceUAV, IGfxDescriptor* outputVariancceUAV);
-    void ResolveTemporal(IGfxCommandList* pCommandList, IGfxBuffer* indirectArgs, IGfxDescriptor* tileList, 
-        IGfxDescriptor* normal, IGfxDescriptor* inputRadiance, IGfxDescriptor* inputVariance, IGfxDescriptor* reprojectedRadiance, IGfxDescriptor* avgRadiance,
-        IGfxDescriptor* sampleCount, IGfxDescriptor* outputRadianceUAV, IGfxDescriptor* outputVariancceUAV);
+    void Reproject(IGfxCommandList* pCommandList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* tileList,
+        RenderGraphTexture* depth, RenderGraphTexture* linearDepth, RenderGraphTexture* normal, RenderGraphTexture* velocity, RenderGraphTexture* inputRadiance, 
+        RenderGraphTexture* outputRadianceUAV, RenderGraphTexture* outputVariancceUAV, RenderGraphTexture* outputAvgRadianceUAV);
+    void Prefilter(IGfxCommandList* pCommandList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* tileList,
+        RenderGraphTexture* linear_depth, RenderGraphTexture* normal, RenderGraphTexture* inputRadiance, RenderGraphTexture* inputVariance, RenderGraphTexture* avgRadiance,
+        RenderGraphTexture* outputRadianceUAV, RenderGraphTexture* outputVariancceUAV);
+    void ResolveTemporal(IGfxCommandList* pCommandList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* tileList,
+        RenderGraphTexture* normal, RenderGraphTexture* inputRadiance, RenderGraphTexture* inputVariance, RenderGraphTexture* reprojectedRadiance, RenderGraphTexture* avgRadiance);
 
 private:
     Renderer* m_pRenderer;

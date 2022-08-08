@@ -14,7 +14,7 @@ public:
     bool IsEnabled() const { return m_bEnable; }
 
 private:
-    void Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* velocity, IGfxDescriptor* linearDepth, IGfxDescriptor* output, uint32_t width, uint32_t height);
+    void Draw(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* velocity, RenderGraphTexture* linearDepth, RenderGraphTexture* output, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

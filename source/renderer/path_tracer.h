@@ -11,9 +11,9 @@ public:
     RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, uint32_t width, uint32_t height);
 
 private:
-    void PathTrace(IGfxCommandList* pCommandList, IGfxDescriptor* diffuse, IGfxDescriptor* specular, IGfxDescriptor* normal, IGfxDescriptor* emissive, IGfxDescriptor* depth, 
-        IGfxDescriptor* output, uint32_t width, uint32_t height);
-    void Accumulate(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* historyUAV, IGfxDescriptor* outputUAV, uint32_t width, uint32_t height);
+    void PathTrace(IGfxCommandList* pCommandList, RenderGraphTexture* diffuse, RenderGraphTexture* specular, RenderGraphTexture* normal, RenderGraphTexture* emissive, RenderGraphTexture* depth, 
+        RenderGraphTexture* output, uint32_t width, uint32_t height);
+    void Accumulate(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* outputUAV, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer;

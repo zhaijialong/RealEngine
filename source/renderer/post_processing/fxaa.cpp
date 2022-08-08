@@ -44,16 +44,16 @@ RenderGraphHandle FXAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
         },
         [=](const FXAAData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = pRenderGraph->GetTexture(data.input);
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
-
-            Draw(pCommandList, input->GetSRV(), output->GetUAV(), width, height);
+            Draw(pCommandList, 
+                pRenderGraph->GetTexture(data.input), 
+                pRenderGraph->GetTexture(data.output), 
+                width, height);
         });
 
     return fxaa_pass->output;
 }
 
-void FXAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, uint32_t width, uint32_t height)
+void FXAA::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 
@@ -69,8 +69,8 @@ void FXAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescri
     };
 
     CB constantBuffer = {
-        input->GetHeapIndex(), 
-        output->GetHeapIndex(),
+        input->GetSRV()->GetHeapIndex(),
+        output->GetUAV()->GetHeapIndex(),
         m_pRenderer->GetLinearSampler()->GetHeapIndex(),
         width,
         height,

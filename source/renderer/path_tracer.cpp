@@ -59,13 +59,14 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         },
         [=](const PathTracingData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* diffuseRT = pRenderGraph->GetTexture(data.diffuseRT);
-            RenderGraphTexture* specularRT = pRenderGraph->GetTexture(data.specularRT);
-            RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.normalRT);
-            RenderGraphTexture* emissiveRT = pRenderGraph->GetTexture(data.emissiveRT);
-            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depthRT);
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
-            PathTrace(pCommandList, diffuseRT->GetSRV(), specularRT->GetSRV(), normalRT->GetSRV(), emissiveRT->GetSRV(), depthRT->GetSRV(), output->GetUAV(), width, height);
+            PathTrace(pCommandList,
+                pRenderGraph->GetTexture(data.diffuseRT), 
+                pRenderGraph->GetTexture(data.specularRT),
+                pRenderGraph->GetTexture(data.normalRT),
+                pRenderGraph->GetTexture(data.emissiveRT),
+                pRenderGraph->GetTexture(data.depthRT),
+                pRenderGraph->GetTexture(data.output),
+                width, height);
         });
 
     struct AccumulationData
@@ -103,47 +104,54 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         },
         [=](const AccumulationData& data, IGfxCommandList* pCommandList)
         {
-            if (m_bHistoryInvalid)
-            {
-                m_bHistoryInvalid = false;
-                m_nAccumulatedFrames = 0;
-
-                float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-                pCommandList->ClearUAV(m_pHistoryAccumulation->GetTexture(), m_pHistoryAccumulation->GetUAV(), clear_value);
-                pCommandList->UavBarrier(m_pHistoryAccumulation->GetTexture());
-            }
-
-            RenderGraphTexture* currentFrame = pRenderGraph->GetTexture(data.currentFrame);
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.output);
-            Accumulate(pCommandList, currentFrame->GetSRV(), m_pHistoryAccumulation->GetUAV(), output->GetUAV(), width, height);
+            Accumulate(pCommandList, 
+                pRenderGraph->GetTexture(data.currentFrame),
+                pRenderGraph->GetTexture(data.output), 
+                width, height);
         });
 
     return accumulation_pass->output;
 }
 
-void PathTracer::PathTrace(IGfxCommandList* pCommandList, IGfxDescriptor* diffuse, IGfxDescriptor* specular, IGfxDescriptor* normal, IGfxDescriptor* emissive, IGfxDescriptor* depth,
-    IGfxDescriptor* output, uint32_t width, uint32_t height)
+void PathTracer::PathTrace(IGfxCommandList* pCommandList, RenderGraphTexture* diffuse, RenderGraphTexture* specular, RenderGraphTexture* normal, RenderGraphTexture* emissive, RenderGraphTexture* depth,
+    RenderGraphTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPathTracingPSO);
 
     uint32_t constants[7] = {
-        diffuse->GetHeapIndex(),
-        specular->GetHeapIndex(),
-        normal->GetHeapIndex(),
-        emissive->GetHeapIndex(),
-        depth->GetHeapIndex(),
+        diffuse->GetSRV()->GetHeapIndex(),
+        specular->GetSRV()->GetHeapIndex(),
+        normal->GetSRV()->GetHeapIndex(),
+        emissive->GetSRV()->GetHeapIndex(),
+        depth->GetSRV()->GetHeapIndex(),
         m_maxRayLength,
-        output->GetHeapIndex() 
+        output->GetUAV()->GetHeapIndex()
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void PathTracer::Accumulate(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* historyUAV, IGfxDescriptor* outputUAV, uint32_t width, uint32_t height)
+void PathTracer::Accumulate(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* outputUAV, uint32_t width, uint32_t height)
 {
+    if (m_bHistoryInvalid)
+    {
+        m_bHistoryInvalid = false;
+        m_nAccumulatedFrames = 0;
+
+        float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        pCommandList->ClearUAV(m_pHistoryAccumulation->GetTexture(), m_pHistoryAccumulation->GetUAV(), clear_value);
+        pCommandList->UavBarrier(m_pHistoryAccumulation->GetTexture());
+    }
+
     pCommandList->SetPipelineState(m_pAccumulationPSO);
 
-    uint32_t constants[5] = { input->GetHeapIndex(), historyUAV->GetHeapIndex(), outputUAV->GetHeapIndex(), m_nAccumulatedFrames++, m_bEnableAccumulation };
+    uint32_t constants[5] = { 
+        input->GetSRV()->GetHeapIndex(),
+        m_pHistoryAccumulation->GetUAV()->GetHeapIndex(), 
+        outputUAV->GetUAV()->GetHeapIndex(), 
+        m_nAccumulatedFrames++, 
+        m_bEnableAccumulation
+    };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }

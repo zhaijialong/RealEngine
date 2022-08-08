@@ -44,24 +44,18 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
         },
         [=](const TonemapPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* hdrRT = pRenderGraph->GetTexture(data.hdrRT);
-            RenderGraphTexture* ldrRT = pRenderGraph->GetTexture(data.outLdrRT);
-            RenderGraphTexture* exposureRT = pRenderGraph->GetTexture(data.exposure);
-
-            IGfxDescriptor* bloomSRV = nullptr;
-            if (data.bloom.IsValid())
-            {
-                RenderGraphTexture* bloom = pRenderGraph->GetTexture(data.bloom);
-                bloomSRV = bloom->GetSRV();
-            }
-
-            Draw(pCommandList, hdrRT->GetSRV(), exposureRT->GetSRV(), ldrRT->GetUAV(), bloomSRV, bloom_intensity, width, height);
+            Draw(pCommandList, 
+                pRenderGraph->GetTexture(data.hdrRT), 
+                pRenderGraph->GetTexture(data.exposure),
+                pRenderGraph->GetTexture(data.outLdrRT), 
+                pRenderGraph->GetTexture(data.bloom),
+                bloom_intensity, width, height);
         });
 
     return tonemap_pass->outLdrRT;
 }
 
-void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IGfxDescriptor* exposure, IGfxDescriptor* pLdrUAV, IGfxDescriptor* bloom, float bloom_intensity, uint32_t width, uint32_t height)
+void Tonemapper::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* pHdrSRV, RenderGraphTexture* exposure, RenderGraphTexture* pLdrUAV, RenderGraphTexture* bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
     eastl::vector<eastl::string> defines;
 
@@ -100,10 +94,10 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* pHdrSRV, IG
     };
     
     Constants constants;
-    constants.hdrTexture = pHdrSRV->GetHeapIndex();
-    constants.ldrTexture = pLdrUAV->GetHeapIndex();
-    constants.exposureTexture = exposure->GetHeapIndex();
-    constants.bloomTexture = bloom ? bloom->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    constants.hdrTexture = pHdrSRV->GetSRV()->GetHeapIndex();
+    constants.ldrTexture = pLdrUAV->GetUAV()->GetHeapIndex();
+    constants.exposureTexture = exposure->GetSRV()->GetHeapIndex();
+    constants.bloomTexture = bloom ? bloom->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     constants.bloomIntensity = bloom_intensity;
     constants.pixelSize = float2(1.0f / width, 1.0f / height);
 

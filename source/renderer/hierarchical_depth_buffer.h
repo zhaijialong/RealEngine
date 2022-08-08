@@ -25,10 +25,10 @@ public:
 private:
     void CalcHZBSize();
 
-    void ReprojectDepth(IGfxCommandList* pCommandList, IGfxDescriptor* prevLinearDepthSRV, IGfxTexture* reprojectedDepthTexture, IGfxDescriptor* reprojectedDepthUAV);
-    void DilateDepth(IGfxCommandList* pCommandList, IGfxDescriptor* reprojectedDepthSRV, IGfxDescriptor* hzbMip0UAV);
+    void ReprojectDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reprojectedDepthTexture);
+    void DilateDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reprojectedDepthSRV, RenderGraphTexture* hzbMip0UAV);
     void BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture, bool min_max = false);
-    void InitHZB(IGfxCommandList* pCommandList, IGfxDescriptor* inputDepthSRV, IGfxDescriptor* hzbMip0UAV, bool min_max = false);
+    void InitHZB(IGfxCommandList* pCommandList, RenderGraphTexture* inputDepthSRV, RenderGraphTexture* hzbMip0UAV, bool min_max = false);
 
     void ResetCounterBuffer(IGfxCommandList* pCommandList);
 

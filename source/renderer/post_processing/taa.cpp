@@ -76,18 +76,17 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
         },
         [=](const TAAPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* inputRT = pRenderGraph->GetTexture(data.inputRT);
-            RenderGraphTexture* velocityRT = pRenderGraph->GetTexture(data.velocityRT);
-            RenderGraphTexture* linearDepthRT = pRenderGraph->GetTexture(data.linearDepthRT);
-            RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.outputRT);
-
-            Draw(pCommandList, inputRT->GetSRV(), velocityRT->GetSRV(), linearDepthRT->GetSRV(), outputRT->GetUAV(), width, height);
+            Draw(pCommandList,
+                pRenderGraph->GetTexture(data.inputRT), 
+                pRenderGraph->GetTexture(data.velocityRT), 
+                pRenderGraph->GetTexture(data.linearDepthRT),
+                pRenderGraph->GetTexture(data.outputRT), width, height);
         });
 
     return taa_pass->outputRT;
 }
 
-void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* velocity, IGfxDescriptor* linearDepth, IGfxDescriptor* output, uint32_t width, uint32_t height)
+void TAA::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* velocity, RenderGraphTexture* linearDepth, RenderGraphTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 
@@ -103,12 +102,12 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
     };
 
     CB cb;
-    cb.inputRT = input->GetHeapIndex();    
-    cb.velocityRT = velocity->GetHeapIndex();
-    cb.linearDepthRT = linearDepth->GetHeapIndex();
+    cb.inputRT = input->GetSRV()->GetHeapIndex();
+    cb.velocityRT = velocity->GetSRV()->GetHeapIndex();
+    cb.linearDepthRT = linearDepth->GetSRV()->GetHeapIndex();
     if (m_bHistoryInvalid)
     {
-        cb.historyInputRT = input->GetHeapIndex();
+        cb.historyInputRT = input->GetSRV()->GetHeapIndex();
         m_bHistoryInvalid = false;
     }
     else
@@ -116,7 +115,7 @@ void TAA::Draw(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescrip
         cb.historyInputRT = m_pHistoryColorInput->GetSRV()->GetHeapIndex();
     }
     cb.historyOutputRT = m_pHistoryColorOutput->GetUAV()->GetHeapIndex();
-    cb.outputRT = output->GetHeapIndex();
+    cb.outputRT = output->GetUAV()->GetHeapIndex();
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
 
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);

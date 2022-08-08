@@ -60,10 +60,10 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserPreparePassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* raytraceResult = pRenderGraph->GetTexture(data.raytraceResult);
-            RenderGraphBuffer* shadowMaskBuffer = pRenderGraph->GetBuffer(data.shadowMaskBuffer);
-
-            Prepare(pCommandList, raytraceResult->GetSRV(), shadowMaskBuffer->GetUAV(), width, height);
+            Prepare(pCommandList, 
+                pRenderGraph->GetTexture(data.raytraceResult),
+                pRenderGraph->GetBuffer(data.shadowMaskBuffer),
+                width, height);
         });
 
     struct DenoiserTileClassificationData
@@ -116,15 +116,14 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserTileClassificationData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphBuffer* shadowMaskBuffer = pRenderGraph->GetBuffer(data.shadowMaskBuffer);
-            RenderGraphTexture* depthTexture = pRenderGraph->GetTexture(data.depthTexture);
-            RenderGraphTexture* normalTexture = pRenderGraph->GetTexture(data.normalTexture);
-            RenderGraphTexture* velocityTexture = pRenderGraph->GetTexture(data.velocityTexture);
-            RenderGraphBuffer* tileMetaDataBuffer = pRenderGraph->GetBuffer(data.tileMetaDataBuffer);
-            RenderGraphTexture* reprojectionResultTexture = pRenderGraph->GetTexture(data.reprojectionResultTexture);
-
-            TileClassification(pCommandList, shadowMaskBuffer->GetSRV(), depthTexture->GetSRV(), normalTexture->GetSRV(), velocityTexture->GetSRV(),
-                tileMetaDataBuffer->GetUAV(), reprojectionResultTexture->GetUAV(), width, height);
+            TileClassification(pCommandList,
+                pRenderGraph->GetBuffer(data.shadowMaskBuffer), 
+                pRenderGraph->GetTexture(data.depthTexture),
+                pRenderGraph->GetTexture(data.normalTexture),
+                pRenderGraph->GetTexture(data.velocityTexture),
+                pRenderGraph->GetBuffer(data.tileMetaDataBuffer),
+                pRenderGraph->GetTexture(data.reprojectionResultTexture),
+                width, height);
         });
 
     struct DenoiserFilterPassData
@@ -147,13 +146,13 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = pRenderGraph->GetTexture(data.inputTexture);
-            IGfxDescriptor* outputUAV = m_pHistoryTexture->GetUAV();
-            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depthTexture);
-            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normalTexture);
-            RenderGraphBuffer* tileMetaData = pRenderGraph->GetBuffer(data.tileMetaDataBuffer);
-
-            Filter(pCommandList, input->GetSRV(), outputUAV, depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 0, width, height);
+            Filter(pCommandList, 
+                pRenderGraph->GetTexture(data.inputTexture)->GetSRV(), 
+                m_pHistoryTexture->GetUAV(),
+                pRenderGraph->GetTexture(data.depthTexture),
+                pRenderGraph->GetTexture(data.normalTexture),
+                pRenderGraph->GetBuffer(data.tileMetaDataBuffer),
+                0, width, height);
         });
 
     auto filter_pass1 = pRenderGraph->AddPass<DenoiserFilterPassData>("ShadowDenoiser filter1", RenderPassType::Compute,
@@ -173,13 +172,13 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
         {
-            IGfxDescriptor* input = m_pHistoryTexture->GetSRV();
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.outputTexture);
-            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depthTexture);
-            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normalTexture);
-            RenderGraphBuffer* tileMetaData = pRenderGraph->GetBuffer(data.tileMetaDataBuffer);
-
-            Filter(pCommandList, input, output->GetUAV(), depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 1, width, height);
+            Filter(pCommandList, 
+                m_pHistoryTexture->GetSRV(), 
+                pRenderGraph->GetTexture(data.outputTexture)->GetUAV(),
+                pRenderGraph->GetTexture(data.depthTexture),
+                pRenderGraph->GetTexture(data.normalTexture),
+                pRenderGraph->GetBuffer(data.tileMetaDataBuffer),
+                1, width, height);
         });
 
     auto filter_pass2 = pRenderGraph->AddPass<DenoiserFilterPassData>("ShadowDenoiser filter2", RenderPassType::Compute,
@@ -199,29 +198,29 @@ RenderGraphHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphH
         },
         [=](const DenoiserFilterPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* input = pRenderGraph->GetTexture(data.inputTexture);
-            RenderGraphTexture* output = pRenderGraph->GetTexture(data.outputTexture);
-            RenderGraphTexture* depth = pRenderGraph->GetTexture(data.depthTexture);
-            RenderGraphTexture* normal = pRenderGraph->GetTexture(data.normalTexture);
-            RenderGraphBuffer* tileMetaData = pRenderGraph->GetBuffer(data.tileMetaDataBuffer);
-
-            Filter(pCommandList, input->GetSRV(), output->GetUAV(), depth->GetSRV(), normal->GetSRV(), tileMetaData->GetSRV(), 2, width, height);
+            Filter(pCommandList,
+                pRenderGraph->GetTexture(data.inputTexture)->GetSRV(),
+                pRenderGraph->GetTexture(data.outputTexture)->GetUAV(),
+                pRenderGraph->GetTexture(data.depthTexture),
+                pRenderGraph->GetTexture(data.normalTexture),
+                pRenderGraph->GetBuffer(data.tileMetaDataBuffer), 
+                2, width, height);
         });
 
     return filter_pass2->outputTexture;
 }
 
-void ShadowDenoiser::Prepare(IGfxCommandList* pCommandList, IGfxDescriptor* raytraceResult, IGfxDescriptor* maskBuffer, uint32_t width, uint32_t height)
+void ShadowDenoiser::Prepare(IGfxCommandList* pCommandList, RenderGraphTexture* raytraceResult, RenderGraphBuffer* maskBuffer, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPrepareMaskPSO);
 
-    uint constants[2] = { raytraceResult->GetHeapIndex(), maskBuffer->GetHeapIndex() };
+    uint constants[2] = { raytraceResult->GetSRV()->GetHeapIndex(), maskBuffer->GetUAV()->GetHeapIndex()};
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch((width + 31) / 32, (height + 15) / 16, 1);
 }
 
-void ShadowDenoiser::TileClassification(IGfxCommandList* pCommandList, IGfxDescriptor* shadowMaskBuffer, IGfxDescriptor* depthTexture, IGfxDescriptor* normalTexture,
-    IGfxDescriptor* velocityTexture, IGfxDescriptor* tileMetaDataBufferUAV, IGfxDescriptor* reprojectionResultTextureUAV, uint32_t width, uint32_t height)
+void ShadowDenoiser::TileClassification(IGfxCommandList* pCommandList, RenderGraphBuffer* shadowMaskBuffer, RenderGraphTexture* depthTexture, RenderGraphTexture* normalTexture,
+    RenderGraphTexture* velocityTexture, RenderGraphBuffer* tileMetaDataBufferUAV, RenderGraphTexture* reprojectionResultTextureUAV, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pTileClassificationPSO);
 
@@ -241,16 +240,16 @@ void ShadowDenoiser::TileClassification(IGfxCommandList* pCommandList, IGfxDescr
     };
 
     CB cb;
-    cb.shadowMaskBuffer = shadowMaskBuffer->GetHeapIndex();
-    cb.depthTexture = depthTexture->GetHeapIndex();
-    cb.normalTexture = normalTexture->GetHeapIndex();
-    cb.velocityTexture = velocityTexture->GetHeapIndex();
+    cb.shadowMaskBuffer = shadowMaskBuffer->GetSRV()->GetHeapIndex();
+    cb.depthTexture = depthTexture->GetSRV()->GetHeapIndex();
+    cb.normalTexture = normalTexture->GetSRV()->GetHeapIndex();
+    cb.velocityTexture = velocityTexture->GetSRV()->GetHeapIndex();
     cb.historyTexture = m_pHistoryTexture->GetSRV()->GetHeapIndex();
     cb.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
     cb.prevMomentsTexture = m_pPrevMomentsTexture->GetSRV()->GetHeapIndex();
     cb.momentsTexture = m_pMomentsTexture->GetUAV()->GetHeapIndex();
-    cb.tileMetaDataBuffer = tileMetaDataBufferUAV->GetHeapIndex();
-    cb.reprojectionResultTexture = reprojectionResultTextureUAV->GetHeapIndex();
+    cb.tileMetaDataBuffer = tileMetaDataBufferUAV->GetUAV()->GetHeapIndex();
+    cb.reprojectionResultTexture = reprojectionResultTextureUAV->GetUAV()->GetHeapIndex();
     cb.bFirstFrame = 0;
 
     if (m_bHistoryInvalid)
@@ -263,16 +262,17 @@ void ShadowDenoiser::TileClassification(IGfxCommandList* pCommandList, IGfxDescr
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void ShadowDenoiser::Filter(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, IGfxDescriptor* depthTexture, IGfxDescriptor* normalTexture, IGfxDescriptor* tileMetaDataBuffer, uint32_t pass_index, uint32_t width, uint32_t height)
+void ShadowDenoiser::Filter(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, RenderGraphTexture* depthTexture, RenderGraphTexture* normalTexture,
+    RenderGraphBuffer* tileMetaDataBuffer, uint32_t pass_index, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pFilterPSO[pass_index]);
 
     uint32_t constants[5] = {
         input->GetHeapIndex(),
         output->GetHeapIndex(),
-        depthTexture->GetHeapIndex(),
-        normalTexture->GetHeapIndex(),
-        tileMetaDataBuffer->GetHeapIndex(),
+        depthTexture->GetSRV()->GetHeapIndex(),
+        normalTexture->GetSRV()->GetHeapIndex(),
+        tileMetaDataBuffer->GetSRV()->GetHeapIndex(),
     };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);

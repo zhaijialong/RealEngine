@@ -57,9 +57,7 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
         },
         [=](const DepthReprojectionData& data, IGfxCommandList* pCommandList)
         {
-            //RenderGraphTexture* prevLinearDepth = graph->GetTexture(data.prevLinearDepth);
-            RenderGraphTexture* reprojectedDepth = graph->GetTexture(data.reprojectedDepth);
-            ReprojectDepth(pCommandList, m_pRenderer->GetPrevLinearDepthTexture()->GetSRV(), reprojectedDepth->GetTexture(), reprojectedDepth->GetUAV());
+            ReprojectDepth(pCommandList, graph->GetTexture(data.reprojectedDepth));
         });
 
     struct DepthDilationData
@@ -86,9 +84,9 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
         },
         [=](const DepthDilationData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* reprojectedDepth = graph->GetTexture(data.reprojectedDepth);
-            RenderGraphTexture* dilatedDepth = graph->GetTexture(data.dilatedDepth);
-            DilateDepth(pCommandList, reprojectedDepth->GetSRV(), dilatedDepth->GetUAV());
+            DilateDepth(pCommandList,
+                graph->GetTexture(data.reprojectedDepth),
+                graph->GetTexture(data.dilatedDepth));
         });
 
     struct BuildHZBData
@@ -144,9 +142,7 @@ void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depth
         },
         [=](const InitHZBData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* inputDepth = graph->GetTexture(data.inputDepthRT);
-            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
-            InitHZB(pCommandList, inputDepth->GetSRV(), hzb->GetUAV());
+            InitHZB(pCommandList, graph->GetTexture(data.inputDepthRT), graph->GetTexture(data.hzb));
         });
 
     struct BuildHZBData
@@ -200,10 +196,7 @@ void HZB::GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT)
         },
         [=](const InitHZBData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* inputDepth = graph->GetTexture(data.inputDepthRT);
-            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
-
-            InitHZB(pCommandList, inputDepth->GetSRV(), hzb->GetUAV(), true);
+            InitHZB(pCommandList, graph->GetTexture(data.inputDepthRT), graph->GetTexture(data.hzb), true);
         });
 
     struct BuildHZBData
@@ -259,25 +252,30 @@ void HZB::CalcHZBSize()
     m_hzbSize.y = 1 << (mipsY - 1);
 }
 
-void HZB::ReprojectDepth(IGfxCommandList* pCommandList, IGfxDescriptor* prevLinearDepthSRV, IGfxTexture* reprojectedDepthTexture, IGfxDescriptor* reprojectedDepthUAV)
+void HZB::ReprojectDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reprojectedDepthTexture)
 {
     float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    pCommandList->ClearUAV(reprojectedDepthTexture, reprojectedDepthUAV, clear_value);
-    pCommandList->UavBarrier(reprojectedDepthTexture);
+    pCommandList->ClearUAV(reprojectedDepthTexture->GetTexture(), reprojectedDepthTexture->GetUAV(), clear_value);
+    pCommandList->UavBarrier(reprojectedDepthTexture->GetTexture());
 
     pCommandList->SetPipelineState(m_pDepthReprojectionPSO);
 
-    uint32_t root_consts[4] = { prevLinearDepthSRV->GetHeapIndex(), reprojectedDepthUAV->GetHeapIndex(), m_hzbSize.x, m_hzbSize.y };
+    uint32_t root_consts[4] = { 
+        m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex(),
+        reprojectedDepthTexture->GetUAV()->GetHeapIndex(),
+        m_hzbSize.x, 
+        m_hzbSize.y
+    };
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
     pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
 }
 
-void HZB::DilateDepth(IGfxCommandList* pCommandList, IGfxDescriptor* reprojectedDepthSRV, IGfxDescriptor* hzbMip0UAV)
+void HZB::DilateDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reprojectedDepthSRV, RenderGraphTexture* hzbMip0UAV)
 {
     pCommandList->SetPipelineState(m_pDepthDilationPSO);
 
-    uint32_t root_consts[4] = { reprojectedDepthSRV->GetHeapIndex(), hzbMip0UAV->GetHeapIndex(), m_hzbSize.x, m_hzbSize.y };
+    uint32_t root_consts[4] = { reprojectedDepthSRV->GetSRV()->GetHeapIndex(), hzbMip0UAV->GetUAV()->GetHeapIndex(), m_hzbSize.x, m_hzbSize.y};
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
     pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
@@ -333,11 +331,11 @@ void HZB::BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture, b
     pCommandList->Dispatch(dispatchX, dispatchY, dispatchZ);
 }
 
-void HZB::InitHZB(IGfxCommandList* pCommandList, IGfxDescriptor* inputDepthSRV, IGfxDescriptor* hzbMip0UAV, bool min_max)
+void HZB::InitHZB(IGfxCommandList* pCommandList, RenderGraphTexture* inputDepthSRV, RenderGraphTexture* hzbMip0UAV, bool min_max)
 {
     pCommandList->SetPipelineState(min_max ? m_pInitSceneHZBPSO : m_pInitHZBPSO);
 
-    uint32_t root_consts[4] = { inputDepthSRV->GetHeapIndex(), hzbMip0UAV->GetHeapIndex(), m_hzbSize.x, m_hzbSize.y };
+    uint32_t root_consts[4] = { inputDepthSRV->GetSRV()->GetHeapIndex(), hzbMip0UAV->GetUAV()->GetHeapIndex(), m_hzbSize.x, m_hzbSize.y};
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
     pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
