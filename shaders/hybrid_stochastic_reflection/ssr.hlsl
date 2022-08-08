@@ -24,7 +24,7 @@ bool ValidateHit(ssrt::HitInfo hitInfo, float2 uv, float3 ray_direction)
 { 
     // Reject the hit if we didnt advance the ray significantly to avoid immediate self reflection
     float2 manhattan_dist = abs(hitInfo.screenUV - uv);
-    float2 screen_size = float2(SceneCB.HZBWidth, SceneCB.HZBHeight);
+    float2 screen_size = SceneCB.renderSize;
     if (all(manhattan_dist < (2 / screen_size)))
     {
         return false;
@@ -48,8 +48,16 @@ bool ValidateHit(ssrt::HitInfo hitInfo, float2 uv, float3 ray_direction)
     }
     
     float distance = abs(GetLinearDepth(depth) - GetLinearDepth(hitInfo.depth));
+    
+    // Fade out hits near the screen borders
+    float2 fov = 0.1 * float2(screen_size.y / screen_size.x, 1);
+    float2 border = smoothstep(0, fov, hitInfo.screenUV) * (1 - smoothstep(1 - fov, 1, hitInfo.screenUV));
+    float vignette = border.x * border.y;
+
     float confidence = 1 - smoothstep(0, c_ssrThickness, distance);
-    if (confidence < 0.95)
+    confidence *= confidence;
+
+    if (vignette * confidence < 0.95)
     {
         return false;
     }
