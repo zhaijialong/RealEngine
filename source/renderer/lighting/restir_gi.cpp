@@ -326,30 +326,39 @@ RenderGraphHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
 
             uint32_t tile_count_x = (width + 7) / 8;
             uint32_t tile_count_y = (height + 7) / 8;
-            pCommandList->WriteBuffer(argsBuffer, 0, tile_count_x * tile_count_y);
-            pCommandList->WriteBuffer(argsBuffer, 4, 1);
-            pCommandList->WriteBuffer(argsBuffer, 8, 1);
 
-            eastl::vector<uint32_t> tileList;
-            tileList.reserve(tile_count_x * tile_count_y);
-
-            for (uint32_t x = 0; x < tile_count_x; ++x)
             {
-                for (uint32_t y = 0; y < tile_count_y; ++y)
-                {
-                    uint32_t tile_coord_x = x * 8;
-                    uint32_t tile_coord_y = y * 8;
-                    uint32_t tile = ((tile_coord_y & 0xffffu) << 16) | ((tile_coord_x & 0xffffu) << 0);
-                    tileList.push_back(tile);
-                }
+                StagingBuffer staging_buffer = m_pRenderer->GetStagingBufferAllocator()->Allocate(sizeof(uint3));
+                char* dst_data = (char*)staging_buffer.buffer->GetCpuAddress() + staging_buffer.offset;
+
+                uint3 dispatchArgs(tile_count_x * tile_count_y, 1, 1);
+                memcpy(dst_data, &dispatchArgs, sizeof(uint3));
+
+                pCommandList->CopyBuffer(argsBuffer, 0, staging_buffer.buffer, staging_buffer.offset, sizeof(uint3));
             }
 
-            uint32_t data_size = sizeof(uint32_t) * tile_count_x * tile_count_y;
-            StagingBuffer staging_buffer = m_pRenderer->GetStagingBufferAllocator()->Allocate(data_size);
-            char* dst_data = (char*)staging_buffer.buffer->GetCpuAddress() + staging_buffer.offset;
-            memcpy(dst_data, tileList.data(), data_size);
+            {
+                eastl::vector<uint32_t> tileList;
+                tileList.reserve(tile_count_x * tile_count_y);
 
-            pCommandList->CopyBuffer(tileListBuffer, 0, staging_buffer.buffer, staging_buffer.offset, data_size);
+                for (uint32_t x = 0; x < tile_count_x; ++x)
+                {
+                    for (uint32_t y = 0; y < tile_count_y; ++y)
+                    {
+                        uint32_t tile_coord_x = x * 8;
+                        uint32_t tile_coord_y = y * 8;
+                        uint32_t tile = ((tile_coord_y & 0xffffu) << 16) | ((tile_coord_x & 0xffffu) << 0);
+                        tileList.push_back(tile);
+                    }
+                }
+
+                uint32_t data_size = sizeof(uint32_t) * tile_count_x * tile_count_y;
+                StagingBuffer staging_buffer = m_pRenderer->GetStagingBufferAllocator()->Allocate(data_size);
+                char* dst_data = (char*)staging_buffer.buffer->GetCpuAddress() + staging_buffer.offset;
+                memcpy(dst_data, tileList.data(), data_size);
+
+                pCommandList->CopyBuffer(tileListBuffer, 0, staging_buffer.buffer, staging_buffer.offset, data_size);
+            }
         });
 
     m_pDenoiser->ImportTextures(pRenderGraph, width, height);
