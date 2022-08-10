@@ -9,23 +9,23 @@ class ReSTIRGI
 public:
     ReSTIRGI(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
     IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetOutputRadianceSRV(); }
 
 private:
-    void InitialSampling(IGfxCommandList* pCommandList, RenderGraphTexture* depth, RenderGraphTexture* normal,
-        RenderGraphTexture* outputRadiance, RenderGraphTexture* outputHitNormal, RenderGraphTexture* outputRay, uint32_t width, uint32_t height);
-    void TemporalResampling(IGfxCommandList* pCommandList, RenderGraphTexture* depth, RenderGraphTexture* normal, RenderGraphTexture* velocity,
-        RenderGraphTexture* candidateRadiance, RenderGraphTexture* candidateHitNormal, RenderGraphTexture* candidateRay, uint32_t width, uint32_t height);
-    void SpatialResampling(IGfxCommandList* pCommandList, RenderGraphTexture* depth, RenderGraphTexture* normal, 
-        RenderGraphTexture* outputReservoirRayDirection, RenderGraphTexture* outputReservoirSampleRadiance, RenderGraphTexture* outputReservoir, uint32_t width, uint32_t height);
+    void InitialSampling(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* normal,
+        RGTexture* outputRadiance, RGTexture* outputHitNormal, RGTexture* outputRay, uint32_t width, uint32_t height);
+    void TemporalResampling(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
+        RGTexture* candidateRadiance, RGTexture* candidateHitNormal, RGTexture* candidateRay, uint32_t width, uint32_t height);
+    void SpatialResampling(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* normal, 
+        RGTexture* outputReservoirRayDirection, RGTexture* outputReservoirSampleRadiance, RGTexture* outputReservoir, uint32_t width, uint32_t height);
 
-    void Resolve(IGfxCommandList* pCommandList, RenderGraphTexture* reservoir, RenderGraphTexture* radiance, RenderGraphTexture* rayDirection, RenderGraphTexture* normal,
-        RenderGraphTexture* output, uint32_t width, uint32_t height);
+    void Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* rayDirection, RGTexture* normal,
+        RGTexture* output, uint32_t width, uint32_t height);
 
-    //void TemporalFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
-    //void SpatialFilter(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
+    //void TemporalFilter(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height);
+    //void SpatialFilter(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height);
 
     bool InitTemporalBuffers(uint32_t width, uint32_t height);
 

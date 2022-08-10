@@ -16,7 +16,7 @@ PathTracer::PathTracer(Renderer* pRenderer)
     m_pAccumulationPSO = pRenderer->GetPipelineState(psoDesc, "PathTracing accumulation PSO");
 }
 
-RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, uint32_t width, uint32_t height)
+RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height)
 {
     GUI("Settings", "PathTracer", [&]()
         {
@@ -31,16 +31,16 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
 
     struct PathTracingData
     {
-        RenderGraphHandle diffuseRT;
-        RenderGraphHandle specularRT;
-        RenderGraphHandle normalRT;
-        RenderGraphHandle emissiveRT;
-        RenderGraphHandle depthRT;
-        RenderGraphHandle output;
+        RGHandle diffuseRT;
+        RGHandle specularRT;
+        RGHandle normalRT;
+        RGHandle emissiveRT;
+        RGHandle depthRT;
+        RGHandle output;
     };
 
     auto pt_pass = pRenderGraph->AddPass<PathTracingData>("PathTracing", RenderPassType::Compute,
-        [&](PathTracingData& data, RenderGraphBuilder& builder)
+        [&](PathTracingData& data, RGBuilder& builder)
         {
             BasePass* pBasePass = m_pRenderer->GetBassPass();
             
@@ -50,11 +50,11 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
             data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT());
             data.depthRT = builder.Read(depth);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA32F;
-            data.output = builder.Create<RenderGraphTexture>(desc, "PathTracing output");
+            data.output = builder.Create<RGTexture>(desc, "PathTracing output");
             data.output = builder.Write(data.output);
         },
         [=](const PathTracingData& data, IGfxCommandList* pCommandList)
@@ -71,9 +71,9 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
 
     struct AccumulationData
     {
-        RenderGraphHandle currentFrame;
-        RenderGraphHandle history;
-        RenderGraphHandle output;
+        RGHandle currentFrame;
+        RGHandle history;
+        RGHandle output;
     };
 
     if (m_pHistoryAccumulation == nullptr ||
@@ -87,19 +87,19 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
     Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
     m_bHistoryInvalid = camera->IsMoved() ? true : false;
 
-    RenderGraphHandle history = pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxResourceState::UnorderedAccess);
+    RGHandle history = pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxResourceState::UnorderedAccess);
 
     auto accumulation_pass = pRenderGraph->AddPass<AccumulationData>("Accumulation", RenderPassType::Compute,
-        [&](AccumulationData& data, RenderGraphBuilder& builder)
+        [&](AccumulationData& data, RGBuilder& builder)
         {
             data.currentFrame = builder.Read(pt_pass->output);
             data.history = builder.Write(history);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            data.output = builder.Create<RenderGraphTexture>(desc, "SceneColor RT");
+            data.output = builder.Create<RGTexture>(desc, "SceneColor RT");
             data.output = builder.Write(data.output);
         },
         [=](const AccumulationData& data, IGfxCommandList* pCommandList)
@@ -113,8 +113,8 @@ RenderGraphHandle PathTracer::Render(RenderGraph* pRenderGraph, RenderGraphHandl
     return accumulation_pass->output;
 }
 
-void PathTracer::PathTrace(IGfxCommandList* pCommandList, RenderGraphTexture* diffuse, RenderGraphTexture* specular, RenderGraphTexture* normal, RenderGraphTexture* emissive, RenderGraphTexture* depth,
-    RenderGraphTexture* output, uint32_t width, uint32_t height)
+void PathTracer::PathTrace(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal, RGTexture* emissive, RGTexture* depth,
+    RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPathTracingPSO);
 
@@ -131,7 +131,7 @@ void PathTracer::PathTrace(IGfxCommandList* pCommandList, RenderGraphTexture* di
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void PathTracer::Accumulate(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* outputUAV, uint32_t width, uint32_t height)
+void PathTracer::Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* outputUAV, uint32_t width, uint32_t height)
 {
     if (m_bHistoryInvalid)
     {

@@ -18,7 +18,7 @@ Bloom::Bloom(Renderer* pRenderer)
     m_pUpsamplePSO = pRenderer->GetPipelineState(desc, "Bloom upsample PSO");
 }
 
-RenderGraphHandle Bloom::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, uint32_t width, uint32_t height)
+RGHandle Bloom::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "Bloom",
         [&]()
@@ -30,7 +30,7 @@ RenderGraphHandle Bloom::Render(RenderGraph* pRenderGraph, RenderGraphHandle sce
 
     if (!m_bEnable)
     {
-        return RenderGraphHandle();
+        return RGHandle();
     }
 
     RENDER_GRAPH_EVENT(pRenderGraph, "Bloom");
@@ -43,43 +43,43 @@ RenderGraphHandle Bloom::Render(RenderGraph* pRenderGraph, RenderGraphHandle sce
         height = eastl::max(1u, (height + 1) >> 1);
     }
 
-    RenderGraphHandle downsampleMip1 = DownsamplePass(pRenderGraph, sceneColorRT, 1);
-    RenderGraphHandle downsampleMip2 = DownsamplePass(pRenderGraph, downsampleMip1, 2);
-    RenderGraphHandle downsampleMip3 = DownsamplePass(pRenderGraph, downsampleMip2, 3);
-    RenderGraphHandle downsampleMip4 = DownsamplePass(pRenderGraph, downsampleMip3, 4);
-    RenderGraphHandle downsampleMip5 = DownsamplePass(pRenderGraph, downsampleMip4, 5);
-    RenderGraphHandle downsampleMip6 = DownsamplePass(pRenderGraph, downsampleMip5, 6);
+    RGHandle downsampleMip1 = DownsamplePass(pRenderGraph, sceneColorRT, 1);
+    RGHandle downsampleMip2 = DownsamplePass(pRenderGraph, downsampleMip1, 2);
+    RGHandle downsampleMip3 = DownsamplePass(pRenderGraph, downsampleMip2, 3);
+    RGHandle downsampleMip4 = DownsamplePass(pRenderGraph, downsampleMip3, 4);
+    RGHandle downsampleMip5 = DownsamplePass(pRenderGraph, downsampleMip4, 5);
+    RGHandle downsampleMip6 = DownsamplePass(pRenderGraph, downsampleMip5, 6);
 
-    RenderGraphHandle upsampleMip6 = downsampleMip6;
-    RenderGraphHandle upsampleMip5 = UpsamplePass(pRenderGraph, downsampleMip5, upsampleMip6, 5);
-    RenderGraphHandle upsampleMip4 = UpsamplePass(pRenderGraph, downsampleMip4, upsampleMip5, 4);
-    RenderGraphHandle upsampleMip3 = UpsamplePass(pRenderGraph, downsampleMip3, upsampleMip4, 3);
-    RenderGraphHandle upsampleMip2 = UpsamplePass(pRenderGraph, downsampleMip2, upsampleMip3, 2);
-    RenderGraphHandle upsampleMip1 = UpsamplePass(pRenderGraph, downsampleMip1, upsampleMip2, 1);
+    RGHandle upsampleMip6 = downsampleMip6;
+    RGHandle upsampleMip5 = UpsamplePass(pRenderGraph, downsampleMip5, upsampleMip6, 5);
+    RGHandle upsampleMip4 = UpsamplePass(pRenderGraph, downsampleMip4, upsampleMip5, 4);
+    RGHandle upsampleMip3 = UpsamplePass(pRenderGraph, downsampleMip3, upsampleMip4, 3);
+    RGHandle upsampleMip2 = UpsamplePass(pRenderGraph, downsampleMip2, upsampleMip3, 2);
+    RGHandle upsampleMip1 = UpsamplePass(pRenderGraph, downsampleMip1, upsampleMip2, 1);
 
     return upsampleMip1;
 }
 
-RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHandle input, uint32_t mip)
+RGHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RGHandle input, uint32_t mip)
 {
     struct DownsamplePassData
     {
-        RenderGraphHandle input;
-        RenderGraphHandle output;
+        RGHandle input;
+        RGHandle output;
     };
 
     eastl::string name = fmt::format("Bloom DownsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y).c_str();
 
     auto downsample_pass = pRenderGraph->AddPass<DownsamplePassData>(name, RenderPassType::Compute,
-        [&](DownsamplePassData& data, RenderGraphBuilder& builder)
+        [&](DownsamplePassData& data, RGBuilder& builder)
         {
             data.input = builder.Read(input);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = m_mipSize[mip].x;
             desc.height = m_mipSize[mip].y;
             desc.format = GfxFormat::R11G11B10F;
-            data.output = builder.Create<RenderGraphTexture>(desc, name);
+            data.output = builder.Create<RGTexture>(desc, name);
             data.output = builder.Write(data.output);
         },
         [=](const DownsamplePassData& data, IGfxCommandList* pCommandList)
@@ -93,28 +93,28 @@ RenderGraphHandle Bloom::DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHa
     return downsample_pass->output;
 }
 
-RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHandle highInput, RenderGraphHandle lowInput, uint32_t mip)
+RGHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RGHandle highInput, RGHandle lowInput, uint32_t mip)
 {
     struct UpsamplePassData
     {
-        RenderGraphHandle lowInput;
-        RenderGraphHandle highInput;
-        RenderGraphHandle output;
+        RGHandle lowInput;
+        RGHandle highInput;
+        RGHandle output;
     };
 
     eastl::string name = fmt::format("Bloom UpsampleMip{}({}x{})", mip, m_mipSize[mip].x, m_mipSize[mip].y).c_str();
 
     auto upsample_pass = pRenderGraph->AddPass<UpsamplePassData>(name, RenderPassType::Compute,
-        [&](UpsamplePassData& data, RenderGraphBuilder& builder)
+        [&](UpsamplePassData& data, RGBuilder& builder)
         {
             data.lowInput = builder.Read(lowInput);
             data.highInput = builder.Read(highInput);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = m_mipSize[mip].x;
             desc.height = m_mipSize[mip].y;
             desc.format = GfxFormat::R11G11B10F;
-            data.output = builder.Create<RenderGraphTexture>(desc, name);
+            data.output = builder.Create<RGTexture>(desc, name);
             data.output = builder.Write(data.output);
         },
         [=](const UpsamplePassData& data, IGfxCommandList* pCommandList)
@@ -129,7 +129,7 @@ RenderGraphHandle Bloom::UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHand
     return upsample_pass->output;
 }
 
-void Bloom::Downsample(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t mip)
+void Bloom::Downsample(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t mip)
 {
     pCommandList->SetPipelineState(mip == 1 ? m_pFirstDownsamplePSO : m_pDownsamplePSO);
 
@@ -158,7 +158,7 @@ void Bloom::Downsample(IGfxCommandList* pCommandList, RenderGraphTexture* input,
     pCommandList->Dispatch((output_width + 7) / 8, (output_height + 7) / 8, 1);
 }
 
-void Bloom::Upsample(IGfxCommandList* pCommandList, RenderGraphTexture* highInput, RenderGraphTexture* lowInput, RenderGraphTexture* output, uint32_t mip)
+void Bloom::Upsample(IGfxCommandList* pCommandList, RGTexture* highInput, RGTexture* lowInput, RGTexture* output, uint32_t mip)
 {
     pCommandList->SetPipelineState(m_pUpsamplePSO);
 

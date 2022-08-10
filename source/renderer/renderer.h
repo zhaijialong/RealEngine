@@ -135,9 +135,9 @@ public:
     Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
     Texture2D* GetPrevNormalTexture() const { return m_pPrevNormalTexture.get(); }
     Texture2D* GetPrevSceneColorTexture() const { return m_pPrevSceneColorTexture.get(); }
-    RenderGraphHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
-    RenderGraphHandle GetPrevNormalHandle() const { return m_prevNormalHandle; }
-    RenderGraphHandle GetPrevSceneColorHandle() const { return m_prevSceneColorHandle; }
+    RGHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
+    RGHandle GetPrevNormalHandle() const { return m_prevNormalHandle; }
+    RGHandle GetPrevSceneColorHandle() const { return m_prevSceneColorHandle; }
 
 private:
     void CreateCommonResources();
@@ -146,20 +146,20 @@ private:
     void BeginFrame();
     void UploadResources();
     void Render();
-    void BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth);
+    void BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth);
     void EndFrame();
 
-    void ForwardPass(RenderGraphHandle& color, RenderGraphHandle& depth);
-    RenderGraphHandle VelocityPass(RenderGraphHandle& depth);
-    RenderGraphHandle LinearizeDepthPass(RenderGraphHandle depth);
-    void ObjectIDPass(RenderGraphHandle& depth);
-    void CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle normal, RenderGraphHandle sceneColor);
+    void ForwardPass(RGHandle& color, RGHandle& depth);
+    RGHandle VelocityPass(RGHandle& depth);
+    RGHandle LinearizeDepthPass(RGHandle depth);
+    void ObjectIDPass(RGHandle& depth);
+    void CopyHistoryPass(RGHandle linearDepth, RGHandle normal, RGHandle sceneColor);
 
     void FlushComputePass(IGfxCommandList* pCommandList);
     void BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
     void ImportPrevFrameTextures();
-    void RenderBackbufferPass(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth);
-    void CopyToBackbuffer(IGfxCommandList* pCommandList, RenderGraphHandle color, RenderGraphHandle depth, bool needUpscaleDepth);
+    void RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle color, RGHandle depth);
+    void CopyToBackbuffer(IGfxCommandList* pCommandList, RGHandle color, RGHandle depth, bool needUpscaleDepth);
     void MouseHitTest();
     void UpdateMipBias();
 
@@ -258,9 +258,9 @@ private:
     eastl::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
     eastl::unique_ptr<Texture2D> m_pPrevNormalTexture;
     eastl::unique_ptr<Texture2D> m_pPrevSceneColorTexture;
-    RenderGraphHandle m_prevLinearDepthHandle;
-    RenderGraphHandle m_prevNormalHandle;
-    RenderGraphHandle m_prevSceneColorHandle;
+    RGHandle m_prevLinearDepthHandle;
+    RGHandle m_prevNormalHandle;
+    RGHandle m_prevSceneColorHandle;
     bool m_bHistoryValid = false;
 
     eastl::unique_ptr<Texture2D> m_pUpscaledDepthTexture;

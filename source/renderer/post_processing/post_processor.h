@@ -14,8 +14,8 @@ class PostProcessor
 public:
     PostProcessor(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
-        RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, 
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT,
+        RGHandle linearDepthRT, RGHandle velocityRT, 
         uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
 
     bool RequiresCameraJitter();

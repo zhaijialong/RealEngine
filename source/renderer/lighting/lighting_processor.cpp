@@ -13,48 +13,48 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pReSTIRGI = eastl::make_unique<ReSTIRGI>(pRenderer);
 }
 
-RenderGraphHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle velocity, uint32_t width, uint32_t height)
+RGHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");
 
     BasePass* pBasePass = m_pRenderer->GetBassPass();
-    RenderGraphHandle diffuse = pBasePass->GetDiffuseRT();
-    RenderGraphHandle specular = pBasePass->GetSpecularRT();
-    RenderGraphHandle normal = pBasePass->GetNormalRT();
-    RenderGraphHandle emissive = pBasePass->GetEmissiveRT();
-    RenderGraphHandle customData = pBasePass->GetCustomDataRT();
+    RGHandle diffuse = pBasePass->GetDiffuseRT();
+    RGHandle specular = pBasePass->GetSpecularRT();
+    RGHandle normal = pBasePass->GetNormalRT();
+    RGHandle emissive = pBasePass->GetEmissiveRT();
+    RGHandle customData = pBasePass->GetCustomDataRT();
 
-    RenderGraphHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
-    RenderGraphHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, velocity, width, height);
-    RenderGraphHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
-    RenderGraphHandle indirect_specular = m_pReflection->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
-    RenderGraphHandle indirect_diffuse = m_pReSTIRGI->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
+    RGHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
+    RGHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, velocity, width, height);
+    RGHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
+    RGHandle indirect_specular = m_pReflection->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
+    RGHandle indirect_diffuse = m_pReSTIRGI->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
 
     return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, indirect_specular, indirect_diffuse, width, height);
 }
 
-RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle ao, RenderGraphHandle direct_lighting,
-    RenderGraphHandle indirect_specular, RenderGraphHandle indirect_diffuse, uint32_t width, uint32_t height)
+RGHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RGHandle depth, RGHandle ao, RGHandle direct_lighting,
+    RGHandle indirect_specular, RGHandle indirect_diffuse, uint32_t width, uint32_t height)
 {
     struct CompositeLightData
     {
-        RenderGraphHandle diffuseRT;
-        RenderGraphHandle specularRT;
-        RenderGraphHandle normalRT;
-        RenderGraphHandle emissiveRT;
-        RenderGraphHandle customDataRT;
-        RenderGraphHandle depthRT;
-        RenderGraphHandle ao;
+        RGHandle diffuseRT;
+        RGHandle specularRT;
+        RGHandle normalRT;
+        RGHandle emissiveRT;
+        RGHandle customDataRT;
+        RGHandle depthRT;
+        RGHandle ao;
 
-        RenderGraphHandle directLighting;
-        RenderGraphHandle indirectSpecular;
-        RenderGraphHandle indirectDiffuse;
+        RGHandle directLighting;
+        RGHandle indirectSpecular;
+        RGHandle indirectDiffuse;
 
-        RenderGraphHandle output;
+        RGHandle output;
     };
 
     auto pass = pRenderGraph->AddPass<CompositeLightData>("CompositeLight", RenderPassType::Compute,
-        [&](CompositeLightData& data, RenderGraphBuilder& builder)
+        [&](CompositeLightData& data, RGBuilder& builder)
         {
             BasePass* pBasePass = m_pRenderer->GetBassPass();
 
@@ -81,26 +81,26 @@ RenderGraphHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, R
                 data.indirectDiffuse = builder.Read(indirect_diffuse);
             }
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            data.output = builder.Create<RenderGraphTexture>(desc, "SceneColor RT");
+            data.output = builder.Create<RGTexture>(desc, "SceneColor RT");
             data.output = builder.Write(data.output);
         },
         [=](const CompositeLightData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* diffuseRT = pRenderGraph->GetTexture(data.diffuseRT);
-            RenderGraphTexture* specularRT = pRenderGraph->GetTexture(data.specularRT);
-            RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.normalRT);
-            RenderGraphTexture* emissiveRT = pRenderGraph->GetTexture(data.emissiveRT);
-            RenderGraphTexture* customDataRT = pRenderGraph->GetTexture(data.customDataRT);
-            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depthRT);
-            RenderGraphTexture* directLightingRT = pRenderGraph->GetTexture(data.directLighting);
-            RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.output);
-            RenderGraphTexture* aoRT = nullptr;
-            RenderGraphTexture* indirectSpecularRT = nullptr;
-            RenderGraphTexture* indirectDiffuseRT = nullptr;
+            RGTexture* diffuseRT = pRenderGraph->GetTexture(data.diffuseRT);
+            RGTexture* specularRT = pRenderGraph->GetTexture(data.specularRT);
+            RGTexture* normalRT = pRenderGraph->GetTexture(data.normalRT);
+            RGTexture* emissiveRT = pRenderGraph->GetTexture(data.emissiveRT);
+            RGTexture* customDataRT = pRenderGraph->GetTexture(data.customDataRT);
+            RGTexture* depthRT = pRenderGraph->GetTexture(data.depthRT);
+            RGTexture* directLightingRT = pRenderGraph->GetTexture(data.directLighting);
+            RGTexture* outputRT = pRenderGraph->GetTexture(data.output);
+            RGTexture* aoRT = nullptr;
+            RGTexture* indirectSpecularRT = nullptr;
+            RGTexture* indirectDiffuseRT = nullptr;
 
             eastl::vector<eastl::string> defines;
             if (data.ao.IsValid())

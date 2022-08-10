@@ -301,7 +301,7 @@ void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pComm
             if (m_pColorRT[i] != nullptr)
             {
                 RenderGraphResourceNode* node = (RenderGraphResourceNode*)graph.GetDAG().GetNode(m_pColorRT[i]->GetToNode());
-                IGfxTexture* texture = ((RenderGraphTexture*)node->GetResource())->GetTexture();
+                IGfxTexture* texture = ((RGTexture*)node->GetResource())->GetTexture();
 
                 uint32_t mip, slice;
                 DecomposeSubresource(texture->GetDesc(), m_pColorRT[i]->GetSubresource(), mip, slice);
@@ -318,12 +318,12 @@ void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pComm
         if (m_pDepthRT != nullptr)
         {
             RenderGraphResourceNode* node = (RenderGraphResourceNode*)graph.GetDAG().GetNode(m_pDepthRT->GetToNode());
-            IGfxTexture* texture = ((RenderGraphTexture*)node->GetResource())->GetTexture();
+            IGfxTexture* texture = ((RGTexture*)node->GetResource())->GetTexture();
 
             uint32_t mip, slice;
             DecomposeSubresource(texture->GetDesc(), m_pDepthRT->GetSubresource(), mip, slice);
 
-            desc.depth.texture = ((RenderGraphTexture*)node->GetResource())->GetTexture();
+            desc.depth.texture = ((RGTexture*)node->GetResource())->GetTexture();
             desc.depth.load_op = m_pDepthRT->GetDepthLoadOp();
             desc.depth.mip_slice = mip;
             desc.depth.array_slice = slice;

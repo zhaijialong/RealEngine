@@ -15,8 +15,8 @@ FSR2::~FSR2()
     DestroyFsr2Context();
 }
 
-RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle input, RenderGraphHandle depth, RenderGraphHandle velocity, 
-    RenderGraphHandle exposure, uint32_t displayWidth, uint32_t displayHeight)
+RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, 
+    RGHandle exposure, uint32_t displayWidth, uint32_t displayHeight)
 {
     GUI("PostProcess", "FSR 2.0", [&]()
         {
@@ -46,26 +46,26 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
 
     struct FSR2Data
     {
-        RenderGraphHandle input;
-        RenderGraphHandle depth;
-        RenderGraphHandle velocity;
-        RenderGraphHandle exposure;
-        RenderGraphHandle output;
+        RGHandle input;
+        RGHandle depth;
+        RGHandle velocity;
+        RGHandle exposure;
+        RGHandle output;
     };
 
     auto fsr2_pass = pRenderGraph->AddPass<FSR2Data>("FSR 2.0", RenderPassType::Compute,
-        [&](FSR2Data& data, RenderGraphBuilder& builder)
+        [&](FSR2Data& data, RGBuilder& builder)
         {
             data.input = builder.Read(input);
             data.depth = builder.Read(depth);
             data.velocity = builder.Read(velocity);
             data.exposure = builder.Read(exposure);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = displayWidth;
             desc.height = displayHeight;
             desc.format = GfxFormat::RGBA16F;
-            data.output = builder.Create<RenderGraphTexture>(desc, "FSR2 Output");
+            data.output = builder.Create<RGTexture>(desc, "FSR2 Output");
             data.output = builder.Write(data.output);
         },
         [=](const FSR2Data& data, IGfxCommandList* pCommandList)
@@ -78,11 +78,11 @@ RenderGraphHandle FSR2::Render(RenderGraph* pRenderGraph, RenderGraphHandle inpu
 
             pCommandList->FlushBarriers();
 
-            RenderGraphTexture* inputRT = pRenderGraph->GetTexture(data.input);
-            RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.depth);
-            RenderGraphTexture* velocityRT = pRenderGraph->GetTexture(data.velocity);
-            RenderGraphTexture* exposureRT = pRenderGraph->GetTexture(data.exposure);
-            RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.output);
+            RGTexture* inputRT = pRenderGraph->GetTexture(data.input);
+            RGTexture* depthRT = pRenderGraph->GetTexture(data.depth);
+            RGTexture* velocityRT = pRenderGraph->GetTexture(data.velocity);
+            RGTexture* exposureRT = pRenderGraph->GetTexture(data.exposure);
+            RGTexture* outputRT = pRenderGraph->GetTexture(data.output);
 
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 

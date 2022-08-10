@@ -9,8 +9,8 @@ public:
     FSR2(Renderer* pRenderer);
     ~FSR2();
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle input, RenderGraphHandle depth, RenderGraphHandle velocity,
-        RenderGraphHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity,
+        RGHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
 
     float GetUpscaleRatio() const;
 

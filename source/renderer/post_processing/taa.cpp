@@ -11,8 +11,8 @@ TAA::TAA(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "TAA PSO");
 }
 
-RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle linearDepthRT,
-    RenderGraphHandle velocityRT, uint32_t width, uint32_t height)
+RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle linearDepthRT,
+    RGHandle velocityRT, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "TAA",
         [&]()
@@ -45,31 +45,31 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
 
     struct TAAPassData
     {
-        RenderGraphHandle inputRT;
-        RenderGraphHandle historyInputRT;
-        RenderGraphHandle velocityRT;
-        RenderGraphHandle linearDepthRT;
+        RGHandle inputRT;
+        RGHandle historyInputRT;
+        RGHandle velocityRT;
+        RGHandle linearDepthRT;
 
-        RenderGraphHandle outputRT;
-        RenderGraphHandle historyOutputRT;
+        RGHandle outputRT;
+        RGHandle historyOutputRT;
     };
 
     auto taa_pass = pRenderGraph->AddPass<TAAPassData>("TAA", RenderPassType::Compute,
-        [&](TAAPassData& data, RenderGraphBuilder& builder)
+        [&](TAAPassData& data, RGBuilder& builder)
         {
-            RenderGraphHandle historyInputRT = builder.Import(m_pHistoryColorInput->GetTexture(), GfxResourceState::UnorderedAccess);
-            RenderGraphHandle historyOutputRT = builder.Import(m_pHistoryColorOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
+            RGHandle historyInputRT = builder.Import(m_pHistoryColorInput->GetTexture(), GfxResourceState::UnorderedAccess);
+            RGHandle historyOutputRT = builder.Import(m_pHistoryColorOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 
             data.inputRT = builder.Read(sceneColorRT);
             data.historyInputRT = builder.Read(historyInputRT);
             data.velocityRT = builder.Read(velocityRT);
             data.linearDepthRT = builder.Read(linearDepthRT);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            data.outputRT = builder.Create<RenderGraphTexture>(desc, "TAA Output");
+            data.outputRT = builder.Create<RGTexture>(desc, "TAA Output");
 
             data.outputRT = builder.Write(data.outputRT);
             data.historyOutputRT = builder.Write(historyOutputRT);
@@ -86,7 +86,7 @@ RenderGraphHandle TAA::Render(RenderGraph* pRenderGraph, RenderGraphHandle scene
     return taa_pass->outputRT;
 }
 
-void TAA::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* velocity, RenderGraphTexture* linearDepth, RenderGraphTexture* output, uint32_t width, uint32_t height)
+void TAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* velocity, RGTexture* linearDepth, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 

@@ -11,24 +11,24 @@ public:
     HZB(Renderer* pRenderer);
 
     void Generate1stPhaseCullingHZB(RenderGraph* graph);
-    void Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depthRT);
-    void GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT);
+    void Generate2ndPhaseCullingHZB(RenderGraph* graph, RGHandle depthRT);
+    void GenerateSceneHZB(RenderGraph* graph, RGHandle depthRT);
 
     uint32_t GetHZBMipCount() const { return m_nHZBMipCount; }
     uint32_t GetHZBWidth() const { return m_hzbSize.x; };
     uint32_t GetHZBHeight() const { return m_hzbSize.y; }
 
-    RenderGraphHandle Get1stPhaseCullingHZBMip(uint32_t mip) const;
-    RenderGraphHandle Get2ndPhaseCullingHZBMip(uint32_t mip) const;
-    RenderGraphHandle GetSceneHZBMip(uint32_t mip) const;
+    RGHandle Get1stPhaseCullingHZBMip(uint32_t mip) const;
+    RGHandle Get2ndPhaseCullingHZBMip(uint32_t mip) const;
+    RGHandle GetSceneHZBMip(uint32_t mip) const;
 
 private:
     void CalcHZBSize();
 
-    void ReprojectDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reprojectedDepthTexture);
-    void DilateDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reprojectedDepthSRV, RenderGraphTexture* hzbMip0UAV);
-    void BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture, bool min_max = false);
-    void InitHZB(IGfxCommandList* pCommandList, RenderGraphTexture* inputDepthSRV, RenderGraphTexture* hzbMip0UAV, bool min_max = false);
+    void ReprojectDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDepthTexture);
+    void DilateDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDepthSRV, RGTexture* hzbMip0UAV);
+    void BuildHZB(IGfxCommandList* pCommandList, RGTexture* texture, bool min_max = false);
+    void InitHZB(IGfxCommandList* pCommandList, RGTexture* inputDepthSRV, RGTexture* hzbMip0UAV, bool min_max = false);
 
     void ResetCounterBuffer(IGfxCommandList* pCommandList);
 
@@ -49,7 +49,7 @@ private:
     uint2 m_hzbSize;
 
     static const uint32_t MAX_HZB_MIP_COUNT = 13; //spd limits
-    RenderGraphHandle m_1stPhaseCullingHZBMips[MAX_HZB_MIP_COUNT] = {};
-    RenderGraphHandle m_2ndPhaseCullingHZBMips[MAX_HZB_MIP_COUNT] = {};
-    RenderGraphHandle m_sceneHZBMips[MAX_HZB_MIP_COUNT] = {};
+    RGHandle m_1stPhaseCullingHZBMips[MAX_HZB_MIP_COUNT] = {};
+    RGHandle m_2ndPhaseCullingHZBMips[MAX_HZB_MIP_COUNT] = {};
+    RGHandle m_sceneHZBMips[MAX_HZB_MIP_COUNT] = {};
 };

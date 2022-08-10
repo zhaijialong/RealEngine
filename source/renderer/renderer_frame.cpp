@@ -6,7 +6,7 @@
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
 
-void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& outDepth)
+void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
 {
     m_pHZB->Generate1stPhaseCullingHZB(m_pRenderGraph.get());
     m_pBasePass->Render1stPhase(m_pRenderGraph.get());
@@ -14,13 +14,13 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     m_pHZB->Generate2ndPhaseCullingHZB(m_pRenderGraph.get(), m_pBasePass->GetDepthRT());
     m_pBasePass->Render2ndPhase(m_pRenderGraph.get());
 
-    RenderGraphHandle sceneDepthRT = m_pBasePass->GetDepthRT();
-    RenderGraphHandle velocityRT = VelocityPass(sceneDepthRT);
-    RenderGraphHandle linearDepthRT = LinearizeDepthPass(sceneDepthRT);
+    RGHandle sceneDepthRT = m_pBasePass->GetDepthRT();
+    RGHandle velocityRT = VelocityPass(sceneDepthRT);
+    RGHandle linearDepthRT = LinearizeDepthPass(sceneDepthRT);
 
     m_pHZB->GenerateSceneHZB(m_pRenderGraph.get(), sceneDepthRT);
 
-    RenderGraphHandle sceneColorRT;
+    RGHandle sceneColorRT;
     if (m_outputType == RendererOutput::PathTracing)
     {
         sceneColorRT = m_pPathTracer->Render(m_pRenderGraph.get(), sceneDepthRT, m_nRenderWidth, m_nRenderHeight);
@@ -32,7 +32,7 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
         ForwardPass(sceneColorRT, sceneDepthRT);
     }
 
-    RenderGraphHandle output = m_pPostProcessor->Render(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, linearDepthRT, velocityRT,
+    RGHandle output = m_pPostProcessor->Render(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, linearDepthRT, velocityRT,
         m_nRenderWidth, m_nRenderHeight, m_nDisplayWidth, m_nDisplayHeight);
 
     ObjectIDPass(sceneDepthRT);
@@ -45,16 +45,16 @@ void Renderer::BuildRenderGraph(RenderGraphHandle& outColor, RenderGraphHandle& 
     m_pRenderGraph->Present(outDepth, GfxResourceState::DepthStencilReadOnly);
 }
 
-void Renderer::ForwardPass(RenderGraphHandle& color, RenderGraphHandle& depth)
+void Renderer::ForwardPass(RGHandle& color, RGHandle& depth)
 {
     struct ForwardPassData
     {
-        RenderGraphHandle outSceneColorRT;
-        RenderGraphHandle outSceneDepthRT;
+        RGHandle outSceneColorRT;
+        RGHandle outSceneDepthRT;
     };
 
     auto forward_pass = m_pRenderGraph->AddPass<ForwardPassData>("Forward Pass", RenderPassType::Graphics,
-        [&](ForwardPassData& data, RenderGraphBuilder& builder)
+        [&](ForwardPassData& data, RGBuilder& builder)
         {
             data.outSceneColorRT = builder.WriteColor(0, color, 0, GfxRenderPassLoadOp::Load);
             data.outSceneDepthRT = builder.ReadDepth(depth, 0);
@@ -71,24 +71,24 @@ void Renderer::ForwardPass(RenderGraphHandle& color, RenderGraphHandle& depth)
     depth = forward_pass->outSceneDepthRT;
 }
 
-RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
+RGHandle Renderer::VelocityPass(RGHandle& depth)
 {
     RENDER_GRAPH_EVENT(m_pRenderGraph.get(), "Velocity Pass");
 
     struct ObjectVelocityPassData
     {
-        RenderGraphHandle outVelocityRT;
-        RenderGraphHandle outSceneDepthRT;
+        RGHandle outVelocityRT;
+        RGHandle outSceneDepthRT;
     };
 
     auto obj_velocity_pass = m_pRenderGraph->AddPass<ObjectVelocityPassData>("Object Velocity", RenderPassType::Graphics,
-        [&](ObjectVelocityPassData& data, RenderGraphBuilder& builder)
+        [&](ObjectVelocityPassData& data, RGBuilder& builder)
         {
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = m_nRenderWidth;
             desc.height = m_nRenderHeight;
             desc.format = GfxFormat::RG16F;
-            data.outVelocityRT = builder.Create<RenderGraphTexture>(desc, "Velocity RT");
+            data.outVelocityRT = builder.Create<RGTexture>(desc, "Velocity RT");
 
             data.outVelocityRT = builder.WriteColor(0, data.outVelocityRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0));
             data.outSceneDepthRT = builder.WriteDepth(depth, 0, GfxRenderPassLoadOp::Load);
@@ -103,12 +103,12 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
 
     struct CameraVelocityPassData
     {
-        RenderGraphHandle velocity;
-        RenderGraphHandle depth;
+        RGHandle velocity;
+        RGHandle depth;
     };
 
     auto camera_velocity_pass = m_pRenderGraph->AddPass<CameraVelocityPassData>("Camera Velocity", RenderPassType::Compute,
-        [&](CameraVelocityPassData& data, RenderGraphBuilder& builder)
+        [&](CameraVelocityPassData& data, RGBuilder& builder)
         {
             data.velocity = builder.Write(obj_velocity_pass->outVelocityRT);
             data.depth = builder.Read(obj_velocity_pass->outSceneDepthRT);
@@ -121,8 +121,8 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
 
             pCommandList->SetPipelineState(pPSO);
 
-            RenderGraphTexture* velocity = m_pRenderGraph->GetTexture(data.velocity);
-            RenderGraphTexture* depth = m_pRenderGraph->GetTexture(data.depth);
+            RGTexture* velocity = m_pRenderGraph->GetTexture(data.velocity);
+            RGTexture* depth = m_pRenderGraph->GetTexture(data.depth);
             uint32_t cb[2] = { velocity->GetUAV()->GetHeapIndex(), depth->GetSRV()->GetHeapIndex()};
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
@@ -133,22 +133,22 @@ RenderGraphHandle Renderer::VelocityPass(RenderGraphHandle& depth)
     return camera_velocity_pass->velocity;
 }
 
-RenderGraphHandle Renderer::LinearizeDepthPass(RenderGraphHandle depth)
+RGHandle Renderer::LinearizeDepthPass(RGHandle depth)
 {
     struct LinearizeDepthPassData
     {
-        RenderGraphHandle inputDepthRT;
-        RenderGraphHandle outputLinearDepthRT;
+        RGHandle inputDepthRT;
+        RGHandle outputLinearDepthRT;
     };
 
     auto linearize_depth_pass = m_pRenderGraph->AddPass<LinearizeDepthPassData>("Linearize Depth", RenderPassType::Compute,
-        [&](LinearizeDepthPassData& data, RenderGraphBuilder& builder)
+        [&](LinearizeDepthPassData& data, RGBuilder& builder)
         {
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = m_nRenderWidth;
             desc.height = m_nRenderHeight;
             desc.format = GfxFormat::R32F;
-            data.outputLinearDepthRT = builder.Create<RenderGraphTexture>(desc, "LinearDepth RT");
+            data.outputLinearDepthRT = builder.Create<RGTexture>(desc, "LinearDepth RT");
 
             data.inputDepthRT = builder.Read(depth);
             data.outputLinearDepthRT = builder.Write(data.outputLinearDepthRT);
@@ -161,8 +161,8 @@ RenderGraphHandle Renderer::LinearizeDepthPass(RenderGraphHandle depth)
 
             pCommandList->SetPipelineState(pPSO);
 
-            RenderGraphTexture* inputRT = m_pRenderGraph->GetTexture(data.inputDepthRT);
-            RenderGraphTexture* outputRT = m_pRenderGraph->GetTexture(data.outputLinearDepthRT);
+            RGTexture* inputRT = m_pRenderGraph->GetTexture(data.inputDepthRT);
+            RGTexture* outputRT = m_pRenderGraph->GetTexture(data.outputLinearDepthRT);
             uint32_t cb[2] = { inputRT->GetSRV()->GetHeapIndex(), outputRT->GetUAV()->GetHeapIndex() };
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
@@ -172,24 +172,24 @@ RenderGraphHandle Renderer::LinearizeDepthPass(RenderGraphHandle depth)
     return linearize_depth_pass->outputLinearDepthRT;
 }
 
-void Renderer::ObjectIDPass(RenderGraphHandle& depth)
+void Renderer::ObjectIDPass(RGHandle& depth)
 {
     if (m_bEnableObjectIDRendering)
     {
         struct IDPassData
         {
-            RenderGraphHandle idTexture;
-            RenderGraphHandle sceneDepthTexture;
+            RGHandle idTexture;
+            RGHandle sceneDepthTexture;
         };
 
         auto id_pass = m_pRenderGraph->AddPass<IDPassData>("Object ID Pass", RenderPassType::Graphics,
-            [&](IDPassData& data, RenderGraphBuilder& builder)
+            [&](IDPassData& data, RGBuilder& builder)
             {
-                RenderGraphTexture::Desc desc;
+                RGTexture::Desc desc;
                 desc.width = m_nRenderWidth;
                 desc.height = m_nRenderHeight;
                 desc.format = GfxFormat::R32UI;
-                data.idTexture = builder.Create<RenderGraphTexture>(desc, "Object ID");
+                data.idTexture = builder.Create<RGTexture>(desc, "Object ID");
 
                 data.idTexture = builder.WriteColor(0, data.idTexture, 0, GfxRenderPassLoadOp::Clear, float4(1000000, 0, 0, 0));
                 data.sceneDepthTexture = builder.ReadDepth(depth, 0);
@@ -208,11 +208,11 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
 
         struct CopyIDPassData
         {
-            RenderGraphHandle srcTexture;
+            RGHandle srcTexture;
         };
 
         m_pRenderGraph->AddPass<CopyIDPassData>("Copy ID to Readback Buffer", RenderPassType::Copy,
-            [&](CopyIDPassData& data, RenderGraphBuilder& builder)
+            [&](CopyIDPassData& data, RGBuilder& builder)
             {
                 data.srcTexture = builder.Read(id_pass->idTexture);
 
@@ -220,7 +220,7 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
             },
             [&](const CopyIDPassData& data, IGfxCommandList* pCommandList)
             {
-                RenderGraphTexture* srcTexture = m_pRenderGraph->GetTexture(data.srcTexture);
+                RGTexture* srcTexture = m_pRenderGraph->GetTexture(data.srcTexture);
 
                 m_nObjectIDRowPitch = srcTexture->GetTexture()->GetRowPitch(0);
                 uint32_t size = m_nObjectIDRowPitch * srcTexture->GetTexture()->GetDesc().height;
@@ -237,22 +237,22 @@ void Renderer::ObjectIDPass(RenderGraphHandle& depth)
     }
 }
 
-void Renderer::CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle normal, RenderGraphHandle sceneColor)
+void Renderer::CopyHistoryPass(RGHandle linearDepth, RGHandle normal, RGHandle sceneColor)
 {
     struct CopyPassData
     {
-        RenderGraphHandle srcLinearDepthTexture;
-        RenderGraphHandle dstLinearDepthTexture;
+        RGHandle srcLinearDepthTexture;
+        RGHandle dstLinearDepthTexture;
 
-        RenderGraphHandle srcNormalTexture;
-        RenderGraphHandle dstNormalTexture;
+        RGHandle srcNormalTexture;
+        RGHandle dstNormalTexture;
 
-        RenderGraphHandle srcSceneColorTexture;
-        RenderGraphHandle dstSceneColorTexture;
+        RGHandle srcSceneColorTexture;
+        RGHandle dstSceneColorTexture;
     };
 
     m_pRenderGraph->AddPass<CopyPassData>("Copy History Textures", RenderPassType::Copy,
-        [&](CopyPassData& data, RenderGraphBuilder& builder)
+        [&](CopyPassData& data, RGBuilder& builder)
         {
             data.srcLinearDepthTexture = builder.Read(linearDepth);
             data.dstLinearDepthTexture = builder.Write(m_prevLinearDepthHandle);
@@ -267,9 +267,9 @@ void Renderer::CopyHistoryPass(RenderGraphHandle linearDepth, RenderGraphHandle 
         },
         [&](const CopyPassData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* srcLinearDepthTexture = m_pRenderGraph->GetTexture(data.srcLinearDepthTexture);
-            RenderGraphTexture* srcNormalTexture = m_pRenderGraph->GetTexture(data.srcNormalTexture);
-            RenderGraphTexture* srcSceneColorTexture = m_pRenderGraph->GetTexture(data.srcSceneColorTexture);
+            RGTexture* srcLinearDepthTexture = m_pRenderGraph->GetTexture(data.srcLinearDepthTexture);
+            RGTexture* srcNormalTexture = m_pRenderGraph->GetTexture(data.srcNormalTexture);
+            RGTexture* srcSceneColorTexture = m_pRenderGraph->GetTexture(data.srcSceneColorTexture);
 
             pCommandList->CopyTexture(m_pPrevLinearDepthTexture->GetTexture(), 0, 0, srcLinearDepthTexture->GetTexture(), 0, 0);
             pCommandList->CopyTexture(m_pPrevNormalTexture->GetTexture(), 0, 0, srcNormalTexture->GetTexture(), 0, 0);

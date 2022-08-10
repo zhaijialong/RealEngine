@@ -8,14 +8,14 @@ class ShadowDenoiser
 public:
     ShadowDenoiser(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle input, RenderGraphHandle depthRT, RenderGraphHandle normalRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height);
 
 private:
-    void Prepare(IGfxCommandList* pCommandList, RenderGraphTexture* raytraceResult, RenderGraphBuffer* maskBuffer, uint32_t width, uint32_t height);
-    void TileClassification(IGfxCommandList* pCommandList, RenderGraphBuffer* shadowMaskBuffer, RenderGraphTexture* depthTexture, RenderGraphTexture* normalTexture,
-        RenderGraphTexture* velocityTexture, RenderGraphBuffer* tileMetaDataBufferUAV, RenderGraphTexture* reprojectionResultTextureUAV, uint32_t width, uint32_t height);
-    void Filter(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, RenderGraphTexture* depthTexture, RenderGraphTexture* normalTexture,
-        RenderGraphBuffer* tileMetaDataBuffer, uint32_t pass_index, uint32_t width, uint32_t height);
+    void Prepare(IGfxCommandList* pCommandList, RGTexture* raytraceResult, RGBuffer* maskBuffer, uint32_t width, uint32_t height);
+    void TileClassification(IGfxCommandList* pCommandList, RGBuffer* shadowMaskBuffer, RGTexture* depthTexture, RGTexture* normalTexture,
+        RGTexture* velocityTexture, RGBuffer* tileMetaDataBufferUAV, RGTexture* reprojectionResultTextureUAV, uint32_t width, uint32_t height);
+    void Filter(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, RGTexture* depthTexture, RGTexture* normalTexture,
+        RGBuffer* tileMetaDataBuffer, uint32_t pass_index, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

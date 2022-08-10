@@ -8,13 +8,13 @@ class TAA
 public:
     TAA(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle linearDepthRT,
-        RenderGraphHandle velocityRT, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle linearDepthRT,
+        RGHandle velocityRT, uint32_t width, uint32_t height);
 
     bool IsEnabled() const { return m_bEnable; }
 
 private:
-    void Draw(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* velocity, RenderGraphTexture* linearDepth, RenderGraphTexture* output, uint32_t width, uint32_t height);
+    void Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* velocity, RGTexture* linearDepth, RGTexture* output, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

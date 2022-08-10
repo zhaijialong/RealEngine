@@ -12,7 +12,7 @@ RTShadow::RTShadow(Renderer* pRenderer)
     m_pRaytracePSO = pRenderer->GetPipelineState(psoDesc, "RTShadow PSO");
 }
 
-RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle depthRT, RenderGraphHandle normalRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height)
+RGHandle RTShadow::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height)
 {
     GUI("Lighting", "Shadow", [&]()
         {
@@ -23,23 +23,23 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
 
     struct RTShadowData
     {
-        RenderGraphHandle depth;
-        RenderGraphHandle normal;
-        RenderGraphHandle shadow;
+        RGHandle depth;
+        RGHandle normal;
+        RGHandle shadow;
     };
 
     auto rtshadow_pass = pRenderGraph->AddPass<RTShadowData>("RTShadow raytrace", 
         m_pRenderer->IsAsyncComputeEnabled() ? RenderPassType::AsyncCompute : RenderPassType::Compute,
-        [&](RTShadowData& data, RenderGraphBuilder& builder)
+        [&](RTShadowData& data, RGBuilder& builder)
         {
             data.depth = builder.Read(depthRT);
             data.normal = builder.Read(normalRT);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::R8UNORM;
-            data.shadow = builder.Create<RenderGraphTexture>(desc, "RTShadow raytraced shadow");
+            data.shadow = builder.Create<RGTexture>(desc, "RTShadow raytraced shadow");
             data.shadow = builder.Write(data.shadow);
         },
         [=](const RTShadowData& data, IGfxCommandList* pCommandList)
@@ -59,7 +59,7 @@ RenderGraphHandle RTShadow::Render(RenderGraph* pRenderGraph, RenderGraphHandle 
     return m_pDenoiser->Render(pRenderGraph, rtshadow_pass->shadow, depthRT, normalRT, velocityRT, width, height);
 }
 
-void RTShadow::RayTrace(IGfxCommandList* pCommandList, RenderGraphTexture* depthSRV, RenderGraphTexture* normalSRV, RenderGraphTexture* shadowUAV, uint32_t width, uint32_t height)
+void RTShadow::RayTrace(IGfxCommandList* pCommandList, RGTexture* depthSRV, RGTexture* normalSRV, RGTexture* shadowUAV, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pRaytracePSO);
 

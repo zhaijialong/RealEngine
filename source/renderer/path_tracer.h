@@ -8,12 +8,12 @@ class PathTracer
 public:
     PathTracer(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height);
 
 private:
-    void PathTrace(IGfxCommandList* pCommandList, RenderGraphTexture* diffuse, RenderGraphTexture* specular, RenderGraphTexture* normal, RenderGraphTexture* emissive, RenderGraphTexture* depth, 
-        RenderGraphTexture* output, uint32_t width, uint32_t height);
-    void Accumulate(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* outputUAV, uint32_t width, uint32_t height);
+    void PathTrace(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal, RGTexture* emissive, RGTexture* depth, 
+        RGTexture* output, uint32_t width, uint32_t height);
+    void Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* outputUAV, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer;

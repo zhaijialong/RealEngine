@@ -11,22 +11,22 @@ ClusteredShading::ClusteredShading(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "ClusteredShading PSO");
 }
 
-RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGraphHandle diffuse, RenderGraphHandle specular, RenderGraphHandle normal, 
-    RenderGraphHandle customData, RenderGraphHandle depth, RenderGraphHandle shadow, uint32_t width, uint32_t height)
+RGHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal, 
+    RGHandle customData, RGHandle depth, RGHandle shadow, uint32_t width, uint32_t height)
 {
     struct ClusteredShadingData
     {
-        RenderGraphHandle diffuseRT;
-        RenderGraphHandle specularRT;
-        RenderGraphHandle normalRT;
-        RenderGraphHandle customDataRT;
-        RenderGraphHandle depthRT;
-        RenderGraphHandle shadow;
-        RenderGraphHandle output;
+        RGHandle diffuseRT;
+        RGHandle specularRT;
+        RGHandle normalRT;
+        RGHandle customDataRT;
+        RGHandle depthRT;
+        RGHandle shadow;
+        RGHandle output;
     };
 
     auto clustered_shading = pRenderGraph->AddPass<ClusteredShadingData>("Clustered Shading", RenderPassType::Compute,
-        [&](ClusteredShadingData& data, RenderGraphBuilder& builder)
+        [&](ClusteredShadingData& data, RGBuilder& builder)
         {
             data.diffuseRT = builder.Read(diffuse);
             data.specularRT = builder.Read(specular);
@@ -35,11 +35,11 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
             data.depthRT = builder.Read(depth);
             data.shadow = builder.Read(shadow);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            data.output = builder.Create<RenderGraphTexture>(desc, "Direct Lighting");
+            data.output = builder.Create<RGTexture>(desc, "Direct Lighting");
             data.output = builder.Write(data.output);
         },
         [=](const ClusteredShadingData& data, IGfxCommandList* pCommandList)
@@ -58,8 +58,8 @@ RenderGraphHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RenderGrap
     return clustered_shading->output;
 }
 
-void ClusteredShading::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* diffuse, RenderGraphTexture* specular, RenderGraphTexture* normal, 
-    RenderGraphTexture* customData, RenderGraphTexture* depth, RenderGraphTexture* shadow, RenderGraphTexture* output, uint32_t width, uint32_t height)
+void ClusteredShading::Draw(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal, 
+    RGTexture* customData, RGTexture* depth, RGTexture* shadow, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 

@@ -4,8 +4,8 @@
 
 struct FXAAPassData
 {
-    RenderGraphHandle inRT;
-    RenderGraphHandle outRT;
+    RGHandle inRT;
+    RGHandle outRT;
 };
 
 class FXAA
@@ -13,10 +13,10 @@ class FXAA
 public:
     FXAA(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t width, uint32_t height);
 
 private:
-    void Draw(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height);
+    void Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

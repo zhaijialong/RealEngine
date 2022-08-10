@@ -14,28 +14,28 @@ public:
     void Render1stPhase(RenderGraph* pRenderGraph);
     void Render2ndPhase(RenderGraph* pRenderGraph);
 
-    RenderGraphHandle GetDiffuseRT() const { return m_diffuseRT; }
-    RenderGraphHandle GetSpecularRT() const { return m_specularRT; }
-    RenderGraphHandle GetNormalRT() const { return m_normalRT; }
-    RenderGraphHandle GetEmissiveRT() const { return m_emissiveRT; }
-    RenderGraphHandle GetCustomDataRT() const { return m_customDataRT; }
-    RenderGraphHandle GetDepthRT() const { return m_depthRT; }
+    RGHandle GetDiffuseRT() const { return m_diffuseRT; }
+    RGHandle GetSpecularRT() const { return m_specularRT; }
+    RGHandle GetNormalRT() const { return m_normalRT; }
+    RGHandle GetEmissiveRT() const { return m_emissiveRT; }
+    RGHandle GetCustomDataRT() const { return m_customDataRT; }
+    RGHandle GetDepthRT() const { return m_depthRT; }
 
-    RenderGraphHandle GetSecondPhaseMeshletListBuffer() const { return m_secondPhaseMeshletListBuffer; }
-    RenderGraphHandle GetSecondPhaseMeshletListCounterBuffer() const { return m_secondPhaseMeshletListCounterBuffer; }
+    RGHandle GetSecondPhaseMeshletListBuffer() const { return m_secondPhaseMeshletListBuffer; }
+    RGHandle GetSecondPhaseMeshletListCounterBuffer() const { return m_secondPhaseMeshletListCounterBuffer; }
 
 private:
     void MergeBatches();
 
-    void ResetCounter(IGfxCommandList* pCommandList, RenderGraphBuffer* firstPhaseMeshletCounter, RenderGraphBuffer* secondPhaseObjectCounter, RenderGraphBuffer* secondPhaseMeshletCounter);
-    void InstanceCulling1stPhase(IGfxCommandList* pCommandList, RenderGraphBuffer* cullingResultUAV, RenderGraphBuffer* secondPhaseObjectListUAV, RenderGraphBuffer* secondPhaseObjectListCounterUAV);
-    void InstanceCulling2ndPhase(IGfxCommandList* pCommandList, RenderGraphBuffer* pIndirectCommandBuffer, RenderGraphBuffer* cullingResultUAV, RenderGraphBuffer* objectListBufferSRV, RenderGraphBuffer* objectListCounterBufferSRV);
+    void ResetCounter(IGfxCommandList* pCommandList, RGBuffer* firstPhaseMeshletCounter, RGBuffer* secondPhaseObjectCounter, RGBuffer* secondPhaseMeshletCounter);
+    void InstanceCulling1stPhase(IGfxCommandList* pCommandList, RGBuffer* cullingResultUAV, RGBuffer* secondPhaseObjectListUAV, RGBuffer* secondPhaseObjectListCounterUAV);
+    void InstanceCulling2ndPhase(IGfxCommandList* pCommandList, RGBuffer* pIndirectCommandBuffer, RGBuffer* cullingResultUAV, RGBuffer* objectListBufferSRV, RGBuffer* objectListCounterBufferSRV);
 
-    void Flush1stPhaseBatches(IGfxCommandList* pCommandList, RenderGraphBuffer* pIndirectCommandBuffer, RenderGraphBuffer* pMeshletListSRV, RenderGraphBuffer* pMeshletListCounterSRV);
-    void Flush2ndPhaseBatches(IGfxCommandList* pCommandList, RenderGraphBuffer* pIndirectCommandBuffer, RenderGraphBuffer* pMeshletListSRV, RenderGraphBuffer* pMeshletListCounterSRV);
+    void Flush1stPhaseBatches(IGfxCommandList* pCommandList, RGBuffer* pIndirectCommandBuffer, RGBuffer* pMeshletListSRV, RGBuffer* pMeshletListCounterSRV);
+    void Flush2ndPhaseBatches(IGfxCommandList* pCommandList, RGBuffer* pIndirectCommandBuffer, RGBuffer* pMeshletListSRV, RGBuffer* pMeshletListCounterSRV);
 
-    void BuildMeshletList(IGfxCommandList* pCommandList, RenderGraphBuffer* cullingResultSRV, RenderGraphBuffer* meshletListBufferUAV, RenderGraphBuffer* meshletListCounterBufferUAV);
-    void BuildIndirectCommand(IGfxCommandList* pCommandList, RenderGraphBuffer* pCounterBufferSRV, RenderGraphBuffer* pCommandBufferUAV);
+    void BuildMeshletList(IGfxCommandList* pCommandList, RGBuffer* cullingResultSRV, RGBuffer* meshletListBufferUAV, RGBuffer* meshletListCounterBufferUAV);
+    void BuildIndirectCommand(IGfxCommandList* pCommandList, RGBuffer* pCounterBufferSRV, RGBuffer* pCommandBufferUAV);
 private:
     Renderer* m_pRenderer;
 
@@ -65,16 +65,16 @@ private:
 
     uint32_t m_instanceIndexAddress = 0; //[0, 24, 27, 122, ...] size : m_nTotalInstanceCount
 
-    RenderGraphHandle m_diffuseRT;
-    RenderGraphHandle m_specularRT;
-    RenderGraphHandle m_normalRT;
-    RenderGraphHandle m_emissiveRT;
-    RenderGraphHandle m_customDataRT;
-    RenderGraphHandle m_depthRT;
+    RGHandle m_diffuseRT;
+    RGHandle m_specularRT;
+    RGHandle m_normalRT;
+    RGHandle m_emissiveRT;
+    RGHandle m_customDataRT;
+    RGHandle m_depthRT;
 
-    RenderGraphHandle m_secondPhaseObjectListBuffer;
-    RenderGraphHandle m_secondPhaseObjectListCounterBuffer;
+    RGHandle m_secondPhaseObjectListBuffer;
+    RGHandle m_secondPhaseObjectListCounterBuffer;
 
-    RenderGraphHandle m_secondPhaseMeshletListBuffer;
-    RenderGraphHandle m_secondPhaseMeshletListCounterBuffer;
+    RGHandle m_secondPhaseMeshletListBuffer;
+    RGHandle m_secondPhaseMeshletListCounterBuffer;
 };

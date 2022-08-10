@@ -5,27 +5,27 @@
 
 struct GTAOFilterDepthPassData
 {
-    RenderGraphHandle inputDepth;
-    RenderGraphHandle outputDepthMip0;
-    RenderGraphHandle outputDepthMip1;
-    RenderGraphHandle outputDepthMip2;
-    RenderGraphHandle outputDepthMip3;
-    RenderGraphHandle outputDepthMip4;
+    RGHandle inputDepth;
+    RGHandle outputDepthMip0;
+    RGHandle outputDepthMip1;
+    RGHandle outputDepthMip2;
+    RGHandle outputDepthMip3;
+    RGHandle outputDepthMip4;
 };
 
 struct GTAOPassData
 {
-    RenderGraphHandle inputFilteredDepth;
-    RenderGraphHandle inputNormal;
-    RenderGraphHandle outputAOTerm;
-    RenderGraphHandle outputEdge;
+    RGHandle inputFilteredDepth;
+    RGHandle inputNormal;
+    RGHandle outputAOTerm;
+    RGHandle outputEdge;
 };
 
 struct GTAODenoisePassData
 {
-    RenderGraphHandle inputAOTerm;
-    RenderGraphHandle inputEdge;
-    RenderGraphHandle outputAOTerm;
+    RGHandle inputAOTerm;
+    RGHandle inputEdge;
+    RGHandle outputAOTerm;
 };
 
 class GTAO
@@ -33,7 +33,7 @@ class GTAO
 public:
     GTAO(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depthRT, RenderGraphHandle normalRT, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, uint32_t width, uint32_t height);
 
 private:
     void CreateHilbertLUT();

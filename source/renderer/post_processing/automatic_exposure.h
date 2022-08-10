@@ -9,17 +9,17 @@ class AutomaticExposure
 public:
     AutomaticExposure(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height);
 
 private:
     void ComputeLuminanceSize(uint32_t width, uint32_t height);
-    void InitLuminance(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output);
-    void ReduceLuminance(IGfxCommandList* pCommandList, RenderGraphTexture* texture);
+    void InitLuminance(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output);
+    void ReduceLuminance(IGfxCommandList* pCommandList, RGTexture* texture);
 
-    void BuildHistogram(IGfxCommandList* pCommandList, RenderGraphTexture* inputTexture, RenderGraphBuffer* histogramBuffer, uint32_t width, uint32_t height);
-    void ReduceHistogram(IGfxCommandList* pCommandList, RenderGraphBuffer* histogramBufferSRV, RenderGraphTexture* avgLuminanceUAV);
+    void BuildHistogram(IGfxCommandList* pCommandList, RGTexture* inputTexture, RGBuffer* histogramBuffer, uint32_t width, uint32_t height);
+    void ReduceHistogram(IGfxCommandList* pCommandList, RGBuffer* histogramBufferSRV, RGTexture* avgLuminanceUAV);
 
-    void Exposure(IGfxCommandList* pCommandList, RenderGraphTexture* avgLuminance, RenderGraphTexture* output);
+    void Exposure(IGfxCommandList* pCommandList, RGTexture* avgLuminance, RGTexture* output);
 
 private:
     Renderer* m_pRenderer;

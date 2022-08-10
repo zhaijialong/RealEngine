@@ -46,8 +46,8 @@ void ReflectionDenoiser::ImportTextures(RenderGraph* pRenderGraph, uint32_t widt
     m_sampleCountOutput = pRenderGraph->Import(m_pSampleCountOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 }
 
-RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGraphHandle indirectArgs, RenderGraphHandle tileListBuffer, RenderGraphHandle input, 
-    RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height,
+RGHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RGHandle indirectArgs, RGHandle tileListBuffer, RGHandle input, 
+    RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height,
     float maxRoughness, float temporalStability)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "ReflectionDenoiser");
@@ -56,14 +56,14 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
     {
         struct ClearHistoryPassData
         {
-            RenderGraphHandle radianceHistory;
-            RenderGraphHandle varianceHistory;
-            RenderGraphHandle sampleCountInput;
-            RenderGraphHandle sampleCountOutput;
+            RGHandle radianceHistory;
+            RGHandle varianceHistory;
+            RGHandle sampleCountInput;
+            RGHandle sampleCountOutput;
         };
 
         auto clear_pass = pRenderGraph->AddPass<ClearHistoryPassData>("ReflectionDenoiser - Clear", RenderPassType::Compute,
-            [&](ClearHistoryPassData& data, RenderGraphBuilder& builder)
+            [&](ClearHistoryPassData& data, RGBuilder& builder)
             {
                 data.radianceHistory = builder.Write(m_radianceHistory);
                 data.varianceHistory = builder.Write(m_varianceHistory);
@@ -89,29 +89,29 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
 
     struct ReprojectPassData
     {
-        RenderGraphHandle indirectArgs;
-        RenderGraphHandle tileListBuffer;
+        RGHandle indirectArgs;
+        RGHandle tileListBuffer;
 
-        RenderGraphHandle depth;
-        RenderGraphHandle linearDepth;
-        RenderGraphHandle normal;
-        RenderGraphHandle velocity;
-        RenderGraphHandle prevLinearDepth;
-        RenderGraphHandle prevNormal;
+        RGHandle depth;
+        RGHandle linearDepth;
+        RGHandle normal;
+        RGHandle velocity;
+        RGHandle prevLinearDepth;
+        RGHandle prevNormal;
 
-        RenderGraphHandle inputRadiance;
-        RenderGraphHandle historyRadiance;
-        RenderGraphHandle historyVariance;
-        RenderGraphHandle historySampleCount;
+        RGHandle inputRadiance;
+        RGHandle historyRadiance;
+        RGHandle historyVariance;
+        RGHandle historySampleCount;
 
-        RenderGraphHandle outputRadiance;
-        RenderGraphHandle outputVariance;
-        RenderGraphHandle outputAvgRadiance;
-        RenderGraphHandle outputSampleCount;
+        RGHandle outputRadiance;
+        RGHandle outputVariance;
+        RGHandle outputAvgRadiance;
+        RGHandle outputSampleCount;
     };
 
     auto reproject_pass = pRenderGraph->AddPass<ReprojectPassData>("ReflectionDenoiser - Reproject", RenderPassType::Compute,
-        [&](ReprojectPassData& data, RenderGraphBuilder& builder)
+        [&](ReprojectPassData& data, RGBuilder& builder)
         {
             data.indirectArgs = builder.ReadIndirectArg(indirectArgs);
             data.tileListBuffer = builder.Read(tileListBuffer);
@@ -128,21 +128,21 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             data.historyVariance = builder.Read(m_varianceHistory);
             data.historySampleCount = builder.Read(m_sampleCountInput);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            data.outputRadiance = builder.Create<RenderGraphTexture>(desc, "ReflectionDenoiser reprojected radiance");
+            data.outputRadiance = builder.Create<RGTexture>(desc, "ReflectionDenoiser reprojected radiance");
             data.outputRadiance = builder.Write(data.outputRadiance);
 
             desc.format = GfxFormat::R16F;
-            data.outputVariance = builder.Create<RenderGraphTexture>(desc, "ReflectionDenoiser reprojected variance");
+            data.outputVariance = builder.Create<RGTexture>(desc, "ReflectionDenoiser reprojected variance");
             data.outputVariance = builder.Write(data.outputVariance);
              
             desc.width = (width + 7) / 8;
             desc.height = (height + 7) / 8;
             desc.format = GfxFormat::RGBA16F;
-            data.outputAvgRadiance = builder.Create<RenderGraphTexture>(desc, "ReflectionDenoiser average radiance");
+            data.outputAvgRadiance = builder.Create<RGTexture>(desc, "ReflectionDenoiser average radiance");
             data.outputAvgRadiance = builder.Write(data.outputAvgRadiance);
 
             data.outputSampleCount = builder.Write(m_sampleCountOutput);
@@ -167,22 +167,22 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
 
     struct PrefilterPassData
     {
-        RenderGraphHandle indirectArgs;
-        RenderGraphHandle tileListBuffer;
+        RGHandle indirectArgs;
+        RGHandle tileListBuffer;
 
-        RenderGraphHandle linearDepth;
-        RenderGraphHandle normal;
+        RGHandle linearDepth;
+        RGHandle normal;
 
-        RenderGraphHandle inputRadiance;
-        RenderGraphHandle inputVariance;
-        RenderGraphHandle avgRadiance;
+        RGHandle inputRadiance;
+        RGHandle inputVariance;
+        RGHandle avgRadiance;
 
-        RenderGraphHandle outputRadiance;
-        RenderGraphHandle outputVariance;
+        RGHandle outputRadiance;
+        RGHandle outputVariance;
     };
 
     auto prefilter_pass = pRenderGraph->AddPass<PrefilterPassData>("ReflectionDenoiser - Prefilter", RenderPassType::Compute,
-        [&](PrefilterPassData& data, RenderGraphBuilder& builder)
+        [&](PrefilterPassData& data, RGBuilder& builder)
         {
             data.indirectArgs = builder.ReadIndirectArg(indirectArgs);
             data.tileListBuffer = builder.Read(tileListBuffer);
@@ -193,15 +193,15 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
             data.inputVariance = builder.Read(reproject_pass->outputVariance);
             data.avgRadiance = builder.Read(reproject_pass->outputAvgRadiance);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            data.outputRadiance = builder.Create<RenderGraphTexture>(desc, "ReflectionDenoiser prefilter radiance");
+            data.outputRadiance = builder.Create<RGTexture>(desc, "ReflectionDenoiser prefilter radiance");
             data.outputRadiance = builder.Write(data.outputRadiance);
 
             desc.format = GfxFormat::R16F;
-            data.outputVariance = builder.Create<RenderGraphTexture>(desc, "ReflectionDenoiser prefilter variance");
+            data.outputVariance = builder.Create<RGTexture>(desc, "ReflectionDenoiser prefilter variance");
             data.outputVariance = builder.Write(data.outputVariance);
         },
         [=](const PrefilterPassData& data, IGfxCommandList* pCommandList)
@@ -220,22 +220,22 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
 
     struct ResovleTemporalPassData
     {
-        RenderGraphHandle indirectArgs;
-        RenderGraphHandle tileListBuffer;
+        RGHandle indirectArgs;
+        RGHandle tileListBuffer;
 
-        RenderGraphHandle normal;
-        RenderGraphHandle inputRadiance;
-        RenderGraphHandle reprojectedRadiance;
-        RenderGraphHandle avgRadiance;
-        RenderGraphHandle inputVariance;
-        RenderGraphHandle sampleCount;
+        RGHandle normal;
+        RGHandle inputRadiance;
+        RGHandle reprojectedRadiance;
+        RGHandle avgRadiance;
+        RGHandle inputVariance;
+        RGHandle sampleCount;
 
-        RenderGraphHandle outputRadiance;
-        RenderGraphHandle outputVariance;
+        RGHandle outputRadiance;
+        RGHandle outputVariance;
     };
 
     auto resolve_temporal_pass = pRenderGraph->AddPass<ResovleTemporalPassData>("ReflectionDenoiser - ResovleTemporal", RenderPassType::Compute,
-        [&](ResovleTemporalPassData& data, RenderGraphBuilder& builder)
+        [&](ResovleTemporalPassData& data, RGBuilder& builder)
         {
             data.indirectArgs = builder.ReadIndirectArg(indirectArgs);
             data.tileListBuffer = builder.Read(tileListBuffer);
@@ -265,9 +265,9 @@ RenderGraphHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RenderGr
     return resolve_temporal_pass->outputRadiance;
 }
 
-void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* tileList,
-    RenderGraphTexture* depth, RenderGraphTexture* linearDepth, RenderGraphTexture* normal, RenderGraphTexture* velocity, RenderGraphTexture* inputRadiance,
-    RenderGraphTexture* outputRadianceUAV, RenderGraphTexture* outputVariancceUAV, RenderGraphTexture* outputAvgRadianceUAV)
+void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, RGBuffer* indirectArgs, RGBuffer* tileList,
+    RGTexture* depth, RGTexture* linearDepth, RGTexture* normal, RGTexture* velocity, RGTexture* inputRadiance,
+    RGTexture* outputRadianceUAV, RGTexture* outputVariancceUAV, RGTexture* outputAvgRadianceUAV)
 {
     float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     pCommandList->ClearUAV(outputAvgRadianceUAV->GetTexture(), outputAvgRadianceUAV->GetUAV(), clear_value);
@@ -325,9 +325,9 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, RenderGraphBuf
     pCommandList->DispatchIndirect(indirectArgs->GetBuffer(), 0);
 }
 
-void ReflectionDenoiser::Prefilter(IGfxCommandList* pCommandList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* tileList,
-    RenderGraphTexture* linear_depth, RenderGraphTexture* normal, RenderGraphTexture* inputRadiance, RenderGraphTexture* inputVariance, RenderGraphTexture* avgRadiance,
-    RenderGraphTexture* outputRadianceUAV, RenderGraphTexture* outputVariancceUAV)
+void ReflectionDenoiser::Prefilter(IGfxCommandList* pCommandList, RGBuffer* indirectArgs, RGBuffer* tileList,
+    RGTexture* linear_depth, RGTexture* normal, RGTexture* inputRadiance, RGTexture* inputVariance, RGTexture* avgRadiance,
+    RGTexture* outputRadianceUAV, RGTexture* outputVariancceUAV)
 {
     pCommandList->SetPipelineState(m_pPrefilterPSO);
 
@@ -357,8 +357,8 @@ void ReflectionDenoiser::Prefilter(IGfxCommandList* pCommandList, RenderGraphBuf
     pCommandList->DispatchIndirect(indirectArgs->GetBuffer(), 0);
 }
 
-void ReflectionDenoiser::ResolveTemporal(IGfxCommandList* pCommandList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* tileList,
-    RenderGraphTexture* normal, RenderGraphTexture* inputRadiance, RenderGraphTexture* inputVariance, RenderGraphTexture* reprojectedRadiance, RenderGraphTexture* avgRadiance)
+void ReflectionDenoiser::ResolveTemporal(IGfxCommandList* pCommandList, RGBuffer* indirectArgs, RGBuffer* tileList,
+    RGTexture* normal, RGTexture* inputRadiance, RGTexture* inputVariance, RGTexture* reprojectedRadiance, RGTexture* avgRadiance)
 {
     pCommandList->SetPipelineState(m_pResolveTemporalPSO);
 

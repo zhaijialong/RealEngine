@@ -38,20 +38,20 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
 
     struct DepthReprojectionData
     {
-        RenderGraphHandle prevLinearDepth;
-        RenderGraphHandle reprojectedDepth;
+        RGHandle prevLinearDepth;
+        RGHandle reprojectedDepth;
     };
 
     auto reprojection_pass = graph->AddPass<DepthReprojectionData>("Depth Reprojection", RenderPassType::Compute,
-        [&](DepthReprojectionData& data, RenderGraphBuilder& builder)
+        [&](DepthReprojectionData& data, RGBuilder& builder)
         {
             data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = m_hzbSize.x;
             desc.height = m_hzbSize.y;
             desc.format = GfxFormat::R16F;
-            data.reprojectedDepth = builder.Create<RenderGraphTexture>(desc, "Reprojected Depth RT");
+            data.reprojectedDepth = builder.Create<RGTexture>(desc, "Reprojected Depth RT");
 
             data.reprojectedDepth = builder.Write(data.reprojectedDepth);
         },
@@ -62,23 +62,23 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
 
     struct DepthDilationData
     {
-        RenderGraphHandle reprojectedDepth;
-        RenderGraphHandle dilatedDepth;
+        RGHandle reprojectedDepth;
+        RGHandle dilatedDepth;
     };
 
-    RenderGraphHandle hzb;
+    RGHandle hzb;
 
     auto dilation_pass = graph->AddPass<DepthDilationData>("Depth Dilation", RenderPassType::Compute,
-        [&](DepthDilationData& data, RenderGraphBuilder& builder)
+        [&](DepthDilationData& data, RGBuilder& builder)
         {
             data.reprojectedDepth = builder.Read(reprojection_pass->reprojectedDepth);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = m_hzbSize.x;
             desc.height = m_hzbSize.y;
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::R16F;
-            hzb = builder.Create<RenderGraphTexture>(desc, "1st phase HZB");
+            hzb = builder.Create<RGTexture>(desc, "1st phase HZB");
 
             data.dilatedDepth = builder.Write(hzb);
         },
@@ -91,11 +91,11 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
 
     struct BuildHZBData
     {
-        RenderGraphHandle hzb;
+        RGHandle hzb;
     };
 
     auto hzb_pass = graph->AddPass<BuildHZBData>("Build HZB", RenderPassType::Compute,
-        [&](BuildHZBData& data, RenderGraphBuilder& builder)
+        [&](BuildHZBData& data, RGBuilder& builder)
         {
             data.hzb = builder.Read(dilation_pass->dilatedDepth);
 
@@ -109,34 +109,34 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
         {
             ResetCounterBuffer(pCommandList);
 
-            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
+            RGTexture* hzb = graph->GetTexture(data.hzb);
             BuildHZB(pCommandList, hzb);
         });
 }
 
-void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depthRT)
+void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RGHandle depthRT)
 {
     RENDER_GRAPH_EVENT(graph, "HZB");
 
     struct InitHZBData
     {
-        RenderGraphHandle inputDepthRT;
-        RenderGraphHandle hzb;
+        RGHandle inputDepthRT;
+        RGHandle hzb;
     };
 
-    RenderGraphHandle hzb;
+    RGHandle hzb;
 
     auto init_hzb = graph->AddPass<InitHZBData>("Init HZB", RenderPassType::Compute,
-        [&](InitHZBData& data, RenderGraphBuilder& builder)
+        [&](InitHZBData& data, RGBuilder& builder)
         {
             data.inputDepthRT = builder.Read(depthRT);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = m_hzbSize.x;
             desc.height = m_hzbSize.y;
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::R16F;
-            hzb = builder.Create<RenderGraphTexture>(desc, "2nd phase HZB");
+            hzb = builder.Create<RGTexture>(desc, "2nd phase HZB");
 
             data.hzb = builder.Write(hzb);
         },
@@ -147,11 +147,11 @@ void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depth
 
     struct BuildHZBData
     {
-        RenderGraphHandle hzb;
+        RGHandle hzb;
     };
 
     auto hzb_pass = graph->AddPass<BuildHZBData>("Build HZB", RenderPassType::Compute,
-        [&](BuildHZBData& data, RenderGraphBuilder& builder)
+        [&](BuildHZBData& data, RGBuilder& builder)
         {
             data.hzb = builder.Read(init_hzb->hzb);
 
@@ -163,34 +163,34 @@ void HZB::Generate2ndPhaseCullingHZB(RenderGraph* graph, RenderGraphHandle depth
         },
         [=](const BuildHZBData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
+            RGTexture* hzb = graph->GetTexture(data.hzb);
             BuildHZB(pCommandList, hzb);
         });
 }
 
-void HZB::GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT)
+void HZB::GenerateSceneHZB(RenderGraph* graph, RGHandle depthRT)
 {
     RENDER_GRAPH_EVENT(graph, "HZB");
 
     struct InitHZBData
     {
-        RenderGraphHandle inputDepthRT;
-        RenderGraphHandle hzb;
+        RGHandle inputDepthRT;
+        RGHandle hzb;
     };
 
-    RenderGraphHandle hzb;
+    RGHandle hzb;
 
     auto init_hzb = graph->AddPass<InitHZBData>("Init HZB", RenderPassType::Compute,
-        [&](InitHZBData& data, RenderGraphBuilder& builder)
+        [&](InitHZBData& data, RGBuilder& builder)
         {
             data.inputDepthRT = builder.Read(depthRT);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = m_hzbSize.x;
             desc.height = m_hzbSize.y;
             desc.mip_levels = m_nHZBMipCount;
             desc.format = GfxFormat::RG16F;
-            hzb = builder.Create<RenderGraphTexture>(desc, "SceneHZB");
+            hzb = builder.Create<RGTexture>(desc, "SceneHZB");
 
             data.hzb = builder.Write(hzb);
         },
@@ -201,11 +201,11 @@ void HZB::GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT)
 
     struct BuildHZBData
     {
-        RenderGraphHandle hzb;
+        RGHandle hzb;
     };
 
     auto hzb_pass = graph->AddPass<BuildHZBData>("Build HZB", RenderPassType::Compute,
-        [&](BuildHZBData& data, RenderGraphBuilder& builder)
+        [&](BuildHZBData& data, RGBuilder& builder)
         {
             data.hzb = builder.Read(init_hzb->hzb);
 
@@ -217,24 +217,24 @@ void HZB::GenerateSceneHZB(RenderGraph* graph, RenderGraphHandle depthRT)
         },
         [=](const BuildHZBData& data, IGfxCommandList* pCommandList)
         {
-            RenderGraphTexture* hzb = graph->GetTexture(data.hzb);
+            RGTexture* hzb = graph->GetTexture(data.hzb);
             BuildHZB(pCommandList, hzb, true);
         });
 }
 
-RenderGraphHandle HZB::Get1stPhaseCullingHZBMip(uint32_t mip) const
+RGHandle HZB::Get1stPhaseCullingHZBMip(uint32_t mip) const
 {
     RE_ASSERT(mip < m_nHZBMipCount);
     return m_1stPhaseCullingHZBMips[mip];
 }
 
-RenderGraphHandle HZB::Get2ndPhaseCullingHZBMip(uint32_t mip) const
+RGHandle HZB::Get2ndPhaseCullingHZBMip(uint32_t mip) const
 {
     RE_ASSERT(mip < m_nHZBMipCount);
     return m_2ndPhaseCullingHZBMips[mip];
 }
 
-RenderGraphHandle HZB::GetSceneHZBMip(uint32_t mip) const
+RGHandle HZB::GetSceneHZBMip(uint32_t mip) const
 {
     RE_ASSERT(mip < m_nHZBMipCount);
     return m_sceneHZBMips[mip];
@@ -252,7 +252,7 @@ void HZB::CalcHZBSize()
     m_hzbSize.y = 1 << (mipsY - 1);
 }
 
-void HZB::ReprojectDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reprojectedDepthTexture)
+void HZB::ReprojectDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDepthTexture)
 {
     float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     pCommandList->ClearUAV(reprojectedDepthTexture->GetTexture(), reprojectedDepthTexture->GetUAV(), clear_value);
@@ -271,7 +271,7 @@ void HZB::ReprojectDepth(IGfxCommandList* pCommandList, RenderGraphTexture* repr
     pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
 }
 
-void HZB::DilateDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reprojectedDepthSRV, RenderGraphTexture* hzbMip0UAV)
+void HZB::DilateDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDepthSRV, RGTexture* hzbMip0UAV)
 {
     pCommandList->SetPipelineState(m_pDepthDilationPSO);
 
@@ -281,7 +281,7 @@ void HZB::DilateDepth(IGfxCommandList* pCommandList, RenderGraphTexture* reproje
     pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
 }
 
-void HZB::BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture, bool min_max)
+void HZB::BuildHZB(IGfxCommandList* pCommandList, RGTexture* texture, bool min_max)
 {
     pCommandList->SetPipelineState(min_max ? m_pDepthMipFilterMinMaxPSO : m_pDepthMipFilterPSO);
 
@@ -331,7 +331,7 @@ void HZB::BuildHZB(IGfxCommandList* pCommandList, RenderGraphTexture* texture, b
     pCommandList->Dispatch(dispatchX, dispatchY, dispatchZ);
 }
 
-void HZB::InitHZB(IGfxCommandList* pCommandList, RenderGraphTexture* inputDepthSRV, RenderGraphTexture* hzbMip0UAV, bool min_max)
+void HZB::InitHZB(IGfxCommandList* pCommandList, RGTexture* inputDepthSRV, RGTexture* hzbMip0UAV, bool min_max)
 {
     pCommandList->SetPipelineState(min_max ? m_pInitSceneHZBPSO : m_pInitHZBPSO);
 

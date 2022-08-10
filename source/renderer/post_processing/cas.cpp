@@ -16,7 +16,7 @@ CAS::CAS(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "CAS PSO");
 }
 
-RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, uint32_t width, uint32_t height)
+RGHandle CAS::Render(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "CAS",
         [&]()
@@ -32,20 +32,20 @@ RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle input
 
     struct CASPassData
     {
-        RenderGraphHandle inRT;
-        RenderGraphHandle outRT;
+        RGHandle inRT;
+        RGHandle outRT;
     };
 
     auto cas_pass = pRenderGraph->AddPass<CASPassData>("CAS", RenderPassType::Compute,
-        [&](CASPassData& data, RenderGraphBuilder& builder)
+        [&](CASPassData& data, RGBuilder& builder)
         {
             data.inRT = builder.Read(inputHandle);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA8SRGB;
-            data.outRT = builder.Create<RenderGraphTexture>(desc, "CAS Output");
+            data.outRT = builder.Create<RGTexture>(desc, "CAS Output");
             data.outRT = builder.Write(data.outRT);
         },
         [=](const CASPassData& data, IGfxCommandList* pCommandList)
@@ -59,7 +59,7 @@ RenderGraphHandle CAS::Render(RenderGraph* pRenderGraph, RenderGraphHandle input
     return cas_pass->outRT;
 }
 
-void CAS::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t width, uint32_t height)
+void CAS::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 

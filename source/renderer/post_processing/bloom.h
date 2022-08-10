@@ -7,16 +7,16 @@ class Bloom
 public:
     Bloom(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height);
 
     float GetIntensity() const { return m_intensity; }
 
 private:
-    RenderGraphHandle DownsamplePass(RenderGraph* pRenderGraph, RenderGraphHandle input, uint32_t mip);
-    RenderGraphHandle UpsamplePass(RenderGraph* pRenderGraph, RenderGraphHandle highInput, RenderGraphHandle lowInput, uint32_t mip);
+    RGHandle DownsamplePass(RenderGraph* pRenderGraph, RGHandle input, uint32_t mip);
+    RGHandle UpsamplePass(RenderGraph* pRenderGraph, RGHandle highInput, RGHandle lowInput, uint32_t mip);
 
-    void Downsample(IGfxCommandList* pCommandList, RenderGraphTexture* input, RenderGraphTexture* output, uint32_t mip);
-    void Upsample(IGfxCommandList* pCommandList, RenderGraphTexture* highInput, RenderGraphTexture* lowInput, RenderGraphTexture* output, uint32_t mip);
+    void Downsample(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t mip);
+    void Upsample(IGfxCommandList* pCommandList, RGTexture* highInput, RGTexture* lowInput, RGTexture* output, uint32_t mip);
 
 private:
     Renderer* m_pRenderer;

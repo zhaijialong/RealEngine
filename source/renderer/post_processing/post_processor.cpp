@@ -16,16 +16,16 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
     m_pDLSS = eastl::make_unique<DLSS>(pRenderer);
 }
 
-RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHandle sceneColorRT, RenderGraphHandle sceneDepthRT,
-    RenderGraphHandle linearDepthRT, RenderGraphHandle velocityRT, 
+RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT,
+    RGHandle linearDepthRT, RGHandle velocityRT, 
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "PostProcess");
 
     UpdateUpsacleMode();
 
-    RenderGraphHandle outputHandle = sceneColorRT;
-    RenderGraphHandle exposure = m_pAutomaticExposure->Render(pRenderGraph, outputHandle, renderWidth, renderHeight);
+    RGHandle outputHandle = sceneColorRT;
+    RGHandle exposure = m_pAutomaticExposure->Render(pRenderGraph, outputHandle, renderWidth, renderHeight);
 
     TemporalSuperResolution upscaleMode = m_pRenderer->GetTemporalUpscaleMode();
     switch (upscaleMode)
@@ -51,7 +51,7 @@ RenderGraphHandle PostProcessor::Render(RenderGraph* pRenderGraph, RenderGraphHa
         return outputHandle;
     }
 
-    RenderGraphHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
+    RGHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
 
     outputHandle = m_pToneMapper->Render(pRenderGraph, outputHandle, exposure, bloom, m_pBloom->GetIntensity(), displayWidth, displayHeight);
     outputHandle = m_pFXAA->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);

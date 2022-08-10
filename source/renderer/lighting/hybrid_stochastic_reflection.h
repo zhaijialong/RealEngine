@@ -7,21 +7,21 @@ class HybridStochasticReflection
 public:
     HybridStochasticReflection(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depth, RenderGraphHandle linear_depth, RenderGraphHandle normal, RenderGraphHandle velocity, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
     IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetOutputRadianceSRV(); }
     float GetMaxRoughness() const { return m_maxRoughness; }
 
 private:
-    void ClassifyTiles(IGfxCommandList* pCommandList, RenderGraphTexture* depth, RenderGraphTexture* normal,
-        RenderGraphBuffer* rayListUAV, RenderGraphBuffer* tileListUAV, RenderGraphBuffer* rayCounterUAV, uint32_t width, uint32_t height);
-    void PrepareIndirectArgs(IGfxCommandList* pCommandList, RenderGraphBuffer* rayCounterSRV, RenderGraphBuffer* indirectArgsUAV, RenderGraphBuffer* denoiserArgsUAV);
-    void SSR(IGfxCommandList* pCommandList, RenderGraphTexture* normal, RenderGraphTexture* depth, RenderGraphTexture* velocity, RenderGraphTexture* outputUAV,
-        RenderGraphBuffer* rayCounter, RenderGraphBuffer* rayList, RenderGraphBuffer* indirectArgs, RenderGraphBuffer* hwRayCounterUAV, RenderGraphBuffer* hwRayListUAV);
+    void ClassifyTiles(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* normal,
+        RGBuffer* rayListUAV, RGBuffer* tileListUAV, RGBuffer* rayCounterUAV, uint32_t width, uint32_t height);
+    void PrepareIndirectArgs(IGfxCommandList* pCommandList, RGBuffer* rayCounterSRV, RGBuffer* indirectArgsUAV, RGBuffer* denoiserArgsUAV);
+    void SSR(IGfxCommandList* pCommandList, RGTexture* normal, RGTexture* depth, RGTexture* velocity, RGTexture* outputUAV,
+        RGBuffer* rayCounter, RGBuffer* rayList, RGBuffer* indirectArgs, RGBuffer* hwRayCounterUAV, RGBuffer* hwRayListUAV);
 
-    void PrepareRaytraceIndirectArgs(IGfxCommandList* pCommandList, RenderGraphBuffer* rayCounterSRV, RenderGraphBuffer* indirectArgsUAV);
-    void Raytrace(IGfxCommandList* pCommandList, RenderGraphTexture* normal, RenderGraphTexture* depth, RenderGraphTexture* outputUAV,
-        RenderGraphBuffer* rayCounter, RenderGraphBuffer* rayList, RenderGraphBuffer* indirectArgs);
+    void PrepareRaytraceIndirectArgs(IGfxCommandList* pCommandList, RGBuffer* rayCounterSRV, RGBuffer* indirectArgsUAV);
+    void Raytrace(IGfxCommandList* pCommandList, RGTexture* normal, RGTexture* depth, RGTexture* outputUAV,
+        RGBuffer* rayCounter, RGBuffer* rayList, RGBuffer* indirectArgs);
 
     void SetRootConstants(IGfxCommandList* pCommandList);
 private:

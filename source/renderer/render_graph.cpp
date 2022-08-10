@@ -156,7 +156,7 @@ void RenderGraph::Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IG
     m_outputResources.clear();
 }
 
-void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filnal_state)
+void RenderGraph::Present(const RGHandle& handle, GfxResourceState filnal_state)
 {
     RE_ASSERT(handle.IsValid());
 
@@ -172,7 +172,7 @@ void RenderGraph::Present(const RenderGraphHandle& handle, GfxResourceState filn
     m_outputResources.push_back(target);
 }
 
-RenderGraphTexture* RenderGraph::GetTexture(const RenderGraphHandle& handle)
+RGTexture* RenderGraph::GetTexture(const RGHandle& handle)
 {
     if (!handle.IsValid())
     {
@@ -180,11 +180,11 @@ RenderGraphTexture* RenderGraph::GetTexture(const RenderGraphHandle& handle)
     }
 
     RenderGraphResource* resource = m_resources[handle.index];
-    RE_ASSERT(dynamic_cast<RenderGraphTexture*>(resource) != nullptr);
-    return (RenderGraphTexture*)resource;
+    RE_ASSERT(dynamic_cast<RGTexture*>(resource) != nullptr);
+    return (RGTexture*)resource;
 }
 
-RenderGraphBuffer* RenderGraph::GetBuffer(const RenderGraphHandle& handle)
+RGBuffer* RenderGraph::GetBuffer(const RGHandle& handle)
 {
     if (!handle.IsValid())
     {
@@ -192,8 +192,8 @@ RenderGraphBuffer* RenderGraph::GetBuffer(const RenderGraphHandle& handle)
     }
 
     RenderGraphResource* resource = m_resources[handle.index];
-    RE_ASSERT(dynamic_cast<RenderGraphBuffer*>(resource) != nullptr);
-    return (RenderGraphBuffer*)resource;
+    RE_ASSERT(dynamic_cast<RGBuffer*>(resource) != nullptr);
+    return (RGBuffer*)resource;
 }
 
 bool RenderGraph::Export(const eastl::string& file)
@@ -201,12 +201,12 @@ bool RenderGraph::Export(const eastl::string& file)
     return m_graph.ExportGraphviz(file.c_str());
 }
 
-RenderGraphHandle RenderGraph::Import(IGfxTexture* texture, GfxResourceState state)
+RGHandle RenderGraph::Import(IGfxTexture* texture, GfxResourceState state)
 {
-    auto resource = Allocate<RenderGraphTexture>(m_resourceAllocator, texture, state);
+    auto resource = Allocate<RGTexture>(m_resourceAllocator, texture, state);
     auto node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
 
-    RenderGraphHandle handle;
+    RGHandle handle;
     handle.index = (uint16_t)m_resources.size();
     handle.node = (uint16_t)m_resourceNodes.size();
 
@@ -216,12 +216,12 @@ RenderGraphHandle RenderGraph::Import(IGfxTexture* texture, GfxResourceState sta
     return handle;
 }
 
-RenderGraphHandle RenderGraph::Import(IGfxBuffer* buffer, GfxResourceState state)
+RGHandle RenderGraph::Import(IGfxBuffer* buffer, GfxResourceState state)
 {
-    auto resource = Allocate<RenderGraphBuffer>(m_resourceAllocator, buffer, state);
+    auto resource = Allocate<RGBuffer>(m_resourceAllocator, buffer, state);
     auto node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
 
-    RenderGraphHandle handle;
+    RGHandle handle;
     handle.index = (uint16_t)m_resources.size();
     handle.node = (uint16_t)m_resourceNodes.size();
 
@@ -231,7 +231,7 @@ RenderGraphHandle RenderGraph::Import(IGfxBuffer* buffer, GfxResourceState state
     return handle;
 }
 
-RenderGraphHandle RenderGraph::Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource)
+RGHandle RenderGraph::Read(RenderGraphPassBase* pass, const RGHandle& input, GfxResourceState usage, uint32_t subresource)
 {
     RE_ASSERT(input.IsValid());
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
@@ -241,7 +241,7 @@ RenderGraphHandle RenderGraph::Read(RenderGraphPassBase* pass, const RenderGraph
     return input;
 }
 
-RenderGraphHandle RenderGraph::Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource)
+RGHandle RenderGraph::Write(RenderGraphPassBase* pass, const RGHandle& input, GfxResourceState usage, uint32_t subresource)
 {
     RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
@@ -252,7 +252,7 @@ RenderGraphHandle RenderGraph::Write(RenderGraphPassBase* pass, const RenderGrap
     RenderGraphResourceNode* output_node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, input_node->GetVersion() + 1);
     AllocatePOD<RenderGraphEdge>(m_graph, pass, output_node, usage, subresource);
 
-    RenderGraphHandle output;        
+    RGHandle output;        
     output.index = input.index;
     output.node = (uint16_t)m_resourceNodes.size();
 
@@ -261,7 +261,7 @@ RenderGraphHandle RenderGraph::Write(RenderGraphPassBase* pass, const RenderGrap
     return output;
 }
 
-RenderGraphHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t color_index, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, const float4& clear_color)
+RGHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t color_index, const RGHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, const float4& clear_color)
 {
     RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
@@ -274,7 +274,7 @@ RenderGraphHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t co
     RenderGraphResourceNode* output_node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, input_node->GetVersion() + 1);
     AllocatePOD<RenderGraphEdgeColorAttchment>(m_graph, pass, output_node, usage, subresource, color_index, load_op, clear_color);
 
-    RenderGraphHandle output;
+    RGHandle output;
     output.index = input.index;
     output.node = (uint16_t)m_resourceNodes.size();
 
@@ -283,7 +283,7 @@ RenderGraphHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t co
     return output;
 }
 
-RenderGraphHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil)
+RGHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const RGHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil)
 {
     RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
@@ -296,7 +296,7 @@ RenderGraphHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const Rende
     RenderGraphResourceNode* output_node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, input_node->GetVersion() + 1);
     AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, pass, output_node, usage, subresource, depth_load_op, stencil_load_op, clear_depth, clear_stencil);
 
-    RenderGraphHandle output;
+    RGHandle output;
     output.index = input.index;
     output.node = (uint16_t)m_resourceNodes.size();
 
@@ -305,7 +305,7 @@ RenderGraphHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const Rende
     return output;
 }
 
-RenderGraphHandle RenderGraph::ReadDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource)
+RGHandle RenderGraph::ReadDepth(RenderGraphPassBase* pass, const RGHandle& input, uint32_t subresource)
 {
     RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
@@ -318,7 +318,7 @@ RenderGraphHandle RenderGraph::ReadDepth(RenderGraphPassBase* pass, const Render
     RenderGraphResourceNode* output_node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, input_node->GetVersion() + 1);
     AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, pass, output_node, usage, subresource, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load, 0.0f, 0);
 
-    RenderGraphHandle output;
+    RGHandle output;
     output.index = input.index;
     output.node = (uint16_t)m_resourceNodes.size();
 

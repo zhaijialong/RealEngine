@@ -7,12 +7,12 @@ class ClusteredShading
 public:
     ClusteredShading(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle diffuse, RenderGraphHandle specular, RenderGraphHandle normal,
-        RenderGraphHandle customData, RenderGraphHandle depth, RenderGraphHandle shadow, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal,
+        RGHandle customData, RGHandle depth, RGHandle shadow, uint32_t width, uint32_t height);
 
 private:
-    void Draw(IGfxCommandList* pCommandList, RenderGraphTexture* diffuse, RenderGraphTexture* specular, RenderGraphTexture* normal,
-        RenderGraphTexture* customData, RenderGraphTexture* depth, RenderGraphTexture* shadow, RenderGraphTexture* output, uint32_t width, uint32_t height);
+    void Draw(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal,
+        RGTexture* customData, RGTexture* depth, RGTexture* shadow, RGTexture* output, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

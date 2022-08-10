@@ -19,14 +19,14 @@ void RenderGraphResource::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pa
     }
 }
 
-RenderGraphTexture::RenderGraphTexture(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
+RGTexture::RGTexture(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
     RenderGraphResource(name),
     m_allocator(allocator)
 {
     m_desc = desc;
 }
 
-RenderGraphTexture::RenderGraphTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state) :
+RGTexture::RGTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state) :
     RenderGraphResource(texture->GetName()),
     m_allocator(allocator)
 {
@@ -36,7 +36,7 @@ RenderGraphTexture::RenderGraphTexture(RenderGraphResourceAllocator& allocator, 
     m_bImported = true;
 }
 
-RenderGraphTexture::~RenderGraphTexture()
+RGTexture::~RGTexture()
 {
     if (!m_bImported)
     {
@@ -51,19 +51,19 @@ RenderGraphTexture::~RenderGraphTexture()
     }
 }
 
-IGfxDescriptor* RenderGraphTexture::GetSRV()
+IGfxDescriptor* RGTexture::GetSRV()
 {
     RE_ASSERT(!IsImported()); 
     return m_allocator.GetDescriptor(m_pTexture, GfxShaderResourceViewDesc());
 }
 
-IGfxDescriptor* RenderGraphTexture::GetUAV()
+IGfxDescriptor* RGTexture::GetUAV()
 {
     RE_ASSERT(!IsImported()); 
     return m_allocator.GetDescriptor(m_pTexture, GfxUnorderedAccessViewDesc());
 }
 
-IGfxDescriptor* RenderGraphTexture::GetUAV(uint32_t mip, uint32_t slice)
+IGfxDescriptor* RGTexture::GetUAV(uint32_t mip, uint32_t slice)
 {
     RE_ASSERT(!IsImported());
     GfxUnorderedAccessViewDesc desc;
@@ -72,7 +72,7 @@ IGfxDescriptor* RenderGraphTexture::GetUAV(uint32_t mip, uint32_t slice)
     return m_allocator.GetDescriptor(m_pTexture, desc);
 }
 
-void RenderGraphTexture::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
+void RGTexture::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
 {
     RenderGraphResource::Resolve(edge, pass);
 
@@ -94,7 +94,7 @@ void RenderGraphTexture::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pas
     }
 }
 
-void RenderGraphTexture::Realize()
+void RGTexture::Realize()
 {
     if (!m_bImported)
     {
@@ -109,19 +109,19 @@ void RenderGraphTexture::Realize()
     }
 }
 
-IGfxResource* RenderGraphTexture::GetAliasedPrevResource()
+IGfxResource* RGTexture::GetAliasedPrevResource()
 {
     return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass);
 }
 
-RenderGraphBuffer::RenderGraphBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
+RGBuffer::RGBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
     RenderGraphResource(name),
     m_allocator(allocator)
 {
     m_desc = desc;
 }
 
-RenderGraphBuffer::RenderGraphBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxResourceState state) :
+RGBuffer::RGBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxResourceState state) :
     RenderGraphResource(buffer->GetName()),
     m_allocator(allocator)
 {
@@ -131,7 +131,7 @@ RenderGraphBuffer::RenderGraphBuffer(RenderGraphResourceAllocator& allocator, IG
     m_bImported = true;
 }
 
-RenderGraphBuffer::~RenderGraphBuffer()
+RGBuffer::~RGBuffer()
 {
     if (!m_bImported)
     {
@@ -139,7 +139,7 @@ RenderGraphBuffer::~RenderGraphBuffer()
     }
 }
 
-IGfxDescriptor* RenderGraphBuffer::GetSRV()
+IGfxDescriptor* RGBuffer::GetSRV()
 {
     RE_ASSERT(!IsImported());
 
@@ -165,7 +165,7 @@ IGfxDescriptor* RenderGraphBuffer::GetSRV()
     return m_allocator.GetDescriptor(m_pBuffer, desc);
 }
 
-IGfxDescriptor* RenderGraphBuffer::GetUAV()
+IGfxDescriptor* RGBuffer::GetUAV()
 {
     RE_ASSERT(!IsImported());
 
@@ -193,7 +193,7 @@ IGfxDescriptor* RenderGraphBuffer::GetUAV()
     return m_allocator.GetDescriptor(m_pBuffer, desc);
 }
 
-void RenderGraphBuffer::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
+void RGBuffer::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
 {
     RenderGraphResource::Resolve(edge, pass);
 
@@ -203,7 +203,7 @@ void RenderGraphBuffer::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass
     }
 }
 
-void RenderGraphBuffer::Realize()
+void RGBuffer::Realize()
 {
     if (!m_bImported)
     {
@@ -211,7 +211,7 @@ void RenderGraphBuffer::Realize()
     }
 }
 
-IGfxResource* RenderGraphBuffer::GetAliasedPrevResource()
+IGfxResource* RGBuffer::GetAliasedPrevResource()
 {
     return m_allocator.GetAliasedPrevResource(m_pBuffer, m_firstPass);
 }

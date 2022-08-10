@@ -63,7 +63,7 @@ GTAO::GTAO(Renderer* pRenderer)
     CreateHilbertLUT();
 }
 
-RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle depthRT, RenderGraphHandle normalRT, uint32_t width, uint32_t height)
+RGHandle GTAO::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, uint32_t width, uint32_t height)
 {
     GUI("Lighting", "GTAO",
         [&]()
@@ -76,22 +76,22 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
 
     if (!m_bEnable)
     {
-        return RenderGraphHandle();
+        return RGHandle();
     }
 
     RENDER_GRAPH_EVENT(pRenderGraph, "GTAO");
 
     auto gtao_filter_depth_pass = pRenderGraph->AddPass<GTAOFilterDepthPassData>("GTAO filter depth", RenderPassType::Compute,
-        [&](GTAOFilterDepthPassData& data, RenderGraphBuilder& builder)
+        [&](GTAOFilterDepthPassData& data, RGBuilder& builder)
         {
             data.inputDepth = builder.Read(depthRT);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.mip_levels = 5;
             desc.format = GfxFormat::R16F;
-            RenderGraphHandle gtao_depth = builder.Create<RenderGraphTexture>(desc, "GTAO depth(HZB)");
+            RGHandle gtao_depth = builder.Create<RGTexture>(desc, "GTAO depth(HZB)");
 
             data.outputDepthMip0 = builder.Write(gtao_depth, 0);
             data.outputDepthMip1 = builder.Write(gtao_depth, 1);
@@ -105,7 +105,7 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
         });
 
     auto gtao_pass = pRenderGraph->AddPass<GTAOPassData>("GTAO", RenderPassType::Compute,
-        [&](GTAOPassData& data, RenderGraphBuilder& builder)
+        [&](GTAOPassData& data, RGBuilder& builder)
         {
             data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip0, 0);
             data.inputFilteredDepth = builder.Read(gtao_filter_depth_pass->outputDepthMip1, 1);
@@ -115,15 +115,15 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
 
             data.inputNormal = builder.Read(normalRT);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = m_bEnableGTSO ? GfxFormat::R32UI : GfxFormat::R8UI;
-            data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO AOTerm");
+            data.outputAOTerm = builder.Create<RGTexture>(desc, "GTAO AOTerm");
             data.outputAOTerm = builder.Write(data.outputAOTerm);
 
             desc.format = GfxFormat::R8UNORM;
-            data.outputEdge = builder.Create<RenderGraphTexture>(desc, "GTAO Edge");
+            data.outputEdge = builder.Create<RGTexture>(desc, "GTAO Edge");
             data.outputEdge = builder.Write(data.outputEdge);
         },
         [=](const GTAOPassData& data, IGfxCommandList* pCommandList)
@@ -132,16 +132,16 @@ RenderGraphHandle GTAO::Render(RenderGraph* pRenderGraph, RenderGraphHandle dept
         });
 
     auto gtao_denoise_pass = pRenderGraph->AddPass<GTAODenoisePassData>("GTAO denoise", RenderPassType::Compute,
-        [&](GTAODenoisePassData& data, RenderGraphBuilder& builder)
+        [&](GTAODenoisePassData& data, RGBuilder& builder)
         {
             data.inputAOTerm = builder.Read(gtao_pass->outputAOTerm);
             data.inputEdge = builder.Read(gtao_pass->outputEdge);
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = m_bEnableGTSO ? GfxFormat::R32UI : GfxFormat::R8UI;
-            data.outputAOTerm = builder.Create<RenderGraphTexture>(desc, "GTAO denoised AO");
+            data.outputAOTerm = builder.Create<RGTexture>(desc, "GTAO denoised AO");
             data.outputAOTerm = builder.Write(data.outputAOTerm);
         },
         [=](const GTAODenoisePassData& data, IGfxCommandList* pCommandList)
@@ -159,8 +159,8 @@ void GTAO::FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassD
     pCommandList->SetPipelineState(m_pPrefilterDepthPSO);
 
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.inputDepth);
-    RenderGraphTexture* hzbRT = pRenderGraph->GetTexture(data.outputDepthMip0);
+    RGTexture* depthRT = pRenderGraph->GetTexture(data.inputDepth);
+    RGTexture* hzbRT = pRenderGraph->GetTexture(data.outputDepthMip0);
 
     struct CB
     {
@@ -210,10 +210,10 @@ void GTAO::Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_
     }
 
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RenderGraphTexture* depthRT = pRenderGraph->GetTexture(data.inputFilteredDepth);
-    RenderGraphTexture* normalRT = pRenderGraph->GetTexture(data.inputNormal);
-    RenderGraphTexture* aoRT = pRenderGraph->GetTexture(data.outputAOTerm);
-    RenderGraphTexture* edgeRT = pRenderGraph->GetTexture(data.outputEdge);
+    RGTexture* depthRT = pRenderGraph->GetTexture(data.inputFilteredDepth);
+    RGTexture* normalRT = pRenderGraph->GetTexture(data.inputNormal);
+    RGTexture* aoRT = pRenderGraph->GetTexture(data.outputAOTerm);
+    RGTexture* edgeRT = pRenderGraph->GetTexture(data.outputEdge);
 
     struct CB
     {
@@ -241,9 +241,9 @@ void GTAO::Denoise(IGfxCommandList* pCommandList, const GTAODenoisePassData& dat
     pCommandList->SetPipelineState(m_bEnableGTSO ? m_pSODenoisePSO : m_pDenoisePSO);
 
     RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RenderGraphTexture* inputAO = pRenderGraph->GetTexture(data.inputAOTerm);
-    RenderGraphTexture* inputEdge = pRenderGraph->GetTexture(data.inputEdge);
-    RenderGraphTexture* outputRT = pRenderGraph->GetTexture(data.outputAOTerm);
+    RGTexture* inputAO = pRenderGraph->GetTexture(data.inputAOTerm);
+    RGTexture* inputEdge = pRenderGraph->GetTexture(data.inputEdge);
+    RGTexture* outputRT = pRenderGraph->GetTexture(data.outputAOTerm);
 
     uint32_t cb[3] =
     {

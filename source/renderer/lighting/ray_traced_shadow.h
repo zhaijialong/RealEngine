@@ -7,10 +7,10 @@ class RTShadow
 public:
     RTShadow(Renderer* pRenderer);
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle depthRT, RenderGraphHandle normalRT, RenderGraphHandle velocityRT, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height);
 
 private:
-    void RayTrace(IGfxCommandList* pCommandList, RenderGraphTexture* depthSRV, RenderGraphTexture* normalSRV, RenderGraphTexture* shadowUAV, uint32_t width, uint32_t height);
+    void RayTrace(IGfxCommandList* pCommandList, RGTexture* depthSRV, RGTexture* normalSRV, RGTexture* shadowUAV, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

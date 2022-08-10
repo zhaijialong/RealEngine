@@ -7,7 +7,7 @@ Tonemapper::Tonemapper(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 }
 
-RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandle inputHandle, RenderGraphHandle exposure, RenderGraphHandle bloom, float bloom_intensity, uint32_t width, uint32_t height)
+RGHandle Tonemapper::Render(RenderGraph* pRenderGraph, RGHandle inputHandle, RGHandle exposure, RGHandle bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "ToneMapping",
         [&]()
@@ -17,15 +17,15 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
 
     struct TonemapPassData
     {
-        RenderGraphHandle hdrRT;
-        RenderGraphHandle exposure;
-        RenderGraphHandle bloom;
+        RGHandle hdrRT;
+        RGHandle exposure;
+        RGHandle bloom;
 
-        RenderGraphHandle outLdrRT;
+        RGHandle outLdrRT;
     };
 
     auto tonemap_pass = pRenderGraph->AddPass<TonemapPassData>("ToneMapping", RenderPassType::Compute,
-        [&](TonemapPassData& data, RenderGraphBuilder& builder)
+        [&](TonemapPassData& data, RGBuilder& builder)
         {
             data.hdrRT = builder.Read(inputHandle);
             data.exposure = builder.Read(exposure);
@@ -35,11 +35,11 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
                 data.bloom = builder.Read(bloom);
             }
 
-            RenderGraphTexture::Desc desc;
+            RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA8SRGB;
-            data.outLdrRT = builder.Create<RenderGraphTexture>(desc, "ToneMapping Output");
+            data.outLdrRT = builder.Create<RGTexture>(desc, "ToneMapping Output");
             data.outLdrRT = builder.Write(data.outLdrRT);
         },
         [=](const TonemapPassData& data, IGfxCommandList* pCommandList)
@@ -55,7 +55,7 @@ RenderGraphHandle Tonemapper::Render(RenderGraph* pRenderGraph, RenderGraphHandl
     return tonemap_pass->outLdrRT;
 }
 
-void Tonemapper::Draw(IGfxCommandList* pCommandList, RenderGraphTexture* pHdrSRV, RenderGraphTexture* exposure, RenderGraphTexture* pLdrUAV, RenderGraphTexture* bloom, float bloom_intensity, uint32_t width, uint32_t height)
+void Tonemapper::Draw(IGfxCommandList* pCommandList, RGTexture* pHdrSRV, RGTexture* exposure, RGTexture* pLdrUAV, RGTexture* bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
     eastl::vector<eastl::string> defines;
 

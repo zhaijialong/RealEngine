@@ -50,14 +50,14 @@ protected:
     bool m_bOutput = false;
 };
 
-class RenderGraphTexture : public RenderGraphResource
+class RGTexture : public RenderGraphResource
 {
 public:
     using Desc = GfxTextureDesc;
 
-    RenderGraphTexture(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc);
-    RenderGraphTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state);
-    ~RenderGraphTexture();
+    RGTexture(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc);
+    RGTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state);
+    ~RGTexture();
 
     IGfxTexture* GetTexture() const { return m_pTexture; }
     IGfxDescriptor* GetSRV();
@@ -77,14 +77,14 @@ private:
     RenderGraphResourceAllocator& m_allocator;
 };
 
-class RenderGraphBuffer : public RenderGraphResource
+class RGBuffer : public RenderGraphResource
 {
 public:
     using Desc = GfxBufferDesc;
 
-    RenderGraphBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc);
-    RenderGraphBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxResourceState state);
-    ~RenderGraphBuffer();
+    RGBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc);
+    RGBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxResourceState state);
+    ~RGBuffer();
 
     IGfxBuffer* GetBuffer() const { return m_pBuffer; }
     IGfxDescriptor* GetSRV();

@@ -11,8 +11,8 @@ public:
     DLSS(Renderer* pRenderer);
     ~DLSS();
 
-    RenderGraphHandle Render(RenderGraph* pRenderGraph, RenderGraphHandle input, RenderGraphHandle depth, RenderGraphHandle velocity,
-        RenderGraphHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity,
+        RGHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
 
     bool IsSupported() const { return m_dlssAvailable; }
     float GetUpscaleRatio() const;

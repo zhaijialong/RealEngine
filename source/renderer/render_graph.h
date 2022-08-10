@@ -13,7 +13,7 @@ class Renderer;
 
 class RenderGraph
 {
-    friend class RenderGraphBuilder;
+    friend class RGBuilder;
 public:
     RenderGraph(Renderer* pRenderer);
 
@@ -27,13 +27,13 @@ public:
     void Compile();
     void Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
 
-    void Present(const RenderGraphHandle& handle, GfxResourceState filnal_state);
+    void Present(const RGHandle& handle, GfxResourceState filnal_state);
 
-    RenderGraphHandle Import(IGfxTexture* texture, GfxResourceState state);
-    RenderGraphHandle Import(IGfxBuffer* buffer, GfxResourceState state);
+    RGHandle Import(IGfxTexture* texture, GfxResourceState state);
+    RGHandle Import(IGfxBuffer* buffer, GfxResourceState state);
 
-    RenderGraphTexture* GetTexture(const RenderGraphHandle& handle);
-    RenderGraphBuffer* GetBuffer(const RenderGraphHandle& handle);
+    RGTexture* GetTexture(const RGHandle& handle);
+    RGBuffer* GetBuffer(const RGHandle& handle);
 
     const DirectedAcyclicGraph& GetDAG() const { return m_graph; }
     bool Export(const eastl::string& file);
@@ -46,14 +46,14 @@ private:
     T* AllocatePOD(ArgsT&&... arguments);
 
     template<typename Resource>
-    RenderGraphHandle Create(const typename Resource::Desc& desc, const eastl::string& name);
+    RGHandle Create(const typename Resource::Desc& desc, const eastl::string& name);
 
-    RenderGraphHandle Read(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
-    RenderGraphHandle Write(RenderGraphPassBase* pass, const RenderGraphHandle& input, GfxResourceState usage, uint32_t subresource);
+    RGHandle Read(RenderGraphPassBase* pass, const RGHandle& input, GfxResourceState usage, uint32_t subresource);
+    RGHandle Write(RenderGraphPassBase* pass, const RGHandle& input, GfxResourceState usage, uint32_t subresource);
 
-    RenderGraphHandle WriteColor(RenderGraphPassBase* pass, uint32_t color_index, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, const float4& clear_color);
-    RenderGraphHandle WriteDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil);
-    RenderGraphHandle ReadDepth(RenderGraphPassBase* pass, const RenderGraphHandle& input, uint32_t subresource);
+    RGHandle WriteColor(RenderGraphPassBase* pass, uint32_t color_index, const RGHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, const float4& clear_color);
+    RGHandle WriteDepth(RenderGraphPassBase* pass, const RGHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil);
+    RGHandle ReadDepth(RenderGraphPassBase* pass, const RGHandle& input, uint32_t subresource);
 
 private:
     LinearAllocator m_allocator { 512 * 1024 };
