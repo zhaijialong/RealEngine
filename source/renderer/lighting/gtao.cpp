@@ -81,8 +81,18 @@ RGHandle GTAO::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle norm
 
     RENDER_GRAPH_EVENT(pRenderGraph, "GTAO");
 
-    auto gtao_filter_depth_pass = pRenderGraph->AddPass<GTAOFilterDepthPassData>("GTAO filter depth", RenderPassType::Compute,
-        [&](GTAOFilterDepthPassData& data, RGBuilder& builder)
+    struct FilterDepthPassData
+    {
+        RGHandle inputDepth;
+        RGHandle outputDepthMip0;
+        RGHandle outputDepthMip1;
+        RGHandle outputDepthMip2;
+        RGHandle outputDepthMip3;
+        RGHandle outputDepthMip4;
+    };
+
+    auto gtao_filter_depth_pass = pRenderGraph->AddPass<FilterDepthPassData>("GTAO filter depth", RenderPassType::Compute,
+        [&](FilterDepthPassData& data, RGBuilder& builder)
         {
             data.inputDepth = builder.Read(depthRT);
 
@@ -99,10 +109,21 @@ RGHandle GTAO::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle norm
             data.outputDepthMip3 = builder.Write(gtao_depth, 3);
             data.outputDepthMip4 = builder.Write(gtao_depth, 4);
         },
-        [=](const GTAOFilterDepthPassData& data, IGfxCommandList* pCommandList)
+        [=](const FilterDepthPassData& data, IGfxCommandList* pCommandList)
         {
-            FilterDepth(pCommandList, data, width, height);
+            FilterDepth(pCommandList, 
+                pRenderGraph->GetTexture(data.inputDepth),
+                pRenderGraph->GetTexture(data.outputDepthMip0),
+                width, height);
         });
+
+    struct GTAOPassData
+    {
+        RGHandle inputFilteredDepth;
+        RGHandle inputNormal;
+        RGHandle outputAOTerm;
+        RGHandle outputEdge;
+    };
 
     auto gtao_pass = pRenderGraph->AddPass<GTAOPassData>("GTAO", RenderPassType::Compute,
         [&](GTAOPassData& data, RGBuilder& builder)
@@ -128,11 +149,23 @@ RGHandle GTAO::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle norm
         },
         [=](const GTAOPassData& data, IGfxCommandList* pCommandList)
         {
-            Draw(pCommandList, data, width, height);
+            Draw(pCommandList,
+                pRenderGraph->GetTexture(data.inputFilteredDepth),
+                pRenderGraph->GetTexture(data.inputNormal),
+                pRenderGraph->GetTexture(data.outputAOTerm),
+                pRenderGraph->GetTexture(data.outputEdge),
+                width, height);
         });
 
-    auto gtao_denoise_pass = pRenderGraph->AddPass<GTAODenoisePassData>("GTAO denoise", RenderPassType::Compute,
-        [&](GTAODenoisePassData& data, RGBuilder& builder)
+    struct DenoisePassData
+    {
+        RGHandle inputAOTerm;
+        RGHandle inputEdge;
+        RGHandle outputAOTerm;
+    };
+
+    auto gtao_denoise_pass = pRenderGraph->AddPass<DenoisePassData>("GTAO denoise", RenderPassType::Compute,
+        [&](DenoisePassData& data, RGBuilder& builder)
         {
             data.inputAOTerm = builder.Read(gtao_pass->outputAOTerm);
             data.inputEdge = builder.Read(gtao_pass->outputEdge);
@@ -144,23 +177,23 @@ RGHandle GTAO::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle norm
             data.outputAOTerm = builder.Create<RGTexture>(desc, "GTAO denoised AO");
             data.outputAOTerm = builder.Write(data.outputAOTerm);
         },
-        [=](const GTAODenoisePassData& data, IGfxCommandList* pCommandList)
+        [=](const DenoisePassData& data, IGfxCommandList* pCommandList)
         {
-            Denoise(pCommandList, data, width, height);
+            Denoise(pCommandList, 
+                pRenderGraph->GetTexture(data.inputAOTerm),
+                pRenderGraph->GetTexture(data.inputEdge),
+                pRenderGraph->GetTexture(data.outputAOTerm),
+                width, height);
         });
 
     return gtao_denoise_pass->outputAOTerm;
 }
 
-void GTAO::FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassData& data, uint32_t width, uint32_t height)
+void GTAO::FilterDepth(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* hzb, uint32_t width, uint32_t height)
 {
     UpdateGTAOConstants(pCommandList, width, height);
 
     pCommandList->SetPipelineState(m_pPrefilterDepthPSO);
-
-    RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RGTexture* depthRT = pRenderGraph->GetTexture(data.inputDepth);
-    RGTexture* hzbRT = pRenderGraph->GetTexture(data.outputDepthMip0);
 
     struct CB
     {
@@ -175,12 +208,12 @@ void GTAO::FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassD
     };
 
     CB cb;
-    cb.srcRawDepth = depthRT->GetSRV()->GetHeapIndex();
-    cb.outWorkingDepthMIP0 = hzbRT->GetUAV(0, 0)->GetHeapIndex();
-    cb.outWorkingDepthMIP1 = hzbRT->GetUAV(1, 0)->GetHeapIndex();
-    cb.outWorkingDepthMIP2 = hzbRT->GetUAV(2, 0)->GetHeapIndex();
-    cb.outWorkingDepthMIP3 = hzbRT->GetUAV(3, 0)->GetHeapIndex();
-    cb.outWorkingDepthMIP4 = hzbRT->GetUAV(4, 0)->GetHeapIndex();
+    cb.srcRawDepth = depth->GetSRV()->GetHeapIndex();
+    cb.outWorkingDepthMIP0 = hzb->GetUAV(0, 0)->GetHeapIndex();
+    cb.outWorkingDepthMIP1 = hzb->GetUAV(1, 0)->GetHeapIndex();
+    cb.outWorkingDepthMIP2 = hzb->GetUAV(2, 0)->GetHeapIndex();
+    cb.outWorkingDepthMIP3 = hzb->GetUAV(3, 0)->GetHeapIndex();
+    cb.outWorkingDepthMIP4 = hzb->GetUAV(4, 0)->GetHeapIndex();
 
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
 
@@ -188,7 +221,7 @@ void GTAO::FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassD
     pCommandList->Dispatch((width + 15) / 16, (height + 15) / 16, 1);
 }
 
-void GTAO::Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_t width, uint32_t height)
+void GTAO::Draw(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal, RGTexture* outputAO, RGTexture* outputEdge, uint32_t width, uint32_t height)
 {
     switch (m_qualityLevel)
     {
@@ -209,12 +242,6 @@ void GTAO::Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_
         break;
     }
 
-    RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RGTexture* depthRT = pRenderGraph->GetTexture(data.inputFilteredDepth);
-    RGTexture* normalRT = pRenderGraph->GetTexture(data.inputNormal);
-    RGTexture* aoRT = pRenderGraph->GetTexture(data.outputAOTerm);
-    RGTexture* edgeRT = pRenderGraph->GetTexture(data.outputEdge);
-
     struct CB
     {
         uint srcWorkingDepth;
@@ -225,31 +252,26 @@ void GTAO::Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_
     };
 
     CB cb;
-    cb.srcWorkingDepth = depthRT->GetSRV()->GetHeapIndex();
-    cb.normalRT = normalRT->GetSRV()->GetHeapIndex();
+    cb.srcWorkingDepth = hzb->GetSRV()->GetHeapIndex();
+    cb.normalRT = normal->GetSRV()->GetHeapIndex();
     cb.hilbertLUT = m_pHilbertLUT->GetSRV()->GetHeapIndex();
-    cb.outWorkingAOTerm = aoRT->GetUAV()->GetHeapIndex();
-    cb.outWorkingEdges = edgeRT->GetUAV()->GetHeapIndex();
+    cb.outWorkingAOTerm = outputAO->GetUAV()->GetHeapIndex();
+    cb.outWorkingEdges = outputEdge->GetUAV()->GetHeapIndex();
 
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
 
     pCommandList->Dispatch((width + XE_GTAO_NUMTHREADS_X - 1)/ XE_GTAO_NUMTHREADS_X, (height + XE_GTAO_NUMTHREADS_Y - 1) / XE_GTAO_NUMTHREADS_Y, 1);
 }
 
-void GTAO::Denoise(IGfxCommandList* pCommandList, const GTAODenoisePassData& data, uint32_t width, uint32_t height)
+void GTAO::Denoise(IGfxCommandList* pCommandList, RGTexture* inputAO, RGTexture* edge, RGTexture* outputAO, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_bEnableGTSO ? m_pSODenoisePSO : m_pDenoisePSO);
-
-    RenderGraph* pRenderGraph = m_pRenderer->GetRenderGraph();
-    RGTexture* inputAO = pRenderGraph->GetTexture(data.inputAOTerm);
-    RGTexture* inputEdge = pRenderGraph->GetTexture(data.inputEdge);
-    RGTexture* outputRT = pRenderGraph->GetTexture(data.outputAOTerm);
 
     uint32_t cb[3] =
     {
         inputAO->GetSRV()->GetHeapIndex(),
-        inputEdge->GetSRV()->GetHeapIndex(),
-        outputRT->GetUAV()->GetHeapIndex()
+        edge->GetSRV()->GetHeapIndex(),
+        outputAO->GetUAV()->GetHeapIndex()
     };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 

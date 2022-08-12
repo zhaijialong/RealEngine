@@ -9,7 +9,7 @@ public:
 
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
-    IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetOutputRadianceSRV(); }
+    IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetHistoryRadianceSRV(); }
     float GetMaxRoughness() const { return m_maxRoughness; }
 
 private:

@@ -10,11 +10,13 @@ public:
 
     void ImportTextures(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
 
-    RGHandle GetHistoryVariance() const { return m_varianceHistory; }
-    IGfxDescriptor* GetHistoryVarianceSRV() const { return m_pVarianceHistory->GetSRV(); }
     bool IsHistoryValid() const { return !m_bHistoryInvalid; }
 
-    IGfxDescriptor* GetOutputRadianceSRV() const { return m_pRadianceHistory->GetSRV(); }
+    RGHandle GetHistoryVariance() const { return m_varianceHistory; }
+    IGfxDescriptor* GetHistoryVarianceSRV() const { return m_pVarianceHistory->GetSRV(); }
+
+    RGHandle GetHistoryRadiance() const { return m_radianceHistory; }
+    IGfxDescriptor* GetHistoryRadianceSRV() const { return m_pRadianceHistory->GetSRV(); }
 
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle indirectArgs, RGHandle tileListBuffer, RGHandle input, 
         RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height,

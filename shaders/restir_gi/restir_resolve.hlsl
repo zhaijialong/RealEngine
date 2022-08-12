@@ -26,5 +26,5 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     float3 radiance = radianceTexture[pos].xyz;
     float W = reservoirTexture[pos].y;
-    outputTexture[pos] = float4(radiance * NdotL * W, 0.0);
+    outputTexture[pos] = float4(radiance /** NdotL*/ * W, 0.0);
 }

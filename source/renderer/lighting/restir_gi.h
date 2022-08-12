@@ -11,7 +11,7 @@ public:
 
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
-    IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetOutputRadianceSRV(); }
+    IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetHistoryRadianceSRV(); }
 
 private:
     void InitialSampling(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* normal,
@@ -24,9 +24,6 @@ private:
     void Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* rayDirection, RGTexture* normal,
         RGTexture* output, uint32_t width, uint32_t height);
 
-    //void TemporalFilter(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height);
-    //void SpatialFilter(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height);
-
     bool InitTemporalBuffers(uint32_t width, uint32_t height);
 
 private:
@@ -36,8 +33,6 @@ private:
     IGfxPipelineState* m_pTemporalResamplingPSO = nullptr;
     IGfxPipelineState* m_pSpatialResamplingPSO = nullptr;
     IGfxPipelineState* m_pResolvePSO = nullptr;
-    IGfxPipelineState* m_pTemporalFilterPSO = nullptr;
-    IGfxPipelineState* m_pSpatialFilterPSO = nullptr;
 
     struct TemporalReservoirBuffer
     {
@@ -49,11 +44,9 @@ private:
 
     TemporalReservoirBuffer m_temporalReservoir[2];
 
-    //eastl::unique_ptr<Texture2D> m_pHistoryRadiance;
-    eastl::unique_ptr<ReflectionDenoiser> m_pDenoiser;
+    eastl::unique_ptr<ReflectionDenoiser> m_pDenoiser; //todo : recurrent blur denoiser
 
     bool m_bEnable = false;
-    bool m_bSecondBounce = false;
     bool m_bEnableReSTIR = true;
     bool m_bEnableDenoiser = true;
 };

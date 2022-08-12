@@ -20,12 +20,6 @@ ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("restir_gi/restir_resolve.hlsl", "main", "cs_6_6", {});
     m_pResolvePSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/resolve PSO");
 
-    desc.cs = pRenderer->GetShader("restir_gi/denoiser_temporal.hlsl", "main", "cs_6_6", {});
-    m_pTemporalFilterPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/temporal filter PSO");
-
-    desc.cs = pRenderer->GetShader("restir_gi/denoiser_spatial.hlsl", "main", "cs_6_6", {});
-    m_pSpatialFilterPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/spatial filter PSO");
-
     m_pDenoiser = eastl::make_unique<ReflectionDenoiser>(pRenderer);
 }
 
@@ -35,8 +29,6 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle li
         [&]()
         {
             ImGui::Checkbox("Enable##ReSTIR GI", &m_bEnable);
-            ImGui::SameLine(0.0f, 60.0f);
-            ImGui::Checkbox("Second Bounce##ReSTIR GI", &m_bSecondBounce);
             ImGui::Checkbox("Enable ReSTIR##ReSTIR GI", &m_bEnableReSTIR);
             ImGui::Checkbox("Enable Denoiser##ReSTIR GI", &m_bEnableDenoiser);
         });
@@ -48,10 +40,14 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle li
 
     RENDER_GRAPH_EVENT(pRenderGraph, "ReSTIR GI");
 
+    m_pDenoiser->ImportTextures(pRenderGraph, width, height);
+
     struct RaytracePassData
     {
         RGHandle depth;
         RGHandle normal;
+        RGHandle prevLinearDepth;
+        RGHandle historyRadiance;
         RGHandle outputRadiance; // w : hitT
         RGHandle outputHitNormal;
         RGHandle outputRay;
@@ -62,6 +58,8 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle li
         {
             data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
+            data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
+            data.historyRadiance = builder.Read(m_pDenoiser->GetHistoryRadiance());
 
             RGTexture::Desc desc;
             desc.width = width;
@@ -238,64 +236,6 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle li
         return resolve_pass->output;
     }
 
-    /*
-    struct TemporalFilterPassData
-    {
-        RGHandle input;
-        RGHandle history;
-        RGHandle output;
-    };
-
-    auto temporal_filter_pass = pRenderGraph->AddPass<TemporalFilterPassData>("ReSTIR GI - temporal filter", RenderPassType::Compute,
-        [&](TemporalFilterPassData& data, RGBuilder& builder)
-        {
-            data.input = builder.Read(resolve_pass->output);
-            data.history = builder.Read(builder.Import(m_pHistoryRadiance->GetTexture(), GfxResourceState::UnorderedAccess));
-
-            RGTexture::Desc desc;
-            desc.width = width;
-            desc.height = height;
-            desc.format = GfxFormat::R11G11B10F;
-            data.output = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/temporal filter output"));
-        },
-        [=](const TemporalFilterPassData& data, IGfxCommandList* pCommandList)
-        {
-            TemporalFilter(pCommandList,
-                pRenderGraph->GetTexture(data.input),
-                pRenderGraph->GetTexture(data.output),
-                width, height);
-        });
-
-    struct SpatialFilterPassData
-    {
-        RGHandle input;
-        RGHandle output;
-        RGHandle outputHistory;
-    };
-
-    auto spatial_filter_pass = pRenderGraph->AddPass<SpatialFilterPassData>("ReSTIR GI - spatial filter", RenderPassType::Compute,
-        [&](SpatialFilterPassData& data, RGBuilder& builder)
-        {
-            data.input = builder.Read(temporal_filter_pass->output);
-            data.outputHistory = builder.Write(temporal_filter_pass->history);
-            
-            RGTexture::Desc desc;
-            desc.width = width;
-            desc.height = height;
-            desc.format = GfxFormat::R11G11B10F;
-            data.output = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/spatial filter output"));
-        },
-        [=](const SpatialFilterPassData& data, IGfxCommandList* pCommandList)
-        {
-            SpatialFilter(pCommandList,
-                pRenderGraph->GetTexture(data.input),
-                pRenderGraph->GetTexture(data.output),
-                width, height);
-        });
-
-    return spatial_filter_pass->output;
-    */
-
     struct PrepareDenoiserArgsPassData
     {
         RGHandle argsBuffer;
@@ -361,9 +301,8 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle li
             }
         });
 
-    m_pDenoiser->ImportTextures(pRenderGraph, width, height);
     return m_pDenoiser->Render(pRenderGraph, prepare_args_pass->argsBuffer, prepare_args_pass->tileListBuffer,
-        resolve_pass->output, depth, linear_depth, normal, velocity, width, height, 1.0f, 0.3f);
+        resolve_pass->output, depth, linear_depth, normal, velocity, width, height, 1.0f, 1.0f);
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* normal,
@@ -371,15 +310,27 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* depth, 
 {
     pCommandList->SetPipelineState(m_pInitialSamplingPSO);
 
-    uint32_t constants[5] = { 
-        depth->GetSRV()->GetHeapIndex(), 
-        normal->GetSRV()->GetHeapIndex(),
-        outputRadiance->GetUAV()->GetHeapIndex(),
-        outputHitNormal->GetUAV()->GetHeapIndex(),
-        outputRay->GetUAV()->GetHeapIndex()
+    struct CB
+    {
+        uint depthTexture;
+        uint normalTexture;
+        uint prevLinearDepthTexture;
+        uint historyRadiance;
+        uint outputRadianceUAV;
+        uint outputHitNormalUAV;
+        uint outputRayUAV;
     };
-    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
 
+    CB constants;
+    constants.depthTexture = depth->GetSRV()->GetHeapIndex();
+    constants.normalTexture = normal->GetSRV()->GetHeapIndex();
+    constants.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
+    constants.historyRadiance = m_pDenoiser->GetHistoryRadianceSRV()->GetHeapIndex();
+    constants.outputRadianceUAV = outputRadiance->GetUAV()->GetHeapIndex();
+    constants.outputHitNormalUAV = outputHitNormal->GetUAV()->GetHeapIndex();
+    constants.outputRayUAV = outputRay->GetUAV()->GetHeapIndex();
+
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
@@ -478,35 +429,6 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTe
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
-/*
-void ReSTIRGI::TemporalFilter(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height)
-{
-    pCommandList->SetPipelineState(m_pTemporalFilterPSO);
-
-    uint32_t constants[3] = {
-        input->GetSRV()->GetHeapIndex(),
-        m_pHistoryRadiance->GetSRV()->GetHeapIndex(),
-        output->GetUAV()->GetHeapIndex(),
-    };
-
-    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
-}
-
-void ReSTIRGI::SpatialFilter(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height)
-{
-    pCommandList->SetPipelineState(m_pSpatialFilterPSO);
-
-    uint32_t constants[3] = {
-        input->GetSRV()->GetHeapIndex(),
-        output->GetUAV()->GetHeapIndex(),
-        m_pHistoryRadiance->GetUAV()->GetHeapIndex(),
-    };
-
-    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
-}
-*/
 
 bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)
 {
@@ -527,9 +449,6 @@ bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)
             m_temporalReservoir[i].reservoir.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir {}", i).c_str()));
         }
-
-        //m_pHistoryRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess,
-        //    "ReSTIR GI/history radiance"));
 
         initialFrame = true;
     }

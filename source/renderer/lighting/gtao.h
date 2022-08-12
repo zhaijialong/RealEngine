@@ -3,31 +3,6 @@
 #include "../render_graph.h"
 #include "../resource/texture_2d.h"
 
-struct GTAOFilterDepthPassData
-{
-    RGHandle inputDepth;
-    RGHandle outputDepthMip0;
-    RGHandle outputDepthMip1;
-    RGHandle outputDepthMip2;
-    RGHandle outputDepthMip3;
-    RGHandle outputDepthMip4;
-};
-
-struct GTAOPassData
-{
-    RGHandle inputFilteredDepth;
-    RGHandle inputNormal;
-    RGHandle outputAOTerm;
-    RGHandle outputEdge;
-};
-
-struct GTAODenoisePassData
-{
-    RGHandle inputAOTerm;
-    RGHandle inputEdge;
-    RGHandle outputAOTerm;
-};
-
 class GTAO
 {
 public:
@@ -39,9 +14,9 @@ private:
     void CreateHilbertLUT();
     void UpdateGTAOConstants(IGfxCommandList* pCommandList, uint32_t width, uint32_t height);
 
-    void FilterDepth(IGfxCommandList* pCommandList, const GTAOFilterDepthPassData& data, uint32_t width, uint32_t height);
-    void Draw(IGfxCommandList* pCommandList, const GTAOPassData& data, uint32_t width, uint32_t height);
-    void Denoise(IGfxCommandList* pCommandList, const GTAODenoisePassData& data, uint32_t width, uint32_t height);
+    void FilterDepth(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* hzb, uint32_t width, uint32_t height);
+    void Draw(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal, RGTexture* outputAO, RGTexture* outputEdge, uint32_t width, uint32_t height);
+    void Denoise(IGfxCommandList* pCommandList, RGTexture* inputAO, RGTexture* edge, RGTexture* outputAO, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

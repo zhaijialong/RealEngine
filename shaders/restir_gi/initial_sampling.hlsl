@@ -2,13 +2,38 @@
 #include "../random.hlsli"
 #include "../importance_sampling.hlsli"
 
-cbuffer CB : register(b0)
+cbuffer CB : register(b1)
 {
     uint c_depthTexture;
     uint c_normalTexture;
+    uint c_prevLinearDepthTexture;
+    uint c_historyRadiance;
     uint c_outputRadianceUAV;
     uint c_outputHitNormalUAV;
     uint c_outputRayUAV;
+}
+
+float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
+{
+    Texture2D historyRadianceTexture = ResourceDescriptorHeap[c_historyRadiance];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
+    
+    Texture2D prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
+    SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+    
+    float4 prevClipPos = mul(CameraCB.mtxPrevViewProjection, float4(position, 1.0));
+    float3 prevNdcPos = GetNdcPosition(prevClipPos);
+    float2 prevUV = GetScreenUV(prevNdcPos.xy);
+    float prevLinearDepth = prevLinearDepthTexture.SampleLevel(pointSampler, prevUV, 0.0).x;
+    
+    if (any(prevUV < 0.0) || any(prevUV > 1.0) ||
+        abs(GetLinearDepth(prevNdcPos.z) - prevLinearDepth) > 0.05)
+    {
+        return 0.0; //todo : maybe some kind of world radiance cache
+    }
+    
+    float3 historyRadiance = historyRadianceTexture.SampleLevel(linearSampler, prevUV, 0).xyz;
+    return historyRadiance * material.diffuse;
 }
 
 [numthreads(8, 8, 1)]
@@ -61,8 +86,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
         float3 direct_lighting = DefaultBRDF(SceneCB.lightDir, -direction, material.worldNormal, material.diffuse, material.specular, material.roughness) * visibility;
         
-        radiance = material.emissive + direct_lighting; //todo : second bounce
-        hitNormal = material.worldNormal;        
+        float3 indirect_lighting = GetIndirectDiffuseLighting(hitInfo.position, material);
+        
+        radiance = material.emissive + direct_lighting + indirect_lighting;
+        hitNormal = material.worldNormal;
     }
     else
     {
@@ -70,7 +97,6 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
         radiance = skyTexture.SampleLevel(linearSampler, direction, 0).xyz;
         hitNormal = -direction;
-
     }
     
     outputRadianceUAV[dispatchThreadID.xy] = float4(radiance, hitInfo.rayT);
