@@ -84,7 +84,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         ray.TMin = 0.00001;
         ray.TMax = 1000.0;
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
-        float3 direct_lighting = DefaultBRDF(SceneCB.lightDir, -direction, material.worldNormal, material.diffuse, material.specular, material.roughness) * visibility;
+
+        float3 brdf = DefaultBRDF(SceneCB.lightDir, -direction, material.worldNormal, material.diffuse, material.specular, material.roughness);
+        float3 direct_lighting = brdf * visibility * SceneCB.lightColor * saturate(dot(material.worldNormal, SceneCB.lightDir));
         
         float3 indirect_lighting = GetIndirectDiffuseLighting(hitInfo.position, material);
         

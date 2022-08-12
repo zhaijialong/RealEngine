@@ -1,33 +1,32 @@
 #pragma once
 
+#include "../common.hlsli"
+
 struct Sample
 {
-    //Visible point and surface normal
-    float3 x_v;
-    float3 n_v;
-    //Sample point and surface normal
-    float3 x_s;
-    float3 n_s;
-    //Outgoing radiance at sample point in RGB
-    float3 Lo;
+    float3 visibilePosition;
+    float3 visibileNormal;
+    float3 samplePosition;
+    float3 sampleNormal;
+    float3 radiance;
 };
 
 // Weighted Reservoir Sampling
 struct Reservoir
 {
-    Sample z;
-    float w_sum;
+    Sample sample;
+    float sumWeight;
     float M;
-    float W;
+    float W; //average weight
     
     bool Update(Sample s_new, float w_new, float random)
     {
-        w_sum += w_new;
+        sumWeight += w_new;
         M += 1;
         
-        if (random < w_new / max(w_sum, 0.00001)) //avoid divide by 0
+        if (random < w_new / max(sumWeight, 0.00001)) //avoid divide by 0
         {
-            z = s_new;
+            sample = s_new;
             return true;
         }
         
@@ -37,9 +36,15 @@ struct Reservoir
     bool Merge(Reservoir r, float target_pdf, float random)
     {
         float M0 = M;
-        bool updated = Update(r.z, target_pdf * r.W * r.M, random);
+        bool updated = Update(r.sample, target_pdf * r.W * r.M, random);
         M = M0 + r.M;
         
         return updated;
     }
 };
+
+float TargetFunction(float3 radiance)
+{
+    //Luminance(radiance * brdf * NdotL);
+    return Luminance(radiance);
+}

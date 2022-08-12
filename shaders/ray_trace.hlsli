@@ -216,7 +216,9 @@ namespace rt
         ray.TMin = 0.00001;
         ray.TMax = 1000.0;
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
-        float3 direct_lighting = DefaultBRDF(SceneCB.lightDir, V, material.worldNormal, material.diffuse, material.specular, material.roughness) * visibility;
+
+        float3 brdf = DefaultBRDF(SceneCB.lightDir, V, material.worldNormal, material.diffuse, material.specular, material.roughness);
+        float3 direct_lighting = brdf * visibility * SceneCB.lightColor * saturate(dot(material.worldNormal, SceneCB.lightDir));
         
         float3 indirect_diffuse = DiffuseIBL(material.worldNormal) * material.diffuse;
         float3 indirect_specular = SpecularIBL(material.worldNormal, V, material.roughness, material.specular);

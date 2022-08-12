@@ -32,11 +32,11 @@ Sample LoadInitialSample(uint2 pos, float depth)
     float candidateRayT = candidateRadianceTexture[pos].w;
     
     Sample S;
-    S.x_v = GetWorldPosition(pos, depth);
-    S.n_v = DecodeNormal(normalTexture[pos].xyz);
-    S.x_s = S.x_v + candidateRay * candidateRayT;
-    S.n_s = OctDecode(candidateHitNormalTexture[pos].xy * 2.0 - 1.0);
-    S.Lo = candidateRadianceTexture[pos].xyz;
+    S.visibilePosition = GetWorldPosition(pos, depth);
+    S.visibileNormal = DecodeNormal(normalTexture[pos].xyz);
+    S.samplePosition = S.visibilePosition + candidateRay * candidateRayT;
+    S.sampleNormal = OctDecode(candidateHitNormalTexture[pos].xy * 2.0 - 1.0);
+    S.radiance = candidateRadianceTexture[pos].xyz;
     
     return S;
 }
@@ -61,15 +61,15 @@ Reservoir LoadTemporalReservoir(uint2 pos)
     float hitT = reservoirSampleRadianceTexture[pos].w;
 
     Reservoir R;
-    R.z.x_v = worldPos.xyz;
-    R.z.n_v = DecodeNormal(prevNormalTexture[pos].xyz);
-    R.z.x_s = R.z.x_v + rayDirection * hitT;
-    R.z.n_s = OctDecode(reservoirSampleNormalTexture[pos].xy * 2.0 - 1.0);
-    R.z.Lo = reservoirSampleRadianceTexture[pos].xyz;
+    R.sample.visibilePosition = worldPos.xyz;
+    R.sample.visibileNormal = DecodeNormal(prevNormalTexture[pos].xyz);
+    R.sample.samplePosition = R.sample.visibilePosition + rayDirection * hitT;
+    R.sample.sampleNormal = OctDecode(reservoirSampleNormalTexture[pos].xy * 2.0 - 1.0);
+    R.sample.radiance = reservoirSampleRadianceTexture[pos].xyz;
 
     R.M = reservoirTexture[pos].x;
     R.W = reservoirTexture[pos].y;
-    R.w_sum = R.W * R.M * Luminance(R.z.Lo);
+    R.sumWeight = R.W * R.M * TargetFunction(R.sample.radiance);
     
     return R;
 }
@@ -81,13 +81,13 @@ void StoreTemporalReservoir(uint2 pos, Reservoir R)
     RWTexture2D<float4> reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_outputReservoirSampleRadiance];
     RWTexture2D<float2> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
     
-    float3 ray = R.z.x_s - R.z.x_v;
+    float3 ray = R.sample.samplePosition - R.sample.visibilePosition;
     float3 rayDirection = normalize(ray);
     float hitT = length(ray);
 
     reservoirRayDirectionTexture[pos] = OctEncode(rayDirection) * 0.5 + 0.5;
-    reservoirSampleNormalTexture[pos] = OctEncode(R.z.n_s) * 0.5 + 0.5;
-    reservoirSampleRadianceTexture[pos] = float4(R.z.Lo, hitT);
+    reservoirSampleNormalTexture[pos] = OctEncode(R.sample.sampleNormal) * 0.5 + 0.5;
+    reservoirSampleRadianceTexture[pos] = float4(R.sample.radiance, hitT);
     reservoirTexture[pos] = float2(R.M, R.W);
 }
 
@@ -119,21 +119,21 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         R = LoadTemporalReservoir(prevPos);
         
         bool invalid = false;
-        invalid |= length(S.x_v - R.z.x_v) > 0.1 * GetLinearDepth(depth);
-        invalid |= saturate(dot(S.n_v, R.z.n_v)) < 0.8;
+        invalid |= length(S.visibilePosition - R.sample.visibilePosition) > 0.1 * GetLinearDepth(depth);
+        invalid |= saturate(dot(S.visibileNormal, R.sample.visibileNormal)) < 0.8;
         
         if (invalid)
         {
-            R.w_sum = R.M = 0;
+            R.sumWeight = R.M = 0;
         }
     }
     
-    float target_p_q = Luminance(S.Lo);
+    float target_p_q = TargetFunction(S.radiance);
     float p_q = 1.0 / (2.0 * M_PI);
     float w = target_p_q /*/ p_q*/;
 
     R.Update(S, w, rng.RandomFloat());
-    R.W = R.w_sum / max(0.00001, R.M * Luminance(R.z.Lo));
+    R.W = R.sumWeight / max(0.00001, R.M * TargetFunction(R.sample.radiance));
     R.M = min(R.M, 30.0);
     
     StoreTemporalReservoir(pos, R);

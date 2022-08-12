@@ -26,15 +26,15 @@ Reservoir LoadReservoir(uint2 pos, float depth, float3 normal)
     float hitT = reservoirSampleRadianceTexture[pos].w;
 
     Reservoir R;
-    R.z.x_v = GetWorldPosition(pos, depth);
-    R.z.n_v = normal;
-    R.z.x_s = R.z.x_v + rayDirection * hitT;
-    R.z.n_s = OctDecode(reservoirSampleNormalTexture[pos].xy * 2.0 - 1.0);
-    R.z.Lo = reservoirSampleRadianceTexture[pos].xyz;
+    R.sample.visibilePosition = GetWorldPosition(pos, depth);
+    R.sample.visibileNormal = normal;
+    R.sample.samplePosition = R.sample.visibilePosition + rayDirection * hitT;
+    R.sample.sampleNormal = OctDecode(reservoirSampleNormalTexture[pos].xy * 2.0 - 1.0);
+    R.sample.radiance = reservoirSampleRadianceTexture[pos].xyz;
 
     R.M = reservoirTexture[pos].x;
     R.W = reservoirTexture[pos].y;
-    R.w_sum = R.W * R.M * Luminance(R.z.Lo);
+    R.sumWeight = R.W * R.M * TargetFunction(R.sample.radiance);
     
     return R;
 }
@@ -46,22 +46,22 @@ void StoreReservoir(uint2 pos, Reservoir R)
     RWTexture2D<float4> reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_outputReservoirSampleRadiance];
     RWTexture2D<float2> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
     
-    float3 ray = R.z.x_s - R.z.x_v;
+    float3 ray = R.sample.samplePosition - R.sample.visibilePosition;
     float3 rayDirection = normalize(ray);
     float hitT = length(ray);
 
     reservoirRayDirectionTexture[pos] = OctEncode(rayDirection) * 0.5 + 0.5;
-    //reservoirSampleNormalTexture[pos] = OctEncode(R.z.n_s) * 0.5 + 0.5;
-    reservoirSampleRadianceTexture[pos] = float4(R.z.Lo, hitT);
+    //reservoirSampleNormalTexture[pos] = OctEncode(R.sample.sampleNormal) * 0.5 + 0.5;
+    reservoirSampleRadianceTexture[pos] = float4(R.sample.radiance, hitT);
     reservoirTexture[pos] = float2(R.M, R.W);
 }
 
 // ReSTIR GI paper Eq.11
 float GetJacobian(Reservoir q, Reservoir r)
 {
-    float3 q_to_hit = q.z.x_v - q.z.x_s;
-    float3 r_to_hit = r.z.x_v - q.z.x_s;
-    float3 hit_normal = q.z.n_s;
+    float3 q_to_hit = q.sample.visibilePosition - q.sample.samplePosition;
+    float3 r_to_hit = r.sample.visibilePosition - q.sample.samplePosition;
+    float3 hit_normal = q.sample.sampleNormal;
     
     float a = saturate(dot(normalize(r_to_hit), hit_normal)) / max(0.00001, saturate(dot(normalize(q_to_hit), hit_normal)));
     float b = square(length(q_to_hit)) / max(0.00001, square(length(r_to_hit)));
@@ -114,7 +114,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
             continue;
         }
         
-        float target_p = Luminance(Rn.z.Lo) / jacobian;
+        float target_p = TargetFunction(Rn.sample.radiance) / jacobian;
 
         //todo : if Rn's sample point is not visible to xv at q , target_p = 0
         
@@ -131,7 +131,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     if (Z > 0)
     {
-        Rs.W = Rs.w_sum / max(0.00001, Z * selected_target_p);
+        Rs.W = Rs.sumWeight / max(0.00001, Z * selected_target_p);
     }
     
     StoreReservoir(pos, Rs);
