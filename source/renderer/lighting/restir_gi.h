@@ -16,7 +16,9 @@ public:
 private:
     void InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, uint32_t width, uint32_t height);
     void TemporalResampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* velocity, RGTexture* candidateRadiance, uint32_t width, uint32_t height);
-    void SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputReservoirSampleRadiance, RGTexture* outputReservoir, uint32_t width, uint32_t height);
+    void SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal,
+        IGfxDescriptor* inputReservoirSampleRadiance, IGfxDescriptor* inputReservoir,
+        RGTexture* outputReservoirSampleRadiance, RGTexture* outputReservoir, uint32_t width, uint32_t height, uint32_t pass_index);
 
     void Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* normal,
         RGTexture* output, uint32_t width, uint32_t height);

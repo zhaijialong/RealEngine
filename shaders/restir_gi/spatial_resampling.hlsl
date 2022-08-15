@@ -9,6 +9,7 @@ cbuffer CB : register(b1)
     uint c_inputReservoir;
     uint c_outputReservoirSampleRadiance;
     uint c_outputReservoir;
+    uint c_spatialPass;
 }
 
 Reservoir LoadReservoir(uint2 pos, float depth, float3 normal)
@@ -56,13 +57,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     PRNG rng = PRNG::Create(pos, halfScreenSize);
     Reservoir Rs = LoadReservoir(pos, depth, normal);
     
-    const uint maxIterations = 8;
-    const float searchRadius = 30.0f; //todo
+    const uint maxIterations = c_spatialPass == 0 ? 8 : 5;
+    const float searchRadius = c_spatialPass == 0 ? 16.0 : 8.0;
     float selected_target_p = 1.0;
     
     for (uint i = 0; i < maxIterations; ++i)
     {
-        uint2 qn = clamp(pos + searchRadius * SampleDiskUniform(rng.RandomFloat2()), 0, halfScreenSize);
+        uint2 qn = clamp(pos + searchRadius * (rng.RandomFloat2() * 2.0 - 1.0), 0, halfScreenSize);
 
         float depth_qn = asfloat(halfDepthNormalTexture[qn].x);
         float3 normal_qn = DecodeNormal16x2(halfDepthNormalTexture[qn].y);

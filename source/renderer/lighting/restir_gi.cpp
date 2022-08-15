@@ -124,15 +124,13 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
     struct SpatialReusePassData
     {
         RGHandle halfDepthNormal;
-
         RGHandle inputReservoirSampleRadiance;
         RGHandle inputReservoir;
-
         RGHandle outputReservoirSampleRadiance;
         RGHandle outputReservoir;
     };
 
-    auto spatial_reuse_pass = pRenderGraph->AddPass<SpatialReusePassData>("ReSTIR GI - spatial resampling", RenderPassType::Compute,
+    auto spatial_reuse_pass0 = pRenderGraph->AddPass<SpatialReusePassData>("ReSTIR GI - spatial resampling", RenderPassType::Compute,
         [&](SpatialReusePassData& data, RGBuilder& builder)
         {
             data.halfDepthNormal = builder.Read(halfDepthNormal);
@@ -152,9 +150,38 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         {
             SpatialResampling(pCommandList, 
                 pRenderGraph->GetTexture(data.halfDepthNormal),
+                m_temporalReservoir[1].sampleRadiance->GetSRV(),
+                m_temporalReservoir[1].reservoir->GetSRV(),
                 pRenderGraph->GetTexture(data.outputReservoirSampleRadiance),
                 pRenderGraph->GetTexture(data.outputReservoir),
-                half_width, half_height);
+                half_width, half_height, 0);
+        });
+
+    auto spatial_reuse_pass1 = pRenderGraph->AddPass<SpatialReusePassData>("ReSTIR GI - spatial resampling", RenderPassType::Compute,
+        [&](SpatialReusePassData& data, RGBuilder& builder)
+        {
+            data.halfDepthNormal = builder.Read(halfDepthNormal);
+            data.inputReservoirSampleRadiance = builder.Read(spatial_reuse_pass0->outputReservoirSampleRadiance);
+            data.inputReservoir = builder.Read(spatial_reuse_pass0->outputReservoir);
+
+            RGTexture::Desc desc;
+            desc.width = half_width;
+            desc.height = half_height;
+            desc.format = GfxFormat::R11G11B10F;
+            data.outputReservoirSampleRadiance = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/spatial reservoir radiance"));
+
+            desc.format = GfxFormat::RG16F;
+            data.outputReservoir = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/spatial reservoir"));
+        },
+        [=](const SpatialReusePassData& data, IGfxCommandList* pCommandList)
+        {
+            SpatialResampling(pCommandList,
+                pRenderGraph->GetTexture(data.halfDepthNormal),
+                pRenderGraph->GetTexture(data.inputReservoirSampleRadiance)->GetSRV(),
+                pRenderGraph->GetTexture(data.inputReservoir)->GetSRV(),
+                pRenderGraph->GetTexture(data.outputReservoirSampleRadiance),
+                pRenderGraph->GetTexture(data.outputReservoir),
+                half_width, half_height, 1);
         });
 
     struct ResolvePassData
@@ -168,8 +195,8 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
     auto resolve_pass = pRenderGraph->AddPass<ResolvePassData>("ReSTIR GI - resolve", RenderPassType::Compute,
         [&](ResolvePassData& data, RGBuilder& builder)
         {
-            data.reservoir = builder.Read(spatial_reuse_pass->outputReservoir);
-            data.radiance = builder.Read(spatial_reuse_pass->outputReservoirSampleRadiance);
+            data.reservoir = builder.Read(spatial_reuse_pass1->outputReservoir);
+            data.radiance = builder.Read(spatial_reuse_pass1->outputReservoirSampleRadiance);
             data.normal = builder.Read(normal);
 
             RGTexture::Desc desc;
@@ -316,7 +343,9 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, RGTexture* half
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputReservoirSampleRadiance, RGTexture* outputReservoir, uint32_t width, uint32_t height)
+void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal,
+    IGfxDescriptor* inputReservoirSampleRadiance, IGfxDescriptor* inputReservoir,
+    RGTexture* outputReservoirSampleRadiance, RGTexture* outputReservoir, uint32_t width, uint32_t height, uint32_t pass_index)
 {
     pCommandList->SetPipelineState(m_pSpatialResamplingPSO);
 
@@ -327,14 +356,16 @@ void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfD
         uint inputReservoir;
         uint outputReservoirSampleRadiance;
         uint outputReservoir;
+        uint spatialPass;
     };
 
     Constants constants;
     constants.halfDepthNormal = halfDepthNormal->GetSRV()->GetHeapIndex();
-    constants.inputReservoirSampleRadiance = m_temporalReservoir[1].sampleRadiance->GetSRV()->GetHeapIndex();
-    constants.inputReservoir = m_temporalReservoir[1].reservoir->GetSRV()->GetHeapIndex();
+    constants.inputReservoirSampleRadiance = inputReservoirSampleRadiance->GetHeapIndex();
+    constants.inputReservoir = inputReservoir->GetHeapIndex();
     constants.outputReservoirSampleRadiance = outputReservoirSampleRadiance->GetUAV()->GetHeapIndex();
     constants.outputReservoir = outputReservoir->GetUAV()->GetHeapIndex();
+    constants.spatialPass = pass_index;
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
