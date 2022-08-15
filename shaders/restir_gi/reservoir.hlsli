@@ -4,10 +4,10 @@
 
 struct Sample
 {
-    float3 visibilePosition;
-    float3 visibileNormal;
-    float3 samplePosition;
-    float3 sampleNormal;
+    //float3 visibilePosition;
+    //float3 visibileNormal;
+    //float3 samplePosition;
+    //float3 sampleNormal;
     float3 radiance;
 };
 
@@ -47,4 +47,17 @@ float TargetFunction(float3 radiance)
 {
     //Luminance(radiance * brdf * NdotL);
     return Luminance(radiance);
+}
+
+uint2 FullScreenPosition(uint2 halfScreenPos)
+{
+    static const uint2 offsets[4] =
+    {
+        uint2(1, 1),
+        uint2(1, 0),
+        uint2(0, 0),
+        uint2(0, 1),
+    };
+    
+    return halfScreenPos * 2 + offsets[SceneCB.frameIndex % 4];
 }

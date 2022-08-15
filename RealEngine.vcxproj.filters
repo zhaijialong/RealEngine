@@ -1466,6 +1466,9 @@
     <FxCompile Include="shaders\restir_gi\restir_resolve.hlsl">
       <Filter>shaders\restir_gi</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\extract_half_depth_normal.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">
