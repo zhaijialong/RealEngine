@@ -468,6 +468,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\atmosphere.hlsli" />
+    <None Include="shaders\bilinear.hlsli" />
     <None Include="shaders\bloom.hlsli" />
     <None Include="shaders\brdf.hlsli" />
     <None Include="shaders\common.hlsli" />

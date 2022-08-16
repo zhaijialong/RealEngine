@@ -1314,6 +1314,9 @@
     <None Include="shaders\restir_gi\reservoir.hlsli">
       <Filter>shaders\restir_gi</Filter>
     </None>
+    <None Include="shaders\bilinear.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

@@ -20,7 +20,7 @@ private:
         IGfxDescriptor* inputReservoirSampleRadiance, IGfxDescriptor* inputReservoir,
         RGTexture* outputReservoirSampleRadiance, RGTexture* outputReservoir, uint32_t width, uint32_t height, uint32_t pass_index);
 
-    void Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* normal,
+    void Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* halfDepthNormal, RGTexture* depth, RGTexture* normal,
         RGTexture* output, uint32_t width, uint32_t height);
 
     bool InitTemporalBuffers(uint32_t width, uint32_t height);

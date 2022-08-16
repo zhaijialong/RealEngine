@@ -188,6 +188,8 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
     {
         RGHandle reservoir;
         RGHandle radiance;
+        RGHandle halfDepthNormal;
+        RGHandle depth;
         RGHandle normal;
         RGHandle output;
     };
@@ -197,6 +199,8 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         {
             data.reservoir = builder.Read(spatial_reuse_pass1->outputReservoir);
             data.radiance = builder.Read(spatial_reuse_pass1->outputReservoirSampleRadiance);
+            data.halfDepthNormal = builder.Read(halfDepthNormal);
+            data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
 
             RGTexture::Desc desc;
@@ -210,6 +214,8 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             Resolve(pCommandList, 
                 pRenderGraph->GetTexture(data.reservoir),
                 pRenderGraph->GetTexture(data.radiance),
+                pRenderGraph->GetTexture(data.halfDepthNormal),
+                pRenderGraph->GetTexture(data.depth),
                 pRenderGraph->GetTexture(data.normal),
                 pRenderGraph->GetTexture(data.output),
                 width, height);
@@ -371,18 +377,20 @@ void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfD
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* normal,
+void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* halfDepthNormal, RGTexture* depth, RGTexture* normal,
     RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pResolvePSO);
 
-    uint32_t constants[4] = { 
+    uint32_t constants[6] = { 
         reservoir->GetSRV()->GetHeapIndex(),
         radiance->GetSRV()->GetHeapIndex(),
+        halfDepthNormal->GetSRV()->GetHeapIndex(),
+        depth->GetSRV()->GetHeapIndex(),
         normal->GetSRV()->GetHeapIndex(),
         output->GetUAV()->GetHeapIndex()
     };
-    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
+    pCommandList->SetComputeConstants(1, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
