@@ -36,6 +36,7 @@ private:
     struct TemporalReservoirBuffer
     {
         eastl::unique_ptr<Texture2D> sampleRadiance; //r11g11b10f
+        eastl::unique_ptr<Texture2D> depthNormal;
         eastl::unique_ptr<Texture2D> reservoir; //rg16f - M/W
     };
 

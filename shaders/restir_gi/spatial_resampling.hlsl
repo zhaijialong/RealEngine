@@ -89,6 +89,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
 
     Rs.W = Rs.sumWeight / max(0.00001, Rs.M * selected_target_p);
+    //Rs.W = min(Rs.W, 10.0);
     
     StoreReservoir(pos, Rs);
 }

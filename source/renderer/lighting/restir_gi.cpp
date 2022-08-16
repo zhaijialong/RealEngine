@@ -86,11 +86,11 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
     {
         RGHandle halfDepthNormal;
         RGHandle velocity;
-        RGHandle prevLinearDepth;
-        RGHandle prevNormal;
         RGHandle candidateRadiance;
+        RGHandle historyReservoirDepthNormal;
         RGHandle historyReservoirSampleRadiance;
         RGHandle historyReservoir;
+        RGHandle outputReservoirDepthNormal;
         RGHandle outputReservoirSampleRadiance;
         RGHandle outputReservoir;
     };
@@ -100,15 +100,15 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         {
             data.halfDepthNormal = builder.Read(halfDepthNormal);
             data.velocity = builder.Read(velocity);
-            data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
-            data.prevNormal = builder.Read(m_pRenderer->GetPrevNormalHandle());
             data.candidateRadiance = builder.Read(raytrace_pass->outputRadiance);
 
             GfxResourceState textureState = initialFrame ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS;
 
+            data.historyReservoirDepthNormal = builder.Read(builder.Import(m_temporalReservoir[0].depthNormal->GetTexture(), GfxResourceState::UnorderedAccess));
             data.historyReservoirSampleRadiance = builder.Read(builder.Import(m_temporalReservoir[0].sampleRadiance->GetTexture(), textureState));
             data.historyReservoir = builder.Read(builder.Import(m_temporalReservoir[0].reservoir->GetTexture(), textureState));
 
+            data.outputReservoirDepthNormal = builder.Write(builder.Import(m_temporalReservoir[1].depthNormal->GetTexture(), textureState));
             data.outputReservoirSampleRadiance = builder.Write(builder.Import(m_temporalReservoir[1].sampleRadiance->GetTexture(), textureState));
             data.outputReservoir = builder.Write(builder.Import(m_temporalReservoir[1].reservoir->GetTexture(), textureState));
         },
@@ -319,11 +319,11 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, RGTexture* half
     {
         uint halfDepthNormal;
         uint velocity;
-        uint prevLinearDepth;
-        uint prevNormal;
         uint candidateRadiance;
+        uint historyReservoirDepthNormal;
         uint historyReservoirSampleRadiance;
         uint historyReservoir;
+        uint outputReservoirDepthNormal;
         uint outputReservoirSampleRadiance;
         uint outputReservoir;
     };
@@ -331,11 +331,11 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, RGTexture* half
     CB cb;
     cb.halfDepthNormal = halfDepthNormal->GetSRV()->GetHeapIndex();
     cb.velocity = velocity->GetSRV()->GetHeapIndex();
-    cb.prevLinearDepth = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
-    cb.prevNormal = m_pRenderer->GetPrevNormalTexture()->GetSRV()->GetHeapIndex();
     cb.candidateRadiance = candidateRadiance->GetSRV()->GetHeapIndex();
+    cb.historyReservoirDepthNormal = m_temporalReservoir[0].depthNormal->GetSRV()->GetHeapIndex();
     cb.historyReservoirSampleRadiance = m_temporalReservoir[0].sampleRadiance->GetSRV()->GetHeapIndex();
     cb.historyReservoir = m_temporalReservoir[0].reservoir->GetSRV()->GetHeapIndex();
+    cb.outputReservoirDepthNormal = m_temporalReservoir[1].depthNormal->GetUAV()->GetHeapIndex();
     cb.outputReservoirSampleRadiance = m_temporalReservoir[1].sampleRadiance->GetUAV()->GetHeapIndex();
     cb.outputReservoir = m_temporalReservoir[1].reservoir->GetUAV()->GetHeapIndex();
 
@@ -398,6 +398,8 @@ bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)
         {
             m_temporalReservoir[i].sampleRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir sampleRadiance {}", i).c_str()));
+            m_temporalReservoir[i].depthNormal.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG32UI, GfxTextureUsageUnorderedAccess,
+                fmt::format("ReSTIR GI/temporal reservoir depthNormal {}", i).c_str()));
             m_temporalReservoir[i].reservoir.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir {}", i).c_str()));
         }
