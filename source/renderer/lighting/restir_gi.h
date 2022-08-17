@@ -44,7 +44,7 @@ private:
 
     eastl::unique_ptr<ReflectionDenoiser> m_pDenoiser; //todo : recurrent blur denoiser
 
-    bool m_bEnable = true;
+    bool m_bEnable = false;
     bool m_bEnableReSTIR = true;
     bool m_bEnableDenoiser = true;
 };

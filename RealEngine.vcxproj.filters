@@ -370,6 +370,9 @@
     <ClCompile Include="source\renderer\lighting\restir_gi.cpp">
       <Filter>source\renderer\lighting</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\lighting\gi_denoiser.cpp">
+      <Filter>source\renderer\lighting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -1101,6 +1104,9 @@
     <ClInclude Include="source\renderer\lighting\restir_gi.h">
       <Filter>source\renderer\lighting</Filter>
     </ClInclude>
+    <ClInclude Include="source\renderer\lighting\gi_denoiser.h">
+      <Filter>source\renderer\lighting</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -1228,6 +1234,9 @@
     </Filter>
     <Filter Include="shaders\restir_gi">
       <UniqueIdentifier>{5d5ea258-d68e-41fb-8c88-84ff22863722}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\recurrent_blur">
+      <UniqueIdentifier>{a0991635-2028-42e8-8140-5c1160934cc2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
