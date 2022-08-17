@@ -63,6 +63,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     if (depth == 0.0)
     {
+        StoreTemporalReservoir(pos, (Reservoir)0, depth, normal);
         return;
     }
     

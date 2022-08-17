@@ -13,6 +13,11 @@ cbuffer CB : register(b0)
 
 float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
 {
+    if (c_historyRadiance == INVALID_RESOURCE_INDEX)
+    {
+        return 0.0;
+    }
+    
     Texture2D historyRadianceTexture = ResourceDescriptorHeap[c_historyRadiance];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
@@ -69,7 +74,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     if (rt::TraceRay(ray, hitInfo))
     {
-        cone.Propagate(0.0, hitInfo.rayT); // using 0 since no curvature measure at second hit
+        cone.Propagate(0.03, hitInfo.rayT);
         rt::MaterialData material = rt::GetMaterial(ray, hitInfo, cone);
         
         RayDesc ray;
@@ -79,7 +84,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         ray.TMax = 1000.0;
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
 
-        float3 brdf = DefaultBRDF(SceneCB.lightDir, -direction, material.worldNormal, material.diffuse, material.specular, material.roughness);
+        float roughness = lerp(material.roughness, 1.0, 0.5); //reduce fireflies
+        
+        float3 brdf = DefaultBRDF(SceneCB.lightDir, -direction, material.worldNormal, material.diffuse, material.specular, roughness);
         float3 direct_lighting = brdf * visibility * SceneCB.lightColor * saturate(dot(material.worldNormal, SceneCB.lightDir));
         
         float3 indirect_lighting = GetIndirectDiffuseLighting(hitInfo.position, material);

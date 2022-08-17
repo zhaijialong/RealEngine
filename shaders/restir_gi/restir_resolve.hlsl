@@ -13,7 +13,10 @@ cbuffer CB : register(b1)
 
 float ComputeCustomWeight(float depth, float3 normal, float sampleDepth, float3 sampleNormal)
 {
-    float depthWeight = exp(-abs(GetLinearDepth(depth) - GetLinearDepth(sampleDepth)));
+    float linearDepth = GetLinearDepth(depth);
+    float linearSampleDepth = GetLinearDepth(sampleDepth);
+    float depthWeight = exp(-abs(linearDepth - linearSampleDepth) / (linearDepth * 5));
+    
     float normalWeight = saturate(dot(normal, sampleNormal));
 
     return depthWeight * normalWeight;
