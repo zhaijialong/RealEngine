@@ -165,6 +165,7 @@
     <ClCompile Include="source\renderer\gpu_scene.cpp" />
     <ClCompile Include="source\renderer\hierarchical_depth_buffer.cpp" />
     <ClCompile Include="source\renderer\lighting\clustered_shading.cpp" />
+    <ClCompile Include="source\renderer\lighting\gi_denoiser.cpp" />
     <ClCompile Include="source\renderer\lighting\gtao.cpp" />
     <ClCompile Include="source\renderer\lighting\hybrid_stochastic_reflection.cpp" />
     <ClCompile Include="source\renderer\lighting\lighting_processor.cpp" />
@@ -397,6 +398,7 @@
     <ClInclude Include="source\renderer\gpu_scene.h" />
     <ClInclude Include="source\renderer\hierarchical_depth_buffer.h" />
     <ClInclude Include="source\renderer\lighting\clustered_shading.h" />
+    <ClInclude Include="source\renderer\lighting\gi_denoiser.h" />
     <ClInclude Include="source\renderer\lighting\gtao.h" />
     <ClInclude Include="source\renderer\lighting\hybrid_stochastic_reflection.h" />
     <ClInclude Include="source\renderer\lighting\lighting_processor.h" />
@@ -468,6 +470,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\atmosphere.hlsli" />
+    <None Include="shaders\bilinear.hlsli" />
     <None Include="shaders\bloom.hlsli" />
     <None Include="shaders\brdf.hlsli" />
     <None Include="shaders\common.hlsli" />
@@ -530,6 +533,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="shaders\debug_print.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="shaders\extract_half_depth_normal.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

@@ -4,32 +4,20 @@
 
 cbuffer CB : register(b1)
 {
-    uint c_depth;
-    uint c_normal;
-    uint c_inputReservoirRayDirection;
-    uint c_inputReservoirSampleNormal;
+    uint c_halfDepthNormal;
     uint c_inputReservoirSampleRadiance;
     uint c_inputReservoir;
-    uint c_outputReservoirRayDirection;
     uint c_outputReservoirSampleRadiance;
     uint c_outputReservoir;
+    uint c_spatialPass;
 }
 
 Reservoir LoadReservoir(uint2 pos, float depth, float3 normal)
 {    
-    Texture2D reservoirRayDirectionTexture = ResourceDescriptorHeap[c_inputReservoirRayDirection];
-    Texture2D reservoirSampleNormalTexture = ResourceDescriptorHeap[c_inputReservoirSampleNormal];
     Texture2D reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_inputReservoirSampleRadiance];
     Texture2D reservoirTexture = ResourceDescriptorHeap[c_inputReservoir];
-    
-    float3 rayDirection = OctDecode(reservoirRayDirectionTexture[pos].xy * 2.0 - 1.0);
-    float hitT = reservoirSampleRadianceTexture[pos].w;
 
     Reservoir R;
-    R.sample.visibilePosition = GetWorldPosition(pos, depth);
-    R.sample.visibileNormal = normal;
-    R.sample.samplePosition = R.sample.visibilePosition + rayDirection * hitT;
-    R.sample.sampleNormal = OctDecode(reservoirSampleNormalTexture[pos].xy * 2.0 - 1.0);
     R.sample.radiance = reservoirSampleRadianceTexture[pos].xyz;
 
     R.M = reservoirTexture[pos].x;
@@ -41,31 +29,11 @@ Reservoir LoadReservoir(uint2 pos, float depth, float3 normal)
 
 void StoreReservoir(uint2 pos, Reservoir R)
 {
-    RWTexture2D<float2> reservoirRayDirectionTexture = ResourceDescriptorHeap[c_outputReservoirRayDirection];
-    //RWTexture2D<float2> reservoirSampleNormalTexture = ResourceDescriptorHeap[c_outputReservoirSampleNormal];
     RWTexture2D<float4> reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_outputReservoirSampleRadiance];
     RWTexture2D<float2> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
     
-    float3 ray = R.sample.samplePosition - R.sample.visibilePosition;
-    float3 rayDirection = normalize(ray);
-    float hitT = length(ray);
-
-    reservoirRayDirectionTexture[pos] = OctEncode(rayDirection) * 0.5 + 0.5;
-    //reservoirSampleNormalTexture[pos] = OctEncode(R.sample.sampleNormal) * 0.5 + 0.5;
-    reservoirSampleRadianceTexture[pos] = float4(R.sample.radiance, hitT);
+    reservoirSampleRadianceTexture[pos] = float4(R.sample.radiance, 0);
     reservoirTexture[pos] = float2(R.M, R.W);
-}
-
-// ReSTIR GI paper Eq.11
-float GetJacobian(Reservoir q, Reservoir r)
-{
-    float3 q_to_hit = q.sample.visibilePosition - q.sample.samplePosition;
-    float3 r_to_hit = r.sample.visibilePosition - q.sample.samplePosition;
-    float3 hit_normal = q.sample.sampleNormal;
-    
-    float a = saturate(dot(normalize(r_to_hit), hit_normal)) / max(0.00001, saturate(dot(normalize(q_to_hit), hit_normal)));
-    float b = square(length(q_to_hit)) / max(0.00001, square(length(r_to_hit)));
-    return a * b;
 }
 
 [numthreads(8, 8, 1)]
@@ -73,32 +41,32 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     uint2 pos = dispatchThreadID.xy;
     
-    Texture2D depthTexture = ResourceDescriptorHeap[c_depth];
-    Texture2D normalTexture = ResourceDescriptorHeap[c_normal];
+    Texture2D<uint2> halfDepthNormalTexture = ResourceDescriptorHeap[c_halfDepthNormal];
     
-    float depth = depthTexture[pos].x;
+    float depth = asfloat(halfDepthNormalTexture[pos].x);
+    float3 normal = DecodeNormal16x2(halfDepthNormalTexture[pos].y);
+    
     float linearDepth = GetLinearDepth(depth);
-    float3 normal = DecodeNormal(normalTexture[pos].xyz);
     
     if (depth == 0.0)
     {
         return;
     }
     
-    PRNG rng = PRNG::Create(pos, SceneCB.renderSize);
+    uint2 halfScreenSize = (SceneCB.renderSize + 1) / 2;
+    PRNG rng = PRNG::Create(pos, halfScreenSize);
     Reservoir Rs = LoadReservoir(pos, depth, normal);
     
-    const uint maxIterations = 8;
-    const float searchRadius = 30.0f; //todo
-    float Z = 0.0;
+    const uint maxIterations = c_spatialPass == 0 ? 8 : 5;
+    const float searchRadius = c_spatialPass == 0 ? 16.0 : 8.0;
     float selected_target_p = 1.0;
     
     for (uint i = 0; i < maxIterations; ++i)
     {
-        uint2 qn = clamp(pos + searchRadius * SampleDiskUniform(rng.RandomFloat2()), 0, SceneCB.renderSize);
+        uint2 qn = clamp(pos + searchRadius * (rng.RandomFloat2() * 2.0 - 1.0), 0, halfScreenSize);
 
-        float depth_qn = depthTexture[qn].x;
-        float3 normal_qn = DecodeNormal(normalTexture[qn].xyz);
+        float depth_qn = asfloat(halfDepthNormalTexture[qn].x);
+        float3 normal_qn = DecodeNormal16x2(halfDepthNormalTexture[qn].y);
 
         if (abs(GetLinearDepth(depth_qn) - linearDepth) / linearDepth > 0.05 ||
             saturate(dot(normal, normal_qn)) < 0.9)
@@ -107,32 +75,21 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         }
         
         Reservoir Rn = LoadReservoir(qn, depth_qn, normal_qn);
-
-        float jacobian = GetJacobian(Rn, Rs);
-        if (jacobian < 0.01 || isnan(jacobian))
-        {
-            continue;
-        }
         
-        float target_p = TargetFunction(Rn.sample.radiance) / jacobian;
+        // just ignore jacobian for performance ...
+        float target_p = TargetFunction(Rn.sample.radiance);// / jacobian; 
 
-        //todo : if Rn's sample point is not visible to xv at q , target_p = 0
+        // and ignore visibility for performance ...
+        //if Rn's sample point is not visible to xv at q , target_p = 0
         
         if(Rs.Merge(Rn, target_p, rng.RandomFloat()))
         {
             selected_target_p = target_p;
         }
-
-        if (target_p > 0)
-        {
-            Z += Rn.M;
-        }
     }
 
-    if (Z > 0)
-    {
-        Rs.W = Rs.sumWeight / max(0.00001, Z * selected_target_p);
-    }
+    Rs.W = Rs.sumWeight / max(0.00001, Rs.M * selected_target_p);
+    //Rs.W = min(Rs.W, 10.0);
     
     StoreReservoir(pos, Rs);
 }

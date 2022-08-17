@@ -17,6 +17,8 @@ private:
     RGHandle CompositeLight(RenderGraph* pRenderGraph, RGHandle depth, RGHandle ao, RGHandle direct_lighting, 
         RGHandle indirect_specular, RGHandle indirect_diffuse, uint32_t width, uint32_t height);
 
+    RGHandle ExtractHalfDepthNormal(RenderGraph* pRenderGraph, RGHandle depth, RGHandle normal, uint32_t width, uint32_t height);
+
 private:
     Renderer* m_pRenderer;
 

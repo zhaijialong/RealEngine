@@ -24,11 +24,13 @@ RGHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RGHandle depth, RG
     RGHandle emissive = pBasePass->GetEmissiveRT();
     RGHandle customData = pBasePass->GetCustomDataRT();
 
+    RGHandle half_normal_depth = ExtractHalfDepthNormal(pRenderGraph, depth, normal, width, height);
+
     RGHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
     RGHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, velocity, width, height);
     RGHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
     RGHandle indirect_specular = m_pReflection->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
-    RGHandle indirect_diffuse = m_pReSTIRGI->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
+    RGHandle indirect_diffuse = m_pReSTIRGI->Render(pRenderGraph, half_normal_depth, depth, linear_depth, normal, velocity, width, height);
 
     return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, indirect_specular, indirect_diffuse, width, height);
 }
@@ -223,3 +225,51 @@ RGHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RGHandle d
 
     return pass->output;
 }
+
+RGHandle LightingProcessor::ExtractHalfDepthNormal(RenderGraph* pRenderGraph, RGHandle depth, RGHandle normal, uint32_t width, uint32_t height)
+{
+    uint32_t half_width = (width + 1) / 2;
+    uint32_t half_height = (height + 1) / 2;
+
+    struct ExtractHalfDepthNormalData
+    {
+        RGHandle depth;
+        RGHandle normal;
+        RGHandle output;
+    };
+
+    return pRenderGraph->AddPass<ExtractHalfDepthNormalData>("Extract half depth/normal", RenderPassType::Compute,
+        [&](ExtractHalfDepthNormalData& data, RGBuilder& builder)
+        {
+            data.depth = builder.Read(depth);
+            data.normal = builder.Read(normal);
+
+            RGTexture::Desc desc;
+            desc.width = half_width;
+            desc.height = half_height;
+            desc.format = GfxFormat::RG32UI;
+            data.output = builder.Write(builder.Create<RGTexture>(desc, "Half Depth/Normal"));
+        },
+        [=](const ExtractHalfDepthNormalData& data, IGfxCommandList* pCommandList)
+        {
+            static IGfxPipelineState* pso = nullptr;
+            if (pso == nullptr)
+            {
+                GfxComputePipelineDesc psoDesc;
+                psoDesc.cs = m_pRenderer->GetShader("extract_half_depth_normal.hlsl", "main", "cs_6_6", {});
+                pso = m_pRenderer->GetPipelineState(psoDesc, "extract half depth/normal PSO");
+            }
+
+            pCommandList->SetPipelineState(pso);
+
+            uint32_t constants[3] = {
+                pRenderGraph->GetTexture(data.depth)->GetSRV()->GetHeapIndex(),
+                pRenderGraph->GetTexture(data.normal)->GetSRV()->GetHeapIndex(),
+                pRenderGraph->GetTexture(data.output)->GetUAV()->GetHeapIndex(),
+            };
+
+            pCommandList->SetComputeConstants(0, constants, sizeof(constants));
+            pCommandList->Dispatch((half_width + 7) / 8, (half_height + 7) / 8, 1);
+        })->output;
+}
+

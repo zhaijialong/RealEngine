@@ -1,16 +1,14 @@
+#include "reservoir.hlsli"
 #include "../ray_trace.hlsli"
 #include "../random.hlsli"
 #include "../importance_sampling.hlsli"
 
-cbuffer CB : register(b1)
+cbuffer CB : register(b0)
 {
-    uint c_depthTexture;
-    uint c_normalTexture;
+    uint c_halfDepthNormalTexture;
     uint c_prevLinearDepthTexture;
     uint c_historyRadiance;
     uint c_outputRadianceUAV;
-    uint c_outputHitNormalUAV;
-    uint c_outputRayUAV;
 }
 
 float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
@@ -39,25 +37,21 @@ float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
-    Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
+    Texture2D<uint2> halfDepthNormalTexture = ResourceDescriptorHeap[c_halfDepthNormalTexture];
     RWTexture2D<float4> outputRadianceUAV = ResourceDescriptorHeap[c_outputRadianceUAV];
-    RWTexture2D<float2> outputHitNormalUAV = ResourceDescriptorHeap[c_outputHitNormalUAV];
-    RWTexture2D<float2> outputRayUAV = ResourceDescriptorHeap[c_outputRayUAV];
     
-    float depth = depthTexture[dispatchThreadID.xy];    
+    float depth = asfloat(halfDepthNormalTexture[dispatchThreadID.xy].x);
+    float3 N = DecodeNormal16x2(halfDepthNormalTexture[dispatchThreadID.xy].y);
+
     if (depth == 0.0)
     {
         outputRadianceUAV[dispatchThreadID.xy] = 0.xxxx;
-        outputHitNormalUAV[dispatchThreadID.xy] = 0.xx;
-        outputRayUAV[dispatchThreadID.xy] = 0.xx;
         return;
     }
 
-    float3 worldPos = GetWorldPosition(dispatchThreadID.xy, depth);
-    float3 N = DecodeNormal(normalTexture[dispatchThreadID.xy].xyz);
+    float3 worldPos = GetWorldPosition(FullScreenPosition(dispatchThreadID.xy), depth);
     
-    BNDS<1> bnds = BNDS<1>::Create(dispatchThreadID.xy, SceneCB.renderSize);
+    BNDS<1> bnds = BNDS<1>::Create(dispatchThreadID.xy, (SceneCB.renderSize + 1) / 2);
     float3 direction = SampleUniformHemisphere(bnds.RandomFloat2(), N); //uniform sample hemisphere, following the ReSTIR GI paper
     float pdf = 1.0 / (2.0 * M_PI);
 
@@ -101,7 +95,5 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         hitNormal = -direction;
     }
     
-    outputRadianceUAV[dispatchThreadID.xy] = float4(radiance, hitInfo.rayT);
-    outputHitNormalUAV[dispatchThreadID.xy] = OctEncode(hitNormal) * 0.5 + 0.5;
-    outputRayUAV[dispatchThreadID.xy] = OctEncode(direction) * 0.5 + 0.5;
+    outputRadianceUAV[dispatchThreadID.xy] = float4(radiance, 0);
 }

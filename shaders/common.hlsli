@@ -106,6 +106,22 @@ float3 DecodeNormal(float3 f)
     return OctDecode(n * 2.0 - 1.0);
 }
 
+uint EncodeNormal16x2(float3 n)
+{
+    float2 v = OctEncode(n) * 0.5 + 0.5;
+    uint2 u16 = (uint2)round(v * 65535.0);
+
+    return (u16.x << 16) | u16.y;
+}
+
+float3 DecodeNormal16x2(uint f)
+{
+    uint2 u16 = uint2(f >> 16, f & 0xffff);
+    float2 n = u16 / 65535.0;
+    
+    return OctDecode(n * 2.0 - 1.0);
+}
+
 float4 EncodeAnisotropy(float3 T, float anisotropy)
 {
     return float4(EncodeNormal(T), anisotropy * 0.5 + 0.5);
