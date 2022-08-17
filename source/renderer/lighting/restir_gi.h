@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../render_graph.h"
-#include "../resource/texture_2d.h"
-#include "reflection_denoiser.h"
+#include "gi_denoiser.h"
 
 class ReSTIRGI
 {
@@ -42,9 +40,9 @@ private:
 
     TemporalReservoirBuffer m_temporalReservoir[2];
 
-    eastl::unique_ptr<ReflectionDenoiser> m_pDenoiser; //todo : recurrent blur denoiser
+    eastl::unique_ptr<GIDenoiser> m_pDenoiser;
 
-    bool m_bEnable = false;
+    bool m_bEnable = true;
     bool m_bEnableReSTIR = true;
-    bool m_bEnableDenoiser = true;
+    bool m_bEnableDenoiser = false;
 };

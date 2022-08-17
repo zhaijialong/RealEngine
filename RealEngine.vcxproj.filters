@@ -1481,6 +1481,24 @@
     <FxCompile Include="shaders\extract_half_depth_normal.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\recurrent_blur\blur.hlsl">
+      <Filter>shaders\recurrent_blur</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\recurrent_blur\history_reconstruction.hlsl">
+      <Filter>shaders\recurrent_blur</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\recurrent_blur\post_blur.hlsl">
+      <Filter>shaders\recurrent_blur</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\recurrent_blur\pre_blur.hlsl">
+      <Filter>shaders\recurrent_blur</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\recurrent_blur\temporal_accumulation.hlsl">
+      <Filter>shaders\recurrent_blur</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\recurrent_blur\temporal_stabilization.hlsl">
+      <Filter>shaders\recurrent_blur</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">

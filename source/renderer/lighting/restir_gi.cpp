@@ -20,7 +20,7 @@ ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("restir_gi/restir_resolve.hlsl", "main", "cs_6_6", {});
     m_pResolvePSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/resolve PSO");
 
-    m_pDenoiser = eastl::make_unique<ReflectionDenoiser>(pRenderer);
+    m_pDenoiser = eastl::make_unique<GIDenoiser>(pRenderer);
 }
 
 RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
@@ -43,7 +43,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
     uint32_t half_width = (width + 1) / 2;
     uint32_t half_height = (height + 1) / 2;
 
-    m_pDenoiser->ImportTextures(pRenderGraph, width, height);
+    m_pDenoiser->ImportHistoryTextures(pRenderGraph, width, height);
 
     struct RaytracePassData
     {
@@ -58,7 +58,11 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         {
             data.halfDepthNormal = builder.Read(halfDepthNormal);
             data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
-            data.historyRadiance = builder.Read(m_pDenoiser->GetHistoryRadiance());
+
+            if (m_bEnableDenoiser)
+            {
+                data.historyRadiance = builder.Read(m_pDenoiser->GetHistoryRadiance());
+            }
 
             RGTexture::Desc desc;
             desc.width = half_width;
@@ -226,73 +230,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         return resolve_pass->output;
     }
 
-    struct PrepareDenoiserArgsPassData
-    {
-        RGHandle argsBuffer;
-        RGHandle tileListBuffer;
-    };
-
-    auto prepare_args_pass = pRenderGraph->AddPass<PrepareDenoiserArgsPassData>("ReSTIR GI - prepare denoiser args", RenderPassType::Copy,
-        [&](PrepareDenoiserArgsPassData& data, RGBuilder& builder)
-        {
-            RGBuffer::Desc desc;
-            desc.size = sizeof(uint32_t) * 3;
-            desc.stride = sizeof(uint32_t);
-            desc.format = GfxFormat::R32UI;
-            desc.usage = GfxBufferUsageTypedBuffer;
-            data.argsBuffer = builder.Create<RGBuffer>(desc, "ReSTIR GI/denoiser indirect args");
-            data.argsBuffer = builder.Write(data.argsBuffer);
-
-            uint32_t tile_count_x = (width + 7) / 8;
-            uint32_t tile_count_y = (height + 7) / 8;
-            desc.size = sizeof(uint32_t) * tile_count_x * tile_count_y;
-            data.tileListBuffer = builder.Create<RGBuffer>(desc, "ReSTIR GI/denoiser tile list");
-            data.tileListBuffer = builder.Write(data.tileListBuffer);
-        },
-        [=](const PrepareDenoiserArgsPassData& data, IGfxCommandList* pCommandList)
-        {
-            IGfxBuffer* argsBuffer = pRenderGraph->GetBuffer(data.argsBuffer)->GetBuffer();
-            IGfxBuffer* tileListBuffer = pRenderGraph->GetBuffer(data.tileListBuffer)->GetBuffer();
-
-            uint32_t tile_count_x = (width + 7) / 8;
-            uint32_t tile_count_y = (height + 7) / 8;
-
-            {
-                StagingBuffer staging_buffer = m_pRenderer->GetStagingBufferAllocator()->Allocate(sizeof(uint3));
-                char* dst_data = (char*)staging_buffer.buffer->GetCpuAddress() + staging_buffer.offset;
-
-                uint3 dispatchArgs(tile_count_x * tile_count_y, 1, 1);
-                memcpy(dst_data, &dispatchArgs, sizeof(uint3));
-
-                pCommandList->CopyBuffer(argsBuffer, 0, staging_buffer.buffer, staging_buffer.offset, sizeof(uint3));
-            }
-
-            {
-                eastl::vector<uint32_t> tileList;
-                tileList.reserve(tile_count_x * tile_count_y);
-
-                for (uint32_t x = 0; x < tile_count_x; ++x)
-                {
-                    for (uint32_t y = 0; y < tile_count_y; ++y)
-                    {
-                        uint32_t tile_coord_x = x * 8;
-                        uint32_t tile_coord_y = y * 8;
-                        uint32_t tile = ((tile_coord_y & 0xffffu) << 16) | ((tile_coord_x & 0xffffu) << 0);
-                        tileList.push_back(tile);
-                    }
-                }
-
-                uint32_t data_size = sizeof(uint32_t) * tile_count_x * tile_count_y;
-                StagingBuffer staging_buffer = m_pRenderer->GetStagingBufferAllocator()->Allocate(data_size);
-                char* dst_data = (char*)staging_buffer.buffer->GetCpuAddress() + staging_buffer.offset;
-                memcpy(dst_data, tileList.data(), data_size);
-
-                pCommandList->CopyBuffer(tileListBuffer, 0, staging_buffer.buffer, staging_buffer.offset, data_size);
-            }
-        });
-
-    return m_pDenoiser->Render(pRenderGraph, prepare_args_pass->argsBuffer, prepare_args_pass->tileListBuffer,
-        resolve_pass->output, depth, linear_depth, normal, velocity, width, height, 1.0f, 1.0f);
+    return m_pDenoiser->Render(pRenderGraph, width, height);
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, uint32_t width, uint32_t height)
@@ -310,7 +248,7 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDep
     CB constants;
     constants.halfDepthNormalTexture = halfDepthNormal->GetSRV()->GetHeapIndex();
     constants.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
-    constants.historyRadiance = m_pDenoiser->GetHistoryRadianceSRV()->GetHeapIndex();
+    constants.historyRadiance = m_bEnableDenoiser ? m_pDenoiser->GetHistoryRadianceSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     constants.outputRadianceUAV = outputRadiance->GetUAV()->GetHeapIndex();
 
     pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
