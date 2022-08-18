@@ -46,10 +46,44 @@ T SrgbToLinear(T color)
     return T(SrgbToLinearChannel(color.r), SrgbToLinearChannel(color.g), SrgbToLinearChannel(color.b));
 }
 
-float3 RGBToYCbCr(float3 color)
+float3 RGBToYCbCr(float3 rgb)
 {
-    const float3x3 m = float3x3(0.2126, 0.7152, 0.0722, -0.1146, -0.3854, 0.5, 0.5, -0.4542, -0.0458);
-    return mul(m, color);
+    const float3x3 m = float3x3(
+         0.2126,  0.7152,  0.0722,
+        -0.1146, -0.3854,  0.5,
+         0.5,    -0.4542, -0.0458
+    );
+
+    return mul(m, rgb);
+}
+
+float3 YCbCrToRGB(float3 ycbcr)
+{
+    const float3x3 m = float3x3(
+        1.0,  0.0,     1.5748,
+        1.0, -0.1873, -0.4681,
+        1.0,  1.8556,  0.0
+    );
+
+    return mul(m, ycbcr);
+}
+
+float3 RGBToYCoCg(float3 rgb)
+{
+    float co = rgb.r - rgb.b;
+    float tmp = rgb.b + co * 0.5;
+    float cg = rgb.g - tmp;
+    float y = tmp + cg * 0.5;
+    return float3(y, co, cg);
+}
+
+float3 YCoCgToRGB(float3 ycocg)
+{
+    float tmp = ycocg.x - ycocg.z * 0.5;
+    float g = ycocg.z + tmp;
+    float b = tmp - ycocg.y * 0.5;
+    float r = b + ycocg.y;
+    return float3(r, g, b);
 }
 
 float Luminance(float3 color)

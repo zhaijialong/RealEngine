@@ -43,8 +43,6 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
     uint32_t half_width = (width + 1) / 2;
     uint32_t half_height = (height + 1) / 2;
 
-    m_pDenoiser->ImportHistoryTextures(pRenderGraph, width, height);
-
     struct RaytracePassData
     {
         RGHandle halfDepthNormal;
@@ -61,6 +59,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
 
             if (m_bEnableDenoiser)
             {
+                m_pDenoiser->ImportHistoryTextures(pRenderGraph, width, height);
                 data.historyRadiance = builder.Read(m_pDenoiser->GetHistoryRadiance());
             }
 
@@ -230,7 +229,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         return resolve_pass->output;
     }
 
-    return m_pDenoiser->Render(pRenderGraph, width, height);
+    return m_pDenoiser->Render(pRenderGraph, resolve_pass->output, width, height);
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, uint32_t width, uint32_t height)

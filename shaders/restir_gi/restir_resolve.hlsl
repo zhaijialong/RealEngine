@@ -15,7 +15,7 @@ float ComputeCustomWeight(float depth, float3 normal, float sampleDepth, float3 
 {
     float linearDepth = GetLinearDepth(depth);
     float linearSampleDepth = GetLinearDepth(sampleDepth);
-    float depthWeight = exp(-abs(linearDepth - linearSampleDepth) / (linearDepth * 5));
+    float depthWeight = exp(-abs(linearDepth - linearSampleDepth));
     
     float normalWeight = saturate(dot(normal, sampleNormal));
 
