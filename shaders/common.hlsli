@@ -70,19 +70,17 @@ float3 YCbCrToRGB(float3 ycbcr)
 
 float3 RGBToYCoCg(float3 rgb)
 {
-    float co = rgb.r - rgb.b;
-    float tmp = rgb.b + co * 0.5;
-    float cg = rgb.g - tmp;
-    float y = tmp + cg * 0.5;
+    float y = dot(rgb, float3(0.25, 0.5, 0.25));
+    float co = dot(rgb, float3(0.5, 0.0, -0.5));
+    float cg = dot(rgb, float3(-0.25, 0.5, -0.25));
     return float3(y, co, cg);
 }
 
 float3 YCoCgToRGB(float3 ycocg)
 {
-    float tmp = ycocg.x - ycocg.z * 0.5;
-    float g = ycocg.z + tmp;
-    float b = tmp - ycocg.y * 0.5;
-    float r = b + ycocg.y;
+    float r = dot(ycocg, float3(1.0, 1.0, -1.0));
+    float g = dot(ycocg, float3(1.0, 0.0, 1.0));
+    float b = dot(ycocg, float3(1.0, -1.0, -1.0));
     return float3(r, g, b);
 }
 

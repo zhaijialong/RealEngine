@@ -13,10 +13,10 @@ public:
     GIDenoiser(Renderer* pRenderer);
 
     void ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
     RGHandle GetHistoryRadiance() const { return m_historyRadiance; }
-    IGfxDescriptor* GetHistoryRadianceSRV() const { return m_pTemporalAccumulation1->GetSRV(); }
+    IGfxDescriptor* GetHistoryRadianceSRV() const { return m_pHistoryRadiance1->GetSRV(); }
 
 private:
     void PreBlur(IGfxCommandList* pCommandList);
@@ -28,12 +28,12 @@ private:
 private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pTemporalAccumulationPSO = nullptr;
+    IGfxPipelineState* m_pBlurPSO = nullptr;
 
     bool m_bHistoryInvalid = true;
+    eastl::unique_ptr<Texture2D> m_pTemporalAccumulationSH;
+
     RGHandle m_historyRadiance;
-
-    eastl::unique_ptr<Texture2D> m_pTemporalAccumulation0;
-    eastl::unique_ptr<Texture2D> m_pTemporalAccumulation1;
-
-    eastl::unique_ptr<Texture2D> m_pTemporalStabilization;
+    //eastl::unique_ptr<Texture2D> m_pHistoryRadiance0;
+    eastl::unique_ptr<Texture2D> m_pHistoryRadiance1;
 };

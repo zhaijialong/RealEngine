@@ -79,17 +79,17 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float4 bilinearWeights = GetBilinearCustomWeights(bilinearFilter, customWeights);
     
 #if OUTPUT_SH
-    uint4 rayDirection = rayDirectionTexture.GatherGreen(pointSampler, gatherUV);
+    uint4 rayDirection = rayDirectionTexture.GatherRed(pointSampler, gatherUV);
     float3 rayDirection00 = DecodeNormal16x2(rayDirection.x);
     float3 rayDirection10 = DecodeNormal16x2(rayDirection.y);
     float3 rayDirection01 = DecodeNormal16x2(rayDirection.z);
     float3 rayDirection11 = DecodeNormal16x2(rayDirection.w);
     
     SH sh00, sh10, sh01, sh11;
-    sh00.Evaluate(radiance00, rayDirection00);
-    sh10.Evaluate(radiance10, rayDirection10);
-    sh01.Evaluate(radiance01, rayDirection01);
-    sh11.Evaluate(radiance11, rayDirection11);
+    sh00.Project(radiance00, rayDirection00);
+    sh10.Project(radiance10, rayDirection10);
+    sh01.Project(radiance01, rayDirection01);
+    sh11.Project(radiance11, rayDirection11);
     
     SH sh = ApplyBilinearCustomWeights(sh00, sh10, sh01, sh11, bilinearWeights);
     outputTexture[pos] = PackSH(sh);

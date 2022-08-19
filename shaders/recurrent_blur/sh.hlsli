@@ -9,18 +9,18 @@ struct SH
     float co;
     float cg;
     
-    void Evaluate(float3 color, float3 dir)
+    void Project(float3 color, float3 dir)
     {
         float3 ycocg = RGBToYCoCg(color);
 
-        shY = shScale(shEvaluate(dir), ycocg.x);
+        shY = shScale(shEvaluateCosineLobe(dir), ycocg.x);
         co = ycocg.y;
         cg = ycocg.z;
     }
     
     float3 Unproject(float3 N)
-    {
-        float y = max(0.0, shUnproject(shY, N));
+    {        
+        float y = max(0.0, shUnproject(shDiffuseConvolution(shY), N));
         return YCoCgToRGB(float3(y, co, cg));
     }
     
