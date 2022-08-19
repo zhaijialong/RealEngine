@@ -6,8 +6,10 @@ cbuffer CB : register(b1)
 {
     uint c_halfDepthNormal;
     uint c_inputReservoirSampleRadiance;
+    uint c_inputReservoirRayDirection;
     uint c_inputReservoir;
     uint c_outputReservoirSampleRadiance;
+    uint c_outputReservoirRayDirection;
     uint c_outputReservoir;
     uint c_spatialPass;
 }
@@ -15,10 +17,12 @@ cbuffer CB : register(b1)
 Reservoir LoadReservoir(uint2 pos, float depth, float3 normal)
 {    
     Texture2D reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_inputReservoirSampleRadiance];
+    Texture2D<uint> reservoirRayDirectionTexture = ResourceDescriptorHeap[c_inputReservoirRayDirection];
     Texture2D reservoirTexture = ResourceDescriptorHeap[c_inputReservoir];
 
     Reservoir R;
     R.sample.radiance = reservoirSampleRadianceTexture[pos].xyz;
+    R.sample.rayDirection = reservoirRayDirectionTexture[pos];
 
     R.M = reservoirTexture[pos].x;
     R.W = reservoirTexture[pos].y;
@@ -30,9 +34,11 @@ Reservoir LoadReservoir(uint2 pos, float depth, float3 normal)
 void StoreReservoir(uint2 pos, Reservoir R)
 {
     RWTexture2D<float4> reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_outputReservoirSampleRadiance];
+    RWTexture2D<uint> reservoirRayDirectionTexture = ResourceDescriptorHeap[c_outputReservoirRayDirection];
     RWTexture2D<float2> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
     
     reservoirSampleRadianceTexture[pos] = float4(R.sample.radiance, 0);
+    reservoirRayDirectionTexture[pos] = R.sample.rayDirection;
     reservoirTexture[pos] = float2(R.M, R.W);
 }
 

@@ -6,20 +6,26 @@ cbuffer CB : register(b1)
     uint c_halfDepthNormal;
     uint c_velocity;
     uint c_candidateRadiance;
+    uint c_candidateRayDirection;
     uint c_historyReservoirDepthNormal;
     uint c_historyReservoirSampleRadiance;
+    uint c_historyReservoirRayDirection;
     uint c_historyReservoir;
     uint c_outputReservoirDepthNormal;
     uint c_outputReservoirSampleRadiance;
+    uint c_outputReservoirRayDirection;
     uint c_outputReservoir;
+    uint c_bHistoryInvalid;
 }
 
 Sample LoadInitialSample(uint2 pos)
 {
     Texture2D candidateRadianceTexture = ResourceDescriptorHeap[c_candidateRadiance];
+    Texture2D<uint> candidateRayDirectionTexture = ResourceDescriptorHeap[c_candidateRayDirection];
     
     Sample S;
     S.radiance = candidateRadianceTexture[pos].xyz;
+    S.rayDirection = candidateRayDirectionTexture[pos];
     
     return S;
 }
@@ -27,10 +33,12 @@ Sample LoadInitialSample(uint2 pos)
 Reservoir LoadTemporalReservoir(uint2 pos)
 {
     Texture2D reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_historyReservoirSampleRadiance];
+    Texture2D<uint> reservoirRayDirectionTexture = ResourceDescriptorHeap[c_historyReservoirRayDirection];
     Texture2D reservoirTexture = ResourceDescriptorHeap[c_historyReservoir];
 
     Reservoir R;
     R.sample.radiance = reservoirSampleRadianceTexture[pos].xyz;
+    R.sample.rayDirection = reservoirRayDirectionTexture[pos];
 
     R.M = reservoirTexture[pos].x;
     R.W = reservoirTexture[pos].y;
@@ -43,10 +51,12 @@ void StoreTemporalReservoir(uint2 pos, Reservoir R, float depth, float3 normal)
 {
     RWTexture2D<uint2> reservoirDepthNormalTexture = ResourceDescriptorHeap[c_outputReservoirDepthNormal];
     RWTexture2D<float4> reservoirSampleRadianceTexture = ResourceDescriptorHeap[c_outputReservoirSampleRadiance];
+    RWTexture2D<uint> reservoirRayDirectionTexture = ResourceDescriptorHeap[c_outputReservoirRayDirection];
     RWTexture2D<float2> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
     
     reservoirDepthNormalTexture[pos] = uint2(asuint(depth), EncodeNormal16x2(normal));
     reservoirSampleRadianceTexture[pos] = float4(R.sample.radiance, 0);
+    reservoirRayDirectionTexture[pos] = R.sample.rayDirection;
     reservoirTexture[pos] = float2(R.M, R.W);
 }
 
@@ -93,12 +103,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         float4 prevWorldPos = mul(CameraCB.mtxPrevViewProjectionInverse, clipPos);
         prevWorldPos.xyz /= prevWorldPos.w;
         
-        bool invalid = false;
+        bool invalid = c_bHistoryInvalid;
         invalid |= length(worldPos - prevWorldPos.xyz) > 0.1 * GetLinearDepth(depth);
         invalid |= saturate(dot(normal, prevNormal)) < 0.8;
         
         if (invalid)
         {
+            R.sample = S;
             R.sumWeight = R.M = 0;
         }
     }

@@ -9,6 +9,7 @@ cbuffer CB : register(b0)
     uint c_prevLinearDepthTexture;
     uint c_historyRadiance;
     uint c_outputRadianceUAV;
+    uint c_outputRayDirection;
 }
 
 float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
@@ -44,6 +45,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D<uint2> halfDepthNormalTexture = ResourceDescriptorHeap[c_halfDepthNormalTexture];
     RWTexture2D<float4> outputRadianceUAV = ResourceDescriptorHeap[c_outputRadianceUAV];
+    RWTexture2D<uint> outputRayDirectionUAV = ResourceDescriptorHeap[c_outputRayDirection];
     
     float depth = asfloat(halfDepthNormalTexture[dispatchThreadID.xy].x);
     float3 N = DecodeNormal16x2(halfDepthNormalTexture[dispatchThreadID.xy].y);
@@ -51,6 +53,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     if (depth == 0.0)
     {
         outputRadianceUAV[dispatchThreadID.xy] = 0.xxxx;
+        outputRayDirectionUAV[dispatchThreadID.xy] = 0;
         return;
     }
 
@@ -103,4 +106,5 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
     
     outputRadianceUAV[dispatchThreadID.xy] = float4(radiance, 0);
+    outputRayDirectionUAV[dispatchThreadID.xy] = EncodeNormal16x2(direction);
 }

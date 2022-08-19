@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common.hlsli"
+//#include "../common.hlsli"
 #include "../SphericalHarmonics.hlsl"
 
 struct SH
@@ -43,25 +43,31 @@ struct SH
     }
 };
 
-uint3 PackSH(SH sh)
+SH lerp(SH x, SH y, float s)
 {
-    uint3 packed;
+    return y * s + x * (1.0 - s);
+}
+
+uint4 PackSH(SH sh)
+{
+    uint4 packed;
     packed.x = (f32tof16(sh.shY.x) << 16) | f32tof16(sh.shY.y);
     packed.y = (f32tof16(sh.shY.z) << 16) | f32tof16(sh.shY.w);
-    packed.z = (f32tof16(sh.co) << 16) | f32tof16(sh.cg);
+    packed.z = asuint(sh.co);
+    packed.w = asuint(sh.cg);
 
     return packed;
 }
 
-SH UnpackSH(uint3 packed)
+SH UnpackSH(uint4 packed)
 {
     SH sh;
     sh.shY.x = f16tof32(packed.x >> 16);
     sh.shY.y = f16tof32(packed.x & 0xffff);
     sh.shY.z = f16tof32(packed.y >> 16);
     sh.shY.w = f16tof32(packed.y & 0xffff);
-    sh.co = f16tof32(packed.z >> 16);
-    sh.cg = f16tof32(packed.z & 0xffff);
+    sh.co = asfloat(packed.z);
+    sh.cg = asfloat(packed.w);
 
     return sh;
 }

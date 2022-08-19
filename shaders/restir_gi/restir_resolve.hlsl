@@ -1,10 +1,12 @@
 #include "../common.hlsli"
 #include "../bilinear.hlsli"
+#include "../recurrent_blur/sh.hlsli"
 
 cbuffer CB : register(b1)
 {
     uint c_reservoirTexture;
     uint c_radianceTexture;
+    uint c_rayDirectionTexture;
     uint c_halfDepthNormal;
     uint c_depthTexture;
     uint c_normalTexture;
@@ -26,11 +28,16 @@ float ComputeCustomWeight(float depth, float3 normal, float sampleDepth, float3 
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D radianceTexture = ResourceDescriptorHeap[c_radianceTexture];
+    Texture2D<uint> rayDirectionTexture = ResourceDescriptorHeap[c_rayDirectionTexture];
     Texture2D reservoirTexture = ResourceDescriptorHeap[c_reservoirTexture];
     Texture2D<uint2> halfDepthNormal = ResourceDescriptorHeap[c_halfDepthNormal];
     Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
+#if OUTPUT_SH
+    RWTexture2D<uint4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
+#else
     RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
+#endif
     
     uint2 pos = dispatchThreadID.xy;
     float2 uv = GetScreenUV(pos, SceneCB.rcpRenderSize);
@@ -40,7 +47,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     if(depth == 0.0)
     {
-        outputTexture[pos] = 0.xxxx;
+        outputTexture[pos] = 0;
         return;
     }
     
@@ -70,7 +77,24 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     customWeights.w = ComputeCustomWeight(depth, N, asfloat(sampleDepth.w), DecodeNormal16x2(sampleNormal.w));
     
     float4 bilinearWeights = GetBilinearCustomWeights(bilinearFilter, customWeights);
-    float3 radiance = ApplyBilinearCustomWeights(radiance00, radiance10, radiance01, radiance11, bilinearWeights);
     
+#if OUTPUT_SH
+    uint4 rayDirection = rayDirectionTexture.GatherGreen(pointSampler, gatherUV);
+    float3 rayDirection00 = DecodeNormal16x2(rayDirection.x);
+    float3 rayDirection10 = DecodeNormal16x2(rayDirection.y);
+    float3 rayDirection01 = DecodeNormal16x2(rayDirection.z);
+    float3 rayDirection11 = DecodeNormal16x2(rayDirection.w);
+    
+    SH sh00, sh10, sh01, sh11;
+    sh00.Evaluate(radiance00, rayDirection00);
+    sh10.Evaluate(radiance10, rayDirection10);
+    sh01.Evaluate(radiance01, rayDirection01);
+    sh11.Evaluate(radiance11, rayDirection11);
+    
+    SH sh = ApplyBilinearCustomWeights(sh00, sh10, sh01, sh11, bilinearWeights);
+    outputTexture[pos] = PackSH(sh);
+#else
+    float3 radiance = ApplyBilinearCustomWeights(radiance00, radiance10, radiance01, radiance11, bilinearWeights);
     outputTexture[pos] = float4(radiance, 0.0);
+#endif
 }
