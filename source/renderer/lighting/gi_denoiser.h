@@ -20,7 +20,8 @@ public:
 
 private:
     void PreBlur(IGfxCommandList* pCommandList);
-    void TemporalAccumulation(IGfxCommandList* pCommandList);
+    void TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
+        RGTexture* outputSH, uint32_t width, uint32_t height);
     void Blur(IGfxCommandList* pCommandList);
     void PostBlur(IGfxCommandList* pCommandList);
     void TemporalStabilization(IGfxCommandList* pCommandList);
@@ -32,6 +33,8 @@ private:
 
     bool m_bHistoryInvalid = true;
     eastl::unique_ptr<Texture2D> m_pTemporalAccumulationSH;
+    eastl::unique_ptr<Texture2D> m_pTemporalAccumulationCount0;
+    eastl::unique_ptr<Texture2D> m_pTemporalAccumulationCount1;
 
     RGHandle m_historyRadiance;
     //eastl::unique_ptr<Texture2D> m_pHistoryRadiance0;
