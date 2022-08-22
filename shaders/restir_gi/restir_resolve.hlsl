@@ -65,25 +65,25 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     uint4 sampleDepth = halfDepthNormal.GatherRed(pointSampler, gatherUV);
     uint4 sampleNormal = halfDepthNormal.GatherGreen(pointSampler, gatherUV);
     
-    float3 radiance00 = float3(radianceRed.x, radianceGreen.x, radianceBlue.x) * W.x;
-    float3 radiance10 = float3(radianceRed.y, radianceGreen.y, radianceBlue.y) * W.y;
-    float3 radiance01 = float3(radianceRed.z, radianceGreen.z, radianceBlue.z) * W.z;
-    float3 radiance11 = float3(radianceRed.w, radianceGreen.w, radianceBlue.w) * W.w;
+    float3 radiance00 = float3(radianceRed.w, radianceGreen.w, radianceBlue.w) * W.w;
+    float3 radiance10 = float3(radianceRed.z, radianceGreen.z, radianceBlue.z) * W.z;
+    float3 radiance01 = float3(radianceRed.x, radianceGreen.x, radianceBlue.x) * W.x;
+    float3 radiance11 = float3(radianceRed.y, radianceGreen.y, radianceBlue.y) * W.y;
     
     float4 customWeights;
-    customWeights.x = ComputeCustomWeight(depth, N, asfloat(sampleDepth.x), DecodeNormal16x2(sampleNormal.x));
-    customWeights.y = ComputeCustomWeight(depth, N, asfloat(sampleDepth.y), DecodeNormal16x2(sampleNormal.y));
-    customWeights.z = ComputeCustomWeight(depth, N, asfloat(sampleDepth.z), DecodeNormal16x2(sampleNormal.z));
-    customWeights.w = ComputeCustomWeight(depth, N, asfloat(sampleDepth.w), DecodeNormal16x2(sampleNormal.w));
+    customWeights.x = ComputeCustomWeight(depth, N, asfloat(sampleDepth.w), DecodeNormal16x2(sampleNormal.w));
+    customWeights.y = ComputeCustomWeight(depth, N, asfloat(sampleDepth.z), DecodeNormal16x2(sampleNormal.z));
+    customWeights.z = ComputeCustomWeight(depth, N, asfloat(sampleDepth.x), DecodeNormal16x2(sampleNormal.x));
+    customWeights.w = ComputeCustomWeight(depth, N, asfloat(sampleDepth.y), DecodeNormal16x2(sampleNormal.y));
     
     float4 bilinearWeights = GetBilinearCustomWeights(bilinearFilter, customWeights);
     
 #if OUTPUT_SH
     uint4 rayDirection = rayDirectionTexture.GatherRed(pointSampler, gatherUV);
-    float3 rayDirection00 = DecodeNormal16x2(rayDirection.x);
-    float3 rayDirection10 = DecodeNormal16x2(rayDirection.y);
-    float3 rayDirection01 = DecodeNormal16x2(rayDirection.z);
-    float3 rayDirection11 = DecodeNormal16x2(rayDirection.w);
+    float3 rayDirection00 = DecodeNormal16x2(rayDirection.w);
+    float3 rayDirection10 = DecodeNormal16x2(rayDirection.z);
+    float3 rayDirection01 = DecodeNormal16x2(rayDirection.x);
+    float3 rayDirection11 = DecodeNormal16x2(rayDirection.y);
     
     SH sh00, sh10, sh01, sh11;
     sh00.Project(radiance00, rayDirection00);

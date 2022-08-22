@@ -47,5 +47,5 @@ private:
 
     bool m_bEnable = true;
     bool m_bEnableReSTIR = true;
-    bool m_bEnableDenoiser = false;
+    bool m_bEnableDenoiser = true;
 };
