@@ -9,8 +9,8 @@ cbuffer CB : register(b0)
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    RWTexture2D<float2> velocityTexture = ResourceDescriptorHeap[c_velocityTexture];
-    float2 velocity = velocityTexture[dispatchThreadID.xy];
+    RWTexture2D<float4> velocityTexture = ResourceDescriptorHeap[c_velocityTexture];
+    float4 velocity = velocityTexture[dispatchThreadID.xy];
 
     if (any(abs(velocity) > 0.00001))
     {
@@ -25,5 +25,5 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float4 prevClipPos = mul(CameraCB.mtxClipToPrevClipNoJitter, float4(ndcPos, 1.0));
     float3 prevNdcPos = GetNdcPosition(prevClipPos);
 
-    velocityTexture[dispatchThreadID.xy] = ndcPos.xy - prevNdcPos.xy;
+    velocityTexture[dispatchThreadID.xy] = float4(ndcPos - prevNdcPos, 0.0);
 }

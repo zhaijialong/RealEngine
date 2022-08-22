@@ -133,7 +133,7 @@ IGfxPipelineState* MeshMaterial::GetVelocityPSO()
         psoDesc.depthstencil_state.depth_write = false;
         psoDesc.depthstencil_state.depth_test = true;
         psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-        psoDesc.rt_format[0] = GfxFormat::RG16F;
+        psoDesc.rt_format[0] = GfxFormat::RGBA16F;
         psoDesc.depthstencil_format = GfxFormat::D32F;
 
         m_pVelocityPSO = pRenderer->GetPipelineState(psoDesc, "model velocity PSO");

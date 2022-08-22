@@ -160,6 +160,7 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
     m_cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
     m_cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
 
+    m_cameraCB.mtxPrevView = m_prevView;
     m_cameraCB.mtxPrevViewProjection = m_prevViewProjectionJitter;
     m_cameraCB.mtxPrevViewProjectionInverse = inverse(m_prevViewProjectionJitter);
 
@@ -232,6 +233,7 @@ void Camera::UpdateJitter()
 
 void Camera::UpdateMatrix()
 {
+    m_prevView = m_view;
     m_prevViewProjection = m_viewProjection;
     m_prevViewProjectionJitter = m_viewProjectionJitter;
 

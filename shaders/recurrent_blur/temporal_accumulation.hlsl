@@ -44,6 +44,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     float3 velocity = velocityTexture[pos].xyz;
     float2 prevUV = GetScreenUV(pos, SceneCB.rcpRenderSize) - velocity.xy * float2(0.5, -0.5);
+    float prevDepth = depth - velocity.z;
     if (c_bHistoryInvalid || any(prevUV < 0.0) || any(prevUV > 1.0))
     {
         outputTexture[pos] = inputTexture[pos];
@@ -57,33 +58,34 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Bilinear bilinearFilter = GetBilinearFilter(prevUV, SceneCB.renderSize);
     float2 prevGatherUV = (bilinearFilter.origin + 1.0) * SceneCB.rcpRenderSize;
     
-    uint4 historySH_R = historyTexture.GatherRed(pointSampler, prevGatherUV);
-    uint4 historySH_G = historyTexture.GatherGreen(pointSampler, prevGatherUV);
-    uint4 historySH_B = historyTexture.GatherBlue(pointSampler, prevGatherUV);
-    uint4 historySH_A = historyTexture.GatherAlpha(pointSampler, prevGatherUV);    
     float4 historyAccumulationCount = (float4)historyAccumulationCountTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
     
-    SH historySH00 = UnpackSH(uint4(historySH_R.w, historySH_G.w, historySH_B.w, historySH_A.w));
-    SH historySH10 = UnpackSH(uint4(historySH_R.z, historySH_G.z, historySH_B.z, historySH_A.z));
-    SH historySH01 = UnpackSH(uint4(historySH_R.x, historySH_G.x, historySH_B.x, historySH_A.x));
-    SH historySH11 = UnpackSH(uint4(historySH_R.y, historySH_G.y, historySH_B.y, historySH_A.y));
+    SH historySH00 = UnpackSH(historyTexture[uint2(bilinearFilter.origin) + uint2(0, 0)]);
+    SH historySH10 = UnpackSH(historyTexture[uint2(bilinearFilter.origin) + uint2(1, 0)]);
+    SH historySH01 = UnpackSH(historyTexture[uint2(bilinearFilter.origin) + uint2(0, 1)]);
+    SH historySH11 = UnpackSH(historyTexture[uint2(bilinearFilter.origin) + uint2(1, 1)]);
     
     float4 prevLinearDepth = prevLinearDepthTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
-    float4 prevNormal_R = prevNormalTexture.GatherRed(pointSampler, prevGatherUV);
-    float4 prevNormal_G = prevNormalTexture.GatherGreen(pointSampler, prevGatherUV);
-    float4 prevNormal_B = prevNormalTexture.GatherBlue(pointSampler, prevGatherUV);
 
-    float3 prevNormal00 = DecodeNormal(float3(prevNormal_R.w, prevNormal_G.w, prevNormal_B.w));
-    float3 prevNormal10 = DecodeNormal(float3(prevNormal_R.z, prevNormal_G.z, prevNormal_B.z));
-    float3 prevNormal01 = DecodeNormal(float3(prevNormal_R.x, prevNormal_G.x, prevNormal_B.x));
-    float3 prevNormal11 = DecodeNormal(float3(prevNormal_R.y, prevNormal_G.y, prevNormal_B.y));
+    //float3 prevNormal00 = DecodeNormal(normalTexture[uint2(bilinearFilter.origin) + uint2(0, 0)].xyz);
+    //float3 prevNormal10 = DecodeNormal(normalTexture[uint2(bilinearFilter.origin) + uint2(1, 0)].xyz);
+    //float3 prevNormal01 = DecodeNormal(normalTexture[uint2(bilinearFilter.origin) + uint2(0, 1)].xyz);
+    //float3 prevNormal11 = DecodeNormal(normalTexture[uint2(bilinearFilter.origin) + uint2(1, 1)].xyz);
     
-    float4 customWeights; //todo : need to be improved
-    customWeights.x = abs(prevLinearDepth.x - linearDepth) < 0.1 && saturate(dot(prevNormal00, N)) > 0.9;
-    customWeights.y = abs(prevLinearDepth.y - linearDepth) < 0.1 && saturate(dot(prevNormal10, N)) > 0.9;
-    customWeights.z = abs(prevLinearDepth.z - linearDepth) < 0.1 && saturate(dot(prevNormal01, N)) > 0.9;
-    customWeights.w = abs(prevLinearDepth.w - linearDepth) < 0.1 && saturate(dot(prevNormal11, N)) > 0.9;
-    float4 bilinearWeights = GetBilinearCustomWeights(bilinearFilter, customWeights);
+    float4 prevClipPos = float4((prevUV * 2.0 - 1.0) * float2(1.0, -1.0), prevDepth, 1.0);
+    float4 prevWorldPos = mul(CameraCB.mtxPrevViewProjectionInverse, prevClipPos);
+    
+    // Compute disocclusion basing on plane distance
+    float3 Xprev = prevWorldPos.xyz / prevWorldPos.w;
+    float NoXprev = dot(N, Xprev);
+    float NoVprev = NoXprev / GetLinearDepth(prevDepth);
+    float4 planeDist = abs(NoVprev * prevLinearDepth - NoXprev);
+
+    float threshold = 0.01;
+    float invDistToPoint = 1.0 / length(GetWorldPosition(pos, depth) - CameraCB.cameraPos);
+    float4 occlusion = step(planeDist * invDistToPoint, threshold);
+    
+    float4 bilinearWeights = GetBilinearCustomWeights(bilinearFilter, occlusion);
     
     SH historySH = ApplyBilinearCustomWeights(historySH00, historySH10, historySH01, historySH11, bilinearWeights);
     float accumulationCount = ApplyBilinearCustomWeights(historyAccumulationCount.x, historyAccumulationCount.y, historyAccumulationCount.z, historyAccumulationCount.w, bilinearWeights);
