@@ -1508,6 +1508,9 @@
     <FxCompile Include="shaders\SphericalHarmonics.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\recurrent_blur\mip_generation.hlsl">
+      <Filter>shaders\recurrent_blur</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">

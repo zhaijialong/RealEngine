@@ -35,18 +35,24 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     float3 worldPos = GetWorldPosition(pos, depth);
     float3 N = DecodeNormal(normalTexture[pos].xyz);
-    PRNG rng = PRNG::Create(pos, SceneCB.renderSize);
-    
-    const float blurRadiusScale = 1.0 / (1.0 + accumulationCountTexture[pos]);
 
+    PRNG rng = PRNG::Create(pos, SceneCB.renderSize);
+    float rotation = rng.RandomFloat() * M_PI * 2.0;
+    float s, c;
+    sincos(rotation, s, c);
+    float2x2 mtxRotation = float2x2(c, -s, s, c);
+    
+    uint accumulationCount = accumulationCountTexture[pos];
+    const float2 blurRadius = lerp(2.0, 8.0, smoothstep(0.0, 1.0, 1.0 - (float)accumulationCount / MAX_TEMPORAL_ACCUMULATION_FRAME)) * SceneCB.rcpRenderSize * GetLinearDepth(depth);
+    
     SH sh = UnpackSH(inputSHTexture[pos]);
     float sumWeight = 1.0;
     
     [unroll]
-    for (uint i = 0; i < 8; ++i)
-    {
-        float2 random = (rng.RandomFloat2() * 2.0 - 1.0) * 0.05; //todo
-        float2 uv = GetSampleUV(worldPos, N, random);
+    for (uint i = 0; i < SAMPLE_NUM; ++i)
+    {        
+        float2 random = mul(mtxRotation, POISSON_SAMPLES[i]);
+        float2 uv = GetSampleUV(worldPos, N, random * blurRadius);
         
         if (any(uv < 0.0) || any(uv > 1.0))
         {
@@ -65,7 +71,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         sh = sh + UnpackSH(inputSHTexture[samplePos]) * weight;
         sumWeight += weight;
         
-        if (all(pos == uint2(500, 500)))
+        if (all(pos == SceneCB.renderSize / 2))
         {
             //debug::DrawSphere(sampleWorldPos, 0.001, float3(1, 0, 0));
         }
