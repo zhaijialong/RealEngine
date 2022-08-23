@@ -22,7 +22,7 @@ private:
     void PreBlur(IGfxCommandList* pCommandList);
     void TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
         RGTexture* outputSH, uint32_t width, uint32_t height);
-    void Blur(IGfxCommandList* pCommandList);
+    void Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height);
     void PostBlur(IGfxCommandList* pCommandList);
     void TemporalStabilization(IGfxCommandList* pCommandList);
 

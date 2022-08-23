@@ -23,8 +23,8 @@ void GIDenoiser::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width
         m_pTemporalAccumulationCount0.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R8UI, GfxTextureUsageUnorderedAccess, "GIDenoiser/temporal accumulation count 0"));
         m_pTemporalAccumulationCount1.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R8UI, GfxTextureUsageUnorderedAccess, "GIDenoiser/temporal accumulation count 1"));
 
-        //m_pHistoryRadiance0.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "GIDenoiser/history radiance 0"));
-        m_pHistoryRadiance1.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "GIDenoiser/history radiance 1"));
+        //m_pHistoryRadiance0.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "GIDenoiser/history radiance 0"));
+        m_pHistoryRadiance1.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "GIDenoiser/history radiance 1"));
 
         m_bHistoryInvalid = true;
     }
@@ -87,6 +87,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
     {
         RGHandle inputSH;
         RGHandle accumulationCount;
+        RGHandle depth;
         RGHandle normal;
         RGHandle outputSH;
         RGHandle outputRadiance;
@@ -97,6 +98,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
         {
             data.inputSH = builder.Read(temporal_accumulation->outputSH);
             data.accumulationCount = builder.Read(temporal_accumulation->outputAccumulationCount);
+            data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
             data.outputSH = builder.Write(temporal_accumulation->historySH);
 
@@ -104,16 +106,11 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
         },
         [=](const BlurData& data, IGfxCommandList* pCommandList)
         {
-            pCommandList->SetPipelineState(m_pBlurPSO);
-
-            uint32_t constants[4] = {
-                pRenderGraph->GetTexture(data.inputSH)->GetSRV()->GetHeapIndex(),
-                pRenderGraph->GetTexture(data.normal)->GetSRV()->GetHeapIndex(),
-                m_pTemporalAccumulationSH->GetUAV()->GetHeapIndex(),
-                m_pHistoryRadiance1->GetUAV()->GetHeapIndex(),
-            };
-            pCommandList->SetComputeConstants(0, constants, sizeof(constants));
-            pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+            Blur(pCommandList,
+                pRenderGraph->GetTexture(data.inputSH),
+                pRenderGraph->GetTexture(data.depth),
+                pRenderGraph->GetTexture(data.normal),
+                width, height);
         });
 
     return blur->outputRadiance;
@@ -159,4 +156,30 @@ void GIDenoiser::TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* 
     {
         m_bHistoryInvalid = false;
     }
+}
+
+void GIDenoiser::Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pBlurPSO);
+
+    struct CB
+    {
+        uint inputSHTexture;
+        uint accumulationCountTexture;
+        uint depthTexture;
+        uint normalTexture;
+        uint outputSHTexture;
+        uint outputRadianceTexture;
+    };
+
+    CB constants;
+    constants.inputSHTexture = inputSH->GetSRV()->GetHeapIndex();
+    constants.accumulationCountTexture = m_pTemporalAccumulationCount1->GetSRV()->GetHeapIndex();
+    constants.depthTexture = depth->GetSRV()->GetHeapIndex();
+    constants.normalTexture = normal->GetSRV()->GetHeapIndex();
+    constants.outputSHTexture = m_pTemporalAccumulationSH->GetUAV()->GetHeapIndex();
+    constants.outputRadianceTexture = m_pHistoryRadiance1->GetUAV()->GetHeapIndex();
+
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }

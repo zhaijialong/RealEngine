@@ -3,6 +3,8 @@
 //#include "../common.hlsli"
 #include "../SphericalHarmonics.hlsl"
 
+#define MAX_TEMPORAL_ACCUMULATION_FRAME (64)
+
 struct SH
 {
     sh2 shY; //2nd order SH

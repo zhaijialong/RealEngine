@@ -486,6 +486,7 @@
     <None Include="shaders\model_constants.hlsli" />
     <None Include="shaders\random.hlsli" />
     <None Include="shaders\ray_trace.hlsli" />
+    <None Include="shaders\recurrent_blur\blur_common.hlsli" />
     <None Include="shaders\recurrent_blur\sh.hlsli" />
     <None Include="shaders\restir_gi\reservoir.hlsli" />
     <None Include="shaders\screen_space_ray_trace.hlsli" />

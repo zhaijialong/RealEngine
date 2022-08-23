@@ -2,24 +2,6 @@
 
 #include "common.hlsli"
 
-// "Efficient Construction of Perpendicular Vectors Without Branching"
-float3 GetPerpendicularVector(float3 u)
-{
-    float3 a = abs(u);
-    uint xm = ((a.x - a.y) < 0 && (a.x - a.z) < 0) ? 1 : 0;
-    uint ym = (a.y - a.z) < 0 ? (1 ^ xm) : 0;
-    uint zm = 1 ^ (xm | ym);
-    return cross(u, float3(xm, ym, zm));
-}
-
-float3x3 GetTangentBasis(float3 N)
-{
-    const float3 B = GetPerpendicularVector(N);
-    const float3 T = cross(B, N);
-
-    return float3x3(T, B, N);
-}
-
 float3 TangentToWorld(float3 v, float3 N)
 {
     float3x3 tangentBasis = GetTangentBasis(N);

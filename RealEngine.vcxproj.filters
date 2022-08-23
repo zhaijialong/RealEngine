@@ -1329,6 +1329,9 @@
     <None Include="shaders\recurrent_blur\sh.hlsli">
       <Filter>shaders\recurrent_blur</Filter>
     </None>
+    <None Include="shaders\recurrent_blur\blur_common.hlsli">
+      <Filter>shaders\recurrent_blur</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\imgui.hlsl">

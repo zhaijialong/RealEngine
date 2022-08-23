@@ -69,6 +69,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     const float searchRadius = c_spatialPass == 0 ? 16.0 : 8.0;
     float selected_target_p = TargetFunction(Rs.sample.radiance);
     
+    [unroll]
     for (uint i = 0; i < maxIterations; ++i)
     {
         uint2 qn = clamp(pos + searchRadius * (rng.RandomFloat2() * 2.0 - 1.0), 0, halfScreenSize);
