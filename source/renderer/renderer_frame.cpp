@@ -87,7 +87,7 @@ RGHandle Renderer::VelocityPass(RGHandle& depth)
             RGTexture::Desc desc;
             desc.width = m_nRenderWidth;
             desc.height = m_nRenderHeight;
-            desc.format = GfxFormat::RG16F;
+            desc.format = GfxFormat::RGBA16F;
             data.outVelocityRT = builder.Create<RGTexture>(desc, "Velocity RT");
 
             data.outVelocityRT = builder.WriteColor(0, data.outVelocityRT, 0, GfxRenderPassLoadOp::Clear, float4(0.0));

@@ -74,6 +74,8 @@ private:
     float4x4 m_view;
     float4x4 m_projection;
     float4x4 m_viewProjection;
+
+    float4x4 m_prevView;
     float4x4 m_prevViewProjection;
 
     float4x4 m_projectionJitter;
