@@ -6,6 +6,9 @@ GIDenoiser::GIDenoiser(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
+    desc.cs = pRenderer->GetShader("recurrent_blur/pre_blur.hlsl", "main", "cs_6_6", {});
+    m_pPreBlurPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/pre blur PSO");
+
     desc.cs = pRenderer->GetShader("recurrent_blur/temporal_accumulation.hlsl", "main", "cs_6_6", {});
     m_pTemporalAccumulationPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/temporal accumulation PSO");
 
@@ -36,6 +39,37 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "GI Denoiser");
 
+    struct PreBlurData
+    {
+        RGHandle inputSH;
+        RGHandle depth;
+        RGHandle normal;
+        RGHandle outputSH;
+    };
+
+    auto pre_blur = pRenderGraph->AddPass<PreBlurData>("GI Denoiser - pre blur", RenderPassType::Compute,
+        [&](PreBlurData& data, RGBuilder& builder)
+        {
+            data.inputSH = builder.Read(radianceSH);
+            data.depth = builder.Read(depth);
+            data.normal = builder.Read(normal);
+
+            RGTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::RGBA32UI;
+            data.outputSH = builder.Write(builder.Create<RGTexture>(desc, "GI Denoiser/pre blur outputSH"));
+        },
+        [=](const PreBlurData& data, IGfxCommandList* pCommandList)
+        {
+            PreBlur(pCommandList,
+                pRenderGraph->GetTexture(data.inputSH),
+                pRenderGraph->GetTexture(data.depth),
+                pRenderGraph->GetTexture(data.normal),
+                pRenderGraph->GetTexture(data.outputSH),
+                width, height);
+        });
+
     eastl::swap(m_pTemporalAccumulationCount0, m_pTemporalAccumulationCount1);
 
     struct TemporalAccumulationData
@@ -55,7 +89,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
     auto temporal_accumulation = pRenderGraph->AddPass<TemporalAccumulationData>("GI Denoiser - temporal accumulation", RenderPassType::Compute,
         [&](TemporalAccumulationData& data, RGBuilder& builder)
         {
-            data.inputSH = builder.Read(radianceSH);
+            data.inputSH = builder.Read(pre_blur->outputSH);
             data.historySH = builder.Read(builder.Import(m_pTemporalAccumulationSH->GetTexture(), GfxResourceState::UnorderedAccess));
             data.historyAccumulationCount = builder.Read(builder.Import(m_pTemporalAccumulationCount0->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS));
             data.depth = builder.Read(depth);
@@ -116,7 +150,29 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
     return blur->outputRadiance;
 }
 
-void GIDenoiser::TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity, 
+void GIDenoiser::PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* outputSH, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pPreBlurPSO);
+
+    struct CB
+    {
+        uint inputSHTexture;
+        uint depthTexture;
+        uint normalTexture;
+        uint outputSHTexture;
+    };
+
+    CB constants;
+    constants.inputSHTexture = inputSH->GetSRV()->GetHeapIndex();
+    constants.depthTexture = depth->GetSRV()->GetHeapIndex();
+    constants.normalTexture = normal->GetSRV()->GetHeapIndex();
+    constants.outputSHTexture = outputSH->GetUAV()->GetHeapIndex();
+
+    pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+}
+
+void GIDenoiser::TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
     RGTexture* outputSH, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pTemporalAccumulationPSO);

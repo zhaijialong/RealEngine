@@ -19,7 +19,7 @@ public:
     IGfxDescriptor* GetHistoryRadianceSRV() const { return m_pHistoryRadiance1->GetSRV(); }
 
 private:
-    void PreBlur(IGfxCommandList* pCommandList);
+    void PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* outputSH, uint32_t width, uint32_t height);
     void TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
         RGTexture* outputSH, uint32_t width, uint32_t height);
     void Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height);
@@ -28,6 +28,7 @@ private:
 
 private:
     Renderer* m_pRenderer = nullptr;
+    IGfxPipelineState* m_pPreBlurPSO = nullptr;
     IGfxPipelineState* m_pTemporalAccumulationPSO = nullptr;
     IGfxPipelineState* m_pBlurPSO = nullptr;
 
