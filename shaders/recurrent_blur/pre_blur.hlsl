@@ -6,6 +6,7 @@
 cbuffer CB : register(b0)
 {
     uint c_inputSHTexture;
+    uint c_varianceTexture;
     uint c_depthTexture;
     uint c_normalTexture;
     uint c_outputSHTexture;
@@ -17,6 +18,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     uint2 pos = dispatchThreadID.xy;
     
     Texture2D<uint4> inputSHTexture = ResourceDescriptorHeap[c_inputSHTexture];
+    Texture2D<float> varianceTexture = ResourceDescriptorHeap[c_varianceTexture];
     Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
     RWTexture2D<uint4> outputSHTexture = ResourceDescriptorHeap[c_outputSHTexture];
@@ -31,7 +33,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 worldPos = GetWorldPosition(pos, depth);
     float3 N = DecodeNormal(normalTexture[pos].xyz);
     
-    float variance = 0.5; //todo
+    float variance = varianceTexture[pos];
     const float2 blurRadius = lerp(2.0, 8.0, variance) * SceneCB.rcpRenderSize * GetLinearDepth(depth);
     
     SH sh = UnpackSH(inputSHTexture[pos]);

@@ -35,13 +35,14 @@ void GIDenoiser::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width
     m_historyRadiance = pRenderGraph->Import(m_pHistoryRadiance1->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 }
 
-RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
+RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, RGHandle depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "GI Denoiser");
 
     struct PreBlurData
     {
         RGHandle inputSH;
+        RGHandle variance;
         RGHandle depth;
         RGHandle normal;
         RGHandle outputSH;
@@ -51,6 +52,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
         [&](PreBlurData& data, RGBuilder& builder)
         {
             data.inputSH = builder.Read(radianceSH);
+            data.variance = builder.Read(variance);
             data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
 
@@ -64,6 +66,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
         {
             PreBlur(pCommandList,
                 pRenderGraph->GetTexture(data.inputSH),
+                pRenderGraph->GetTexture(data.variance),
                 pRenderGraph->GetTexture(data.depth),
                 pRenderGraph->GetTexture(data.normal),
                 pRenderGraph->GetTexture(data.outputSH),
@@ -150,13 +153,15 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
     return blur->outputRadiance;
 }
 
-void GIDenoiser::PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* outputSH, uint32_t width, uint32_t height)
+void GIDenoiser::PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* variance, RGTexture* depth, RGTexture* normal,
+    RGTexture* outputSH, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPreBlurPSO);
 
     struct CB
     {
         uint inputSHTexture;
+        uint varianceTexture;
         uint depthTexture;
         uint normalTexture;
         uint outputSHTexture;
@@ -164,6 +169,7 @@ void GIDenoiser::PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTe
 
     CB constants;
     constants.inputSHTexture = inputSH->GetSRV()->GetHeapIndex();
+    constants.varianceTexture = variance->GetSRV()->GetHeapIndex();
     constants.depthTexture = depth->GetSRV()->GetHeapIndex();
     constants.normalTexture = normal->GetSRV()->GetHeapIndex();
     constants.outputSHTexture = outputSH->GetUAV()->GetHeapIndex();

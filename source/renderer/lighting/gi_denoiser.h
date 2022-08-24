@@ -13,13 +13,14 @@ public:
     GIDenoiser(Renderer* pRenderer);
 
     void ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, RGHandle depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
     RGHandle GetHistoryRadiance() const { return m_historyRadiance; }
     IGfxDescriptor* GetHistoryRadianceSRV() const { return m_pHistoryRadiance1->GetSRV(); }
 
 private:
-    void PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* outputSH, uint32_t width, uint32_t height);
+    void PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* variance, RGTexture* depth, RGTexture* normal, 
+        RGTexture* outputSH, uint32_t width, uint32_t height);
     void TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
         RGTexture* outputSH, uint32_t width, uint32_t height);
     void Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height);

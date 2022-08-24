@@ -3,6 +3,7 @@
 #include "../common.hlsli"
 
 // generated with https://github.com/bartwronski/PoissonSamplingGenerator
+#if 0
 static const uint SAMPLE_NUM = 8;
 static const float2 POISSON_SAMPLES[SAMPLE_NUM] =
 {
@@ -15,6 +16,16 @@ static const float2 POISSON_SAMPLES[SAMPLE_NUM] =
     float2(-0.03046610330580737f, 0.4220034509328376f),
     float2(-0.2770630908672257f, -0.16925817178494032f),
 };
+#else
+static const uint SAMPLE_NUM = 4;
+static const float2 POISSON_SAMPLES[SAMPLE_NUM] =
+{
+    float2(-0.4646624066070678f, 0.24803163036536205f),
+    float2(0.956253704413146f, 0.16878146654045234f),
+    float2(0.1834577165360513f, -0.8139204782196608f),
+    float2(0.19292358168597165f, 0.689068261059822f),
+};
+#endif
 
 // "Fast Denoising with Self Stabilizing Recurrent Blurs", Dmitry Zhdan, 2020
 float GetGeometryWeight(float3 p0, float3 n0, float3 p, float planeDistNorm)

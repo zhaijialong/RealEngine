@@ -225,7 +225,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         RGHandle depth;
         RGHandle normal;
         RGHandle output;
-        RGHandle outputRayDirection;
+        RGHandle outputVariance;
     };
 
     auto resolve_pass = pRenderGraph->AddPass<ResolvePassData>("ReSTIR GI - resolve", RenderPassType::Compute,
@@ -246,6 +246,9 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             {
                 desc.format = GfxFormat::RGBA32UI;
                 data.output = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/resolve output SH"));
+
+                desc.format = GfxFormat::R8UNORM;
+                data.outputVariance = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/resolve output variance"));
             }
             else
             {
@@ -263,6 +266,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
                 pRenderGraph->GetTexture(data.depth),
                 pRenderGraph->GetTexture(data.normal),
                 pRenderGraph->GetTexture(data.output),
+                pRenderGraph->GetTexture(data.outputVariance),
                 width, height);
         });
 
@@ -271,7 +275,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         return resolve_pass->output;
     }
 
-    return m_pDenoiser->Render(pRenderGraph, resolve_pass->output, depth, normal, velocity, width, height);
+    return m_pDenoiser->Render(pRenderGraph, resolve_pass->output, resolve_pass->outputVariance, resolve_pass-> depth, normal, velocity, width, height);
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, RGTexture* outputRayDirection, uint32_t width, uint32_t height)
@@ -371,19 +375,20 @@ void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfD
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
-void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* rayDirection, 
-    RGTexture* halfDepthNormal, RGTexture* depth, RGTexture* normal, RGTexture* output, uint32_t width, uint32_t height)
+void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* rayDirection, RGTexture* halfDepthNormal, RGTexture* depth, RGTexture* normal, 
+    RGTexture* output, RGTexture* outputVariance, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_bEnableDenoiser ? m_pResolveSHPSO : m_pResolvePSO);
 
-    uint32_t constants[7] = { 
+    uint32_t constants[8] = { 
         reservoir->GetSRV()->GetHeapIndex(),
         radiance->GetSRV()->GetHeapIndex(),
         rayDirection->GetSRV()->GetHeapIndex(),
         halfDepthNormal->GetSRV()->GetHeapIndex(),
         depth->GetSRV()->GetHeapIndex(),
         normal->GetSRV()->GetHeapIndex(),
-        output->GetUAV()->GetHeapIndex()
+        output->GetUAV()->GetHeapIndex(),
+        outputVariance ? outputVariance->GetUAV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);

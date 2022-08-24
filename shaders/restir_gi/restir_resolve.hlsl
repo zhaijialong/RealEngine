@@ -11,6 +11,7 @@ cbuffer CB : register(b1)
     uint c_depthTexture;
     uint c_normalTexture;
     uint c_outputTexture;
+    uint c_outputVarianceTexture;
 }
 
 float ComputeCustomWeight(float depth, float3 normal, float sampleDepth, float3 sampleNormal)
@@ -35,6 +36,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
 #if OUTPUT_SH
     RWTexture2D<uint4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
+    RWTexture2D<float> outputVarianceTexture = ResourceDescriptorHeap[c_outputVarianceTexture];
 #else
     RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 #endif
@@ -90,6 +92,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     SH sh = ApplyBilinearCustomWeights(sh00, sh10, sh01, sh11, bilinearWeights);
     outputTexture[pos] = PackSH(sh);
+    
+    float4 M = reservoirTexture.GatherRed(pointSampler, gatherUV);
+    float sampleCount = ApplyBilinearCustomWeights(M.w, M.z, M.x, M.y, bilinearWeights);
+    outputVarianceTexture[pos] = square(1.0 - saturate(sampleCount / 500.0));
 #else
     float3 radiance = ApplyBilinearCustomWeights(radiance00, radiance10, radiance01, radiance11, bilinearWeights);
     outputTexture[pos] = float4(radiance, 0.0);
