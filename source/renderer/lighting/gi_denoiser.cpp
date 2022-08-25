@@ -133,7 +133,10 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
     struct MipGenerationData
     {
         RGHandle inputSH;
-        RGHandle outputSHMips;
+        RGHandle outputSHMips1;
+        RGHandle outputSHMips2;
+        RGHandle outputSHMips3;
+        RGHandle outputSHMips4;
     };
 
     auto mip_generation = pRenderGraph->AddPass<MipGenerationData>("GI Denoiser - mip generation", RenderPassType::Compute,
@@ -146,24 +149,27 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
             desc.height = (height + 1) / 2;
             desc.mip_levels = 4;
             desc.format = GfxFormat::RGBA32UI;
-            data.outputSHMips = builder.Create<RGTexture>(desc, "GI Denoiser/SH mips");
+            RGHandle shMips = builder.Create<RGTexture>(desc, "GI Denoiser/SH mips");
 
-            for (uint32_t i = 0; i < desc.mip_levels; ++i)
-            {
-                data.outputSHMips = builder.Write(data.outputSHMips, i);
-            }
+            data.outputSHMips1 = builder.Write(shMips, 0);
+            data.outputSHMips2 = builder.Write(shMips, 1);
+            data.outputSHMips3 = builder.Write(shMips, 2);
+            data.outputSHMips4 = builder.Write(shMips, 3);
         },
         [=](const MipGenerationData& data, IGfxCommandList* pCommandList)
         {
             MipGeneration(pCommandList,
                 pRenderGraph->GetTexture(data.inputSH),
-                pRenderGraph->GetTexture(data.outputSHMips),
+                pRenderGraph->GetTexture(data.outputSHMips1),
                 width, height);
         });
 
     struct HistoryReconstructionData
     {
-        RGHandle inputSHMips;
+        RGHandle inputSHMips1;
+        RGHandle inputSHMips2;
+        RGHandle inputSHMips3;
+        RGHandle inputSHMips4;
         RGHandle accumulationCount;
         RGHandle outputSH;
     };
@@ -171,10 +177,10 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
     auto history_reconstruction = pRenderGraph->AddPass<HistoryReconstructionData>("GI Denoiser - history reconstruction", RenderPassType::Compute,
         [&](HistoryReconstructionData& data, RGBuilder& builder)
         {
-            for (uint32_t i = 0; i < 4; ++i)
-            {
-                data.inputSHMips = builder.Read(mip_generation->outputSHMips, i);
-            }
+            data.inputSHMips1 = builder.Read(mip_generation->outputSHMips1, 0);
+            data.inputSHMips2 = builder.Read(mip_generation->outputSHMips2, 1);
+            data.inputSHMips3 = builder.Read(mip_generation->outputSHMips3, 2);
+            data.inputSHMips4 = builder.Read(mip_generation->outputSHMips4, 3);
 
             data.accumulationCount = builder.Read(temporal_accumulation->outputAccumulationCount);
             data.outputSH = builder.Write(temporal_accumulation->outputSH);
@@ -182,7 +188,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
         [=](const HistoryReconstructionData& data, IGfxCommandList* pCommandList)
         {
             HistoryReconstruction(pCommandList,
-                pRenderGraph->GetTexture(data.inputSHMips),
+                pRenderGraph->GetTexture(data.inputSHMips1),
                 pRenderGraph->GetTexture(data.outputSH),
                 width, height);
         });
@@ -351,6 +357,7 @@ void GIDenoiser::HistoryReconstruction(IGfxCommandList* pCommandList, RGTexture*
     constants.accumulationCountTexture = m_pTemporalAccumulationCount1->GetSRV()->GetHeapIndex();
     constants.outputSHTexture = outputSH->GetUAV()->GetHeapIndex();
 
+    pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 

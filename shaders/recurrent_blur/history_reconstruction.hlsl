@@ -1,3 +1,5 @@
+#include "../common.hlsli"
+#include "sh.hlsli"
 
 cbuffer CB : register(b0)
 {
@@ -15,8 +17,12 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D<uint> accumulationCountTexture = ResourceDescriptorHeap[c_accumulationCountTexture];
     RWTexture2D<uint4> outputSHTexture = ResourceDescriptorHeap[c_outputSHTexture];
     
-    if (accumulationCountTexture[pos] < 20)
+    float2 uv = GetScreenUV(pos, SceneCB.rcpRenderSize);
+    
+    if (accumulationCountTexture[pos] < 10)
     {
-        outputSHTexture[pos] = uint4(11, 30235, 23509, 2304943);
+
+        
+        //outputSHTexture[pos] = uint4(11, 30235, 23509, 2304943);
     }
 }
