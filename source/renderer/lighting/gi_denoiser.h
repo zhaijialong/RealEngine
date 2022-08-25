@@ -23,6 +23,7 @@ private:
         RGTexture* outputSH, uint32_t width, uint32_t height);
     void TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
         RGTexture* outputSH, uint32_t width, uint32_t height);
+    void MipGeneration(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* outputSHMips, uint32_t width, uint32_t height);
     void Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height);
     void PostBlur(IGfxCommandList* pCommandList);
     void TemporalStabilization(IGfxCommandList* pCommandList);
@@ -31,6 +32,8 @@ private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPreBlurPSO = nullptr;
     IGfxPipelineState* m_pTemporalAccumulationPSO = nullptr;
+    IGfxPipelineState* m_pMipGenerationPSO = nullptr;
+    IGfxPipelineState* m_pHistoryReconstruction = nullptr;
     IGfxPipelineState* m_pBlurPSO = nullptr;
 
     bool m_bHistoryInvalid = true;

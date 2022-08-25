@@ -1,6 +1,10 @@
 #include "gi_denoiser.h"
 #include "../renderer.h"
 
+#define A_CPU
+#include "ffx_a.h"
+#include "ffx_spd.h"
+
 GIDenoiser::GIDenoiser(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
@@ -11,6 +15,12 @@ GIDenoiser::GIDenoiser(Renderer* pRenderer)
 
     desc.cs = pRenderer->GetShader("recurrent_blur/temporal_accumulation.hlsl", "main", "cs_6_6", {});
     m_pTemporalAccumulationPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/temporal accumulation PSO");
+
+    desc.cs = pRenderer->GetShader("recurrent_blur/mip_generation.hlsl", "main", "cs_6_6", {});
+    m_pMipGenerationPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/mip generation PSO");
+
+    desc.cs = pRenderer->GetShader("recurrent_blur/history_reconstruction.hlsl", "main", "cs_6_6", {});
+    m_pHistoryReconstruction = pRenderer->GetPipelineState(desc, "GIDenoiser/history reconstruction PSO");
 
     desc.cs = pRenderer->GetShader("recurrent_blur/blur.hlsl", "main", "cs_6_6", {});
     m_pBlurPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/blur PSO");
@@ -120,6 +130,38 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
                 width, height);
         });
 
+    struct MipGenerationData
+    {
+        RGHandle inputSH;
+        RGHandle outputSHMips;
+    };
+
+    auto mip_generation = pRenderGraph->AddPass<MipGenerationData>("GI Denoiser - mip generation", RenderPassType::Compute,
+        [&](MipGenerationData& data, RGBuilder& builder)
+        {
+            data.inputSH = builder.Read(temporal_accumulation->outputSH);
+
+            RGTexture::Desc desc;
+            desc.width = (width + 1) / 2;
+            desc.height = (height + 1) / 2;
+            desc.mip_levels = 4;
+            desc.format = GfxFormat::RGBA32UI;
+            data.outputSHMips = builder.Create<RGTexture>(desc, "GI Denoiser/SH mips");
+
+            for (uint32_t i = 0; i < desc.mip_levels; ++i)
+            {
+                data.outputSHMips = builder.Write(data.outputSHMips, i);
+            }
+        },
+        [=](const MipGenerationData& data, IGfxCommandList* pCommandList)
+        {
+            MipGeneration(pCommandList,
+                pRenderGraph->GetTexture(data.inputSH),
+                pRenderGraph->GetTexture(data.outputSHMips),
+                width, height);
+        });
+
+
     struct BlurData
     {
         RGHandle inputSH;
@@ -218,6 +260,54 @@ void GIDenoiser::TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* 
     {
         m_bHistoryInvalid = false;
     }
+}
+
+void GIDenoiser::MipGeneration(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* outputSHMips, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pMipGenerationPSO);
+
+    varAU2(dispatchThreadGroupCountXY);
+    varAU2(workGroupOffset); // needed if Left and Top are not 0,0
+    varAU2(numWorkGroupsAndMips);
+    varAU4(rectInfo) = initAU4(0, 0, width, height); // left, top, width, height
+    SpdSetup(dispatchThreadGroupCountXY, workGroupOffset, numWorkGroupsAndMips, rectInfo, 4);
+
+    struct CB
+    {
+        uint mips;
+        uint numWorkGroups;
+        uint2 workGroupOffset;
+
+        float2 invInputSize;
+        uint inputSHTexture;
+        uint spdGlobalAtomicUAV;
+
+        //hlsl packing rules : every element in an array is stored in a four-component vector
+        uint4 outputSHTexture[4];
+    };
+
+    CB constants;
+    constants.numWorkGroups = numWorkGroupsAndMips[0];
+    constants.mips = numWorkGroupsAndMips[1];
+    constants.workGroupOffset[0] = workGroupOffset[0];
+    constants.workGroupOffset[1] = workGroupOffset[1];
+    constants.invInputSize[0] = 1.0f / width;
+    constants.invInputSize[1] = 1.0f / height;
+
+    constants.inputSHTexture = inputSH->GetSRV()->GetHeapIndex();
+    constants.spdGlobalAtomicUAV = m_pRenderer->GetSPDCounterBuffer()->GetUAV()->GetHeapIndex();
+
+    for (uint32_t i = 0; i < 4; ++i)
+    {
+        constants.outputSHTexture[i].x = outputSHMips->GetUAV(i, 0)->GetHeapIndex();
+    }
+
+    pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
+
+    uint32_t dispatchX = dispatchThreadGroupCountXY[0];
+    uint32_t dispatchY = dispatchThreadGroupCountXY[1];
+    uint32_t dispatchZ = 1; //array slice
+    pCommandList->Dispatch(dispatchX, dispatchY, dispatchZ);
 }
 
 void GIDenoiser::Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height)
