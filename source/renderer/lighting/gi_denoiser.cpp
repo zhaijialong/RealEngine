@@ -20,7 +20,7 @@ GIDenoiser::GIDenoiser(Renderer* pRenderer)
     m_pMipGenerationPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/mip generation PSO");
 
     desc.cs = pRenderer->GetShader("recurrent_blur/history_reconstruction.hlsl", "main", "cs_6_6", {});
-    m_pHistoryReconstruction = pRenderer->GetPipelineState(desc, "GIDenoiser/history reconstruction PSO");
+    m_pHistoryReconstructionPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/history reconstruction PSO");
 
     desc.cs = pRenderer->GetShader("recurrent_blur/blur.hlsl", "main", "cs_6_6", {});
     m_pBlurPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/blur PSO");
@@ -161,6 +161,31 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
                 width, height);
         });
 
+    struct HistoryReconstructionData
+    {
+        RGHandle inputSHMips;
+        RGHandle accumulationCount;
+        RGHandle outputSH;
+    };
+
+    auto history_reconstruction = pRenderGraph->AddPass<HistoryReconstructionData>("GI Denoiser - history reconstruction", RenderPassType::Compute,
+        [&](HistoryReconstructionData& data, RGBuilder& builder)
+        {
+            for (uint32_t i = 0; i < 4; ++i)
+            {
+                data.inputSHMips = builder.Read(mip_generation->outputSHMips, i);
+            }
+
+            data.accumulationCount = builder.Read(temporal_accumulation->outputAccumulationCount);
+            data.outputSH = builder.Write(temporal_accumulation->outputSH);
+        },
+        [=](const HistoryReconstructionData& data, IGfxCommandList* pCommandList)
+        {
+            HistoryReconstruction(pCommandList,
+                pRenderGraph->GetTexture(data.inputSHMips),
+                pRenderGraph->GetTexture(data.outputSH),
+                width, height);
+        });
 
     struct BlurData
     {
@@ -175,7 +200,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
     auto blur = pRenderGraph->AddPass<BlurData>("GI Denoiser - blur", RenderPassType::Compute,
         [&](BlurData& data, RGBuilder& builder)
         {
-            data.inputSH = builder.Read(temporal_accumulation->outputSH);
+            data.inputSH = builder.Read(history_reconstruction->outputSH);
             data.accumulationCount = builder.Read(temporal_accumulation->outputAccumulationCount);
             data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
@@ -308,6 +333,25 @@ void GIDenoiser::MipGeneration(IGfxCommandList* pCommandList, RGTexture* inputSH
     uint32_t dispatchY = dispatchThreadGroupCountXY[1];
     uint32_t dispatchZ = 1; //array slice
     pCommandList->Dispatch(dispatchX, dispatchY, dispatchZ);
+}
+
+void GIDenoiser::HistoryReconstruction(IGfxCommandList* pCommandList, RGTexture* inputSHMips, RGTexture* outputSH, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pHistoryReconstructionPSO);
+
+    struct CB
+    {
+        uint inputSHMipsTexture;
+        uint accumulationCountTexture;
+        uint outputSHTexture;
+    };
+
+    CB constants;
+    constants.inputSHMipsTexture = inputSHMips->GetSRV()->GetHeapIndex();
+    constants.accumulationCountTexture = m_pTemporalAccumulationCount1->GetSRV()->GetHeapIndex();
+    constants.outputSHTexture = outputSH->GetUAV()->GetHeapIndex();
+
+    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
 }
 
 void GIDenoiser::Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height)

@@ -81,14 +81,15 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float NoVprev = NoXprev / GetLinearDepth(prevDepth);
     float4 planeDist = abs(NoVprev * prevLinearDepth - NoXprev);
 
-    float threshold = 0.01;
-    float invDistToPoint = 1.0 / length(GetWorldPosition(pos, depth) - CameraCB.cameraPos);
-    float4 occlusion = step(planeDist * invDistToPoint, threshold);
+    const float threshold = 0.01;
+    float distToPoint = length(GetWorldPosition(pos, depth) - CameraCB.cameraPos);
+    float4 occlusion = step(planeDist, threshold * distToPoint);
     
-    occlusion.x *= dot(N, prevNormal00) > 0.95;
-    occlusion.y *= dot(N, prevNormal10) > 0.95;
-    occlusion.z *= dot(N, prevNormal01) > 0.95;
-    occlusion.w *= dot(N, prevNormal11) > 0.95;
+    const float normalThreshold = 0.9;
+    occlusion.x *= dot(N, prevNormal00) > normalThreshold;
+    occlusion.y *= dot(N, prevNormal10) > normalThreshold;
+    occlusion.z *= dot(N, prevNormal01) > normalThreshold;
+    occlusion.w *= dot(N, prevNormal11) > normalThreshold;
     
     float4 bilinearWeights = GetBilinearCustomWeights(bilinearFilter, occlusion);
     
