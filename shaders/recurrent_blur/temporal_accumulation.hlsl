@@ -67,10 +67,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     float4 prevLinearDepth = prevLinearDepthTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
 
-    float3 prevNormal00 = DecodeNormal(normalTexture[uint2(bilinearFilter.origin) + uint2(0, 0)].xyz);
-    float3 prevNormal10 = DecodeNormal(normalTexture[uint2(bilinearFilter.origin) + uint2(1, 0)].xyz);
-    float3 prevNormal01 = DecodeNormal(normalTexture[uint2(bilinearFilter.origin) + uint2(0, 1)].xyz);
-    float3 prevNormal11 = DecodeNormal(normalTexture[uint2(bilinearFilter.origin) + uint2(1, 1)].xyz);
+    float3 prevNormal00 = DecodeNormal(prevNormalTexture[uint2(bilinearFilter.origin) + uint2(0, 0)].xyz);
+    float3 prevNormal10 = DecodeNormal(prevNormalTexture[uint2(bilinearFilter.origin) + uint2(1, 0)].xyz);
+    float3 prevNormal01 = DecodeNormal(prevNormalTexture[uint2(bilinearFilter.origin) + uint2(0, 1)].xyz);
+    float3 prevNormal11 = DecodeNormal(prevNormalTexture[uint2(bilinearFilter.origin) + uint2(1, 1)].xyz);
     
     float4 prevClipPos = float4((prevUV * 2.0 - 1.0) * float2(1.0, -1.0), prevDepth, 1.0);
     float4 prevWorldPos = mul(CameraCB.mtxPrevViewProjectionInverse, prevClipPos);
