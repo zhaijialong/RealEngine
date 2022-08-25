@@ -26,8 +26,6 @@ HZB::HZB(Renderer* pRenderer) :
 
     desc.cs = pRenderer->GetShader("hzb.hlsl", "build_hzb", "cs_6_6", { "MIN_MAX_FILTER=1" });
     m_pDepthMipFilterMinMaxPSO = pRenderer->GetPipelineState(desc, "HZB generate mips PSO");
-
-    m_pSPDCounterBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "HZB::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
 }
 
 void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
@@ -107,8 +105,6 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
         },
         [=](const BuildHZBData& data, IGfxCommandList* pCommandList)
         {
-            ResetCounterBuffer(pCommandList);
-
             RGTexture* hzb = graph->GetTexture(data.hzb);
             BuildHZB(pCommandList, hzb);
         });
@@ -316,7 +312,7 @@ void HZB::BuildHZB(IGfxCommandList* pCommandList, RGTexture* texture, bool min_m
     constants.invInputSize[1] = 1.0f / textureDesc.height;
 
     constants.c_imgSrc = texture->GetSRV()->GetHeapIndex();
-    constants.c_spdGlobalAtomicUAV = m_pSPDCounterBuffer->GetUAV()->GetHeapIndex();
+    constants.c_spdGlobalAtomicUAV = m_pRenderer->GetSPDCounterBuffer()->GetUAV()->GetHeapIndex();
 
     for (uint32_t i = 0; i < textureDesc.mip_levels - 1; ++i)
     {
@@ -339,13 +335,4 @@ void HZB::InitHZB(IGfxCommandList* pCommandList, RGTexture* inputDepthSRV, RGTex
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
     pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
-}
-
-void HZB::ResetCounterBuffer(IGfxCommandList* pCommandList)
-{
-    GPU_EVENT(pCommandList, "HZB reset counter");
-
-    pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopyDst);
-    pCommandList->WriteBuffer(m_pSPDCounterBuffer->GetBuffer(), 0, 0);
-    pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
 }

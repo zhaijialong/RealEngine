@@ -139,6 +139,8 @@ public:
     RGHandle GetPrevNormalHandle() const { return m_prevNormalHandle; }
     RGHandle GetPrevSceneColorHandle() const { return m_prevSceneColorHandle; }
 
+    TypedBuffer* GetSPDCounterBuffer() const { return m_pSPDCounterBuffer.get(); }
+
 private:
     void CreateCommonResources();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
@@ -264,6 +266,7 @@ private:
     bool m_bHistoryValid = false;
 
     eastl::unique_ptr<Texture2D> m_pUpscaledDepthTexture;
+    eastl::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
 
     bool m_bGpuDrivenStatsEnabled = false;
     bool m_bShowMeshlets = false;

@@ -29,7 +29,6 @@ private:
     IGfxPipelineState* m_pSpecularFilterPSO = nullptr;
     IGfxPipelineState* m_pDiffuseFilterPSO = nullptr;
 
-    eastl::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
     eastl::unique_ptr<Texture2D> m_pHDRITexture;
     eastl::unique_ptr<TextureCube> m_pTexture;
     eastl::unique_ptr<TextureCube> m_pSpecularTexture;

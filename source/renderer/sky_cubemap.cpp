@@ -27,7 +27,6 @@ SkyCubeMap::SkyCubeMap(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("ibl_prefilter.hlsl", "diffuse_filter", "cs_6_6", {});
     m_pDiffuseFilterPSO = pRenderer->GetPipelineState(desc, "IBL diffuse PSO");
 
-    m_pSPDCounterBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "SkyCubeMap::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
     m_pTexture.reset(pRenderer->CreateTextureCube(128, 128, 8, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pTexture"));
     m_pSpecularTexture.reset(pRenderer->CreateTextureCube(128, 128, 8, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pSpecularTexture"));
     m_pDiffuseTexture.reset(pRenderer->CreateTextureCube(128, 128, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pDiffuseTexture"));
@@ -121,8 +120,6 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
         pCommandList->ResourceBarrier(m_pTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::ShaderResourceAll, GfxResourceState::UnorderedAccess);
     }
 
-    pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopyDst);
-
     pCommandList->SetPipelineState(m_source == SkySource::Realtime ? m_pRealtimeSkyPSO : m_pTexturedSkyPSO);
 
     struct CB
@@ -139,11 +136,7 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
     pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
     pCommandList->Dispatch((size + 7) / 8, (size + 7) / 8, 6);
 
-    //reset spd counter(overlap with the above dispatch)
-    pCommandList->WriteBuffer(m_pSPDCounterBuffer->GetBuffer(), 0, 0);
-
     const GfxTextureDesc& textureDesc = m_pTexture->GetTexture()->GetDesc();
-    pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
 
     for (uint32_t slice = 0; slice < 6; ++slice)
     {
@@ -184,7 +177,7 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
     constants.invInputSize[1] = 1.0f / size;
 
     constants.c_imgSrc = m_pTexture->GetArraySRV()->GetHeapIndex();
-    constants.c_spdGlobalAtomicUAV = m_pSPDCounterBuffer->GetUAV()->GetHeapIndex();
+    constants.c_spdGlobalAtomicUAV = m_pRenderer->GetSPDCounterBuffer()->GetUAV()->GetHeapIndex();
 
     for (uint32_t i = 0; i < textureDesc.mip_levels - 1; ++i)
     {
