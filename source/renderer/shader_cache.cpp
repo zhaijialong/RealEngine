@@ -2,6 +2,7 @@
 #include "renderer.h"
 #include "shader_compiler.h"
 #include "pipeline_cache.h"
+#include "utils/log.h"
 #include "core/engine.h"
 #include <fstream>
 #include <filesystem>
@@ -145,6 +146,8 @@ IGfxShader* ShaderCache::CreateShader(const eastl::string& file, const eastl::st
 void ShaderCache::RecompileShader(IGfxShader* shader)
 {
     const GfxShaderDesc& desc = shader->GetDesc();
+    RE_LOG("recompling shader : {}", desc.file.c_str());
+
     eastl::string source = GetCachedFileContent(desc.file);
 
     eastl::vector<uint8_t> shader_blob;

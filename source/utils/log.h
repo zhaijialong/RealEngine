@@ -6,10 +6,11 @@
 inline void RE_LOG(const char* log)
 {
     OutputDebugStringA(log);
+    OutputDebugStringA("\n");
 }
 
 template <typename... T>
 inline void RE_LOG(const char* format, T&&... args)
 {
-    OutputDebugStringA(fmt::format(format, args...).c_str());
+    RE_LOG(fmt::format(format, args...).c_str());
 }
