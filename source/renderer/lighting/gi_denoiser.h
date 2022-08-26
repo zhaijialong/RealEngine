@@ -27,7 +27,8 @@ private:
     void TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
         RGTexture* outputSH, uint32_t width, uint32_t height);
     void MipGeneration(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* outputMips, uint32_t width, uint32_t height, bool depth);
-    void HistoryReconstruction(IGfxCommandList* pCommandList, RGTexture* inputSHMips, RGTexture* outputSH, uint32_t width, uint32_t height);
+    void HistoryReconstruction(IGfxCommandList* pCommandList, RGTexture* inputSHMips, RGTexture* linearDepthMips, RGTexture* depth, RGTexture* normal,
+        RGTexture* outputSH, uint32_t width, uint32_t height);
     void Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height);
     //void PostBlur(IGfxCommandList* pCommandList);
     //void TemporalStabilization(IGfxCommandList* pCommandList);
