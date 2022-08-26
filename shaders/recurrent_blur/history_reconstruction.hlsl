@@ -1,4 +1,5 @@
 #include "../common.hlsli"
+#include "../bilinear.hlsli"
 #include "sh.hlsli"
 
 cbuffer CB : register(b0)
@@ -18,11 +19,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     RWTexture2D<uint4> outputSHTexture = ResourceDescriptorHeap[c_outputSHTexture];
     
     float2 uv = GetScreenUV(pos, SceneCB.rcpRenderSize);
+    Bilinear bilinearFilter = GetBilinearFilter(uv, SceneCB.renderSize);
     
-    if (accumulationCountTexture[pos] < 10)
+    uint accumulationCount = accumulationCountTexture[pos];
+    if (accumulationCount < 10)
     {
-
+        uint2 mipPos = pos / 8;
         
-        //outputSHTexture[pos] = uint4(11, 30235, 23509, 2304943);
+        outputSHTexture[pos] = inputSHMipsTexture.Load(uint3(mipPos, 2));
     }
 }

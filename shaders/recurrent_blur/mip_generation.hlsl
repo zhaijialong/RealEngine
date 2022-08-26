@@ -12,7 +12,7 @@ cbuffer spdConstants : register(b1)
     uint c_spdGlobalAtomicUAV;
 
     //hlsl packing rules : every element in an array is stored in a four-component vector
-    uint4 c_outputSHTexture[12]; // do no access MIP [5]
+    uint4 c_outputSHTexture[12]; //only 4 mips
 }
 
 #define A_GPU
@@ -23,7 +23,12 @@ cbuffer spdConstants : register(b1)
 #define AF4 SH // this makes SPD works with SH  <(£þ3£þ)> 
 
 groupshared AU1 spdCounter;
-groupshared AF4 spdIntermediate[16][16];
+groupshared float spdIntermediateSH_R[16][16];
+groupshared float spdIntermediateSH_G[16][16];
+groupshared float spdIntermediateSH_B[16][16];
+groupshared float spdIntermediateSH_A[16][16];
+groupshared float spdIntermediateCo[16][16];
+groupshared float spdIntermediateCg[16][16];
 
 AF4 SpdLoadSourceImage(ASU2 p, AU1 slice)
 {
@@ -61,12 +66,24 @@ void SpdResetAtomicCounter(AU1 slice)
 
 AF4 SpdLoadIntermediate(AU1 x, AU1 y)
 {
-    return spdIntermediate[x][y];
+    SH sh;
+    sh.shY.x = spdIntermediateSH_R[x][y];
+    sh.shY.y = spdIntermediateSH_G[x][y];
+    sh.shY.z = spdIntermediateSH_B[x][y];
+    sh.shY.w = spdIntermediateSH_A[x][y];
+    sh.co = spdIntermediateCo[x][y];
+    sh.cg = spdIntermediateCg[x][y];
+    return sh;
 }
 
 void SpdStoreIntermediate(AU1 x, AU1 y, AF4 value)
 {
-    spdIntermediate[x][y] = value;
+    spdIntermediateSH_R[x][y] = value.shY.x;
+    spdIntermediateSH_G[x][y] = value.shY.y;
+    spdIntermediateSH_B[x][y] = value.shY.z;
+    spdIntermediateSH_A[x][y] = value.shY.w;
+    spdIntermediateCo[x][y] = value.co;
+    spdIntermediateCg[x][y] = value.cg;
 }
 
 AF4 SpdReduce4(AF4 v0, AF4 v1, AF4 v2, AF4 v3)

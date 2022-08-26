@@ -36,16 +36,16 @@ void GIDenoiser::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width
         m_pTemporalAccumulationCount0.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R8UI, GfxTextureUsageUnorderedAccess, "GIDenoiser/temporal accumulation count 0"));
         m_pTemporalAccumulationCount1.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R8UI, GfxTextureUsageUnorderedAccess, "GIDenoiser/temporal accumulation count 1"));
 
-        //m_pHistoryRadiance0.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "GIDenoiser/history radiance 0"));
-        m_pHistoryRadiance1.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "GIDenoiser/history radiance 1"));
+        m_pHistoryRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "GIDenoiser/history radiance"));
 
         m_bHistoryInvalid = true;
     }
 
-    m_historyRadiance = pRenderGraph->Import(m_pHistoryRadiance1->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
+    m_historyRadiance = pRenderGraph->Import(m_pHistoryRadiance->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 }
 
-RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, RGHandle depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
+RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, 
+    RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "GI Denoiser");
 
@@ -212,7 +212,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
             data.normal = builder.Read(normal);
             data.outputSH = builder.Write(temporal_accumulation->historySH);
 
-            data.outputRadiance = builder.Write(pRenderGraph->Import(m_pHistoryRadiance1->GetTexture(), GfxResourceState::ShaderResourceNonPS));
+            data.outputRadiance = builder.Write(pRenderGraph->Import(m_pHistoryRadiance->GetTexture(), GfxResourceState::ShaderResourceNonPS));
         },
         [=](const BlurData& data, IGfxCommandList* pCommandList)
         {
@@ -381,7 +381,7 @@ void GIDenoiser::Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTextu
     constants.depthTexture = depth->GetSRV()->GetHeapIndex();
     constants.normalTexture = normal->GetSRV()->GetHeapIndex();
     constants.outputSHTexture = m_pTemporalAccumulationSH->GetUAV()->GetHeapIndex();
-    constants.outputRadianceTexture = m_pHistoryRadiance1->GetUAV()->GetHeapIndex();
+    constants.outputRadianceTexture = m_pHistoryRadiance->GetUAV()->GetHeapIndex();
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
     pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);

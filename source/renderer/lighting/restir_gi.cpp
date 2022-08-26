@@ -275,7 +275,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         return resolve_pass->output;
     }
 
-    return m_pDenoiser->Render(pRenderGraph, resolve_pass->output, resolve_pass->outputVariance, resolve_pass-> depth, normal, velocity, width, height);
+    return m_pDenoiser->Render(pRenderGraph, resolve_pass->output, resolve_pass->outputVariance, depth, linear_depth, normal, velocity, width, height);
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, RGTexture* outputRayDirection, uint32_t width, uint32_t height)
