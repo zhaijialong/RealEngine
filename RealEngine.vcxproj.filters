@@ -1511,6 +1511,9 @@
     <FxCompile Include="shaders\recurrent_blur\mip_generation.hlsl">
       <Filter>shaders\recurrent_blur</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\recurrent_blur\mip_generation_depth.hlsl">
+      <Filter>shaders\recurrent_blur</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="source\windows\icon.ico">

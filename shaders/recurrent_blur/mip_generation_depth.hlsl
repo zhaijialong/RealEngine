@@ -19,21 +19,13 @@ cbuffer spdConstants : register(b1)
 #define A_HLSL
 #include "../ffx_a.h"
 
-#undef AF4
-#define AF4 SH // this makes SPD works with SH  <(£þ3£þ)> 
-
 groupshared AU1 spdCounter;
-groupshared float spdIntermediateSH_R[16][16];
-groupshared float spdIntermediateSH_G[16][16];
-groupshared float spdIntermediateSH_B[16][16];
-groupshared float spdIntermediateSH_A[16][16];
-groupshared float spdIntermediateCo[16][16];
-groupshared float spdIntermediateCg[16][16];
+groupshared float spdIntermediate[16][16];
 
 AF4 SpdLoadSourceImage(ASU2 p, AU1 slice)
 {
-    Texture2D<uint4> imgSrc = ResourceDescriptorHeap[c_inputSHTexture];
-    return UnpackSH(imgSrc[p]);
+    Texture2D<float> imgSrc = ResourceDescriptorHeap[c_inputSHTexture];
+    return AF4(imgSrc[p], 0, 0, 0);
 }
 
 AF4 SpdLoad(ASU2 tex, AU1 slice)
@@ -43,8 +35,8 @@ AF4 SpdLoad(ASU2 tex, AU1 slice)
 
 void SpdStore(ASU2 pix, AF4 outValue, AU1 index, AU1 slice)
 {    
-    RWTexture2D<uint4> imgDst = ResourceDescriptorHeap[c_outputSHTexture[index].x];
-    imgDst[pix] = PackSH(outValue);
+    RWTexture2D<float> imgDst = ResourceDescriptorHeap[c_outputSHTexture[index].x];
+    imgDst[pix] = outValue.x;
 }
 
 void SpdIncreaseAtomicCounter(AU1 slice)
@@ -66,24 +58,12 @@ void SpdResetAtomicCounter(AU1 slice)
 
 AF4 SpdLoadIntermediate(AU1 x, AU1 y)
 {
-    SH sh;
-    sh.shY.x = spdIntermediateSH_R[x][y];
-    sh.shY.y = spdIntermediateSH_G[x][y];
-    sh.shY.z = spdIntermediateSH_B[x][y];
-    sh.shY.w = spdIntermediateSH_A[x][y];
-    sh.co = spdIntermediateCo[x][y];
-    sh.cg = spdIntermediateCg[x][y];
-    return sh;
+    return AF4(spdIntermediate[x][y], 0, 0, 0);
 }
 
 void SpdStoreIntermediate(AU1 x, AU1 y, AF4 value)
 {
-    spdIntermediateSH_R[x][y] = value.shY.x;
-    spdIntermediateSH_G[x][y] = value.shY.y;
-    spdIntermediateSH_B[x][y] = value.shY.z;
-    spdIntermediateSH_A[x][y] = value.shY.w;
-    spdIntermediateCo[x][y] = value.co;
-    spdIntermediateCg[x][y] = value.cg;
+    spdIntermediate[x][y] = value.x;
 }
 
 AF4 SpdReduce4(AF4 v0, AF4 v1, AF4 v2, AF4 v3)

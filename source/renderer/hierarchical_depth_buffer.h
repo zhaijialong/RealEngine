@@ -30,8 +30,6 @@ private:
     void BuildHZB(IGfxCommandList* pCommandList, RGTexture* texture, bool min_max = false);
     void InitHZB(IGfxCommandList* pCommandList, RGTexture* inputDepthSRV, RGTexture* hzbMip0UAV, bool min_max = false);
 
-    void ResetCounterBuffer(IGfxCommandList* pCommandList);
-
 private:
     Renderer* m_pRenderer = nullptr;
 
@@ -42,8 +40,6 @@ private:
 
     IGfxPipelineState* m_pInitSceneHZBPSO = nullptr;
     IGfxPipelineState* m_pDepthMipFilterMinMaxPSO = nullptr;
-    
-    eastl::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
 
     uint32_t m_nHZBMipCount = 0;
     uint2 m_hzbSize;

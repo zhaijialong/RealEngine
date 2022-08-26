@@ -3,6 +3,7 @@
 My toy engine, mainly for rendering experiment and prototyping. 
 It requires a GPU which supports DX12 Ultimate with latest driver.
 It is not supposed to be used in production, and prefers clean design and code over being heavily optimized.
+![rendergraph](bin/screenshot.jpg)
 
 ## some highlights
 
@@ -19,7 +20,7 @@ It is not supposed to be used in production, and prefers clean design and code o
 * ~~render graph~~(~~barriers~~, ~~resource aliasing~~, ~~async compute~~)
 * ~~GTAO~~
 * ~~specular GI~~
-* diffuse GI
+* ~~diffuse GI~~
 * clustered shading
 * ~~Bloom~~
 * ~~Auto Exposure~~

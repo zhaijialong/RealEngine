@@ -126,6 +126,13 @@ void Renderer::BeginFrame()
     pComputeCommandList->ResetAllocator();
     pComputeCommandList->Begin();
     pComputeCommandList->BeginProfiling();
+
+    if (m_pDevice->GetFrameID() == 0)
+    {
+        pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopyDst);
+        pCommandList->WriteBuffer(m_pSPDCounterBuffer->GetBuffer(), 0, 0);
+        pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
+    }
 }
 
 void Renderer::UploadResources()
@@ -657,6 +664,8 @@ void Renderer::CreateCommonResources()
     m_pScramblingRankingTexture64SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_64spp.png", false));
     m_pScramblingRankingTexture128SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_128spp.png", false));
     m_pScramblingRankingTexture256SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_256spp.png", false));
+
+    m_pSPDCounterBuffer.reset(CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "Renderer::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
 
     GfxGraphicsPipelineDesc psoDesc;
     psoDesc.vs = GetShader("copy.hlsl", "vs_main", "vs_6_6", {});

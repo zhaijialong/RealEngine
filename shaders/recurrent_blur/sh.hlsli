@@ -55,7 +55,7 @@ uint4 PackSH(SH sh)
     uint4 packed;
     packed.x = (f32tof16(sh.shY.x) << 16) | f32tof16(sh.shY.y);
     packed.y = (f32tof16(sh.shY.z) << 16) | f32tof16(sh.shY.w);
-    packed.z = asuint(sh.co);
+    packed.z = asuint(sh.co); //todo : maybe seperate cocg to another rg16f texture, to save some bandwidth...
     packed.w = asuint(sh.cg);
 
     return packed;

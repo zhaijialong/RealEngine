@@ -17,7 +17,6 @@ AutomaticExposure::AutomaticExposure(Renderer* pRenderer)
     desc.cs = m_pRenderer->GetShader("automatic_exposure_histogram.hlsl", "histogram_reduction", "cs_6_6", {});
     m_pHistogramReductionPSO = pRenderer->GetPipelineState(desc, "Histogram Reduction PSO");
 
-    m_pSPDCounterBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "AutomaticExposure::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
     m_pPreviousEV100.reset(pRenderer->CreateTexture2D(1, 1, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "AutomaticExposure::m_pPreviousEV100"));
 }
 
@@ -247,10 +246,6 @@ void AutomaticExposure::InitLuminance(IGfxCommandList* pCommandList, RGTexture* 
 
 void AutomaticExposure::ReduceLuminance(IGfxCommandList* pCommandList, RGTexture* texture)
 {
-    pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopyDst);
-    pCommandList->WriteBuffer(m_pSPDCounterBuffer->GetBuffer(), 0, 0);
-    pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
-
     pCommandList->SetPipelineState(m_pLuminanceReductionPSO);
 
     varAU2(dispatchThreadGroupCountXY);
@@ -282,7 +277,7 @@ void AutomaticExposure::ReduceLuminance(IGfxCommandList* pCommandList, RGTexture
     constants.invInputSize[1] = 1.0f / m_luminanceSize.y;
 
     constants.c_imgSrc = texture->GetSRV()->GetHeapIndex();
-    constants.c_spdGlobalAtomicUAV = m_pSPDCounterBuffer->GetUAV()->GetHeapIndex();
+    constants.c_spdGlobalAtomicUAV = m_pRenderer->GetSPDCounterBuffer()->GetUAV()->GetHeapIndex();
 
     for (uint32_t i = 0; i < m_luminanceMips - 1; ++i)
     {
