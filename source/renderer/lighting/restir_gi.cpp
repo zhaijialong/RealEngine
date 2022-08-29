@@ -55,7 +55,8 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         RGHandle outputRayDirection;
     };
 
-    auto raytrace_pass = pRenderGraph->AddPass<RaytracePassData>("ReSTIR GI - initial sampling", RenderPassType::Compute,
+    auto raytrace_pass = pRenderGraph->AddPass<RaytracePassData>("ReSTIR GI - initial sampling", 
+        m_pRenderer->IsAsyncComputeEnabled() ? RenderPassType::AsyncCompute : RenderPassType::Compute,
         [&](RaytracePassData& data, RGBuilder& builder)
         {
             data.halfDepthNormal = builder.Read(halfDepthNormal);
