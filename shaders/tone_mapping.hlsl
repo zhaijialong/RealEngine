@@ -43,6 +43,27 @@ float3 ApplyToneMapping(float3 color)
 #endif
 }
 
+//https://github.com/EmbarkStudios/kajiya/blob/main/assets/shaders/post_combine.hlsl
+float TriangularRemap(float n)
+{
+    float origin = n * 2.0 - 1.0;
+    float v = origin * rsqrt(abs(origin));
+    v = max(-1.0, v);
+    v -= sign(origin);
+    return v;
+}
+
+float3 ApplyDither(float3 color, uint2 pos)
+{
+#if DITHER    
+    Texture2D blueNoiseTexture = ResourceDescriptorHeap[SceneCB.blueNoiseTexture];
+    float blur_noise = blueNoiseTexture[(pos + uint2(SceneCB.frameIndex * 59, SceneCB.frameIndex * 37)) & 255].x;
+    float dither = TriangularRemap(blur_noise);
+    color += dither / 255.0;
+#endif
+    return color;
+}
+
 [numthreads(8, 8, 1)]
 void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {    
@@ -53,6 +74,9 @@ void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
     color = ApplyExposure(color);
     color = ApplyToneMapping(color);
     
+    color = LinearToSrgb(color.xyz);
+    color = ApplyDither(color, dispatchThreadID.xy);
+    
     RWTexture2D<float4> ldrTexture = ResourceDescriptorHeap[c_ldrTexture];
-    ldrTexture[dispatchThreadID.xy] = float4(LinearToSrgb(color.xyz), 1.0);
+    ldrTexture[dispatchThreadID.xy] = float4(color, 1.0);
 }

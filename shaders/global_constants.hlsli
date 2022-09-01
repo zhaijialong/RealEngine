@@ -56,7 +56,7 @@ struct SceneConstant
     
     uint minReductionSampler;
     uint maxReductionSampler;
-    uint _padding;
+    uint blueNoiseTexture;
     uint preintegratedGFTexture;
 
     uint sobolSequenceTexture;

@@ -311,6 +311,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.skySpecularIBLTexture = m_pSkyCubeMap->GetSpecularCubeTexture()->GetSRV()->GetHeapIndex();
     sceneCB.skyDiffuseIBLTexture = m_pSkyCubeMap->GetDiffuseCubeTexture()->GetSRV()->GetHeapIndex();
     sceneCB.preintegratedGFTexture = m_pPreintegratedGFTexture->GetSRV()->GetHeapIndex();
+    sceneCB.blueNoiseTexture = m_pBlueNoise->GetSRV()->GetHeapIndex();
     sceneCB.sheenETexture = m_pSheenETexture->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
     sceneCB.frameIndex = (uint32_t)GetFrameID();
@@ -664,6 +665,8 @@ void Renderer::CreateCommonResources()
     m_pScramblingRankingTexture64SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_64spp.png", false));
     m_pScramblingRankingTexture128SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_128spp.png", false));
     m_pScramblingRankingTexture256SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_256spp.png", false));
+
+    m_pBlueNoise.reset(CreateTexture2D(asset_path + "textures/blue_noise/LDR_RGBA_0.png", false));
 
     m_pSPDCounterBuffer.reset(CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "Renderer::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
 

@@ -23,4 +23,6 @@ private:
         ACES,
     };
     TonemappingMode m_mode = TonemappingMode::Neutral;
+
+    bool m_bEnableDither = false;
 };

@@ -254,6 +254,8 @@ private:
     eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture128SPP;
     eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture256SPP;
 
+    eastl::unique_ptr<Texture2D> m_pBlueNoise;
+
     eastl::unique_ptr<Texture2D> m_pPreintegratedGFTexture;
     eastl::unique_ptr<Texture2D> m_pSheenETexture;
 

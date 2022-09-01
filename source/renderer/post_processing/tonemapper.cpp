@@ -13,6 +13,7 @@ RGHandle Tonemapper::Render(RenderGraph* pRenderGraph, RGHandle inputHandle, RGH
         [&]()
         {
             ImGui::Combo("Mode##Tonemapper", (int*)&m_mode, "Neutral\0ACES\0\0");
+            ImGui::Checkbox("Enable Dither##Tonemapper", &m_bEnableDither);
         });
 
     struct TonemapPassData
@@ -74,6 +75,11 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, RGTexture* pHdrSRV, RGTextu
     if (bloom)
     {
         defines.push_back("BLOOM=1");
+    }
+
+    if (m_bEnableDither)
+    {
+        defines.push_back("DITHER=1");
     }
 
     GfxComputePipelineDesc psoDesc;
