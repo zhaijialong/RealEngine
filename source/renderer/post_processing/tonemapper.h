@@ -24,5 +24,5 @@ private:
     };
     TonemappingMode m_mode = TonemappingMode::Neutral;
 
-    bool m_bEnableDither = false;
+    bool m_bEnableDither = true;
 };

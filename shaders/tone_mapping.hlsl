@@ -57,8 +57,8 @@ float3 ApplyDither(float3 color, uint2 pos)
 {
 #if DITHER    
     Texture2D blueNoiseTexture = ResourceDescriptorHeap[SceneCB.blueNoiseTexture];
-    float blur_noise = blueNoiseTexture[(pos + uint2(SceneCB.frameIndex * 59, SceneCB.frameIndex * 37)) & 255].x;
-    float dither = TriangularRemap(blur_noise);
+    float blue_noise = blueNoiseTexture[(pos + SceneCB.frameIndex * uint2(59, 37)) & 255].x;
+    float dither = TriangularRemap(blue_noise);
     color += dither / 255.0;
 #endif
     return color;
