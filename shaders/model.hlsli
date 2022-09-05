@@ -28,10 +28,10 @@ struct VertexOutput
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
-    
     float3 worldPos : WORLD_POSITION;
-    uint meshlet : COLOR0;
-    uint instanceIndex : COLOR1;
+
+    nointerpolation uint meshletIndex : COLOR0;
+    nointerpolation uint instanceIndex : COLOR1;
 };
 
 Vertex GetVertex(uint instance_id,  uint vertex_id)

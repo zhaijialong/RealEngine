@@ -38,7 +38,7 @@ void main_ms(
         uint vertex_id = LoadSceneStaticBuffer<uint>(instanceData.meshletVerticesBufferAddress, meshlet.vertexOffset + groupThreadID);
 
         model::VertexOutput v = model::GetVertexOutput(instanceIndex, vertex_id);
-        v.meshlet = meshletIndex;
+        v.meshletIndex = meshletIndex;
         v.instanceIndex = instanceIndex;
         
         vertices[groupThreadID] = v;

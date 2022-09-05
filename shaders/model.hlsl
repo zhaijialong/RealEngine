@@ -74,7 +74,7 @@ GBufferOutput ps_main(model::VertexOutput input
 
     if (SceneCB.bShowMeshlets)
     {
-        uint hash = WangHash(input.meshlet);
+        uint hash = WangHash(input.meshletIndex);
         diffuse.xyz = float3(float(hash & 255), float((hash >> 8) & 255), float((hash >> 16) & 255)) / 255.0;
         roughness = 1.0;
         emissive = float3(0.0, 0.0, 0.0);
