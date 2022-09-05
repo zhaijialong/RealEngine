@@ -56,14 +56,16 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     customWeights.y = GetGeometryWeight(worldPos, N, GetWorldPosition(uv, z10), 1.0);
     customWeights.z = GetGeometryWeight(worldPos, N, GetWorldPosition(uv, z01), 1.0);
     customWeights.w = GetGeometryWeight(worldPos, N, GetWorldPosition(uv, z11), 1.0);
-
-    SH sh00 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(0, 0), mipLevel)));
-    SH sh10 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(1, 0), mipLevel)));
-    SH sh01 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(0, 1), mipLevel)));
-    SH sh11 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(1, 1), mipLevel)));
     
     float4 bilinearWeights = GetBilinearCustomWeights(filter, customWeights);
-    SH blurry = ApplyBilinearCustomWeights(sh00, sh10, sh01, sh11, bilinearWeights);
-
-    outputSHTexture[pos] = PackSH(blurry);
+    if(dot(bilinearWeights, 1.0) > 0.0)
+    {
+        SH sh00 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(0, 0), mipLevel)));
+        SH sh10 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(1, 0), mipLevel)));
+        SH sh01 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(0, 1), mipLevel)));
+        SH sh11 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(1, 1), mipLevel)));
+        
+        SH blurry = ApplyBilinearCustomWeights(sh00, sh10, sh01, sh11, bilinearWeights);
+        outputSHTexture[pos] = PackSH(blurry);
+    }
 }
