@@ -30,10 +30,18 @@ RGHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, RGHandle 
     GUI("Lighting", "Hybrid Stochastic Reflection",
         [&]()
         {
-            ImGui::Checkbox("Enable##HSR", &m_bEnable);
+            if (ImGui::Checkbox("Enable##HSR", &m_bEnable))
+            {
+                m_pDenoiser->InvalidateHistory();
+            }
+
             ImGui::Checkbox("Enable SW Ray##HSR", &m_bEnableSWRay);
             ImGui::Checkbox("Enable HW Ray##HSR", &m_bEnableHWRay);
-            ImGui::Checkbox("Enable Denoiser##HSR", &m_bEnableDenoiser);
+
+            if (ImGui::Checkbox("Enable Denoiser##HSR", &m_bEnableDenoiser))
+            {
+                m_pDenoiser->InvalidateHistory();
+            }
 
             ImGui::Text("Samples Per Quad : "); ImGui::SameLine();
             ImGui::RadioButton("1##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 1); ImGui::SameLine();

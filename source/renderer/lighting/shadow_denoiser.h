@@ -10,6 +10,8 @@ public:
 
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height);
 
+    void InvalidateHistory();
+
 private:
     void Prepare(IGfxCommandList* pCommandList, RGTexture* raytraceResult, RGBuffer* maskBuffer, uint32_t width, uint32_t height);
     void TileClassification(IGfxCommandList* pCommandList, RGBuffer* shadowMaskBuffer, RGTexture* depthTexture, RGTexture* normalTexture,

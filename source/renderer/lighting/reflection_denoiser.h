@@ -11,6 +11,7 @@ public:
     void ImportTextures(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
 
     bool IsHistoryValid() const { return !m_bHistoryInvalid; }
+    void InvalidateHistory();
 
     RGHandle GetHistoryVariance() const { return m_varianceHistory; }
     IGfxDescriptor* GetHistoryVarianceSRV() const { return m_pVarianceHistory->GetSRV(); }

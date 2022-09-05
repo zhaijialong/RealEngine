@@ -22,6 +22,7 @@ private:
         RGTexture* output, RGTexture* outputVariance, uint32_t width, uint32_t height);
 
     bool InitTemporalBuffers(uint32_t width, uint32_t height);
+    void ResetTemporalBuffers();
 
 private:
     Renderer* m_pRenderer;
@@ -29,8 +30,6 @@ private:
     IGfxPipelineState* m_pInitialSamplingPSO = nullptr;
     IGfxPipelineState* m_pTemporalResamplingPSO = nullptr;
     IGfxPipelineState* m_pSpatialResamplingPSO = nullptr;
-    IGfxPipelineState* m_pResolvePSO = nullptr;
-    IGfxPipelineState* m_pResolveSHPSO = nullptr;
 
     struct TemporalReservoirBuffer
     {

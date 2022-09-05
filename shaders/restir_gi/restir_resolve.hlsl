@@ -30,7 +30,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D radianceTexture = ResourceDescriptorHeap[c_radianceTexture];
     Texture2D<uint> rayDirectionTexture = ResourceDescriptorHeap[c_rayDirectionTexture];
+#if ENABLE_RESTIR
     Texture2D reservoirTexture = ResourceDescriptorHeap[c_reservoirTexture];
+#endif
     Texture2D<uint2> halfDepthNormal = ResourceDescriptorHeap[c_halfDepthNormal];
     Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
@@ -59,7 +61,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float2 gatherUV = (bilinearFilter.origin + 1.0) / halfRenderSize;
     
+#if ENABLE_RESTIR
+    float4 M = reservoirTexture.GatherRed(pointSampler, gatherUV);
     float4 W = reservoirTexture.GatherGreen(pointSampler, gatherUV);
+#else
+    float4 M = 1.0;
+    float4 W = 1.0;
+#endif
     
     uint4 sampleDepth = halfDepthNormal.GatherRed(pointSampler, gatherUV);
     uint4 sampleNormal = halfDepthNormal.GatherGreen(pointSampler, gatherUV);
@@ -92,8 +100,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     SH sh = ApplyBilinearCustomWeights(sh00, sh10, sh01, sh11, bilinearWeights);
     outputTexture[pos] = PackSH(sh);
-    
-    float4 M = reservoirTexture.GatherRed(pointSampler, gatherUV);
+
     float sampleCount = ApplyBilinearCustomWeights(M.w, M.z, M.x, M.y, bilinearWeights);
     outputVarianceTexture[pos] = square(1.0 - saturate(sampleCount / 500.0));
 #else

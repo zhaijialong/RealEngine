@@ -46,6 +46,15 @@ void ReflectionDenoiser::ImportTextures(RenderGraph* pRenderGraph, uint32_t widt
     m_sampleCountOutput = pRenderGraph->Import(m_pSampleCountOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 }
 
+void ReflectionDenoiser::InvalidateHistory()
+{
+    m_bHistoryInvalid = true;
+    m_pRadianceHistory.reset();
+    m_pVarianceHistory.reset();
+    m_pSampleCountInput.reset();
+    m_pSampleCountOutput.reset();
+}
+
 RGHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RGHandle indirectArgs, RGHandle tileListBuffer, RGHandle input, 
     RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height,
     float maxRoughness, float temporalStability)

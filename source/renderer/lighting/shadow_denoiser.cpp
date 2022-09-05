@@ -210,6 +210,14 @@ RGHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RGHandle input, RGHan
     return filter_pass2->outputTexture;
 }
 
+void ShadowDenoiser::InvalidateHistory()
+{
+    m_bHistoryInvalid = true;
+    m_pMomentsTexture.reset();
+    m_pPrevMomentsTexture.reset();
+    m_pHistoryTexture.reset();
+}
+
 void ShadowDenoiser::Prepare(IGfxCommandList* pCommandList, RGTexture* raytraceResult, RGBuffer* maskBuffer, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPrepareMaskPSO);

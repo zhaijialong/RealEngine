@@ -16,7 +16,10 @@ RGHandle RTShadow::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle 
 {
     GUI("Lighting", "Shadow", [&]()
         {
-            ImGui::Checkbox("Enable Denoiser##RTShadow", &m_bEnableDenoiser);
+            if (ImGui::Checkbox("Enable Denoiser##RTShadow", &m_bEnableDenoiser))
+            {
+                m_pDenoiser->InvalidateHistory();
+            }
         });
 
     RENDER_GRAPH_EVENT(pRenderGraph, "RTShadow");

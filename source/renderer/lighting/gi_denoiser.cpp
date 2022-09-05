@@ -47,6 +47,15 @@ void GIDenoiser::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width
     m_historyRadiance = pRenderGraph->Import(m_pHistoryRadiance->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 }
 
+void GIDenoiser::InvalidateHistory()
+{
+    m_bHistoryInvalid = true;
+    m_pTemporalAccumulationSH.reset();
+    m_pTemporalAccumulationCount0.reset();
+    m_pTemporalAccumulationCount1.reset();
+    m_pHistoryRadiance.reset();
+}
+
 RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, 
     RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {

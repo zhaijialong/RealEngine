@@ -21,6 +21,8 @@ public:
     RGHandle GetHistoryRadiance() const { return m_historyRadiance; }
     IGfxDescriptor* GetHistoryRadianceSRV() const { return m_pHistoryRadiance->GetSRV(); }
 
+    void InvalidateHistory();
+
 private:
     void PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* variance, RGTexture* depth, RGTexture* normal, 
         RGTexture* outputSH, uint32_t width, uint32_t height);
