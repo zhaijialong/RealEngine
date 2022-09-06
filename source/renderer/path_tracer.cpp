@@ -18,7 +18,7 @@ PathTracer::PathTracer(Renderer* pRenderer)
 
 RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height)
 {
-    GUI("Settings", "PathTracer", [&]()
+    GUI("Lighting", "PathTracer", [&]()
         {
             if (ImGui::Checkbox("Enable Accumulation##PathTracer", &m_bEnableAccumulation))
             {

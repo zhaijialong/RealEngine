@@ -46,10 +46,15 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float2 mipSize = SceneCB.renderSize / (1u << (mipLevel + 1));
     Bilinear filter = GetBilinearFilter(uv, mipSize);
 
-    float z00 = GetNdcDepth(linearDepthMipsTexture.Load(uint3(filter.origin + uint2(0, 0), mipLevel)));
-    float z10 = GetNdcDepth(linearDepthMipsTexture.Load(uint3(filter.origin + uint2(1, 0), mipLevel)));
-    float z01 = GetNdcDepth(linearDepthMipsTexture.Load(uint3(filter.origin + uint2(0, 1), mipLevel)));
-    float z11 = GetNdcDepth(linearDepthMipsTexture.Load(uint3(filter.origin + uint2(1, 1), mipLevel)));
+    int2 pos00 = int2(filter.origin) + int2(0, 0);
+    int2 pos10 = int2(filter.origin) + int2(1, 0);
+    int2 pos01 = int2(filter.origin) + int2(0, 1);
+    int2 pos11 = int2(filter.origin) + int2(1, 1);
+    
+    float z00 = GetNdcDepth(linearDepthMipsTexture.Load(uint3(pos00, mipLevel)));
+    float z10 = GetNdcDepth(linearDepthMipsTexture.Load(uint3(pos10, mipLevel)));
+    float z01 = GetNdcDepth(linearDepthMipsTexture.Load(uint3(pos01, mipLevel)));
+    float z11 = GetNdcDepth(linearDepthMipsTexture.Load(uint3(pos11, mipLevel)));
 
     float4 customWeights;
     customWeights.x = GetGeometryWeight(worldPos, N, GetWorldPosition(uv, z00), 1.0);
@@ -60,10 +65,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float4 bilinearWeights = GetBilinearCustomWeights(filter, customWeights);
     if(dot(bilinearWeights, 1.0) > 0.0)
     {
-        SH sh00 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(0, 0), mipLevel)));
-        SH sh10 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(1, 0), mipLevel)));
-        SH sh01 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(0, 1), mipLevel)));
-        SH sh11 = UnpackSH(inputSHMipsTexture.Load(uint3(filter.origin + uint2(1, 1), mipLevel)));
+        SH sh00 = UnpackSH(inputSHMipsTexture.Load(uint3(pos00, mipLevel)));
+        SH sh10 = UnpackSH(inputSHMipsTexture.Load(uint3(pos10, mipLevel)));
+        SH sh01 = UnpackSH(inputSHMipsTexture.Load(uint3(pos01, mipLevel)));
+        SH sh11 = UnpackSH(inputSHMipsTexture.Load(uint3(pos11, mipLevel)));
         
         SH blurry = ApplyBilinearCustomWeights(sh00, sh10, sh01, sh11, bilinearWeights);
         outputSHTexture[pos] = PackSH(blurry);

@@ -72,10 +72,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     uint4 sampleDepth = halfDepthNormal.GatherRed(pointSampler, gatherUV);
     uint4 sampleNormal = halfDepthNormal.GatherGreen(pointSampler, gatherUV);
     
-    float3 radiance00 = radianceTexture[uint2(bilinearFilter.origin) + uint2(0, 0)].xyz * W.w;
-    float3 radiance10 = radianceTexture[uint2(bilinearFilter.origin) + uint2(1, 0)].xyz * W.z;
-    float3 radiance01 = radianceTexture[uint2(bilinearFilter.origin) + uint2(0, 1)].xyz * W.x;
-    float3 radiance11 = radianceTexture[uint2(bilinearFilter.origin) + uint2(1, 1)].xyz * W.y;
+    float3 radiance00 = radianceTexture[int2(bilinearFilter.origin) + int2(0, 0)].xyz * W.w;
+    float3 radiance10 = radianceTexture[int2(bilinearFilter.origin) + int2(1, 0)].xyz * W.z;
+    float3 radiance01 = radianceTexture[int2(bilinearFilter.origin) + int2(0, 1)].xyz * W.x;
+    float3 radiance11 = radianceTexture[int2(bilinearFilter.origin) + int2(1, 1)].xyz * W.y;
     
     float4 customWeights;
     customWeights.x = ComputeCustomWeight(depth, N, asfloat(sampleDepth.w), DecodeNormal16x2(sampleNormal.w));

@@ -65,23 +65,29 @@ float3 YCbCrToRGB(float3 ycbcr)
         1.0,  1.8556,  0.0
     );
 
-    return mul(m, ycbcr);
+    return max(0.0, mul(m, ycbcr));
 }
 
 float3 RGBToYCoCg(float3 rgb)
 {
-    float y = dot(rgb, float3(0.25, 0.5, 0.25));
-    float co = dot(rgb, float3(0.5, 0.0, -0.5));
-    float cg = dot(rgb, float3(-0.25, 0.5, -0.25));
-    return float3(y, co, cg);
+    const float3x3 m = float3x3(
+        0.25,  0.5,  0.25,
+        0.5,   0.0, -0.5,
+        -0.25, 0.5, -0.25
+    );
+
+    return mul(m, rgb);
 }
 
 float3 YCoCgToRGB(float3 ycocg)
 {
-    float r = dot(ycocg, float3(1.0, 1.0, -1.0));
-    float g = dot(ycocg, float3(1.0, 0.0, 1.0));
-    float b = dot(ycocg, float3(1.0, -1.0, -1.0));
-    return float3(r, g, b);
+    const float3x3 m = float3x3(
+        1.0,  1.0, -1.0,
+        1.0,  0.0,  1.0,
+        1.0, -1.0, -1.0
+    );
+
+    return mul(m, ycocg);
 }
 
 float Luminance(float3 color)

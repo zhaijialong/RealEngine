@@ -57,20 +57,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     Bilinear bilinearFilter = GetBilinearFilter(prevUV, SceneCB.renderSize);
     float2 prevGatherUV = (bilinearFilter.origin + 1.0) * SceneCB.rcpRenderSize;
-    
-    float4 historyAccumulationCount = (float4)historyAccumulationCountTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
-    
-    SH historySH00 = UnpackSH(historyTexture[uint2(bilinearFilter.origin) + uint2(0, 0)]);
-    SH historySH10 = UnpackSH(historyTexture[uint2(bilinearFilter.origin) + uint2(1, 0)]);
-    SH historySH01 = UnpackSH(historyTexture[uint2(bilinearFilter.origin) + uint2(0, 1)]);
-    SH historySH11 = UnpackSH(historyTexture[uint2(bilinearFilter.origin) + uint2(1, 1)]);
-    
+        
     float4 prevLinearDepth = prevLinearDepthTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
 
-    float3 prevNormal00 = DecodeNormal(prevNormalTexture[uint2(bilinearFilter.origin) + uint2(0, 0)].xyz);
-    float3 prevNormal10 = DecodeNormal(prevNormalTexture[uint2(bilinearFilter.origin) + uint2(1, 0)].xyz);
-    float3 prevNormal01 = DecodeNormal(prevNormalTexture[uint2(bilinearFilter.origin) + uint2(0, 1)].xyz);
-    float3 prevNormal11 = DecodeNormal(prevNormalTexture[uint2(bilinearFilter.origin) + uint2(1, 1)].xyz);
+    float3 prevNormal00 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(0, 0)].xyz);
+    float3 prevNormal10 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(1, 0)].xyz);
+    float3 prevNormal01 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(0, 1)].xyz);
+    float3 prevNormal11 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(1, 1)].xyz);
     
     float4 prevClipPos = float4((prevUV * 2.0 - 1.0) * float2(1.0, -1.0), prevDepth, 1.0);
     float4 prevWorldPos = mul(CameraCB.mtxPrevViewProjectionInverse, prevClipPos);
@@ -92,8 +85,14 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     occlusion.w *= dot(N, prevNormal11) > normalThreshold;
     
     float4 bilinearWeights = GetBilinearCustomWeights(bilinearFilter, occlusion);
-    
+
+    SH historySH00 = UnpackSH(historyTexture[int2(bilinearFilter.origin) + int2(0, 0)]);
+    SH historySH10 = UnpackSH(historyTexture[int2(bilinearFilter.origin) + int2(1, 0)]);
+    SH historySH01 = UnpackSH(historyTexture[int2(bilinearFilter.origin) + int2(0, 1)]);
+    SH historySH11 = UnpackSH(historyTexture[int2(bilinearFilter.origin) + int2(1, 1)]);
     SH historySH = ApplyBilinearCustomWeights(historySH00, historySH10, historySH01, historySH11, bilinearWeights);
+    
+    float4 historyAccumulationCount = (float4)historyAccumulationCountTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
     float accumulationCount = ApplyBilinearCustomWeights(historyAccumulationCount.x, historyAccumulationCount.y, historyAccumulationCount.z, historyAccumulationCount.w, bilinearWeights);
     
     SH inputSH = UnpackSH(inputTexture[pos]);

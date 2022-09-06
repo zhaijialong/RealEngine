@@ -3,7 +3,7 @@
 //#include "../common.hlsli"
 #include "../SphericalHarmonics.hlsl"
 
-#define MAX_TEMPORAL_ACCUMULATION_FRAME (64)
+#define MAX_TEMPORAL_ACCUMULATION_FRAME (32)
 
 struct SH
 {
