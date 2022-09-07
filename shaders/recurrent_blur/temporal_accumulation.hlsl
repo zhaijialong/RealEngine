@@ -44,7 +44,6 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     float3 velocity = velocityTexture[pos].xyz;
     float2 prevUV = GetScreenUV(pos, SceneCB.rcpRenderSize) - velocity.xy * float2(0.5, -0.5);
-    float prevDepth = depth - velocity.z;
     if (c_bHistoryInvalid || any(prevUV < 0.0) || any(prevUV > 1.0))
     {
         outputTexture[pos] = inputTexture[pos];
@@ -57,14 +56,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     Bilinear bilinearFilter = GetBilinearFilter(prevUV, SceneCB.renderSize);
     float2 prevGatherUV = (bilinearFilter.origin + 1.0) * SceneCB.rcpRenderSize;
-        
     float4 prevLinearDepth = prevLinearDepthTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
-
-    float3 prevNormal00 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(0, 0)].xyz);
-    float3 prevNormal10 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(1, 0)].xyz);
-    float3 prevNormal01 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(0, 1)].xyz);
-    float3 prevNormal11 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(1, 1)].xyz);
     
+#if 0    
     float4 prevClipPos = float4((prevUV * 2.0 - 1.0) * float2(1.0, -1.0), prevDepth, 1.0);
     float4 prevWorldPos = mul(CameraCB.mtxPrevViewProjectionInverse, prevClipPos);
     
@@ -77,6 +71,14 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     const float threshold = 0.01;
     float distToPoint = length(GetWorldPosition(pos, depth) - CameraCB.cameraPos);
     float4 occlusion = step(planeDist, threshold * distToPoint);
+#else
+    float4 occlusion = step(GetLinearDepth(depth - velocity.z), prevLinearDepth * 1.03);
+#endif    
+    
+    float3 prevNormal00 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(0, 0)].xyz);
+    float3 prevNormal10 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(1, 0)].xyz);
+    float3 prevNormal01 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(0, 1)].xyz);
+    float3 prevNormal11 = DecodeNormal(prevNormalTexture[int2(bilinearFilter.origin) + int2(1, 1)].xyz);
     
     const float normalThreshold = 0.9;
     occlusion.x *= dot(N, prevNormal00) > normalThreshold;

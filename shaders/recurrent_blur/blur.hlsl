@@ -42,8 +42,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     sincos(rotation, s, c);
     float2x2 mtxRotation = float2x2(c, -s, s, c);
     
-    uint accumulationCount = accumulationCountTexture[pos];
-    const float2 blurRadius = lerp(2.0, 8.0, smoothstep(0.0, 1.0, 1.0 - (float)accumulationCount / MAX_TEMPORAL_ACCUMULATION_FRAME)) * SceneCB.rcpRenderSize * GetLinearDepth(depth);
+    float normAccumulationCount = (float)accumulationCountTexture[pos] / MAX_TEMPORAL_ACCUMULATION_FRAME;
+    const float2 blurRadius = lerp(2.0, 8.0, smoothstep(0.0, 1.0, 1.0 - normAccumulationCount)) * SceneCB.rcpRenderSize * GetLinearDepth(depth);
     
     SH sh = UnpackSH(inputSHTexture[pos]);
     float sumWeight = 1.0;
@@ -81,4 +81,5 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     outputSHTexture[pos] = PackSH(sh);
     outputRadianceTexture[pos] = sh.Unproject(N);
+    //outputRadianceTexture[pos] = normAccumulationCount.xxx;
 }
