@@ -150,7 +150,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         const float varianceGamma = lerp(0.75, 2, velocityConfidenceFactor * velocityConfidenceFactor);
         historyColor.xyz = VarianceClip(historyColor.xyz, varianceGamma, c0, c1, c2, c3, c4, c5, c6, c7, c8);
 
-        float weight = historyColor.w * velocityConfidenceFactor;
+        float weight = min(historyColor.w * velocityConfidenceFactor, 0.97);
 
         float3 ouputColor = lerp(inputColor, historyColor.xyz, weight);
         float newWeight = saturate(1.0 / (2.0 - weight));
