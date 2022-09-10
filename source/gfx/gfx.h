@@ -1,18 +1,18 @@
 #pragma once
 
 #include "gfx_define.h"
-#include "i_gfx_device.h"
-#include "i_gfx_buffer.h"
-#include "i_gfx_texture.h"
-#include "i_gfx_command_list.h"
-#include "i_gfx_fence.h"
-#include "i_gfx_shader.h"
-#include "i_gfx_pipeline_state.h"
-#include "i_gfx_swapchain.h"
-#include "i_gfx_descriptor.h"
-#include "i_gfx_heap.h"
-#include "i_gfx_rt_blas.h"
-#include "i_gfx_rt_tlas.h"
+#include "gfx_device.h"
+#include "gfx_buffer.h"
+#include "gfx_texture.h"
+#include "gfx_command_list.h"
+#include "gfx_fence.h"
+#include "gfx_shader.h"
+#include "gfx_pipeline_state.h"
+#include "gfx_swapchain.h"
+#include "gfx_descriptor.h"
+#include "gfx_heap.h"
+#include "gfx_rt_blas.h"
+#include "gfx_rt_tlas.h"
 
 IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc);
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width);

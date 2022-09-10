@@ -1,7 +1,7 @@
 #pragma once
 
 #include "d3d12_header.h"
-#include "../i_gfx_fence.h"
+#include "../gfx_fence.h"
 
 class D3D12Device;
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "d3d12_header.h"
-#include "../i_gfx_pipeline_state.h"
+#include "../gfx_pipeline_state.h"
 
 class D3D12Device;
 

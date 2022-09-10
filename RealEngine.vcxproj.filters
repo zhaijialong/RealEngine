@@ -346,7 +346,7 @@
     <ClCompile Include="source\renderer\lighting\reflection_denoiser.cpp">
       <Filter>source\renderer\lighting</Filter>
     </ClCompile>
-    <ClCompile Include="source\world\i_visible_object.cpp">
+    <ClCompile Include="source\world\visible_object.cpp">
       <Filter>source\world</Filter>
     </ClCompile>
     <ClCompile Include="external\FSR2\ffx_assert.cpp">
@@ -387,31 +387,31 @@
     <ClInclude Include="source\gfx\gfx_define.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_buffer.h">
+    <ClInclude Include="source\gfx\gfx_buffer.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_command_list.h">
+    <ClInclude Include="source\gfx\gfx_command_list.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_device.h">
+    <ClInclude Include="source\gfx\gfx_device.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_fence.h">
+    <ClInclude Include="source\gfx\gfx_fence.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_pipeline_state.h">
+    <ClInclude Include="source\gfx\gfx_pipeline_state.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_resource.h">
+    <ClInclude Include="source\gfx\gfx_resource.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_shader.h">
+    <ClInclude Include="source\gfx\gfx_shader.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_swapchain.h">
+    <ClInclude Include="source\gfx\gfx_swapchain.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_texture.h">
+    <ClInclude Include="source\gfx\gfx_texture.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
     <ClInclude Include="source\utils\assert.h">
@@ -501,7 +501,7 @@
     <ClInclude Include="external\imgui\imgui_impl_win32.h">
       <Filter>external\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_descriptor.h">
+    <ClInclude Include="source\gfx\gfx_descriptor.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
     <ClInclude Include="source\gfx\d3d12\d3d12_descriptor.h">
@@ -624,10 +624,10 @@
     <ClInclude Include="source\world\directional_light.h">
       <Filter>source\world</Filter>
     </ClInclude>
-    <ClInclude Include="source\world\i_light.h">
+    <ClInclude Include="source\world\light.h">
       <Filter>source\world</Filter>
     </ClInclude>
-    <ClInclude Include="source\world\i_visible_object.h">
+    <ClInclude Include="source\world\visible_object.h">
       <Filter>source\world</Filter>
     </ClInclude>
     <ClInclude Include="source\world\sky_sphere.h">
@@ -663,7 +663,7 @@
     <ClInclude Include="source\renderer\gpu_driven_debug_line.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_heap.h">
+    <ClInclude Include="source\gfx\gfx_heap.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
     <ClInclude Include="source\gfx\d3d12\d3d12_heap.h">
@@ -711,10 +711,10 @@
     <ClInclude Include="source\renderer\render_batch.h">
       <Filter>source\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_rt_blas.h">
+    <ClInclude Include="source\gfx\gfx_rt_blas.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="source\gfx\i_gfx_rt_tlas.h">
+    <ClInclude Include="source\gfx\gfx_rt_tlas.h">
       <Filter>source\gfx</Filter>
     </ClInclude>
     <ClInclude Include="source\gfx\d3d12\d3d12_rt_blas.h">

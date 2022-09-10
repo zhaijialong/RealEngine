@@ -1,7 +1,7 @@
 #pragma once
 
 #include "d3d12_header.h"
-#include "../i_gfx_command_list.h"
+#include "../gfx_command_list.h"
 
 class IGfxDevice;
 class IGfxFence;

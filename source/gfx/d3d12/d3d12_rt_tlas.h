@@ -1,7 +1,7 @@
 #pragma once
 
 #include "d3d12_header.h"
-#include "../i_gfx_rt_tlas.h"
+#include "../gfx_rt_tlas.h"
 
 class D3D12Device;
 

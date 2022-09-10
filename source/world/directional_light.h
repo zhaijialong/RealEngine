@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_light.h"
+#include "light.h"
 
 class DirectionalLight : public ILight
 {

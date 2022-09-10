@@ -1,7 +1,7 @@
 #pragma once
 
 #include "d3d12_header.h"
-#include "../i_gfx_swapchain.h"
+#include "../gfx_swapchain.h"
 
 class D3D12Device;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_gfx_resource.h"
+#include "gfx_resource.h"
 
 class IGfxRayTracingTLAS : public IGfxResource
 {

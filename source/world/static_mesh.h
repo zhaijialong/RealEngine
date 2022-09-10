@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/render_batch.h"
-#include "i_visible_object.h"
+#include "visible_object.h"
 #include "model_constants.hlsli"
 
 class MeshMaterial;

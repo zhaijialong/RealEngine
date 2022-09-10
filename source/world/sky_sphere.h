@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_visible_object.h"
+#include "visible_object.h"
 
 class SkySphere : public IVisibleObject
 {

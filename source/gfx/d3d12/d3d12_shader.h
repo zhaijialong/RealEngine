@@ -1,7 +1,7 @@
 #pragma once
 
 #include "d3d12_header.h"
-#include "../i_gfx_shader.h"
+#include "../gfx_shader.h"
 
 class D3D12Device;
 

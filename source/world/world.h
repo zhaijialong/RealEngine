@@ -1,7 +1,7 @@
 #pragma once
 
 #include "camera.h"
-#include "i_light.h"
+#include "light.h"
 
 namespace tinyxml2
 {

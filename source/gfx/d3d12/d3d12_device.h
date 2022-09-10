@@ -1,7 +1,7 @@
 #pragma once
 
 #include "d3d12_header.h"
-#include "../i_gfx_device.h"
+#include "../gfx_device.h"
 #include "EASTL/unique_ptr.h"
 #include "EASTL/queue.h"
 

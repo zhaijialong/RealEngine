@@ -1,4 +1,4 @@
-#include "i_visible_object.h"
+#include "visible_object.h"
 #include "utils/gui_util.h"
 
 void IVisibleObject::OnGui()
