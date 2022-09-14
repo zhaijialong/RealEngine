@@ -5,6 +5,19 @@
 
 #define MAX_TEMPORAL_ACCUMULATION_FRAME (32)
 
+// "Precomputed Global Illumination in Frostbite", Yuriy O'Donnell, 2018
+sh2 shApplyDiffuseConvolutionL1(sh2 sh)
+{
+    float A0 = 0.886227f; // pi / sqrt(fourPi)
+    float A1 = 1.023326f; // sqrt(pi / 3)
+    
+    sh2 result;
+    result.x = sh.x * A0;
+    result.yzw = sh.yzw * A1;
+
+    return result;
+}
+
 struct SH
 {
     sh2 shY; //2nd order SH
@@ -14,15 +27,17 @@ struct SH
     void Project(float3 color, float3 dir)
     {
         float3 ycocg = RGBToYCoCg(color);
-
-        shY = shScale(shEvaluateCosineLobe(dir), ycocg.x);
+        
+        shY = 2.0 * M_PI * shEvaluate(dir) * ycocg.x; //radiance SH
         co = ycocg.y;
         cg = ycocg.z;
     }
     
-    float3 Unproject(float3 N)
-    {        
-        float y = max(0.0, shUnproject(shDiffuseConvolution(shY), N));
+    float3 UnprojectIrradiance(float3 N)
+    {
+        sh2 irradianceSH = shApplyDiffuseConvolutionL1(shY);
+        
+        float y = max(0.0, shUnproject(irradianceSH, N));
         return YCoCgToRGB(float3(y, co, cg));
     }
     

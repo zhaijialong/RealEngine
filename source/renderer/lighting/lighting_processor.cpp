@@ -213,7 +213,7 @@ RGHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RGHandle d
             }
             if (indirectDiffuseRT)
             {
-                cb1.indirectDiffuseRT = indirectDiffuseRT->IsImported() ? m_pReSTIRGI->GetOutputRadianceSRV()->GetHeapIndex() : indirectDiffuseRT->GetSRV()->GetHeapIndex();
+                cb1.indirectDiffuseRT = indirectDiffuseRT->IsImported() ? m_pReSTIRGI->GetOutputIrradianceSRV()->GetHeapIndex() : indirectDiffuseRT->GetSRV()->GetHeapIndex();
             }
             cb1.hsrMaxRoughness = m_pReflection->GetMaxRoughness();
             cb1.outputRT = outputRT->GetUAV()->GetHeapIndex();

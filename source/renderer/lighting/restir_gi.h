@@ -9,7 +9,7 @@ public:
 
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
-    IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetHistoryRadianceSRV(); }
+    IGfxDescriptor* GetOutputIrradianceSRV() const { return m_pDenoiser->GetHistoryIrradianceSRV(); }
 
 private:
     void InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, RGTexture* outputRayDirection, uint32_t width, uint32_t height);

@@ -56,7 +56,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
     {
         RGHandle halfDepthNormal;
         RGHandle prevLinearDepth;
-        RGHandle historyRadiance;
+        RGHandle historyIrradiance;
         RGHandle outputRadiance;
         RGHandle outputRayDirection;
     };
@@ -71,7 +71,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             if (m_bEnableDenoiser)
             {
                 m_pDenoiser->ImportHistoryTextures(pRenderGraph, width, height);
-                data.historyRadiance = builder.Read(m_pDenoiser->GetHistoryRadiance());
+                data.historyIrradiance = builder.Read(m_pDenoiser->GetHistoryIrradiance());
             }
 
             RGTexture::Desc desc;
@@ -302,7 +302,7 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDep
     {
         uint halfDepthNormalTexture;
         uint prevLinearDepthTexture;
-        uint historyRadiance;
+        uint historyIrradiance;
         uint outputRadianceUAV;
         uint outputRayDirectionUAV;
     };
@@ -310,7 +310,7 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDep
     CB constants;
     constants.halfDepthNormalTexture = halfDepthNormal->GetSRV()->GetHeapIndex();
     constants.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
-    constants.historyRadiance = m_bEnableDenoiser ? m_pDenoiser->GetHistoryRadianceSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    constants.historyIrradiance = m_bEnableDenoiser ? m_pDenoiser->GetHistoryIrradianceSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     constants.outputRadianceUAV = outputRadiance->GetUAV()->GetHeapIndex();
     constants.outputRayDirectionUAV = outputRayDirection->GetUAV()->GetHeapIndex();
 

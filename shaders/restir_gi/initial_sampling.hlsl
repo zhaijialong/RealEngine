@@ -7,19 +7,19 @@ cbuffer CB : register(b0)
 {
     uint c_halfDepthNormalTexture;
     uint c_prevLinearDepthTexture;
-    uint c_historyRadiance;
+    uint c_historyIrradiance;
     uint c_outputRadianceUAV;
     uint c_outputRayDirection;
 }
 
 float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
 {
-    if (c_historyRadiance == INVALID_RESOURCE_INDEX)
+    if (c_historyIrradiance == INVALID_RESOURCE_INDEX)
     {
         return 0.0;
     }
     
-    Texture2D historyRadianceTexture = ResourceDescriptorHeap[c_historyRadiance];
+    Texture2D historyIrradianceTexture = ResourceDescriptorHeap[c_historyIrradiance];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     Texture2D prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
@@ -36,8 +36,8 @@ float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
         return 0.0; //todo : maybe some kind of world radiance cache
     }
     
-    float3 historyRadiance = historyRadianceTexture.SampleLevel(linearSampler, prevUV, 0).xyz;
-    return historyRadiance * material.diffuse;
+    float3 irradiance = historyIrradianceTexture.SampleLevel(linearSampler, prevUV, 0).xyz;
+    return irradiance * material.diffuse;
 }
 
 [numthreads(8, 8, 1)]

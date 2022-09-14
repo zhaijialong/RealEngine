@@ -18,8 +18,8 @@ public:
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, 
         RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
-    RGHandle GetHistoryRadiance() const { return m_historyRadiance; }
-    IGfxDescriptor* GetHistoryRadianceSRV() const { return m_pHistoryRadiance->GetSRV(); }
+    RGHandle GetHistoryIrradiance() const { return m_historyIrradiance; }
+    IGfxDescriptor* GetHistoryIrradianceSRV() const { return m_pHistoryIrradiance->GetSRV(); }
 
     void InvalidateHistory();
 
@@ -49,6 +49,6 @@ private:
     eastl::unique_ptr<Texture2D> m_pTemporalAccumulationCount0;
     eastl::unique_ptr<Texture2D> m_pTemporalAccumulationCount1;
 
-    RGHandle m_historyRadiance;
-    eastl::unique_ptr<Texture2D> m_pHistoryRadiance;
+    RGHandle m_historyIrradiance;
+    eastl::unique_ptr<Texture2D> m_pHistoryIrradiance;
 };

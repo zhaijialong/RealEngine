@@ -10,7 +10,7 @@ cbuffer CB : register(b1)
     uint c_depthTexture;
     uint c_normalTexture;
     uint c_outputSHTexture;
-    uint c_outputRadianceTexture;
+    uint c_outputIrradianceTexture;
 }
 
 [numthreads(8, 8, 1)]
@@ -23,13 +23,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
     RWTexture2D<uint4> outputSHTexture = ResourceDescriptorHeap[c_outputSHTexture];
-    RWTexture2D<float3> outputRadianceTexture = ResourceDescriptorHeap[c_outputRadianceTexture];
+    RWTexture2D<float3> outputIrradianceTexture = ResourceDescriptorHeap[c_outputIrradianceTexture];
 
     float depth = depthTexture[pos];
     if (depth == 0.0)
     {
         outputSHTexture[pos] = 0;
-        outputRadianceTexture[pos] = 0;
+        outputIrradianceTexture[pos] = 0;
         return;
     }
     
@@ -80,6 +80,6 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     sh = sh * rcp(sumWeight);
     
     outputSHTexture[pos] = PackSH(sh);
-    outputRadianceTexture[pos] = sh.Unproject(N);
+    outputIrradianceTexture[pos] = sh.UnprojectIrradiance(N);
     //outputRadianceTexture[pos] = normAccumulationCount.xxx;
 }
