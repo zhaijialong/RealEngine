@@ -16,7 +16,7 @@ cbuffer CB : register(b1)
 };
 
 float4x4 FFX_DNSR_Shadows_GetViewProjectionInverse() { return CameraCB.mtxViewProjectionInverse; }
-float4x4 FFX_DNSR_Shadows_GetReprojectionMatrix() { return CameraCB.mtxProjection; }
+float4x4 FFX_DNSR_Shadows_GetReprojectionMatrix() { return CameraCB.mtxClipToPrevClipNoJitter; }
 float4x4 FFX_DNSR_Shadows_GetProjectionInverse() { return CameraCB.mtxProjectionInverse; }
 float2 FFX_DNSR_Shadows_GetInvBufferDimensions() { return SceneCB.rcpRenderSize; }
 int2 FFX_DNSR_Shadows_GetBufferDimensions() { return SceneCB.renderSize; }

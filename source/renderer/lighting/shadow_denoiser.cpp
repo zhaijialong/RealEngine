@@ -192,7 +192,7 @@ RGHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RGHandle input, RGHan
             RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
-            desc.format = GfxFormat::R8UNORM;
+            desc.format = GfxFormat::R16UNORM;
             data.outputTexture = builder.Create<RGTexture>(desc, "ShadowDenoiser filter2 output");
             data.outputTexture = builder.Write(data.outputTexture);
         },
