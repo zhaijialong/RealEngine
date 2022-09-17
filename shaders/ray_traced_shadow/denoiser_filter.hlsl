@@ -63,7 +63,9 @@ void main(uint2 gid : SV_GroupID, uint2 gtid : SV_GroupThreadID, uint2 did : SV_
     bool bWriteOutput = false;
     float2 results = FFX_DNSR_Shadows_FilterSoftShadowsPass(gid, gtid, did, bWriteOutput, PASS_INDEX, STEP_SIZE);
 
-    if (bWriteOutput)
+    #if !GFX_VENDOR_AMD
+    if (bWriteOutput) //doesn't work correctly on AMD with it
+    #endif
     {
 #if FILTER_PASS == 2
         // Recover some of the contrast lost during denoising
