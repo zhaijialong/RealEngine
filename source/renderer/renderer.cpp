@@ -1005,9 +1005,7 @@ void Renderer::UploadTexture(IGfxTexture* texture, const void* data)
             upload.offset = dst_offset;
             m_pendingTextureUploads.push_back(upload);
 
-#define ALIGN(address, alignment) (((address) + (alignment) - 1) & ~((alignment) - 1)) 
-
-            dst_offset += ALIGN(dst_row_pitch * row_num, 512); //512 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
+            dst_offset += RoundUpPow2(dst_row_pitch * row_num, 512); //512 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
             src_offset += src_row_pitch * row_num;
         }
     }

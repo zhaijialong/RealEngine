@@ -97,8 +97,8 @@ RGHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, RGHandle 
             data.rayListBuffer = builder.Create<RGBuffer>(desc, "HSR SW ray list");
             data.rayListBuffer = builder.Write(data.rayListBuffer);
 
-            uint32_t tile_count_x = (width + 7) / 8;
-            uint32_t tile_count_y = (height + 7) / 8;
+            uint32_t tile_count_x = DivideRoudingUp(width, 8);
+            uint32_t tile_count_y = DivideRoudingUp(height, 8);
             desc.size = sizeof(uint32_t) * tile_count_x * tile_count_y;
             data.tileListBuffer = builder.Create<RGBuffer>(desc, "HSR tile list");
             data.tileListBuffer = builder.Write(data.tileListBuffer);
@@ -308,7 +308,7 @@ void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, RG
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
 
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 void HybridStochasticReflection::PrepareIndirectArgs(IGfxCommandList* pCommandList, RGBuffer* rayCounterSRV, RGBuffer* indirectArgsUAV, RGBuffer* denoiserArgsUAV)

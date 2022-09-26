@@ -264,7 +264,7 @@ void HZB::ReprojectDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDe
     };
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
-    pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(m_hzbSize.x, 8), DivideRoudingUp(m_hzbSize.y, 8), 1);
 }
 
 void HZB::DilateDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDepthSRV, RGTexture* hzbMip0UAV)
@@ -274,7 +274,7 @@ void HZB::DilateDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDepth
     uint32_t root_consts[4] = { reprojectedDepthSRV->GetSRV()->GetHeapIndex(), hzbMip0UAV->GetUAV()->GetHeapIndex(), m_hzbSize.x, m_hzbSize.y};
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
-    pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(m_hzbSize.x, 8), DivideRoudingUp(m_hzbSize.y, 8), 1);
 }
 
 void HZB::BuildHZB(IGfxCommandList* pCommandList, RGTexture* texture, bool min_max)
@@ -334,5 +334,5 @@ void HZB::InitHZB(IGfxCommandList* pCommandList, RGTexture* inputDepthSRV, RGTex
     uint32_t root_consts[4] = { inputDepthSRV->GetSRV()->GetHeapIndex(), hzbMip0UAV->GetUAV()->GetHeapIndex(), m_hzbSize.x, m_hzbSize.y};
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
 
-    pCommandList->Dispatch((m_hzbSize.x + 7) / 8, (m_hzbSize.y + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(m_hzbSize.x, 8), DivideRoudingUp(m_hzbSize.y, 8), 1);
 }

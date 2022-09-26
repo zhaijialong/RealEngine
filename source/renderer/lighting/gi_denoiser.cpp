@@ -303,7 +303,7 @@ void GIDenoiser::PreBlur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTe
     constants.outputSHTexture = outputSH->GetUAV()->GetHeapIndex();
 
     pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 void GIDenoiser::TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, RGTexture* velocity,
@@ -340,7 +340,7 @@ void GIDenoiser::TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* 
     constants.bHistoryInvalid = m_bHistoryInvalid;
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 
     if (m_bHistoryInvalid)
     {
@@ -420,7 +420,7 @@ void GIDenoiser::HistoryReconstruction(IGfxCommandList* pCommandList, RGTexture*
     constants.outputSHTexture = outputSH->GetUAV()->GetHeapIndex();
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 void GIDenoiser::Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTexture* depth, RGTexture* normal, uint32_t width, uint32_t height)
@@ -446,5 +446,5 @@ void GIDenoiser::Blur(IGfxCommandList* pCommandList, RGTexture* inputSH, RGTextu
     constants.outputIrradianceTexture = m_pHistoryIrradiance->GetUAV()->GetHeapIndex();
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }

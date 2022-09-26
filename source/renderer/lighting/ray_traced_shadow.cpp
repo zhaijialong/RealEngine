@@ -68,6 +68,6 @@ void RTShadow::RayTrace(IGfxCommandList* pCommandList, RGTexture* depthSRV, RGTe
 
     uint constants[3] = { depthSRV->GetSRV()->GetHeapIndex(), normalSRV->GetSRV()->GetHeapIndex(), shadowUAV->GetUAV()->GetHeapIndex()};
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 

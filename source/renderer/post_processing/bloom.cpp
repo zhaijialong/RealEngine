@@ -155,7 +155,7 @@ void Bloom::Downsample(IGfxCommandList* pCommandList, RGTexture* input, RGTextur
     constants.threshold = m_threshold;
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
-    pCommandList->Dispatch((output_width + 7) / 8, (output_height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(output_width, 8), DivideRoudingUp(output_height, 8), 1);
 }
 
 void Bloom::Upsample(IGfxCommandList* pCommandList, RGTexture* highInput, RGTexture* lowInput, RGTexture* output, uint32_t mip)
@@ -184,5 +184,5 @@ void Bloom::Upsample(IGfxCommandList* pCommandList, RGTexture* highInput, RGText
     constants.outputPixelSize = float2(1.0f / output_width, 1.0f / output_height);
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
-    pCommandList->Dispatch((output_width + 7) / 8, (output_height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(output_width, 8), DivideRoudingUp(output_height, 8), 1);
 }

@@ -126,7 +126,7 @@ RGHandle Renderer::VelocityPass(RGHandle& depth)
             uint32_t cb[2] = { velocity->GetUAV()->GetHeapIndex(), depth->GetSRV()->GetHeapIndex()};
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
-            pCommandList->Dispatch((m_nRenderWidth + 7) / 8, (m_nRenderHeight + 7) / 8, 1);
+            pCommandList->Dispatch(DivideRoudingUp(m_nRenderWidth, 8), DivideRoudingUp(m_nRenderHeight, 8), 1);
         });
 
     depth = camera_velocity_pass->depth;
@@ -166,7 +166,7 @@ RGHandle Renderer::LinearizeDepthPass(RGHandle depth)
             uint32_t cb[2] = { inputRT->GetSRV()->GetHeapIndex(), outputRT->GetUAV()->GetHeapIndex() };
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
-            pCommandList->Dispatch((m_nRenderWidth + 7) / 8, (m_nRenderHeight + 7) / 8, 1);
+            pCommandList->Dispatch(DivideRoudingUp(m_nRenderWidth, 8), DivideRoudingUp(m_nRenderHeight, 8), 1);
         });
 
     return linearize_depth_pass->outputLinearDepthRT;

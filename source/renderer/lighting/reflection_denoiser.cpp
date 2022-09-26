@@ -148,8 +148,8 @@ RGHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RGHandle indirect
             data.outputVariance = builder.Create<RGTexture>(desc, "ReflectionDenoiser reprojected variance");
             data.outputVariance = builder.Write(data.outputVariance);
              
-            desc.width = (width + 7) / 8;
-            desc.height = (height + 7) / 8;
+            desc.width = DivideRoudingUp(width, 8);
+            desc.height = DivideRoudingUp(height, 8);
             desc.format = GfxFormat::RGBA16F;
             data.outputAvgRadiance = builder.Create<RGTexture>(desc, "ReflectionDenoiser average radiance");
             data.outputAvgRadiance = builder.Write(data.outputAvgRadiance);

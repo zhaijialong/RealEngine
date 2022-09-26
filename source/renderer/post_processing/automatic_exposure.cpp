@@ -241,7 +241,7 @@ void AutomaticExposure::InitLuminance(IGfxCommandList* pCommandList, RGTexture* 
         m_minLuminance, m_maxLuminance };
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
 
-    pCommandList->Dispatch((m_luminanceSize.x + 7) / 8, (m_luminanceSize.y + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(m_luminanceSize.x, 8), DivideRoudingUp(m_luminanceSize.y, 8), 1);
 }
 
 void AutomaticExposure::ReduceLuminance(IGfxCommandList* pCommandList, RGTexture* texture)
@@ -350,7 +350,7 @@ void AutomaticExposure::BuildHistogram(IGfxCommandList* pCommandList, RGTexture*
     };
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
 
-    pCommandList->Dispatch((half_width + 15) / 16, (half_height + 15) / 16, 1);
+    pCommandList->Dispatch(DivideRoudingUp(half_width, 16), DivideRoudingUp(half_height, 16), 1);
 }
 
 void AutomaticExposure::ReduceHistogram(IGfxCommandList* pCommandList, RGBuffer* histogramBufferSRV, RGTexture* avgLuminanceUAV)

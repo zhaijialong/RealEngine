@@ -2,6 +2,7 @@
 
 #include "memory.h"
 #include "assert.h"
+#include "math.h"
 
 class LinearAllocator
 {
@@ -19,7 +20,7 @@ public:
 
     void* Alloc(uint32_t size, uint32_t alignment = 1)
     {
-        uint32_t address = Align(m_nPointerOffset, alignment);
+        uint32_t address = RoundUpPow2(m_nPointerOffset, alignment);
         RE_ASSERT(address + size <= m_nMemorySize);
 
         m_nPointerOffset = address + size;
@@ -30,12 +31,6 @@ public:
     void Reset()
     {
         m_nPointerOffset = 0;
-    }
-
-private:
-    uint32_t Align(uint32_t address, uint32_t alignment)
-    {
-        return (address + alignment - 1) & ~(alignment - 1);
     }
 
 private:

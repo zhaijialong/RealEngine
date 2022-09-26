@@ -134,7 +134,7 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
 
     CB cb = { m_pTexture->GetUAV(0)->GetHeapIndex(), size, 1.0f / size, m_pHDRITexture->GetSRV()->GetHeapIndex() };
     pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
-    pCommandList->Dispatch((size + 7) / 8, (size + 7) / 8, 6);
+    pCommandList->Dispatch(DivideRoudingUp(size, 8), DivideRoudingUp(size, 8), 6);
 
     const GfxTextureDesc& textureDesc = m_pTexture->GetTexture()->GetDesc();
 
@@ -220,7 +220,7 @@ void SkyCubeMap::UpdateSpecularCubeTexture(IGfxCommandList* pCommandList)
         pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
         uint32_t size = textureDesc.width >> i;
-        pCommandList->Dispatch((size + 7) / 8, (size + 7) / 8, 6);
+        pCommandList->Dispatch(DivideRoudingUp(size, 8), DivideRoudingUp(size, 8), 6);
     }
 }
 
@@ -240,5 +240,5 @@ void SkyCubeMap::UpdateDiffuseCubeTexture(IGfxCommandList* pCommandList)
 
     uint32_t cb[3] = { m_pTexture->GetSRV()->GetHeapIndex(), m_pDiffuseTexture->GetUAV(0)->GetHeapIndex(), size };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
-    pCommandList->Dispatch((size + 7) / 8, (size + 7) / 8, 6);
+    pCommandList->Dispatch(DivideRoudingUp(size, 8), DivideRoudingUp(size, 8), 6);
 }

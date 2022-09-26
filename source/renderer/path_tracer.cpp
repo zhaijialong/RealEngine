@@ -128,7 +128,7 @@ void PathTracer::PathTrace(IGfxCommandList* pCommandList, RGTexture* diffuse, RG
         output->GetUAV()->GetHeapIndex()
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 void PathTracer::Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* outputUAV, uint32_t width, uint32_t height)
@@ -153,5 +153,5 @@ void PathTracer::Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGT
         m_bEnableAccumulation
     };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }

@@ -315,7 +315,7 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDep
     constants.outputRayDirectionUAV = outputRayDirection->GetUAV()->GetHeapIndex();
 
     pCommandList->SetComputeConstants(0, &constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* velocity, 
@@ -356,7 +356,7 @@ void ReSTIRGI::TemporalResampling(IGfxCommandList* pCommandList, RGTexture* half
     cb.bHistoryInvalid = historyInvalid;
 
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal,
@@ -388,7 +388,7 @@ void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfD
     constants.spatialPass = pass_index;
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* rayDirection, RGTexture* halfDepthNormal, RGTexture* depth, RGTexture* normal, 
@@ -423,7 +423,7 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTe
         outputVariance ? outputVariance->GetUAV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)

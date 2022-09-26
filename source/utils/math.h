@@ -1,5 +1,6 @@
 #pragma once
 
+#include "assert.h"
 #include "linalg/linalg.h"
 #include "hlslpp/hlsl++.h"
 
@@ -201,4 +202,20 @@ inline bool FrustumCull(const float4* planes, uint32_t plane_count, float3 cente
     }
 
     return true;
+}
+
+inline uint32_t DivideRoudingUp(uint32_t a, uint32_t b)
+{
+    return (a + b - 1) / b;
+}
+
+inline bool IsPow2(uint32_t x)
+{
+    return (x & (x - 1)) == 0;
+}
+
+inline uint32_t RoundUpPow2(uint32_t a, uint32_t b)
+{
+    RE_ASSERT(IsPow2(b));
+    return (a + b - 1) & ~(b - 1);
 }

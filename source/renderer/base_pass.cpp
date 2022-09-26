@@ -601,7 +601,7 @@ void BasePass::BuildMeshletList(IGfxCommandList* pCommandList, RGBuffer* culling
             meshletListBufferUAV->GetUAV()->GetHeapIndex(),
             meshletListCounterBufferUAV->GetUAV()->GetHeapIndex()};
         pCommandList->SetComputeConstants(1, consts, sizeof(consts));
-        pCommandList->Dispatch((m_indirectBatches[i].originMeshletCount + 63) / 64, 1, 1);
+        pCommandList->Dispatch(DivideRoudingUp(m_indirectBatches[i].originMeshletCount, 64), 1, 1);
     }
 }
 

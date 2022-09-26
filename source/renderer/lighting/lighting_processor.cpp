@@ -220,7 +220,7 @@ RGHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RGHandle d
 
             pCommandList->SetComputeConstants(1, &cb1, sizeof(cb1));
 
-            pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+            pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
         });
 
     return pass->output;
@@ -269,7 +269,7 @@ RGHandle LightingProcessor::ExtractHalfDepthNormal(RenderGraph* pRenderGraph, RG
             };
 
             pCommandList->SetComputeConstants(0, constants, sizeof(constants));
-            pCommandList->Dispatch((half_width + 7) / 8, (half_height + 7) / 8, 1);
+            pCommandList->Dispatch(DivideRoudingUp(half_width, 8), DivideRoudingUp(half_height, 8), 1);
         })->output;
 }
 

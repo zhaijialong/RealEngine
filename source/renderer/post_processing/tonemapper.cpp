@@ -113,5 +113,5 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, RGTexture* pHdrSRV, RGTextu
 
     pCommandList->SetComputeConstants(1, &constants, sizeof(constants));
 
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }

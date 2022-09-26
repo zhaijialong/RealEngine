@@ -48,7 +48,7 @@ RGHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RGHandle input, RGHan
         {
             data.raytraceResult = builder.Read(input);
 
-            uint32_t tile_x = (width + 7) / 8;
+            uint32_t tile_x = DivideRoudingUp(width, 8);
             uint32_t tile_y = (height + 3) / 4;
 
             RGBuffer::Desc desc;
@@ -97,7 +97,7 @@ RGHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RGHandle input, RGHan
 
             data.momentsTexture = builder.Write(momentsTexture);
 
-            uint32_t tile_x = (width + 7) / 8;
+            uint32_t tile_x = DivideRoudingUp(width, 8);
             uint32_t tile_y = (height + 3) / 4;
 
             RGBuffer::Desc bufferDesc;
@@ -224,7 +224,7 @@ void ShadowDenoiser::Prepare(IGfxCommandList* pCommandList, RGTexture* raytraceR
 
     uint constants[2] = { raytraceResult->GetSRV()->GetHeapIndex(), maskBuffer->GetUAV()->GetHeapIndex()};
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 31) / 32, (height + 15) / 16, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 32), DivideRoudingUp(height, 16), 1);
 }
 
 void ShadowDenoiser::TileClassification(IGfxCommandList* pCommandList, RGBuffer* shadowMaskBuffer, RGTexture* depthTexture, RGTexture* normalTexture,
@@ -267,7 +267,7 @@ void ShadowDenoiser::TileClassification(IGfxCommandList* pCommandList, RGBuffer*
     }
 
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
 void ShadowDenoiser::Filter(IGfxCommandList* pCommandList, IGfxDescriptor* input, IGfxDescriptor* output, RGTexture* depthTexture, RGTexture* normalTexture,
@@ -283,5 +283,5 @@ void ShadowDenoiser::Filter(IGfxCommandList* pCommandList, IGfxDescriptor* input
         tileMetaDataBuffer->GetSRV()->GetHeapIndex(),
     };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }

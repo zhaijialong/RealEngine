@@ -80,5 +80,5 @@ void FXAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* outp
 
     pCommandList->SetComputeConstants(1, &constantBuffer, sizeof(constantBuffer));
 
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }

@@ -1,5 +1,5 @@
 #include "render_graph_resource_allocator.h"
-#include "utils/assert.h"
+#include "utils/math.h"
 #include "fmt/format.h"
 
 RenderGraphResourceAllocator::RenderGraphResourceAllocator(IGfxDevice* pDevice)
@@ -181,10 +181,8 @@ IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uin
 
 void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
 {
-#define ALIGN(address, alignment) (((address) + (alignment) - 1) & ~((alignment) - 1)) 
-
     GfxHeapDesc heapDesc;
-    heapDesc.size = ALIGN(size, 64u * 1024);
+    heapDesc.size = RoundUpPow2(size, 64u * 1024);
 
     eastl::string heapName = fmt::format("RG Heap {:.1f} MB", heapDesc.size / (1024.0f * 1024.0f)).c_str();
 

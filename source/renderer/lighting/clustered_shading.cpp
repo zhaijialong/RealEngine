@@ -83,5 +83,5 @@ void ClusteredShading::Draw(IGfxCommandList* pCommandList, RGTexture* diffuse, R
     cb.shadowRT = shadow->GetSRV()->GetHeapIndex();
     cb.outputRT = output->GetUAV()->GetHeapIndex();
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }

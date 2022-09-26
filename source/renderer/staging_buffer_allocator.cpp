@@ -1,9 +1,8 @@
 #include "staging_buffer_allocator.h"
 #include "renderer.h"
-#include "utils/assert.h"
+#include "utils/math.h"
 
 #define BUFFER_SIZE (64 * 1024 * 1024)
-#define ALIGN(address, alignment) (((address) + (alignment) - 1) & ~((alignment) - 1)) 
 
 StagingBufferAllocator::StagingBufferAllocator(Renderer* pRenderer)
 {
@@ -31,7 +30,7 @@ StagingBuffer StagingBufferAllocator::Allocate(uint32_t size)
     buffer.size = size;
     buffer.offset = m_nAllocatedSize;
 
-    m_nAllocatedSize += ALIGN(size, 512); //512 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
+    m_nAllocatedSize += RoundUpPow2(size, 512); //512 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
     m_nLastAllocatedFrame = m_pRenderer->GetFrameID();
 
     return buffer;

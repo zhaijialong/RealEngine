@@ -118,7 +118,7 @@ void TAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* veloc
     cb.outputRT = output->GetUAV()->GetHeapIndex();
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
 
-    pCommandList->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 
     eastl::swap(m_pHistoryColorInput, m_pHistoryColorOutput);
 }

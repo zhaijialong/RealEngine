@@ -218,7 +218,7 @@ void GTAO::FilterDepth(IGfxCommandList* pCommandList, RGTexture* depth, RGTextur
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
 
     // note: in gtao_prefilter_depth_16x16 each is thread group handles a 16x16 block (with [numthreads(8, 8, 1)] and each logical thread handling a 2x2 block)
-    pCommandList->Dispatch((width + 15) / 16, (height + 15) / 16, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, 16), DivideRoudingUp(height, 16), 1);
 }
 
 void GTAO::Draw(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal, RGTexture* outputAO, RGTexture* outputEdge, uint32_t width, uint32_t height)
@@ -260,7 +260,7 @@ void GTAO::Draw(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal
 
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
 
-    pCommandList->Dispatch((width + XE_GTAO_NUMTHREADS_X - 1)/ XE_GTAO_NUMTHREADS_X, (height + XE_GTAO_NUMTHREADS_Y - 1) / XE_GTAO_NUMTHREADS_Y, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, XE_GTAO_NUMTHREADS_X), DivideRoudingUp(height, XE_GTAO_NUMTHREADS_Y), 1);
 }
 
 void GTAO::Denoise(IGfxCommandList* pCommandList, RGTexture* inputAO, RGTexture* edge, RGTexture* outputAO, uint32_t width, uint32_t height)
@@ -275,7 +275,7 @@ void GTAO::Denoise(IGfxCommandList* pCommandList, RGTexture* inputAO, RGTexture*
     };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
-    pCommandList->Dispatch((width + XE_GTAO_NUMTHREADS_X * 2 - 1) / (XE_GTAO_NUMTHREADS_X * 2), (height + XE_GTAO_NUMTHREADS_Y - 1) / XE_GTAO_NUMTHREADS_Y, 1);
+    pCommandList->Dispatch(DivideRoudingUp(width, XE_GTAO_NUMTHREADS_X * 2), DivideRoudingUp(height, XE_GTAO_NUMTHREADS_Y), 1);
 }
 
 void GTAO::CreateHilbertLUT()
