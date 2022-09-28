@@ -373,6 +373,9 @@
     <ClCompile Include="source\renderer\lighting\gi_denoiser.cpp">
       <Filter>source\renderer\lighting</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\marschner_hair_lut.cpp">
+      <Filter>source\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -1106,6 +1109,9 @@
     </ClInclude>
     <ClInclude Include="source\renderer\lighting\gi_denoiser.h">
       <Filter>source\renderer\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\marschner_hair_lut.h">
+      <Filter>source\renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

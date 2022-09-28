@@ -8,6 +8,7 @@
 #include "gpu_driven_stats.h"
 #include "gpu_scene.h"
 #include "hierarchical_depth_buffer.h"
+#include "marschner_hair_lut.h"
 #include "base_pass.h"
 #include "path_tracer.h"
 #include "sky_cubemap.h"
@@ -97,6 +98,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 void Renderer::RenderFrame()
 {
     CPU_EVENT("Render", "Renderer::RenderFrame");
+
+    m_pMarschnerHairLUT->Debug();
 
     BeginFrame();
     UploadResources();
@@ -654,6 +657,9 @@ void Renderer::CreateCommonResources()
     eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
     m_pPreintegratedGFTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
     m_pSheenETexture.reset(CreateTexture2D(asset_path + "textures/Sheen_ash_E.dds", false));
+
+    m_pMarschnerHairLUT = eastl::make_unique<MarschnerHairLUT>(this);
+    m_pMarschnerHairLUT->Generate();
 
     m_pSobolSequenceTexture.reset(CreateTexture2D(asset_path + "textures/blue_noise/sobol_256_4d.png", false));
     m_pScramblingRankingTexture1SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_1spp.png", false));

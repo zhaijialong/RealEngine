@@ -258,6 +258,7 @@ private:
 
     eastl::unique_ptr<Texture2D> m_pPreintegratedGFTexture;
     eastl::unique_ptr<Texture2D> m_pSheenETexture;
+    eastl::unique_ptr<class MarschnerHairLUT> m_pMarschnerHairLUT;
 
     eastl::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
     eastl::unique_ptr<Texture2D> m_pPrevNormalTexture;
