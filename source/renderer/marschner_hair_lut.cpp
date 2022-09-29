@@ -37,15 +37,16 @@ void MarschnerHairLUT::Generate()
             float u = (i + 0.5f) / (float)textureWidth;
             float v = (j + 0.5f) / (float)textureHeight;
 
-            float thetaI = radian_to_degree(asin(u * 2.0f - 1.0f));
-            float thetaR = radian_to_degree(asin(v * 2.0f - 1.0f));
-            float thetaH = (thetaR + thetaI) / 2.0f;
+            float thetaI = asin(u * 2.0f - 1.0f);
+            float thetaR = asin(v * 2.0f - 1.0f);
+            float thetaH = (thetaI + thetaR) / 2.0f;
+            float thetaD = (thetaI - thetaR) / 2.0f;
 
             M[i + j * textureWidth] = float4(
-                g(betaR, thetaH - alphaR),
-                g(betaTT, thetaH - alphaTT),
-                g(betaTRT, thetaH - alphaTRT),
-                1.0);
+                g(betaR, radian_to_degree(thetaH) - alphaR),
+                g(betaTT, radian_to_degree(thetaH) - alphaTT),
+                g(betaTRT, radian_to_degree(thetaH) - alphaTRT),
+                cos(thetaD));
         }
     }
 
