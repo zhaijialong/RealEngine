@@ -219,3 +219,90 @@ inline uint32_t RoundUpPow2(uint32_t a, uint32_t b)
     RE_ASSERT(IsPow2(b));
     return (a + b - 1) & ~(b - 1);
 }
+
+union FP32
+{
+    uint u;
+    float f;
+    struct
+    {
+        uint Mantissa : 23;
+        uint Exponent : 8;
+        uint Sign : 1;
+    };
+};
+
+union FP16
+{
+    uint16_t u;
+    struct
+    {
+        uint Mantissa : 10;
+        uint Exponent : 5;
+        uint Sign : 1;
+    };
+};
+
+//https://gist.github.com/rygorous/2156668, float_to_half_fast3
+inline uint16_t FloatToHalf(float value)
+{
+    FP32 f;
+    f.f = value;
+    FP32 f32infty = { 255 << 23 };
+    FP32 f16infty = { 31 << 23 };
+    FP32 magic = { 15 << 23 };
+    uint sign_mask = 0x80000000u;
+    uint round_mask = ~0xfffu;
+    FP16 o = { 0 };
+
+    uint sign = f.u & sign_mask;
+    f.u ^= sign;
+
+    // NOTE all the integer compares in this function can be safely
+    // compiled into signed compares since all operands are below
+    // 0x80000000. Important if you want fast straight SSE2 code
+    // (since there's no unsigned PCMPGTD).
+
+    if (f.u >= f32infty.u) // Inf or NaN (all exponent bits set)
+    {
+        o.u = (f.u > f32infty.u) ? 0x7e00 : 0x7c00; // NaN->qNaN and Inf->Inf
+    }
+    else // (De)normalized number or zero
+    {
+        f.u &= round_mask;
+        f.f *= magic.f;
+        f.u -= round_mask;
+        if (f.u > f16infty.u) f.u = f16infty.u; // Clamp to signed infinity if overflowed
+
+        o.u = f.u >> 13; // Take the bits!
+    }
+
+    o.u |= sign >> 16;
+    return o.u;
+}
+
+inline float HalfToFloat(uint16_t value)
+{
+    FP16 h = { value };
+    static const FP32 magic = { 113 << 23 };
+    static const uint shifted_exp = 0x7c00 << 13; // exponent mask after shift
+    FP32 o;
+
+    o.u = (h.u & 0x7fff) << 13;     // exponent/mantissa bits
+    uint exp = shifted_exp & o.u;   // just the exponent
+    o.u += (127 - 15) << 23;        // exponent adjust
+
+    // handle exponent special cases
+    if (exp == shifted_exp) // Inf/NaN?
+    {
+        o.u += (128 - 16) << 23;    // extra exp adjust
+    }
+    else if (exp == 0) // Zero/Denormal?
+    {
+        o.u += 1 << 23;             // extra exp adjust
+        o.f -= magic.f;             // renormalize
+    }
+
+    o.u |= (h.u & 0x8000) << 16;    // sign bit
+    return o.f;
+}

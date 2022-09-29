@@ -13,6 +13,10 @@ public:
     void Debug();
 
 private:
+    void GenerateM();
+    void GenerateN();
+
+private:
     Renderer* m_pRenderer;
 
     eastl::unique_ptr<Texture2D> m_pM;

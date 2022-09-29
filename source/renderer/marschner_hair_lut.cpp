@@ -28,7 +28,23 @@ MarschnerHairLUT::MarschnerHairLUT(Renderer* pRenderer)
 
 void MarschnerHairLUT::Generate()
 {
-    eastl::vector<float4> M(textureWidth * textureHeight);
+    GenerateM();
+    GenerateN();
+}
+
+void MarschnerHairLUT::Debug()
+{
+    ImGui::Begin("Marschner M");
+    ImGui::Image((ImTextureID)m_pM->GetSRV(), ImVec2((float)textureWidth, (float)textureHeight));
+    ImGui::End();
+
+    ImGui::Begin("Marschner N");
+    ImGui::End();
+}
+
+void MarschnerHairLUT::GenerateM()
+{
+    eastl::vector<ushort4> M(textureWidth * textureHeight * 4);
 
     for (uint32_t i = 0; i < textureWidth; ++i)
     {
@@ -42,21 +58,25 @@ void MarschnerHairLUT::Generate()
             float thetaH = (thetaI + thetaR) / 2.0f;
             float thetaD = (thetaI - thetaR) / 2.0f;
 
-            M[i + j * textureWidth] = float4(
+            float4 value = float4(
                 g(betaR, radian_to_degree(thetaH) - alphaR),
                 g(betaTT, radian_to_degree(thetaH) - alphaTT),
                 g(betaTRT, radian_to_degree(thetaH) - alphaTRT),
                 cos(thetaD));
+
+            M[i + j * textureWidth] = ushort4(
+                FloatToHalf(value.x),
+                FloatToHalf(value.y),
+                FloatToHalf(value.z),
+                FloatToHalf(value.w)
+            );
         }
     }
 
-    m_pM.reset(m_pRenderer->CreateTexture2D(textureWidth, textureHeight, 1, GfxFormat::RGBA32F, 0, "MarschnerHairLUT::M"));
+    m_pM.reset(m_pRenderer->CreateTexture2D(textureWidth, textureHeight, 1, GfxFormat::RGBA16F, 0, "MarschnerHairLUT::M"));
     m_pRenderer->UploadTexture(m_pM->GetTexture(), &M[0]);
 }
 
-void MarschnerHairLUT::Debug()
+void MarschnerHairLUT::GenerateN()
 {
-    ImGui::Begin("Marschner M");
-    ImGui::Image((ImTextureID)m_pM->GetSRV(), ImVec2((float)textureWidth, (float)textureHeight));
-    ImGui::End();
 }
