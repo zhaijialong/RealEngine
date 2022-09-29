@@ -108,7 +108,7 @@ RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
             dispatchDesc.renderSize.height = m_pRenderer->GetRenderHeight();
             dispatchDesc.cameraFar = camera->GetZFar();
             dispatchDesc.cameraNear = camera->GetZNear();
-            dispatchDesc.cameraFovAngleVertical = degree_to_randian(camera->GetFov());
+            dispatchDesc.cameraFovAngleVertical = degree_to_radian(camera->GetFov());
 
             FfxErrorCode errorCode = ffxFsr2ContextDispatch(&m_context, &dispatchDesc);
             FFX_ASSERT(errorCode == FFX_OK);

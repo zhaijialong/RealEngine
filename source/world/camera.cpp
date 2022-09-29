@@ -45,7 +45,7 @@ void Camera::SetPerpective(float aspectRatio, float yfov, float znear, float zfa
     m_znear = znear;
     m_zfar = zfar;
 
-    m_projection = perspective_matrix(degree_to_randian(yfov), aspectRatio, zfar, znear, pos_z, zero_to_one);
+    m_projection = perspective_matrix(degree_to_radian(yfov), aspectRatio, zfar, znear, pos_z, zero_to_one);
 }
 
 void Camera::SetPosition(const float3& pos)
@@ -142,7 +142,7 @@ void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
     m_cameraCB.cameraPos = GetPosition();
-    m_cameraCB.spreadAngle = atanf(2.0f * tanf(degree_to_randian(m_fov) * 0.5f) / pRenderer->GetRenderHeight()); // "Texture Level-of-Detail Strategies for Real-Time Ray Tracing", Eq.20
+    m_cameraCB.spreadAngle = atanf(2.0f * tanf(degree_to_radian(m_fov) * 0.5f) / pRenderer->GetRenderHeight()); // "Texture Level-of-Detail Strategies for Real-Time Ray Tracing", Eq.20
     m_cameraCB.nearZ = m_znear;
     m_cameraCB.farZ = m_zfar;
     m_cameraCB.linearZParams = CalcDepthLinearizationParams(m_projection);

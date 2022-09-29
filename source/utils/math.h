@@ -59,7 +59,7 @@ inline float4x4 inverse(const float4x4& m)
 }
 
 template<class T>
-inline T degree_to_randian(T degree)
+inline T degree_to_radian(T degree)
 {
     const float PI = 3.141592653f;
     return degree * PI / 180.0f;
@@ -74,7 +74,7 @@ inline T radian_to_degree(T radian)
 
 inline quaternion rotation_quat(const float3& euler_angles) //pitch-yaw-roll order, in degrees
 {
-    float3 radians = degree_to_randian(euler_angles);
+    float3 radians = degree_to_radian(euler_angles);
 
     float3 c = cos(radians * 0.5f);
     float3 s = sin(radians * 0.5f);
