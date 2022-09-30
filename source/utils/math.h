@@ -174,6 +174,11 @@ inline void decompose(const float4x4& matrix, float3& translation, float3& rotat
     rotation = rotation_angles(q);
 }
 
+inline float sign(float x)
+{
+    return float((x > 0) - (x < 0));
+}
+
 inline bool nearly_equal(float a, float b)
 {
     return std::abs(a - b) < FLT_EPSILON;

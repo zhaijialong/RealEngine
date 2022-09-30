@@ -3,6 +3,7 @@
 #include "utils/gui_util.h"
 
 // reference:
+// Marschner et al. 2003, "Light Scattering from Human Hair Fibers"
 // https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-23-hair-animation-and-rendering-nalu-demo
 // https://hairrendering.wordpress.com/2010/06/27/marschner-shader-part-ii/
 
@@ -17,15 +18,142 @@ static const float betaR = 5; //todo : lerp(5, 10, roughness)
 static const float betaTT = betaR / 2.0f;
 static const float betaTRT = betaR * 2.0f;
 
-//https://en.wikipedia.org/wiki/Normal_distribution
-float g(float sigma, float x_mu)
+static const float indexOfRefraction = 1.55f;
+static const float absorption = 0.2f;
+
+// https://en.wikipedia.org/wiki/Normal_distribution
+float NormalDistribution(float sigma, float x_mu)
 {
     return expf(-0.5f * x_mu * x_mu / (sigma * sigma)) / (sqrtf(2.0f * M_PI) * sigma);
 }
 
+// https://en.wikipedia.org/wiki/Cubic_equation
+// a * x^3 + b * x^2 + c * x + d = 0
+struct CubicEquationSolver
+{
+    float roots[3] = {};
+    uint32_t rootCount = 0;
+
+    void Solve(float a, float b, float c, float d)
+    {
+        RE_ASSERT(b == 0.0f); //b should be always 0 for our case
+
+        if (abs(a) < FLT_EPSILON)
+        {
+            // linear equation
+            if (abs(c) > FLT_EPSILON)
+            {
+                rootCount = 1;
+                roots[0] = -d / c;
+            }
+        }
+        else
+        {
+            //normalized to Cardano's formula: x^3 + p * x = q
+            float p = c / a;
+            float q = -d / a;
+
+            if (abs(q) < FLT_EPSILON)
+            {
+                roots[0] = 0.0f;
+                rootCount = 1;
+
+                if (-p > 0.0)
+                {
+                    roots[1] = sqrtf(-p);
+                    roots[2] = -sqrtf(-p);
+                    rootCount = 3;
+                }
+            }
+            else
+            {
+                float Q = p / 3.0f;
+                float R = q / 2.0f;
+                float D = Q * Q * Q + R * R;
+
+                if (D > 0.0f)
+                {
+                    float sqrtD = sqrtf(D);
+                    float x = sign(R + sqrtD);
+                    float S = sign(R + sqrtD) * powf(abs(R + sqrtD), 1.0f / 3.0f);
+                    float T = sign(R - sqrtD) * powf(abs(R - sqrtD), 1.0f / 3.0f);
+
+                    roots[0] = S + T;
+                    rootCount = 1;
+                }
+                else
+                {
+                    float theta = acos(R / sqrtf(-Q * Q * Q));
+                    float sqrtQ = sqrtf(-Q);
+
+                    roots[0] = 2.0f * sqrtQ * cos(theta / 3.0f);
+                    roots[1] = 2.0f * sqrtQ * cos((theta + 2.0f * M_PI) / 3.0f);
+                    roots[2] = 2.0f * sqrtQ * cos((theta + 4.0f * M_PI) / 3.0f);
+
+                    rootCount = 3;
+                }
+            }
+        }
+    }
+};
+
+// Marschner et al. 2003, "Light Scattering from Human Hair Fibers", Appendix B
+float PerpendicularIOR(float ior, float theta)
+{
+    return sqrtf(ior * ior - sin(theta) * sin(theta)) / cos(theta);
+}
+
+// Marschner et al. 2003, "Light Scattering from Human Hair Fibers", Appendix B
+float ParallelIOR(float ior, float theta)
+{
+    return ior * ior * cos(theta) / sqrtf(ior * ior - sin(theta) * sin(theta));
+}
+
+float A(uint32_t p, float h, float perpendicularIOR, float parallelIOR)
+{
+    float gammaI = asin(h);
+    float gammaT = asin(h / perpendicularIOR);
+
+    return 1.0f;
+}
+
+// phi is Equation 10, h = sin(gammaI)
+float DPhiDH(uint32_t p, float c, float h)
+{
+    float gammaI = asin(h);
+    float dPhiDGammaI = (6.0f * p * c / M_PI - 2.0f) - 3.0f * 8.0f * p * c * gammaI * gammaI / (M_PI * M_PI * M_PI);
+    float dGammaIDH = 1.0f / sqrtf(1.0f - h * h); //derivative of asin
+
+    return dPhiDGammaI * dGammaIDH;
+}
+
 float Np(uint32_t p, float phi, float thetaD)
 {
-    return 1.0f;
+    thetaD = M_PI;
+    phi = M_PI;
+    float perpendicularIOR = PerpendicularIOR(indexOfRefraction, thetaD);
+    float parallelIOR = ParallelIOR(indexOfRefraction, thetaD);
+
+    CubicEquationSolver cubicSolver;
+
+    //solve incident angles, Marschner's paper Equation 10
+    float c = asin(1.0f / perpendicularIOR);
+    cubicSolver.Solve(
+        -8.0f * p * c / (M_PI * M_PI * M_PI),
+        0.0f,
+        6.0f * p * c / M_PI - 2.0f,
+        p * M_PI - phi
+    );
+
+    float N = 0.0f;
+    for (uint32_t i = 0; i < cubicSolver.rootCount; ++i)
+    {
+        float h = sin(cubicSolver.roots[i]); //Figure 9
+
+        N += A(p, h, perpendicularIOR, parallelIOR) / abs(2.0f * DPhiDH(p, c, h)); //Equation 8
+    }
+
+    return min(N, 1.0f);
 }
 
 MarschnerHairLUT::MarschnerHairLUT(Renderer* pRenderer)
@@ -67,9 +195,9 @@ void MarschnerHairLUT::GenerateM()
             float thetaD = (thetaI - thetaR) / 2.0f; //[-PI/2, PI/2]
 
             float4 value = float4(
-                g(betaR, radian_to_degree(thetaH) - alphaR),
-                g(betaTT, radian_to_degree(thetaH) - alphaTT),
-                g(betaTRT, radian_to_degree(thetaH) - alphaTRT),
+                NormalDistribution(betaR, radian_to_degree(thetaH) - alphaR),
+                NormalDistribution(betaTT, radian_to_degree(thetaH) - alphaTT),
+                NormalDistribution(betaTRT, radian_to_degree(thetaH) - alphaTRT),
                 cos(thetaD)); //[0, 1]
 
             M[i + j * textureWidth] = ushort4(
