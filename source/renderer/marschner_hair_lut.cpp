@@ -109,12 +109,74 @@ float ParallelIOR(float ior, float theta)
     return ior * ior * cos(theta) / sqrtf(ior * ior - sin(theta) * sin(theta));
 }
 
+// https://en.wikipedia.org/wiki/Total_internal_reflection
+bool TotalInternalReflection(float n1, float n2, float gammaI)
+{
+    if (n1 > n2)
+    {
+        if (gammaI > asin(n2 / n1))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+float FresnelPerpendicular(float ior, float gammaI)
+{
+    float n1 = 1.0f;
+    float n2 = ior;
+    float gammaT = asin(sin(gammaI) / ior);
+
+    if (TotalInternalReflection(n1, n2, gammaI))
+    {
+        return 1.0f;
+    }
+
+    float Rs = (n1 * cos(gammaI) - n2 * cos(gammaT)) /
+        (n1 * cos(gammaI) + n2 * cos(gammaT));
+
+    return Rs * Rs;
+}
+
+float FresnelParallel(float ior, float gammaI)
+{
+    float n1 = 1.0f;
+    float n2 = ior;
+    float gammaT = asin(sin(gammaI) / ior);
+
+    if (TotalInternalReflection(n1, n2, gammaI))
+    {
+        return 1.0f;
+    }
+
+    float Rp = (n2 * cos(gammaI) - n1 * cos(gammaT)) /
+        (n2 * cos(gammaI) + n1 * cos(gammaT));
+
+    return Rp * Rp;
+}
+
+// https://en.wikipedia.org/wiki/Fresnel_equations
+float Fresnel(float perpendicularIOR, float parallelIOR, float gamma)
+{
+    return (FresnelPerpendicular(perpendicularIOR, gamma) + FresnelParallel(parallelIOR, gamma)) / 2.0f;
+}
+
 float A(uint32_t p, float h, float perpendicularIOR, float parallelIOR)
 {
     float gammaI = asin(h);
     float gammaT = asin(h / perpendicularIOR);
+    float F = Fresnel(perpendicularIOR, parallelIOR, gammaI);
 
-    return 1.0f;
+    if (p == 0)
+    {
+        return F;
+    }
+
+    float invF = Fresnel(1.0f / perpendicularIOR, 1.0f / parallelIOR, gammaT);
+    float T = exp(-2.0f * absorption * (1.0f + cos(2.0f * gammaT)));
+
+    return (1.0f - F) * (1.0f - F) * pow(invF, float(p - 1)) * pow(T, (float)p);
 }
 
 // phi is Equation 10, h = sin(gammaI)
@@ -129,8 +191,6 @@ float DPhiDH(uint32_t p, float c, float h)
 
 float Np(uint32_t p, float phi, float thetaD)
 {
-    thetaD = M_PI;
-    phi = M_PI;
     float perpendicularIOR = PerpendicularIOR(indexOfRefraction, thetaD);
     float parallelIOR = ParallelIOR(indexOfRefraction, thetaD);
 
