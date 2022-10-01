@@ -126,7 +126,7 @@ float FresnelPerpendicular(float ior, float gammaI)
 {
     float n1 = 1.0f;
     float n2 = ior;
-    float gammaT = asin(sin(gammaI) / ior);
+    float gammaT = asin(clamp(sin(gammaI) / ior, -1, 1));
 
     if (TotalInternalReflection(n1, n2, gammaI))
     {
@@ -143,7 +143,7 @@ float FresnelParallel(float ior, float gammaI)
 {
     float n1 = 1.0f;
     float n2 = ior;
-    float gammaT = asin(sin(gammaI) / ior);
+    float gammaT = asin(clamp(sin(gammaI) / ior, -1, 1));
 
     if (TotalInternalReflection(n1, n2, gammaI))
     {
@@ -213,7 +213,7 @@ float Np(uint32_t p, float phi, float thetaD)
         N += A(p, h, perpendicularIOR, parallelIOR) / abs(2.0f * DPhiDH(p, c, h)); //Equation 8
     }
 
-    return min(N, 1.0f);
+    return N;
 }
 
 MarschnerHairLUT::MarschnerHairLUT(Renderer* pRenderer)
