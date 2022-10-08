@@ -867,6 +867,37 @@ Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, uint32_t l
     return texture;
 }
 
+Texture3D* Renderer::CreateTexture3D(const eastl::string& file, bool srgb)
+{
+    TextureLoader loader;
+    if (!loader.Load(file, srgb))
+    {
+        return nullptr;
+    }
+
+    Texture3D* texture = new Texture3D(file);
+    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetDepth(), loader.GetMipLevels(), loader.GetFormat(), 0))
+    {
+        delete texture;
+        return nullptr;
+    }
+
+    UploadTexture(texture->GetTexture(), loader.GetData());
+
+    return texture;
+}
+
+Texture3D* Renderer::CreateTexture3D(uint32_t width, uint32_t height, uint32_t depth, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name)
+{
+    Texture3D* texture = new Texture3D(name);
+    if (!texture->Create(width, height, depth, levels, format, flags))
+    {
+        delete texture;
+        return nullptr;
+    }
+    return texture;
+}
+
 TextureCube* Renderer::CreateTextureCube(const eastl::string& file, bool srgb)
 {
     TextureLoader loader;

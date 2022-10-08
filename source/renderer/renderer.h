@@ -4,6 +4,7 @@
 #include "render_batch.h"
 #include "gpu_scene.h"
 #include "resource/texture_2d.h"
+#include "resource/texture_3d.h"
 #include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
 #include "resource/structured_buffer.h"
@@ -86,6 +87,8 @@ public:
 
     Texture2D* CreateTexture2D(const eastl::string& file, bool srgb = true);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
+    Texture3D* CreateTexture3D(const eastl::string& file, bool srgb = true);
+    Texture3D* CreateTexture3D(uint32_t width, uint32_t height, uint32_t depth, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
     TextureCube* CreateTextureCube(const eastl::string& file, bool srgb = true);
     TextureCube* CreateTextureCube(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
 
