@@ -1,6 +1,7 @@
 #include "marschner_hair_lut.h"
 #include "renderer.h"
 #include "utils/gui_util.h"
+#include "utils/parallel_for.h"
 
 // reference:
 // Marschner et al. 2003, "Light Scattering from Human Hair Fibers"
@@ -122,7 +123,7 @@ bool TotalInternalReflection(float n1, float n2, float gammaI)
     return false;
 }
 
-float FresnelPerpendicular(float ior, float gammaI)
+float PerpendicularFresnel(float ior, float gammaI)
 {
     float n1 = 1.0f;
     float n2 = ior;
@@ -139,7 +140,7 @@ float FresnelPerpendicular(float ior, float gammaI)
     return Rs * Rs;
 }
 
-float FresnelParallel(float ior, float gammaI)
+float ParallelFresnel(float ior, float gammaI)
 {
     float n1 = 1.0f;
     float n2 = ior;
@@ -159,7 +160,7 @@ float FresnelParallel(float ior, float gammaI)
 // https://en.wikipedia.org/wiki/Fresnel_equations
 float Fresnel(float perpendicularIOR, float parallelIOR, float gamma)
 {
-    return (FresnelPerpendicular(perpendicularIOR, gamma) + FresnelParallel(parallelIOR, gamma)) / 2.0f;
+    return (PerpendicularFresnel(perpendicularIOR, gamma) + ParallelFresnel(parallelIOR, gamma)) / 2.0f;
 }
 
 float A(uint32_t p, float h, float perpendicularIOR, float parallelIOR)
@@ -242,12 +243,12 @@ void MarschnerHairLUT::GenerateM()
 {
     eastl::vector<ushort4> M(textureWidth * textureHeight);
 
-    for (uint32_t i = 0; i < textureWidth; ++i)
-    {
-        for (uint32_t j = 0; j < textureHeight; ++j)
+    ParallelFor(textureWidth * textureHeight, [&](uint32_t index)
         {
-            float u = (i + 0.5f) / (float)textureWidth; //dot(T, L) * 0.5 + 0.5
-            float v = (j + 0.5f) / (float)textureHeight;//dot(T, V) * 0.5 + 0.5
+            uint32_t x = index % textureWidth;
+            uint32_t y = index / textureWidth;
+            float u = (x + 0.5f) / (float)textureWidth; //dot(T, L) * 0.5 + 0.5
+            float v = (y + 0.5f) / (float)textureHeight;//dot(T, V) * 0.5 + 0.5
 
             float thetaI = asin(u * 2.0f - 1.0f); //[-PI/2, PI/2]
             float thetaR = asin(v * 2.0f - 1.0f); //[-PI/2, PI/2]
@@ -260,14 +261,13 @@ void MarschnerHairLUT::GenerateM()
                 NormalDistribution(betaTRT, radian_to_degree(thetaH) - alphaTRT),
                 cos(thetaD)); //[0, 1]
 
-            M[i + j * textureWidth] = ushort4(
+            M[x + y * textureWidth] = ushort4(
                 FloatToHalf(value.x),
                 FloatToHalf(value.y),
                 FloatToHalf(value.z),
                 FloatToHalf(value.w)
             );
-        }
-    }
+        });
 
     m_pM.reset(m_pRenderer->CreateTexture2D(textureWidth, textureHeight, 1, GfxFormat::RGBA16F, 0, "MarschnerHairLUT::M"));
     m_pRenderer->UploadTexture(m_pM->GetTexture(), &M[0]);
@@ -277,12 +277,12 @@ void MarschnerHairLUT::GenerateN()
 {
     eastl::vector<ushort4> N(textureWidth * textureHeight);
 
-    for (uint32_t i = 0; i < textureWidth; ++i)
-    {
-        for (uint32_t j = 0; j < textureHeight; ++j)
+    ParallelFor(textureWidth * textureHeight, [&](uint32_t index)
         {
-            float u = (i + 0.5f) / (float)textureWidth; //cos(phi) * 0.5 + 0.5
-            float v = (j + 0.5f) / (float)textureHeight;//cos(thetaD), in [0, 1]
+            uint32_t x = index % textureWidth;
+            uint32_t y = index / textureWidth;
+            float u = (x + 0.5f) / (float)textureWidth; //cos(phi) * 0.5 + 0.5
+            float v = (y + 0.5f) / (float)textureHeight;//cos(thetaD), in [0, 1]
 
             float phi = acos(u * 2.0f - 1.0f);
             float thetaD = acos(v);
@@ -293,14 +293,13 @@ void MarschnerHairLUT::GenerateN()
                 Np(2, phi, thetaD),
                 1.0f);
 
-            N[i + j * textureWidth] = ushort4(
+            N[x + y * textureWidth] = ushort4(
                 FloatToHalf(value.x),
                 FloatToHalf(value.y),
                 FloatToHalf(value.z),
                 FloatToHalf(value.w)
             );
-        }
-    }
+        });
 
     m_pN.reset(m_pRenderer->CreateTexture2D(textureWidth, textureHeight, 1, GfxFormat::RGBA16F, 0, "MarschnerHairLUT::N"));
     m_pRenderer->UploadTexture(m_pN->GetTexture(), &N[0]);
