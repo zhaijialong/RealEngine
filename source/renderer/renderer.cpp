@@ -329,6 +329,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.scramblingRankingTexture64SPP = m_pScramblingRankingTexture64SPP->GetSRV()->GetHeapIndex();
     sceneCB.scramblingRankingTexture128SPP = m_pScramblingRankingTexture128SPP->GetSRV()->GetHeapIndex();
     sceneCB.scramblingRankingTexture256SPP = m_pScramblingRankingTexture256SPP->GetSRV()->GetHeapIndex();
+    sceneCB.marschnerTextureM = m_pMarschnerHairLUT->GetM()->GetSRV()->GetHeapIndex();
+    sceneCB.marschnerTextureN = m_pMarschnerHairLUT->GetN()->GetSRV()->GetHeapIndex();
 
     if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
     {

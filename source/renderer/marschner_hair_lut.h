@@ -12,6 +12,9 @@ public:
     void Generate();
     void Debug();
 
+    Texture2D* GetM() const { return m_pM.get(); }
+    Texture2D* GetN() const { return m_pN.get(); }
+
 private:
     void GenerateM();
     void GenerateN();

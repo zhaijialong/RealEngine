@@ -147,3 +147,29 @@ float SheenScaling(float3 V, float3 N, float3 sheenColor, float sheenRoughness)
     
     return 1.0 - max3(sheenColor) * SheenE(NdotV, sheenRoughness);
 }
+
+float3 HairBSDF(float3 L, float3 V, float3 T, float3 diffuse, float3 specular, float roughness)
+{
+    Texture2D marschnerTextureM = ResourceDescriptorHeap[SceneCB.marschnerTextureM];
+    Texture2D marschnerTextureN = ResourceDescriptorHeap[SceneCB.marschnerTextureN];
+    SamplerState bilinearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
+    
+    float sinThetaL = clamp(dot(T, L), -1.0, 1.0);
+    float sinThetaV = clamp(dot(T, V), -1.0, 1.0);
+
+    float2 uvM = float2(sinThetaL, sinThetaV) * 0.5 + 0.5;
+    float4 M = marschnerTextureM.SampleLevel(bilinearSampler, uvM, 0.0);
+    
+    float3 Lperp = L - sinThetaL * T;
+    float3 Vperp = V - sinThetaV * T;
+    float cosPhi = dot(Vperp, Lperp) * rsqrt(dot(Vperp, Vperp) * dot(Lperp, Lperp));
+    float cosThetaD = M.w; //[0, 1]
+
+    float2 uvN = float2(cosPhi * 0.5 + 0.5, cosThetaD);
+    float4 N = marschnerTextureN.SampleLevel(bilinearSampler, uvN, 0.0);
+    
+    float3 S = dot(M.xyz, N.xyz) * diffuse / (cosThetaD * cosThetaD);
+    
+    //todo : multi scatter ?
+    return S;
+}

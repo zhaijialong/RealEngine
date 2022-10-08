@@ -92,6 +92,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
                 direct_light = brdf * visibility * SceneCB.lightColor;
                 break;
             }
+            case ShadingModel::Hair:
+            {
+                float3 T = DecodeNormal(customData.xyz);
+                float3 hairBsdf = HairBSDF(SceneCB.lightDir, V, T, diffuse, specular, roughness);
+                direct_light = hairBsdf * visibility * SceneCB.lightColor;
+                break;
+            }
             case ShadingModel::Default:
             default:
             {
