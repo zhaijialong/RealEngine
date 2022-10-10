@@ -10,14 +10,7 @@
 
 static const uint32_t textureWidth = 128;
 static const uint32_t textureHeight = 128;
-
-static const float alphaR = radian_to_degree(-0.07f); //same as UE's shift 0.035
-static const float alphaTT = -alphaR / 2.0f;
-static const float alphaTRT = -3.0f * alphaR / 2.0f;
-
-static const float betaR = 5; //todo : lerp(5, 10, roughness)
-static const float betaTT = betaR / 2.0f;
-static const float betaTRT = betaR * 2.0f;
+static const uint32_t textureDepth = 32;
 
 static const float indexOfRefraction = 1.55f;
 static const float absorption = 0.2f;
@@ -241,35 +234,48 @@ void MarschnerHairLUT::Debug()
 
 void MarschnerHairLUT::GenerateM()
 {
-    eastl::vector<ushort4> M(textureWidth * textureHeight);
+    eastl::vector<ushort4> M(textureWidth * textureHeight * textureDepth);
 
-    ParallelFor(textureWidth * textureHeight, [&](uint32_t index)
-        {
-            uint32_t x = index % textureWidth;
-            uint32_t y = index / textureWidth;
-            float u = (x + 0.5f) / (float)textureWidth; //dot(T, L) * 0.5 + 0.5
-            float v = (y + 0.5f) / (float)textureHeight;//dot(T, V) * 0.5 + 0.5
+    for (uint32_t z = 0; z < textureDepth; ++z)
+    {
+        ParallelFor(textureWidth * textureHeight, [&](uint32_t index)
+            {
+                uint32_t x = index % textureWidth;
+                uint32_t y = index / textureWidth;
+                float u = (x + 0.5f) / (float)textureWidth; //dot(T, L) * 0.5 + 0.5
+                float v = (y + 0.5f) / (float)textureHeight;//dot(T, V) * 0.5 + 0.5
+                float w = (z + 0.5f) / (float)textureDepth; //roughness
 
-            float thetaI = asin(u * 2.0f - 1.0f); //[-PI/2, PI/2]
-            float thetaR = asin(v * 2.0f - 1.0f); //[-PI/2, PI/2]
-            float thetaH = (thetaI + thetaR) / 2.0f; //[-PI/2, PI/2]
-            float thetaD = (thetaI - thetaR) / 2.0f; //[-PI/2, PI/2]
+                float thetaI = asin(u * 2.0f - 1.0f); //[-PI/2, PI/2]
+                float thetaR = asin(v * 2.0f - 1.0f); //[-PI/2, PI/2]
+                float thetaH = (thetaI + thetaR) / 2.0f; //[-PI/2, PI/2]
+                float thetaD = (thetaI - thetaR) / 2.0f; //[-PI/2, PI/2]
+                float roughness = clamp(w, 0.03f, 1.0f);
 
-            float4 value = float4(
-                NormalDistribution(betaR, radian_to_degree(thetaH) - alphaR),
-                NormalDistribution(betaTT, radian_to_degree(thetaH) - alphaTT),
-                NormalDistribution(betaTRT, radian_to_degree(thetaH) - alphaTRT),
-                cos(thetaD)); //[0, 1]
+                const float alphaR = -0.07f; //same as UE's shift 0.035
+                const float alphaTT = -alphaR / 2.0f;
+                const float alphaTRT = -3.0f * alphaR / 2.0f;
 
-            M[x + y * textureWidth] = ushort4(
-                FloatToHalf(value.x),
-                FloatToHalf(value.y),
-                FloatToHalf(value.z),
-                FloatToHalf(value.w)
-            );
-        });
+                const float betaR = roughness * roughness;
+                const float betaTT = betaR / 2.0f;
+                const float betaTRT = betaR * 2.0f;
 
-    m_pM.reset(m_pRenderer->CreateTexture2D(textureWidth, textureHeight, 1, GfxFormat::RGBA16F, 0, "MarschnerHairLUT::M"));
+                float4 value = float4(
+                    NormalDistribution(betaR, thetaH - alphaR),
+                    NormalDistribution(betaTT, thetaH - alphaTT),
+                    NormalDistribution(betaTRT, thetaH - alphaTRT),
+                    cos(thetaD)); //[0, 1]
+
+                M[x + y * textureWidth + z * textureWidth * textureHeight] = ushort4(
+                    FloatToHalf(value.x),
+                    FloatToHalf(value.y),
+                    FloatToHalf(value.z),
+                    FloatToHalf(value.w)
+                );
+            });
+    }
+
+    m_pM.reset(m_pRenderer->CreateTexture3D(textureWidth, textureHeight, textureDepth, 1, GfxFormat::RGBA16F, 0, "MarschnerHairLUT::M"));
     m_pRenderer->UploadTexture(m_pM->GetTexture(), &M[0]);
 }
 

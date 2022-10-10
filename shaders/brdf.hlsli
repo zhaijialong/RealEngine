@@ -150,14 +150,14 @@ float SheenScaling(float3 V, float3 N, float3 sheenColor, float sheenRoughness)
 
 float3 HairBSDF(float3 L, float3 V, float3 T, float3 diffuse, float3 specular, float roughness)
 {
-    Texture2D marschnerTextureM = ResourceDescriptorHeap[SceneCB.marschnerTextureM];
+    Texture3D marschnerTextureM = ResourceDescriptorHeap[SceneCB.marschnerTextureM];
     Texture2D marschnerTextureN = ResourceDescriptorHeap[SceneCB.marschnerTextureN];
     SamplerState bilinearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     float sinThetaL = clamp(dot(T, L), -1.0, 1.0);
     float sinThetaV = clamp(dot(T, V), -1.0, 1.0);
 
-    float2 uvM = float2(sinThetaL, sinThetaV) * 0.5 + 0.5;
+    float3 uvM = float3(sinThetaL * 0.5 + 0.5, sinThetaV * 0.5 + 0.5, roughness);
     float4 M = marschnerTextureM.SampleLevel(bilinearSampler, uvM, 0.0);
     
     float3 Lperp = L - sinThetaL * T;
