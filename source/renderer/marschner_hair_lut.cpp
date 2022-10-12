@@ -1,6 +1,5 @@
 #include "marschner_hair_lut.h"
 #include "renderer.h"
-#include "utils/gui_util.h"
 #include "utils/parallel_for.h"
 
 // reference:
@@ -225,17 +224,6 @@ void MarschnerHairLUT::Generate()
 {
     GenerateM();
     GenerateN();
-}
-
-void MarschnerHairLUT::Debug()
-{
-    ImGui::Begin("Marschner M");
-    ImGui::Image((ImTextureID)m_pM->GetSRV(), ImVec2((float)textureWidth, (float)textureHeight));
-    ImGui::End();
-
-    ImGui::Begin("Marschner N");
-    ImGui::Image((ImTextureID)m_pN->GetSRV(), ImVec2((float)textureWidth, (float)textureHeight));
-    ImGui::End();
 }
 
 void MarschnerHairLUT::GenerateM()

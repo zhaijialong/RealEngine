@@ -99,8 +99,6 @@ void Renderer::RenderFrame()
 {
     CPU_EVENT("Render", "Renderer::RenderFrame");
 
-    m_pMarschnerHairLUT->Debug();
-
     BeginFrame();
     UploadResources();
     Render();

@@ -11,7 +11,6 @@ public:
     MarschnerHairLUT(Renderer* pRenderer);
     
     void Generate();
-    void Debug();
 
     Texture3D* GetM() const { return m_pM.get(); }
     Texture2D* GetN() const { return m_pN.get(); }
