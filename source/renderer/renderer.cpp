@@ -8,6 +8,7 @@
 #include "gpu_driven_stats.h"
 #include "gpu_scene.h"
 #include "hierarchical_depth_buffer.h"
+#include "marschner_hair_lut.h"
 #include "base_pass.h"
 #include "path_tracer.h"
 #include "sky_cubemap.h"
@@ -97,6 +98,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
 void Renderer::RenderFrame()
 {
     CPU_EVENT("Render", "Renderer::RenderFrame");
+
+    m_pMarschnerHairLUT->Debug();
 
     BeginFrame();
     UploadResources();
@@ -326,6 +329,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.scramblingRankingTexture64SPP = m_pScramblingRankingTexture64SPP->GetSRV()->GetHeapIndex();
     sceneCB.scramblingRankingTexture128SPP = m_pScramblingRankingTexture128SPP->GetSRV()->GetHeapIndex();
     sceneCB.scramblingRankingTexture256SPP = m_pScramblingRankingTexture256SPP->GetSRV()->GetHeapIndex();
+    sceneCB.marschnerTextureM = m_pMarschnerHairLUT->GetM()->GetSRV()->GetHeapIndex();
+    sceneCB.marschnerTextureN = m_pMarschnerHairLUT->GetN()->GetSRV()->GetHeapIndex();
 
     if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
     {
@@ -655,6 +660,9 @@ void Renderer::CreateCommonResources()
     m_pPreintegratedGFTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
     m_pSheenETexture.reset(CreateTexture2D(asset_path + "textures/Sheen_ash_E.dds", false));
 
+    m_pMarschnerHairLUT = eastl::make_unique<MarschnerHairLUT>(this);
+    m_pMarschnerHairLUT->Generate();
+
     m_pSobolSequenceTexture.reset(CreateTexture2D(asset_path + "textures/blue_noise/sobol_256_4d.png", false));
     m_pScramblingRankingTexture1SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_1spp.png", false));
     m_pScramblingRankingTexture2SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_2spp.png", false));
@@ -852,6 +860,37 @@ Texture2D* Renderer::CreateTexture2D(uint32_t width, uint32_t height, uint32_t l
 {
     Texture2D* texture = new Texture2D(name);
     if (!texture->Create(width, height, levels, format, flags))
+    {
+        delete texture;
+        return nullptr;
+    }
+    return texture;
+}
+
+Texture3D* Renderer::CreateTexture3D(const eastl::string& file, bool srgb)
+{
+    TextureLoader loader;
+    if (!loader.Load(file, srgb))
+    {
+        return nullptr;
+    }
+
+    Texture3D* texture = new Texture3D(file);
+    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetDepth(), loader.GetMipLevels(), loader.GetFormat(), 0))
+    {
+        delete texture;
+        return nullptr;
+    }
+
+    UploadTexture(texture->GetTexture(), loader.GetData());
+
+    return texture;
+}
+
+Texture3D* Renderer::CreateTexture3D(uint32_t width, uint32_t height, uint32_t depth, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name)
+{
+    Texture3D* texture = new Texture3D(name);
+    if (!texture->Create(width, height, depth, levels, format, flags))
     {
         delete texture;
         return nullptr;

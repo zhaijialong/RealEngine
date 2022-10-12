@@ -144,7 +144,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     outTexture[dispatchThreadID.xy].xyz = float3(float(hash & 255), float((hash >> 8) & 255), float((hash >> 16) & 255)) / 255.0;
     outTexture[dispatchThreadID.xy].w = 1.0;
 #elif OUTPUT_CUSTOM_DATA
-    if(shadingModel == ShadingModel::Anisotropy)
+    if(shadingModel == ShadingModel::Anisotropy || shadingModel == ShadingModel::Hair)
     {
         float3 T = DecodeNormal(customDataRT[pos].xyz);
         outTexture[dispatchThreadID.xy] = float4(T * 0.5 + 0.5, 1.0);

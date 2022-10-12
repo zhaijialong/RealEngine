@@ -240,7 +240,7 @@ void MeshMaterial::OnGui()
 {
     GUI("Inspector", "Material", [&]()
         {
-            bool resetPSO = ImGui::Combo("Shading Model##Material", (int*)&m_shadingModel, "Default\0Anisotropy\0Sheen\0ClearCoat\0\0", (int)ShadingModel::Max);
+            bool resetPSO = ImGui::Combo("Shading Model##Material", (int*)&m_shadingModel, "Default\0Anisotropy\0Sheen\0ClearCoat\0Hair\0\0", (int)ShadingModel::Max);
 
             //todo : material textures
 
@@ -301,6 +301,9 @@ void MeshMaterial::AddMaterialDefines(eastl::vector<eastl::string>& defines)
         break;
     case ShadingModel::ClearCoat:
         defines.push_back("SHADING_MODEL_CLEAR_COAT=1");
+        break;
+    case ShadingModel::Hair:
+        defines.push_back("SHADING_MODEL_HAIR=1");
         break;
     default:
         defines.push_back("SHADING_MODEL_DEFAULT=1");

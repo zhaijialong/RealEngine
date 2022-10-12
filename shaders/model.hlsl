@@ -45,6 +45,7 @@ GBufferOutput ps_main(model::VertexOutput input
 #if DOUBLE_SIDED
     N *= isFrontFace ? 1.0 : -1.0;
 #endif
+    float3 T = model::GetMaterialAnisotropyTangent(instanceIndex, input.uv, input.tangent, input.bitangent, N);
     float ao = model::GetMaterialAO(instanceIndex, input.uv);
     float3 emissive = model::GetMaterialEmissive(instanceIndex, input.uv);
     
@@ -86,8 +87,7 @@ GBufferOutput ps_main(model::VertexOutput input
     output.normalRT = float4(EncodeNormal(N), roughness);
     output.emissiveRT = emissive;
     
-#if SHADING_MODEL_ANISOTROPY
-    float3 T = model::GetMaterialAnisotropyTangent(instanceIndex, input.uv, input.tangent, input.bitangent, N);
+#if SHADING_MODEL_ANISOTROPY    
     float anisotropy = model::GetMaterialConstant(instanceIndex).anisotropy;
     output.customDataRT = EncodeAnisotropy(T, anisotropy);
 #elif SHADING_MODEL_SHEEN
@@ -101,6 +101,8 @@ GBufferOutput ps_main(model::VertexOutput input
     #endif
     output.normalRT = float4(EncodeNormal(clearCoatNormal), clearCoatAndRoughness.g);
     output.customDataRT = EncodeClearCoat(clearCoatAndRoughness.x, roughness, N);
+#elif SHADING_MODEL_HAIR
+    output.customDataRT = float4(EncodeNormal(T), 0);
 #else
     output.customDataRT = float4(0, 0, 0, 0);
 #endif

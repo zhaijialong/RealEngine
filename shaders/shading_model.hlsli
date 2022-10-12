@@ -6,6 +6,7 @@ enum class ShadingModel : uint
     Anisotropy,
     Sheen,
     ClearCoat,
+    Hair,
     //SSS,
     
     Max,
