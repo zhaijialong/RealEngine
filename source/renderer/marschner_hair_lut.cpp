@@ -203,12 +203,14 @@ float Np(uint32_t p, float phi, float thetaD)
     for (uint32_t i = 0; i < cubicSolver.rootCount; ++i)
     {
         float gammaI = cubicSolver.roots[i];
-        if (abs(gammaI) <= M_PI / 2.0f)
+        if (p < 2 && abs(gammaI) > M_PI / 2.0f)
         {
-            float h = sin(gammaI); //Figure 9
-
-            N += A(p, h, perpendicularIOR, parallelIOR) / abs(2.0f * DPhiDH(p, c, h)); //Equation 8
+            continue;
         }
+
+        float h = sin(gammaI); //Figure 9
+
+        N += A(p, h, perpendicularIOR, parallelIOR) / abs(2.0f * DPhiDH(p, c, h)); //Equation 8
     }
 
     return N;
