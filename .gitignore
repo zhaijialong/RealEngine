@@ -34,3 +34,7 @@ bin/rendergraph
 *.aps
 bin/RealEngine.lib
 bin/nvngx_dlss.dll
+bin/XeFX_Loader.dll
+bin/libxess.dll
+bin/igxess.dll
+bin/XeFX.dll

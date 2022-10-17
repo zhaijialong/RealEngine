@@ -19,8 +19,6 @@ XeSS::XeSS(Renderer* pRenderer)
     xess_result_t result = xessD3D12CreateContext(device, &m_context);
     RE_ASSERT(result == XESS_RESULT_SUCCESS);
 
-    xessSetJitterScale(m_context, 1.0f, 1.0f);
-    xessSetVelocityScale(m_context, -0.5f, 0.5f);
     xessSetLoggingCallback(m_context, XESS_LOGGING_LEVEL_DEBUG, XeSSLog);
 
     Engine::GetInstance()->WindowResizeSignal.connect(&XeSS::OnWindowResize, this);
@@ -101,6 +99,9 @@ RGHandle XeSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
             params.inputWidth = renderWidth;
             params.inputHeight = renderHeight;
 
+            xessSetJitterScale(m_context, 1.0f, 1.0f);
+            xessSetVelocityScale(m_context, -0.5f * renderWidth, 0.5f * renderHeight);
+
             xess_result_t result = xessD3D12Execute(m_context, (ID3D12GraphicsCommandList*)pCommandList->GetHandle(), &params);
             RE_ASSERT(result == XESS_RESULT_SUCCESS);
 
@@ -135,8 +136,7 @@ void XeSS::InitializeXeSS(uint32_t displayWidth, uint32_t displayHeight)
         params.outputResolution.y = displayHeight;
         params.qualitySetting = m_quality;
         params.initFlags = XESS_INIT_FLAG_INVERTED_DEPTH | 
-            XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE |
-            XESS_INIT_FLAG_USE_NDC_VELOCITY;
+            XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE;
 
         xess_result_t result = xessD3D12Init(m_context, &params);
         RE_ASSERT(result == XESS_RESULT_SUCCESS);

@@ -69,6 +69,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(SolutionDir)external\DLSS\lib\Windows_x86_64\rel\nvngx_dlss.dll $(SolutionDir)bin /D
+xcopy $(SolutionDir)external\xess\bin\libxess.dll $(SolutionDir)bin /D
+xcopy $(SolutionDir)external\xess\bin\igxess.dll $(SolutionDir)bin /D
+xcopy $(SolutionDir)external\xess\bin\XeFX_Loader.dll $(SolutionDir)bin /D
+xcopy $(SolutionDir)external\xess\bin\XeFX.dll $(SolutionDir)bin /D</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -90,6 +97,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(SolutionDir)external\DLSS\lib\Windows_x86_64\rel\nvngx_dlss.dll $(SolutionDir)bin /D
+xcopy $(SolutionDir)external\xess\bin\libxess.dll $(SolutionDir)bin /D
+xcopy $(SolutionDir)external\xess\bin\igxess.dll $(SolutionDir)bin /D
+xcopy $(SolutionDir)external\xess\bin\XeFX_Loader.dll $(SolutionDir)bin /D
+xcopy $(SolutionDir)external\xess\bin\XeFX.dll $(SolutionDir)bin /D</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="external\d3d12ma\D3D12MemAlloc.cpp" />
