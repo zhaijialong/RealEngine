@@ -97,7 +97,7 @@ void PostProcessor::UpdateUpsacleMode()
                 m_pRenderer->SetTemporalUpscaleRatio(m_pDLSS->GetUpscaleRatio(m_pRenderer->GetDisplayWidth(), m_pRenderer->GetDisplayHeight()));
                 break;
             case TemporalSuperResolution::XeSS:
-                m_pRenderer->SetTemporalUpscaleRatio(m_pXeSS->GetUpscaleRatio());
+                m_pRenderer->SetTemporalUpscaleRatio(m_pXeSS->GetUpscaleRatio(m_pRenderer->GetDisplayWidth(), m_pRenderer->GetDisplayHeight()));
                 break;
             default:
                 m_pRenderer->SetTemporalUpscaleRatio(1.0f);
