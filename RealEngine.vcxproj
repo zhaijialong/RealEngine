@@ -59,7 +59,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>MICROPROFILE_ENABLED=1;MICROPROFILE_GPU_TIMERS=1;MICROPROFILE_GPU_TIMERS_D3D12=1;EASTL_EASTDC_VSNPRINTF=0;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;$(SolutionDir)external/rpmalloc;$(SolutionDir)external/DLSS/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;$(SolutionDir)external/rpmalloc;$(SolutionDir)external/DLSS/include;$(SolutionDir)external/xess/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:strictStrings- %(AdditionalOptions)</AdditionalOptions>
@@ -78,7 +78,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>MICROPROFILE_ENABLED=1;MICROPROFILE_GPU_TIMERS=1;MICROPROFILE_GPU_TIMERS_D3D12=1;EASTL_EASTDC_VSNPRINTF=0;_CRT_SECURE_NO_WARNINGS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;$(SolutionDir)external/rpmalloc;$(SolutionDir)external/DLSS/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)source;$(SolutionDir)shaders;$(SolutionDir)external;$(SolutionDir)external/stb;$(SolutionDir)external/imgui;$(SolutionDir)external/fmt/include;$(SolutionDir)external/EASTL/include;$(SolutionDir)external/rpmalloc;$(SolutionDir)external/DLSS/include;$(SolutionDir)external/xess/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:strictStrings- %(AdditionalOptions)</AdditionalOptions>
@@ -185,6 +185,7 @@
     <ClCompile Include="source\renderer\post_processing\post_processor.cpp" />
     <ClCompile Include="source\renderer\post_processing\taa.cpp" />
     <ClCompile Include="source\renderer\post_processing\tonemapper.cpp" />
+    <ClCompile Include="source\renderer\post_processing\xess.cpp" />
     <ClCompile Include="source\renderer\renderer.cpp" />
     <ClCompile Include="source\renderer\renderer_frame.cpp" />
     <ClCompile Include="source\renderer\render_graph.cpp" />
@@ -419,6 +420,7 @@
     <ClInclude Include="source\renderer\post_processing\post_processor.h" />
     <ClInclude Include="source\renderer\post_processing\taa.h" />
     <ClInclude Include="source\renderer\post_processing\tonemapper.h" />
+    <ClInclude Include="source\renderer\post_processing\xess.h" />
     <ClInclude Include="source\renderer\renderer.h" />
     <ClInclude Include="source\renderer\render_batch.h" />
     <ClInclude Include="source\renderer\render_graph.h" />

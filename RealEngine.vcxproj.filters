@@ -376,6 +376,9 @@
     <ClCompile Include="source\renderer\marschner_hair_lut.cpp">
       <Filter>source\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer\post_processing\xess.cpp">
+      <Filter>source\renderer\post_processing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\d3d12ma\D3D12MemAlloc.h">
@@ -1112,6 +1115,9 @@
     </ClInclude>
     <ClInclude Include="source\renderer\marschner_hair_lut.h">
       <Filter>source\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\renderer\post_processing\xess.h">
+      <Filter>source\renderer\post_processing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

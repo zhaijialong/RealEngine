@@ -9,15 +9,15 @@ public:
     FSR2(Renderer* pRenderer);
     ~FSR2();
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity,
-        RGHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
+        uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
 
     float GetUpscaleRatio() const;
 
 private:
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
     
-    void CreateFsr2Context();
+    void CreateFsr2Context(uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
     void DestroyFsr2Context();
 
 private:

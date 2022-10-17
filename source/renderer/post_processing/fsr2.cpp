@@ -15,8 +15,8 @@ FSR2::~FSR2()
     DestroyFsr2Context();
 }
 
-RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, 
-    RGHandle exposure, uint32_t displayWidth, uint32_t displayHeight)
+RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
+    uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     GUI("PostProcess", "FSR 2.0", [&]()
         {
@@ -73,7 +73,7 @@ RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
             if (m_needCreateContext)
             {
                 DestroyFsr2Context();
-                CreateFsr2Context();
+                CreateFsr2Context(renderWidth, renderHeight, displayWidth, displayHeight);
             }
 
             pCommandList->FlushBarriers();
@@ -97,15 +97,15 @@ RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
             dispatchDesc.output = ffxGetResourceDX12(&m_context, (ID3D12Resource*)outputRT->GetTexture()->GetHandle(), L"FSR2_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
             dispatchDesc.jitterOffset.x = camera->GetJitter().x;
             dispatchDesc.jitterOffset.y = camera->GetJitter().y;
-            dispatchDesc.motionVectorScale.x = -0.5f * (float)m_pRenderer->GetRenderWidth();
-            dispatchDesc.motionVectorScale.y = 0.5f * (float)m_pRenderer->GetRenderHeight();
+            dispatchDesc.motionVectorScale.x = -0.5f * (float)renderWidth;
+            dispatchDesc.motionVectorScale.y = 0.5f * (float)renderHeight;
             dispatchDesc.reset = false;
             dispatchDesc.enableSharpening = true;
             dispatchDesc.sharpness = m_sharpness;
             dispatchDesc.frameTimeDelta = Engine::GetInstance()->GetFrameDeltaTime() * 1000.0f;
             dispatchDesc.preExposure = 1.0f;
-            dispatchDesc.renderSize.width = m_pRenderer->GetRenderWidth();
-            dispatchDesc.renderSize.height = m_pRenderer->GetRenderHeight();
+            dispatchDesc.renderSize.width = renderWidth;
+            dispatchDesc.renderSize.height = renderHeight;
             dispatchDesc.cameraFar = camera->GetZFar();
             dispatchDesc.cameraNear = camera->GetZNear();
             dispatchDesc.cameraFovAngleVertical = degree_to_radian(camera->GetFov());
@@ -138,7 +138,7 @@ void FSR2::OnWindowResize(void* window, uint32_t width, uint32_t height)
     }
 }
 
-void FSR2::CreateFsr2Context()
+void FSR2::CreateFsr2Context(uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     if (m_needCreateContext)
     {
@@ -150,10 +150,10 @@ void FSR2::CreateFsr2Context()
         FFX_ASSERT(errorCode == FFX_OK);
 
         m_desc.device = ffxGetDeviceDX12(device);
-        m_desc.maxRenderSize.width = m_pRenderer->GetRenderWidth();
-        m_desc.maxRenderSize.height = m_pRenderer->GetRenderHeight();
-        m_desc.displaySize.width = m_pRenderer->GetDisplayWidth();
-        m_desc.displaySize.height = m_pRenderer->GetDisplayHeight();
+        m_desc.maxRenderSize.width = renderWidth;
+        m_desc.maxRenderSize.height = renderHeight;
+        m_desc.displaySize.width = displayWidth;
+        m_desc.displaySize.height = displayHeight;
         m_desc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE | FFX_FSR2_ENABLE_DEPTH_INVERTED;
 
         ffxFsr2ContextCreate(&m_context, &m_desc);

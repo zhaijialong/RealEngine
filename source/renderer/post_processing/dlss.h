@@ -11,11 +11,11 @@ public:
     DLSS(Renderer* pRenderer);
     ~DLSS();
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity,
-        RGHandle exposure, uint32_t displayWidth, uint32_t displayHeight);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
+        uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
 
     bool IsSupported() const { return m_dlssAvailable; }
-    float GetUpscaleRatio() const;
+    float GetUpscaleRatio(uint32_t displayWidth, uint32_t displayHeight) const;
 
 private:
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
@@ -23,7 +23,7 @@ private:
     bool InitializeNGX();
     void ShutdownNGX();
 
-    bool InitializeDLSSFeatures(IGfxCommandList* pCommandList);
+    bool InitializeDLSSFeatures(IGfxCommandList* pCommandList, uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
     void ReleaseDLSSFeatures();
 
     int GetQualityMode() const;

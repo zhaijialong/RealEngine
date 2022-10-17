@@ -26,15 +26,15 @@ DLSS::~DLSS()
     ShutdownNGX();
 }
 
-RGHandle DLSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, 
-    RGHandle exposure, uint32_t displayWidth, uint32_t displayHeight)
+RGHandle DLSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
+    uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     if (!IsSupported())
     {
         return input;
     }
 
-    GUI("PostProcess", "DLSS", [&]()
+    GUI("PostProcess", "DLSS", [&, displayWidth, displayHeight]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             if (mode == TemporalSuperResolution::DLSS)
@@ -54,7 +54,7 @@ RGHandle DLSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
 
                 ImGui::SliderFloat("Sharpness##DLSS", &m_sharpness, 0.0f, 1.0f, "%.2f");
 
-                m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio());
+                m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio(displayWidth, displayHeight));
             }
         });
 
@@ -87,7 +87,7 @@ RGHandle DLSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
             if (m_needInitializeDlss)
             {
                 ReleaseDLSSFeatures();
-                InitializeDLSSFeatures(pCommandList);
+                InitializeDLSSFeatures(pCommandList, renderWidth, renderHeight, displayWidth, displayHeight);
             }
 
             pCommandList->FlushBarriers();
@@ -110,9 +110,9 @@ RGHandle DLSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
             dlssEvalParams.InJitterOffsetY = camera->GetJitter().y;
             dlssEvalParams.Feature.InSharpness = m_sharpness;
             dlssEvalParams.InReset = false;
-            dlssEvalParams.InMVScaleX = -0.5f * (float)m_pRenderer->GetRenderWidth();
-            dlssEvalParams.InMVScaleY = 0.5f * (float)m_pRenderer->GetRenderHeight();
-            dlssEvalParams.InRenderSubrectDimensions = { m_pRenderer->GetRenderWidth(), m_pRenderer->GetRenderHeight() };
+            dlssEvalParams.InMVScaleX = -0.5f * (float)renderWidth;
+            dlssEvalParams.InMVScaleY = 0.5f * (float)renderHeight;
+            dlssEvalParams.InRenderSubrectDimensions = { renderWidth, renderHeight };
 
             NVSDK_NGX_Result result = NGX_D3D12_EVALUATE_DLSS_EXT((ID3D12GraphicsCommandList*)pCommandList->GetHandle(), m_dlssFeature, m_ngxParameters, &dlssEvalParams);
             RE_ASSERT(NVSDK_NGX_SUCCEED(result));
@@ -124,7 +124,7 @@ RGHandle DLSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
     return dlss_pass->output;
 }
 
-float DLSS::GetUpscaleRatio() const
+float DLSS::GetUpscaleRatio(uint32_t displayWidth, uint32_t displayHeight) const
 {
     if (m_qualityMode == 4)
     {
@@ -138,11 +138,11 @@ float DLSS::GetUpscaleRatio() const
     unsigned int minWidth;
     unsigned int minHeight;
     float sharpness;
-    NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, m_pRenderer->GetDisplayWidth(), m_pRenderer->GetDisplayHeight(),
+    NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, displayWidth, displayHeight,
         (NVSDK_NGX_PerfQuality_Value)m_qualityMode,
         &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
 
-    return (float)m_pRenderer->GetDisplayWidth() / (float)optimalWidth;
+    return (float)displayWidth / (float)optimalWidth;
 }
 
 void DLSS::OnWindowResize(void* window, uint32_t width, uint32_t height)
@@ -216,7 +216,7 @@ int DLSS::GetQualityMode() const
     return m_qualityMode;
 }
 
-bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList)
+bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList, uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     if (!m_dlssAvailable)
     {
@@ -225,9 +225,6 @@ bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList)
 
     if (m_needInitializeDlss)
     {
-        uint32_t displayWidth = m_pRenderer->GetDisplayWidth();
-        uint32_t displayHeight = m_pRenderer->GetDisplayHeight();
-
         NVSDK_NGX_PerfQuality_Value qualityMode = (NVSDK_NGX_PerfQuality_Value)GetQualityMode();
 
         unsigned int optimalWidth;
@@ -242,8 +239,8 @@ bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList)
         RE_ASSERT(optimalWidth != 0 && optimalHeight != 0);
 
         NVSDK_NGX_DLSS_Create_Params dlssCreateParams = {};
-        dlssCreateParams.Feature.InWidth = m_pRenderer->GetRenderWidth();
-        dlssCreateParams.Feature.InHeight = m_pRenderer->GetRenderHeight();
+        dlssCreateParams.Feature.InWidth = renderWidth;
+        dlssCreateParams.Feature.InHeight = renderHeight;
         dlssCreateParams.Feature.InTargetWidth = displayWidth;
         dlssCreateParams.Feature.InTargetHeight = displayHeight;
         dlssCreateParams.Feature.InPerfQualityValue = qualityMode;

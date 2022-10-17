@@ -197,6 +197,7 @@ void Camera::UpdateJitter()
         {
         case TemporalSuperResolution::FSR2:
         case TemporalSuperResolution::DLSS:
+        case TemporalSuperResolution::XeSS:
         {
             uint32_t phaseCount = ffxFsr2GetJitterPhaseCount(pRenderer->GetRenderWidth(), pRenderer->GetDisplayWidth());
             uint32_t index = frameIndex % phaseCount;
