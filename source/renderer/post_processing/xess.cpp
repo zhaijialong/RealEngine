@@ -32,7 +32,11 @@ XeSS::~XeSS()
 RGHandle XeSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
-    GUI("PostProcess", "XeSS", [&, displayWidth, displayHeight]()
+    xess_version_t version;
+    xessGetVersion(&version);
+
+    GUI("PostProcess", fmt::format("XeSS {}.{}.{}", version.major, version.minor, version.patch).c_str(), 
+        [&, displayWidth, displayHeight]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             if (mode == TemporalSuperResolution::XeSS)

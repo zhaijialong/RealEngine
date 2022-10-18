@@ -34,7 +34,7 @@ RGHandle DLSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
         return input;
     }
 
-    GUI("PostProcess", "DLSS", [&, displayWidth, displayHeight]()
+    GUI("PostProcess", "DLSS 2.4", [&, displayWidth, displayHeight]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             if (mode == TemporalSuperResolution::DLSS)

@@ -2,6 +2,7 @@
 #include "../renderer.h"
 #include "utils/gui_util.h"
 #include "FSR2/dx12/ffx_fsr2_dx12.h"
+#include "fmt/format.h"
 
 FSR2::FSR2(Renderer* pRenderer)
 {
@@ -18,7 +19,8 @@ FSR2::~FSR2()
 RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
-    GUI("PostProcess", "FSR 2.0", [&]()
+    GUI("PostProcess", fmt::format("FSR {}.{}.{}", FFX_FSR2_VERSION_MAJOR, FFX_FSR2_VERSION_MINOR, FFX_FSR2_VERSION_PATCH).c_str(),
+        [&]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             if (mode == TemporalSuperResolution::FSR2)

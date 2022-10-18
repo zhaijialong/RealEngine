@@ -79,7 +79,7 @@ void PostProcessor::UpdateUpsacleMode()
     GUI("PostProcess", "Temporal Super Resolution", [&]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
-            ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR 2.0\0DLSS\0XeSS\0\0", (int)TemporalSuperResolution::Max);
+            ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR2\0DLSS\0XeSS\0\0", (int)TemporalSuperResolution::Max);
 
             if (mode == TemporalSuperResolution::DLSS && !m_pDLSS->IsSupported())
             {
