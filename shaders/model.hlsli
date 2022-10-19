@@ -65,7 +65,7 @@ VertexOutput GetVertexOutput(uint instance_id,  uint vertex_id)
     float4 worldPos = mul(instanceData.mtxWorld, float4(v.pos, 1.0));
 
     VertexOutput output = (VertexOutput)0;
-    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
+    output.pos = mul(GetCameraCB().mtxViewProjection, worldPos);
     output.worldPos = worldPos.xyz;
     output.uv = v.uv;
     output.normal = normalize(mul(instanceData.mtxWorldInverseTranspose, float4(v.normal, 0.0f)).xyz);

@@ -4,9 +4,9 @@
 #include "XeGTAO.h"
 #include "XeGTAO.hlsli"
 
-ConstantBuffer<GTAOConstants> gtaoCB : register(b2);
+ConstantBuffer<GTAOConstants> gtaoCB : register(b1);
 
-cbuffer filterDepthCB : register(b1)
+cbuffer filterDepthCB : register(b0)
 {
     uint c_srcRawDepth;
     uint c_outWorkingDepthMIP0;
@@ -31,7 +31,7 @@ void gtao_prefilter_depth_16x16(uint2 dispatchThreadID : SV_DispatchThreadID, ui
     XeGTAO_PrefilterDepths16x16(dispatchThreadID, groupThreadID, gtaoCB, srcRawDepth, samplerPointClamp, outWorkingDepthMIP0, outWorkingDepthMIP1, outWorkingDepthMIP2, outWorkingDepthMIP3, outWorkingDepthMIP4);
 }
 
-cbuffer gtaoResource : register(b1)
+cbuffer gtaoResource : register(b0)
 {
     uint c_srcWorkingDepth;
     uint c_normalRT;
@@ -57,7 +57,7 @@ lpfloat3 LoadNormal(int2 pos)
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     float3 normal = DecodeNormal(normalRT.Load(int3(pos, 0)).xyz);
     
-    normal = mul(CameraCB.mtxView, float4(normal, 0.0)).xyz;
+    normal = mul(GetCameraCB().mtxView, float4(normal, 0.0)).xyz;
 
     return (lpfloat3)normal;
 }
@@ -70,7 +70,7 @@ void gtao_main(const uint2 pixCoord : SV_DispatchThreadID)
     RWTexture2D<uint> outWorkingAOTerm = ResourceDescriptorHeap[c_outWorkingAOTerm];
     RWTexture2D<unorm float> outWorkingEdges = ResourceDescriptorHeap[c_outWorkingEdges];
     
-    if (srcWorkingDepth[pixCoord] > CameraCB.farZ - 0.001)
+    if (srcWorkingDepth[pixCoord] > GetCameraCB().farZ - 0.001)
     {
         XeGTAO_OutputWorkingTerm(pixCoord, 1.0, float3(0, 0, 0), outWorkingAOTerm);
         outWorkingEdges[pixCoord] = 1.0;

@@ -215,7 +215,7 @@ void GTAO::FilterDepth(IGfxCommandList* pCommandList, RGTexture* depth, RGTextur
     cb.outWorkingDepthMIP3 = hzb->GetUAV(3, 0)->GetHeapIndex();
     cb.outWorkingDepthMIP4 = hzb->GetUAV(4, 0)->GetHeapIndex();
 
-    pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
+    pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
 
     // note: in gtao_prefilter_depth_16x16 each is thread group handles a 16x16 block (with [numthreads(8, 8, 1)] and each logical thread handling a 2x2 block)
     pCommandList->Dispatch(DivideRoudingUp(width, 16), DivideRoudingUp(height, 16), 1);
@@ -258,7 +258,7 @@ void GTAO::Draw(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal
     cb.outWorkingAOTerm = outputAO->GetUAV()->GetHeapIndex();
     cb.outWorkingEdges = outputEdge->GetUAV()->GetHeapIndex();
 
-    pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
+    pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
 
     pCommandList->Dispatch(DivideRoudingUp(width, XE_GTAO_NUMTHREADS_X), DivideRoudingUp(height, XE_GTAO_NUMTHREADS_Y), 1);
 }
@@ -308,5 +308,5 @@ void GTAO::UpdateGTAOConstants(IGfxCommandList* pCommandList, uint32_t width, ui
     XeGTAO::GTAOConstants consts;
     XeGTAO::GTAOUpdateConstants(consts, width, height, settings, &projection.x.x, true, m_pRenderer->GetFrameID() % 256);
 
-    pCommandList->SetComputeConstants(2, &consts, sizeof(consts));
+    pCommandList->SetComputeConstants(1, &consts, sizeof(consts));
 }

@@ -11,7 +11,7 @@ cbuffer cb : register(b0)
 
 float2 FFX_DNSR_Shadows_GetInvBufferDimensions() { return SceneCB.rcpRenderSize; }
 int2 FFX_DNSR_Shadows_GetBufferDimensions() { return SceneCB.renderSize; }
-float4x4 FFX_DNSR_Shadows_GetProjectionInverse() { return CameraCB.mtxProjectionInverse; }
+float4x4 FFX_DNSR_Shadows_GetProjectionInverse() { return GetCameraCB().mtxProjectionInverse; }
 float FFX_DNSR_Shadows_GetDepthSimilaritySigma() { return 1.0; }
 
 float FFX_DNSR_Shadows_ReadDepth(int2 p)

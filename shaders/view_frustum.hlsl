@@ -15,12 +15,12 @@ float3 IntersectPlanes(float4 p0, float4 p1, float4 p2)
 [numthreads(1, 1, 1)]
 void main()
 {
-    const float4 left = CameraCB.culling.planes[0];
-    const float4 right = CameraCB.culling.planes[1];
-    const float4 top = CameraCB.culling.planes[2];
-    const float4 bottom = CameraCB.culling.planes[3];
-    const float4 far = CameraCB.culling.planes[4];
-    const float4 near = CameraCB.culling.planes[5];
+    const float4 left = GetCameraCB().culling.planes[0];
+    const float4 right = GetCameraCB().culling.planes[1];
+    const float4 top = GetCameraCB().culling.planes[2];
+    const float4 bottom = GetCameraCB().culling.planes[3];
+    const float4 far = GetCameraCB().culling.planes[4];
+    const float4 near = GetCameraCB().culling.planes[5];
     
     const float3 color = float3(1, 0, 0);
     

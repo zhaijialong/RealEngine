@@ -1,6 +1,6 @@
 #include "model.hlsli"
 
-cbuffer ProjectionCB : register(b3)
+cbuffer ProjectionCB : register(b1)
 {
     float4x4 c_mtxShadowViewProjection;
 };

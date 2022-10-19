@@ -25,7 +25,7 @@ float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
     Texture2D prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
     SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     
-    float4 prevClipPos = mul(CameraCB.mtxPrevViewProjection, float4(position, 1.0));
+    float4 prevClipPos = mul(GetCameraCB().mtxPrevViewProjection, float4(position, 1.0));
     float3 prevNdcPos = GetNdcPosition(prevClipPos);
     float2 prevUV = GetScreenUV(prevNdcPos.xy);
     float prevLinearDepth = prevLinearDepthTexture.SampleLevel(pointSampler, prevUV, 0.0).x;

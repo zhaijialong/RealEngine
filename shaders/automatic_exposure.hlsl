@@ -154,7 +154,7 @@ void exposure()
     EV100 = previousEV100 + (EV100 - previousEV100) * (1 - exp(-SceneCB.frameTime * c_adaptionSpeed));
     previousEV100Texture[uint2(0, 0)] = EV100;
 #else
-    float EV100 = ComputeEV100(CameraCB.physicalCamera.aperture, CameraCB.physicalCamera.shutterSpeed, CameraCB.physicalCamera.iso);
+    float EV100 = ComputeEV100(GetCameraCB().physicalCamera.aperture, GetCameraCB().physicalCamera.shutterSpeed, GetCameraCB().physicalCamera.iso);
 #endif
 
 #if DEBUG_SHOW_EV100
@@ -164,7 +164,7 @@ void exposure()
     debug::PrintFloat(pos, color, EV100);
 #endif
 
-    float exposure = ComputeExposure(EV100 - CameraCB.physicalCamera.exposureCompensation);
+    float exposure = ComputeExposure(EV100 - GetCameraCB().physicalCamera.exposureCompensation);
 
     RWTexture2D<float> exposureTexture = ResourceDescriptorHeap[c_exposureTexture];
     exposureTexture[uint2(0, 0)] = exposure;

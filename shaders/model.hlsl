@@ -24,7 +24,7 @@ GBufferOutput ps_main(model::VertexOutput input
 )
 {
 #if GFX_VENDOR_AMD
-    float3 V = normalize(CameraCB.cameraPos - input.worldPos);
+    float3 V = normalize(GetCameraCB().cameraPos - input.worldPos);
     bool isFrontFace = dot(input.normal, V) > 0.0; //workaround for AMD driver bug
 #endif
 

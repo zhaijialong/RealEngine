@@ -26,7 +26,7 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
     // 1. frustum culling
     for (uint i = 0; i < 6; ++i)
     {
-        if (dot(center, CameraCB.culling.planes[i].xyz) + CameraCB.culling.planes[i].w + radius < 0)
+        if (dot(center, GetCameraCB().culling.planes[i].xyz) + GetCameraCB().culling.planes[i].w + radius < 0)
         {
             stats(c_bFirstPass ? STATS_1ST_PHASE_FRUSTUM_CULLED_MESHLET : STATS_2ND_PHASE_FRUSTUM_CULLED_MESHLET, 1);
             return false;
@@ -40,7 +40,7 @@ bool Cull(Meshlet meshlet, uint instanceIndex, uint meshletIndex)
     float cutoff = cone.w / 127.0;
     
     axis = normalize(mul(instanceData.mtxWorld, float4(axis, 0.0)).xyz);
-    float3 view = center - CameraCB.culling.viewPos;
+    float3 view = center - GetCameraCB().culling.viewPos;
     
     if (dot(view, -axis) >= cutoff * length(view) + radius)
     {

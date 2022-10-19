@@ -100,7 +100,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         float3 prevNormal = DecodeNormal16x2(historyReservoirDepthNormal[prevHalfPos].y);
         
         float4 clipPos = float4((prevUV * 2.0 - 1.0) * float2(1.0, -1.0), prevDepth, 1.0);
-        float4 prevWorldPos = mul(CameraCB.mtxPrevViewProjectionInverse, clipPos);
+        float4 prevWorldPos = mul(GetCameraCB().mtxPrevViewProjectionInverse, clipPos);
         prevWorldPos.xyz /= prevWorldPos.w;
         
         bool invalid = c_bHistoryInvalid;

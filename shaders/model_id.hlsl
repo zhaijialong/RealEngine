@@ -16,7 +16,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     float4 worldPos = mul(GetInstanceData(c_InstanceIndex).mtxWorld, pos);
     
     VSOutput output;
-    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
+    output.pos = mul(GetCameraCB().mtxViewProjection, worldPos);
 
 #if ALPHA_TEST
     output.uv = v.uv;

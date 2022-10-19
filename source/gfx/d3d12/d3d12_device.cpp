@@ -637,20 +637,18 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
 void D3D12Device::CreateRootSignature()
 {
     //AMD : Try to stay below 13 DWORDs https://gpuopen.com/performance/
-    //5 root constants + 4 root CBVs == 13 DWORDs, everything else is bindless
+    //8 root constants + 2 root CBVs == 12 DWORDs, everything else is bindless
 
-    CD3DX12_ROOT_PARAMETER1 root_parameters[5] = {};
-    root_parameters[0].InitAsConstants(5, 0);
+    CD3DX12_ROOT_PARAMETER1 root_parameters[3] = {};
+    root_parameters[0].InitAsConstants(GFX_MAX_ROOT_CONSTANTS, 0);
     root_parameters[1].InitAsConstantBufferView(1);
     root_parameters[2].InitAsConstantBufferView(2);
-    root_parameters[3].InitAsConstantBufferView(3);
-    root_parameters[4].InitAsConstantBufferView(4);
 
     D3D12_ROOT_SIGNATURE_FLAGS flags =
         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
+        D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED | //todo : does this SM6.6 flag cost additional DWORDs ?
         D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED;
 
     CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;

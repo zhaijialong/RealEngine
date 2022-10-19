@@ -51,7 +51,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float ao = diffuse.w;
     
     float3 worldPos = GetWorldPosition(pos.xy, depth);
-    float3 V = normalize(CameraCB.cameraPos - worldPos);    
+    float3 V = normalize(GetCameraCB().cameraPos - worldPos);    
     
     Texture2D directLightingRT = ResourceDescriptorHeap[c_directLightingRT];
     float3 direct_light = directLightingRT[pos].xyz;
@@ -118,7 +118,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
 
 #if GTAO && GTSO
-    bentNormal = normalize(mul(CameraCB.mtxViewInverse, float4(bentNormal, 0.0)).xyz);
+    bentNormal = normalize(mul(GetCameraCB().mtxViewInverse, float4(bentNormal, 0.0)).xyz);
     float3 R = reflect(-V, N);
     float specularAO = ComputeGTSO(R, bentNormal, gtao, roughness);
 

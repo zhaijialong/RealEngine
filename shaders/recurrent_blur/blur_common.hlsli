@@ -51,7 +51,7 @@ float2 GetSampleUV(float3 worldPos, float3 N, float2 random)
     
     worldPos += T * random.x + B * random.y;
 
-    float4 clipPos = mul(CameraCB.mtxViewProjection, float4(worldPos, 1.0));
+    float4 clipPos = mul(GetCameraCB().mtxViewProjection, float4(worldPos, 1.0));
     float3 ndcPos = GetNdcPosition(clipPos);
     
     return GetScreenUV(ndcPos.xy);

@@ -38,7 +38,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     
     float depth = depthRT[coords];
     float3 position = GetWorldPosition(coords, depth);
-    float3 V = normalize(CameraCB.cameraPos - position);
+    float3 V = normalize(GetCameraCB().cameraPos - position);
     float3 N = DecodeNormal(normalRT[coords].xyz);
     float roughness = normalRT[coords].w;
     

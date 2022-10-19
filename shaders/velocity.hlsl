@@ -22,7 +22,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 ndcPos = float3(GetNdcPosition((float2)dispatchThreadID.xy + 0.5, SceneCB.rcpRenderSize), depth);
     
-    float4 prevClipPos = mul(CameraCB.mtxClipToPrevClipNoJitter, float4(ndcPos, 1.0));
+    float4 prevClipPos = mul(GetCameraCB().mtxClipToPrevClipNoJitter, float4(ndcPos, 1.0));
     float3 prevNdcPos = GetNdcPosition(prevClipPos);
 
     velocityTexture[dispatchThreadID.xy] = float4(ndcPos - prevNdcPos, 0.0);

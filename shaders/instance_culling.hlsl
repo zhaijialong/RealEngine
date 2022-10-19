@@ -126,7 +126,7 @@ void build_instance_culling_command() //for second phase
     commandBuffer[0] = uint3((instanceCount + 63) / 64, 1, 1);
 }
 
-cbuffer BuildMeshletListConstants : register(b1)
+cbuffer BuildMeshletListConstants : register(b0)
 {
     uint c_dispatchIndex;
     uint c_cullingResultSRV;

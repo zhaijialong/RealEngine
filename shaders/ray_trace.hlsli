@@ -111,7 +111,7 @@ namespace rt
         {
             RayCone cone;
             cone.width = 0.0; // no width when the ray cone starts
-            cone.spreadAngle = CameraCB.spreadAngle;
+            cone.spreadAngle = GetCameraCB().spreadAngle;
             return cone;
         }
         

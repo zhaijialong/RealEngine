@@ -20,9 +20,9 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     float3 worldNormal = mul(instanceData.mtxWorldInverseTranspose, float4(normal, 0.0)).xyz;
     
     VSOutput output;
-    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
+    output.pos = mul(GetCameraCB().mtxViewProjection, worldPos);
 
-    float3 clipNormal = mul(CameraCB.mtxViewProjection, float4(worldNormal, 0.0)).xyz;
+    float3 clipNormal = mul(GetCameraCB().mtxViewProjection, float4(worldNormal, 0.0)).xyz;
 
     const float width = 2;
     

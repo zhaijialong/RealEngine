@@ -51,7 +51,7 @@ public:
 
     void Tick(float delta_time);
 
-    void SetupCameraCB(IGfxCommandList* pCommandList);
+    void SetupCameraCB(CameraConstant& cameraCB);
     void DrawViewFrustum(IGfxCommandList* pCommandList);
 
     bool IsMoved() const { return m_bMoved; }
@@ -82,8 +82,6 @@ private:
     float4x4 m_viewProjectionJitter;
 
     float4x4 m_prevViewProjectionJitter;
-
-    CameraConstant m_cameraCB;
 
     float m_aspectRatio = 0.0f;
     float m_fov = 0.0f;

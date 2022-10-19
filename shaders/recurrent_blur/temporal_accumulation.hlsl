@@ -60,7 +60,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
 #if 0    
     float4 prevClipPos = float4((prevUV * 2.0 - 1.0) * float2(1.0, -1.0), prevDepth, 1.0);
-    float4 prevWorldPos = mul(CameraCB.mtxPrevViewProjectionInverse, prevClipPos);
+    float4 prevWorldPos = mul(GetCameraCB().mtxPrevViewProjectionInverse, prevClipPos);
     
     // Compute disocclusion basing on plane distance
     float3 Xprev = prevWorldPos.xyz / prevWorldPos.w;
@@ -69,7 +69,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float4 planeDist = abs(NoVprev * prevLinearDepth - NoXprev);
 
     const float threshold = 0.01;
-    float distToPoint = length(GetWorldPosition(pos, depth) - CameraCB.cameraPos);
+    float distToPoint = length(GetWorldPosition(pos, depth) - GetCameraCB().cameraPos);
     float4 occlusion = step(planeDist, threshold * distToPoint);
 #else
     float4 occlusion = step(GetLinearDepth(depth - velocity.z), prevLinearDepth * 1.03);

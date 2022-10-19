@@ -535,7 +535,7 @@ void D3D12CommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, ui
 
 void D3D12CommandList::SetGraphicsConstants(uint32_t slot, const void* data, size_t data_size)
 {
-    RE_ASSERT((slot == 0 && data_size <= sizeof(int32_t) * 5) || (slot >= 1 && slot <= 4));
+    RE_ASSERT((slot == 0 && data_size <= sizeof(int32_t) * GFX_MAX_ROOT_CONSTANTS) || (slot > 0 && slot < GFX_MAX_CBV_BINDINGS));
 
     if (slot == 0)
     {
@@ -553,7 +553,7 @@ void D3D12CommandList::SetGraphicsConstants(uint32_t slot, const void* data, siz
 
 void D3D12CommandList::SetComputeConstants(uint32_t slot, const void* data, size_t data_size)
 {
-    RE_ASSERT((slot == 0 && data_size <= sizeof(int32_t) * 5) || (slot >= 1 && slot <= 4));
+    RE_ASSERT((slot == 0 && data_size <= sizeof(int32_t) * GFX_MAX_ROOT_CONSTANTS) || (slot > 0 && slot < GFX_MAX_CBV_BINDINGS));
 
     if (slot == 0)
     {

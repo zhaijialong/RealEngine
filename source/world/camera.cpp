@@ -137,51 +137,44 @@ void Camera::Tick(float delta_time)
     }
 }
 
-void Camera::SetupCameraCB(IGfxCommandList* pCommandList)
+void Camera::SetupCameraCB(CameraConstant& cameraCB)
 {
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    m_cameraCB.cameraPos = GetPosition();
-    m_cameraCB.spreadAngle = atanf(2.0f * tanf(degree_to_radian(m_fov) * 0.5f) / pRenderer->GetRenderHeight()); // "Texture Level-of-Detail Strategies for Real-Time Ray Tracing", Eq.20
-    m_cameraCB.nearZ = m_znear;
-    m_cameraCB.farZ = m_zfar;
-    m_cameraCB.linearZParams = CalcDepthLinearizationParams(m_projection);
-    m_cameraCB.jitter = m_jitter;
-    m_cameraCB.prevJitter = m_prevJitter;
+    cameraCB.cameraPos = GetPosition();
+    cameraCB.spreadAngle = atanf(2.0f * tanf(degree_to_radian(m_fov) * 0.5f) / pRenderer->GetRenderHeight()); // "Texture Level-of-Detail Strategies for Real-Time Ray Tracing", Eq.20
+    cameraCB.nearZ = m_znear;
+    cameraCB.farZ = m_zfar;
+    cameraCB.linearZParams = CalcDepthLinearizationParams(m_projection);
+    cameraCB.jitter = m_jitter;
+    cameraCB.prevJitter = m_prevJitter;
     
-    m_cameraCB.mtxView = m_view;
-    m_cameraCB.mtxViewInverse = inverse(m_view);
-    m_cameraCB.mtxProjection = m_projectionJitter;
-    m_cameraCB.mtxProjectionInverse = inverse(m_projectionJitter);
-    m_cameraCB.mtxViewProjection = m_viewProjectionJitter;
-    m_cameraCB.mtxViewProjectionInverse = inverse(m_viewProjectionJitter);
+    cameraCB.mtxView = m_view;
+    cameraCB.mtxViewInverse = inverse(m_view);
+    cameraCB.mtxProjection = m_projectionJitter;
+    cameraCB.mtxProjectionInverse = inverse(m_projectionJitter);
+    cameraCB.mtxViewProjection = m_viewProjectionJitter;
+    cameraCB.mtxViewProjectionInverse = inverse(m_viewProjectionJitter);
 
-    m_cameraCB.mtxViewProjectionNoJitter = m_viewProjection;
-    m_cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
-    m_cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
+    cameraCB.mtxViewProjectionNoJitter = m_viewProjection;
+    cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
+    cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
 
-    m_cameraCB.mtxPrevView = m_prevView;
-    m_cameraCB.mtxPrevViewProjection = m_prevViewProjectionJitter;
-    m_cameraCB.mtxPrevViewProjectionInverse = inverse(m_prevViewProjectionJitter);
+    cameraCB.mtxPrevView = m_prevView;
+    cameraCB.mtxPrevViewProjection = m_prevViewProjectionJitter;
+    cameraCB.mtxPrevViewProjectionInverse = inverse(m_prevViewProjectionJitter);
 
-    m_cameraCB.culling.viewPos = m_frustumViewPos;
+    cameraCB.culling.viewPos = m_frustumViewPos;
 
-    m_cameraCB.physicalCamera.aperture = m_aperture;
-    m_cameraCB.physicalCamera.shutterSpeed = 1.0f / m_shutterSpeed;
-    m_cameraCB.physicalCamera.iso = m_iso;
-    m_cameraCB.physicalCamera.exposureCompensation = m_exposureCompensation;
+    cameraCB.physicalCamera.aperture = m_aperture;
+    cameraCB.physicalCamera.shutterSpeed = 1.0f / m_shutterSpeed;
+    cameraCB.physicalCamera.iso = m_iso;
+    cameraCB.physicalCamera.exposureCompensation = m_exposureCompensation;
 
     for (int i = 0; i < 6; ++i)
     {
-        m_cameraCB.culling.planes[i] = m_frustumPlanes[i];
+        cameraCB.culling.planes[i] = m_frustumPlanes[i];
     }
-
-    if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
-    {
-        pCommandList->SetGraphicsConstants(3, &m_cameraCB, sizeof(CameraConstant));
-    }
-
-    pCommandList->SetComputeConstants(3, &m_cameraCB, sizeof(CameraConstant));
 }
 
 void Camera::UpdateJitter()

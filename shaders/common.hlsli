@@ -203,16 +203,16 @@ void DecodeClearCoat(float4 data, out float clearCoat, out float roughness, out 
 
 float GetLinearDepth(float ndcDepth)
 {
-    float C1 = CameraCB.linearZParams.x;
-    float C2 = CameraCB.linearZParams.y;
+    float C1 = GetCameraCB().linearZParams.x;
+    float C2 = GetCameraCB().linearZParams.y;
     
     return 1.0f / (ndcDepth * C1 - C2);
 }
 
 float GetNdcDepth(float linearDepth)
 {
-    float A = CameraCB.mtxProjection._33;
-    float B = CameraCB.mtxProjection._34;
+    float A = GetCameraCB().mtxProjection._33;
+    float B = GetCameraCB().mtxProjection._34;
     
     return A + B / linearDepth;
 }
@@ -250,7 +250,7 @@ float2 GetScreenPosition(float2 ndcPos, uint2 bufferSize)
 float3 GetWorldPosition(float2 screenUV, float depth)
 {
     float4 clipPos = float4((screenUV * 2.0 - 1.0) * float2(1.0, -1.0), depth, 1.0);
-    float4 worldPos = mul(CameraCB.mtxViewProjectionInverse, clipPos);
+    float4 worldPos = mul(GetCameraCB().mtxViewProjectionInverse, clipPos);
     worldPos.xyz /= worldPos.w;
     
     return worldPos.xyz;
@@ -287,12 +287,12 @@ bool ProjectSphere(float3 center, float radius, float znear, float P00, float P1
 
 bool OcclusionCull(Texture2D<float> hzbTexture, uint2 hzbSize, float3 center, float radius)
 {
-    center = mul(CameraCB.mtxView, float4(center, 1.0)).xyz;
+    center = mul(GetCameraCB().mtxView, float4(center, 1.0)).xyz;
     
     bool visible = true;
 
     float4 aabb;
-    if (ProjectSphere(center, radius, CameraCB.nearZ, CameraCB.mtxProjection[0][0], CameraCB.mtxProjection[1][1], aabb))
+    if (ProjectSphere(center, radius, GetCameraCB().nearZ, GetCameraCB().mtxProjection[0][0], GetCameraCB().mtxProjection[1][1], aabb))
     {
         SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
         

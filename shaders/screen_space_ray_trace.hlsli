@@ -26,8 +26,8 @@ namespace ssrt
     
     bool HierarchicalRaymarch(Ray ray, out HitInfo hitInfo)
     {
-        float4 rayStartClip = mul(CameraCB.mtxViewProjection, float4(ray.origin, 1));
-        float4 rayEndClip = mul(CameraCB.mtxViewProjection, float4(ray.origin + ray.direction, 1));
+        float4 rayStartClip = mul(GetCameraCB().mtxViewProjection, float4(ray.origin, 1));
+        float4 rayEndClip = mul(GetCameraCB().mtxViewProjection, float4(ray.origin + ray.direction, 1));
         
         float3 rayStartNdc = clamp(GetNdcPosition(rayStartClip), -1, 1);
         float3 rayEndNdc = clamp(GetNdcPosition(rayEndClip), -1, 1);

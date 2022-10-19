@@ -25,7 +25,7 @@ float ProbabilityToSampleDiffuse(float3 diffuse, float3 specular)
 float3 SkyColor(uint2 screenPos)
 {
     float3 position = GetWorldPosition(screenPos, 0);
-    float3 dir = normalize(position - CameraCB.cameraPos);
+    float3 dir = normalize(position - GetCameraCB().cameraPos);
     
     TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
@@ -54,7 +54,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     PRNG rng = PRNG::Create(dispatchThreadID.xy, SceneCB.renderSize);
 
     float3 position = GetWorldPosition(dispatchThreadID.xy, depth);
-    float3 wo = normalize(CameraCB.cameraPos - position);
+    float3 wo = normalize(GetCameraCB().cameraPos - position);
 
     float3 diffuse = diffuseRT[dispatchThreadID.xy].xyz;
     float3 specular = specularRT[dispatchThreadID.xy].xyz;

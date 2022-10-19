@@ -15,13 +15,13 @@ cbuffer CB : register(b1)
     uint c_bFirstFrame;
 };
 
-float4x4 FFX_DNSR_Shadows_GetViewProjectionInverse() { return CameraCB.mtxViewProjectionInverse; }
-float4x4 FFX_DNSR_Shadows_GetReprojectionMatrix() { return CameraCB.mtxClipToPrevClipNoJitter; }
-float4x4 FFX_DNSR_Shadows_GetProjectionInverse() { return CameraCB.mtxProjectionInverse; }
+float4x4 FFX_DNSR_Shadows_GetViewProjectionInverse() { return GetCameraCB().mtxViewProjectionInverse; }
+float4x4 FFX_DNSR_Shadows_GetReprojectionMatrix() { return GetCameraCB().mtxClipToPrevClipNoJitter; }
+float4x4 FFX_DNSR_Shadows_GetProjectionInverse() { return GetCameraCB().mtxProjectionInverse; }
 float2 FFX_DNSR_Shadows_GetInvBufferDimensions() { return SceneCB.rcpRenderSize; }
 int2 FFX_DNSR_Shadows_GetBufferDimensions() { return SceneCB.renderSize; }
 int FFX_DNSR_Shadows_IsFirstFrame() { return c_bFirstFrame; }
-float3 FFX_DNSR_Shadows_GetEye() { return CameraCB.cameraPos; }
+float3 FFX_DNSR_Shadows_GetEye() { return GetCameraCB().cameraPos; }
 
 float FFX_DNSR_Shadows_ReadDepth(int2 p)
 {

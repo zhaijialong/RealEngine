@@ -251,7 +251,6 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
     bool enable_jitter = m_pPostProcessor->RequiresCameraJitter() || (m_outputType == RendererOutput::PathTracing);
     camera->EnableJitter(enable_jitter);
-    camera->SetupCameraCB(pCommandList);
 
     RGHandle firstPhaseHZBHandle = m_pHZB->Get1stPhaseCullingHZBMip(0);
     RGHandle secondPhaseHZBHandle = m_pHZB->Get2ndPhaseCullingHZBMip(0);
@@ -266,6 +265,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     RGBuffer* occlusionCulledMeshletsCounterBuffer = m_pRenderGraph->GetBuffer(occlusionCulledMeshletsCounterBufferHandle);
 
     SceneConstant sceneCB;
+    camera->SetupCameraCB(sceneCB.cameraCB);
+
     sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
     sceneCB.sceneStaticBufferSRV = m_pGpuScene->GetSceneStaticBufferSRV()->GetHeapIndex();
     sceneCB.sceneAnimationBufferSRV = m_pGpuScene->GetSceneAnimationBufferSRV()->GetHeapIndex();
@@ -332,10 +333,10 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
     if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
     {
-        pCommandList->SetGraphicsConstants(4, &sceneCB, sizeof(sceneCB));
+        pCommandList->SetGraphicsConstants(2, &sceneCB, sizeof(sceneCB));
     }
 
-    pCommandList->SetComputeConstants(4, &sceneCB, sizeof(sceneCB));
+    pCommandList->SetComputeConstants(2, &sceneCB, sizeof(sceneCB));
 }
 
 void Renderer::ImportPrevFrameTextures()

@@ -21,10 +21,10 @@ void depth_reprojection(uint3 dispatchThreadID : SV_DispatchThreadID)
     float prevNdcDepth = GetNdcDepth(prevLinearDepth);
     
     float4 clipPos = float4((uv * 2.0 - 1.0) * float2(1.0, -1.0), prevNdcDepth, 1.0);
-    float4 worldPos = mul(CameraCB.mtxPrevViewProjectionInverse, clipPos);
+    float4 worldPos = mul(GetCameraCB().mtxPrevViewProjectionInverse, clipPos);
     worldPos /= worldPos.w;
     
-    float4 reprojectedPosition = mul(CameraCB.mtxViewProjection, worldPos);
+    float4 reprojectedPosition = mul(GetCameraCB().mtxViewProjection, worldPos);
     reprojectedPosition /= reprojectedPosition.w;
     
     float reprojectedDepth = reprojectedPosition.w < 0.0f ? prevNdcDepth : reprojectedPosition.z;

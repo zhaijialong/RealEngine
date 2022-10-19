@@ -20,7 +20,7 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
     float4 worldPos = mul(instanceData.mtxWorld, pos);
 
     VSOutput output;
-    output.pos = mul(CameraCB.mtxViewProjection, worldPos);
+    output.pos = mul(GetCameraCB().mtxViewProjection, worldPos);
     
 #if ALPHA_TEST
     output.uv = v.uv;
@@ -33,8 +33,8 @@ VSOutput vs_main(uint vertex_id : SV_VertexID)
 #endif
     float4 prevWorldPos = mul(instanceData.mtxPrevWorld, prevPos);
     
-    output.clipPos = mul(CameraCB.mtxViewProjectionNoJitter, worldPos);
-    output.prevClipPos = mul(CameraCB.mtxPrevViewProjectionNoJitter, prevWorldPos);
+    output.clipPos = mul(GetCameraCB().mtxViewProjectionNoJitter, worldPos);
+    output.prevClipPos = mul(GetCameraCB().mtxPrevViewProjectionNoJitter, prevWorldPos);
     
     return output;
 }

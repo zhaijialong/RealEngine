@@ -48,19 +48,19 @@ float3 FFX_DNSR_Reflections_ScreenSpaceToViewSpace(float3 screen_uv_coord)
 {
     screen_uv_coord.y = (1 - screen_uv_coord.y);
     screen_uv_coord.xy = 2 * screen_uv_coord.xy - 1;
-    float4 view_pos = mul(CameraCB.mtxProjectionInverse, float4(screen_uv_coord, 1));
+    float4 view_pos = mul(GetCameraCB().mtxProjectionInverse, float4(screen_uv_coord, 1));
     view_pos.xyz /= view_pos.w;
     return view_pos.xyz;
 }
 
 float3 FFX_DNSR_Reflections_ViewSpaceToWorldSpace(float4 view_space_coord)
 {
-    return mul(CameraCB.mtxViewInverse, view_space_coord).xyz;
+    return mul(GetCameraCB().mtxViewInverse, view_space_coord).xyz;
 }
 
 float3 FFX_DNSR_Reflections_WorldSpaceToScreenSpacePrevious(float3 world_space_pos)
 {
-    float4 projected = mul(CameraCB.mtxPrevViewProjection, float4(world_space_pos, 1));
+    float4 projected = mul(GetCameraCB().mtxPrevViewProjection, float4(world_space_pos, 1));
     projected.xyz /= projected.w;
     projected.xy = 0.5 * projected.xy + 0.5;
     projected.y = (1 - projected.y);

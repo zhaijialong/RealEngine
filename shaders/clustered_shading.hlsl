@@ -37,7 +37,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float4 customData = customDataRT[pos];
 
     float3 worldPos = GetWorldPosition(pos.xy, depth);
-    float3 V = normalize(CameraCB.cameraPos - worldPos);
+    float3 V = normalize(GetCameraCB().cameraPos - worldPos);
 
     //TODO : clustered light culling & shading
     
