@@ -5,6 +5,11 @@
 
 class D3D12Device;
 
+namespace D3D12MA
+{
+    class Allocation;
+}
+
 class D3D12RayTracingTLAS : public IGfxRayTracingTLAS
 {
 public:
@@ -19,9 +24,12 @@ public:
 
 private:
     ID3D12Resource* m_pASBuffer = nullptr;
+    D3D12MA::Allocation* m_pASAllocation = nullptr;
     ID3D12Resource* m_pScratchBuffer = nullptr;
+    D3D12MA::Allocation* m_pScratchAllocation = nullptr;
 
     ID3D12Resource* m_pInstanceBuffer = nullptr;
+    D3D12MA::Allocation* m_pInstanceAllocation = nullptr;
     void* m_pInstanceBufferCpuAddress = nullptr;
     uint32_t m_nInstanceBufferSize = 0;
     uint32_t m_nCurrentInstanceBufferOffset = 0;

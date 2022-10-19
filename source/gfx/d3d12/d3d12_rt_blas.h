@@ -5,6 +5,11 @@
 
 class D3D12Device;
 
+namespace D3D12MA
+{
+    class Allocation;
+}
+
 class D3D12RayTracingBLAS : public IGfxRayTracingBLAS
 {
 public:
@@ -24,5 +29,7 @@ private:
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC m_buildDesc;
 
     ID3D12Resource* m_pASBuffer = nullptr;
+    D3D12MA::Allocation* m_pASAllocation = nullptr;
     ID3D12Resource* m_pScratchBuffer = nullptr;
+    D3D12MA::Allocation* m_pScratchAllocation = nullptr;
 };

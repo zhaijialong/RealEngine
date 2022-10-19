@@ -2,6 +2,7 @@
 #include "d3d12_rt_blas.h"
 #include "d3d12_device.h"
 #include "utils/math.h"
+#include "d3d12ma/D3D12MemAlloc.h"
 
 D3D12RayTracingTLAS::D3D12RayTracingTLAS(D3D12Device* pDevice, const GfxRayTracingTLASDesc& desc, const eastl::string& name)
 {
@@ -14,8 +15,11 @@ D3D12RayTracingTLAS::~D3D12RayTracingTLAS()
 {
     D3D12Device* pDevice = (D3D12Device*)m_pDevice;
     pDevice->Delete(m_pASBuffer);
+    pDevice->Delete(m_pASAllocation);
     pDevice->Delete(m_pScratchBuffer);
+    pDevice->Delete(m_pScratchAllocation);
     pDevice->Delete(m_pInstanceBuffer);
+    pDevice->Delete(m_pInstanceAllocation);
 }
 
 bool D3D12RayTracingTLAS::Create()
@@ -31,17 +35,23 @@ bool D3D12RayTracingTLAS::Create()
     D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO info = {};
     device->GetRaytracingAccelerationStructurePrebuildInfo(&prebuildDesc, &info);
 
-    //todo : improve memory usage
+    //todo : better memory allocation and compaction like what RTXMU does
+    D3D12MA::Allocator* pAllocator = ((D3D12Device*)m_pDevice)->GetResourceAllocator();
+    D3D12MA::ALLOCATION_DESC allocationDesc = {};
+    allocationDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+
     CD3DX12_RESOURCE_DESC asBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(info.ResultDataMaxSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     CD3DX12_RESOURCE_DESC scratchBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(info.ScratchDataSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    const D3D12_HEAP_PROPERTIES heapProps = { D3D12_HEAP_TYPE_DEFAULT, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 0, 0 };
-    device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &asBufferDesc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr, IID_PPV_ARGS(&m_pASBuffer));
-    device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &scratchBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_pScratchBuffer));
+    pAllocator->CreateResource(&allocationDesc, &asBufferDesc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr, &m_pASAllocation, IID_PPV_ARGS(&m_pASBuffer));
+    pAllocator->CreateResource(&allocationDesc, &scratchBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, &m_pScratchAllocation, IID_PPV_ARGS(&m_pScratchBuffer));
 
+    allocationDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
     m_nInstanceBufferSize = RoundUpPow2(sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_desc.instance_count, D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT) * GFX_MAX_INFLIGHT_FRAMES;
     CD3DX12_RESOURCE_DESC instanceBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_nInstanceBufferSize);
-    const D3D12_HEAP_PROPERTIES uploadHeapProps = { D3D12_HEAP_TYPE_UPLOAD, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 0, 0 };
-    device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &instanceBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_pInstanceBuffer));
+    pAllocator->CreateResource(&allocationDesc, &instanceBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, &m_pInstanceAllocation, IID_PPV_ARGS(&m_pInstanceBuffer));
+
+    m_pASBuffer->SetName(string_to_wstring(m_name).c_str());
+    m_pASAllocation->SetName(string_to_wstring(m_name).c_str());
 
     CD3DX12_RANGE readRange(0, 0);
     m_pInstanceBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pInstanceBufferCpuAddress));
