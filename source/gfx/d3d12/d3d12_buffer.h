@@ -22,7 +22,7 @@ public:
     virtual uint64_t GetGpuAddress() override;
     virtual uint32_t GetRequiredStagingBufferSize() const override;
 
-    bool Create(D3D12Heap* heap = nullptr, uint32_t offset = 0);
+    bool Create();
 
 private:
     ID3D12Resource* m_pBuffer = nullptr;

@@ -7,6 +7,7 @@ class IGfxBuffer;
 class IGfxTexture;
 class IGfxShader;
 class IGfxRayTracingBLAS;
+class IGfxHeap;
 
 const static int GFX_MAX_INFLIGHT_FRAMES = 3;
 
@@ -223,6 +224,8 @@ struct GfxBufferDesc
     GfxMemoryType memory_type = GfxMemoryType::GpuOnly;
     GfxAllocationType alloc_type = GfxAllocationType::Placed;
     GfxBufferUsageFlags usage = 0;
+    IGfxHeap* heap = nullptr;
+    uint32_t heap_offset = 0;
 };
 
 inline bool operator==(const GfxBufferDesc& lhs, const GfxBufferDesc& rhs)
@@ -247,6 +250,8 @@ struct GfxTextureDesc
     GfxMemoryType memory_type = GfxMemoryType::GpuOnly;
     GfxAllocationType alloc_type = GfxAllocationType::Placed;
     GfxTextureUsageFlags usage = 0;
+    IGfxHeap* heap = nullptr;
+    uint32_t heap_offset = 0;
 };
 
 inline bool operator==(const GfxTextureDesc& lhs, const GfxTextureDesc& rhs)

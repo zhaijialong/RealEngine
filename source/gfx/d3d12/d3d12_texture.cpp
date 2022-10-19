@@ -28,7 +28,7 @@ D3D12Texture::~D3D12Texture()
     }
 }
 
-bool D3D12Texture::Create(D3D12Heap* heap, uint32_t offset)
+bool D3D12Texture::Create()
 {
     ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
 
@@ -56,12 +56,12 @@ bool D3D12Texture::Create(D3D12Heap* heap, uint32_t offset)
 
     HRESULT hr;
     
-    if (heap != nullptr)
+    if (m_desc.heap != nullptr)
     {
         RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Placed);
-        RE_ASSERT(m_desc.memory_type == heap->GetDesc().memory_type);
+        RE_ASSERT(m_desc.memory_type == m_desc.heap->GetDesc().memory_type);
 
-        hr = pAllocator->CreateAliasingResource((D3D12MA::Allocation*)heap->GetHandle(), offset,
+        hr = pAllocator->CreateAliasingResource((D3D12MA::Allocation*)m_desc.heap->GetHandle(), m_desc.heap_offset,
             &resourceDesc, initial_state, nullptr, IID_PPV_ARGS(&m_pTexture));
     }
     else if (m_desc.alloc_type == GfxAllocationType::Sparse)

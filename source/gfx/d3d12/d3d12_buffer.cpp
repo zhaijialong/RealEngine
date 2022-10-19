@@ -27,7 +27,7 @@ uint64_t D3D12Buffer::GetGpuAddress()
     return m_pBuffer->GetGPUVirtualAddress();
 }
 
-bool D3D12Buffer::Create(D3D12Heap* heap, uint32_t offset)
+bool D3D12Buffer::Create()
 {
     D3D12MA::Allocator* pAllocator = ((D3D12Device*)m_pDevice)->GetResourceAllocator();
 
@@ -50,13 +50,13 @@ bool D3D12Buffer::Create(D3D12Heap* heap, uint32_t offset)
 
     HRESULT hr;
 
-    if (heap != nullptr)
+    if (m_desc.heap != nullptr)
     {
         RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Placed);
-        RE_ASSERT(m_desc.memory_type == heap->GetDesc().memory_type);
-        RE_ASSERT(m_desc.size + offset <= heap->GetDesc().size);
+        RE_ASSERT(m_desc.memory_type == m_desc.heap->GetDesc().memory_type);
+        RE_ASSERT(m_desc.size + m_desc.heap_offset <= m_desc.heap->GetDesc().size);
 
-        hr = pAllocator->CreateAliasingResource((D3D12MA::Allocation*)heap->GetHandle(), offset,
+        hr = pAllocator->CreateAliasingResource((D3D12MA::Allocation*)m_desc.heap->GetHandle(), m_desc.heap_offset,
             &resourceDesc, initial_state, nullptr, IID_PPV_ARGS(&m_pBuffer));
     }
     else

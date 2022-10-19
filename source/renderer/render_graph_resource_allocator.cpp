@@ -111,8 +111,11 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
             }
         }        
 
+        GfxTextureDesc newDesc = desc;
+        newDesc.heap = heap.heap;
+
         AliasedResource aliasedTexture;
-        aliasedTexture.resource = m_pDevice->CreateTexture(desc, heap.heap, 0, "RGTexture " + name);
+        aliasedTexture.resource = m_pDevice->CreateTexture(newDesc, "RGTexture " + name);
         aliasedTexture.isTexture = true;
         aliasedTexture.lifetime = lifetime;
         heap.resources.push_back(aliasedTexture);
@@ -163,8 +166,11 @@ IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uin
             }
         }
 
+        GfxBufferDesc newDesc = desc;
+        newDesc.heap = heap.heap;
+
         AliasedResource aliasedBuffer;
-        aliasedBuffer.resource = m_pDevice->CreateBuffer(desc, heap.heap, 0, "RGBuffer " + name);
+        aliasedBuffer.resource = m_pDevice->CreateBuffer(newDesc, "RGBuffer " + name);
         aliasedBuffer.isTexture = false;
         aliasedBuffer.lifetime = lifetime;
         heap.resources.push_back(aliasedBuffer);

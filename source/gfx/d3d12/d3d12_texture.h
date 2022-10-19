@@ -23,7 +23,7 @@ public:
     virtual GfxTilingDesc GetTilingDesc() const override;
     virtual GfxSubresourceTilingDesc GetTilingDesc(uint32_t subresource) const override;
 
-    bool Create(D3D12Heap* heap = nullptr, uint32_t offset = 0);
+    bool Create();
     D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(uint32_t mip_slice, uint32_t array_slice);
     D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(uint32_t mip_slice, uint32_t array_slice);
 

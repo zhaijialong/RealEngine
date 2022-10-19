@@ -121,32 +121,10 @@ IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, const eastl::st
     return pBuffer;
 }
 
-IGfxBuffer* D3D12Device::CreateBuffer(const GfxBufferDesc& desc, IGfxHeap* heap, uint32_t offset, const eastl::string& name)
-{
-    D3D12Buffer* pBuffer = new D3D12Buffer(this, desc, name);
-    if (!pBuffer->Create((D3D12Heap*)heap, offset))
-    {
-        delete pBuffer;
-        return nullptr;
-    }
-    return pBuffer;
-}
-
 IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, const eastl::string& name)
 {
     D3D12Texture* pTexture = new D3D12Texture(this, desc, name);
     if (!pTexture->Create())
-    {
-        delete pTexture;
-        return nullptr;
-    }
-    return pTexture;
-}
-
-IGfxTexture* D3D12Device::CreateTexture(const GfxTextureDesc& desc, IGfxHeap* heap, uint32_t offset, const eastl::string& name)
-{
-    D3D12Texture* pTexture = new D3D12Texture(this, desc, name);
-    if (!pTexture->Create((D3D12Heap*)heap, offset))
     {
         delete pTexture;
         return nullptr;
