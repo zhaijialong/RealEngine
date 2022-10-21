@@ -3,7 +3,7 @@
 My toy engine, mainly for rendering experiment and prototyping. 
 It requires a GPU which supports DX12 Ultimate with latest driver.
 It is not supposed to be used in production, and prefers clean design and code over being heavily optimized.
-![rendergraph](bin/screenshot.jpg)
+![screenshot](bin/screenshot.jpg)
 
 ## some highlights
 
@@ -17,24 +17,24 @@ It is not supposed to be used in production, and prefers clean design and code o
 
 ## planned features
 
-* ~~render graph~~(~~barriers~~, ~~resource aliasing~~, ~~async compute~~)
-* ~~GTAO~~
-* ~~specular GI~~
-* ~~diffuse GI~~
-* clustered shading
-* ~~Bloom~~
-* ~~Auto Exposure~~
-* ~~TAA~~
-* ~~CAS~~
-* ~~meshlet~~
-* ~~RTX~~
-* ~~a reference pathtracer~~
-* ~~FSR2~~/~~DLSS~~/~~XeSS~~
-* DOF
-* motion blur
-* visibility buffer
-* Direct Storage
-* maybe  volumetric cloud/fog, water/ocean simulation, large-scale landscape, or any random things
+- [x] render graph(barriers, resource aliasing, async compute)
+- [x] GTAO
+- [x] specular GI
+- [x] diffuse GI
+- [ ] clustered shading
+- [x] Bloom
+- [x] Auto Exposure
+- [x] TAA
+- [x] CAS
+- [x] meshlet
+- [x] RTX
+- [x] a reference pathtracer
+- [x] FSR2/DLSS/XeSS
+- [ ] DOF
+- [ ] motion blur
+- [ ] visibility buffer
+- [ ] Direct Storage
+- [ ] maybe  volumetric cloud/fog, water/ocean simulation, large-scale landscape, or any random things
 
 
 ## AMD related issues
