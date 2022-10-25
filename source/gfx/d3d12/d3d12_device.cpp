@@ -639,10 +639,12 @@ void D3D12Device::CreateRootSignature()
     //AMD : Try to stay below 13 DWORDs https://gpuopen.com/performance/
     //8 root constants + 2 root CBVs == 12 DWORDs, everything else is bindless
 
-    CD3DX12_ROOT_PARAMETER1 root_parameters[3] = {};
+    CD3DX12_ROOT_PARAMETER1 root_parameters[GFX_MAX_CBV_BINDINGS] = {};
     root_parameters[0].InitAsConstants(GFX_MAX_ROOT_CONSTANTS, 0);
-    root_parameters[1].InitAsConstantBufferView(1);
-    root_parameters[2].InitAsConstantBufferView(2);
+    for (uint32_t i = 1; i < GFX_MAX_CBV_BINDINGS; ++i)
+    {
+        root_parameters[i].InitAsConstantBufferView(i);
+    }
 
     D3D12_ROOT_SIGNATURE_FLAGS flags =
         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |

@@ -535,15 +535,15 @@ void D3D12CommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, ui
 
 void D3D12CommandList::SetGraphicsConstants(uint32_t slot, const void* data, size_t data_size)
 {
-    RE_ASSERT((slot == 0 && data_size <= sizeof(int32_t) * GFX_MAX_ROOT_CONSTANTS) || (slot > 0 && slot < GFX_MAX_CBV_BINDINGS));
-
     if (slot == 0)
     {
         uint32_t consts_count = (uint32_t)data_size / sizeof(uint32_t);
+        RE_ASSERT(consts_count <= GFX_MAX_ROOT_CONSTANTS);
         m_pCommandList->SetGraphicsRoot32BitConstants(0, consts_count, data, 0);
     }
     else
     {
+        RE_ASSERT(slot < GFX_MAX_CBV_BINDINGS);
         D3D12_GPU_VIRTUAL_ADDRESS address = ((D3D12Device*)m_pDevice)->AllocateConstantBuffer(data, data_size);
         RE_ASSERT(address);
 
@@ -553,15 +553,15 @@ void D3D12CommandList::SetGraphicsConstants(uint32_t slot, const void* data, siz
 
 void D3D12CommandList::SetComputeConstants(uint32_t slot, const void* data, size_t data_size)
 {
-    RE_ASSERT((slot == 0 && data_size <= sizeof(int32_t) * GFX_MAX_ROOT_CONSTANTS) || (slot > 0 && slot < GFX_MAX_CBV_BINDINGS));
-
     if (slot == 0)
     {
         uint32_t consts_count = (uint32_t)data_size / sizeof(uint32_t);
+        RE_ASSERT(consts_count <= GFX_MAX_ROOT_CONSTANTS);
         m_pCommandList->SetComputeRoot32BitConstants(0, consts_count, data, 0);
     }
     else
     {
+        RE_ASSERT(slot < GFX_MAX_CBV_BINDINGS);
         D3D12_GPU_VIRTUAL_ADDRESS address = ((D3D12Device*)m_pDevice)->AllocateConstantBuffer(data, data_size);
         RE_ASSERT(address);
 
