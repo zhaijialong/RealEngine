@@ -1,8 +1,8 @@
 #pragma once
 
-#include "d3d12/d3d12.h"
-#include "d3d12/d3dx12.h"
-#include "d3d12/dxgi1_6.h"
+#include "directx/d3d12.h"
+#include "directx/d3dx12.h"
+#include "dxgi1_6.h"
 #include "../gfx_define.h"
 #include "utils/string.h"
 #include "utils/assert.h"
