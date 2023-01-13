@@ -64,7 +64,7 @@ public:
     virtual IGfxHeap* CreateHeap(const GfxHeapDesc& desc, const eastl::string& name) override;
     virtual IGfxBuffer* CreateBuffer(const GfxBufferDesc& desc, const eastl::string& name) override;
     virtual IGfxTexture* CreateTexture(const GfxTextureDesc& desc, const eastl::string& name) override;
-    virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, const eastl::vector<uint8_t>& data, const eastl::string& name) override;
+    virtual IGfxShader* CreateShader(const GfxShaderDesc& desc, eastl::span<uint8_t> data, const eastl::string& name) override;
     virtual IGfxPipelineState* CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name) override;
     virtual IGfxPipelineState* CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name) override;
     virtual IGfxPipelineState* CreateComputePipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name) override;

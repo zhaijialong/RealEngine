@@ -8,7 +8,7 @@ class D3D12Device;
 class D3D12Shader : public IGfxShader
 {
 public:
-    D3D12Shader(D3D12Device* pDevice, const GfxShaderDesc& desc, const eastl::vector<uint8_t> data, const eastl::string& name);
+    D3D12Shader(D3D12Device* pDevice, const GfxShaderDesc& desc, eastl::span<uint8_t> data, const eastl::string& name);
 
     virtual void* GetHandle() const override { return nullptr; }
     virtual bool SetShaderData(const uint8_t* data, uint32_t data_size) override;
