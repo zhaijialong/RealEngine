@@ -2,6 +2,7 @@
 
 #include "EASTL/string.h"
 #include "EASTL/vector.h"
+#include "EASTL/span.h"
 
 class IGfxBuffer;
 class IGfxTexture;
