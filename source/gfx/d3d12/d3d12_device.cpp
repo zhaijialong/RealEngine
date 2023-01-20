@@ -324,6 +324,8 @@ void D3D12Device::EndFrame()
 
 bool D3D12Device::Init()
 {
+    RE_LOG("initializing D3D12 device");
+
     UINT dxgiFactoryFlags = 0;
 
 #if defined(_DEBUG)

@@ -1,16 +1,6 @@
 #pragma once
 
-#include "fmt/format.h"
-#include <Windows.h>
+#include "spdlog/spdlog.h"
 
-inline void RE_LOG(const char* log)
-{
-    OutputDebugStringA(log);
-    OutputDebugStringA("\n");
-}
+#define RE_LOG(...) spdlog::default_logger_raw()->log(spdlog::source_loc{ __FILE__, __LINE__, SPDLOG_FUNCTION }, spdlog::level::trace, __VA_ARGS__)
 
-template <typename... T>
-inline void RE_LOG(const char* format, T&&... args)
-{
-    RE_LOG(fmt::format(format, args...).c_str());
-}

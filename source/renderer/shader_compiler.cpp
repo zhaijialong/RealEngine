@@ -4,10 +4,10 @@
 #include "utils/log.h"
 #include "utils/string.h"
 #include "utils/assert.h"
-#include "dxc/dxcapi.h"
 
 #include <filesystem>
 #include <atlbase.h> //CComPtr
+#include "dxc/dxcapi.h"
 
 class DXCIncludeHandler : public IDxcIncludeHandler
 {

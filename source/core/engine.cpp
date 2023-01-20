@@ -6,6 +6,9 @@
 #include "rpmalloc/rpmalloc.h"
 #include "rpmalloc/rpnew.h"
 #include "fmt/format.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/msvc_sink.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
@@ -23,6 +26,14 @@ Engine::~Engine()
 
 void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
+    auto msvc_sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>((work_path + "log.txt").c_str(), true);
+    auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ msvc_sink, file_sink });
+    spdlog::set_default_logger(logger);
+    spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [%n] [thread %t] [%l] %v");
+    spdlog::set_level(spdlog::level::trace);
+    spdlog::flush_every(std::chrono::milliseconds(10));
+
     StartProfiler();
 
     enki::TaskSchedulerConfig config;
