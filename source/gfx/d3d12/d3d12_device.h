@@ -127,7 +127,7 @@ private:
 
 private:
     GfxDeviceDesc m_desc;
-    GfxVendor m_vendor;
+    GfxVendor m_vendor = GfxVendor::Unkown;
 
     IDXGIFactory5* m_pDxgiFactory = nullptr;
     IDXGIAdapter1* m_pDxgiAdapter = nullptr;

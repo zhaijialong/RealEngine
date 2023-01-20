@@ -661,6 +661,7 @@ struct GfxSubresourceTilingDesc
 
 enum class GfxVendor
 {
+    Unkown,
     AMD,
     Nvidia,
     Intel,
