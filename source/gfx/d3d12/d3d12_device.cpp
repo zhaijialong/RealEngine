@@ -351,13 +351,12 @@ bool D3D12Device::Init()
     m_pDxgiAdapter = FindAdapter(m_pDxgiFactory, minimumFeatureLevel);
     if (m_pDxgiAdapter == nullptr)
     {
+        RE_ERROR("failed to find a capable DXGI adapter.");
         return false;
     }
 
     DXGI_ADAPTER_DESC adapterDesc;
     m_pDxgiAdapter->GetDesc(&adapterDesc);
-    RE_TRACE("GPU : {}", wstring_to_string(adapterDesc.Description).c_str());
-
     switch (adapterDesc.VendorId)
     {
     case 0x1002:
@@ -372,6 +371,9 @@ bool D3D12Device::Init()
     default:
         break;
     }
+
+    RE_TRACE("GPU : {}", wstring_to_string(adapterDesc.Description).c_str());
+    //todo : RE_TRACE("Vendor : {}", enum_to_string(m_vendor));
     
     if (m_vendor == GfxVendor::AMD)
     {

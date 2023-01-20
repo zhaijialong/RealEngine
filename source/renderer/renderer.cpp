@@ -16,6 +16,7 @@
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
 #include "utils/profiler.h"
+#include "utils/log.h"
 #include "fmt/format.h"
 #include "global_constants.hlsli"
 
@@ -47,6 +48,11 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     GfxDeviceDesc desc;
     desc.max_frame_lag = GFX_MAX_INFLIGHT_FRAMES;
     m_pDevice.reset(CreateGfxDevice(desc));
+    if (m_pDevice == nullptr)
+    {
+        RE_ERROR("[Renderer::CreateDevice] failed to create the gfx device.");
+        return;
+    }
 
     GfxSwapchainDesc swapchainDesc;
     swapchainDesc.window_handle = window_handle;
