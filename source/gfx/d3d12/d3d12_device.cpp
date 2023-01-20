@@ -324,7 +324,7 @@ void D3D12Device::EndFrame()
 
 bool D3D12Device::Init()
 {
-    RE_LOG("initializing D3D12 device");
+    RE_TRACE("initializing D3D12 device");
 
     UINT dxgiFactoryFlags = 0;
 
@@ -356,6 +356,8 @@ bool D3D12Device::Init()
 
     DXGI_ADAPTER_DESC adapterDesc;
     m_pDxgiAdapter->GetDesc(&adapterDesc);
+    RE_TRACE("GPU : {}", wstring_to_string(adapterDesc.Description).c_str());
+
     switch (adapterDesc.VendorId)
     {
     case 0x1002:
@@ -368,7 +370,6 @@ bool D3D12Device::Init()
         m_vendor = GfxVendor::Intel;
         break;
     default:
-        RE_ASSERT(false);
         break;
     }
     

@@ -176,7 +176,7 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
     pResults->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&pErrors), nullptr);
     if (pErrors != nullptr && pErrors->GetStringLength() != 0)
     {
-        RE_LOG(pErrors->GetStringPointer());
+        RE_ERROR(pErrors->GetStringPointer());
     }
 
     HRESULT hr;

@@ -6,9 +6,25 @@
 
 #pragma comment(lib, "external/xess/lib/libxess.lib")
 
-static void XeSSLog(const char* message, xess_logging_level_t loging_level)
+static void XeSSLog(const char* message, xess_logging_level_t logging_level)
 {
-    RE_LOG(message);
+    switch (logging_level)
+    {
+    case XESS_LOGGING_LEVEL_DEBUG:
+        RE_DEBUG(message);
+        break;
+    case XESS_LOGGING_LEVEL_INFO:
+        RE_INFO(message);
+        break;
+    case XESS_LOGGING_LEVEL_WARNING:
+        RE_WARN(message);
+        break;
+    case XESS_LOGGING_LEVEL_ERROR:
+        RE_ERROR(message);
+        break;
+    default:
+        break;
+    }
 }
 
 XeSS::XeSS(Renderer* pRenderer)

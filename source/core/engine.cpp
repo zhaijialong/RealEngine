@@ -108,7 +108,7 @@ void Engine::LoadEngineConfig()
     SI_Error error = m_configIni.LoadFile(ini_file.c_str());
     if (error != SI_OK)
     {
-        RE_LOG("Failed to load RealEngine.ini !");
+        RE_ERROR("Failed to load RealEngine.ini !");
         return;
     }
 
