@@ -1,7 +1,7 @@
 #include "restir_gi.h"
 #include "../renderer.h"
 #include "utils/gui_util.h"
-#include "fmt/format.h"
+#include "utils/fmt.h"
 
 ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
 {

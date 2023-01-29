@@ -5,8 +5,6 @@
 #include "enkiTS/TaskScheduler.h"
 #include "rpmalloc/rpmalloc.h"
 #include "rpmalloc/rpnew.h"
-#include "fmt/format.h"
-#include "spdlog/spdlog.h"
 #include "spdlog/sinks/msvc_sink.h"
 #include "spdlog/sinks/basic_file_sink.h"
 

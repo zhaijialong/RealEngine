@@ -2,7 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12_texture.h"
 #include "utils/assert.h"
-#include "fmt/format.h"
+#include "utils/fmt.h"
 
 D3D12Swapchain::D3D12Swapchain(D3D12Device* pDevice, const GfxSwapchainDesc& desc, const eastl::string& name)
 {
@@ -141,7 +141,7 @@ bool D3D12Swapchain::CreateTextures()
             return false;
         }
 
-        eastl::string name = fmt::format("{} texture {}", m_name.c_str(), i).c_str();
+        eastl::string name = fmt::format("{} texture {}", m_name, i).c_str();
         pBackbuffer->SetName(string_to_wstring(name).c_str());
 
         D3D12Texture* texture = new D3D12Texture(pDevice, textureDesc, name);

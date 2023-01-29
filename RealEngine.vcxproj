@@ -457,6 +457,7 @@ xcopy $(SolutionDir)external\xess\bin\XeFX.dll $(SolutionDir)bin /D</Command>
     <ClInclude Include="source\renderer\staging_buffer_allocator.h" />
     <ClInclude Include="source\renderer\texture_loader.h" />
     <ClInclude Include="source\utils\assert.h" />
+    <ClInclude Include="source\utils\fmt.h" />
     <ClInclude Include="source\utils\gui_util.h" />
     <ClInclude Include="source\utils\linear_allocator.h" />
     <ClInclude Include="source\utils\log.h" />

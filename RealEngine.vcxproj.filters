@@ -1119,6 +1119,9 @@
     <ClInclude Include="source\renderer\post_processing\xess.h">
       <Filter>source\renderer\post_processing</Filter>
     </ClInclude>
+    <ClInclude Include="source\utils\fmt.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">

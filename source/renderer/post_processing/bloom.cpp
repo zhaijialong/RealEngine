@@ -1,7 +1,7 @@
 #include "bloom.h"
 #include "../renderer.h"
 #include "utils/gui_util.h"
-#include "fmt/format.h"
+#include "utils/fmt.h"
 
 Bloom::Bloom(Renderer* pRenderer)
 {

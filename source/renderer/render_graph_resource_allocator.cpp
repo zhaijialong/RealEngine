@@ -1,6 +1,6 @@
 #include "render_graph_resource_allocator.h"
 #include "utils/math.h"
-#include "fmt/format.h"
+#include "utils/fmt.h"
 
 RenderGraphResourceAllocator::RenderGraphResourceAllocator(IGfxDevice* pDevice)
 {

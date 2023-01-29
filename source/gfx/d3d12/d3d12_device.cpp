@@ -36,7 +36,7 @@ static IDXGIAdapter1* FindAdapter(IDXGIFactory6* pDXGIFactory, D3D_FEATURE_LEVEL
     {
         DXGI_ADAPTER_DESC1 desc;
         pDXGIAdapter->GetDesc1(&desc);
-        RE_DEBUG("  - {}", wstring_to_string(desc.Description).c_str());
+        RE_DEBUG("  - {}", wstring_to_string(desc.Description));
 
         adapters.push_back(pDXGIAdapter);
     }
@@ -384,7 +384,7 @@ bool D3D12Device::Init()
     }
 
     RE_INFO("Vendor : {}", magic_enum::enum_name(m_vendor));
-    RE_INFO("GPU : {}", wstring_to_string(adapterDesc.Description).c_str());
+    RE_INFO("GPU : {}", wstring_to_string(adapterDesc.Description));
 
     if (m_vendor == GfxVendor::AMD)
     {

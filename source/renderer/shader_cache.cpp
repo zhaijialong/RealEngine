@@ -146,7 +146,7 @@ IGfxShader* ShaderCache::CreateShader(const eastl::string& file, const eastl::st
 void ShaderCache::RecompileShader(IGfxShader* shader)
 {
     const GfxShaderDesc& desc = shader->GetDesc();
-    RE_INFO("recompling shader : {}", desc.file.c_str());
+    RE_INFO("recompling shader : {}", desc.file);
 
     eastl::string source = GetCachedFileContent(desc.file);
 

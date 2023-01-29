@@ -1,6 +1,6 @@
 #include "shadow_denoiser.h"
 #include "../renderer.h"
-#include "fmt/format.h"
+#include "utils/fmt.h"
 
 ShadowDenoiser::ShadowDenoiser(Renderer* pRenderer)
 {

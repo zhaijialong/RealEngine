@@ -7,9 +7,9 @@
 #include "resource_cache.h"
 #include "core/engine.h"
 #include "utils/string.h"
+#include "utils/fmt.h"
 #include "tinyxml2/tinyxml2.h"
 #include "meshoptimizer/meshoptimizer.h"
-#include "fmt/format.h"
 
 #define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
