@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fmt.h"
+#define SPDLOG_FMT_EXTERNAL
 #include "spdlog/spdlog.h"
 
 #define RE_TRACE(...) spdlog::default_logger_raw()->log(spdlog::source_loc{ __FILE__, __LINE__, SPDLOG_FUNCTION }, spdlog::level::trace, __VA_ARGS__)
