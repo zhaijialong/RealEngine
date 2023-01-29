@@ -17,7 +17,9 @@ World::World()
 }
 
 void World::LoadScene(const eastl::string& file)
-{    
+{
+    RE_INFO("Loading Scene : {}", file.c_str());
+
     tinyxml2::XMLDocument doc;
     if (tinyxml2::XML_SUCCESS != doc.LoadFile(file.c_str()))
     {

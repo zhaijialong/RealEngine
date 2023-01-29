@@ -128,6 +128,8 @@ private:
 private:
     GfxDeviceDesc m_desc;
     GfxVendor m_vendor = GfxVendor::Unkown;
+    CD3DX12FeatureSupport m_featureSupport;
+    uint64_t m_nFrameID = 0;
 
     IDXGIFactory5* m_pDxgiFactory = nullptr;
     IDXGIAdapter1* m_pDxgiAdapter = nullptr;
@@ -148,18 +150,12 @@ private:
     ID3D12CommandSignature* m_pMultiDispatchMeshSignature = nullptr;
 
     D3D12MA::Allocator* m_pResourceAllocator = nullptr;
-
-    static const uint32_t CB_ALLOCATOR_COUNT = 3;
-    eastl::unique_ptr<D3D12ConstantBufferAllocator> m_pConstantBufferAllocators[CB_ALLOCATOR_COUNT];
-
+    eastl::unique_ptr<D3D12ConstantBufferAllocator> m_pConstantBufferAllocators[GFX_MAX_INFLIGHT_FRAMES];
     eastl::unique_ptr<D3D12DescriptorAllocator> m_pRTVAllocator;
     eastl::unique_ptr<D3D12DescriptorAllocator> m_pDSVAllocator;
     eastl::unique_ptr<D3D12DescriptorAllocator> m_pResDescriptorAllocator;
     eastl::unique_ptr<D3D12DescriptorAllocator> m_pSamplerAllocator;
-
     eastl::unique_ptr<D3D12DescriptorAllocator> m_pNonShaderVisibleUavAllocator;
-
-    uint64_t m_nFrameID = 0;
 
     struct ObjectDeletion
     {

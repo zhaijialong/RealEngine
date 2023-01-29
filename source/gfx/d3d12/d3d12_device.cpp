@@ -16,6 +16,7 @@
 #include "utils/log.h"
 #include "utils/profiler.h"
 #include "utils/math.h"
+#include "magic_enum/magic_enum.hpp"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -57,7 +58,7 @@ D3D12Device::D3D12Device(const GfxDeviceDesc& desc)
 
 D3D12Device::~D3D12Device()
 {
-    for (uint32_t i = 0; i < CB_ALLOCATOR_COUNT; ++i)
+    for (uint32_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         m_pConstantBufferAllocators[i].reset();
     }
@@ -311,7 +312,7 @@ void D3D12Device::BeginFrame()
 {
     DoDeferredDeletion();
 
-    uint32_t index = m_nFrameID % CB_ALLOCATOR_COUNT;
+    uint32_t index = m_nFrameID % GFX_MAX_INFLIGHT_FRAMES;
     m_pConstantBufferAllocators[index]->Reset();
 }
 
@@ -347,7 +348,7 @@ bool D3D12Device::Init()
         return false;
     }
 
-    D3D_FEATURE_LEVEL minimumFeatureLevel = D3D_FEATURE_LEVEL_12_2;
+    D3D_FEATURE_LEVEL minimumFeatureLevel = D3D_FEATURE_LEVEL_12_0;
     m_pDxgiAdapter = FindAdapter(m_pDxgiFactory, minimumFeatureLevel);
     if (m_pDxgiAdapter == nullptr)
     {
@@ -372,9 +373,9 @@ bool D3D12Device::Init()
         break;
     }
 
+    RE_TRACE("Vendor : {}", magic_enum::enum_name(m_vendor));
     RE_TRACE("GPU : {}", wstring_to_string(adapterDesc.Description).c_str());
-    //todo : RE_TRACE("Vendor : {}", enum_to_string(m_vendor));
-    
+
     if (m_vendor == GfxVendor::AMD)
     {
         if (FAILED(ags::CreateDevice(m_pDxgiAdapter, minimumFeatureLevel, IID_PPV_ARGS(&m_pDevice))))
@@ -390,15 +391,21 @@ bool D3D12Device::Init()
         }
     }
 
-    D3D12_FEATURE_DATA_SHADER_MODEL shaderModel;
-    shaderModel.HighestShaderModel = D3D_SHADER_MODEL_6_7;
-    if (FAILED(m_pDevice->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel))))
+    m_featureSupport.Init(m_pDevice);
+
+    bool capableDevice = m_featureSupport.HighestShaderModel() >= D3D_SHADER_MODEL_6_6 &&
+        m_featureSupport.ResourceBindingTier() >= D3D12_RESOURCE_BINDING_TIER_3 &&
+        m_featureSupport.RaytracingTier() >= D3D12_RAYTRACING_TIER_1_1 &&
+        m_featureSupport.RenderPassesTier() >= D3D12_RENDER_PASS_TIER_0 &&
+        m_featureSupport.MeshShaderTier() >= D3D12_MESH_SHADER_TIER_1 &&
+        m_featureSupport.WaveOps() &&
+        m_featureSupport.Native16BitShaderOpsSupported();
+
+    if (!capableDevice)
     {
+        RE_ERROR("the device is not capable of running RealEngine.");
         return false;
     }
-
-    //SM6.6 is required !
-    RE_ASSERT(shaderModel.HighestShaderModel >= D3D_SHADER_MODEL_6_6);
 
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -423,7 +430,7 @@ bool D3D12Device::Init()
         return false;
     }
 
-    for (uint32_t i = 0; i < CB_ALLOCATOR_COUNT; ++i)
+    for (uint32_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         eastl::string name = fmt::format("CB Allocator {}", i).c_str();
         m_pConstantBufferAllocators[i] = eastl::make_unique<D3D12ConstantBufferAllocator>(this, 8 * 1024 * 1024, name);
@@ -458,7 +465,7 @@ D3D12_GPU_VIRTUAL_ADDRESS D3D12Device::AllocateConstantBuffer(const void* data, 
     void* cpu_address;
     uint64_t gpu_address;
 
-    uint32_t index = m_nFrameID % CB_ALLOCATOR_COUNT;
+    uint32_t index = m_nFrameID % GFX_MAX_INFLIGHT_FRAMES;
     m_pConstantBufferAllocators[index]->Allocate((uint32_t)data_size, &cpu_address, &gpu_address);
 
     memcpy(cpu_address, data, data_size);
