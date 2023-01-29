@@ -131,7 +131,7 @@ private:
     CD3DX12FeatureSupport m_featureSupport;
     uint64_t m_nFrameID = 0;
 
-    IDXGIFactory5* m_pDxgiFactory = nullptr;
+    IDXGIFactory6* m_pDxgiFactory = nullptr;
     IDXGIAdapter1* m_pDxgiAdapter = nullptr;
 
     ID3D12Device5* m_pDevice = nullptr;

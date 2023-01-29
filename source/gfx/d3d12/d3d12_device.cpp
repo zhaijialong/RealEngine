@@ -24,31 +24,43 @@
 extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 700; }
 extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
-static IDXGIAdapter1* FindAdapter(IDXGIFactory4* pDXGIFactory, D3D_FEATURE_LEVEL minimumFeatureLevel)
+static IDXGIAdapter1* FindAdapter(IDXGIFactory6* pDXGIFactory, D3D_FEATURE_LEVEL minimumFeatureLevel)
 {
-    IDXGIAdapter1* pDXGIAdapter = NULL;
+    eastl::vector<IDXGIAdapter1*> adapters;
 
-    for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != pDXGIFactory->EnumAdapters1(adapterIndex, &pDXGIAdapter); ++adapterIndex)
+    RE_DEBUG("available GPUs :");
+    IDXGIAdapter1* pDXGIAdapter = nullptr;
+    for (UINT adapterIndex = 0; 
+        DXGI_ERROR_NOT_FOUND != pDXGIFactory->EnumAdapterByGpuPreference(adapterIndex, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&pDXGIAdapter));
+        ++adapterIndex)
     {
         DXGI_ADAPTER_DESC1 desc;
         pDXGIAdapter->GetDesc1(&desc);
+        RE_DEBUG("  - {}", wstring_to_string(desc.Description).c_str());
 
-        if (desc.VendorId == 0x1414) //MS software GPU
-        {
-            pDXGIAdapter->Release();
-            continue;
-        }
-
-        if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) &&
-            SUCCEEDED(D3D12CreateDevice(pDXGIAdapter, minimumFeatureLevel, _uuidof(ID3D12Device), nullptr)))
-        {
-            break;
-        }
-
-        pDXGIAdapter->Release();
+        adapters.push_back(pDXGIAdapter);
     }
 
-    return pDXGIAdapter;
+    auto selectedAdapter = eastl::find_if(adapters.begin(), adapters.end(), [=](IDXGIAdapter1* adapter)
+        {
+            DXGI_ADAPTER_DESC1 desc;
+            adapter->GetDesc1(&desc);
+
+            bool isSoftwareGPU = desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE;
+            bool capableFeatureLevel = SUCCEEDED(D3D12CreateDevice(adapter, minimumFeatureLevel, _uuidof(ID3D12Device), nullptr));
+
+            return !isSoftwareGPU && capableFeatureLevel;
+        });
+
+    for (auto adapter : adapters)
+    {
+        if (selectedAdapter == nullptr || adapter != *selectedAdapter)
+        {
+            adapter->Release();
+        }
+    }
+
+    return selectedAdapter == nullptr ? nullptr : *selectedAdapter;
 }
 
 D3D12Device::D3D12Device(const GfxDeviceDesc& desc)
@@ -373,8 +385,8 @@ bool D3D12Device::Init()
         break;
     }
 
-    RE_TRACE("Vendor : {}", magic_enum::enum_name(m_vendor));
-    RE_TRACE("GPU : {}", wstring_to_string(adapterDesc.Description).c_str());
+    RE_INFO("Vendor : {}", magic_enum::enum_name(m_vendor));
+    RE_INFO("GPU : {}", wstring_to_string(adapterDesc.Description).c_str());
 
     if (m_vendor == GfxVendor::AMD)
     {
