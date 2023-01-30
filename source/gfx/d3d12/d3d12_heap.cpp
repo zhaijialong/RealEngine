@@ -1,6 +1,7 @@
 #include "d3d12_heap.h"
 #include "d3d12_device.h"
 #include "d3d12ma/D3D12MemAlloc.h"
+#include "utils/log.h"
 
 D3D12Heap::D3D12Heap(D3D12Device* pDevice, const GfxHeapDesc& desc, const eastl::string& name)
 {
@@ -41,6 +42,7 @@ bool D3D12Heap::Create()
     HRESULT hr = pAllocator->AllocateMemory(&allocationDesc, &allocationInfo, &m_pAllocation);
     if (FAILED(hr))
     {
+        RE_ERROR("[D3D12Heap] failed to create {}", m_name);
         return false;
     }
 

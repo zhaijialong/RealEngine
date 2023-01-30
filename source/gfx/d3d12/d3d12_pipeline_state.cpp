@@ -1,6 +1,7 @@
 #include "d3d12_pipeline_state.h"
 #include "d3d12_device.h"
 #include "d3d12_shader.h"
+#include "utils/log.h"
 
 template<class T>
 inline bool has_rt_binding(const T& desc)
@@ -59,6 +60,7 @@ bool D3D12GraphicsPipelineState::Create()
     ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
     if (FAILED(pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState))))
     {
+        RE_ERROR("[D3D12GraphicsPipelineState] failed to create {}", m_name);
         return false;
     }
 
@@ -97,6 +99,7 @@ bool D3D12ComputePipelineState::Create()
     ID3D12Device* pDevice = (ID3D12Device*)m_pDevice->GetHandle();
     if (FAILED(pDevice->CreateComputePipelineState(&desc, IID_PPV_ARGS(&pipelineState))))
     {
+        RE_ERROR("[D3D12ComputePipelineState] failed to create {}", m_name);
         return false;
     }
 
@@ -166,6 +169,7 @@ bool D3D12MeshShadingPipelineState::Create()
     HRESULT hr = pDevice->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState));
     if (FAILED(hr))
     {
+        RE_ERROR("[D3D12MeshShadingPipelineState] failed to create {}", m_name);
         return false;
     }
 

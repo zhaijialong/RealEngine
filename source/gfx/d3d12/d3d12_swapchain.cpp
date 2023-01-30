@@ -2,7 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12_texture.h"
 #include "utils/assert.h"
-#include "utils/fmt.h"
+#include "utils/log.h"
 
 D3D12Swapchain::D3D12Swapchain(D3D12Device* pDevice, const GfxSwapchainDesc& desc, const eastl::string& name)
 {
@@ -68,6 +68,7 @@ bool D3D12Swapchain::Resize(uint32_t width, uint32_t height)
     HRESULT hr = m_pSwapChain->ResizeBuffers(m_desc.backbuffer_count, width, height, desc.BufferDesc.Format, desc.Flags);
     if (!SUCCEEDED(hr))
     {
+        RE_ERROR("[D3D12Swapchain] failed to resize {}", m_name);
         return false;
     }
 
@@ -113,6 +114,7 @@ bool D3D12Swapchain::Create()
 
     if (FAILED(hr))
     {
+        RE_ERROR("[D3D12Swapchain] failed to create {}", m_name);
         return false;
     }
 

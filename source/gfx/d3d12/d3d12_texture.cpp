@@ -3,6 +3,7 @@
 #include "d3d12_heap.h"
 #include "d3d12ma/D3D12MemAlloc.h"
 #include "utils/assert.h"
+#include "utils/log.h"
 
 D3D12Texture::D3D12Texture(D3D12Device* pDevice, const GfxTextureDesc& desc, const eastl::string& name)
 {
@@ -81,6 +82,7 @@ bool D3D12Texture::Create()
 
     if (FAILED(hr))
     {
+        RE_ERROR("[D3D12Texture] failed to create {}", m_name);
         return false;
     }
 

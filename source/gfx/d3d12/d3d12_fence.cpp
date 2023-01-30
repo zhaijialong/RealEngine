@@ -1,5 +1,6 @@
 #include "d3d12_fence.h"
 #include "d3d12_device.h"
+#include "utils/log.h"
 
 D3D12Fence::D3D12Fence(D3D12Device* pDevice, const eastl::string& name)
 {
@@ -36,6 +37,7 @@ bool D3D12Fence::Create()
     HRESULT hr = pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_pFence));
     if (FAILED(hr))
     {
+        RE_ERROR("[D3D12Fence] failed to create {}", m_name);
         return false;
     }
 

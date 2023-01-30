@@ -183,6 +183,7 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
     pResults->GetStatus(&hr);
     if (FAILED(hr))
     {
+        RE_ERROR("[ShaderCompiler] failed to compile shader : {}, {}", file, entry_point);
         return false;
     }
 

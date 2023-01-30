@@ -2,6 +2,7 @@
 #include "d3d12_device.h"
 #include "d3d12_heap.h"
 #include "d3d12ma/D3D12MemAlloc.h"
+#include "utils/log.h"
 
 D3D12Buffer::D3D12Buffer(D3D12Device* pDevice, const GfxBufferDesc& desc, const eastl::string& name)
 {
@@ -71,6 +72,7 @@ bool D3D12Buffer::Create()
 
     if (FAILED(hr))
     {
+        RE_ERROR("[D3D12Buffer] failed to create {}", m_name);
         return false;
     }
 

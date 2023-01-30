@@ -22,10 +22,16 @@ void pix::Init()
 
 void pix::BeginEvent(ID3D12GraphicsCommandList* pCommandList, const char* event)
 {
-    pixBeginEventOnCommandList(pCommandList, 0, event);
+    if (pixBeginEventOnCommandList)
+    {
+        pixBeginEventOnCommandList(pCommandList, 0, event);
+    }
 }
 
 void pix::EndEvent(ID3D12GraphicsCommandList* pCommandList)
 {
-    pixEndEventOnCommandList(pCommandList);
+    if (pixEndEventOnCommandList)
+    {
+        pixEndEventOnCommandList(pCommandList);
+    }
 }
