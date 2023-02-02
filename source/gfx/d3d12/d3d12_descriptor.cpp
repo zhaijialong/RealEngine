@@ -309,7 +309,7 @@ bool D3D12Sampler::Create()
     samplerDesc.AddressW = d3d12_address_mode(m_desc.address_w);
     samplerDesc.MipLODBias = m_desc.mip_bias;
     samplerDesc.MaxAnisotropy = (UINT)m_desc.max_anisotropy;
-    samplerDesc.ComparisonFunc = d3d12_compare_func(m_desc.compare_func);
+    samplerDesc.ComparisonFunc = m_desc.reduction_mode == GfxSamplerReductionMode::Compare ? d3d12_compare_func(m_desc.compare_func) : D3D12_COMPARISON_FUNC_NONE;
     samplerDesc.MinLOD = m_desc.min_lod;
     samplerDesc.MaxLOD = m_desc.max_lod;
     memcpy(samplerDesc.BorderColor, m_desc.border_color, sizeof(float) * 4);

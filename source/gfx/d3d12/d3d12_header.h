@@ -373,7 +373,7 @@ inline D3D12_COMPARISON_FUNC d3d12_compare_func(GfxCompareFunc func)
     case GfxCompareFunc::Always:
         return D3D12_COMPARISON_FUNC_ALWAYS;
     default:
-        return D3D12_COMPARISON_FUNC_ALWAYS;
+        return D3D12_COMPARISON_FUNC_NONE;
     }
 }
 
