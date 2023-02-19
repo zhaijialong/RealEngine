@@ -40,6 +40,8 @@ float3 ApplyToneMapping(float3 color)
     return ACESFitted(color);
 #elif NEUTRAL
     return neutral_tonemap(color);
+#elif TONY_MC_MAPFACE
+    return tony_mc_mapface(color);
 #endif
 }
 

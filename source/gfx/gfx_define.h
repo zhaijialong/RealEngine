@@ -45,6 +45,7 @@ enum class GfxFormat
     RGB32UI,
     RGB32SI,
     R11G11B10F,
+    RGB9E5,
 
     RG32F,
     RG32UI,

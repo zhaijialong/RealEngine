@@ -321,6 +321,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.preintegratedGFTexture = m_pPreintegratedGFTexture->GetSRV()->GetHeapIndex();
     sceneCB.blueNoiseTexture = m_pBlueNoise->GetSRV()->GetHeapIndex();
     sceneCB.sheenETexture = m_pSheenETexture->GetSRV()->GetHeapIndex();
+    sceneCB.tonyMcMapfaceTexture = m_pTonyMcMapface->GetSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
     sceneCB.frameIndex = (uint32_t)GetFrameID();
     sceneCB.mipBias = m_mipBias;
@@ -664,6 +665,7 @@ void Renderer::CreateCommonResources()
     eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
     m_pPreintegratedGFTexture.reset(CreateTexture2D(asset_path + "textures/PreintegratedGF.dds", false));
     m_pSheenETexture.reset(CreateTexture2D(asset_path + "textures/Sheen_ash_E.dds", false));
+    m_pTonyMcMapface.reset(CreateTexture3D(asset_path + "textures/tony_mc_mapface/tony_mc_mapface.dds", false));
 
     m_pMarschnerHairLUT = eastl::make_unique<MarschnerHairLUT>(this);
     m_pMarschnerHairLUT->Generate();

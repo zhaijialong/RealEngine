@@ -21,8 +21,9 @@ private:
     {
         Neutral,
         ACES,
+        TonyMcMapface,
     };
-    TonemappingMode m_mode = TonemappingMode::Neutral;
+    TonemappingMode m_mode = TonemappingMode::TonyMcMapface;
 
     bool m_bEnableDither = true;
 };

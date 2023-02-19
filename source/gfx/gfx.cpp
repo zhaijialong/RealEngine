@@ -85,6 +85,7 @@ uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width)
     case GfxFormat::BGRA8SRGB:
     case GfxFormat::RGB10A2UNORM:
     case GfxFormat::R11G11B10F:
+    case GfxFormat::RGB9E5:
         return width * 4;
     case GfxFormat::RG32F:
     case GfxFormat::RG32UI:

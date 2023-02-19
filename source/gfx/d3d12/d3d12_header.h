@@ -122,6 +122,8 @@ inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false, bool ua
         return DXGI_FORMAT_R32G32B32_SINT;
     case GfxFormat::R11G11B10F:
         return DXGI_FORMAT_R11G11B10_FLOAT;
+    case GfxFormat::RGB9E5:
+        return DXGI_FORMAT_R9G9B9E5_SHAREDEXP;
     case GfxFormat::RG32F:
         return DXGI_FORMAT_R32G32_FLOAT;
     case GfxFormat::RG32UI:

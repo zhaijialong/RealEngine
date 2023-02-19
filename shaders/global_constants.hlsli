@@ -135,6 +135,7 @@ struct SceneConstant
     uint skyDiffuseIBLTexture;
 
     uint sheenETexture;
+    uint tonyMcMapfaceTexture;
     uint marschnerTextureM;
     uint marschnerTextureN;
 };

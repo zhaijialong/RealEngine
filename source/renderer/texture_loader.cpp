@@ -60,6 +60,8 @@ static inline GfxFormat get_texture_format(ddspp::DXGIFormat format, bool srgb)
         return srgb ? GfxFormat::BGRA8SRGB : GfxFormat::BGRA8UNORM;
     case ddspp::B8G8R8A8_UNORM_SRGB:
         return GfxFormat::BGRA8SRGB;
+    case ddspp::R9G9B9E5_SHAREDEXP:
+        return GfxFormat::RGB9E5;
     case ddspp::R32G32_FLOAT:
         return GfxFormat::RG32F;
     case ddspp::R32G32_UINT:

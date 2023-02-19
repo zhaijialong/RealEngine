@@ -73,3 +73,19 @@ float3 neutral_tonemap(float3 col)
 
     return col * final_mult;
 }
+
+//https://github.com/h3r2tic/tony-mc-mapface/blob/main/shader/tony_mc_mapface.hlsl
+float3 tony_mc_mapface(float3 stimulus) 
+{
+    // Apply a non-linear transform that the LUT is encoded with.
+    const float3 encoded = stimulus / (stimulus + 1.0);
+
+    // Align the encoded range to texel centers.
+    const float LUT_DIMS = 48.0;
+    const float3 uv = encoded * ((LUT_DIMS - 1.0) / LUT_DIMS) + 0.5 / LUT_DIMS;
+
+    Texture3D tony_mc_mapface_lut = ResourceDescriptorHeap[SceneCB.tonyMcMapfaceTexture];
+    SamplerState sampler_linear_clamp = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
+
+    return tony_mc_mapface_lut.SampleLevel(sampler_linear_clamp, uv, 0);
+}
