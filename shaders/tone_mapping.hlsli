@@ -87,5 +87,5 @@ float3 tony_mc_mapface(float3 stimulus)
     Texture3D tony_mc_mapface_lut = ResourceDescriptorHeap[SceneCB.tonyMcMapfaceTexture];
     SamplerState sampler_linear_clamp = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
-    return tony_mc_mapface_lut.SampleLevel(sampler_linear_clamp, uv, 0);
+    return tony_mc_mapface_lut.SampleLevel(sampler_linear_clamp, uv, 0).xyz;
 }
