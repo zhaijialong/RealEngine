@@ -5,9 +5,9 @@
 #include "nvsdk_ngx_helpers.h"
 
 #ifdef _DEBUG
-#pragma comment(lib, "external/DLSS/lib/Windows_x86_64/x86_64/nvsdk_ngx_d_dbg.lib")
+#pragma comment(lib, "nvsdk_ngx_d_dbg.lib")
 #else
-#pragma comment(lib, "external/DLSS/lib/Windows_x86_64/x86_64/nvsdk_ngx_d.lib")
+#pragma comment(lib, "nvsdk_ngx_d.lib")
 #endif
 
 #define APP_ID 231313132

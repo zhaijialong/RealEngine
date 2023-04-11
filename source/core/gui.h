@@ -26,5 +26,5 @@ private:
     eastl::unique_ptr<StructuredBuffer> m_pVertexBuffer[GFX_MAX_INFLIGHT_FRAMES];
     eastl::unique_ptr<IndexBuffer> m_pIndexBuffer[GFX_MAX_INFLIGHT_FRAMES];
 
-    std::vector<eastl::function<void()>> m_commands;
+    eastl::vector<eastl::function<void()>> m_commands;
 };

@@ -4,7 +4,7 @@
 #include "utils/log.h"
 #include "xess/xess_d3d12.h"
 
-#pragma comment(lib, "external/xess/lib/libxess.lib")
+#pragma comment(lib, "libxess.lib")
 
 static void XeSSLog(const char* message, xess_logging_level_t logging_level)
 {
