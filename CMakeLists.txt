@@ -7,6 +7,10 @@ if(MSVC)
     add_definitions(/MP)
     add_definitions(-DUNICODE)
     add_definitions(-D_UNICODE)
+    
+    # todo : why /Ob2 not working ?
+    string(REPLACE "/Ob2" "/Ob1" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
+    string(REPLACE "/Ob2" "/Ob1" CMAKE_C_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
 endif()
 
 set(REAL_ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
