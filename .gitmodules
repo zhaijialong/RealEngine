@@ -4,3 +4,6 @@
 [submodule "external/xess"]
 	path = external/xess
 	url = https://github.com/intel/xess.git
+[submodule "external/RayTracingDenoiser"]
+	path = external/RayTracingDenoiser
+	url = https://github.com/zhaijialong/RayTracingDenoiser.git

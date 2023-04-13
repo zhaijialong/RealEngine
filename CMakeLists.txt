@@ -14,15 +14,29 @@ if(MSVC)
 endif()
 
 set(REAL_ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${REAL_ENGINE_ROOT}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${REAL_ENGINE_ROOT}/bin)
+
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${REAL_ENGINE_ROOT}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${REAL_ENGINE_ROOT}/bin)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 include(${REAL_ENGINE_ROOT}/source/source.cmake)
 include(${REAL_ENGINE_ROOT}/shaders/shaders.cmake)
 include(${REAL_ENGINE_ROOT}/external/external.cmake)
 
+# NRD
+set(DXC_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
+set(DXC_SPIRV_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
+set(NRD_STATIC_LIBRARY ON)
+set(NRD_SHADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD_Shaders)
+set(GLOBAL_BIN_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD)
+add_subdirectory(${EXTERNAL_ROOT}/RayTracingDenoiser)	
+set_target_properties(NRD PROPERTIES FOLDER	External)
+set_target_properties(NRD_Shaders PROPERTIES FOLDER External)
+set_target_properties(ShaderMake PROPERTIES FOLDER External)
+set_target_properties(ShaderMakeBlob PROPERTIES FOLDER External)
+
+# RealEngine
 add_executable(RealEngine WIN32 ${ENGINE_SRC_FILES} ${EXTERNAL_FILES} ${SHADER_FILES})
 target_include_directories(RealEngine PUBLIC 
     ${SOURCE_ROOT}
@@ -48,7 +62,7 @@ target_compile_definitions(RealEngine PUBLIC
     _CRT_SECURE_NO_WARNINGS
     NOMINMAX
 )
-target_link_libraries(RealEngine ws2_32)
+target_link_libraries(RealEngine ws2_32 NRD)
 
 add_custom_command(
     TARGET RealEngine POST_BUILD
