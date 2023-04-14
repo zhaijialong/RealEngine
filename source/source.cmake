@@ -59,12 +59,16 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/lighting/clustered_shading.h
     ${SOURCE_ROOT}/renderer/lighting/gi_denoiser.cpp
     ${SOURCE_ROOT}/renderer/lighting/gi_denoiser.h
+    ${SOURCE_ROOT}/renderer/lighting/gi_denoiser_nrd.cpp
+    ${SOURCE_ROOT}/renderer/lighting/gi_denoiser_nrd.h
     ${SOURCE_ROOT}/renderer/lighting/gtao.cpp
     ${SOURCE_ROOT}/renderer/lighting/gtao.h
     ${SOURCE_ROOT}/renderer/lighting/hybrid_stochastic_reflection.cpp
     ${SOURCE_ROOT}/renderer/lighting/hybrid_stochastic_reflection.h
     ${SOURCE_ROOT}/renderer/lighting/lighting_processor.cpp
     ${SOURCE_ROOT}/renderer/lighting/lighting_processor.h
+    ${SOURCE_ROOT}/renderer/lighting/nrd_integration.cpp
+    ${SOURCE_ROOT}/renderer/lighting/nrd_integration.h
     ${SOURCE_ROOT}/renderer/lighting/ray_traced_shadow.cpp
     ${SOURCE_ROOT}/renderer/lighting/ray_traced_shadow.h
     ${SOURCE_ROOT}/renderer/lighting/reflection_denoiser.cpp

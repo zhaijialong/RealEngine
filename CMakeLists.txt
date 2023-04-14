@@ -7,6 +7,7 @@ if(MSVC)
     add_definitions(/MP)
     add_definitions(-DUNICODE)
     add_definitions(-D_UNICODE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     
     # todo : why /Ob2 not working ?
     string(REPLACE "/Ob2" "/Ob1" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
@@ -49,6 +50,7 @@ target_include_directories(RealEngine PUBLIC
     ${EXTERNAL_ROOT}/rpmalloc
     ${EXTERNAL_ROOT}/DLSS/include
     ${EXTERNAL_ROOT}/xess/inc
+    ${EXTERNAL_ROOT}/RayTracingDenoiser/Include
 )
 target_link_directories(RealEngine PUBLIC
     ${EXTERNAL_ROOT}/DLSS/lib/Windows_x86_64/x86_64

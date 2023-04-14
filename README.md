@@ -53,3 +53,4 @@ tested on RX6600(win11, Adrenalin 22.10.01.03)
 
 * [DLSS](https://github.com/NVIDIA/DLSS/blob/main/LICENSE.txt)
 * [XeSS](https://github.com/intel/xess/blob/main/licenses/LICENSE.pdf)
+* [NRD](https://github.com/NVIDIAGameWorks/RayTracingDenoiser/blob/master/LICENSE.txt)
