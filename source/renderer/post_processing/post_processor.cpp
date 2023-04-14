@@ -1,4 +1,14 @@
 #include "post_processor.h"
+#include "taa.h"
+#include "automatic_exposure.h"
+#include "bloom.h"
+#include "tonemapper.h"
+#include "fxaa.h"
+#include "cas.h"
+#include "fsr2.h"
+#include "dlss.h"
+#include "xess.h"
+
 #include "../renderer.h"
 #include "utils/gui_util.h"
 
@@ -16,6 +26,8 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
     m_pDLSS = eastl::make_unique<DLSS>(pRenderer);
     m_pXeSS = eastl::make_unique<XeSS>(pRenderer);
 }
+
+PostProcessor::~PostProcessor() = default;
 
 RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT,
     RGHandle linearDepthRT, RGHandle velocityRT, 

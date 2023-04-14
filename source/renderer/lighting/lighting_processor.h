@@ -1,15 +1,12 @@
 #pragma once
 
-#include "gtao.h"
-#include "ray_traced_shadow.h"
-#include "clustered_shading.h"
-#include "hybrid_stochastic_reflection.h"
-#include "restir_gi.h"
+#include "../render_graph.h"
 
 class LightingProcessor
 {
 public:
     LightingProcessor(Renderer* pRenderer);
+    ~LightingProcessor();
 
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height);
     
@@ -22,9 +19,9 @@ private:
 private:
     Renderer* m_pRenderer;
 
-    eastl::unique_ptr<GTAO> m_pGTAO;
-    eastl::unique_ptr<RTShadow> m_pRTShdow;
-    eastl::unique_ptr<HybridStochasticReflection> m_pReflection;
-    eastl::unique_ptr<ReSTIRGI> m_pReSTIRGI;
-    eastl::unique_ptr<ClusteredShading> m_pClusteredShading;
+    eastl::unique_ptr<class GTAO> m_pGTAO;
+    eastl::unique_ptr<class RTShadow> m_pRTShdow;
+    eastl::unique_ptr<class HybridStochasticReflection> m_pReflection;
+    eastl::unique_ptr<class ReSTIRGI> m_pReSTIRGI;
+    eastl::unique_ptr<class ClusteredShading> m_pClusteredShading;
 };

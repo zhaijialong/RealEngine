@@ -1,4 +1,9 @@
 #include "lighting_processor.h"
+#include "gtao.h"
+#include "ray_traced_shadow.h"
+#include "clustered_shading.h"
+#include "hybrid_stochastic_reflection.h"
+#include "restir_gi.h"
 #include "../renderer.h"
 #include "../base_pass.h"
 
@@ -12,6 +17,8 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
     m_pReflection = eastl::make_unique<HybridStochasticReflection>(pRenderer);
     m_pReSTIRGI = eastl::make_unique<ReSTIRGI>(pRenderer);
 }
+
+LightingProcessor::~LightingProcessor() = default;
 
 RGHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height)
 {

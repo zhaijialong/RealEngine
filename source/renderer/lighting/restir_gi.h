@@ -1,15 +1,17 @@
 #pragma once
 
-#include "gi_denoiser.h"
+#include "../render_graph.h"
+#include "../resource/texture_2d.h"
 
 class ReSTIRGI
 {
 public:
     ReSTIRGI(Renderer* pRenderer);
+    ~ReSTIRGI();
 
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
-    IGfxDescriptor* GetOutputIrradianceSRV() const { return m_pDenoiser->GetHistoryIrradianceSRV(); }
+    IGfxDescriptor* GetOutputIrradianceSRV() const;
 
 private:
     void InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, RGTexture* outputRayDirection, uint32_t width, uint32_t height);
@@ -41,9 +43,18 @@ private:
 
     TemporalReservoirBuffer m_temporalReservoir[2];
 
-    eastl::unique_ptr<GIDenoiser> m_pDenoiser;
+    eastl::unique_ptr<class GIDenoiser> m_pDenoiser;
+    eastl::unique_ptr<class GIDenoiserNRD> m_pDenoiserNRD;
 
     bool m_bEnable = true;
     bool m_bEnableReSTIR = true;
-    bool m_bEnableDenoiser = true;
+
+    enum class DenoiserType
+    {
+        NRD,
+        Custom,
+        None
+    };
+
+    DenoiserType m_denoiserType = DenoiserType::Custom;
 };

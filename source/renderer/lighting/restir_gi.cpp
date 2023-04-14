@@ -1,4 +1,6 @@
 #include "restir_gi.h"
+#include "gi_denoiser.h"
+#include "gi_denoiser_nrd.h"
 #include "../renderer.h"
 #include "utils/gui_util.h"
 #include "utils/fmt.h"
@@ -18,7 +20,10 @@ ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
     m_pSpatialResamplingPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/spatial resampling PSO");
 
     m_pDenoiser = eastl::make_unique<GIDenoiser>(pRenderer);
+    m_pDenoiserNRD = eastl::make_unique<GIDenoiserNRD>(pRenderer);
 }
+
+ReSTIRGI::~ReSTIRGI() = default;
 
 RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {
@@ -36,7 +41,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
                 ResetTemporalBuffers();
             }
             
-            if (ImGui::Checkbox("Enable Denoiser##ReSTIR GI", &m_bEnableDenoiser))
+            if(ImGui::Combo("Denoiser##ReSTIR GI", (int*)&m_denoiserType, "NRD\0Custom\0None\0\0", 3))
             {
                 m_pDenoiser->InvalidateHistory();
             }
@@ -68,7 +73,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             data.halfDepthNormal = builder.Read(halfDepthNormal);
             data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
 
-            if (m_bEnableDenoiser)
+            if (m_denoiserType == DenoiserType::Custom)
             {
                 m_pDenoiser->ImportHistoryTextures(pRenderGraph, width, height);
                 data.historyIrradiance = builder.Read(m_pDenoiser->GetHistoryIrradiance());
@@ -258,7 +263,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             desc.width = width;
             desc.height = height;
 
-            if (m_bEnableDenoiser)
+            if (m_denoiserType == DenoiserType::Custom)
             {
                 desc.format = GfxFormat::RGBA32UI;
                 data.output = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/resolve output SH"));
@@ -286,12 +291,17 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
                 width, height);
         });
 
-    if (!m_bEnableDenoiser)
+    if (m_denoiserType == DenoiserType::None)
     {
         return resolve_pass->output;
     }
 
     return m_pDenoiser->Render(pRenderGraph, resolve_pass->output, resolve_pass->outputVariance, depth, linear_depth, normal, velocity, width, height);
+}
+
+IGfxDescriptor* ReSTIRGI::GetOutputIrradianceSRV() const
+{
+    return m_pDenoiser->GetHistoryIrradianceSRV();
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, RGTexture* outputRayDirection, uint32_t width, uint32_t height)
@@ -310,7 +320,7 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDep
     CB constants;
     constants.halfDepthNormalTexture = halfDepthNormal->GetSRV()->GetHeapIndex();
     constants.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
-    constants.historyIrradiance = m_bEnableDenoiser ? m_pDenoiser->GetHistoryIrradianceSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    constants.historyIrradiance = m_denoiserType == DenoiserType::Custom ? m_pDenoiser->GetHistoryIrradianceSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
     constants.outputRadianceUAV = outputRadiance->GetUAV()->GetHeapIndex();
     constants.outputRayDirectionUAV = outputRayDirection->GetUAV()->GetHeapIndex();
 
@@ -401,7 +411,7 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTe
         defines.push_back("ENABLE_RESTIR=1");
     }
 
-    if (m_bEnableDenoiser)
+    if (m_denoiserType == DenoiserType::Custom)
     {
         defines.push_back("OUTPUT_SH=1");
     }
