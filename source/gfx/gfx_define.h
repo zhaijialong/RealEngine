@@ -39,6 +39,7 @@ enum class GfxFormat
     RGBA8SRGB,
     BGRA8UNORM,
     BGRA8SRGB,
+    RGB10A2UI,
     RGB10A2UNORM,
 
     RGB32F,

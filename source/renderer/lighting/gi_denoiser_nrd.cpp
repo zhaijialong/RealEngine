@@ -3,6 +3,8 @@
 #include "utils/gui_util.h"
 #include "../renderer.h"
 
+static const nrd::Method NRDMethod = nrd::Method::REBLUR_DIFFUSE; //todo : REBLUR_DIFFUSE_SH
+
 GIDenoiserNRD::GIDenoiserNRD(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
@@ -17,6 +19,24 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, uin
 {
     CreateReblurDenoiser(width, height);
 
+    struct ReblurData
+    {
+
+    };
+
+    auto reblur_pass = pRenderGraph->AddPass<ReblurData>("ReBLUR Denoiser", RenderPassType::Compute,
+        [&](ReblurData& data, RGBuilder& builder)
+        {
+            builder.SkipCulling(); //todo
+        },
+        [=](const ReblurData& data, IGfxCommandList* pCommandList)
+        {
+            nrd::CommonSettings commonSettings = {};
+            nrd::ReblurSettings reblurSettings = {};
+
+            m_pReblur->SetMethodSettings(NRDMethod, &reblurSettings);
+            m_pReblur->Denoise(pCommandList, commonSettings);
+        });
 
     return radiance;
 }
@@ -34,8 +54,7 @@ void GIDenoiserNRD::CreateReblurDenoiser(uint32_t width, uint32_t height)
 
         const nrd::MethodDesc methodDescs[] =
         {
-            //{ nrd::Method::REBLUR_DIFFUSE_SH, (uint16_t)width, (uint16_t)height },
-            { nrd::Method::REBLUR_DIFFUSE, (uint16_t)width, (uint16_t)height },
+            { NRDMethod, (uint16_t)width, (uint16_t)height },
         };
 
         nrd::DenoiserCreationDesc desc = {};
