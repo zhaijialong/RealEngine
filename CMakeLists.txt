@@ -28,7 +28,6 @@ include(${REAL_ENGINE_ROOT}/external/external.cmake)
 # NRD
 set(DXC_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
 set(DXC_SPIRV_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
-set(NRD_STATIC_LIBRARY ON)
 set(NRD_SHADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD_Shaders)
 set(GLOBAL_BIN_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD)
 add_subdirectory(${EXTERNAL_ROOT}/RayTracingDenoiser)	
