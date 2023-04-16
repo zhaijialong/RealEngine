@@ -40,13 +40,26 @@ bool Texture2D::Create(uint32_t width, uint32_t height, uint32_t levels, GfxForm
 
     if (flags & GfxTextureUsageUnorderedAccess)
     {
-        GfxUnorderedAccessViewDesc uavDesc;
-        m_pUAV.reset(pDevice->CreateUnorderedAccessView(m_pTexture.get(), uavDesc, m_name));
-        if (m_pUAV == nullptr)
+        for (uint32_t i = 0; i < levels; ++i)
         {
-            return false;
+            GfxUnorderedAccessViewDesc uavDesc;
+            uavDesc.texture.mip_slice = i;
+
+            IGfxDescriptor* uav = pDevice->CreateUnorderedAccessView(m_pTexture.get(), uavDesc, m_name);
+            if (uav == nullptr)
+            {
+                return false;
+            }
+
+            m_UAVs.emplace_back(uav);
         }
+
     }
 
     return true;
+}
+
+IGfxDescriptor* Texture2D::GetUAV(uint32_t mip) const
+{
+    return m_UAVs[mip].get();
 }

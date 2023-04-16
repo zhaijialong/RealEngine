@@ -7,6 +7,15 @@ struct NRDIntegrationTexture
 {
     eastl::unique_ptr<Texture2D> texture;
     eastl::vector<GfxResourceState> states;
+
+    void SetResourceSate(IGfxCommandList* pCommandList, uint32_t mip, GfxResourceState state)
+    {
+        if (states[mip] != state)
+        {
+            pCommandList->ResourceBarrier(texture->GetTexture(), mip, states[mip], state);
+            states[mip] = state;
+        }
+    }
 };
 
 class NRDIntegration

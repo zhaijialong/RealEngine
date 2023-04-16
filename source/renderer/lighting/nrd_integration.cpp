@@ -2,6 +2,29 @@
 #include "../renderer.h"
 #include "../../utils/fmt.h"
 
+//must match with NRD.hlsli : cbuffer globalHeapIndices : register(b1)
+struct ResourceIndices
+{
+    uint4 gInputTextureIndices[7];
+    uint4 gOutputTextureIndices[4];
+    uint4 gSamplerIndices;
+
+    void SetInputTexture(uint32_t bindingIndex, IGfxDescriptor* srv)
+    {
+        gInputTextureIndices[bindingIndex / 7][bindingIndex % 4] = srv->GetHeapIndex();
+    }
+
+    void SetOutputTexture(uint32_t bindingIndex, IGfxDescriptor* uav)
+    {
+        gOutputTextureIndices[bindingIndex / 4][bindingIndex % 4] = uav->GetHeapIndex();
+    }
+
+    void SetSampler(uint32_t bindingIndex, IGfxDescriptor* sampler)
+    {
+        gSamplerIndices[bindingIndex % 4] = sampler->GetHeapIndex();
+    }
+};
+
 static inline GfxFormat GetFormat(nrd::Format format)
 {
     switch (format)
@@ -292,6 +315,67 @@ void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::Dispatch
 
     IGfxPipelineState* pso = m_pipelines[dispatchDesc.pipelineIndex].get();
     pCommandList->SetPipelineState(pso);
+
+    ResourceIndices resources = {};
+
+    uint32_t n = 0;
+    for (uint32_t i = 0; i < pipelineDesc.resourceRangesNum; i++)
+    {
+        const nrd::ResourceRangeDesc& resourceRange = pipelineDesc.resourceRanges[i];
+        const bool isStorage = resourceRange.descriptorType == nrd::DescriptorType::STORAGE_TEXTURE;
+
+        for (uint32_t j = 0; j < resourceRange.descriptorsNum; j++)
+        {
+            const nrd::ResourceDesc& nrdResource = dispatchDesc.resources[n++];
+            IGfxDescriptor* descriptor = nullptr;
+
+            if (nrdResource.type == nrd::ResourceType::TRANSIENT_POOL || nrdResource.type == nrd::ResourceType::PERMANENT_POOL)
+            {
+                NRDIntegrationTexture* nrdTexture = nullptr;
+                if (nrdResource.type == nrd::ResourceType::TRANSIENT_POOL)
+                {
+                    nrdTexture = &m_textures[nrdResource.indexInPool + denoiserDesc.permanentPoolSize];
+                }
+                else if (nrdResource.type == nrd::ResourceType::PERMANENT_POOL)
+                {
+                    nrdTexture = &m_textures[nrdResource.indexInPool];
+                }
+
+                nrdTexture->SetResourceSate(pCommandList, nrdResource.mipOffset,
+                    nrdResource.stateNeeded == nrd::DescriptorType::STORAGE_TEXTURE ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
+
+                if (isStorage)
+                {
+                    descriptor = nrdTexture->texture->GetUAV(nrdResource.mipOffset);
+                }
+                else
+                {
+                    RE_ASSERT(nrdResource.mipOffset == 0); //Texture2D doesn't have SRVs for a specific mip level now
+                    descriptor = nrdTexture->texture->GetSRV();
+                }
+            }
+            else
+            {
+                //todo : user pool
+            }
+
+            if (isStorage)
+            {
+                resources.SetOutputTexture(resourceRange.baseRegisterIndex + j, descriptor);
+            }
+            else
+            {
+                resources.SetInputTexture(resourceRange.baseRegisterIndex + j, descriptor);
+            }
+        }
+    }
+
+    for (size_t i = 0; i < m_samplers.size(); ++i)
+    {
+        resources.SetSampler(i, m_samplers[i].get());
+    }
+
+    pCommandList->SetComputeConstants(1, &resources, sizeof(resources));
 
     if (dispatchDesc.constantBufferDataSize > 0)
     {

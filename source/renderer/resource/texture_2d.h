@@ -14,12 +14,12 @@ public:
 
     IGfxTexture* GetTexture() const { return m_pTexture.get(); }
     IGfxDescriptor* GetSRV() const { return m_pSRV.get(); }
-    IGfxDescriptor* GetUAV() const { return m_pUAV.get(); }
+    IGfxDescriptor* GetUAV(uint32_t mip = 0) const;
 
 protected:
     eastl::string m_name;
 
     eastl::unique_ptr<IGfxTexture> m_pTexture;
     eastl::unique_ptr<IGfxDescriptor> m_pSRV;
-    eastl::unique_ptr<IGfxDescriptor> m_pUAV;
+    eastl::vector<eastl::unique_ptr<IGfxDescriptor>> m_UAVs;
 };
