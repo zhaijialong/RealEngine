@@ -20,6 +20,7 @@ public:
     const float3& GetRotation() const { return m_rotation; }
 
     const float4x4& GetViewMatrix() const { return m_view; }
+    const float4x4& GetPrevViewMatrix() const { return m_prevView; }
     const float4x4& GetProjectionMatrix() const { return m_projectionJitter; }
     const float4x4& GetViewProjectionMatrix() const { return m_viewProjectionJitter; }
 

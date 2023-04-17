@@ -296,7 +296,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
 
     if (m_denoiserType == DenoiserType::NRD)
     {
-        return m_pDenoiserNRD->Render(pRenderGraph, resolve_pass->output, width, height);
+        return m_pDenoiserNRD->Render(pRenderGraph, resolve_pass->output, normal, linear_depth, velocity, width, height);
     }
     else if (m_denoiserType == DenoiserType::Custom)
     {

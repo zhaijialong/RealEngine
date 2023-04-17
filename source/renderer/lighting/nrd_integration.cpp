@@ -193,7 +193,7 @@ bool NRDIntegration::SetMethodSettings(nrd::Method method, const void* methodSet
     return result == nrd::Result::SUCCESS;
 }
 
-void NRDIntegration::Denoise(IGfxCommandList* pCommandList, const nrd::CommonSettings& commonSettings)
+void NRDIntegration::Denoise(IGfxCommandList* pCommandList, const nrd::CommonSettings& commonSettings, NRDUserPool& userPool)
 {
     const nrd::DispatchDesc* dispatchDescs = nullptr;
     uint32_t dispatchDescNum = 0;
@@ -203,7 +203,7 @@ void NRDIntegration::Denoise(IGfxCommandList* pCommandList, const nrd::CommonSet
     {
         const nrd::DispatchDesc& dispatchDesc = dispatchDescs[i];
 
-        Dispatch(pCommandList, dispatchDesc);
+        Dispatch(pCommandList, dispatchDesc, userPool);
     }
 }
 
@@ -253,7 +253,7 @@ void NRDIntegration::CreateTextures()
             name = fmt::format("NRD::TransientPool{}", i - denoiserDesc.permanentPoolSize).c_str();
         }
 
-        NRDIntegrationTexture texture;
+        NRDPoolTexture texture;
         texture.texture.reset(m_pRenderer->CreateTexture2D(nrdTextureDesc.width, nrdTextureDesc.height, nrdTextureDesc.mipNum, format, GfxTextureUsageUnorderedAccess, name));
         for (uint16_t i = 0; i < nrdTextureDesc.mipNum; ++i)
         {
@@ -306,7 +306,7 @@ void NRDIntegration::CreateSamplers()
     }
 }
 
-void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::DispatchDesc& dispatchDesc)
+void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::DispatchDesc& dispatchDesc, NRDUserPool& userPool)
 {
     GPU_EVENT(pCommandList, dispatchDesc.name);
 
@@ -327,11 +327,13 @@ void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::Dispatch
         for (uint32_t j = 0; j < resourceRange.descriptorsNum; j++)
         {
             const nrd::ResourceDesc& nrdResource = dispatchDesc.resources[n++];
+            GfxResourceState stateNeeded = nrdResource.stateNeeded == nrd::DescriptorType::STORAGE_TEXTURE ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS;
+
             IGfxDescriptor* descriptor = nullptr;
 
             if (nrdResource.type == nrd::ResourceType::TRANSIENT_POOL || nrdResource.type == nrd::ResourceType::PERMANENT_POOL)
             {
-                NRDIntegrationTexture* nrdTexture = nullptr;
+                NRDPoolTexture* nrdTexture = nullptr;
                 if (nrdResource.type == nrd::ResourceType::TRANSIENT_POOL)
                 {
                     nrdTexture = &m_textures[nrdResource.indexInPool + denoiserDesc.permanentPoolSize];
@@ -341,8 +343,7 @@ void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::Dispatch
                     nrdTexture = &m_textures[nrdResource.indexInPool];
                 }
 
-                nrdTexture->SetResourceSate(pCommandList, nrdResource.mipOffset,
-                    nrdResource.stateNeeded == nrd::DescriptorType::STORAGE_TEXTURE ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
+                nrdTexture->SetResourceSate(pCommandList, nrdResource.mipOffset, stateNeeded);
 
                 if (isStorage)
                 {
@@ -356,7 +357,10 @@ void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::Dispatch
             }
             else
             {
-                //todo : user pool
+                NRDUserTexture* userTexture = &userPool[(size_t)nrdResource.type];
+                userTexture->SetResourceSate(pCommandList, stateNeeded);
+
+                descriptor = isStorage ? userTexture->uav : userTexture->srv;
             }
 
             if (isStorage)
