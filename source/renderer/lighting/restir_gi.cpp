@@ -73,8 +73,12 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             data.halfDepthNormal = builder.Read(halfDepthNormal);
             data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
 
-            //todo : if (m_denoiserType == DenoiserType::NRD)
-            if (m_denoiserType == DenoiserType::Custom)
+            if (m_denoiserType == DenoiserType::NRD)
+            {
+                m_pDenoiserNRD->ImportHistoryTextures(pRenderGraph, width, height);
+                data.historyIrradiance = builder.Read(m_pDenoiserNRD->GetHistoryIrradiance());
+            }
+            else if (m_denoiserType == DenoiserType::Custom)
             {
                 m_pDenoiser->ImportHistoryTextures(pRenderGraph, width, height);
                 data.historyIrradiance = builder.Read(m_pDenoiser->GetHistoryIrradiance());
@@ -310,8 +314,14 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
 
 IGfxDescriptor* ReSTIRGI::GetOutputIrradianceSRV() const
 {
-    //todo : if (m_denoiserType == DenoiserType::NRD)
-    return m_pDenoiser->GetHistoryIrradianceSRV();
+    if (m_denoiserType == DenoiserType::NRD)
+    {
+        return m_pDenoiserNRD->GetHistoryIrradianceSRV();
+    }
+    else
+    {
+        return m_pDenoiser->GetHistoryIrradianceSRV();
+    }
 }
 
 void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDepthNormal, RGTexture* outputRadiance, RGTexture* outputRayDirection, uint32_t width, uint32_t height)
@@ -330,8 +340,18 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDep
     CB constants;
     constants.halfDepthNormalTexture = halfDepthNormal->GetSRV()->GetHeapIndex();
     constants.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
-    //todo : if (m_denoiserType == DenoiserType::NRD)
-    constants.historyIrradiance = m_denoiserType == DenoiserType::Custom ? m_pDenoiser->GetHistoryIrradianceSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    if (m_denoiserType == DenoiserType::NRD)
+    {
+        constants.historyIrradiance = m_pDenoiserNRD->GetHistoryIrradianceSRV()->GetHeapIndex();
+    }
+    else if (m_denoiserType == DenoiserType::Custom)
+    {
+        constants.historyIrradiance = m_pDenoiser->GetHistoryIrradianceSRV()->GetHeapIndex();
+    }
+    else
+    {
+        constants.historyIrradiance = GFX_INVALID_RESOURCE;
+    }
     constants.outputRadianceUAV = outputRadiance->GetUAV()->GetHeapIndex();
     constants.outputRayDirectionUAV = outputRayDirection->GetUAV()->GetHeapIndex();
 
