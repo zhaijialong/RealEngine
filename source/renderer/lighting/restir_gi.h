@@ -21,7 +21,7 @@ private:
         IGfxDescriptor* inputReservoirSampleRadiance, IGfxDescriptor* inputReservoirRayDirection, IGfxDescriptor* inputReservoir,
         RGTexture* outputReservoirSampleRadiance, RGTexture* outputReservoirRayDireciton, RGTexture* outputReservoir, uint32_t width, uint32_t height, uint32_t pass_index);
     void Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* rayDirection, RGTexture* halfDepthNormal, RGTexture* depth, RGTexture* normal,
-        RGTexture* output, RGTexture* outputVariance, uint32_t width, uint32_t height);
+        RGTexture* output, RGTexture* outputVariance, RGTexture* outputRayDirection, uint32_t width, uint32_t height);
 
     bool InitTemporalBuffers(uint32_t width, uint32_t height);
     void ResetTemporalBuffers();
@@ -56,5 +56,5 @@ private:
         None
     };
 
-    DenoiserType m_denoiserType = DenoiserType::Custom;
+    DenoiserType m_denoiserType = DenoiserType::NRD;
 };

@@ -3,7 +3,7 @@
 #include "utils/gui_util.h"
 #include "../renderer.h"
 
-static const nrd::Method NRDMethod = nrd::Method::REBLUR_DIFFUSE; //todo : REBLUR_DIFFUSE_SH
+static const nrd::Method NRDMethod = nrd::Method::REBLUR_DIFFUSE_SH;
 
 GIDenoiserNRD::GIDenoiserNRD(Renderer* pRenderer)
 {
@@ -28,12 +28,13 @@ GIDenoiserNRD::~GIDenoiserNRD() = default;
 
 void GIDenoiserNRD::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width, uint32_t height)
 {
-    if (m_pOutputRadiance == nullptr ||
-        m_pOutputRadiance->GetTexture()->GetDesc().width != width ||
-        m_pOutputRadiance->GetTexture()->GetDesc().height != height ||
+    if (m_pResolvedOutput == nullptr ||
+        m_pResolvedOutput->GetTexture()->GetDesc().width != width ||
+        m_pResolvedOutput->GetTexture()->GetDesc().height != height ||
         m_bNeedCreateReblur)
     {
-        m_pOutputRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "ReBLUR - output"));
+        m_pOutputSH0.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "ReBLUR - output SH0"));
+        m_pOutputSH1.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "ReBLUR - output SH1"));
         m_pResolvedOutput.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "ReBLUR - resolved output"));
 
         m_bHistoryInvalid = true;
@@ -42,7 +43,7 @@ void GIDenoiserNRD::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t wi
     m_historyIrradiance = pRenderGraph->Import(m_pResolvedOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
 }
 
-RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGHandle normal, RGHandle linearDepth, RGHandle velocity, uint32_t width, uint32_t height)
+RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGHandle rayDirection, RGHandle normal, RGHandle linearDepth, RGHandle velocity, uint32_t width, uint32_t height)
 {
     CreateReblurDenoiser(width, height);
 
@@ -74,52 +75,63 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
     struct PackRadianceHitTData
     {
         RGHandle radiance;
+        RGHandle rayDirection;
         RGHandle linearDepth;
-        RGHandle packedRadiance;
+        RGHandle outputSH0;
+        RGHandle outputSH1;
     };
 
     auto pack_radiance_pass = pRenderGraph->AddPass<PackRadianceHitTData>("ReBLUR - pack radiance/hitT", RenderPassType::Compute,
         [&](PackRadianceHitTData& data, RGBuilder& builder)
         {
             data.radiance = builder.Read(radiance);
+            data.rayDirection = builder.Read(rayDirection);
             data.linearDepth = builder.Read(linearDepth);
 
             RGTexture::Desc desc;
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGBA16F;
-            data.packedRadiance = builder.Write(builder.Create<RGTexture>(desc, "ReBlur - packed radiance"));
+            data.outputSH0 = builder.Write(builder.Create<RGTexture>(desc, "ReBlur - SH0"));
+            data.outputSH1 = builder.Write(builder.Create<RGTexture>(desc, "ReBlur - SH1"));
         },
         [=](const PackRadianceHitTData& data, IGfxCommandList* pCommandList)
         {
             PackRadiance(pCommandList, 
                 pRenderGraph->GetTexture(data.radiance),
+                pRenderGraph->GetTexture(data.rayDirection),
                 pRenderGraph->GetTexture(data.linearDepth),
-                pRenderGraph->GetTexture(data.packedRadiance),
+                pRenderGraph->GetTexture(data.outputSH0),
+                pRenderGraph->GetTexture(data.outputSH1),
                 width, height);
         });
 
     struct ReblurData
     {
-        RGHandle radiance;
+        RGHandle sh0;
+        RGHandle sh1;
         RGHandle normal;
         RGHandle linearDepth;
         RGHandle velocity;
-        RGHandle output;
+        RGHandle outputSH0;
+        RGHandle outputSH1;
     };
 
     auto reblur_pass = pRenderGraph->AddPass<ReblurData>("ReBLUR", RenderPassType::Compute,
         [&](ReblurData& data, RGBuilder& builder)
         {
-            data.radiance = builder.Read(pack_radiance_pass->packedRadiance);
+            data.sh0 = builder.Read(pack_radiance_pass->outputSH0);
+            data.sh1 = builder.Read(pack_radiance_pass->outputSH1);
             data.normal = builder.Read(pack_normal_pass->packedNormal);
             data.linearDepth = builder.Read(linearDepth);
             data.velocity = builder.Read(velocity);
-            data.output = builder.Write(builder.Import(m_pOutputRadiance->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS));
+            data.outputSH0 = builder.Write(builder.Import(m_pOutputSH0->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS));
+            data.outputSH1 = builder.Write(builder.Import(m_pOutputSH1->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS));
         },
         [=](const ReblurData& data, IGfxCommandList* pCommandList)
         {
-            RGTexture* radiance = pRenderGraph->GetTexture(data.radiance);
+            RGTexture* sh0 = pRenderGraph->GetTexture(data.sh0);
+            RGTexture* sh1 = pRenderGraph->GetTexture(data.sh1);
             RGTexture* normal = pRenderGraph->GetTexture(data.normal);
             RGTexture* linearDepth = pRenderGraph->GetTexture(data.linearDepth);
             RGTexture* velocity = pRenderGraph->GetTexture(data.velocity);
@@ -128,8 +140,10 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             userPool[(size_t)nrd::ResourceType::IN_MV] = { velocity->GetTexture(), velocity->GetSRV(), velocity->GetUAV(), GfxResourceState::ShaderResourceNonPS };
             userPool[(size_t)nrd::ResourceType::IN_NORMAL_ROUGHNESS] = { normal->GetTexture(), normal->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
             userPool[(size_t)nrd::ResourceType::IN_VIEWZ] = { linearDepth->GetTexture(), linearDepth->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
-            userPool[(size_t)nrd::ResourceType::IN_DIFF_RADIANCE_HITDIST] = { radiance->GetTexture(), radiance->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
-            userPool[(size_t)nrd::ResourceType::OUT_DIFF_RADIANCE_HITDIST] = { m_pOutputRadiance->GetTexture(), m_pOutputRadiance->GetSRV(), m_pOutputRadiance->GetUAV(), GfxResourceState::UnorderedAccess };
+            userPool[(size_t)nrd::ResourceType::IN_DIFF_SH0] = { sh0->GetTexture(), sh0->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
+            userPool[(size_t)nrd::ResourceType::IN_DIFF_SH1] = { sh1->GetTexture(), sh1->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
+            userPool[(size_t)nrd::ResourceType::OUT_DIFF_SH0] = { m_pOutputSH0->GetTexture(), m_pOutputSH0->GetSRV(), m_pOutputSH0->GetUAV(), GfxResourceState::UnorderedAccess };
+            userPool[(size_t)nrd::ResourceType::OUT_DIFF_SH1] = { m_pOutputSH1->GetTexture(), m_pOutputSH1->GetSRV(), m_pOutputSH1->GetUAV(), GfxResourceState::UnorderedAccess };
 
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 
@@ -156,19 +170,23 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
 
     struct ResolveData
     {
-        RGHandle denoiserOutput;
+        RGHandle outputSH0;
+        RGHandle outputSH1;
+        RGHandle normal;
         RGHandle resolveOutput;
     };
 
     auto resolve_pass = pRenderGraph->AddPass<ResolveData>("ReBLUR - resolve", RenderPassType::Compute,
         [&](ResolveData& data, RGBuilder& builder)
         {
-            data.denoiserOutput = builder.Read(reblur_pass->output);
+            data.outputSH0 = builder.Read(reblur_pass->outputSH0);
+            data.outputSH1 = builder.Read(reblur_pass->outputSH1);
+            data.normal = builder.Read(normal);
             data.resolveOutput = builder.Write(m_historyIrradiance);
         },
         [=](const ResolveData& data, IGfxCommandList* pCommandList)
         {
-            ResolveOutput(pCommandList, width, height);
+            ResolveOutput(pCommandList, pRenderGraph->GetTexture(data.normal), width, height);
         });
 
     return resolve_pass->resolveOutput;
@@ -209,7 +227,7 @@ void GIDenoiserNRD::PackNormalRoughness(IGfxCommandList* pCommandList, RGTexture
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
-void GIDenoiserNRD::PackRadiance(IGfxCommandList* pCommandList, RGTexture* radiance, RGTexture* linearDepth, RGTexture* packedRadiance, uint32_t width, uint32_t height)
+void GIDenoiserNRD::PackRadiance(IGfxCommandList* pCommandList, RGTexture* radiance, RGTexture* rayDirection, RGTexture* linearDepth, RGTexture* outputSH0, RGTexture* outputSH1, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPackRadianceHitTPSO);
 
@@ -217,25 +235,34 @@ void GIDenoiserNRD::PackRadiance(IGfxCommandList* pCommandList, RGTexture* radia
     {
         float4 hitDistParams;
         uint radianceTexture;
+        uint rayDirectionTexture;
         uint linearDepthTexture;
-        uint packedRadianceTexture;
+        uint outputSH0Texture;
+        uint outputSH1Texture;
     };
 
     CB cb;
     memcpy(&cb.hitDistParams, &m_pReblurSettings->hitDistanceParameters, sizeof(float4));
     cb.radianceTexture = radiance->GetSRV()->GetHeapIndex();
+    cb.rayDirectionTexture = rayDirection->GetSRV()->GetHeapIndex();
     cb.linearDepthTexture = linearDepth->GetSRV()->GetHeapIndex();
-    cb.packedRadianceTexture = packedRadiance->GetUAV()->GetHeapIndex();
+    cb.outputSH0Texture = outputSH0->GetUAV()->GetHeapIndex();
+    cb.outputSH1Texture = outputSH1->GetUAV()->GetHeapIndex();
 
-    pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
+    pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
-void GIDenoiserNRD::ResolveOutput(IGfxCommandList* pCommandList, uint32_t width, uint32_t height)
+void GIDenoiserNRD::ResolveOutput(IGfxCommandList* pCommandList, RGTexture* normal, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pResolveOutputPSO);
 
-    uint32_t cb[2] = { m_pOutputRadiance->GetSRV()->GetHeapIndex(), m_pResolvedOutput->GetUAV()->GetHeapIndex() };
+    uint32_t cb[4] = { 
+        m_pOutputSH0->GetSRV()->GetHeapIndex(), 
+        m_pOutputSH1->GetSRV()->GetHeapIndex(),
+        normal->GetSRV()->GetHeapIndex(),
+        m_pResolvedOutput->GetUAV()->GetHeapIndex() 
+    };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);

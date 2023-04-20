@@ -12,6 +12,7 @@ cbuffer CB : register(b1)
     uint c_normalTexture;
     uint c_outputTexture;
     uint c_outputVarianceTexture;
+    uint c_outputRayDirectionTexture;
 }
 
 float ComputeCustomWeight(float depth, float3 normal, float sampleDepth, float3 sampleNormal)
@@ -85,13 +86,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     float4 bilinearWeights = GetBilinearCustomWeights(bilinearFilter, customWeights);
     
-#if OUTPUT_SH
     uint4 rayDirection = rayDirectionTexture.GatherRed(pointSampler, gatherUV);
     float3 rayDirection00 = DecodeNormal16x2(rayDirection.w);
     float3 rayDirection10 = DecodeNormal16x2(rayDirection.z);
     float3 rayDirection01 = DecodeNormal16x2(rayDirection.x);
     float3 rayDirection11 = DecodeNormal16x2(rayDirection.y);
-    
+
+#if OUTPUT_SH
     SH sh00, sh10, sh01, sh11;
     sh00.Project(radiance00.xyz, rayDirection00);
     sh10.Project(radiance10.xyz, rayDirection10);
@@ -106,5 +107,12 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 #else
     float4 radiance = ApplyBilinearCustomWeights(radiance00, radiance10, radiance01, radiance11, bilinearWeights);
     outputTexture[pos] = radiance;
+#endif
+
+#if OUTPUT_RAYDIRECTION
+    float3 direction = ApplyBilinearCustomWeights(rayDirection00, rayDirection10, rayDirection01, rayDirection11, bilinearWeights);
+
+    RWTexture2D<uint> outputRayDirectionTexture = ResourceDescriptorHeap[c_outputRayDirectionTexture];
+    outputRayDirectionTexture[pos] = EncodeNormal16x2(normalize(direction));
 #endif
 }

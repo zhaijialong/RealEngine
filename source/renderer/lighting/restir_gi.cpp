@@ -249,6 +249,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
         RGHandle normal;
         RGHandle output;
         RGHandle outputVariance;
+        RGHandle outputRayDirection;
     };
 
     auto resolve_pass = pRenderGraph->AddPass<ResolvePassData>("ReSTIR GI - resolve", RenderPassType::Compute,
@@ -280,6 +281,12 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             {
                 desc.format = GfxFormat::RGBA16F;
                 data.output = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/resolve output"));
+
+                if (m_denoiserType == DenoiserType::NRD)
+                {
+                    desc.format = GfxFormat::R32UI;
+                    data.outputRayDirection = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/resolve output rayDirection"));
+                }
             }
         },
         [=](const ResolvePassData& data, IGfxCommandList* pCommandList)
@@ -293,13 +300,14 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
                 pRenderGraph->GetTexture(data.normal),
                 pRenderGraph->GetTexture(data.output),
                 pRenderGraph->GetTexture(data.outputVariance),
+                pRenderGraph->GetTexture(data.outputRayDirection),
                 width, height);
         });
 
 
     if (m_denoiserType == DenoiserType::NRD)
     {
-        return m_pDenoiserNRD->Render(pRenderGraph, resolve_pass->output, normal, linear_depth, velocity, width, height);
+        return m_pDenoiserNRD->Render(pRenderGraph, resolve_pass->output, resolve_pass->outputRayDirection, normal, linear_depth, velocity, width, height);
     }
     else if (m_denoiserType == DenoiserType::Custom)
     {
@@ -432,7 +440,7 @@ void ReSTIRGI::SpatialResampling(IGfxCommandList* pCommandList, RGTexture* halfD
 }
 
 void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTexture* radiance, RGTexture* rayDirection, RGTexture* halfDepthNormal, RGTexture* depth, RGTexture* normal, 
-    RGTexture* output, RGTexture* outputVariance, uint32_t width, uint32_t height)
+    RGTexture* output, RGTexture* outputVariance, RGTexture* outputRayDirection, uint32_t width, uint32_t height)
 {
     eastl::vector<eastl::string> defines;
 
@@ -445,6 +453,10 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTe
     {
         defines.push_back("OUTPUT_SH=1");
     }
+    else if (m_denoiserType == DenoiserType::NRD)
+    {
+        defines.push_back("OUTPUT_RAYDIRECTION=1");
+    }
 
     GfxComputePipelineDesc desc;
     desc.cs = m_pRenderer->GetShader("restir_gi/restir_resolve.hlsl", "main", "cs_6_6", defines);
@@ -452,7 +464,7 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTe
 
     pCommandList->SetPipelineState(pso);
 
-    uint32_t constants[8] = { 
+    uint32_t constants[9] = { 
         reservoir ? reservoir->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
         radiance->GetSRV()->GetHeapIndex(),
         rayDirection->GetSRV()->GetHeapIndex(),
@@ -461,6 +473,7 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTe
         normal->GetSRV()->GetHeapIndex(),
         output->GetUAV()->GetHeapIndex(),
         outputVariance ? outputVariance->GetUAV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
+        outputRayDirection ? outputRayDirection->GetUAV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
     };
     pCommandList->SetComputeConstants(1, constants, sizeof(constants));
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
