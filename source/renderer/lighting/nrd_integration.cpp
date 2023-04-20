@@ -11,7 +11,7 @@ struct ResourceIndices
 
     void SetInputTexture(uint32_t bindingIndex, IGfxDescriptor* srv)
     {
-        gInputTextureIndices[bindingIndex / 7][bindingIndex % 4] = srv->GetHeapIndex();
+        gInputTextureIndices[bindingIndex / 4][bindingIndex % 4] = srv->GetHeapIndex();
     }
 
     void SetOutputTexture(uint32_t bindingIndex, IGfxDescriptor* uav)

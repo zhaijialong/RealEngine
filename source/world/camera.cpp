@@ -228,6 +228,7 @@ void Camera::UpdateJitter()
 void Camera::UpdateMatrix()
 {
     m_prevView = m_view;
+    m_prevProjection = m_projection;
     m_prevViewProjection = m_viewProjection;
     m_prevViewProjectionJitter = m_viewProjectionJitter;
 

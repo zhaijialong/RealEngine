@@ -108,7 +108,7 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
         RGHandle output;
     };
 
-    auto reblur_pass = pRenderGraph->AddPass<ReblurData>("ReBLUR Denoiser", RenderPassType::Compute,
+    auto reblur_pass = pRenderGraph->AddPass<ReblurData>("ReBLUR", RenderPassType::Compute,
         [&](ReblurData& data, RGBuilder& builder)
         {
             data.radiance = builder.Read(pack_radiance_pass->packedRadiance);
@@ -134,8 +134,8 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 
             nrd::CommonSettings commonSettings = {};
-            memcpy(commonSettings.viewToClipMatrix, &camera->GetNonJitterViewProjectionMatrix(), sizeof(float4x4));
-            memcpy(commonSettings.viewToClipMatrixPrev, &camera->GetNonJitterPrevViewProjectionMatrix(), sizeof(float4x4));
+            memcpy(commonSettings.viewToClipMatrix, &camera->GetNonJitterProjectionMatrix(), sizeof(float4x4));
+            memcpy(commonSettings.viewToClipMatrixPrev, &camera->GetNonJitterPrevProjectionMatrix(), sizeof(float4x4));
             memcpy(commonSettings.worldToViewMatrix, &camera->GetViewMatrix(), sizeof(float4x4));
             memcpy(commonSettings.worldToViewMatrixPrev, &camera->GetPrevViewMatrix(), sizeof(float4x4));
             commonSettings.motionVectorScale[0] = -0.5f;
