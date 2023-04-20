@@ -105,6 +105,6 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         hitNormal = -direction;
     }
     
-    outputRadianceUAV[dispatchThreadID.xy] = float4(radiance, 0);
+    outputRadianceUAV[dispatchThreadID.xy] = float4(radiance, hitInfo.rayT);
     outputRayDirectionUAV[dispatchThreadID.xy] = EncodeNormal16x2(direction);
 }

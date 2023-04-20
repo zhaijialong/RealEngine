@@ -87,7 +87,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             RGTexture::Desc desc;
             desc.width = half_width;
             desc.height = half_height;
-            desc.format = GfxFormat::R11G11B10F;
+            desc.format = GfxFormat::RGBA16F;
             data.outputRadiance = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/candidate radiance"));
 
             desc.format = GfxFormat::R32UI;
@@ -179,7 +179,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
                 RGTexture::Desc desc;
                 desc.width = half_width;
                 desc.height = half_height;
-                desc.format = GfxFormat::R11G11B10F;
+                desc.format = GfxFormat::RGBA16F;
                 data.outputReservoirSampleRadiance = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/spatial reservoir radiance"));
 
                 desc.format = GfxFormat::R32UI;
@@ -212,7 +212,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
                 RGTexture::Desc desc;
                 desc.width = half_width;
                 desc.height = half_height;
-                desc.format = GfxFormat::R11G11B10F;
+                desc.format = GfxFormat::RGBA16F;
                 data.outputReservoirSampleRadiance = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/spatial reservoir radiance"));
 
                 desc.format = GfxFormat::R32UI;
@@ -268,7 +268,6 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             desc.width = width;
             desc.height = height;
 
-            //todo : if (m_denoiserType == DenoiserType::NRD)
             if (m_denoiserType == DenoiserType::Custom)
             {
                 desc.format = GfxFormat::RGBA32UI;
@@ -279,7 +278,7 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
             }
             else
             {
-                desc.format = GfxFormat::R11G11B10F;
+                desc.format = GfxFormat::RGBA16F;
                 data.output = builder.Write(builder.Create<RGTexture>(desc, "ReSTIR GI/resolve output"));
             }
         },
@@ -442,7 +441,6 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTe
         defines.push_back("ENABLE_RESTIR=1");
     }
 
-    //todo : if (m_denoiserType == DenoiserType::NRD)
     if (m_denoiserType == DenoiserType::Custom)
     {
         defines.push_back("OUTPUT_SH=1");
@@ -478,7 +476,7 @@ bool ReSTIRGI::InitTemporalBuffers(uint32_t width, uint32_t height)
     {
         for (int i = 0; i < 2; ++i)
         {
-            m_temporalReservoir[i].sampleRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess,
+            m_temporalReservoir[i].sampleRadiance.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir sampleRadiance {}", i).c_str()));
             m_temporalReservoir[i].rayDirection.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::R32UI, GfxTextureUsageUnorderedAccess,
                 fmt::format("ReSTIR GI/temporal reservoir rayDirection {}", i).c_str()));

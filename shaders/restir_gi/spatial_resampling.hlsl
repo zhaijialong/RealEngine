@@ -22,6 +22,7 @@ Reservoir LoadReservoir(uint2 pos, float depth, float3 normal)
 
     Reservoir R;
     R.sample.radiance = reservoirSampleRadianceTexture[pos].xyz;
+    R.sample.hitT = reservoirSampleRadianceTexture[pos].w;
     R.sample.rayDirection = reservoirRayDirectionTexture[pos];
 
     R.M = reservoirTexture[pos].x;
@@ -37,7 +38,7 @@ void StoreReservoir(uint2 pos, Reservoir R)
     RWTexture2D<uint> reservoirRayDirectionTexture = ResourceDescriptorHeap[c_outputReservoirRayDirection];
     RWTexture2D<float2> reservoirTexture = ResourceDescriptorHeap[c_outputReservoir];
     
-    reservoirSampleRadianceTexture[pos] = float4(R.sample.radiance, 0);
+    reservoirSampleRadianceTexture[pos] = float4(R.sample.radiance, R.sample.hitT);
     reservoirRayDirectionTexture[pos] = R.sample.rayDirection;
     reservoirTexture[pos] = float2(R.M, R.W);
 }

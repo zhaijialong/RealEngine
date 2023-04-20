@@ -9,6 +9,7 @@ struct Sample
     //float3 samplePosition;
     //float3 sampleNormal;
     float3 radiance;
+    float hitT;
     uint rayDirection;
 };
 

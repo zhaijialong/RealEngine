@@ -37,7 +37,7 @@ void pack_radiance_hitT(uint3 dispatchThreadID : SV_DispatchThreadID)
     RWTexture2D<float4> packedRadianceTexture = ResourceDescriptorHeap[c_packedRadianceTexture];
 
     float3 radiance = radianceTexture[dispatchThreadID.xy].xyz;
-    float hitDist = 10;// todo
+    float hitDist = radianceTexture[dispatchThreadID.xy].w;
     float linearDepth = linearDepthTexture[dispatchThreadID.xy].x;
 
     float normHitDist = REBLUR_FrontEnd_GetNormHitDist(hitDist, linearDepth, c_hitDistParams);

@@ -72,10 +72,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     uint4 sampleDepth = halfDepthNormal.GatherRed(pointSampler, gatherUV);
     uint4 sampleNormal = halfDepthNormal.GatherGreen(pointSampler, gatherUV);
     
-    float3 radiance00 = radianceTexture[int2(bilinearFilter.origin) + int2(0, 0)].xyz * W.w;
-    float3 radiance10 = radianceTexture[int2(bilinearFilter.origin) + int2(1, 0)].xyz * W.z;
-    float3 radiance01 = radianceTexture[int2(bilinearFilter.origin) + int2(0, 1)].xyz * W.x;
-    float3 radiance11 = radianceTexture[int2(bilinearFilter.origin) + int2(1, 1)].xyz * W.y;
+    float4 radiance00 = radianceTexture[int2(bilinearFilter.origin) + int2(0, 0)] * W.w;
+    float4 radiance10 = radianceTexture[int2(bilinearFilter.origin) + int2(1, 0)] * W.z;
+    float4 radiance01 = radianceTexture[int2(bilinearFilter.origin) + int2(0, 1)] * W.x;
+    float4 radiance11 = radianceTexture[int2(bilinearFilter.origin) + int2(1, 1)] * W.y;
     
     float4 customWeights;
     customWeights.x = ComputeCustomWeight(depth, N, asfloat(sampleDepth.w), DecodeNormal16x2(sampleNormal.w));
@@ -93,10 +93,10 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 rayDirection11 = DecodeNormal16x2(rayDirection.y);
     
     SH sh00, sh10, sh01, sh11;
-    sh00.Project(radiance00, rayDirection00);
-    sh10.Project(radiance10, rayDirection10);
-    sh01.Project(radiance01, rayDirection01);
-    sh11.Project(radiance11, rayDirection11);
+    sh00.Project(radiance00.xyz, rayDirection00);
+    sh10.Project(radiance10.xyz, rayDirection10);
+    sh01.Project(radiance01.xyz, rayDirection01);
+    sh11.Project(radiance11.xyz, rayDirection11);
     
     SH sh = ApplyBilinearCustomWeights(sh00, sh10, sh01, sh11, bilinearWeights);
     outputTexture[pos] = PackSH(sh);
@@ -104,7 +104,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float sampleCount = ApplyBilinearCustomWeights(M.w, M.z, M.x, M.y, bilinearWeights);
     outputVarianceTexture[pos] = square(1.0 - saturate(sampleCount / 500.0));
 #else
-    float3 radiance = ApplyBilinearCustomWeights(radiance00, radiance10, radiance01, radiance11, bilinearWeights);
-    outputTexture[pos] = float4(radiance, 0.0);
+    float4 radiance = ApplyBilinearCustomWeights(radiance00, radiance10, radiance01, radiance11, bilinearWeights);
+    outputTexture[pos] = radiance;
 #endif
 }
