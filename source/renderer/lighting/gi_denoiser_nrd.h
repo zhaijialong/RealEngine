@@ -17,8 +17,8 @@ public:
 
     RGHandle GetHistoryIrradiance() const { return m_historyIrradiance; }
     IGfxDescriptor* GetHistoryIrradianceSRV() const { return m_pResolvedOutput->GetSRV(); }
+
 private:
-    void OnWindowResize(void* window, uint32_t width, uint32_t height);
     void CreateReblurDenoiser(uint32_t width, uint32_t height);
 
     void PackNormalRoughness(IGfxCommandList* pCommandList, RGTexture* normal, RGTexture* packedNormal, uint32_t width, uint32_t height);

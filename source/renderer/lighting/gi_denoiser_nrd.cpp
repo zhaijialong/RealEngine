@@ -13,8 +13,6 @@ GIDenoiserNRD::GIDenoiserNRD(Renderer* pRenderer)
     m_pReblurSettings->antilagIntensitySettings.enable = true;
     m_pReblurSettings->antilagIntensitySettings.sensitivityToDarkness = 0.01f;
 
-    Engine::GetInstance()->WindowResizeSignal.connect(&GIDenoiserNRD::OnWindowResize, this);
-
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_normal_roughness", "cs_6_6", {});
     m_pPackNormalRoughnessPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - pack normal/roughness PSO");
@@ -43,6 +41,7 @@ void GIDenoiserNRD::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t wi
         m_pResolvedOutput.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "ReBLUR - resolved output"));
 
         m_bHistoryInvalid = true;
+        m_bNeedCreateReblur = true;
     }
 
     m_historyIrradiance = pRenderGraph->Import(m_pResolvedOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
@@ -193,7 +192,7 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             commonSettings.cameraJitter[0] = camera->GetJitter().x;
             commonSettings.cameraJitter[1] = camera->GetJitter().y;
             commonSettings.frameIndex = (uint32_t)m_pRenderer->GetFrameID();
-            commonSettings.accumulationMode = nrd::AccumulationMode::CONTINUE;
+            commonSettings.accumulationMode = m_bHistoryInvalid ? nrd::AccumulationMode::RESTART : nrd::AccumulationMode::CONTINUE;
             commonSettings.isMotionVectorInWorldSpace = false;            
 
             m_pReblur->SetMethodSettings(NRDMethod, m_pReblurSettings.get());
@@ -225,11 +224,6 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
         });
 
     return resolve_pass->resolveOutput;
-}
-
-void GIDenoiserNRD::OnWindowResize(void* window, uint32_t width, uint32_t height)
-{
-    m_bNeedCreateReblur = true;
 }
 
 void GIDenoiserNRD::CreateReblurDenoiser(uint32_t width, uint32_t height)
