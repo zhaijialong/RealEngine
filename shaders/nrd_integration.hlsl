@@ -53,6 +53,32 @@ void pack_radiance_hitT(uint3 dispatchThreadID : SV_DispatchThreadID)
     outputSH1Texture[dispatchThreadID.xy] = sh1;
 }
 
+cbuffer PackVelocityCB : register(b0)
+{
+    uint c_velocityTexture;
+    uint c_velocityLinearDepthTexture;
+    uint c_prevLinearDepthTexture;
+    uint c_packedVelocityTexture;
+};
+
+[numthreads(8, 8, 1)]
+void pack_velocity(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    Texture2D velocityTexture = ResourceDescriptorHeap[c_velocityTexture];
+    Texture2D linearDepthTexture = ResourceDescriptorHeap[c_velocityLinearDepthTexture];
+    Texture2D prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
+    RWTexture2D<float4> packedVelocityTexture = ResourceDescriptorHeap[c_packedVelocityTexture];
+
+    float3 velocity = velocityTexture[dispatchThreadID.xy].xyz;
+    float linearDepth = linearDepthTexture[dispatchThreadID.xy].x;
+
+	float3 ndcPos = float3(GetNdcPosition((float2)dispatchThreadID.xy + 0.5, SceneCB.rcpRenderSize), GetNdcDepth(linearDepth));    
+	float4 prevViewPos = mul(GetCameraCB().mtxClipToPrevViewNoJitter, float4(ndcPos, 1.0));
+	float prevLiearDepth = prevViewPos.z / prevViewPos.w;
+
+	packedVelocityTexture[dispatchThreadID.xy] = float4(velocity.xy, prevLiearDepth - linearDepth, 0);
+}
+
 cbuffer ResolveCB : register(b0)
 {
     uint c_sh0Texture;

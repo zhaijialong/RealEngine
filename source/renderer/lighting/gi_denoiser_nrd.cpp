@@ -20,6 +20,9 @@ GIDenoiserNRD::GIDenoiserNRD(Renderer* pRenderer)
     psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_radiance_hitT", "cs_6_6", {});
     m_pPackRadianceHitTPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - pack radiance/hitT PSO");
 
+    psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_velocity", "cs_6_6", {});
+    m_pPackVelocityPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - pack velocity PSO");
+
     psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "resolve_output", "cs_6_6", {});
     m_pResolveOutputPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - resolve PSO");
 }
@@ -106,6 +109,36 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
                 width, height);
         });
 
+    struct PackVelocityData
+    {
+        RGHandle velocity;
+        RGHandle linearDepth;
+        RGHandle prevLinearDepth;
+        RGHandle output;
+    };
+
+    auto pack_velocity_pass = pRenderGraph->AddPass<PackVelocityData>("", RenderPassType::Compute,
+        [&](PackVelocityData& data, RGBuilder& builder)
+        {
+            data.velocity = builder.Read(velocity);
+            data.linearDepth = builder.Read(linearDepth);
+            data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
+
+            RGTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::RGBA16F;
+            data.output = builder.Write(builder.Create<RGTexture>(desc, "ReBlur - velocity"));
+        },
+        [=](const PackVelocityData& data, IGfxCommandList* pCommandList)
+        {
+            PackVelocity(pCommandList,
+                pRenderGraph->GetTexture(data.velocity),
+                pRenderGraph->GetTexture(data.linearDepth),
+                pRenderGraph->GetTexture(data.output),
+                width, height);
+        });
+
     struct ReblurData
     {
         RGHandle sh0;
@@ -124,7 +157,7 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             data.sh1 = builder.Read(pack_radiance_pass->outputSH1);
             data.normal = builder.Read(pack_normal_pass->packedNormal);
             data.linearDepth = builder.Read(linearDepth);
-            data.velocity = builder.Read(velocity);
+            data.velocity = builder.Read(pack_velocity_pass->output);
             data.outputSH0 = builder.Write(builder.Import(m_pOutputSH0->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS));
             data.outputSH1 = builder.Write(builder.Import(m_pOutputSH1->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS));
         },
@@ -154,7 +187,7 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             memcpy(commonSettings.worldToViewMatrixPrev, &camera->GetPrevViewMatrix(), sizeof(float4x4));
             commonSettings.motionVectorScale[0] = -0.5f;
             commonSettings.motionVectorScale[1] = 0.5f;
-            commonSettings.motionVectorScale[2] = 0.0; //todo
+            commonSettings.motionVectorScale[2] = 1.0f;
             commonSettings.cameraJitter[0] = camera->GetJitter().x;
             commonSettings.cameraJitter[1] = camera->GetJitter().y;
             commonSettings.frameIndex = (uint32_t)m_pRenderer->GetFrameID();
@@ -250,6 +283,22 @@ void GIDenoiserNRD::PackRadiance(IGfxCommandList* pCommandList, RGTexture* radia
     cb.outputSH1Texture = outputSH1->GetUAV()->GetHeapIndex();
 
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
+    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+}
+
+void GIDenoiserNRD::PackVelocity(IGfxCommandList* pCommandList, RGTexture* velocity, RGTexture* linearDepth, RGTexture* output, uint32_t width, uint32_t height)
+{
+    pCommandList->SetPipelineState(m_pPackVelocityPSO);
+
+    uint32_t cb[4] =
+    {
+        velocity->GetSRV()->GetHeapIndex(),
+        linearDepth->GetSRV()->GetHeapIndex(),
+        m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex(),
+        output->GetUAV()->GetHeapIndex()
+    };
+    pCommandList->SetComputeConstants(0, cb, sizeof(cb));
+
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 

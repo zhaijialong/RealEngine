@@ -44,6 +44,7 @@ struct CameraConstant
     float4x4 mtxViewProjectionNoJitter;
     float4x4 mtxPrevViewProjectionNoJitter;
     float4x4 mtxClipToPrevClipNoJitter;
+	float4x4 mtxClipToPrevViewNoJitter;
     
     float4x4 mtxPrevView;
     float4x4 mtxPrevViewProjection;

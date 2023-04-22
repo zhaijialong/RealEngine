@@ -159,6 +159,7 @@ void Camera::SetupCameraCB(CameraConstant& cameraCB)
     cameraCB.mtxViewProjectionNoJitter = m_viewProjection;
     cameraCB.mtxPrevViewProjectionNoJitter = m_prevViewProjection;
     cameraCB.mtxClipToPrevClipNoJitter = mul(m_prevViewProjection, inverse(m_viewProjection));
+    cameraCB.mtxClipToPrevViewNoJitter = mul(m_prevView, inverse(m_viewProjection));
 
     cameraCB.mtxPrevView = m_prevView;
     cameraCB.mtxPrevViewProjection = m_prevViewProjectionJitter;
