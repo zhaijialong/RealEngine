@@ -10,6 +10,8 @@ GIDenoiserNRD::GIDenoiserNRD(Renderer* pRenderer)
     m_pRenderer = pRenderer;
     m_pReblur = eastl::make_unique<NRDIntegration>(pRenderer);
     m_pReblurSettings = eastl::make_unique<nrd::ReblurSettings>();
+    m_pReblurSettings->antilagIntensitySettings.enable = true;
+    m_pReblurSettings->antilagIntensitySettings.sensitivityToDarkness = 0.01f;
 
     Engine::GetInstance()->WindowResizeSignal.connect(&GIDenoiserNRD::OnWindowResize, this);
 
