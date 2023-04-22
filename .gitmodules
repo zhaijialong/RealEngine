@@ -7,3 +7,6 @@
 [submodule "external/RayTracingDenoiser"]
 	path = external/RayTracingDenoiser
 	url = https://github.com/zhaijialong/RayTracingDenoiser.git
+[submodule "external/JoltPhysics"]
+	path = external/JoltPhysics
+	url = https://github.com/jrouwe/JoltPhysics.git

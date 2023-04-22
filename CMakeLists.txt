@@ -25,6 +25,13 @@ include(${REAL_ENGINE_ROOT}/source/source.cmake)
 include(${REAL_ENGINE_ROOT}/shaders/shaders.cmake)
 include(${REAL_ENGINE_ROOT}/external/external.cmake)
 
+# Jolt
+set(USE_AVX OFF)
+set(USE_AVX2 OFF)
+set(USE_AVX512 OFF)
+add_subdirectory(${EXTERNAL_ROOT}/JoltPhysics/Build)
+set_target_properties(Jolt PROPERTIES FOLDER External)
+
 # NRD
 set(DXC_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
 set(DXC_SPIRV_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
@@ -63,7 +70,7 @@ target_compile_definitions(RealEngine PUBLIC
     _CRT_SECURE_NO_WARNINGS
     NOMINMAX
 )
-target_link_libraries(RealEngine ws2_32 NRD)
+target_link_libraries(RealEngine ws2_32 Jolt NRD)
 
 add_custom_command(
     TARGET RealEngine POST_BUILD
