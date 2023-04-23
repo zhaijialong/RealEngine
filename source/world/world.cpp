@@ -1,5 +1,5 @@
 #include "world.h"
-#include "core/engine.h"
+#include "physics/physics_system.h"
 #include "gltf_loader.h"
 #include "sky_sphere.h"
 #include "directional_light.h"
@@ -14,7 +14,11 @@
 World::World()
 {
     m_pCamera = eastl::make_unique<Camera>();
+    m_pPhysicsSystem = eastl::make_unique<PhysicsSystem>();
+    m_pPhysicsSystem->Initialize();
 }
+
+World::~World() = default;
 
 void World::LoadScene(const eastl::string& file)
 {

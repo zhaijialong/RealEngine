@@ -134,13 +134,20 @@ NRDIntegration::~NRDIntegration()
     Destroy();
 }
 
-bool NRDIntegration::Initialize(const nrd::DenoiserCreationDesc& denoiserCreationDesc)
+bool NRDIntegration::Initialize(const nrd::MethodDesc& method)
 {
     const nrd::LibraryDesc& libraryDesc = nrd::GetLibraryDesc();
     if (libraryDesc.versionMajor != NRD_VERSION_MAJOR || libraryDesc.versionMinor != NRD_VERSION_MINOR)
     {
         return false;
     }
+
+    nrd::DenoiserCreationDesc denoiserCreationDesc = {};
+    denoiserCreationDesc.memoryAllocatorInterface.Allocate = [](void* userArg, size_t size, size_t alignment) { return RE_ALLOC(size, alignment); };
+    denoiserCreationDesc.memoryAllocatorInterface.Reallocate = [](void* userArg, void* memory, size_t size, size_t alignment) { return RE_REALLOC(memory, size); };
+    denoiserCreationDesc.memoryAllocatorInterface.Free = [](void* userArg, void* memory) { RE_FREE(memory); };
+    denoiserCreationDesc.requestedMethods = &method;
+    denoiserCreationDesc.requestedMethodsNum = 1;
 
     for (uint32_t i = 0; i < denoiserCreationDesc.requestedMethodsNum; i++)
     {

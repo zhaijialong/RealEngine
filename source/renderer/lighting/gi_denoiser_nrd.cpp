@@ -227,15 +227,8 @@ void GIDenoiserNRD::CreateReblurDenoiser(uint32_t width, uint32_t height)
     {
         m_pReblur->Destroy();
 
-        const nrd::MethodDesc methodDescs[] =
-        {
-            { NRDMethod, (uint16_t)width, (uint16_t)height },
-        };
-
-        nrd::DenoiserCreationDesc desc = {};
-        desc.requestedMethods = methodDescs;
-        desc.requestedMethodsNum = 1;
-        m_pReblur->Initialize(desc);
+        nrd::MethodDesc methodDescs = { NRDMethod, (uint16_t)width, (uint16_t)height };
+        m_pReblur->Initialize(methodDescs);
 
         m_bNeedCreateReblur = false;
     }

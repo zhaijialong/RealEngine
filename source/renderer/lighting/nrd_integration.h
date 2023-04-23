@@ -43,7 +43,7 @@ public:
     NRDIntegration(Renderer* pRenderer);
     ~NRDIntegration();
 
-    bool Initialize(const nrd::DenoiserCreationDesc& denoiserCreationDesc);
+    bool Initialize(const nrd::MethodDesc& method);
     void Destroy();
 
     bool SetMethodSettings(nrd::Method method, const void* methodSettings);

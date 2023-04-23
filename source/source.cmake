@@ -3,7 +3,6 @@ set(SOURCE_ROOT ${REAL_ENGINE_ROOT}/source)
 set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/source.cmake
     ${SOURCE_ROOT}/core/eastl_allocator.cpp
-    ${SOURCE_ROOT}/core/eastl_allocator.h
     ${SOURCE_ROOT}/core/engine.cpp
     ${SOURCE_ROOT}/core/engine.h
     ${SOURCE_ROOT}/core/gui.cpp
@@ -55,6 +54,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/gfx_shader.h
     ${SOURCE_ROOT}/gfx/gfx_swapchain.h
     ${SOURCE_ROOT}/gfx/gfx_texture.h
+    ${SOURCE_ROOT}/physics/physics_system.cpp
+    ${SOURCE_ROOT}/physics/physics_system.h
     ${SOURCE_ROOT}/renderer/lighting/clustered_shading.cpp
     ${SOURCE_ROOT}/renderer/lighting/clustered_shading.h
     ${SOURCE_ROOT}/renderer/lighting/gi_denoiser.cpp
