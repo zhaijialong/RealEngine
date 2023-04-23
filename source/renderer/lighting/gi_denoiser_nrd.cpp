@@ -113,8 +113,6 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
     struct PackVelocityData
     {
         RGHandle velocity;
-        RGHandle linearDepth;
-        RGHandle prevLinearDepth;
         RGHandle output;
     };
 
@@ -122,8 +120,6 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
         [&](PackVelocityData& data, RGBuilder& builder)
         {
             data.velocity = builder.Read(velocity);
-            data.linearDepth = builder.Read(linearDepth);
-            data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
 
             RGTexture::Desc desc;
             desc.width = width;
@@ -135,7 +131,6 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
         {
             PackVelocity(pCommandList,
                 pRenderGraph->GetTexture(data.velocity),
-                pRenderGraph->GetTexture(data.linearDepth),
                 pRenderGraph->GetTexture(data.output),
                 width, height);
         });
@@ -282,15 +277,13 @@ void GIDenoiserNRD::PackRadiance(IGfxCommandList* pCommandList, RGTexture* radia
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
-void GIDenoiserNRD::PackVelocity(IGfxCommandList* pCommandList, RGTexture* velocity, RGTexture* linearDepth, RGTexture* output, uint32_t width, uint32_t height)
+void GIDenoiserNRD::PackVelocity(IGfxCommandList* pCommandList, RGTexture* velocity, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPackVelocityPSO);
 
-    uint32_t cb[4] =
+    uint32_t cb[2] =
     {
         velocity->GetSRV()->GetHeapIndex(),
-        linearDepth->GetSRV()->GetHeapIndex(),
-        m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex(),
         output->GetUAV()->GetHeapIndex()
     };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));

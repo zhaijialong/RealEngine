@@ -23,7 +23,7 @@ private:
 
     void PackNormalRoughness(IGfxCommandList* pCommandList, RGTexture* normal, RGTexture* packedNormal, uint32_t width, uint32_t height);
     void PackRadiance(IGfxCommandList* pCommandList, RGTexture* radiance, RGTexture* rayDirection, RGTexture* linearDepth, RGTexture* outputSH0, RGTexture* outputSH1, uint32_t width, uint32_t height);
-    void PackVelocity(IGfxCommandList* pCommandList, RGTexture* velocity, RGTexture* linearDepth, RGTexture* output, uint32_t width, uint32_t height);
+    void PackVelocity(IGfxCommandList* pCommandList, RGTexture* velocity, RGTexture* output, uint32_t width, uint32_t height);
     void ResolveOutput(IGfxCommandList* pCommandList, RGTexture* normal, uint32_t width, uint32_t height);
 
 private:

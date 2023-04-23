@@ -48,5 +48,8 @@ float4 ps_main(VSOutput input) : SV_TARGET0
     float3 ndcPos = GetNdcPosition(input.clipPos);
     float3 prevNdcPos = GetNdcPosition(input.prevClipPos);
 
-    return float4(ndcPos - prevNdcPos, 0.0);
+    float linearDepth = input.clipPos.w;
+    float prevLinearDepth = input.prevClipPos.w;
+    
+    return float4(ndcPos - prevNdcPos, linearDepth - prevLinearDepth);
 }
