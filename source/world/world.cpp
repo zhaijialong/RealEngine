@@ -63,6 +63,7 @@ void World::Tick(float delta_time)
 {
     CPU_EVENT("Tick", "World::Tick");
 
+    m_pPhysicsSystem->Tick(delta_time);
     m_pCamera->Tick(delta_time);
 
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)

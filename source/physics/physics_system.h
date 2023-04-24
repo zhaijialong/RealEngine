@@ -11,6 +11,8 @@ namespace JPH
     class BroadPhaseLayerInterface;
     class ObjectVsBroadPhaseLayerFilter;
     class ObjectLayerPairFilter;
+    class BodyActivationListener;
+    class ContactListener;
 }
 
 class PhysicsSystem
@@ -29,5 +31,7 @@ private:
     eastl::unique_ptr<class JPH::BroadPhaseLayerInterface> m_pBroadPhaseLayer;
     eastl::unique_ptr<class JPH::ObjectVsBroadPhaseLayerFilter> m_pBroadPhaseLayerFilter;
     eastl::unique_ptr<class JPH::ObjectLayerPairFilter> m_pObjectLayerFilter;
+    eastl::unique_ptr<class JPH::BodyActivationListener> m_pBodyActivationListener;
+    eastl::unique_ptr<class JPH::ContactListener> m_pContactListener;
     eastl::unique_ptr<class JPH::JobSystemThreadPool> m_pJobSystem; //todo : use a custom job system built upon enkiTS
 };

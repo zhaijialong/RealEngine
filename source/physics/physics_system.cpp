@@ -1,6 +1,8 @@
 #include "physics_system.h"
 #include "physics_broad_phase_layer.h"
 #include "physics_layer_filter.h"
+#include "physics_body_activation_listener.h"
+#include "physics_contact_listener.h"
 #include "utils/log.h"
 #include "utils/memory.h"
 #include <cstdarg>
@@ -45,14 +47,20 @@ const JPH::uint cMaxContactConstraints = 10240;
 
 PhysicsSystem::PhysicsSystem()
 {
+#if 0 //todo : enable it after we switch to the enkiTS job scheduler
     JPH::Allocate = RE_ALLOC;
     JPH::Free = RE_FREE;
     JPH::AlignedAllocate = RE_ALLOC;
     JPH::AlignedFree = RE_FREE;
+#else
+    JPH::RegisterDefaultAllocator();
+#endif
+
     JPH::Trace = JoltTraceImpl;
 #ifdef JPH_ENABLE_ASSERTS
     JPH::AssertFailed = AssertFailedImpl;
 #endif
+
     JPH::Factory::sInstance = new JPH::Factory();
     JPH::RegisterTypes();
 }
@@ -70,13 +78,13 @@ void PhysicsSystem::Initialize()
     m_pBroadPhaseLayer = eastl::make_unique<PhysicsBroadPhaseLayerInterface>();
     m_pBroadPhaseLayerFilter = eastl::make_unique<PhysicsObjectVsBroadPhaseLayerFilter>();
     m_pObjectLayerFilter = eastl::make_unique<PhysicsObjectLayerPairFilter>();
+    m_pBodyActivationListener = eastl::make_unique<PhysicsBodyActivationListener>();
+    m_pContactListener = eastl::make_unique<PhysicsContactListener>();
 
     m_pJoltSystem = eastl::make_unique<JPH::PhysicsSystem>();
     m_pJoltSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
-
-    //todo
-    //m_pJoltSystem->SetBodyActivationListener
-    //m_pJoltSystem->SetContactListener
+    m_pJoltSystem->SetBodyActivationListener(m_pBodyActivationListener.get());
+    m_pJoltSystem->SetContactListener(m_pContactListener.get());
 }
 
 void PhysicsSystem::OptimizeBVH()
@@ -89,5 +97,6 @@ void PhysicsSystem::Tick(float delta_time)
     const int cCollisionSteps = 1;
     const int cIntegrationSubSteps = 1;
 
-    m_pJoltSystem->Update(delta_time, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
+    const float cDeltaTime = 1.0f / 60.0f;
+    m_pJoltSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
 }
