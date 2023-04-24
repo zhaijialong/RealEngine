@@ -54,6 +54,11 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/gfx_shader.h
     ${SOURCE_ROOT}/gfx/gfx_swapchain.h
     ${SOURCE_ROOT}/gfx/gfx_texture.h
+    ${SOURCE_ROOT}/physics/physics_broad_phase_layer.cpp
+    ${SOURCE_ROOT}/physics/physics_broad_phase_layer.h
+    ${SOURCE_ROOT}/physics/physics_layer.h
+    ${SOURCE_ROOT}/physics/physics_layer_filter.cpp
+    ${SOURCE_ROOT}/physics/physics_layer_filter.h
     ${SOURCE_ROOT}/physics/physics_system.cpp
     ${SOURCE_ROOT}/physics/physics_system.h
     ${SOURCE_ROOT}/renderer/lighting/clustered_shading.cpp
