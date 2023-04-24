@@ -94,9 +94,9 @@ void PhysicsSystem::OptimizeBVH()
 
 void PhysicsSystem::Tick(float delta_time)
 {
+    const float cDeltaTime = 1.0f / 60.0f;
     const int cCollisionSteps = 1;
     const int cIntegrationSubSteps = 1;
 
-    const float cDeltaTime = 1.0f / 60.0f;
     m_pJoltSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
 }
