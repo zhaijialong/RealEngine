@@ -1,5 +1,4 @@
 #include "world.h"
-#include "physics/physics_system.h"
 #include "gltf_loader.h"
 #include "sky_sphere.h"
 #include "directional_light.h"
@@ -13,8 +12,10 @@
 
 World::World()
 {
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
     m_pCamera = eastl::make_unique<Camera>();
-    m_pPhysicsSystem = eastl::make_unique<PhysicsSystem>();
+    m_pPhysicsSystem = eastl::make_unique<PhysicsSystem>(pRenderer);
     m_pPhysicsSystem->Initialize();
 }
 
@@ -76,25 +77,27 @@ void World::Tick(float delta_time)
         (*iter)->Tick(delta_time);
     }
 
-    eastl::vector<IVisibleObject*> visibleObjects(m_objects.size());
-    eastl::atomic<uint32_t> visibleCount {0};
-
-    ParallelFor((uint32_t)m_objects.size(), [&](uint32_t i) 
-        {
-            if (m_objects[i]->FrustumCull(m_pCamera->GetFrustumPlanes(), 6))
-            {
-                uint32_t index = visibleCount.fetch_add(1);
-                visibleObjects[index] = m_objects[i].get();
-            }
-        });
-
-    visibleObjects.resize(visibleCount);
-    
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-
-    for (auto iter = visibleObjects.begin(); iter != visibleObjects.end(); ++iter)
+    if (pRenderer->GetOutputType() != RendererOutput::Physics)
     {
-        (*iter)->Render(pRenderer);
+        eastl::vector<IVisibleObject*> visibleObjects(m_objects.size());
+        eastl::atomic<uint32_t> visibleCount{ 0 };
+
+        ParallelFor((uint32_t)m_objects.size(), [&](uint32_t i)
+            {
+                if (m_objects[i]->FrustumCull(m_pCamera->GetFrustumPlanes(), 6))
+                {
+                    uint32_t index = visibleCount.fetch_add(1);
+                    visibleObjects[index] = m_objects[i].get();
+                }
+            });
+
+        visibleObjects.resize(visibleCount);
+
+        for (auto iter = visibleObjects.begin(); iter != visibleObjects.end(); ++iter)
+        {
+            (*iter)->Render(pRenderer);
+        }
     }
 }
 

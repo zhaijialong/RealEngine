@@ -1,6 +1,7 @@
 #pragma once
 
 #include "camera.h"
+#include "physics/physics_system.h"
 #include "light.h"
 
 namespace tinyxml2
@@ -15,6 +16,7 @@ public:
     ~World();
 
     Camera* GetCamera() const { return m_pCamera.get(); }
+    PhysicsSystem* GetPhysicsSystem() const { return m_pPhysicsSystem.get(); }
 
     void LoadScene(const eastl::string& file);
     void SaveScene(const eastl::string& file);
@@ -38,7 +40,7 @@ private:
 
 private:
     eastl::unique_ptr<Camera> m_pCamera;
-    eastl::unique_ptr<class PhysicsSystem> m_pPhysicsSystem;
+    eastl::unique_ptr<PhysicsSystem> m_pPhysicsSystem;
 
     eastl::vector<eastl::unique_ptr<IVisibleObject>> m_objects;
     eastl::vector<eastl::unique_ptr<ILight>> m_lights;

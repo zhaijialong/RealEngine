@@ -27,6 +27,7 @@ enum class RendererOutput
     IndirectSpecular,
     IndirectDiffuse,
     PathTracing,
+    Physics,
 
     Max
 };

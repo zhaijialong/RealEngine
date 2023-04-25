@@ -3,6 +3,8 @@
 #include "physics_layer_filter.h"
 #include "physics_body_activation_listener.h"
 #include "physics_contact_listener.h"
+#include "physics_debug_renderer.h"
+#include "renderer/renderer.h"
 #include "utils/log.h"
 #include "utils/memory.h"
 #include <cstdarg>
@@ -45,7 +47,7 @@ const JPH::uint cNumBodyMutexes = 0;
 const JPH::uint cMaxBodyPairs = 65536;
 const JPH::uint cMaxContactConstraints = 10240;
 
-PhysicsSystem::PhysicsSystem()
+PhysicsSystem::PhysicsSystem(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
 #if 0 //todo : enable it after we switch to the enkiTS job scheduler
     JPH::Allocate = RE_ALLOC;
@@ -80,6 +82,7 @@ void PhysicsSystem::Initialize()
     m_pObjectLayerFilter = eastl::make_unique<PhysicsObjectLayerPairFilter>();
     m_pBodyActivationListener = eastl::make_unique<PhysicsBodyActivationListener>();
     m_pContactListener = eastl::make_unique<PhysicsContactListener>();
+    m_pDebugRenderer = eastl::make_unique<PhysicsDebugRenderer>(m_pRenderer);
 
     m_pJoltSystem = eastl::make_unique<JPH::PhysicsSystem>();
     m_pJoltSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
@@ -99,4 +102,18 @@ void PhysicsSystem::Tick(float delta_time)
     const int cIntegrationSubSteps = 1;
 
     m_pJoltSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
+
+
+    if (m_pRenderer->GetOutputType() == RendererOutput::Physics)
+    {
+        m_pDebugRenderer->Clear();
+        
+        JPH::BodyManager::DrawSettings drawSettings;
+        m_pJoltSystem->DrawBodies(drawSettings, m_pDebugRenderer.get());
+    }
+}
+
+void PhysicsSystem::DebugDraw(IGfxCommandList* pCommandList)
+{
+    m_pDebugRenderer->Draw(pCommandList);
 }

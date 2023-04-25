@@ -60,6 +60,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/physics/physics_broad_phase_layer.h
     ${SOURCE_ROOT}/physics/physics_contact_listener.cpp
     ${SOURCE_ROOT}/physics/physics_contact_listener.h
+    ${SOURCE_ROOT}/physics/physics_debug_renderer.cpp
+    ${SOURCE_ROOT}/physics/physics_debug_renderer.h
     ${SOURCE_ROOT}/physics/physics_layer.h
     ${SOURCE_ROOT}/physics/physics_layer_filter.cpp
     ${SOURCE_ROOT}/physics/physics_layer_filter.h

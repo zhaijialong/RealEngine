@@ -472,6 +472,13 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
     pCommandList->BeginRenderPass(render_pass);
 
     CopyToBackbuffer(pCommandList, color, depth, needUpscaleDepth);
+
+    if (GetOutputType() == RendererOutput::Physics)
+    {
+        PhysicsSystem* pPhysicsSystem = Engine::GetInstance()->GetWorld()->GetPhysicsSystem();
+        pPhysicsSystem->DebugDraw(pCommandList);
+    }
+
     m_pGpuDebugLine->Draw(pCommandList);
     m_pGpuDebugPrint->Draw(pCommandList);
     Engine::GetInstance()->GetGUI()->Render(pCommandList);

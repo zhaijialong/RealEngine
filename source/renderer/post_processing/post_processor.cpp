@@ -33,6 +33,11 @@ RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT,
     RGHandle linearDepthRT, RGHandle velocityRT, 
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
+    if (m_pRenderer->GetOutputType() == RendererOutput::Physics)
+    {
+        return sceneColorRT;
+    }
+
     RENDER_GRAPH_EVENT(pRenderGraph, "PostProcess");
 
     UpdateUpsacleMode();

@@ -188,7 +188,8 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             commonSettings.cameraJitter[1] = camera->GetJitter().y;
             commonSettings.frameIndex = (uint32_t)m_pRenderer->GetFrameID();
             commonSettings.accumulationMode = m_bHistoryInvalid ? nrd::AccumulationMode::RESTART : nrd::AccumulationMode::CONTINUE;
-            commonSettings.isMotionVectorInWorldSpace = false;            
+            commonSettings.isMotionVectorInWorldSpace = false;
+            commonSettings.denoisingRange = camera->GetZFar();
 
             m_pReblur->SetMethodSettings(NRDMethod, m_pReblurSettings.get());
             m_pReblur->Denoise(pCommandList, commonSettings, userPool);
