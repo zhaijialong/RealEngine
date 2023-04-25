@@ -17,6 +17,11 @@
 #include "Jolt/Physics/PhysicsSettings.h"
 #include "Jolt/Physics/PhysicsSystem.h"
 
+//should be removed later
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+
 static void JoltTraceImpl(const char* inFMT, ...)
 {
     va_list list;
@@ -88,6 +93,19 @@ void PhysicsSystem::Initialize()
     m_pJoltSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
     m_pJoltSystem->SetBodyActivationListener(m_pBodyActivationListener.get());
     m_pJoltSystem->SetContactListener(m_pContactListener.get());
+
+    ///////// testing code here, should be removed later /////////
+    using namespace JPH;
+    BodyInterface& body_interface = m_pJoltSystem->GetBodyInterface();
+
+    BoxShapeSettings floor_shape_settings(Vec3(100.0f, 1.0f, 100.0f));
+    ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
+    ShapeRefC floor_shape = floor_shape_result.Get();
+    BodyCreationSettings floor_settings(floor_shape, RVec3(0.0, -1.0, 0.0), Quat::sIdentity(), EMotionType::Static, (ObjectLayer)PhysicsLayers::STATIC);
+    body_interface.CreateAndAddBody(floor_settings, EActivation::DontActivate);
+
+    BodyCreationSettings sphere_settings(new SphereShape(0.5f), RVec3(0.0, 5.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, (ObjectLayer)PhysicsLayers::DYNAMIC);
+    body_interface.CreateAndAddBody(sphere_settings, EActivation::Activate);
 }
 
 void PhysicsSystem::OptimizeBVH()
@@ -102,7 +120,6 @@ void PhysicsSystem::Tick(float delta_time)
     const int cIntegrationSubSteps = 1;
 
     m_pJoltSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
-
 
     if (m_pRenderer->GetOutputType() == RendererOutput::Physics)
     {
