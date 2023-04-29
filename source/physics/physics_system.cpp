@@ -127,10 +127,7 @@ void PhysicsSystem::Tick(float delta_time)
         
         JPH::BodyManager::DrawSettings drawSettings;
         m_pJoltSystem->DrawBodies(drawSettings, m_pDebugRenderer.get());
-    }
-}
 
-void PhysicsSystem::DebugDraw(IGfxCommandList* pCommandList)
-{
-    m_pDebugRenderer->Draw(pCommandList);
+        m_pDebugRenderer->Draw();
+    }
 }

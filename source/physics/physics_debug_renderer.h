@@ -19,7 +19,7 @@ public:
     virtual void DrawText3D(JPH::RVec3Arg inPosition, const JPH::string_view& inString, JPH::ColorArg inColor = JPH::Color::sWhite, float inHeight = 0.5f) override;
 
     void Clear();
-    void Draw(IGfxCommandList* pCommandList);
+    void Draw();
 
 private:
     Renderer* m_pRenderer;

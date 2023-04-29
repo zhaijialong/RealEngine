@@ -27,9 +27,12 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     int2 pos = dispatchThreadID.xy;
     
     Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthRT];
+    RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_outputRT];
+    
     float depth = depthRT[pos];
     if (depth == 0.0)
     {
+        outTexture[dispatchThreadID.xy] = 0.0;
         return;
     }
     
@@ -125,9 +128,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     indirect_specular *= specularAO;
 #endif
 
-    float3 radiance = emissive + direct_light + diffuse.xyz * indirect_diffuse * ao + indirect_specular;
-    
-    RWTexture2D<float4> outTexture = ResourceDescriptorHeap[c_outputRT];
+    float3 radiance = emissive + direct_light + diffuse.xyz * indirect_diffuse * ao + indirect_specular;    
 
 #if OUTPUT_DIFFUSE
     outTexture[dispatchThreadID.xy] = float4(diffuse.xyz, 1.0);

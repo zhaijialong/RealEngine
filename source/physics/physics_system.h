@@ -27,7 +27,6 @@ public:
     void Initialize();
     void OptimizeBVH();
     void Tick(float delta_time);
-    void DebugDraw(IGfxCommandList* pCommandList);
 
 private:
     Renderer* m_pRenderer;
