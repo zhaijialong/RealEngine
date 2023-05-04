@@ -57,7 +57,7 @@ void Renderer::ForwardPass(RGHandle& color, RGHandle& depth)
         [&](ForwardPassData& data, RGBuilder& builder)
         {
             data.outSceneColorRT = builder.WriteColor(0, color, 0, GfxRenderPassLoadOp::Load);
-            data.outSceneDepthRT = builder.ReadDepth(depth, 0);
+            data.outSceneDepthRT = builder.WriteDepth(depth, 0, GfxRenderPassLoadOp::Load);
         },
         [&](const ForwardPassData& data, IGfxCommandList* pCommandList)
         {

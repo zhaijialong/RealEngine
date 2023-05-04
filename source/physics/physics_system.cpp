@@ -87,7 +87,9 @@ void PhysicsSystem::Initialize()
     m_pObjectLayerFilter = eastl::make_unique<PhysicsObjectLayerPairFilter>();
     m_pBodyActivationListener = eastl::make_unique<PhysicsBodyActivationListener>();
     m_pContactListener = eastl::make_unique<PhysicsContactListener>();
+#ifdef JPH_DEBUG_RENDERER
     m_pDebugRenderer = eastl::make_unique<PhysicsDebugRenderer>(m_pRenderer);
+#endif
 
     m_pJoltSystem = eastl::make_unique<JPH::PhysicsSystem>();
     m_pJoltSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
@@ -104,7 +106,7 @@ void PhysicsSystem::Initialize()
     BodyCreationSettings floor_settings(floor_shape, RVec3(0.0, -1.0, 0.0), Quat::sIdentity(), EMotionType::Static, (ObjectLayer)PhysicsLayers::STATIC);
     body_interface.CreateAndAddBody(floor_settings, EActivation::DontActivate);
 
-    BodyCreationSettings sphere_settings(new SphereShape(0.5f), RVec3(0.0, 5.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, (ObjectLayer)PhysicsLayers::DYNAMIC);
+    BodyCreationSettings sphere_settings(new SphereShape(5.f), RVec3(0.0, 25.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, (ObjectLayer)PhysicsLayers::DYNAMIC);
     body_interface.CreateAndAddBody(sphere_settings, EActivation::Activate);
 }
 
@@ -122,12 +124,12 @@ void PhysicsSystem::Tick(float delta_time)
     m_pJoltSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
 
     if (m_pRenderer->GetOutputType() == RendererOutput::Physics)
-    {
-        m_pDebugRenderer->Clear();
-        
+    {        
+#ifdef JPH_DEBUG_RENDERER
         JPH::BodyManager::DrawSettings drawSettings;
         m_pJoltSystem->DrawBodies(drawSettings, m_pDebugRenderer.get());
 
-        m_pDebugRenderer->Draw();
+        m_pJoltSystem->DrawConstraints(m_pDebugRenderer.get());
+#endif
     }
 }

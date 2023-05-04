@@ -4,12 +4,13 @@
 #include "utils/math.h"
 #include "utils/linear_allocator.h"
 
-#define MAX_RENDER_BATCH_CB_COUNT (5)
+#define MAX_RENDER_BATCH_CB_COUNT GFX_MAX_CBV_BINDINGS
 
 struct RenderBatch
 {
     RenderBatch(LinearAllocator& cb_allocator) : m_allocator(cb_allocator)
     {
+        ib = nullptr;
     }
 
     const char* label = "";
@@ -43,6 +44,7 @@ struct RenderBatch
     float radius = 0.0f;
     uint32_t meshletCount = 0;
     uint32_t instanceIndex = 0;
+    uint32_t vertex_count = 0;
 
     void SetPipelineState(IGfxPipelineState* pPSO)
     {
@@ -74,6 +76,11 @@ struct RenderBatch
         index_count = count;
     }
 
+    void Draw(uint32_t count)
+    {
+        vertex_count = count;
+    }
+
     void DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
     {
         dispatch_x = group_count_x;
@@ -103,10 +110,14 @@ inline void DrawBatch(IGfxCommandList* pCommandList, const RenderBatch& batch)
     {
         pCommandList->DispatchMesh(batch.dispatch_x, batch.dispatch_y, batch.dispatch_z);
     }
-    else
+    else if(batch.ib != nullptr)
     {
         pCommandList->SetIndexBuffer(batch.ib, batch.ib_offset, batch.ib_format);
         pCommandList->DrawIndexed(batch.index_count);
+    }
+    else
+    {
+        pCommandList->Draw(batch.vertex_count);
     }
 }
 

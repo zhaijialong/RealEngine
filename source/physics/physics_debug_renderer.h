@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef JPH_DEBUG_RENDERER
+
 #include "Jolt/Jolt.h"
 #include "Jolt/Renderer/DebugRenderer.h"
 
@@ -18,9 +20,8 @@ public:
     virtual void DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& inWorldSpaceBounds, float inLODScaleSq, JPH::ColorArg inModelColor, const GeometryRef& inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) override;
     virtual void DrawText3D(JPH::RVec3Arg inPosition, const JPH::string_view& inString, JPH::ColorArg inColor = JPH::Color::sWhite, float inHeight = 0.5f) override;
 
-    void Clear();
-    void Draw();
-
 private:
     Renderer* m_pRenderer;
 };
+
+#endif //JPH_DEBUG_RENDERER
