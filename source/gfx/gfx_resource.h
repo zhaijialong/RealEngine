@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx_define.h"
+#include "gfx_defines.h"
 
 class IGfxDevice;
 

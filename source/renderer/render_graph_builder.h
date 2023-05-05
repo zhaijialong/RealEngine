@@ -1,7 +1,7 @@
 #pragma once
 
 #include "render_graph.h"
-#include "gfx/gfx_define.h"
+#include "gfx/gfx_defines.h"
 
 enum class RGBuilderFlag
 {

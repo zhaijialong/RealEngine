@@ -3,7 +3,7 @@
 #include "directx/d3d12.h"
 #include "directx/d3dx12.h"
 #include "dxgi1_6.h"
-#include "../gfx_define.h"
+#include "../gfx_defines.h"
 #include "utils/string.h"
 #include "utils/assert.h"
 

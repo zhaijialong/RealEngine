@@ -2,6 +2,11 @@
 
 #include "stdint.h"
 
+enum class PhysicsEngine
+{
+    Jolt,
+};
+
 namespace PhysicsLayers
 {
     static constexpr uint16_t STATIC(0);

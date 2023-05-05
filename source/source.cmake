@@ -42,7 +42,7 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/gfx.h
     ${SOURCE_ROOT}/gfx/gfx_buffer.h
     ${SOURCE_ROOT}/gfx/gfx_command_list.h
-    ${SOURCE_ROOT}/gfx/gfx_define.h
+    ${SOURCE_ROOT}/gfx/gfx_defines.h
     ${SOURCE_ROOT}/gfx/gfx_descriptor.h
     ${SOURCE_ROOT}/gfx/gfx_device.h
     ${SOURCE_ROOT}/gfx/gfx_fence.h
@@ -54,18 +54,27 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/gfx_shader.h
     ${SOURCE_ROOT}/gfx/gfx_swapchain.h
     ${SOURCE_ROOT}/gfx/gfx_texture.h
-    ${SOURCE_ROOT}/physics/physics_body_activation_listener.cpp
-    ${SOURCE_ROOT}/physics/physics_body_activation_listener.h
-    ${SOURCE_ROOT}/physics/physics_broad_phase_layer.cpp
-    ${SOURCE_ROOT}/physics/physics_broad_phase_layer.h
-    ${SOURCE_ROOT}/physics/physics_contact_listener.cpp
-    ${SOURCE_ROOT}/physics/physics_contact_listener.h
-    ${SOURCE_ROOT}/physics/physics_debug_renderer.cpp
-    ${SOURCE_ROOT}/physics/physics_debug_renderer.h
-    ${SOURCE_ROOT}/physics/physics_layer.h
-    ${SOURCE_ROOT}/physics/physics_layer_filter.cpp
-    ${SOURCE_ROOT}/physics/physics_layer_filter.h
-    ${SOURCE_ROOT}/physics/physics_system.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_body_activation_listener.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_body_activation_listener.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_broad_phase_layer.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_broad_phase_layer.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_contact_listener.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_contact_listener.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_debug_renderer.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_debug_renderer.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_layer_filter.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_layer_filter.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_rigid_body.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_rigid_body.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_shape.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_shape.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_system.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_system.h
+    ${SOURCE_ROOT}/physics/physics.cpp
+    ${SOURCE_ROOT}/physics/physics.h
+    ${SOURCE_ROOT}/physics/physics_defines.h
+    ${SOURCE_ROOT}/physics/physics_rigid_body.h
+    ${SOURCE_ROOT}/physics/physics_shape.h
     ${SOURCE_ROOT}/physics/physics_system.h
     ${SOURCE_ROOT}/renderer/lighting/clustered_shading.cpp
     ${SOURCE_ROOT}/renderer/lighting/clustered_shading.h

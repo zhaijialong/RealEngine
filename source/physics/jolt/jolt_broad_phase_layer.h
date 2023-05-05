@@ -3,7 +3,7 @@
 #include "Jolt/Jolt.h"
 #include "Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h"
 
-class PhysicsBroadPhaseLayerInterface : public JPH::BroadPhaseLayerInterface
+class JoltBroadPhaseLayerInterface : public JPH::BroadPhaseLayerInterface
 {
 public:
     virtual JPH::uint GetNumBroadPhaseLayers() const override;

@@ -1,9 +1,11 @@
-#include "physics_system.h"
-#include "physics_broad_phase_layer.h"
-#include "physics_layer_filter.h"
-#include "physics_body_activation_listener.h"
-#include "physics_contact_listener.h"
-#include "physics_debug_renderer.h"
+#include "jolt_system.h"
+#include "jolt_broad_phase_layer.h"
+#include "jolt_layer_filter.h"
+#include "jolt_body_activation_listener.h"
+#include "jolt_contact_listener.h"
+#include "jolt_debug_renderer.h"
+#include "../physics_defines.h"
+#include "core/engine.h"
 #include "renderer/renderer.h"
 #include "utils/log.h"
 #include "utils/memory.h"
@@ -52,8 +54,10 @@ const JPH::uint cNumBodyMutexes = 0;
 const JPH::uint cMaxBodyPairs = 65536;
 const JPH::uint cMaxContactConstraints = 10240;
 
-PhysicsSystem::PhysicsSystem(Renderer* pRenderer) : m_pRenderer(pRenderer)
+JoltSystem::JoltSystem()
 {
+    m_pRenderer = Engine::GetInstance()->GetRenderer();
+
 #if 0 //todo : enable it after we switch to the enkiTS job scheduler
     JPH::Allocate = RE_ALLOC;
     JPH::Free = RE_FREE;
@@ -72,33 +76,33 @@ PhysicsSystem::PhysicsSystem(Renderer* pRenderer) : m_pRenderer(pRenderer)
     JPH::RegisterTypes();
 }
 
-PhysicsSystem::~PhysicsSystem()
+JoltSystem::~JoltSystem()
 {
     JPH::UnregisterTypes();
     delete JPH::Factory::sInstance;
 }
 
-void PhysicsSystem::Initialize()
+void JoltSystem::Initialize()
 {
     m_pTempAllocator = eastl::make_unique<JPH::TempAllocatorImpl>(10 * 1024 * 1024);
     m_pJobSystem = eastl::make_unique<JPH::JobSystemThreadPool>(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
-    m_pBroadPhaseLayer = eastl::make_unique<PhysicsBroadPhaseLayerInterface>();
-    m_pBroadPhaseLayerFilter = eastl::make_unique<PhysicsObjectVsBroadPhaseLayerFilter>();
-    m_pObjectLayerFilter = eastl::make_unique<PhysicsObjectLayerPairFilter>();
-    m_pBodyActivationListener = eastl::make_unique<PhysicsBodyActivationListener>();
-    m_pContactListener = eastl::make_unique<PhysicsContactListener>();
+    m_pBroadPhaseLayer = eastl::make_unique<JoltBroadPhaseLayerInterface>();
+    m_pBroadPhaseLayerFilter = eastl::make_unique<JoltObjectVsBroadPhaseLayerFilter>();
+    m_pObjectLayerFilter = eastl::make_unique<JoltObjectLayerPairFilter>();
+    m_pBodyActivationListener = eastl::make_unique<JoltBodyActivationListener>();
+    m_pContactListener = eastl::make_unique<JoltContactListener>();
 #ifdef JPH_DEBUG_RENDERER
-    m_pDebugRenderer = eastl::make_unique<PhysicsDebugRenderer>(m_pRenderer);
+    m_pDebugRenderer = eastl::make_unique<JoltDebugRenderer>(m_pRenderer);
 #endif
 
-    m_pJoltSystem = eastl::make_unique<JPH::PhysicsSystem>();
-    m_pJoltSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
-    m_pJoltSystem->SetBodyActivationListener(m_pBodyActivationListener.get());
-    m_pJoltSystem->SetContactListener(m_pContactListener.get());
+    m_pSystem = eastl::make_unique<JPH::PhysicsSystem>();
+    m_pSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
+    m_pSystem->SetBodyActivationListener(m_pBodyActivationListener.get());
+    m_pSystem->SetContactListener(m_pContactListener.get());
 
     ///////// testing code here, should be removed later /////////
     using namespace JPH;
-    BodyInterface& body_interface = m_pJoltSystem->GetBodyInterface();
+    BodyInterface& body_interface = m_pSystem->GetBodyInterface();
 
     BoxShapeSettings floor_shape_settings(Vec3(100.0f, 1.0f, 100.0f));
     ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
@@ -110,26 +114,26 @@ void PhysicsSystem::Initialize()
     body_interface.CreateAndAddBody(sphere_settings, EActivation::Activate);
 }
 
-void PhysicsSystem::OptimizeBVH()
+void JoltSystem::OptimizeTLAS()
 {
-    m_pJoltSystem->OptimizeBroadPhase();
+    m_pSystem->OptimizeBroadPhase();
 }
 
-void PhysicsSystem::Tick(float delta_time)
+void JoltSystem::Tick(float delta_time)
 {
     const float cDeltaTime = 1.0f / 60.0f;
     const int cCollisionSteps = 1;
     const int cIntegrationSubSteps = 1;
 
-    m_pJoltSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
+    m_pSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
 
     if (m_pRenderer->GetOutputType() == RendererOutput::Physics)
     {        
 #ifdef JPH_DEBUG_RENDERER
         JPH::BodyManager::DrawSettings drawSettings;
-        m_pJoltSystem->DrawBodies(drawSettings, m_pDebugRenderer.get());
+        m_pSystem->DrawBodies(drawSettings, m_pDebugRenderer.get());
 
-        m_pJoltSystem->DrawConstraints(m_pDebugRenderer.get());
+        m_pSystem->DrawConstraints(m_pDebugRenderer.get());
 #endif
     }
 }

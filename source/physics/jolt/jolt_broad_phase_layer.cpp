@@ -1,13 +1,13 @@
-#include "physics_broad_phase_layer.h"
-#include "physics_layer.h"
+#include "jolt_broad_phase_layer.h"
+#include "../physics_defines.h"
 #include "utils/assert.h"
 
-JPH::uint PhysicsBroadPhaseLayerInterface::GetNumBroadPhaseLayers() const
+JPH::uint JoltBroadPhaseLayerInterface::GetNumBroadPhaseLayers() const
 {
     return PhysicsBroadPhaseLayers::NUM;
 }
 
-JPH::BroadPhaseLayer PhysicsBroadPhaseLayerInterface::GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const
+JPH::BroadPhaseLayer JoltBroadPhaseLayerInterface::GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const
 {
     switch (inLayer)
     {
@@ -24,7 +24,7 @@ JPH::BroadPhaseLayer PhysicsBroadPhaseLayerInterface::GetBroadPhaseLayer(JPH::Ob
 }
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
-const char* PhysicsBroadPhaseLayerInterface::GetBroadPhaseLayerName(JPH::BroadPhaseLayer inLayer) const
+const char* JoltBroadPhaseLayerInterface::GetBroadPhaseLayerName(JPH::BroadPhaseLayer inLayer) const
 {
     switch ((JPH::BroadPhaseLayer::Type)inLayer)
     {

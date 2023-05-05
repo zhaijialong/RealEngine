@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx_define.h"
+#include "gfx_defines.h"
 #include "gfx_device.h"
 #include "gfx_buffer.h"
 #include "gfx_texture.h"

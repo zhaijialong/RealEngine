@@ -8,10 +8,10 @@
 class IGfxCommandList;
 class Renderer;
 
-class PhysicsDebugRenderer : public JPH::DebugRenderer
+class JoltDebugRenderer : public JPH::DebugRenderer
 {
 public:
-    PhysicsDebugRenderer(Renderer* pRenderer);
+    JoltDebugRenderer(Renderer* pRenderer);
 
     virtual void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override;
     virtual void DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor) override;

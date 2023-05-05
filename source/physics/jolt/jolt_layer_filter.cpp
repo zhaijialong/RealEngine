@@ -1,8 +1,8 @@
-#include "physics_layer_filter.h"
-#include "physics_layer.h"
+#include "jolt_layer_filter.h"
+#include "../physics_defines.h"
 #include "utils/assert.h"
 
-bool PhysicsObjectVsBroadPhaseLayerFilter::ShouldCollide(JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2) const
+bool JoltObjectVsBroadPhaseLayerFilter::ShouldCollide(JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2) const
 {
     switch (inLayer1)
     {
@@ -16,7 +16,7 @@ bool PhysicsObjectVsBroadPhaseLayerFilter::ShouldCollide(JPH::ObjectLayer inLaye
     }
 }
 
-bool PhysicsObjectLayerPairFilter::ShouldCollide(JPH::ObjectLayer inLayer1, JPH::ObjectLayer inLayer2) const
+bool JoltObjectLayerPairFilter::ShouldCollide(JPH::ObjectLayer inLayer1, JPH::ObjectLayer inLayer2) const
 {
     switch (inLayer1)
     {

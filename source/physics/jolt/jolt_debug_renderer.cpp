@@ -1,10 +1,10 @@
-#include "physics_debug_renderer.h"
-#include "../renderer/renderer.h"
+#include "jolt_debug_renderer.h"
+#include "../../renderer/renderer.h"
 #include "physics_debug.hlsli"
 
 #ifdef JPH_DEBUG_RENDERER
 
-class PhysicsBatch : public JPH::RefTargetVirtual
+class JoltBatch : public JPH::RefTargetVirtual
 {
 public:
     virtual void AddRef() override 
@@ -20,13 +20,13 @@ public:
         }
     }
 
-    PhysicsBatch(Renderer* pRenderer, const JPH::DebugRenderer::Triangle* inTriangles, int inTriangleCount)
+    JoltBatch(Renderer* pRenderer, const JPH::DebugRenderer::Triangle* inTriangles, int inTriangleCount)
     {
         m_pVertexBuffer.reset(pRenderer->CreateStructuredBuffer(inTriangles, sizeof(JPH::DebugRenderer::Vertex), inTriangleCount * 3, "PhysicsBatch vertices"));
         m_vertexCount = inTriangleCount * 3;
     }
 
-    PhysicsBatch(Renderer* pRenderer, const JPH::DebugRenderer::Vertex* inVertices, int inVertexCount, const JPH::uint32* inIndices, int inIndexCount)
+    JoltBatch(Renderer* pRenderer, const JPH::DebugRenderer::Vertex* inVertices, int inVertexCount, const JPH::uint32* inIndices, int inIndexCount)
     {
         m_pVertexBuffer.reset(pRenderer->CreateStructuredBuffer(inVertices, sizeof(JPH::DebugRenderer::Vertex), inVertexCount, "PhysicsBatch vertices"));
         m_pIndexBuffer.reset(pRenderer->CreateIndexBuffer(inIndices, sizeof(JPH::uint32), inIndexCount, "PhysicsBatch indices"));
@@ -48,35 +48,35 @@ private:
     uint32_t m_indexCount = 0;
 };
 
-PhysicsDebugRenderer::PhysicsDebugRenderer(Renderer* pRenderer) : m_pRenderer(pRenderer)
+JoltDebugRenderer::JoltDebugRenderer(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
     Initialize();
 }
 
-void PhysicsDebugRenderer::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor)
+void JoltDebugRenderer::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor)
 {
     // todo
 }
 
-void PhysicsDebugRenderer::DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor)
+void JoltDebugRenderer::DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor)
 {
     // todo
 }
 
-JPH::DebugRenderer::Batch PhysicsDebugRenderer::CreateTriangleBatch(const Triangle* inTriangles, int inTriangleCount)
+JPH::DebugRenderer::Batch JoltDebugRenderer::CreateTriangleBatch(const Triangle* inTriangles, int inTriangleCount)
 {
-    return new PhysicsBatch(m_pRenderer, inTriangles, inTriangleCount);
+    return new JoltBatch(m_pRenderer, inTriangles, inTriangleCount);
 }
 
-JPH::DebugRenderer::Batch PhysicsDebugRenderer::CreateTriangleBatch(const Vertex* inVertices, int inVertexCount, const JPH::uint32* inIndices, int inIndexCount)
+JPH::DebugRenderer::Batch JoltDebugRenderer::CreateTriangleBatch(const Vertex* inVertices, int inVertexCount, const JPH::uint32* inIndices, int inIndexCount)
 {
-    return new PhysicsBatch(m_pRenderer, inVertices, inVertexCount, inIndices, inIndexCount);
+    return new JoltBatch(m_pRenderer, inVertices, inVertexCount, inIndices, inIndexCount);
 }
 
-void PhysicsDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& inWorldSpaceBounds, float inLODScaleSq, JPH::ColorArg inModelColor, const GeometryRef& inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& inWorldSpaceBounds, float inLODScaleSq, JPH::ColorArg inModelColor, const GeometryRef& inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
     // todo : culling, LOD, instancing ...
-    PhysicsBatch* physicsBatch = (PhysicsBatch*)inGeometry->mLODs[0].mTriangleBatch.GetPtr();
+    JoltBatch* physicsBatch = (JoltBatch*)inGeometry->mLODs[0].mTriangleBatch.GetPtr();
 
     RenderBatch& batch = m_pRenderer->AddForwardPassBatch();
     batch.label = "Physics Debug Render";
@@ -112,7 +112,7 @@ void PhysicsDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH:
     }
 }
 
-void PhysicsDebugRenderer::DrawText3D(JPH::RVec3Arg inPosition, const JPH::string_view& inString, JPH::ColorArg inColor, float inHeight)
+void JoltDebugRenderer::DrawText3D(JPH::RVec3Arg inPosition, const JPH::string_view& inString, JPH::ColorArg inColor, float inHeight)
 {
     // todo
 }

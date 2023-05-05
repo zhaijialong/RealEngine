@@ -15,7 +15,7 @@ World::World()
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
     m_pCamera = eastl::make_unique<Camera>();
-    m_pPhysicsSystem = eastl::make_unique<PhysicsSystem>(pRenderer);
+    m_pPhysicsSystem.reset(CreatePhysicsSystem(PhysicsEngine::Jolt));
     m_pPhysicsSystem->Initialize();
 }
 

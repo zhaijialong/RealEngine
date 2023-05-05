@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/gfx_define.h"
+#include "gfx/gfx_defines.h"
 
 struct IDxcCompiler3;
 struct IDxcUtils;
