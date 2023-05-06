@@ -3,12 +3,12 @@
 
 IPhysicsSystem* CreatePhysicsSystem(PhysicsEngine physicsEngine)
 {
-	switch (physicsEngine)
-	{
-	case PhysicsEngine::Jolt:
-		return new JoltSystem();
-	default:
-		break;
-	}
+    switch (physicsEngine)
+    {
+    case PhysicsEngine::Jolt:
+        return new JoltSystem();
+    default:
+        break;
+    }
     return nullptr;
 }
