@@ -4,12 +4,13 @@
 #include "jolt_body_activation_listener.h"
 #include "jolt_contact_listener.h"
 #include "jolt_debug_renderer.h"
+#include "jolt_job_system.h"
 #include "../physics_defines.h"
 #include "core/engine.h"
 #include "renderer/renderer.h"
 #include "utils/log.h"
 #include "utils/memory.h"
-#include <cstdarg>
+#include "utils/profiler.h"
 
 #include "Jolt/Jolt.h"
 #include "Jolt/RegisterTypes.h"
@@ -58,7 +59,7 @@ JoltSystem::JoltSystem()
 {
     m_pRenderer = Engine::GetInstance()->GetRenderer();
 
-#if 0 //todo : enable it after we switch to the enkiTS job scheduler
+#if 1
     JPH::Allocate = RE_ALLOC;
     JPH::Free = RE_FREE;
     JPH::AlignedAllocate = RE_ALLOC;
@@ -85,7 +86,8 @@ JoltSystem::~JoltSystem()
 void JoltSystem::Initialize()
 {
     m_pTempAllocator = eastl::make_unique<JPH::TempAllocatorImpl>(10 * 1024 * 1024);
-    m_pJobSystem = eastl::make_unique<JPH::JobSystemThreadPool>(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
+    //m_pJobSystem = eastl::make_unique<JPH::JobSystemThreadPool>(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
+    m_pJobSystem = eastl::make_unique<JoltJobSystem>(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers);
     m_pBroadPhaseLayer = eastl::make_unique<JoltBroadPhaseLayerInterface>();
     m_pBroadPhaseLayerFilter = eastl::make_unique<JoltObjectVsBroadPhaseLayerFilter>();
     m_pObjectLayerFilter = eastl::make_unique<JoltObjectLayerPairFilter>();
@@ -121,6 +123,8 @@ void JoltSystem::OptimizeTLAS()
 
 void JoltSystem::Tick(float delta_time)
 {
+    CPU_EVENT("Tick", "Physics");
+
     const float cDeltaTime = 1.0f / 60.0f;
     const int cCollisionSteps = 1;
     const int cIntegrationSubSteps = 1;

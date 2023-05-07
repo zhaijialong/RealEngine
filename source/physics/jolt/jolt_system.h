@@ -7,7 +7,7 @@ namespace JPH
 {
     class PhysicsSystem;
     class TempAllocatorImpl;
-    class JobSystemThreadPool;
+    class JobSystemWithBarrier;
     class BroadPhaseLayerInterface;
     class ObjectVsBroadPhaseLayerFilter;
     class ObjectLayerPairFilter;
@@ -23,9 +23,9 @@ public:
     JoltSystem();
     ~JoltSystem();
 
-    void Initialize() override;
-    void OptimizeTLAS() override;
-    void Tick(float delta_time) override;
+    virtual void Initialize() override;
+    virtual void OptimizeTLAS() override;
+    virtual void Tick(float delta_time) override;
 
 private:
     Renderer* m_pRenderer;
@@ -37,6 +37,6 @@ private:
     eastl::unique_ptr<class JPH::ObjectLayerPairFilter> m_pObjectLayerFilter;
     eastl::unique_ptr<class JPH::BodyActivationListener> m_pBodyActivationListener;
     eastl::unique_ptr<class JPH::ContactListener> m_pContactListener;
-    eastl::unique_ptr<class JPH::JobSystemThreadPool> m_pJobSystem; //todo : use a custom job system built upon enkiTS
+    eastl::unique_ptr<class JPH::JobSystemWithBarrier> m_pJobSystem;
     eastl::unique_ptr<class JoltDebugRenderer> m_pDebugRenderer;
 };

@@ -62,6 +62,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/physics/jolt/jolt_contact_listener.h
     ${SOURCE_ROOT}/physics/jolt/jolt_debug_renderer.cpp
     ${SOURCE_ROOT}/physics/jolt/jolt_debug_renderer.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_job_system.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_job_system.h
     ${SOURCE_ROOT}/physics/jolt/jolt_layer_filter.cpp
     ${SOURCE_ROOT}/physics/jolt/jolt_layer_filter.h
     ${SOURCE_ROOT}/physics/jolt/jolt_rigid_body.cpp

@@ -72,16 +72,15 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
 
 void Engine::Shut()
 {
-    m_pTaskScheduler->WaitforAllAndShutdown();
-    m_pTaskScheduler.reset();
-
-    ShutdownProfiler();
+    m_pTaskScheduler->WaitforAll();
 
     m_pWorld.reset();
     m_pEditor.reset();
     m_pGUI.reset();
     m_pRenderer.reset();
+    m_pTaskScheduler.reset();
 
+    ShutdownProfiler();
     spdlog::shutdown();
 }
 
