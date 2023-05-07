@@ -31,6 +31,10 @@ float4 ps_main(VSOutput input) : SV_TARGET
 {
     float3 N = normalize(input.normal);
     float3 L = SceneCB.lightDir;
+    float lighting = max(0.0, dot(N, L)) + 0.05;
     
-    return input.color * (max(0.0, dot(N, L)) + 0.1);
+    uint2 less_haf = step(frac(input.uv), 0.5);
+    float checkerboard = less_haf.x ^ less_haf.y ? 0.5 : 1.0;
+    
+    return input.color * lighting * checkerboard;
 }
