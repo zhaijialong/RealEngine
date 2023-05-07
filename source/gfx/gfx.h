@@ -62,9 +62,9 @@ private:
 };
 
 #if 1
-#define GPU_EVENT(pCommandList, event_name) RenderEvent __render_event__(pCommandList, event_name); MPRenderEvent __mp_event__(pCommandList, event_name)
 #define GPU_EVENT_DEBUG(pCommandList, event_name) RenderEvent __render_event__(pCommandList, event_name)
 #define GPU_EVENT_PROFILER(pCommandList, event_name) MPRenderEvent __mp_event__(pCommandList, event_name)
+#define GPU_EVENT(pCommandList, event_name) GPU_EVENT_DEBUG(pCommandList, event_name); GPU_EVENT_PROFILER(pCommandList, event_name)
 #else
 #define GPU_EVENT(pCommandList, event_name) 
 #define GPU_EVENT_DEBUG(pCommandList, event_name) 

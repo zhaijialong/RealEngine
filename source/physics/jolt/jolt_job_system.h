@@ -11,13 +11,7 @@ class JoltJobSystem : public JPH::JobSystemWithBarrier
     {
         enki::Dependency dependency;
 
-        virtual void OnDependenciesComplete(enki::TaskScheduler* pTaskScheduler_, uint32_t threadNum_) override
-        {
-            ICompletable::OnDependenciesComplete(pTaskScheduler_, threadNum_);
-
-            JoltJob* job = (JoltJob*)dependency.GetDependencyTask();
-            job->Release();
-        }
+        virtual void OnDependenciesComplete(enki::TaskScheduler* pTaskScheduler_, uint32_t threadNum_) override;
     };
 
     class JoltJob : public JobSystem::Job, public enki::ITaskSet
@@ -30,10 +24,7 @@ class JoltJobSystem : public JPH::JobSystemWithBarrier
             m_completionAction.SetDependency(m_completionAction.dependency, this);
         }
 
-        virtual void ExecuteRange(enki::TaskSetPartition range_, uint32_t threadnum_) override
-        {
-            Execute();
-        }
+        virtual void ExecuteRange(enki::TaskSetPartition range_, uint32_t threadnum_) override;
 
     private:
         CompletionAction m_completionAction;

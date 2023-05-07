@@ -1,5 +1,6 @@
 #include "jolt_job_system.h"
 #include "core/engine.h"
+#include "utils/profiler.h"
 #include "Jolt/Core/Profiler.h"
 
 using namespace JPH;
@@ -77,4 +78,19 @@ void JoltJobSystem::QueueJobs(Job** inJobs, JPH::uint inNumJobs)
 void JoltJobSystem::FreeJob(Job* inJob)
 {
     m_jobs.DestructObject((JoltJob*)inJob);
+}
+
+void JoltJobSystem::JoltJob::ExecuteRange(enki::TaskSetPartition range_, uint32_t threadnum_)
+{
+    CPU_EVENT("Physics", "Physics Job");
+
+    Execute();
+}
+
+void JoltJobSystem::CompletionAction::OnDependenciesComplete(enki::TaskScheduler* pTaskScheduler_, uint32_t threadNum_)
+{
+    ICompletable::OnDependenciesComplete(pTaskScheduler_, threadNum_);
+
+    JoltJob* job = (JoltJob*)dependency.GetDependencyTask();
+    job->Release();
 }

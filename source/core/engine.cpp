@@ -31,7 +31,9 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
     spdlog::set_level(spdlog::level::trace);
     spdlog::flush_every(std::chrono::milliseconds(10));
 
-    StartProfiler();
+    MicroProfileSetEnableAllGroups(true);
+    MicroProfileSetForceMetaCounters(true);
+    MicroProfileOnThreadCreate("Main Thread");
 
     enki::TaskSchedulerConfig config;
     config.profilerCallbacks.threadStart = [](uint32_t i) 
@@ -80,7 +82,7 @@ void Engine::Shut()
     m_pRenderer.reset();
     m_pTaskScheduler.reset();
 
-    ShutdownProfiler();
+    MicroProfileShutdown();
     spdlog::shutdown();
 }
 
@@ -96,7 +98,7 @@ void Engine::Tick()
 
     m_pRenderer->RenderFrame();
 
-    TickProfiler();
+    MicroProfileFlip(0);
 }
 
 void Engine::LoadEngineConfig()

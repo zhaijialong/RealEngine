@@ -123,7 +123,7 @@ void JoltSystem::OptimizeTLAS()
 
 void JoltSystem::Tick(float delta_time)
 {
-    CPU_EVENT("Tick", "Physics");
+    CPU_EVENT("Physics", "JoltSystem::Tick");
 
     const float cDeltaTime = 1.0f / 60.0f;
     const int cCollisionSteps = 1;
