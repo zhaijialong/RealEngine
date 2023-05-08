@@ -5,8 +5,8 @@
 #include "Jolt/Jolt.h"
 #include "Jolt/Renderer/DebugRenderer.h"
 
-class IGfxCommandList;
 class Renderer;
+class IGfxPipelineState;
 
 class JoltDebugRenderer : public JPH::DebugRenderer
 {
@@ -22,6 +22,8 @@ public:
 
 private:
     Renderer* m_pRenderer;
+
+    IGfxPipelineState* m_PSOs[3];
 };
 
 #endif //JPH_DEBUG_RENDERER

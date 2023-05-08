@@ -132,7 +132,9 @@ void JoltSystem::Tick(float delta_time)
     m_pSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
 
     if (m_pRenderer->GetOutputType() == RendererOutput::Physics)
-    {        
+    {
+        CPU_EVENT("Physics", "Debug Draw");
+
 #ifdef JPH_DEBUG_RENDERER
         JPH::BodyManager::DrawSettings drawSettings;
         m_pSystem->DrawBodies(drawSettings, m_pDebugRenderer.get());

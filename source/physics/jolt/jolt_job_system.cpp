@@ -82,7 +82,7 @@ void JoltJobSystem::FreeJob(Job* inJob)
 
 void JoltJobSystem::JoltJob::ExecuteRange(enki::TaskSetPartition range_, uint32_t threadnum_)
 {
-    CPU_EVENT("Physics", "Physics Job");
+    CPU_EVENT("Physics", "Physics Task");
 
     Execute();
 }

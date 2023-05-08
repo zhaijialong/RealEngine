@@ -51,6 +51,24 @@ private:
 JoltDebugRenderer::JoltDebugRenderer(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
     Initialize();
+
+    GfxGraphicsPipelineDesc psoDesc;
+    psoDesc.vs = m_pRenderer->GetShader("physics_debug.hlsl", "vs_main", "vs_6_6", {});
+    psoDesc.ps = m_pRenderer->GetShader("physics_debug.hlsl", "ps_main", "ps_6_6", {});
+    psoDesc.rasterizer_state.wireframe = false;
+    psoDesc.depthstencil_state.depth_test = true;
+    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
+    psoDesc.rt_format[0] = GfxFormat::RGBA16F;
+    psoDesc.depthstencil_format = GfxFormat::D32F;
+
+    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Back;
+    m_PSOs[(int)ECullMode::CullBackFace] = m_pRenderer->GetPipelineState(psoDesc, "Physics Debug PSO");
+
+    psoDesc.rasterizer_state.cull_mode = GfxCullMode::Front;
+    m_PSOs[(int)ECullMode::CullFrontFace] = m_pRenderer->GetPipelineState(psoDesc, "Physics Debug PSO");
+
+    psoDesc.rasterizer_state.cull_mode = GfxCullMode::None;
+    m_PSOs[(int)ECullMode::Off] = m_pRenderer->GetPipelineState(psoDesc, "Physics Debug PSO");
 }
 
 void JoltDebugRenderer::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor)
@@ -78,27 +96,15 @@ void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AA
     // todo : culling, LOD, instancing ...
     JoltBatch* physicsBatch = (JoltBatch*)inGeometry->mLODs[0].mTriangleBatch.GetPtr();
 
-    RenderBatch& batch = m_pRenderer->AddForwardPassBatch();
-    batch.label = "Physics Debug Render";
-
-    GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = m_pRenderer->GetShader("physics_debug.hlsl", "vs_main", "vs_6_6", {});
-    psoDesc.ps = m_pRenderer->GetShader("physics_debug.hlsl", "ps_main", "ps_6_6", {});
-    psoDesc.rasterizer_state.cull_mode = inCullMode == ECullMode::CullBackFace ? GfxCullMode::Back : (inCullMode == ECullMode::CullFrontFace ? GfxCullMode::Front : GfxCullMode::None);
-    psoDesc.rasterizer_state.wireframe = inDrawMode == EDrawMode::Wireframe;
-    psoDesc.depthstencil_state.depth_test = true;
-    psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
-    psoDesc.rt_format[0] = GfxFormat::RGBA16F;
-    psoDesc.depthstencil_format = GfxFormat::D32F;
-    IGfxPipelineState* pso = m_pRenderer->GetPipelineState(psoDesc, "Physics Debug PSO");
-    batch.SetPipelineState(pso);
-
     Constants constants;
     constants.vertexBuffer = physicsBatch->GetVertexBuffer()->GetSRV()->GetHeapIndex();
     constants.color = inModelColor.GetUInt32();
     memcpy(&constants.mtxWorld, &inModelMatrix, sizeof(float4x4));
     constants.mtxWorldInverseTranspose = transpose(inverse(constants.mtxWorld));
 
+    RenderBatch& batch = m_pRenderer->AddForwardPassBatch();
+    batch.label = "Physics Debug Render";
+    batch.SetPipelineState(m_PSOs[(int)inCullMode]);
     batch.SetConstantBuffer(1, &constants, sizeof(constants));
 
     if (physicsBatch->GetIndexBuffer() != nullptr)
