@@ -79,11 +79,12 @@ void Engine::Shut()
     m_pWorld.reset();
     m_pEditor.reset();
     m_pGUI.reset();
-    m_pRenderer.reset();
     m_pTaskScheduler.reset();
 
     MicroProfileShutdown();
     spdlog::shutdown();
+
+    m_pRenderer.reset();
 }
 
 void Engine::Tick()

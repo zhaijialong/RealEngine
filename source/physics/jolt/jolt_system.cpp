@@ -5,7 +5,8 @@
 #include "jolt_contact_listener.h"
 #include "jolt_debug_renderer.h"
 #include "jolt_job_system.h"
-#include "../physics_defines.h"
+#include "jolt_shape.h"
+#include "jolt_rigid_body.h"
 #include "core/engine.h"
 #include "renderer/renderer.h"
 #include "utils/log.h"
@@ -20,11 +21,6 @@
 #include "Jolt/Physics/PhysicsSettings.h"
 #include "Jolt/Physics/PhysicsSystem.h"
 
-//should be removed later
-#include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>
-#include <Jolt/Physics/Body/BodyCreationSettings.h>
-
 static void JoltTraceImpl(const char* inFMT, ...)
 {
     va_list list;
@@ -38,15 +34,7 @@ static void JoltTraceImpl(const char* inFMT, ...)
 
 static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine)
 {
-    if (inMessage)
-    {
-        RE_ERROR("{}:{}: ({}) {}", inFile, inLine, inExpression, inMessage);
-	}
-    else
-    {
-        RE_ERROR("{}:{}: ({})", inFile, inLine, inExpression);
-    }
-
+    RE_ERROR("{}:{}: ({}) {}", inFile, inLine, inExpression, inMessage ? inMessage : "");
     return true;
 };
 
@@ -101,19 +89,15 @@ void JoltSystem::Initialize()
     m_pSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
     m_pSystem->SetBodyActivationListener(m_pBodyActivationListener.get());
     m_pSystem->SetContactListener(m_pContactListener.get());
-
+    
     ///////// testing code here, should be removed later /////////
-    using namespace JPH;
-    BodyInterface& body_interface = m_pSystem->GetBodyInterface();
+    IPhysicsShape* floor_shape = CreateBoxShape(float3(100.0f, 1.0f, 100.0f));
+    IPhysicsRigidBody* floor = CreateRigidBody(floor_shape, float3(0.0f, -1.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Static, PhysicsLayers::STATIC);
+    AddRigidBody(floor, false);
 
-    BoxShapeSettings floor_shape_settings(Vec3(100.0f, 1.0f, 100.0f));
-    ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
-    ShapeRefC floor_shape = floor_shape_result.Get();
-    BodyCreationSettings floor_settings(floor_shape, RVec3(0.0, -1.0, 0.0), Quat::sIdentity(), EMotionType::Static, (ObjectLayer)PhysicsLayers::STATIC);
-    body_interface.CreateAndAddBody(floor_settings, EActivation::DontActivate);
-
-    BodyCreationSettings sphere_settings(new SphereShape(5.f), RVec3(0.0, 25.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, (ObjectLayer)PhysicsLayers::DYNAMIC);
-    body_interface.CreateAndAddBody(sphere_settings, EActivation::Activate);
+    IPhysicsShape* sphere_shape = CreateSphereShape(5.0f);
+    IPhysicsRigidBody* sphere = CreateRigidBody(sphere_shape, float3(0.0f, 25.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC);
+    AddRigidBody(sphere, true);
 }
 
 void JoltSystem::OptimizeTLAS()
@@ -142,4 +126,82 @@ void JoltSystem::Tick(float delta_time)
         m_pSystem->DrawConstraints(m_pDebugRenderer.get());
 #endif
     }
+}
+
+IPhysicsShape* JoltSystem::CreateBoxShape(const float3& half_extent)
+{
+    JoltShape* shape = new JoltShape();
+    if (!shape->CreateBox(half_extent))
+    {
+        delete shape;
+        return nullptr;
+    }
+    return shape;
+}
+
+IPhysicsShape* JoltSystem::CreateSphereShape(float radius)
+{
+    JoltShape* shape = new JoltShape();
+    if (!shape->CreateSphere(radius))
+    {
+        delete shape;
+        return nullptr;
+    }
+    return shape;
+}
+
+IPhysicsShape* JoltSystem::CreateCapsuleShape(float half_height, float radius)
+{
+    JoltShape* shape = new JoltShape();
+    if (!shape->CreateCapsule(half_height, radius))
+    {
+        delete shape;
+        return nullptr;
+    }
+    return shape;
+}
+
+IPhysicsShape* JoltSystem::CreateCylinderShape(float half_height, float radius)
+{
+    JoltShape* shape = new JoltShape();
+    if (!shape->CreateCylinder(half_height, radius))
+    {
+        delete shape;
+        return nullptr;
+    }
+    return shape;
+}
+
+IPhysicsShape* JoltSystem::CreateConvexHullShape(eastl::span<float3> points)
+{
+    JoltShape* shape = new JoltShape();
+    if (!shape->CreateConvexHull(points))
+    {
+        delete shape;
+        return nullptr;
+    }
+    return shape;
+}
+
+IPhysicsRigidBody* JoltSystem::CreateRigidBody(const IPhysicsShape* shape, const float3& position, const quaternion& rotation, PhysicsMotion motion_type, uint16_t layer)
+{
+    JoltRigidBody* rigidBody = new JoltRigidBody(m_pSystem->GetBodyInterface());
+    if (!rigidBody->Create(shape, position, rotation, motion_type, layer))
+    {
+        delete rigidBody;
+        return nullptr;
+    }
+    return rigidBody;
+}
+
+void JoltSystem::AddRigidBody(const IPhysicsRigidBody* rigid_body, bool activate)
+{
+    JPH::BodyInterface& bodyInterface = m_pSystem->GetBodyInterface();
+    bodyInterface.AddBody(((JoltRigidBody*)rigid_body)->GetID(), activate ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
+}
+
+void JoltSystem::RemoveRigidBody(const IPhysicsRigidBody* rigid_body)
+{
+    JPH::BodyInterface& bodyInterface = m_pSystem->GetBodyInterface();
+    bodyInterface.RemoveBody(((JoltRigidBody*)rigid_body)->GetID());
 }

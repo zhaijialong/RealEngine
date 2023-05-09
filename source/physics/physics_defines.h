@@ -20,3 +20,10 @@ namespace PhysicsBroadPhaseLayers
     static constexpr uint8_t DYNAMIC(1);
     static constexpr uint8_t NUM(2);
 }
+
+enum class PhysicsMotion
+{
+    Static,
+    Kinematic,
+    Dynamic,
+};

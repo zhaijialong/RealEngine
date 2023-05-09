@@ -58,6 +58,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/physics/jolt/jolt_body_activation_listener.h
     ${SOURCE_ROOT}/physics/jolt/jolt_broad_phase_layer.cpp
     ${SOURCE_ROOT}/physics/jolt/jolt_broad_phase_layer.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_constraint.cpp
+    ${SOURCE_ROOT}/physics/jolt/jolt_constraint.h
     ${SOURCE_ROOT}/physics/jolt/jolt_contact_listener.cpp
     ${SOURCE_ROOT}/physics/jolt/jolt_contact_listener.h
     ${SOURCE_ROOT}/physics/jolt/jolt_debug_renderer.cpp
@@ -72,8 +74,10 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/physics/jolt/jolt_shape.h
     ${SOURCE_ROOT}/physics/jolt/jolt_system.cpp
     ${SOURCE_ROOT}/physics/jolt/jolt_system.h
+    ${SOURCE_ROOT}/physics/jolt/jolt_utils.h
     ${SOURCE_ROOT}/physics/physics.cpp
     ${SOURCE_ROOT}/physics/physics.h
+    ${SOURCE_ROOT}/physics/physics_constraint.h
     ${SOURCE_ROOT}/physics/physics_defines.h
     ${SOURCE_ROOT}/physics/physics_rigid_body.h
     ${SOURCE_ROOT}/physics/physics_shape.h

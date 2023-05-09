@@ -27,6 +27,17 @@ public:
     virtual void OptimizeTLAS() override;
     virtual void Tick(float delta_time) override;
 
+    virtual IPhysicsShape* CreateBoxShape(const float3& half_extent) override;
+    virtual IPhysicsShape* CreateSphereShape(float radius) override;
+    virtual IPhysicsShape* CreateCapsuleShape(float half_height, float radius) override;
+    virtual IPhysicsShape* CreateCylinderShape(float half_height, float radius) override;
+    virtual IPhysicsShape* CreateConvexHullShape(eastl::span<float3> points) override;
+
+    virtual IPhysicsRigidBody* CreateRigidBody(const IPhysicsShape* shape, const float3& position, const quaternion& rotation, PhysicsMotion motion_type, uint16_t layer) override;
+
+    virtual void AddRigidBody(const IPhysicsRigidBody* rigid_body, bool activate) override;
+    virtual void RemoveRigidBody(const IPhysicsRigidBody* rigid_body) override;
+
 private:
     Renderer* m_pRenderer;
 
