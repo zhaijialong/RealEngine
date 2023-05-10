@@ -20,7 +20,7 @@ JoltJobSystem::~JoltJobSystem()
 
 int JoltJobSystem::GetMaxConcurrency() const
 {
-    return m_pTaskScheduler->GetNumTaskThreads() - 1;
+    return m_pTaskScheduler->GetNumTaskThreads();
 }
 
 JobSystem::JobHandle JoltJobSystem::CreateJob(const char* inName, JPH::ColorArg inColor, const JobFunction& inJobFunction, JPH::uint32 inNumDependencies)
