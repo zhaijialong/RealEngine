@@ -49,6 +49,14 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
         MicroProfileOnThreadExit();
         rpmalloc_thread_finalize(1); 
     };
+    config.customAllocator.alloc = [](size_t align, size_t size, void* userData, const char* file, int line)
+    {
+        return RE_ALLOC(size, align);
+    };
+    config.customAllocator.free = [](void* ptr, size_t size, void* userData, const char* file, int line)
+    {
+        RE_FREE(ptr);
+    };
 
     m_pTaskScheduler.reset(new enki::TaskScheduler());
     m_pTaskScheduler->Initialize(config);
