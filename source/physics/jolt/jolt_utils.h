@@ -18,19 +18,19 @@ inline JPH::Quat ToJolt(const quaternion& q)
 
 inline JPH::EMotionType ToJolt(PhysicsMotion motion)
 {
-	switch (motion)
-	{
-	case PhysicsMotion::Static:
-		return JPH::EMotionType::Static;
-	case PhysicsMotion::Kinematic:
-		return JPH::EMotionType::Kinematic;
-	case PhysicsMotion::Dynamic:
-	default:
-		return JPH::EMotionType::Dynamic;
-	}
+    switch (motion)
+    {
+    case PhysicsMotion::Static:
+        return JPH::EMotionType::Static;
+    case PhysicsMotion::Kinematic:
+        return JPH::EMotionType::Kinematic;
+    case PhysicsMotion::Dynamic:
+    default:
+        return JPH::EMotionType::Dynamic;
+    }
 }
 
 inline JPH::ObjectLayer ToJolt(uint16_t layer)
 {
-	return (JPH::ObjectLayer)layer;
+    return (JPH::ObjectLayer)layer;
 }
