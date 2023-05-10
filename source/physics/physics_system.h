@@ -22,7 +22,9 @@ public:
     virtual IPhysicsShape* CreateCylinderShape(float half_height, float radius) = 0;
     virtual IPhysicsShape* CreateConvexHullShape(eastl::span<float3> points) = 0;
     //todo : virtual IPhysicsShape* CreateCompoundShape() = 0;
-    //todo : virtual IPhysicsShape* CreateMeshShape() = 0;
+    virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count) = 0;
+    virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count) = 0;
+    virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count) = 0;
     //todo : virtual IPhysicsShape* CreateHeightFiledShape() = 0;
     virtual IPhysicsRigidBody* CreateRigidBody(const IPhysicsShape* shape, const float3& position, const quaternion& rotation, PhysicsMotion motion_type, uint16_t layer) = 0;
 

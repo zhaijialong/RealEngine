@@ -32,6 +32,9 @@ public:
     virtual IPhysicsShape* CreateCapsuleShape(float half_height, float radius) override;
     virtual IPhysicsShape* CreateCylinderShape(float half_height, float radius) override;
     virtual IPhysicsShape* CreateConvexHullShape(eastl::span<float3> points) override;
+    virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count) override;
+    virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count) override;
+    virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count) override;
 
     virtual IPhysicsRigidBody* CreateRigidBody(const IPhysicsShape* shape, const float3& position, const quaternion& rotation, PhysicsMotion motion_type, uint16_t layer) override;
 

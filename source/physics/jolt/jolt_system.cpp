@@ -89,15 +89,6 @@ void JoltSystem::Initialize()
     m_pSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
     m_pSystem->SetBodyActivationListener(m_pBodyActivationListener.get());
     m_pSystem->SetContactListener(m_pContactListener.get());
-    
-    ///////// testing code here, should be removed later /////////
-    IPhysicsShape* floor_shape = CreateBoxShape(float3(100.0f, 1.0f, 100.0f));
-    IPhysicsRigidBody* floor = CreateRigidBody(floor_shape, float3(0.0f, -1.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Static, PhysicsLayers::STATIC);
-    AddRigidBody(floor, false);
-
-    IPhysicsShape* sphere_shape = CreateSphereShape(5.0f);
-    IPhysicsRigidBody* sphere = CreateRigidBody(sphere_shape, float3(0.0f, 25.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC);
-    AddRigidBody(sphere, true);
 }
 
 void JoltSystem::OptimizeTLAS()
@@ -176,6 +167,39 @@ IPhysicsShape* JoltSystem::CreateConvexHullShape(eastl::span<float3> points)
 {
     JoltShape* shape = new JoltShape();
     if (!shape->CreateConvexHull(points))
+    {
+        delete shape;
+        return nullptr;
+    }
+    return shape;
+}
+
+IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count)
+{
+    JoltShape* shape = new JoltShape();
+    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count))
+    {
+        delete shape;
+        return nullptr;
+    }
+    return shape;
+}
+
+IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count)
+{
+    JoltShape* shape = new JoltShape();
+    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count, indices, index_count))
+    {
+        delete shape;
+        return nullptr;
+    }
+    return shape;
+}
+
+IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count)
+{
+    JoltShape* shape = new JoltShape();
+    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count, indices, index_count))
     {
         delete shape;
         return nullptr;

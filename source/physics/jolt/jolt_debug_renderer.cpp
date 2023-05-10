@@ -104,7 +104,7 @@ void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AA
 
     RenderBatch& batch = m_pRenderer->AddForwardPassBatch();
     batch.label = "Physics Debug Render";
-    batch.SetPipelineState(m_PSOs[(int)inCullMode]);
+    batch.SetPipelineState(m_PSOs[(int)ECullMode::Off]); //we can't know if the geometry is CCW or CW here, so just disable backface culling ...
     batch.SetConstantBuffer(1, &constants, sizeof(constants));
 
     if (physicsBatch->GetIndexBuffer() != nullptr)
