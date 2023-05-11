@@ -174,10 +174,10 @@ IPhysicsShape* JoltSystem::CreateConvexHullShape(eastl::span<float3> points)
     return shape;
 }
 
-IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count)
+IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, bool winding_order_ccw)
 {
     JoltShape* shape = new JoltShape();
-    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count))
+    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count, winding_order_ccw))
     {
         delete shape;
         return nullptr;
@@ -185,10 +185,10 @@ IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t verte
     return shape;
 }
 
-IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count)
+IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count, bool winding_order_ccw)
 {
     JoltShape* shape = new JoltShape();
-    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count, indices, index_count))
+    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count, indices, index_count, winding_order_ccw))
     {
         delete shape;
         return nullptr;
@@ -196,10 +196,10 @@ IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t verte
     return shape;
 }
 
-IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count)
+IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count, bool winding_order_ccw)
 {
     JoltShape* shape = new JoltShape();
-    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count, indices, index_count))
+    if (!shape->CreateMesh(vertices, vertex_stride, vertex_count, indices, index_count, winding_order_ccw))
     {
         delete shape;
         return nullptr;

@@ -60,7 +60,7 @@ bool JoltShape::CreateConvexHull(eastl::span<float3> points)
     return result.IsValid();
 }
 
-bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count)
+bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, bool winding_order_ccw)
 {
     JPH::TriangleList triangles;
 
@@ -70,9 +70,18 @@ bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32
     for (uint32_t i = 0; i < triangle_count; ++i)
     {
         JPH::Triangle triangle;
-        memcpy(&triangle.mV[0], (const char*)vertices + (i * 3 + 0) * vertex_stride, sizeof(float3));
-        memcpy(&triangle.mV[1], (const char*)vertices + (i * 3 + 1) * vertex_stride, sizeof(float3));
-        memcpy(&triangle.mV[2], (const char*)vertices + (i * 3 + 2) * vertex_stride, sizeof(float3));
+        if (winding_order_ccw) // Jolt needs CW
+        {
+            memcpy(&triangle.mV[0], (const char*)vertices + (i * 3 + 0) * vertex_stride, sizeof(float3));
+            memcpy(&triangle.mV[2], (const char*)vertices + (i * 3 + 1) * vertex_stride, sizeof(float3));
+            memcpy(&triangle.mV[1], (const char*)vertices + (i * 3 + 2) * vertex_stride, sizeof(float3));
+        }
+        else
+        {
+            memcpy(&triangle.mV[0], (const char*)vertices + (i * 3 + 0) * vertex_stride, sizeof(float3));
+            memcpy(&triangle.mV[1], (const char*)vertices + (i * 3 + 1) * vertex_stride, sizeof(float3));
+            memcpy(&triangle.mV[2], (const char*)vertices + (i * 3 + 2) * vertex_stride, sizeof(float3));
+        }
 
         triangles.push_back(triangle);
     }
@@ -84,39 +93,11 @@ bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32
     return result.IsValid();
 }
 
-template <typename T>
-void ToJoltTriangles(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const T* indices, uint32_t index_count,
-    JPH::VertexList& vertexList, JPH::IndexedTriangleList& triangleList)
-{
-    vertexList.reserve(vertex_count);
-
-    for (uint32_t i = 0; i < vertex_count; ++i)
-    {
-        JPH::Float3 v;
-        memcpy(&v, (const char*)vertices + i * vertex_stride, sizeof(float3));
-
-        vertexList.push_back(v);
-    }
-
-    uint32_t triangle_count = index_count / 3;
-    triangleList.reserve(triangle_count);
-
-    for (uint32_t i = 0; i < triangle_count; ++i)
-    {
-        JPH::IndexedTriangle triangle;
-        triangle.mIdx[0] = (JPH::uint32)indices[i * 3 + 0];
-        triangle.mIdx[1] = (JPH::uint32)indices[i * 3 + 1];
-        triangle.mIdx[2] = (JPH::uint32)indices[i * 3 + 2];
-
-        triangleList.push_back(triangle);
-    }
-}
-
-bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count)
+bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count, bool winding_order_ccw)
 {
     JPH::VertexList vertexList;
     JPH::IndexedTriangleList triangleList;
-    ToJoltTriangles(vertices, vertex_stride, vertex_count, indices, index_count, vertexList, triangleList);
+    ToJoltTriangles(vertices, vertex_stride, vertex_count, indices, index_count, vertexList, triangleList, winding_order_ccw);
 
     JPH::MeshShapeSettings settings(vertexList, triangleList);
     JPH::Shape::ShapeResult result;
@@ -125,11 +106,11 @@ bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32
     return result.IsValid();
 }
 
-bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count)
+bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count, bool winding_order_ccw)
 {
     JPH::VertexList vertexList;
     JPH::IndexedTriangleList triangleList;
-    ToJoltTriangles(vertices, vertex_stride, vertex_count, indices, index_count, vertexList, triangleList);
+    ToJoltTriangles(vertices, vertex_stride, vertex_count, indices, index_count, vertexList, triangleList, winding_order_ccw);
 
     JPH::MeshShapeSettings settings(vertexList, triangleList);
     JPH::Shape::ShapeResult result;

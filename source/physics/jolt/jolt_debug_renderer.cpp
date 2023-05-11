@@ -56,6 +56,7 @@ JoltDebugRenderer::JoltDebugRenderer(Renderer* pRenderer) : m_pRenderer(pRendere
     psoDesc.vs = m_pRenderer->GetShader("physics_debug.hlsl", "vs_main", "vs_6_6", {});
     psoDesc.ps = m_pRenderer->GetShader("physics_debug.hlsl", "ps_main", "ps_6_6", {});
     psoDesc.rasterizer_state.wireframe = false;
+    psoDesc.rasterizer_state.front_ccw = false; // Jolt uses CW order
     psoDesc.depthstencil_state.depth_test = true;
     psoDesc.depthstencil_state.depth_func = GfxCompareFunc::GreaterEqual;
     psoDesc.rt_format[0] = GfxFormat::RGBA16F;
@@ -104,7 +105,7 @@ void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AA
 
     RenderBatch& batch = m_pRenderer->AddForwardPassBatch();
     batch.label = "Physics Debug Render";
-    batch.SetPipelineState(m_PSOs[(int)ECullMode::Off]); //we can't know if the geometry is CCW or CW here, so just disable backface culling ...
+    batch.SetPipelineState(m_PSOs[(int)inCullMode]);
     batch.SetConstantBuffer(1, &constants, sizeof(constants));
 
     if (physicsBatch->GetIndexBuffer() != nullptr)

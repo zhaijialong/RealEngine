@@ -14,9 +14,9 @@ public:
     bool CreateCapsule(float half_height, float radius);
     bool CreateCylinder(float half_height, float radius);
     bool CreateConvexHull(eastl::span<float3> points);
-    bool CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count);
-    bool CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count);
-    bool CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count);
+    bool CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, bool winding_order_ccw);
+    bool CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count, bool winding_order_ccw);
+    bool CreateMesh(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count, bool winding_order_ccw);
 
     JPH::Shape* GetShape() const { return m_shape.GetPtr(); }
 
