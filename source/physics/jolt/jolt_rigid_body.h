@@ -6,6 +6,7 @@
 #include "Jolt/Jolt.h"
 #include "Jolt/Physics/Body/BodyID.h"
 #include "Jolt/Physics/Body/BodyInterface.h"
+#include "Jolt/Physics/Collision/Shape/Shape.h"
 
 class IPhysicsShape;
 
@@ -33,4 +34,7 @@ public:
 private:
     JPH::BodyInterface& m_bodyInterface;
     JPH::BodyID m_bodyID;
+
+    float3 m_scale{ 1.0f, 1.0f, 1.0f };
+    JPH::Ref<JPH::Shape> m_shape;
 };

@@ -3,6 +3,7 @@
 #include "jolt_utils.h"
 #include "Jolt/Physics/Body/BodyCreationSettings.h"
 #include "Jolt/Physics/Body/Body.h"
+#include "Jolt/Physics/Collision/Shape/ScaledShape.h"
 
 JoltRigidBody::JoltRigidBody(JPH::BodyInterface& bodyInterface) : 
     m_bodyInterface(bodyInterface)
@@ -16,8 +17,10 @@ JoltRigidBody::~JoltRigidBody()
 
 bool JoltRigidBody::Create(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer)
 {
+    m_shape = ((const JoltShape*)shape)->GetShape();
+
     JPH::BodyCreationSettings settings;
-    settings.SetShape(((const JoltShape*)shape)->GetShape());
+    settings.SetShape(m_shape);
     settings.mMotionType = ToJolt(motion_type);
     settings.mObjectLayer = ToJolt(layer);
 
@@ -43,13 +46,26 @@ void JoltRigidBody::RemoveFromPhysicsSystem()
 
 float3 JoltRigidBody::GetScale() const
 {
-    //todo
-    return float3();
+    return m_scale;
 }
 
 void JoltRigidBody::SetScale(const float3& scale)
 {
-    //todo
+    if (!nearly_equal(m_scale.x, scale.x) ||
+        !nearly_equal(m_scale.y, scale.y) ||
+        !nearly_equal(m_scale.z, scale.z))
+    {
+        m_scale = scale;
+
+        if (m_scale == float3(1.0f, 1.0f, 1.0f))
+        {
+            m_bodyInterface.SetShape(m_bodyID, m_shape, true, JPH::EActivation::DontActivate);
+        }
+        else
+        {
+            m_bodyInterface.SetShape(m_bodyID, new JPH::ScaledShape(m_shape, ToJolt(m_scale)), true, JPH::EActivation::DontActivate);
+        }
+    }
 }
 
 float3 JoltRigidBody::GetPosition() const
