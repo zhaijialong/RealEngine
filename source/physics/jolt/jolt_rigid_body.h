@@ -15,8 +15,20 @@ public:
     JoltRigidBody(JPH::BodyInterface& bodyInterface);
     ~JoltRigidBody();
 
-    bool Create(const IPhysicsShape* shape, const float3& position, const quaternion& rotation, PhysicsMotion motion_type, uint16_t layer);
+    bool Create(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer);
     JPH::BodyID GetID() const { return m_bodyID; }
+
+    virtual void AddToPhysicsSystem(bool activate) override;
+    virtual void RemoveFromPhysicsSystem() override;
+
+    virtual float3 GetScale() const override;
+    virtual void SetScale(const float3& scale) override;
+
+    virtual float3 GetPosition() const override;
+    virtual void SetPosition(const float3& position) override;
+
+    virtual quaternion GetRotation() const override;
+    virtual void SetRotation(const quaternion& rotation) override;
 
 private:
     JPH::BodyInterface& m_bodyInterface;

@@ -107,7 +107,7 @@ GLTFLoader::GLTFLoader(World* world, tinyxml2::XMLElement* element)
     const tinyxml2::XMLAttribute* rotation_attr = element->FindAttribute("rotation");
     if (rotation_attr)
     {
-        m_rotation = str_to_float3(rotation_attr->Value());
+        m_rotation = rotation_quat(str_to_float3(rotation_attr->Value()));
     }
 
     const tinyxml2::XMLAttribute* scale_attr = element->FindAttribute("scale");
@@ -117,7 +117,7 @@ GLTFLoader::GLTFLoader(World* world, tinyxml2::XMLElement* element)
     }
 
     float4x4 T = translation_matrix(m_position);
-    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
+    float4x4 R = rotation_matrix(m_rotation);
     float4x4 S = scaling_matrix(m_scale);
     m_mtxWorld = mul(T, mul(R, S));
 
@@ -191,7 +191,7 @@ void GLTFLoader::LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* no
     if (node->mesh)
     {
         float3 position;
-        float3 rotation;
+        float4 rotation;
         float3 scale;
         decompose(mtxLocalToWorld, position, rotation, scale);
 
@@ -202,7 +202,7 @@ void GLTFLoader::LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* no
         {
             eastl::string name = fmt::format("mesh_{}_{} {}", mesh_index, i, (node->mesh->name ? node->mesh->name : "")).c_str();
 
-            StaticMesh* mesh = LoadStaticMesh(&node->mesh->primitives[i], name);
+            StaticMesh* mesh = LoadStaticMesh(&node->mesh->primitives[i], name, bFrontFaceCCW);
 
             mesh->m_pMaterial->m_bFrontFaceCCW = bFrontFaceCCW;
             mesh->SetPosition(position);
@@ -366,7 +366,7 @@ meshopt_Stream LoadBufferStream(const cgltf_accessor* accessor, bool convertToLH
     return stream;
 }
 
-StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const eastl::string& name)
+StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const eastl::string& name, bool bFrontFaceCCW)
 {
     StaticMesh* mesh = new StaticMesh(m_file + " " + name);
     mesh->m_pMaterial.reset(LoadMaterial(primitive->material));
@@ -586,6 +586,20 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const e
         {
         case cgltf_attribute_type_position:
             mesh->m_posBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") pos", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
+
+            {
+                IPhysicsSystem* physics = Engine::GetInstance()->GetWorld()->GetPhysicsSystem();
+                if (indices.stride == 2)
+                {
+                    mesh->m_pShape.reset(physics->CreateMeshShape((const float*)remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count,
+                        (const uint16_t*)remapped_indices, (uint32_t)index_count, bFrontFaceCCW));
+                }
+                else
+                {
+                    mesh->m_pShape.reset(physics->CreateMeshShape((const float*)remapped_vertices[i], (uint32_t)vertex_streams[i].stride, (uint32_t)remapped_vertex_count,
+                        (const uint32_t*)remapped_indices, (uint32_t)index_count, bFrontFaceCCW));
+                }
+            }
             break;
         case cgltf_attribute_type_texcoord:
             mesh->m_uvBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") UV", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);

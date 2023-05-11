@@ -8,7 +8,7 @@ bool DirectionalLight::Create()
 
 void DirectionalLight::Tick(float delta_time)
 {
-    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
+    float4x4 R = rotation_matrix(m_rotation);
     m_lightDir = normalize(mul(R, float4(0.0f, 1.0f, 0.0f, 0.0f)).xyz());
 
     ImGuiIO& io = ImGui::GetIO();

@@ -11,9 +11,19 @@ inline JPH::Vec3 ToJolt(const float3& x)
     return JPH::Vec3(x.x, x.y, x.z);
 }
 
+inline float3 FromJolt(const JPH::Vec3& x)
+{
+    return float3(x.GetX(), x.GetY(), x.GetZ());
+}
+
 inline JPH::Quat ToJolt(const quaternion& q)
 {
     return JPH::Quat(q.x, q.y, q.z, q.w);
+}
+
+inline quaternion FromJolt(const JPH::Quat& q)
+{
+    return quaternion(q.GetX(), q.GetY(), q.GetZ(), q.GetW());
 }
 
 inline JPH::EMotionType ToJolt(PhysicsMotion motion)

@@ -23,6 +23,8 @@ StaticMesh::~StaticMesh()
     cache->RelaseSceneBuffer(m_meshletIndicesBufferAddress);
 
     cache->RelaseSceneBuffer(m_indexBufferAddress);
+
+    m_pRigidBody->RemoveFromPhysicsSystem();
 }
 
 bool StaticMesh::Create()
@@ -48,6 +50,10 @@ bool StaticMesh::Create()
     IGfxDevice* device = m_pRenderer->GetDevice();
     m_pBLAS.reset(device->CreateRayTracingBLAS(desc, "BLAS : " + m_name));
     m_pRenderer->BuildRayTracingBLAS(m_pBLAS.get());
+
+    IPhysicsSystem* physics = Engine::GetInstance()->GetWorld()->GetPhysicsSystem();
+    m_pRigidBody.reset(physics->CreateRigidBody(m_pShape.get(), PhysicsMotion::Static, PhysicsLayers::STATIC));
+    m_pRigidBody->AddToPhysicsSystem(false);
 
     return true;
 }
@@ -90,7 +96,7 @@ void StaticMesh::UpdateConstants()
     m_instanceData.scale = max(max(abs(m_scale.x), abs(m_scale.y)), abs(m_scale.z));
 
     float4x4 T = translation_matrix(m_pos);
-    float4x4 R = rotation_matrix(rotation_quat(m_rotation));
+    float4x4 R = rotation_matrix(m_rotation);
     float4x4 S = scaling_matrix(m_scale);
     float4x4 mtxWorld = mul(T, mul(R, S));
 
@@ -180,4 +186,25 @@ void StaticMesh::OnGui()
         });
 
     m_pMaterial->OnGui();
+}
+
+void StaticMesh::SetPosition(const float3& pos)
+{
+    IVisibleObject::SetPosition(pos);
+
+    m_pRigidBody->SetPosition(pos);
+}
+
+void StaticMesh::SetRotation(const quaternion& rotation)
+{
+    IVisibleObject::SetRotation(rotation);
+
+    m_pRigidBody->SetRotation(rotation);
+}
+
+void StaticMesh::SetScale(const float3& scale)
+{
+    IVisibleObject::SetScale(scale);
+
+    m_pRigidBody->SetScale(scale);
 }

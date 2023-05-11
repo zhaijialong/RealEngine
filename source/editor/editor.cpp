@@ -297,7 +297,7 @@ void Editor::DrawGizmo()
     }
 
     float3 pos = pSelectedObject->GetPosition();
-    float3 rotation = pSelectedObject->GetRotation();
+    float3 rotation = rotation_angles(pSelectedObject->GetRotation());
     float3 scale = pSelectedObject->GetScale();
 
     float4x4 mtxWorld;
@@ -329,7 +329,7 @@ void Editor::DrawGizmo()
 
     ImGuizmo::DecomposeMatrixToComponents((const float*)&mtxWorld, (float*)&pos, (float*)&rotation, (float*)&scale);
     pSelectedObject->SetPosition(pos);
-    pSelectedObject->SetRotation(rotation);
+    pSelectedObject->SetRotation(rotation_quat(rotation));
     pSelectedObject->SetScale(scale);
 
     pSelectedObject->OnGui();

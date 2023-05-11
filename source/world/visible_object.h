@@ -14,20 +14,20 @@ public:
     virtual bool FrustumCull(const float4* planes, uint32_t plane_count) const { return true; }
     virtual void OnGui();
 
-    float3 GetPosition() const { return m_pos; }
-    void SetPosition(const float3& pos) { m_pos = pos; }
+    virtual float3 GetPosition() const { return m_pos; }
+    virtual void SetPosition(const float3& pos) { m_pos = pos; }
 
-    float3 GetRotation() const { return m_rotation; }
-    void SetRotation(const float3& rotation) { m_rotation = rotation; }
+    virtual quaternion GetRotation() const { return m_rotation; }
+    virtual void SetRotation(const quaternion& rotation) { m_rotation = rotation; }
 
-    float3 GetScale() const { return m_scale; }
-    void SetScale(const float3& scale) { m_scale = scale; }
+    virtual float3 GetScale() const { return m_scale; }
+    virtual void SetScale(const float3& scale) { m_scale = scale; }
 
     void SetID(uint32_t id) { m_nID = id; }
 
 protected:
     uint32_t m_nID = 0;
     float3 m_pos = { 0.0f, 0.0f, 0.0f };
-    float3 m_rotation = { 0.0f, 0.0f, 0.0f }; //in degrees
+    quaternion m_rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     float3 m_scale = { 1.0f, 1.0f, 1.0f };
 };

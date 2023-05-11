@@ -34,7 +34,7 @@ public:
     
 private:
     void LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* node, const float4x4& mtxParentToWorld);
-    StaticMesh* LoadStaticMesh(const cgltf_primitive* primitive, const eastl::string& name);
+    StaticMesh* LoadStaticMesh(const cgltf_primitive* primitive, const eastl::string& name, bool bFrontFaceCCW);
 
     Animation* LoadAnimation(const cgltf_data* data, const cgltf_animation* animation);
     Skeleton* LoadSkeleton(const cgltf_data* data, const cgltf_skin* skin);
@@ -49,7 +49,7 @@ private:
     eastl::string m_file;
 
     float3 m_position = float3(0, 0, 0);
-    float3 m_rotation = float3(0, 0, 0);
+    quaternion m_rotation = quaternion(0, 0, 0, 1);
     float3 m_scale = float3(1, 1, 1);
     float4x4 m_mtxWorld;
 

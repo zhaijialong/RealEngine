@@ -89,6 +89,11 @@ void JoltSystem::Initialize()
     m_pSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
     m_pSystem->SetBodyActivationListener(m_pBodyActivationListener.get());
     m_pSystem->SetContactListener(m_pContactListener.get());
+
+    //IPhysicsShape* sphere_shape = CreateSphereShape(1.0f);
+    //AddRigidBody(CreateRigidBody(sphere_shape, float3(0.0f, 10.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC), true);
+    //AddRigidBody(CreateRigidBody(sphere_shape, float3(3.0f, 10.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC), true);
+    //AddRigidBody(CreateRigidBody(sphere_shape, float3(-3.0f, 10.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC), true);
 }
 
 void JoltSystem::OptimizeTLAS()
@@ -207,25 +212,13 @@ IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t verte
     return shape;
 }
 
-IPhysicsRigidBody* JoltSystem::CreateRigidBody(const IPhysicsShape* shape, const float3& position, const quaternion& rotation, PhysicsMotion motion_type, uint16_t layer)
+IPhysicsRigidBody* JoltSystem::CreateRigidBody(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer)
 {
     JoltRigidBody* rigidBody = new JoltRigidBody(m_pSystem->GetBodyInterface());
-    if (!rigidBody->Create(shape, position, rotation, motion_type, layer))
+    if (!rigidBody->Create(shape, motion_type, layer))
     {
         delete rigidBody;
         return nullptr;
     }
     return rigidBody;
-}
-
-void JoltSystem::AddRigidBody(const IPhysicsRigidBody* rigid_body, bool activate)
-{
-    JPH::BodyInterface& bodyInterface = m_pSystem->GetBodyInterface();
-    bodyInterface.AddBody(((JoltRigidBody*)rigid_body)->GetID(), activate ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
-}
-
-void JoltSystem::RemoveRigidBody(const IPhysicsRigidBody* rigid_body)
-{
-    JPH::BodyInterface& bodyInterface = m_pSystem->GetBodyInterface();
-    bodyInterface.RemoveBody(((JoltRigidBody*)rigid_body)->GetID());
 }

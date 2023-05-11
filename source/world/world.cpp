@@ -40,6 +40,8 @@ void World::LoadScene(const eastl::string& file)
     {
         CreateVisibleObject(element);
     }
+
+    m_pPhysicsSystem->OptimizeTLAS();
 }
 
 void World::SaveScene(const eastl::string& file)
@@ -143,7 +145,7 @@ inline void LoadVisibleObject(tinyxml2::XMLElement* element, IVisibleObject* obj
     const tinyxml2::XMLAttribute* rotation = element->FindAttribute("rotation");
     if (rotation)
     {
-        object->SetRotation(str_to_float3(rotation->Value()));
+        object->SetRotation(rotation_quat(str_to_float3(rotation->Value())));
     }
 
     const tinyxml2::XMLAttribute* scale = element->FindAttribute("scale");

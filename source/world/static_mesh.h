@@ -19,6 +19,10 @@ public:
     virtual bool FrustumCull(const float4* planes, uint32_t plane_count) const override;
     virtual void OnGui() override;
 
+    virtual void SetPosition(const float3& pos) override;
+    virtual void SetRotation(const quaternion& rotation) override;
+    virtual void SetScale(const float3& scale) override;
+
 private:
     void UpdateConstants();
     void Draw(RenderBatch& batch, IGfxPipelineState* pso);
@@ -29,6 +33,8 @@ private:
     eastl::string m_name;
     eastl::unique_ptr<MeshMaterial> m_pMaterial = nullptr;
     eastl::unique_ptr<IGfxRayTracingBLAS> m_pBLAS;
+    eastl::unique_ptr<class IPhysicsRigidBody> m_pRigidBody;
+    eastl::unique_ptr<class IPhysicsShape> m_pShape;
 
     uint32_t m_posBufferAddress = -1;
     uint32_t m_uvBufferAddress = -1;
