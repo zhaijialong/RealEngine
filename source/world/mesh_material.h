@@ -7,6 +7,7 @@
 class MeshMaterial
 {
     friend class GLTFLoader;
+    friend class World;
 public:
     ~MeshMaterial();
 

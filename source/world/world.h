@@ -38,6 +38,8 @@ private:
     void CreateModel(tinyxml2::XMLElement* element);
     void CreateSky(tinyxml2::XMLElement* element);
 
+    void PhysicsTest(Renderer* pRenderer);
+
 private:
     eastl::unique_ptr<Camera> m_pCamera;
     eastl::unique_ptr<IPhysicsSystem> m_pPhysicsSystem;
@@ -46,4 +48,7 @@ private:
     eastl::vector<eastl::unique_ptr<ILight>> m_lights;
 
     ILight* m_pPrimaryLight = nullptr;
+
+    eastl::unique_ptr<IPhysicsShape> m_boxShape;
+    eastl::unique_ptr<IPhysicsShape> m_sphereShape;
 };

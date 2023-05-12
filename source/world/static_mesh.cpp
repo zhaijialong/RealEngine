@@ -65,10 +65,24 @@ void StaticMesh::Tick(float delta_time)
         return; //todo
     }
 
+    if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+    {
+        m_pos = m_pRigidBody->GetPosition();
+        m_rotation = m_pRigidBody->GetRotation();
+    }
+
     UpdateConstants();
 
     GfxRayTracingInstanceFlag flags = m_pMaterial->IsFrontFaceCCW() ? GfxRayTracingInstanceFlagFrontFaceCCW : 0;
     m_nInstanceIndex = m_pRenderer->AddInstance(m_instanceData, m_pBLAS.get(), flags);
+}
+
+void StaticMesh::SetPhysicsBody(IPhysicsRigidBody* body)
+{
+    m_pRigidBody->RemoveFromPhysicsSystem();
+
+    m_pRigidBody.reset(body);
+    m_pRigidBody->SetPositionAndRotation(GetPosition(), GetRotation());
 }
 
 void StaticMesh::UpdateConstants()
@@ -193,6 +207,10 @@ void StaticMesh::SetPosition(const float3& pos)
     IVisibleObject::SetPosition(pos);
 
     m_pRigidBody->SetPosition(pos);
+    if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+    {
+        m_pRigidBody->Activate();
+    }
 }
 
 void StaticMesh::SetRotation(const quaternion& rotation)
@@ -200,6 +218,10 @@ void StaticMesh::SetRotation(const quaternion& rotation)
     IVisibleObject::SetRotation(rotation);
 
     m_pRigidBody->SetRotation(rotation);
+    if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+    {
+        m_pRigidBody->Activate();
+    }
 }
 
 void StaticMesh::SetScale(const float3& scale)
@@ -207,4 +229,8 @@ void StaticMesh::SetScale(const float3& scale)
     IVisibleObject::SetScale(scale);
 
     m_pRigidBody->SetScale(scale);
+    if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+    {
+        m_pRigidBody->Activate();
+    }
 }

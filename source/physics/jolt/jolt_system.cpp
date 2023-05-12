@@ -89,11 +89,6 @@ void JoltSystem::Initialize()
     m_pSystem->Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, *m_pBroadPhaseLayer, *m_pBroadPhaseLayerFilter, *m_pObjectLayerFilter);
     m_pSystem->SetBodyActivationListener(m_pBodyActivationListener.get());
     m_pSystem->SetContactListener(m_pContactListener.get());
-
-    //IPhysicsShape* sphere_shape = CreateSphereShape(1.0f);
-    //AddRigidBody(CreateRigidBody(sphere_shape, float3(0.0f, 10.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC), true);
-    //AddRigidBody(CreateRigidBody(sphere_shape, float3(3.0f, 10.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC), true);
-    //AddRigidBody(CreateRigidBody(sphere_shape, float3(-3.0f, 10.0f, 0.0f), quaternion(0, 0, 0, 1), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC), true);
 }
 
 void JoltSystem::OptimizeTLAS()

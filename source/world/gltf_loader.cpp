@@ -93,9 +93,18 @@ inline uint32_t GetNodeIndex(const cgltf_data* data, const cgltf_node* node)
     return 0;
 }
 
-GLTFLoader::GLTFLoader(World* world, tinyxml2::XMLElement* element)
+GLTFLoader::GLTFLoader(World* world)
 {
     m_pWorld = world;
+
+    float4x4 T = translation_matrix(m_position);
+    float4x4 R = rotation_matrix(m_rotation);
+    float4x4 S = scaling_matrix(m_scale);
+    m_mtxWorld = mul(T, mul(R, S));
+}
+
+void GLTFLoader::LoadSettings(tinyxml2::XMLElement* element)
+{
     m_file = element->FindAttribute("file")->Value();
 
     const tinyxml2::XMLAttribute* position_attr = element->FindAttribute("position");
@@ -130,9 +139,9 @@ GLTFLoader::GLTFLoader(World* world, tinyxml2::XMLElement* element)
     }
 }
 
-void GLTFLoader::Load()
+void GLTFLoader::Load(const char* gltf_file)
 {
-    eastl::string file = Engine::GetInstance()->GetAssetPath() + m_file;
+    eastl::string file = Engine::GetInstance()->GetAssetPath() + (gltf_file ? gltf_file : m_file);
 
     cgltf_options options = {};
     cgltf_data* data = NULL;

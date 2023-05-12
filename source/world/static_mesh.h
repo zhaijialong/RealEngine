@@ -5,6 +5,8 @@
 #include "model_constants.hlsli"
 
 class MeshMaterial;
+class IPhysicsShape;
+class IPhysicsRigidBody;
 
 class StaticMesh : public IVisibleObject
 {
@@ -23,6 +25,11 @@ public:
     virtual void SetRotation(const quaternion& rotation) override;
     virtual void SetScale(const float3& scale) override;
 
+    IPhysicsRigidBody* GetPhysicsBody() const { return m_pRigidBody.get(); }
+    void SetPhysicsBody(IPhysicsRigidBody* body);
+
+    MeshMaterial* GetMaterial() const { return m_pMaterial.get(); }
+
 private:
     void UpdateConstants();
     void Draw(RenderBatch& batch, IGfxPipelineState* pso);
@@ -33,8 +40,8 @@ private:
     eastl::string m_name;
     eastl::unique_ptr<MeshMaterial> m_pMaterial = nullptr;
     eastl::unique_ptr<IGfxRayTracingBLAS> m_pBLAS;
-    eastl::unique_ptr<class IPhysicsRigidBody> m_pRigidBody;
-    eastl::unique_ptr<class IPhysicsShape> m_pShape;
+    eastl::unique_ptr<IPhysicsRigidBody> m_pRigidBody;
+    eastl::unique_ptr<IPhysicsShape> m_pShape;
 
     uint32_t m_posBufferAddress = -1;
     uint32_t m_uvBufferAddress = -1;

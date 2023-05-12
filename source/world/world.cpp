@@ -2,10 +2,13 @@
 #include "gltf_loader.h"
 #include "sky_sphere.h"
 #include "directional_light.h"
+#include "static_mesh.h"
+#include "mesh_material.h"
 #include "utils/assert.h"
 #include "utils/string.h"
 #include "utils/profiler.h"
 #include "utils/log.h"
+#include "utils/gui_util.h"
 #include "utils/parallel_for.h"
 #include "tinyxml2/tinyxml2.h"
 #include "EASTL/atomic.h"
@@ -17,6 +20,9 @@ World::World()
     m_pCamera = eastl::make_unique<Camera>();
     m_pPhysicsSystem.reset(CreatePhysicsSystem(PhysicsEngine::Jolt));
     m_pPhysicsSystem->Initialize();
+
+    m_boxShape.reset(m_pPhysicsSystem->CreateBoxShape(float3(1.0f, 1.0f, 1.0f)));
+    m_sphereShape.reset(m_pPhysicsSystem->CreateSphereShape(1.0f));
 }
 
 World::~World() = default;
@@ -66,6 +72,10 @@ void World::Tick(float delta_time)
 {
     CPU_EVENT("Tick", "World::Tick");
 
+    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+
+    PhysicsTest(pRenderer);
+
     m_pPhysicsSystem->Tick(delta_time);
     m_pCamera->Tick(delta_time);
 
@@ -79,7 +89,6 @@ void World::Tick(float delta_time)
         (*iter)->Tick(delta_time);
     }
 
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     if (pRenderer->GetOutputType() != RendererOutput::Physics)
     {
         eastl::vector<IVisibleObject*> visibleObjects(m_objects.size());
@@ -252,7 +261,8 @@ void World::CreateCamera(tinyxml2::XMLElement* element)
 
 void World::CreateModel(tinyxml2::XMLElement* element)
 {
-    GLTFLoader loader(this, element);
+    GLTFLoader loader(this);
+    loader.LoadSettings(element);
     loader.Load();
 }
 
@@ -270,4 +280,46 @@ void World::CreateSky(tinyxml2::XMLElement* element)
     }
 
     AddObject(object);
+}
+
+void World::PhysicsTest(Renderer* pRenderer)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    if (!io.WantCaptureKeyboard && ImGui::IsKeyReleased(' '))
+    {
+        IPhysicsRigidBody* body = nullptr;
+        GLTFLoader loader(this);
+
+        if (pRenderer->GetFrameID() % 2 == 1)
+        {
+            loader.Load("model/box.gltf");
+            body = m_pPhysicsSystem->CreateRigidBody(m_boxShape.get(), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC);
+        }
+        else
+        {
+            loader.Load("model/sphere.gltf");
+            body = m_pPhysicsSystem->CreateRigidBody(m_sphereShape.get(), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC);
+        }
+
+        body->AddToPhysicsSystem(true);
+        body->SetLinearVelocity(m_pCamera->GetForward() * 10.0f);
+
+        StaticMesh* mesh = (StaticMesh*)m_objects.back().get();
+        mesh->SetPhysicsBody(body);
+        mesh->SetScale(float3(0.3));
+        mesh->SetPosition(m_pCamera->GetPosition() + m_pCamera->GetForward() * 1.0f);
+
+        static uint seed = 23333;
+        auto RandFloat = [&]()
+        {
+            seed = 1664525 * seed + 1013904223;
+            return (float)seed / float(0xFFFFFFFF);
+        };
+
+        MeshMaterial* material = mesh->GetMaterial();
+        material->m_bPbrMetallicRoughness = true;
+        material->m_albedoColor = float3(RandFloat(), RandFloat(), RandFloat());
+        material->m_metallic = RandFloat();
+        material->m_roughness = RandFloat();
+    }
 }

@@ -28,10 +28,11 @@ namespace tinyxml2
 class GLTFLoader
 {
 public:
-    GLTFLoader(World* world, tinyxml2::XMLElement* element);
+    GLTFLoader(World* world);
 
-    void Load();
-    
+    void LoadSettings(tinyxml2::XMLElement* element);
+    void Load(const char* gltf_file = nullptr);
+
 private:
     void LoadStaticMeshNode(const cgltf_data* data, const cgltf_node* node, const float4x4& mtxParentToWorld);
     StaticMesh* LoadStaticMesh(const cgltf_primitive* primitive, const eastl::string& name, bool bFrontFaceCCW);
