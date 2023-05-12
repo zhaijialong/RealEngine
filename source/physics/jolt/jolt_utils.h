@@ -40,6 +40,20 @@ inline JPH::EMotionType ToJolt(PhysicsMotion motion)
     }
 }
 
+inline PhysicsMotion FromJolt(JPH::EMotionType motion)
+{
+    switch (motion)
+    {
+    case JPH::EMotionType::Static:
+        return PhysicsMotion::Static;
+    case JPH::EMotionType::Kinematic:
+        return PhysicsMotion::Kinematic;
+    case JPH::EMotionType::Dynamic:
+    default:
+        return PhysicsMotion::Dynamic;
+    }
+}
+
 inline JPH::ObjectLayer ToJolt(uint16_t layer)
 {
     return (JPH::ObjectLayer)layer;

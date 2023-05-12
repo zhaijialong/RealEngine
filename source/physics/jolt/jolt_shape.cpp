@@ -118,3 +118,27 @@ bool JoltShape::CreateMesh(const float* vertices, uint32_t vertex_stride, uint32
 
     return result.IsValid();
 }
+
+bool JoltShape::IsConvexShape() const
+{
+    return m_shape->GetType() == JPH::EShapeType::Convex;
+}
+
+float JoltShape::GetDensity() const
+{
+    if (IsConvexShape())
+    {
+        const JPH::ConvexShape* convexShape = (const JPH::ConvexShape*)m_shape.GetPtr();
+        convexShape->GetDensity();
+    }
+    return 0.0f;
+}
+
+void JoltShape::SetDensity(float density)
+{
+    if (IsConvexShape())
+    {
+        JPH::ConvexShape* convexShape = (JPH::ConvexShape*)m_shape.GetPtr();
+        convexShape->SetDensity(density);
+    }
+}

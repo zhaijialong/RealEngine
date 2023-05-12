@@ -20,6 +20,10 @@ public:
 
     JPH::Shape* GetShape() const { return m_shape.GetPtr(); }
 
+    virtual bool IsConvexShape() const override;
+    virtual float GetDensity() const override;
+    virtual void SetDensity(float density) override;
+
 private:
     JPH::Ref<JPH::Shape> m_shape;
 };

@@ -44,6 +44,48 @@ void JoltRigidBody::RemoveFromPhysicsSystem()
     m_bodyInterface.RemoveBody(m_bodyID);
 }
 
+void JoltRigidBody::Activate()
+{
+    m_bodyInterface.ActivateBody(m_bodyID);
+}
+
+void JoltRigidBody::Deactivate()
+{
+    m_bodyInterface.DeactivateBody(m_bodyID);
+}
+
+bool JoltRigidBody::IsActive() const
+{
+    return m_bodyInterface.IsActive(m_bodyID);
+}
+
+void JoltRigidBody::SetShape(IPhysicsShape* shape)
+{
+    m_shape = ((const JoltShape*)shape)->GetShape();
+
+    m_bodyInterface.SetShape(m_bodyID, m_shape, true, JPH::EActivation::DontActivate);
+}
+
+uint16_t JoltRigidBody::GetLayer() const
+{
+    return m_bodyInterface.GetObjectLayer(m_bodyID);
+}
+
+void JoltRigidBody::SetLayer(uint16_t layer)
+{
+    m_bodyInterface.SetObjectLayer(m_bodyID, layer);
+}
+
+PhysicsMotion JoltRigidBody::GetMotionType() const
+{
+    return FromJolt(m_bodyInterface.GetMotionType(m_bodyID));
+}
+
+void JoltRigidBody::SetMotionType(PhysicsMotion motion_type)
+{
+    m_bodyInterface.SetMotionType(m_bodyID, ToJolt(motion_type), JPH::EActivation::DontActivate);
+}
+
 float3 JoltRigidBody::GetScale() const
 {
     return m_scale;
@@ -86,4 +128,54 @@ quaternion JoltRigidBody::GetRotation() const
 void JoltRigidBody::SetRotation(const quaternion& rotation)
 {
     m_bodyInterface.SetRotation(m_bodyID, ToJolt(rotation), JPH::EActivation::DontActivate);
+}
+
+void JoltRigidBody::SetPositionAndRotation(const float3& position, const quaternion& rotation)
+{
+    m_bodyInterface.SetPositionAndRotation(m_bodyID, ToJolt(position), ToJolt(rotation), JPH::EActivation::DontActivate);
+}
+
+float3 JoltRigidBody::GetLinearVelocity() const
+{
+    return FromJolt(m_bodyInterface.GetLinearVelocity(m_bodyID));
+}
+
+void JoltRigidBody::SetLinearVelocity(const float3& velocity)
+{
+    m_bodyInterface.SetLinearVelocity(m_bodyID, ToJolt(velocity));
+}
+
+float3 JoltRigidBody::GetAngularVelocity() const
+{
+    return FromJolt(m_bodyInterface.GetAngularVelocity(m_bodyID));
+}
+
+void JoltRigidBody::SetAngularVelocity(const float3& velocity)
+{
+    m_bodyInterface.SetAngularVelocity(m_bodyID, ToJolt(velocity));
+}
+
+float JoltRigidBody::GetFriction() const
+{
+    return m_bodyInterface.GetFriction(m_bodyID);
+}
+
+void JoltRigidBody::SetFriction(float friction)
+{
+    m_bodyInterface.SetFriction(m_bodyID, friction);
+}
+
+void JoltRigidBody::AddForce(const float3& force)
+{
+    m_bodyInterface.AddForce(m_bodyID, ToJolt(force));
+}
+
+void JoltRigidBody::AddImpulse(const float3& impulse)
+{
+    m_bodyInterface.AddImpulse(m_bodyID, ToJolt(impulse));
+}
+
+void JoltRigidBody::AddTorque(const float3& torque)
+{
+    m_bodyInterface.AddTorque(m_bodyID, ToJolt(torque));
 }

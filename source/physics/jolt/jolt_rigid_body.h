@@ -22,6 +22,18 @@ public:
     virtual void AddToPhysicsSystem(bool activate) override;
     virtual void RemoveFromPhysicsSystem() override;
 
+    virtual void Activate() override;
+    virtual void Deactivate() override;
+    virtual bool IsActive() const override;
+
+    virtual void SetShape(IPhysicsShape* shape) override;
+
+    virtual uint16_t GetLayer() const override;
+    virtual void SetLayer(uint16_t layer) override;
+
+    virtual PhysicsMotion GetMotionType() const override;
+    virtual void SetMotionType(PhysicsMotion motion_type) override;
+
     virtual float3 GetScale() const override;
     virtual void SetScale(const float3& scale) override;
 
@@ -30,6 +42,21 @@ public:
 
     virtual quaternion GetRotation() const override;
     virtual void SetRotation(const quaternion& rotation) override;
+
+    virtual void SetPositionAndRotation(const float3& position, const quaternion& rotation) override;
+
+    virtual float3 GetLinearVelocity() const override;
+    virtual void SetLinearVelocity(const float3& velocity) override;
+
+    virtual float3 GetAngularVelocity() const override;
+    virtual void SetAngularVelocity(const float3& velocity) override;
+
+    virtual float GetFriction() const override;
+    virtual void SetFriction(float friction) override;
+
+    virtual void AddForce(const float3& force) override;
+    virtual void AddImpulse(const float3& impulse) override;
+    virtual void AddTorque(const float3& torque) override;
 
 private:
     JPH::BodyInterface& m_bodyInterface;
