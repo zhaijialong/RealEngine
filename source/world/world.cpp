@@ -309,17 +309,20 @@ void World::PhysicsTest(Renderer* pRenderer)
         mesh->SetScale(float3(0.3));
         mesh->SetPosition(m_pCamera->GetPosition() + m_pCamera->GetForward() * 1.0f);
 
-        static uint seed = 23333;
-        auto RandFloat = [&]()
+        auto WangHash = [](uint x)
         {
-            seed = 1664525 * seed + 1013904223;
-            return (float)seed / float(0xFFFFFFFF);
+            x = (x ^ 61) ^ (x >> 16);
+            x *= 9;
+            x = x ^ (x >> 4);
+            x *= 0x27d4eb2d;
+            x = x ^ (x >> 15);
+            return x;
         };
+        uint hash = WangHash(m_objects.size());
 
         MeshMaterial* material = mesh->GetMaterial();
         material->m_bPbrMetallicRoughness = true;
-        material->m_albedoColor = float3(RandFloat(), RandFloat(), RandFloat());
-        material->m_metallic = RandFloat();
-        material->m_roughness = RandFloat();
+        material->m_albedoColor = float3(float(hash & 255), float((hash >> 8) & 255), float((hash >> 16) & 255)) / 255.0f;
+        material->m_roughness = float(hash >> 24) / 255.0f;
     }
 }
