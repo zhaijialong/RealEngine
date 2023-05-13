@@ -16,7 +16,7 @@ public:
     JoltRigidBody(JPH::BodyInterface& bodyInterface);
     ~JoltRigidBody();
 
-    bool Create(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer);
+    bool Create(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer, void* user_data);
     JPH::BodyID GetID() const { return m_bodyID; }
 
     virtual void AddToPhysicsSystem(bool activate) override;
@@ -30,6 +30,8 @@ public:
 
     virtual uint16_t GetLayer() const override;
     virtual void SetLayer(uint16_t layer) override;
+
+    virtual void* GetUserData() const override;
 
     virtual PhysicsMotion GetMotionType() const override;
     virtual void SetMotionType(PhysicsMotion motion_type) override;

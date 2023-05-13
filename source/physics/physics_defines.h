@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdint.h"
+#include "utils/math.h"
 
 enum class PhysicsEngine
 {
@@ -26,4 +26,11 @@ enum class PhysicsMotion
     Static,
     Kinematic,
     Dynamic,
+};
+
+struct PhysicsRayTraceResult
+{
+    float3 position;
+    float3 normal;
+    void* user_data;
 };

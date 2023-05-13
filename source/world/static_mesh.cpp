@@ -52,7 +52,7 @@ bool StaticMesh::Create()
     m_pRenderer->BuildRayTracingBLAS(m_pBLAS.get());
 
     IPhysicsSystem* physics = Engine::GetInstance()->GetWorld()->GetPhysicsSystem();
-    m_pRigidBody.reset(physics->CreateRigidBody(m_pShape.get(), PhysicsMotion::Static, PhysicsLayers::STATIC));
+    m_pRigidBody.reset(physics->CreateRigidBody(m_pShape.get(), PhysicsMotion::Static, PhysicsLayers::STATIC, this));
     m_pRigidBody->AddToPhysicsSystem(false);
 
     return true;

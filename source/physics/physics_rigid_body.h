@@ -22,6 +22,8 @@ public:
     virtual uint16_t GetLayer() const = 0;
     virtual void SetLayer(uint16_t layer) = 0;
 
+    virtual void* GetUserData() const = 0;
+
     virtual PhysicsMotion GetMotionType() const = 0;
     virtual void SetMotionType(PhysicsMotion motion_type) = 0;
 

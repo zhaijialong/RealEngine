@@ -36,7 +36,9 @@ public:
     virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count, bool winding_order_ccw = false) override;
     virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count, bool winding_order_ccw = false) override;
 
-    virtual IPhysicsRigidBody* CreateRigidBody(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer) override;
+    virtual IPhysicsRigidBody* CreateRigidBody(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer, void* user_data = nullptr) override;
+
+    virtual bool RayTrace(const float3& origin, const float3& direction, float max_distance, PhysicsRayTraceResult& result) const override;
 
 private:
     Renderer* m_pRenderer;

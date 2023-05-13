@@ -7,6 +7,7 @@
 #include "jolt_job_system.h"
 #include "jolt_shape.h"
 #include "jolt_rigid_body.h"
+#include "jolt_utils.h"
 #include "core/engine.h"
 #include "renderer/renderer.h"
 #include "utils/log.h"
@@ -20,6 +21,8 @@
 #include "Jolt/Core/JobSystemThreadPool.h"
 #include "Jolt/Physics/PhysicsSettings.h"
 #include "Jolt/Physics/PhysicsSystem.h"
+#include "Jolt/Physics/Collision/RayCast.h"
+#include "Jolt/Physics/Collision/CastResult.h"
 
 static void JoltTraceImpl(const char* inFMT, ...)
 {
@@ -207,13 +210,40 @@ IPhysicsShape* JoltSystem::CreateMeshShape(const float* vertices, uint32_t verte
     return shape;
 }
 
-IPhysicsRigidBody* JoltSystem::CreateRigidBody(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer)
+IPhysicsRigidBody* JoltSystem::CreateRigidBody(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer, void* user_data)
 {
     JoltRigidBody* rigidBody = new JoltRigidBody(m_pSystem->GetBodyInterface());
-    if (!rigidBody->Create(shape, motion_type, layer))
+    if (!rigidBody->Create(shape, motion_type, layer, user_data))
     {
         delete rigidBody;
         return nullptr;
     }
     return rigidBody;
+}
+
+bool JoltSystem::RayTrace(const float3& origin, const float3& direction, float max_distance, PhysicsRayTraceResult& result) const
+{
+    const JPH::NarrowPhaseQuery& query = m_pSystem->GetNarrowPhaseQuery();
+
+    JPH::RRayCast ray(ToJolt(origin), ToJolt(direction * max_distance));
+    JPH::RayCastResult castResult;
+    bool hit = query.CastRay(ray, castResult);
+
+    if (hit)
+    {
+        JPH::BodyInterface& bodyInterface = m_pSystem->GetBodyInterface();
+
+        result.position = FromJolt(ray.GetPointOnRay(castResult.mFraction));
+
+        JPH::BodyLockRead lock(m_pSystem->GetBodyLockInterface(), castResult.mBodyID);
+        if (lock.Succeeded())
+        {
+            const JPH::Body& body = lock.GetBody();
+
+            result.normal = FromJolt(body.GetWorldSpaceSurfaceNormal(castResult.mSubShapeID2, ToJolt(result.position)));
+            result.user_data = (void*)body.GetUserData();
+        }
+    }
+
+    return hit;
 }

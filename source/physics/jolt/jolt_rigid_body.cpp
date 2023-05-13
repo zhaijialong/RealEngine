@@ -15,7 +15,7 @@ JoltRigidBody::~JoltRigidBody()
     m_bodyInterface.DestroyBody(m_bodyID);
 }
 
-bool JoltRigidBody::Create(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer)
+bool JoltRigidBody::Create(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer, void* user_data)
 {
     m_shape = ((const JoltShape*)shape)->GetShape();
 
@@ -23,6 +23,7 @@ bool JoltRigidBody::Create(const IPhysicsShape* shape, PhysicsMotion motion_type
     settings.SetShape(m_shape);
     settings.mMotionType = ToJolt(motion_type);
     settings.mObjectLayer = ToJolt(layer);
+    settings.mUserData = (JPH::uint64)user_data;
 
     JPH::Body* body = m_bodyInterface.CreateBody(settings);
     if (body == nullptr)
@@ -74,6 +75,11 @@ uint16_t JoltRigidBody::GetLayer() const
 void JoltRigidBody::SetLayer(uint16_t layer)
 {
     m_bodyInterface.SetObjectLayer(m_bodyID, layer);
+}
+
+void* JoltRigidBody::GetUserData() const
+{
+    return (void*)m_bodyInterface.GetUserData(m_bodyID);
 }
 
 PhysicsMotion JoltRigidBody::GetMotionType() const

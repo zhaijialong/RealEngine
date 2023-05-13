@@ -1,7 +1,6 @@
 #pragma once
 
 #include "physics_defines.h"
-#include "utils/math.h"
 #include "EASTL/span.h"
 
 class IPhysicsShape;
@@ -26,5 +25,10 @@ public:
     virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint16_t* indices, uint32_t index_count, bool winding_order_ccw = false) = 0;
     virtual IPhysicsShape* CreateMeshShape(const float* vertices, uint32_t vertex_stride, uint32_t vertex_count, const uint32_t* indices, uint32_t index_count, bool winding_order_ccw = false) = 0;
     //todo : virtual IPhysicsShape* CreateHeightFiledShape() = 0;
-    virtual IPhysicsRigidBody* CreateRigidBody(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer) = 0;
+    virtual IPhysicsRigidBody* CreateRigidBody(const IPhysicsShape* shape, PhysicsMotion motion_type, uint16_t layer, void* user_data = nullptr) = 0;
+
+    //todo : filters
+    virtual bool RayTrace(const float3& origin, const float3& direction, float max_distance, PhysicsRayTraceResult& result) const = 0;
+    //todo :virtual bool Overlap() const = 0;
+    //todo :virtual bool Sweep() const = 0;
 };

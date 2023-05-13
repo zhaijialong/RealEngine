@@ -293,12 +293,12 @@ void World::PhysicsTest(Renderer* pRenderer)
         if (pRenderer->GetFrameID() % 2 == 1)
         {
             loader.Load("model/box.gltf");
-            body = m_pPhysicsSystem->CreateRigidBody(m_boxShape.get(), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC);
+            body = m_pPhysicsSystem->CreateRigidBody(m_boxShape.get(), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC, m_objects.back().get());
         }
         else
         {
             loader.Load("model/sphere.gltf");
-            body = m_pPhysicsSystem->CreateRigidBody(m_sphereShape.get(), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC);
+            body = m_pPhysicsSystem->CreateRigidBody(m_sphereShape.get(), PhysicsMotion::Dynamic, PhysicsLayers::DYNAMIC, m_objects.back().get());
         }
 
         body->AddToPhysicsSystem(true);
