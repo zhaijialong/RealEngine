@@ -1,6 +1,6 @@
 #include "terrain.h"
 #include "renderer.h"
-#include "core/engine.h"
+#include "utils/gui_util.h"
 
 Terrain::Terrain(Renderer* pRenderer)
 {
@@ -10,8 +10,10 @@ Terrain::Terrain(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("terrain/terrain.hlsl", "main", "cs_6_6", {});
     m_pRaymachPSO = pRenderer->GetPipelineState(desc, "terrain raymarching PSO");
 
-    eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
-    m_pHeightmap.reset(pRenderer->CreateTexture2D(asset_path + "textures/Erosion.png", false));
+    desc.cs = pRenderer->GetShader("terrain/heightmap.hlsl", "main", "cs_6_6", {});
+    m_pHeightmapPSO = pRenderer->GetPipelineState(desc, "terrain heightmap PSO");
+
+    m_pHeightmap.reset(pRenderer->CreateTexture2D(1024, 1024, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap"));
 }
 
 RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
@@ -28,10 +30,34 @@ RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
         },
         [=](const TerrainRaymarchingPassData& data, IGfxCommandList* pCommandList)
         {
+            ImGui::Begin("Terrain");
+            Heightmap(pCommandList);
             Raymarch(pCommandList, pRenderGraph->GetTexture(data.output));
+            ImGui::End();
         });
 
     return raymarching_pass->output;
+}
+
+void Terrain::Heightmap(IGfxCommandList* pCommandList)
+{
+    ImGui::SliderInt("Seed##Terrain", (int*)&m_seed, 0, 1000000);
+    m_bGenerateHeightmap |= ImGui::Button("Generate##Terrain");
+    ImGui::Image((ImTextureID)m_pHeightmap->GetSRV(), ImVec2(300, 300));
+
+    uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
+    uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
+
+    if (m_bGenerateHeightmap)
+    {
+        pCommandList->SetPipelineState(m_pHeightmapPSO);
+        uint32_t cb[] = { m_seed, m_pHeightmap->GetUAV()->GetHeapIndex() };
+        pCommandList->SetComputeConstants(0, cb, sizeof(cb));
+        pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+        pCommandList->UavBarrier(nullptr);
+
+        m_bGenerateHeightmap = false;
+    }
 }
 
 void Terrain::Raymarch(IGfxCommandList* pCommandList, RGTexture* output)

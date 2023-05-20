@@ -1,4 +1,4 @@
 <scene>
-    <camera position="17.3395653,6.17326212,14.56773663" rotation="9.60000420,-59.6000061,0" fov="60.0" znear="0.01" zfar="1000.0"/>
+    <camera position="10.3395653,17.17326212,-22.56773663" rotation="45.60000420,-13.6000061,0" fov="60.0" znear="0.01" zfar="1000.0"/>
     <light type="directional" primary="true" rotation="15.000,0.000,0.000" intensity="3.0"/>
 </scene>
