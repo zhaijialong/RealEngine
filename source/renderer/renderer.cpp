@@ -12,6 +12,7 @@
 #include "base_pass.h"
 #include "path_tracer.h"
 #include "sky_cubemap.h"
+#include "terrain.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
@@ -99,6 +100,7 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_pGpuStats = eastl::make_unique<GpuDrivenStats>(this);
     m_pPathTracer = eastl::make_unique<PathTracer>(this);
     m_pSkyCubeMap = eastl::make_unique<SkyCubeMap>(this);
+    m_pTerrain = eastl::make_unique<Terrain>(this);
 }
 
 void Renderer::RenderFrame()

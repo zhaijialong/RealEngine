@@ -296,6 +296,7 @@ private:
     eastl::unique_ptr<class PostProcessor> m_pPostProcessor;
     eastl::unique_ptr<class PathTracer> m_pPathTracer;
     eastl::unique_ptr<class SkyCubeMap> m_pSkyCubeMap;
+    eastl::unique_ptr<class Terrain> m_pTerrain;
 
     eastl::unique_ptr<class GpuDrivenDebugLine> m_pGpuDebugLine;
     eastl::unique_ptr<class GpuDrivenDebugPrint> m_pGpuDebugPrint;

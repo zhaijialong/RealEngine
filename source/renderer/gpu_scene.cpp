@@ -93,7 +93,7 @@ void GpuScene::Update()
     if (m_pSceneTLAS == nullptr || m_pSceneTLAS->GetDesc().instance_count < rt_instance_count)
     {
         GfxRayTracingTLASDesc desc;
-        desc.instance_count = rt_instance_count;
+        desc.instance_count = max(rt_instance_count, 1);
         desc.flags = GfxRayTracingASFlagPreferFastBuild;
 
         IGfxDevice* device = m_pRenderer->GetDevice();

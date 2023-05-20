@@ -4,6 +4,7 @@
 #include "path_tracer.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
+#include "terrain.h"
 #include "core/engine.h"
 
 void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
@@ -31,6 +32,8 @@ void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
 
         ForwardPass(sceneColorRT, sceneDepthRT);
     }
+
+    sceneColorRT = m_pTerrain->Render(m_pRenderGraph.get(), sceneColorRT);
 
     RGHandle output = m_pPostProcessor->Render(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, linearDepthRT, velocityRT,
         m_nRenderWidth, m_nRenderHeight, m_nDisplayWidth, m_nDisplayHeight);
