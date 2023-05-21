@@ -13,7 +13,15 @@ Terrain::Terrain(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("terrain/heightmap.hlsl", "main", "cs_6_6", {});
     m_pHeightmapPSO = pRenderer->GetPipelineState(desc, "terrain heightmap PSO");
 
+    desc.cs = pRenderer->GetShader("terrain/erosion.hlsl", "main", "cs_6_6", {});
+    m_pErosionPSO = pRenderer->GetPipelineState(desc, "terrain erosion PSO");
+
     m_pHeightmap.reset(pRenderer->CreateTexture2D(1024, 1024, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap"));
+    m_pHardness.reset(pRenderer->CreateTexture2D(1024, 1024, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Hardness"));
+    m_pSediment.reset(pRenderer->CreateTexture2D(1024, 1024, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Sediment"));
+    m_pWater.reset(pRenderer->CreateTexture2D(1024, 1024, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Water"));
+    m_pFlux.reset(pRenderer->CreateTexture2D(1024, 1024, 1, GfxFormat::RGBA16UNORM, GfxTextureUsageUnorderedAccess, "Flux"));
+    m_pVelocity.reset(pRenderer->CreateTexture2D(1024, 1024, 1, GfxFormat::RG16UNORM, GfxTextureUsageUnorderedAccess, "Velocity"));
 }
 
 RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
@@ -49,11 +57,11 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
     bGenerateHeightmap |= ImGui::Button("Generate##Terrain");
     ImGui::Image((ImTextureID)m_pHeightmap->GetSRV(), ImVec2(300, 300));
 
-    uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
-    uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
-
     if (bGenerateHeightmap)
     {
+        uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
+        uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
+
         pCommandList->SetPipelineState(m_pHeightmapPSO);
         uint32_t cb[] = { seed, m_pHeightmap->GetUAV()->GetHeapIndex() };
         pCommandList->SetComputeConstants(0, cb, sizeof(cb));
@@ -69,6 +77,21 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     static bool bErosion = false;
 
     ImGui::Checkbox("Erosion##Terrain", &bErosion);
+
+    if (bErosion)
+    {
+        pCommandList->SetPipelineState(m_pErosionPSO);
+
+        uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
+        uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
+
+        for (uint32_t i = 0; i < 5; ++i)
+        {
+            pCommandList->SetComputeConstants(0, &i, sizeof(uint32_t));
+            pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+            pCommandList->UavBarrier(nullptr);
+        }
+    }
 }
 
 void Terrain::Raymarch(IGfxCommandList* pCommandList, RGTexture* output)
