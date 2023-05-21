@@ -71,11 +71,35 @@ bool CastRay(Ray ray, out float hitT)
 
 float3 TerrainColor(float3 position)
 {
-    float3 diffuseColor = saturate(GetHeight(position.x, position.z).xxx / 10.0 + 0.1);
+    float Height = GetHeight(position.x, position.z) / terrainHeightScale;
     float3 N = GetNormal(position);
-    float3 L = SceneCB.lightDir;
     
-    return diffuseColor * (max(0, dot(N, L)) + DiffuseIBL(N));
+    float3 diffuseColor = 0;
+    
+    if (Height < 0.15)
+    {
+        diffuseColor = float3(0.05, 0.6, 0.05);
+    }
+    else if(Height < 0.2)
+    {
+        diffuseColor = lerp(float3(0.05, 0.6, 0.05), float3(0.8, 0.5, 0.2), (Height - 0.15) / 0.05);
+
+    }
+    else if (Height < 0.25)
+    {
+        diffuseColor = float3(0.8, 0.5, 0.2);
+    }
+    else if(Height < 0.3)
+    {
+        diffuseColor = lerp(float3(0.8, 0.5, 0.2), 1.0, (Height - 0.25) / 0.05);
+    }
+    else
+    {
+        diffuseColor = 1.0;
+    }
+    
+
+    return diffuseColor * DiffuseIBL(N);
 }
 
 float3 SkyColor(Ray ray)

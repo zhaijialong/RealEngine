@@ -32,6 +32,7 @@ RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
         {
             ImGui::Begin("Terrain");
             Heightmap(pCommandList);
+            Erosion(pCommandList);
             Raymarch(pCommandList, pRenderGraph->GetTexture(data.output));
             ImGui::End();
         });
@@ -41,23 +42,33 @@ RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
 
 void Terrain::Heightmap(IGfxCommandList* pCommandList)
 {
-    ImGui::SliderInt("Seed##Terrain", (int*)&m_seed, 0, 1000000);
-    m_bGenerateHeightmap |= ImGui::Button("Generate##Terrain");
+    static bool bGenerateHeightmap = true;
+    static uint seed = 556650;
+
+    bGenerateHeightmap |= ImGui::SliderInt("Seed##Terrain", (int*)&seed, 0, 1000000);
+    bGenerateHeightmap |= ImGui::Button("Generate##Terrain");
     ImGui::Image((ImTextureID)m_pHeightmap->GetSRV(), ImVec2(300, 300));
 
     uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
     uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
 
-    if (m_bGenerateHeightmap)
+    if (bGenerateHeightmap)
     {
         pCommandList->SetPipelineState(m_pHeightmapPSO);
-        uint32_t cb[] = { m_seed, m_pHeightmap->GetUAV()->GetHeapIndex() };
+        uint32_t cb[] = { seed, m_pHeightmap->GetUAV()->GetHeapIndex() };
         pCommandList->SetComputeConstants(0, cb, sizeof(cb));
         pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
         pCommandList->UavBarrier(nullptr);
 
-        m_bGenerateHeightmap = false;
+        bGenerateHeightmap = false;
     }
+}
+
+void Terrain::Erosion(IGfxCommandList* pCommandList)
+{
+    static bool bErosion = false;
+
+    ImGui::Checkbox("Erosion##Terrain", &bErosion);
 }
 
 void Terrain::Raymarch(IGfxCommandList* pCommandList, RGTexture* output)

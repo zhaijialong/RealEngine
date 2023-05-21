@@ -25,5 +25,5 @@ private:
     eastl::unique_ptr<Texture2D> m_pHistoryColorOutput;
 
     bool m_bHistoryInvalid = true;
-    bool m_bEnable = true;
+    bool m_bEnable = false;
 };
