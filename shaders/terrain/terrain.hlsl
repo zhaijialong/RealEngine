@@ -1,29 +1,64 @@
 #include "../common.hlsli"
+#include "../debug.hlsli"
 #include "../atmosphere.hlsli"
+#include "../brdf.hlsli"
 
 cbuffer CB : register(b0)
 {
     uint c_heightTexture;
+    uint c_waterTexture;
+    uint c_waterFluxTexture;
+    uint c_waterVelocityTexture;
+    uint c_sedimentTexture;
     uint c_outputTexture;
+    uint c_bShowLayers;
 }
+
+
+static Texture2D heightTexture = ResourceDescriptorHeap[c_heightTexture];
+static Texture2D waterTexture = ResourceDescriptorHeap[c_waterTexture];
+static Texture2D waterFluxTexture = ResourceDescriptorHeap[c_waterFluxTexture];
+static Texture2D waterVelocityTexture = ResourceDescriptorHeap[c_waterVelocityTexture];
+static Texture2D sedimentTexture = ResourceDescriptorHeap[c_sedimentTexture];
+static RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
+static SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
 static const float2 terrainOrigin = float2(-20.0, -20.0);
 static const float terrainSize = 40.0;
 static const float terrainHeightScale = 30.0;
 
-float GetHeight(float x, float z)
-{    
+float4 GetLayerHeights(float x, float z)
+{
     float2 uv = (float2(x, z) - terrainOrigin) / terrainSize;
-    if(any(uv < 0.0) || any(uv > 1.0))
+    if (any(uv < 0.0) || any(uv > 1.0))
     {
         return -10000000000.0;
-    }    
-    
-    Texture2D heightTexture = ResourceDescriptorHeap[c_heightTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
+    }
     
     uv.y = 1.0 - uv.y;
-    return heightTexture.SampleLevel(linearSampler, uv, 0).x * terrainHeightScale;
+    float4 heights = heightTexture.SampleLevel(linearSampler, uv, 0);
+
+    return heights;
+}
+
+float GetWaterHeight(float x, float z)
+{
+    float2 uv = (float2(x, z) - terrainOrigin) / terrainSize;
+    if (any(uv < 0.0) || any(uv > 1.0))
+    {
+        return -10000000000.0;
+    }
+    
+    uv.y = 1.0 - uv.y;
+    return waterTexture.SampleLevel(linearSampler, uv, 0).x;    
+}
+
+float GetHeight(float x, float z)
+{    
+    float terrainHeight = dot(GetLayerHeights(x, z), 1.0);
+    float waterHeight = GetWaterHeight(x, z);
+    
+    return (terrainHeight + waterHeight) * terrainHeightScale;
 }
 
 float3 GetNormal(float3 p)
@@ -69,37 +104,81 @@ bool CastRay(Ray ray, out float hitT)
     return false;
 }
 
-float3 TerrainColor(float3 position)
+float3 GetDiffuseColor(float x, float z)
 {
-    float Height = GetHeight(position.x, position.z) / terrainHeightScale;
-    float3 N = GetNormal(position);
-    
+    float4 heights = GetLayerHeights(x, z);
     float3 diffuseColor = 0;
     
-    if (Height < 0.15)
+    if (c_bShowLayers)
     {
-        diffuseColor = float3(0.05, 0.6, 0.05);
-    }
-    else if(Height < 0.2)
-    {
-        diffuseColor = lerp(float3(0.05, 0.6, 0.05), float3(0.8, 0.5, 0.2), (Height - 0.15) / 0.05);
-
-    }
-    else if (Height < 0.25)
-    {
-        diffuseColor = float3(0.8, 0.5, 0.2);
-    }
-    else if(Height < 0.3)
-    {
-        diffuseColor = lerp(float3(0.8, 0.5, 0.2), 1.0, (Height - 0.25) / 0.05);
+        if (heights[3] > 0)
+        {
+            return 1; //not used
+        }
+        else if (heights[2] > 0)
+        {
+            return 0; //not used
+        }
+        else if (heights[1] > 0)
+        {
+            return float3(0.929, 0.906, 0.588);
+        }
+        else
+        {
+            return float3(0.447, 0.368, 0.227);
+        }
     }
     else
     {
-        diffuseColor = 1.0;
+        float height = dot(heights, 1);
+
+        if (height < 0.15)
+        {
+            diffuseColor = float3(0.05, 0.6, 0.05);
+        }
+        else if (height < 0.2)
+        {
+            diffuseColor = lerp(float3(0.05, 0.6, 0.05), float3(0.8, 0.5, 0.2), (height - 0.15) / 0.05);
+
+        }
+        else if (height < 0.25)
+        {
+            diffuseColor = float3(0.8, 0.5, 0.2);
+        }
+        else if (height < 0.3)
+        {
+            diffuseColor = lerp(float3(0.8, 0.5, 0.2), 1.0, (height - 0.25) / 0.05);
+        }
+        else
+        {
+            diffuseColor = 1.0;
+        }
     }
     
+    return diffuseColor;
+}
 
-    return diffuseColor * DiffuseIBL(N);
+float3 TerrainColor(float3 position, float3 V)
+{
+    float waterHeight = GetWaterHeight(position.x, position.z);
+    float3 N = GetNormal(position);
+    float3 terrainColor = GetDiffuseColor(position.x, position.z) * DiffuseIBL(N);
+    
+    if (waterHeight > 0)
+    {
+        float3 H = normalize(N + SceneCB.lightDir);
+        
+        float specular = pow(max(dot(N, H), 0.0), 333.0);
+        float3 relectionColor = lerp(float3(0.6, 0.6, 0.6), float3(0.3, 0.5, 0.9), clamp(H.z, 0.f, 1.f));
+        float R = saturate(0.2 + 0.2 * pow(1.0 + dot(V, -N), 22.0));
+    
+        float3 waterColor = float3(0.0, 0.3, 0.5) + relectionColor * R + specular;
+        float alpha = min((1.8 + specular) * waterHeight * 20.0, 1.0);
+        
+        return lerp(terrainColor, waterColor, alpha);
+    }
+
+    return terrainColor;
 }
 
 float3 SkyColor(Ray ray)
@@ -113,11 +192,39 @@ float3 SkyColor(Ray ray)
     return color;
 }
 
+void DrawRect(uint2 pos, uint4 rect, Texture2D texture, float scale = 1.0)
+{
+    if (pos.x >= rect.x && pos.x < rect.z && pos.y >= rect.y && pos.y < rect.w)
+    {
+        float2 uv = (pos - rect.xy + 0.5) / float2(rect.zw - rect.xy);
+        float4 value = texture.SampleLevel(linearSampler, uv, 0) * scale;
+        outputTexture[pos] = value;
+    }
+}
+
+void DebugUI(uint2 pos)
+{
+    if (all(pos == 0))
+    {
+        float2 screenPos = float2(0.0, 95.0);
+        debug::PrintString(screenPos, float3(1, 1, 1), 'w', 'a', 't', 'e', 'r');
+        screenPos = float2(0.0, 315.0);
+        debug::PrintString(screenPos, float3(1, 1, 1), 'f', 'l', 'u', 'x');
+        screenPos = float2(0.0, 535.0);
+        debug::PrintString(screenPos, float3(1, 1, 1), 'v', 'e', 'l', 'o', 'c', 'i', 't', 'y');
+        screenPos = float2(0.0, 755.0);
+        debug::PrintString(screenPos, float3(1, 1, 1), 's', 'e', 'd', 'i', 'm', 'e', 'n', 't');
+    }
+    
+    DrawRect(pos, uint4(0, 100, 200, 300), waterTexture, 10.0);
+    DrawRect(pos, uint4(0, 320, 200, 520), waterFluxTexture, 5.0);
+    DrawRect(pos, uint4(0, 540, 200, 740), waterVelocityTexture, 0.02);
+    DrawRect(pos, uint4(0, 760, 200, 960), sedimentTexture);
+}
+
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
-{
-    RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
-    
+{    
     float3 position = GetWorldPosition(dispatchThreadID.xy, 0);
     
     Ray ray;
@@ -131,10 +238,12 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     {
         float3 position = ray.origin + ray.direction * hitT;
         
-        outputTexture[dispatchThreadID.xy] = float4(TerrainColor(position), 1.0);
+        outputTexture[dispatchThreadID.xy] = float4(TerrainColor(position, -ray.direction), 1.0);
     }
     else
     {
         outputTexture[dispatchThreadID.xy] = float4(SkyColor(ray), 1.0);
     }
+    
+    DebugUI(dispatchThreadID.xy);
 }
