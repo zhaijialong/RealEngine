@@ -82,11 +82,17 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
 
     static float rainRate = 0.0001;
     static float evaporationRate = 0.005;
+    static float4 sedimentCapacity = float4(0.0001f, 0.1f, 0.0f, 0.0f);
+    static float erosionConstant = 0.3f;
+    static float depositionConstant = 0.1f;
 
     ImGui::Separator();
     ImGui::Checkbox("Rain##Terrain", &bRain);
     ImGui::SliderFloat("Rain Rate##Terrain", &rainRate, 0.0001, 0.001, "%.4f");
     ImGui::SliderFloat("Evaporation##Terrain", &evaporationRate, 0.005, 0.05, "%.4f");
+    ImGui::SliderFloat4("Sediment Capacity##Terrain", (float*)&sedimentCapacity, 0.0001, 0.1, "%.4f");
+    ImGui::SliderFloat("Erosion##Terrain", &erosionConstant, 0.001, 0.5, "%.4f");
+    ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.4f");
 
     pCommandList->SetPipelineState(m_pErosionPSO);
 
@@ -101,6 +107,10 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
         uint c_bRain;
         float c_rainRate;
         float c_evaporationRate;
+
+        float4 c_sedimentCapacity;
+        float c_erosionConstant;
+        float c_depositionConstant;
     } cb;
     cb.c_heightmapUAV = m_pHeightmap->GetUAV()->GetHeapIndex();
     cb.c_sedimentUAV = m_pSediment->GetUAV()->GetHeapIndex();
@@ -110,6 +120,9 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     cb.c_bRain = bRain;
     cb.c_rainRate = rainRate;
     cb.c_evaporationRate = evaporationRate;
+    cb.c_sedimentCapacity = sedimentCapacity;
+    cb.c_erosionConstant = erosionConstant;
+    cb.c_depositionConstant = depositionConstant;
         
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
 
