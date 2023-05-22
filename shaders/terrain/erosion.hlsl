@@ -18,6 +18,11 @@ cbuffer CB1 : register(b1)
     uint c_bRain;
     float c_rainRate;
     float c_evaporationRate;
+    
+    float4 c_sedimentCapacity; //4 layers
+
+    float c_erosionConstant;
+    float c_depositionConstant;
 }
 
 static RWTexture2D<float4> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV];
@@ -30,6 +35,11 @@ static const float density = 1.0;
 static const float gravity = 9.8;
 static const float pipeLength = 1.0;
 static const float deltaTime = 0.03;
+static const float minTiltAngle = radians(5.0);
+
+// must match with terrain.hlsl
+static const float terrainSize = 40.0;
+static const float terrainHeightScale = 30.0;
 
 float GetHeight(int2 pos)
 {
@@ -59,6 +69,26 @@ float4 GetWaterFlux(int2 pos)
     }
     
     return fluxUAV[pos];
+}
+
+uint GetTopmostLayer(float4 heights)
+{
+    if (heights[3] > 0)
+    {
+        return 3;
+    }
+    else if (heights[2] > 0)
+    {
+        return 2;
+    }
+    else if (heights[1] > 0)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 void rain(uint2 pos)
@@ -156,10 +186,44 @@ void update_water(int2 pos)
 
 void force_based_erosion(int2 pos)
 {
+    float heightL = GetHeight(pos + int2(-1, 0));
+    float heightR = GetHeight(pos + int2(1, 0));
+    float heightT = GetHeight(pos + int2(0, -1));
+    float heightB = GetHeight(pos + int2(0, 1));
+    float3 normal = normalize(float3((heightL - heightR) * terrainHeightScale, (heightT - heightB) * terrainHeightScale, 2.0 / terrainSize));
+    float tiltAngle = acos(dot(normal, float3(0, 0, 1)));
+    tiltAngle = max(tiltAngle, minTiltAngle);
+    
+    float4 heights = heightmapUAV[pos];
+    float sediment = sedimentUAV[pos];
+    float2 velocity = velocityUAV[pos];
+    
+    float4 sedimentCapacity = length(velocity) * c_sedimentCapacity * abs(sin(tiltAngle));
+    
+    uint topmostLayer = GetTopmostLayer(heights);
+    if (sediment > sedimentCapacity[topmostLayer])
+    {
+        float sedimentDiff = (sediment - sedimentCapacity[topmostLayer]) * c_depositionConstant;
+        heightmapUAV[pos][topmostLayer] += sedimentDiff;
+        sedimentUAV[pos] -= sedimentDiff;
+    }
+    else
+    {
+        for (int k = 3; k > 0; --k)
+        {
+            if (k > topmostLayer)
+            {
+                heightmapUAV[pos][k] = 0.0;
+            }
+
+            //todo
+        }
+    }
 }
 
 void advect_sediment(int2 pos)
 {
+    //todo
 }
 
 [numthreads(8, 8, 1)]
