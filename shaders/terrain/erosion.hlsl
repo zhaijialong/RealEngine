@@ -10,26 +10,30 @@ cbuffer CB0 : register(b0)
 cbuffer CB1 : register(b1)
 {
     uint c_heightmapUAV;
-    uint c_sedimentUAV;
+    uint c_sedimentUAV0;
+    uint c_sedimentUAV1;
     uint c_waterUAV;
+    
     uint c_fluxUAV;
-
-    uint c_velocityUAV;    
+    uint c_velocityUAV0;    
+    uint c_velocityUAV1;
     uint c_bRain;
+    
+    float4 c_erosionConstant; //4 layers
+    
     float c_rainRate;
     float c_evaporationRate;
-    
-    float4 c_sedimentCapacity; //4 layers
-
-    float c_erosionConstant;
     float c_depositionConstant;
+    float c_sedimentCapacityConstant;
 }
 
 static RWTexture2D<float4> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV];
-static RWTexture2D<float> sedimentUAV = ResourceDescriptorHeap[c_sedimentUAV];
+static RWTexture2D<float> sedimentUAV0 = ResourceDescriptorHeap[c_sedimentUAV0];
+static RWTexture2D<float> sedimentUAV1 = ResourceDescriptorHeap[c_sedimentUAV1];
 static RWTexture2D<float> waterUAV = ResourceDescriptorHeap[c_waterUAV];
 static RWTexture2D<float4> fluxUAV = ResourceDescriptorHeap[c_fluxUAV];
-static RWTexture2D<float2> velocityUAV = ResourceDescriptorHeap[c_velocityUAV];
+static RWTexture2D<float2> velocityUAV0 = ResourceDescriptorHeap[c_velocityUAV0];
+static RWTexture2D<float2> velocityUAV1 = ResourceDescriptorHeap[c_velocityUAV1];
 
 static const float density = 1.0;
 static const float gravity = 9.8;
@@ -89,6 +93,16 @@ uint GetTopmostLayer(float4 heights)
     {
         return 0;
     }
+}
+
+template<typename T>
+T BilinearSample(RWTexture2D<T> sampledTexture, float2 pos)
+{
+    T s00 = sampledTexture[uint2(floor(pos.x), floor(pos.y))];
+    T s10 = sampledTexture[uint2(ceil(pos.x), floor(pos.y))];
+    T s01 = sampledTexture[uint2(floor(pos.x), ceil(pos.y))];
+    T s11 = sampledTexture[uint2(ceil(pos.x), ceil(pos.y))];
+    return lerp(lerp(s00, s10, frac(pos.x)), lerp(s01, s11, frac(pos.x)), frac(pos.y));
 }
 
 void rain(uint2 pos)
@@ -177,11 +191,45 @@ void update_water(int2 pos)
     float deltaY = (fluxT.w - flux.z + flux.w - fluxB.z) * 0.5;
     
     float avgHeight = (waterHeight + newWaterHeight) * 0.5;
-    float velocityFactor = pipeLength * avgHeight;
-    float2 velocity = velocityFactor > 1e-6 ? float2(deltaX, deltaY) / velocityFactor : float2(0, 0);
+    float2 velocity = float2(deltaX, deltaY) / (pipeLength * avgHeight);
+    
+    if(newWaterHeight < 1e-4)
+    {
+        velocity = 0.0;
+    }
     
     waterUAV[pos] = newWaterHeight;
-    velocityUAV[pos] = velocity;
+    velocityUAV0[pos] = velocity;
+}
+
+// velocityUAV0 -> velocityUAV1
+void diffuse_velocity0(int2 pos)
+{
+    uint width, height;
+    velocityUAV0.GetDimensions(width, height);
+    
+    float2 velocity = velocityUAV0[pos];
+    float2 velocityL = velocityUAV0[clamp(pos + int2(-1, 0), 0, int2(width - 1, height - 1))];
+    float2 velocityR = velocityUAV0[clamp(pos + int2(1, 0), 0, int2(width - 1, height - 1))];
+    float2 velocityT = velocityUAV0[clamp(pos + int2(0, -1), 0, int2(width - 1, height - 1))];
+    float2 velocityB = velocityUAV0[clamp(pos + int2(0, 1), 0, int2(width - 1, height - 1))];
+    
+    velocityUAV1[pos] = (velocityL + velocityR + velocityT + velocityB + 4.0 * velocity) / 8.0;
+}
+
+// velocityUAV1 -> velocityUAV0
+void diffuse_velocity1(int2 pos)
+{
+    uint width, height;
+    velocityUAV0.GetDimensions(width, height);
+    
+    float2 velocity = velocityUAV1[pos];
+    float2 velocityL = velocityUAV1[clamp(pos + int2(-1, 0), 0, int2(width - 1, height - 1))];
+    float2 velocityR = velocityUAV1[clamp(pos + int2(1, 0), 0, int2(width - 1, height - 1))];
+    float2 velocityT = velocityUAV1[clamp(pos + int2(0, -1), 0, int2(width - 1, height - 1))];
+    float2 velocityB = velocityUAV1[clamp(pos + int2(0, 1), 0, int2(width - 1, height - 1))];
+    
+    velocityUAV0[pos] = (velocityL + velocityR + velocityT + velocityB + 4.0 * velocity) / 8.0;
 }
 
 void force_based_erosion(int2 pos)
@@ -195,35 +243,54 @@ void force_based_erosion(int2 pos)
     tiltAngle = max(tiltAngle, minTiltAngle);
     
     float4 heights = heightmapUAV[pos];
-    float sediment = sedimentUAV[pos];
-    float2 velocity = velocityUAV[pos];
+    float sediment = sedimentUAV0[pos];
+    float2 velocity = velocityUAV0[pos];
     
-    float4 sedimentCapacity = length(velocity) * c_sedimentCapacity * abs(sin(tiltAngle));
-    
+    float sedimentCapacity = length(velocity) * c_sedimentCapacityConstant * abs(sin(tiltAngle));
     uint topmostLayer = GetTopmostLayer(heights);
-    if (sediment > sedimentCapacity[topmostLayer])
+
+
+    if (sediment > sedimentCapacity)
     {
-        float sedimentDiff = (sediment - sedimentCapacity[topmostLayer]) * c_depositionConstant;
-        heightmapUAV[pos][topmostLayer] += sedimentDiff;
-        sedimentUAV[pos] -= sedimentDiff;
+        float sedimentDiff = (sediment - sedimentCapacity) * c_depositionConstant;
+        heightmapUAV[pos][0] += sedimentDiff;
+        sedimentUAV0[pos] -= sedimentDiff;
     }
     else
     {
-        for (int k = 3; k > 0; --k)
+        float sedimentDiff = (sedimentCapacity - sediment) * c_erosionConstant[0];
+        heightmapUAV[pos][0] -= sedimentDiff;
+        sedimentUAV0[pos] += sedimentDiff;
+        /*
+        float layersHeight = 0.0;
+        
+        for (int k = topmostLayer; k > 0; --k)
         {
-            if (k > topmostLayer)
+            float maxSediment = sedimentCapacity - layersHeight;
+							
+            if (maxSediment < sediment)
             {
-                heightmapUAV[pos][k] = 0.0;
+                break;
             }
 
-            //todo
-        }
+            layersHeight += heights[k];
+            
+            float sedimentDiff = (maxSediment - sediment) * c_erosionConstant[k];
+            sedimentDiff = min(heights[k], sedimentDiff);
+							
+            sedimentUAV[pos] += sedimentDiff;
+            heightmapUAV[pos][k] -= sedimentDiff;
+        }*/
     }
 }
 
 void advect_sediment(int2 pos)
-{
-    //todo
+{    
+    float2 velocity = velocityUAV0[pos];
+    float previousX = pos.x - velocity.x * deltaTime;
+    float previousY = pos.y - velocity.y * deltaTime;
+
+    sedimentUAV1[pos] = BilinearSample(sedimentUAV0, float2(previousX, previousY));
 }
 
 [numthreads(8, 8, 1)]
@@ -238,15 +305,21 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
             flow(dispatchThreadID.xy);
             break;
         case 2:
-            update_water(dispatchThreadID.xy); //todo : velocity diffuse
+            update_water(dispatchThreadID.xy);
             break;
         case 3:
-            force_based_erosion(dispatchThreadID.xy);
+            diffuse_velocity0(dispatchThreadID.xy);
             break;
         case 4:
-            advect_sediment(dispatchThreadID.xy);
+            diffuse_velocity1(dispatchThreadID.xy);
             break;
         case 5:
+            force_based_erosion(dispatchThreadID.xy);
+            break;
+        case 6:
+            advect_sediment(dispatchThreadID.xy);
+            break;
+        case 7:
             evaporation(dispatchThreadID.xy);
             break;
         default:

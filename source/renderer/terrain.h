@@ -19,10 +19,12 @@ private:
     Renderer* m_pRenderer;
 
     eastl::unique_ptr<Texture2D> m_pHeightmap;
-    eastl::unique_ptr<Texture2D> m_pSediment;
+    eastl::unique_ptr<Texture2D> m_pSediment0;
+    eastl::unique_ptr<Texture2D> m_pSediment1;
     eastl::unique_ptr<Texture2D> m_pWater;
     eastl::unique_ptr<Texture2D> m_pFlux;
-    eastl::unique_ptr<Texture2D> m_pVelocity;
+    eastl::unique_ptr<Texture2D> m_pVelocity0;
+    eastl::unique_ptr<Texture2D> m_pVelocity1;
    
     IGfxPipelineState* m_pHeightmapPSO = nullptr;
     IGfxPipelineState* m_pErosionPSO = nullptr;
