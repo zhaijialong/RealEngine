@@ -19,7 +19,6 @@ private:
     Renderer* m_pRenderer;
 
     eastl::unique_ptr<Texture2D> m_pHeightmap;
-    eastl::unique_ptr<Texture2D> m_pHardness;
     eastl::unique_ptr<Texture2D> m_pSediment;
     eastl::unique_ptr<Texture2D> m_pWater;
     eastl::unique_ptr<Texture2D> m_pFlux;
