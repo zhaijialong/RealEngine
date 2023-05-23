@@ -9,37 +9,40 @@ cbuffer CB0 : register(b0)
 
 cbuffer CB1 : register(b1)
 {
-    uint c_heightmapUAV;
+    uint c_heightmapUAV0;
+    uint c_heightmapUAV1;
     uint c_sedimentUAV0;
     uint c_sedimentUAV1;
-    uint c_waterUAV;
     
+    uint c_waterUAV;
     uint c_fluxUAV;
     uint c_velocityUAV0;    
     uint c_velocityUAV1;
-    uint c_bRain;
     
     float4 c_erosionConstant; //4 layers
     
+    uint c_bRain;
     float c_rainRate;
     float c_evaporationRate;
     float c_depositionConstant;
+    
     float c_sedimentCapacityConstant;
+    float c_smoothness;
 }
 
-static RWTexture2D<float4> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV];
-static RWTexture2D<float> sedimentUAV0 = ResourceDescriptorHeap[c_sedimentUAV0];
-static RWTexture2D<float> sedimentUAV1 = ResourceDescriptorHeap[c_sedimentUAV1];
+static RWTexture2D<float4> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV0];
 static RWTexture2D<float> waterUAV = ResourceDescriptorHeap[c_waterUAV];
 static RWTexture2D<float4> fluxUAV = ResourceDescriptorHeap[c_fluxUAV];
 static RWTexture2D<float2> velocityUAV0 = ResourceDescriptorHeap[c_velocityUAV0];
 static RWTexture2D<float2> velocityUAV1 = ResourceDescriptorHeap[c_velocityUAV1];
+static RWTexture2D<float> sedimentUAV0 = ResourceDescriptorHeap[c_sedimentUAV0];
+static RWTexture2D<float> sedimentUAV1 = ResourceDescriptorHeap[c_sedimentUAV1];
 
 static const float density = 1.0;
 static const float gravity = 9.8;
 static const float pipeLength = 1.0;
 static const float deltaTime = 0.03;
-static const float minTiltAngle = radians(5.0);
+static const float minTiltAngle = radians(1.0);
 
 // must match with terrain.hlsl
 static const float terrainSize = 40.0;
@@ -107,7 +110,7 @@ T BilinearSample(RWTexture2D<T> sampledTexture, float2 pos)
 
 void rain(uint2 pos)
 {
-    if (c_bRain && (SceneCB.frameIndex % 10 == 0))
+    if (c_bRain && (SceneCB.frameIndex % 3 == 0))
     {
         uint width, height;
         waterUAV.GetDimensions(width, height);
@@ -115,13 +118,13 @@ void rain(uint2 pos)
         PRNG rng = PRNG::Create(pos, uint2(width, height));
         float water = rng.RandomFloat();
 
-        waterUAV[pos] += water * c_rainRate;
+        waterUAV[pos] += water * c_rainRate * deltaTime;
     }
 }
 
 void evaporation(uint2 pos)
 {
-    waterUAV[pos] = waterUAV[pos] * (1.0 - c_evaporationRate);
+    waterUAV[pos] = waterUAV[pos] * (1.0 - c_evaporationRate * deltaTime);
 }
 
 void flow(int2 pos)
@@ -249,7 +252,6 @@ void force_based_erosion(int2 pos)
     float sedimentCapacity = length(velocity) * c_sedimentCapacityConstant * abs(sin(tiltAngle));
     uint topmostLayer = GetTopmostLayer(heights);
 
-
     if (sediment > sedimentCapacity)
     {
         float sedimentDiff = (sediment - sedimentCapacity) * c_depositionConstant;
@@ -293,6 +295,55 @@ void advect_sediment(int2 pos)
     sedimentUAV1[pos] = BilinearSample(sedimentUAV0, float2(previousX, previousY));
 }
 
+void smooth_height(int2 pos)
+{
+    RWTexture2D<float4> output = ResourceDescriptorHeap[c_heightmapUAV1];
+    
+    float4 C = heightmapUAV[pos];
+    float sediment = sedimentUAV1[pos];
+    if (sediment < 0.00001)
+    {
+        output[pos] = C;
+        return;
+    }
+    
+    uint width, height;
+    heightmapUAV.GetDimensions(width, height);
+    
+    float4 T = heightmapUAV[clamp(pos + int2(0, -1), 0, int2(width - 1, height - 1))];
+    float4 TR = heightmapUAV[clamp(pos + int2(1, -1), 0, int2(width - 1, height - 1))];
+    float4 R = heightmapUAV[clamp(pos + int2(1, 0), 0, int2(width - 1, height - 1))];
+    float4 BR = heightmapUAV[clamp(pos + int2(1, 1), 0, int2(width - 1, height - 1))];
+    float4 B = heightmapUAV[clamp(pos + int2(0, 1), 0, int2(width - 1, height - 1))];
+    float4 BL = heightmapUAV[clamp(pos + int2(-1, 1), 0, int2(width - 1, height - 1))];
+    float4 L = heightmapUAV[clamp(pos + int2(-1, 0), 0, int2(width - 1, height - 1))];
+    float4 TL = heightmapUAV[clamp(pos + int2(-1, -1), 0, int2(width - 1, height - 1))];
+    
+    float deltaT = dot(C - T, 1.0);
+    float deltaTR = dot(C - TR, 1.0);
+    float deltaR = dot(C - R, 1.0);
+    float deltaBR = dot(C - BR, 1.0);
+    float deltaB = dot(C - B, 1.0);
+    float deltaBL = dot(C - BL, 1.0);
+    float deltaL = dot(C - L, 1.0);
+    float deltaTL = dot(C - TL, 1.0);
+    
+    float averageHeightDiff = abs((deltaL + deltaR + deltaT + deltaB + deltaTL + deltaTR + deltaBL + deltaBR) / 8.0);
+    
+    float threathhold = lerp(10.0, 200.0, 1.0 - c_smoothness) / 65536.0;
+    
+    if (((abs(deltaR) > threathhold && abs(deltaL) > threathhold) && deltaR * deltaL > 0.0) ||
+        ((abs(deltaT) > threathhold && abs(deltaB) > threathhold) && deltaT * deltaB > 0.0) ||
+        ((abs(deltaTR) > threathhold && abs(deltaBL) > threathhold) && deltaTR * deltaBL > 0.0) ||
+        ((abs(deltaTL) > threathhold && abs(deltaBR) > threathhold) && deltaTL * deltaBR > 0.0))
+    {
+        float curWeight = 5.0;
+        C = (C * curWeight + L + R + T + B + TL + TR + BL + BR) / (curWeight + 8.0);
+    }
+    
+    output[pos] = C;
+}
+
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
@@ -321,6 +372,9 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
             break;
         case 7:
             evaporation(dispatchThreadID.xy);
+            break;
+        case 8:
+            smooth_height(dispatchThreadID.xy);
             break;
         default:
             break;
