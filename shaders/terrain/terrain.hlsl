@@ -27,29 +27,33 @@ static const float2 terrainOrigin = float2(-20.0, -20.0);
 static const float terrainSize = 40.0;
 static const float terrainHeightScale = 30.0;
 
-float4 GetLayerHeights(float x, float z)
+float2 GetUV(float x, float z)
 {
     float2 uv = (float2(x, z) - terrainOrigin) / terrainSize;
+    uv.y = 1.0 - uv.y;
+    return uv;
+}
+
+float4 GetLayerHeights(float x, float z)
+{
+    float2 uv = GetUV(x, z);
     if (any(uv < 0.0) || any(uv > 1.0))
     {
         return -10000000000.0;
     }
     
-    uv.y = 1.0 - uv.y;
     float4 heights = heightTexture.SampleLevel(linearSampler, uv, 0);
-
     return heights;
 }
 
 float GetWaterHeight(float x, float z)
 {
-    float2 uv = (float2(x, z) - terrainOrigin) / terrainSize;
+    float2 uv = GetUV(x, z);
     if (any(uv < 0.0) || any(uv > 1.0))
     {
         return -10000000000.0;
     }
-    
-    uv.y = 1.0 - uv.y;
+
     return waterTexture.SampleLevel(linearSampler, uv, 0).x;    
 }
 
@@ -160,6 +164,11 @@ float3 GetDiffuseColor(float x, float z)
 
 float3 TerrainColor(float3 position, float3 V)
 {
+    float2 uv = GetUV(position.x, position.z);
+    //return saturate(waterVelocityTexture.SampleLevel(linearSampler, uv, 0).xyz * 0.02);
+    //return saturate(waterFluxTexture.SampleLevel(linearSampler, uv, 0).xyz * 5.0);
+    //return saturate(sedimentTexture.SampleLevel(linearSampler, uv, 0).xyz * 1000.0);
+    
     float waterHeight = GetWaterHeight(position.x, position.z);
     float3 N = GetNormal(position);
     float3 terrainColor = GetDiffuseColor(position.x, position.z) * DiffuseIBL(N);
@@ -219,7 +228,7 @@ void DebugUI(uint2 pos)
     DrawRect(pos, uint4(0, 100, 200, 300), waterTexture, 10.0);
     DrawRect(pos, uint4(0, 320, 200, 520), waterFluxTexture, 5.0);
     DrawRect(pos, uint4(0, 540, 200, 740), waterVelocityTexture, 0.02);
-    DrawRect(pos, uint4(0, 760, 200, 960), sedimentTexture, 300.0);
+    DrawRect(pos, uint4(0, 760, 200, 960), sedimentTexture, 1000.0);
 }
 
 [numthreads(8, 8, 1)]
