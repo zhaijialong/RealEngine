@@ -225,8 +225,8 @@ void DebugUI(uint2 pos)
         debug::PrintString(screenPos, float3(1, 1, 1), 's', 'e', 'd', 'i', 'm', 'e', 'n', 't');
     }
     
-    DrawRect(pos, uint4(0, 100, 200, 300), waterTexture, 10.0);
-    DrawRect(pos, uint4(0, 320, 200, 520), waterFluxTexture, 5.0);
+    DrawRect(pos, uint4(0, 100, 200, 300), waterTexture, 100.0);
+    DrawRect(pos, uint4(0, 320, 200, 520), waterFluxTexture, 50.0);
     DrawRect(pos, uint4(0, 540, 200, 740), waterVelocityTexture, 0.02);
     DrawRect(pos, uint4(0, 760, 200, 960), sedimentTexture, 1000.0);
 }

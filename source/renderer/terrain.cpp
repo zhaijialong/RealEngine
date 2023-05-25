@@ -19,8 +19,8 @@ Terrain::Terrain(Renderer* pRenderer)
     const uint32_t size = 2048;
     m_pHeightmap0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap0")); // 4 layers
     m_pHeightmap1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap1")); // 4 layers
-    m_pWater.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Water"));
-    m_pFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16UNORM, GfxTextureUsageUnorderedAccess, "Flux"));
+    m_pWater.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Water"));
+    m_pFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "Flux"));
     m_pVelocity0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess, "Velocity0"));
     m_pVelocity1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess, "Velocity1"));
     m_pSediment0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment0"));
@@ -89,21 +89,21 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
 {
     static bool bRain = false;
 
-    static float rainRate = 0.03;
-    static float evaporationRate = 1.0;
-    static float4 erosionConstant = float4(0.1f, 0.2f, 0.2f, 0.2f);
+    static float rainRate = 0.0001;
+    static float evaporationRate = 0.05;
+    static float4 erosionConstant = float4(0.2f, 0.2f, 0.2f, 0.2f);
     static float depositionConstant = 0.3f;
-    static float sedimentCapacityConstant = 0.0005f;
+    static float sedimentCapacityConstant = 0.001f;
     static float smoothness = 1.0f;
 
     ImGui::Separator();
     ImGui::Checkbox("Rain##Terrain", &bRain);
-    ImGui::SliderFloat("Rain Rate##Terrain", &rainRate, 0.0, 0.3, "%.4f");
-    ImGui::SliderFloat("Evaporation##Terrain", &evaporationRate, 0.0, 10.0, "%.4f");
-    ImGui::SliderFloat4("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.4f");
-    ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.4f");
-    ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.0001, 0.001, "%.4f");
-    ImGui::SliderFloat("Smoothness##Terrain", &smoothness, 0.0, 1.0, "%.4f");
+    ImGui::SliderFloat("Rain Rate##Terrain", &rainRate, 0.0, 0.0005, "%.4f");
+    ImGui::SliderFloat("Evaporation##Terrain", &evaporationRate, 0.0, 10.0, "%.2f");
+    ImGui::SliderFloat4("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.2f");
+    ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.2f");
+    ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.0001, 0.005, "%.4f");
+    ImGui::SliderFloat("Smoothness##Terrain", &smoothness, 0.0, 1.0, "%.2f");
 
     pCommandList->SetPipelineState(m_pErosionPSO);
 

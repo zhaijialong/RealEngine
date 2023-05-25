@@ -40,8 +40,9 @@ static RWTexture2D<float> sedimentUAV1 = ResourceDescriptorHeap[c_sedimentUAV1];
 
 static const float density = 1.0;
 static const float gravity = 9.8;
-static const float pipeLength = 1.0;
-static const float deltaTime = 0.03;
+static const float pipeLength = 0.8;
+static const float pipeArea = 2.0;
+static const float deltaTime = 0.05;
 static const float minTiltAngle = radians(1.0);
 
 // must match with terrain.hlsl
@@ -110,13 +111,13 @@ T BilinearSample(RWTexture2D<T> sampledTexture, float2 pos)
 
 void rain(uint2 pos)
 {
-    if (c_bRain && (SceneCB.frameIndex % 3 == 0))
+    if (c_bRain)
     {
         uint width, height;
         waterUAV.GetDimensions(width, height);
     
         PRNG rng = PRNG::Create(pos, uint2(width, height));
-        float water = rng.RandomFloat();
+        float water = max(rng.RandomFloat(), 0.2);
 
         waterUAV[pos] += water * c_rainRate * deltaTime;
     }
@@ -157,10 +158,10 @@ void flow(int2 pos)
     float accelerationB = staticPressureB / (density * pipeLength);
     
     float4 flux = fluxUAV[pos];
-    float fluxL = max(0.0, flux.x + deltaTime * pipeLength * pipeLength * accelerationL);
-    float fluxR = max(0.0, flux.y + deltaTime * pipeLength * pipeLength * accelerationR);
-    float fluxT = max(0.0, flux.z + deltaTime * pipeLength * pipeLength * accelerationT);
-    float fluxB = max(0.0, flux.w + deltaTime * pipeLength * pipeLength * accelerationB);
+    float fluxL = max(0.0, flux.x + deltaTime * pipeArea * accelerationL);
+    float fluxR = max(0.0, flux.y + deltaTime * pipeArea * accelerationR);
+    float fluxT = max(0.0, flux.z + deltaTime * pipeArea * accelerationT);
+    float fluxB = max(0.0, flux.w + deltaTime * pipeArea * accelerationB);
     
     float waterOutflow = deltaTime * (fluxL + fluxR + fluxT + fluxB);
     float K = min(1.0, waterHeight * pipeLength * pipeLength / waterOutflow);
@@ -301,46 +302,43 @@ void smooth_height(int2 pos)
     
     float4 C = heightmapUAV[pos];
     float sediment = sedimentUAV1[pos];
-    if (sediment < 0.00001)
+    if (sediment > 0.0)
     {
-        output[pos] = C;
-        return;
-    }
+        uint width, height;
+        heightmapUAV.GetDimensions(width, height);
     
-    uint width, height;
-    heightmapUAV.GetDimensions(width, height);
+        float4 T = heightmapUAV[clamp(pos + int2(0, -1), 0, int2(width - 1, height - 1))];
+        float4 TR = heightmapUAV[clamp(pos + int2(1, -1), 0, int2(width - 1, height - 1))];
+        float4 R = heightmapUAV[clamp(pos + int2(1, 0), 0, int2(width - 1, height - 1))];
+        float4 BR = heightmapUAV[clamp(pos + int2(1, 1), 0, int2(width - 1, height - 1))];
+        float4 B = heightmapUAV[clamp(pos + int2(0, 1), 0, int2(width - 1, height - 1))];
+        float4 BL = heightmapUAV[clamp(pos + int2(-1, 1), 0, int2(width - 1, height - 1))];
+        float4 L = heightmapUAV[clamp(pos + int2(-1, 0), 0, int2(width - 1, height - 1))];
+        float4 TL = heightmapUAV[clamp(pos + int2(-1, -1), 0, int2(width - 1, height - 1))];
     
-    float4 T = heightmapUAV[clamp(pos + int2(0, -1), 0, int2(width - 1, height - 1))];
-    float4 TR = heightmapUAV[clamp(pos + int2(1, -1), 0, int2(width - 1, height - 1))];
-    float4 R = heightmapUAV[clamp(pos + int2(1, 0), 0, int2(width - 1, height - 1))];
-    float4 BR = heightmapUAV[clamp(pos + int2(1, 1), 0, int2(width - 1, height - 1))];
-    float4 B = heightmapUAV[clamp(pos + int2(0, 1), 0, int2(width - 1, height - 1))];
-    float4 BL = heightmapUAV[clamp(pos + int2(-1, 1), 0, int2(width - 1, height - 1))];
-    float4 L = heightmapUAV[clamp(pos + int2(-1, 0), 0, int2(width - 1, height - 1))];
-    float4 TL = heightmapUAV[clamp(pos + int2(-1, -1), 0, int2(width - 1, height - 1))];
+        float deltaT = dot(C - T, 1.0);
+        float deltaTR = dot(C - TR, 1.0);
+        float deltaR = dot(C - R, 1.0);
+        float deltaBR = dot(C - BR, 1.0);
+        float deltaB = dot(C - B, 1.0);
+        float deltaBL = dot(C - BL, 1.0);
+        float deltaL = dot(C - L, 1.0);
+        float deltaTL = dot(C - TL, 1.0);
     
-    float deltaT = dot(C - T, 1.0);
-    float deltaTR = dot(C - TR, 1.0);
-    float deltaR = dot(C - R, 1.0);
-    float deltaBR = dot(C - BR, 1.0);
-    float deltaB = dot(C - B, 1.0);
-    float deltaBL = dot(C - BL, 1.0);
-    float deltaL = dot(C - L, 1.0);
-    float deltaTL = dot(C - TL, 1.0);
+        float averageHeightDiff = abs((deltaL + deltaR + deltaT + deltaB + deltaTL + deltaTR + deltaBL + deltaBR) / 8.0);
     
-    float averageHeightDiff = abs((deltaL + deltaR + deltaT + deltaB + deltaTL + deltaTR + deltaBL + deltaBR) / 8.0);
+        float threathhold = lerp(10.0, 200.0, 1.0 - c_smoothness) / 65536.0;
     
-    float threathhold = lerp(10.0, 200.0, 1.0 - c_smoothness) / 65536.0;
-    
-    if (((abs(deltaR) > threathhold && abs(deltaL) > threathhold) && deltaR * deltaL > 0.0) ||
-        ((abs(deltaT) > threathhold && abs(deltaB) > threathhold) && deltaT * deltaB > 0.0) ||
-        ((abs(deltaTR) > threathhold && abs(deltaBL) > threathhold) && deltaTR * deltaBL > 0.0) ||
-        ((abs(deltaTL) > threathhold && abs(deltaBR) > threathhold) && deltaTL * deltaBR > 0.0))
-    {
-        float curWeight = 5.0;
-        C = (C * curWeight + L + R + T + B + TL + TR + BL + BR) / (curWeight + 8.0);
-    }
-    
+        if (((abs(deltaR) > threathhold && abs(deltaL) > threathhold) && deltaR * deltaL > 0.0) ||
+            ((abs(deltaT) > threathhold && abs(deltaB) > threathhold) && deltaT * deltaB > 0.0) ||
+            ((abs(deltaTR) > threathhold && abs(deltaBL) > threathhold) && deltaTR * deltaBL > 0.0) ||
+            ((abs(deltaTL) > threathhold && abs(deltaBR) > threathhold) && deltaTL * deltaBR > 0.0))
+        {
+            float curWeight = 5.0;
+            C = (C * curWeight + L + R + T + B + TL + TR + BL + BR) / (curWeight + 8.0);
+        }
+    } 
+
     output[pos] = C;
 }
 
