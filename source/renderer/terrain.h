@@ -16,6 +16,7 @@ private:
     void Raymarch(IGfxCommandList* pCommandList, RGTexture* output);
 
     void Clear(IGfxCommandList* pCommandList);
+    void Save(const eastl::string& file);
 
 private:
     Renderer* m_pRenderer;

@@ -19,8 +19,8 @@ Terrain::Terrain(Renderer* pRenderer)
     m_pErosionPSO = pRenderer->GetPipelineState(desc, "terrain erosion PSO");
 
     const uint32_t size = 2048;
-    m_pHeightmap0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap0")); // 4 layers
-    m_pHeightmap1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap1")); // 4 layers
+    m_pHeightmap0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap0"));
+    m_pHeightmap1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap1"));
     m_pWater.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Water"));
     m_pFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "Flux"));
     m_pVelocity0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess, "Velocity0"));
@@ -116,6 +116,8 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
             eastl::string result = ifd::FileDialog::Instance().GetResult().u8string().c_str();
             //todo : pCommandList->CopyTextureToBuffer(m_pStagingBuffer.get(), m_pHeightmap0->GetTexture(), 0, 0);
         }
+
+        ifd::FileDialog::Instance().Close();
     }
 }
 
@@ -215,4 +217,9 @@ void Terrain::Clear(IGfxCommandList* pCommandList)
     pCommandList->ClearUAV(m_pRegolith->GetTexture(), m_pRegolith->GetUAV(), clear_value);
     pCommandList->ClearUAV(m_pRegolithFlux->GetTexture(), m_pRegolithFlux->GetUAV(), clear_value);
     pCommandList->UavBarrier(nullptr);
+}
+
+void Terrain::Save(const eastl::string& file)
+{
+    //stbi_write_png()
 }

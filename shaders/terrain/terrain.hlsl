@@ -34,16 +34,15 @@ float2 GetUV(float x, float z)
     return uv;
 }
 
-float4 GetLayerHeights(float x, float z)
+float GetTerrainHeight(float x, float z)
 {
     float2 uv = GetUV(x, z);
     if (any(uv < 0.0) || any(uv > 1.0))
     {
         return -10000000000.0;
     }
-    
-    float4 heights = heightTexture.SampleLevel(linearSampler, uv, 0);
-    return heights;
+
+    return heightTexture.SampleLevel(linearSampler, uv, 0).x;
 }
 
 float GetWaterHeight(float x, float z)
@@ -59,7 +58,7 @@ float GetWaterHeight(float x, float z)
 
 float GetHeight(float x, float z)
 {    
-    float terrainHeight = dot(GetLayerHeights(x, z), 1.0);
+    float terrainHeight = GetTerrainHeight(x, z);
     float waterHeight = GetWaterHeight(x, z);
     
     return (terrainHeight + waterHeight) * terrainHeightScale;
@@ -110,55 +109,31 @@ bool CastRay(Ray ray, out float hitT)
 
 float3 GetDiffuseColor(float x, float z)
 {
-    float4 heights = GetLayerHeights(x, z);
-    float3 diffuseColor = 0;
-    
-#if 0
-    {
-        if (heights[3] > 0)
-        {
-            return 1; //not used
-        }
-        else if (heights[2] > 0)
-        {
-            return 0; //not used
-        }
-        else if (heights[1] > 0)
-        {
-            return float3(0.929, 0.906, 0.588);
-        }
-        else
-        {
-            return float3(0.447, 0.368, 0.227);
-        }
-    }
-#else
-    {
-        float height = dot(heights, 1);
+    float3 diffuseColor = 0;    
+    float height = GetTerrainHeight(x, z);
 
-        if (height < 0.15)
-        {
-            diffuseColor = float3(0.05, 0.6, 0.05);
-        }
-        else if (height < 0.2)
-        {
-            diffuseColor = lerp(float3(0.05, 0.6, 0.05), float3(0.8, 0.5, 0.2), (height - 0.15) / 0.05);
-
-        }
-        else if (height < 0.25)
-        {
-            diffuseColor = float3(0.8, 0.5, 0.2);
-        }
-        else if (height < 0.3)
-        {
-            diffuseColor = lerp(float3(0.8, 0.5, 0.2), 1.0, (height - 0.25) / 0.05);
-        }
-        else
-        {
-            diffuseColor = 1.0;
-        }
+    if (height < 0.05)
+    {
+        diffuseColor = float3(0.05, 0.6, 0.05);
     }
-#endif
+    else if (height < 0.1)
+    {
+        diffuseColor = lerp(float3(0.05, 0.6, 0.05), float3(0.8, 0.5, 0.2), (height - 0.05) / 0.05);
+
+    }
+    else if (height < 0.25)
+    {
+        diffuseColor = float3(0.8, 0.5, 0.2);
+    }
+    else if (height < 0.3)
+    {
+        diffuseColor = lerp(float3(0.8, 0.5, 0.2), 1.0, (height - 0.25) / 0.05);
+    }
+    else
+    {
+        diffuseColor = 1.0;
+    }
+
     return diffuseColor;
 }
 

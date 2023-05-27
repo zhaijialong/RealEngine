@@ -8,7 +8,7 @@ cbuffer CB0 : register(b0)
     uint c_passIndex;
 }
 
-static RWTexture2D<float4> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV0];
+static RWTexture2D<float> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV0];
 static RWTexture2D<float> waterUAV = ResourceDescriptorHeap[c_waterUAV];
 static RWTexture2D<float4> fluxUAV = ResourceDescriptorHeap[c_fluxUAV];
 static RWTexture2D<float2> velocityUAV0 = ResourceDescriptorHeap[c_velocityUAV0];
@@ -22,9 +22,8 @@ float GetHeight(int2 pos)
 {
     uint width, height;
     heightmapUAV.GetDimensions(width, height);
-    
-    float4 heights = heightmapUAV[clamp(pos, 0, int2(width - 1, height - 1))];
-    return dot(heights, 1.0);
+
+    return heightmapUAV[clamp(pos, 0, int2(width - 1, height - 1))];
 }
 
 float GetWaterHeight(int2 pos)
@@ -236,44 +235,22 @@ void force_based_erosion(int2 pos)
     float tiltAngle = acos(dot(normal, float3(0, 0, 1)));
     tiltAngle = max(tiltAngle, minTiltAngle);
     
-    float4 heights = heightmapUAV[pos];
     float sediment = sedimentUAV0[pos];
     float2 velocity = velocityUAV0[pos];
     
     float sedimentCapacity = length(velocity) * c_sedimentCapacityConstant * abs(sin(tiltAngle));
-    uint topmostLayer = GetTopmostLayer(heights);
 
     if (sediment > sedimentCapacity)
     {
         float sedimentDiff = (sediment - sedimentCapacity) * c_depositionConstant;
-        heightmapUAV[pos][0] += sedimentDiff;
+        heightmapUAV[pos] += sedimentDiff;
         sedimentUAV0[pos] -= sedimentDiff;
     }
     else
     {
         float sedimentDiff = (sedimentCapacity - sediment) * c_erosionConstant[0];
-        heightmapUAV[pos][0] -= sedimentDiff;
+        heightmapUAV[pos] -= sedimentDiff;
         sedimentUAV0[pos] += sedimentDiff;
-        /*
-        float layersHeight = 0.0;
-        
-        for (int k = topmostLayer; k > 0; --k)
-        {
-            float maxSediment = sedimentCapacity - layersHeight;
-							
-            if (maxSediment < sediment)
-            {
-                break;
-            }
-
-            layersHeight += heights[k];
-            
-            float sedimentDiff = (maxSediment - sediment) * c_erosionConstant[k];
-            sedimentDiff = min(heights[k], sedimentDiff);
-							
-            sedimentUAV[pos] += sedimentDiff;
-            heightmapUAV[pos][k] -= sedimentDiff;
-        }*/
     }
 }
 
@@ -361,44 +338,41 @@ void dissolution_based_erosion(int2 pos)
     {
         float regolithDiff = regolith - maxRegolith;
         regolithUAV[pos] -= regolithDiff;
-        heightmapUAV[pos][0] += regolithDiff;
+        heightmapUAV[pos] += regolithDiff;
     }
     else
     {
         float regolithDiff = maxRegolith - regolith;
         regolithUAV[pos] += regolithDiff;
-        heightmapUAV[pos][0] -= regolithDiff;
+        heightmapUAV[pos] -= regolithDiff;
     }
 }
 
 void smooth_height(int2 pos)
 {    
-    float4 C = heightmapUAV[pos];
+    float C = GetHeight(pos);
     float sediment = sedimentUAV1[pos];
     float regolith = regolithUAV[pos];
     
     if (sediment > 0.0 || regolith > 0.0)
-    {
-        uint width, height;
-        heightmapUAV.GetDimensions(width, height);
+    {    
+        float T = GetHeight(pos);
+        float TR = GetHeight(pos + int2(1, -1));
+        float R = GetHeight(pos + int2(1, 0));
+        float BR = GetHeight(pos + int2(1, 1));
+        float B = GetHeight(pos + int2(0, 1));
+        float BL = GetHeight(pos + int2(-1, 1));
+        float L = GetHeight(pos + int2(-1, 0));
+        float TL = GetHeight(pos + int2(-1, -1));
     
-        float4 T = heightmapUAV[clamp(pos + int2(0, -1), 0, int2(width - 1, height - 1))];
-        float4 TR = heightmapUAV[clamp(pos + int2(1, -1), 0, int2(width - 1, height - 1))];
-        float4 R = heightmapUAV[clamp(pos + int2(1, 0), 0, int2(width - 1, height - 1))];
-        float4 BR = heightmapUAV[clamp(pos + int2(1, 1), 0, int2(width - 1, height - 1))];
-        float4 B = heightmapUAV[clamp(pos + int2(0, 1), 0, int2(width - 1, height - 1))];
-        float4 BL = heightmapUAV[clamp(pos + int2(-1, 1), 0, int2(width - 1, height - 1))];
-        float4 L = heightmapUAV[clamp(pos + int2(-1, 0), 0, int2(width - 1, height - 1))];
-        float4 TL = heightmapUAV[clamp(pos + int2(-1, -1), 0, int2(width - 1, height - 1))];
-    
-        float deltaT = dot(C - T, 1.0);
-        float deltaTR = dot(C - TR, 1.0);
-        float deltaR = dot(C - R, 1.0);
-        float deltaBR = dot(C - BR, 1.0);
-        float deltaB = dot(C - B, 1.0);
-        float deltaBL = dot(C - BL, 1.0);
-        float deltaL = dot(C - L, 1.0);
-        float deltaTL = dot(C - TL, 1.0);
+        float deltaT = C - T;
+        float deltaTR = C - TR;
+        float deltaR = C - R;
+        float deltaBR = C - BR;
+        float deltaB = C - B;
+        float deltaBL = C - BL;
+        float deltaL = C - L;
+        float deltaTL = C - TL;
     
         float averageHeightDiff = abs((deltaL + deltaR + deltaT + deltaB + deltaTL + deltaTR + deltaBL + deltaBR) / 8.0);
     
@@ -414,7 +388,7 @@ void smooth_height(int2 pos)
         }
     } 
     
-    RWTexture2D<float4> output = ResourceDescriptorHeap[c_heightmapUAV1];
+    RWTexture2D<float> output = ResourceDescriptorHeap[c_heightmapUAV1];
     output[pos] = C;
 }
 
