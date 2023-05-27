@@ -68,26 +68,6 @@ float4 GetRegolithFlux(int2 pos)
     return regolithFluxUAV[pos];
 }
 
-uint GetTopmostLayer(float4 heights)
-{
-    if (heights[3] > 0)
-    {
-        return 3;
-    }
-    else if (heights[2] > 0)
-    {
-        return 2;
-    }
-    else if (heights[1] > 0)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
 template<typename T>
 T BilinearSample(RWTexture2D<T> sampledTexture, float2 pos)
 {
@@ -248,7 +228,7 @@ void force_based_erosion(int2 pos)
     }
     else
     {
-        float sedimentDiff = (sedimentCapacity - sediment) * c_erosionConstant[0];
+        float sedimentDiff = (sedimentCapacity - sediment) * c_erosionConstant;
         heightmapUAV[pos] -= sedimentDiff;
         sedimentUAV0[pos] += sedimentDiff;
     }

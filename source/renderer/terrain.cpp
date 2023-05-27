@@ -4,6 +4,9 @@
 #include "ImFileDialog/ImFileDialog.h"
 #include "terrain/constants.hlsli"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
+
 Terrain::Terrain(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
@@ -29,6 +32,11 @@ Terrain::Terrain(Renderer* pRenderer)
     m_pSediment1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment1"));
     m_pRegolith.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Regolith"));
     m_pRegolithFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "RegolithFlux"));
+
+    GfxBufferDesc bufferDesc;
+    bufferDesc.size = m_pHeightmap0->GetTexture()->GetRowPitch(0) * size;
+    bufferDesc.memory_type = GfxMemoryType::GpuToCpu;
+    m_pStagingBuffer.reset(pRenderer->GetDevice()->CreateBuffer(bufferDesc, "Heightmap readback"));
 }
 
 RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
@@ -62,6 +70,7 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
 {
     static bool bGenerateHeightmap = true;
     static bool bInputTexture = false;
+    static bool bSaveTexture = false;
     static uint seed = 556650;
 
     bGenerateHeightmap |= ImGui::SliderInt("Seed##Terrain", (int*)&seed, 0, 1000000);
@@ -76,7 +85,7 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
     ImGui::SameLine();
     if (ImGui::Button("Save##Terrain"))
     {
-        ifd::FileDialog::Instance().Save("SaveHeightmap", "Save Heightmap", "heightmap file (*.png){.png},.*");
+        ifd::FileDialog::Instance().Save("SaveHeightmap", "Save Heightmap", "heightmap file (*.hdr){.hdr},.*");
     }
 
     if (bGenerateHeightmap || bInputTexture)
@@ -97,6 +106,12 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
         bInputTexture = false;
     }
 
+    if (bSaveTexture)
+    {
+        Save();
+        bSaveTexture = false;
+    }
+
     if (ifd::FileDialog::Instance().IsDone("LoadHeightmap"))
     {
         if (ifd::FileDialog::Instance().HasResult())
@@ -113,8 +128,11 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
     {
         if (ifd::FileDialog::Instance().HasResult())
         {
-            eastl::string result = ifd::FileDialog::Instance().GetResult().u8string().c_str();
-            //todo : pCommandList->CopyTextureToBuffer(m_pStagingBuffer.get(), m_pHeightmap0->GetTexture(), 0, 0);
+            pCommandList->ResourceBarrier(m_pHeightmap0->GetTexture(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopySrc);
+            pCommandList->CopyTextureToBuffer(m_pStagingBuffer.get(), m_pHeightmap0->GetTexture(), 0, 0);
+            pCommandList->ResourceBarrier(m_pHeightmap0->GetTexture(), 0, GfxResourceState::CopySrc, GfxResourceState::UnorderedAccess);
+            m_savePath = ifd::FileDialog::Instance().GetResult().u8string().c_str();
+            bSaveTexture = true;
         }
 
         ifd::FileDialog::Instance().Close();
@@ -127,8 +145,8 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
 
     static float rainRate = 0.0001;
     static float evaporationRate = 0.05;
-    static float4 erosionConstant = float4(0.2f, 0.2f, 0.2f, 0.2f);
-    static float depositionConstant = 0.3f;
+    static float erosionConstant = 0.2f;
+    static float depositionConstant = 0.1f;
     static float sedimentCapacityConstant = 0.001f;
     static float maxRegolith = 0.00003;
     static float smoothness = 1.0f;
@@ -143,7 +161,7 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     }
     ImGui::SliderFloat("Rain Rate##Terrain", &rainRate, 0.0, 0.0005, "%.4f");
     ImGui::SliderFloat("Evaporation##Terrain", &evaporationRate, 0.0, 10.0, "%.2f");
-    ImGui::SliderFloat4("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.2f");
+    ImGui::SliderFloat("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.0001, 0.005, "%.4f");
     ImGui::SliderFloat("Max Regolith##Terrain", &maxRegolith, 0.00000, 0.001, "%.5f");
@@ -176,11 +194,29 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
     uint32_t height = m_pHeightmap0->GetTexture()->GetDesc().height;
 
+    const char* pass_names[] =
+    {
+        "rain",
+        "flow",
+        "update_water",
+        "diffuse_velocity0",
+        "diffuse_velocity1",
+        "force_based_erosion",
+        "advect_sediment",
+        "regolith_flow",
+        "regolith_update",
+        "dissolution_based_erosion",
+        "evaporation",
+        "smooth_height",
+    };
+
     for (uint32_t i = 0; i < 12; ++i)
     {
+        pCommandList->BeginEvent(pass_names[i]);
         pCommandList->SetComputeConstants(0, &i, sizeof(uint32_t));
         pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
         pCommandList->UavBarrier(nullptr);
+        pCommandList->EndEvent();
     }
 }
 
@@ -219,7 +255,44 @@ void Terrain::Clear(IGfxCommandList* pCommandList)
     pCommandList->UavBarrier(nullptr);
 }
 
-void Terrain::Save(const eastl::string& file)
+void Terrain::Save()
 {
-    //stbi_write_png()
+    m_pRenderer->WaitGpuFinished();
+
+    uint8_t* readback_data = (uint8_t*)m_pStagingBuffer->GetCpuAddress();
+    uint32_t readback_pitch = m_pHeightmap0->GetTexture()->GetRowPitch(0);
+
+    uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
+    uint32_t height = m_pHeightmap0->GetTexture()->GetDesc().height;
+
+    /*
+    eastl::vector<uint16_t> data;
+    data.resize(width * height);
+
+    for (uint32_t i = 0; i < height; ++i)
+    {
+        memcpy((uint8_t*)data.data() + i * width * sizeof(uint16_t),
+            readback_data + i * readback_pitch,
+            width * sizeof(uint16_t));
+    }
+
+    // it does not support 16bits !!
+    stbi_write_png(m_savePath.c_str(), width, height, 1, data.data(), width * sizeof(uint16_t));
+    */
+
+    eastl::vector<float> data;
+    data.reserve(width * height);
+
+    for (uint32_t j = 0; j < height; ++j)
+    {
+        for (uint32_t i = 0; i < width; ++i)
+        {
+            uint16_t value;
+            memcpy(&value, readback_data + j * readback_pitch + i * sizeof(uint16_t), sizeof(uint16_t));
+
+            data.push_back(value / 65535.0f);
+        }
+    }
+
+    stbi_write_hdr(m_savePath.c_str(), width, height, 1, data.data());
 }

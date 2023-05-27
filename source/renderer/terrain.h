@@ -16,13 +16,14 @@ private:
     void Raymarch(IGfxCommandList* pCommandList, RGTexture* output);
 
     void Clear(IGfxCommandList* pCommandList);
-    void Save(const eastl::string& file);
+    void Save();
 
 private:
     Renderer* m_pRenderer;
 
     eastl::unique_ptr<Texture2D> m_pInputTexture;
     eastl::unique_ptr<IGfxBuffer> m_pStagingBuffer;
+    eastl::string m_savePath;
 
     eastl::unique_ptr<Texture2D> m_pHeightmap0;
     eastl::unique_ptr<Texture2D> m_pHeightmap1;
