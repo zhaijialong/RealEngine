@@ -18,13 +18,17 @@ cbuffer CB1 : register(b1)
     
     float4 c_erosionConstant; //4 layers
     
+    uint c_regolithUAV;
+    uint c_regolithFluxUAV;
     uint c_bRain;
     float c_rainRate;
+    
     float c_evaporationRate;
     float c_depositionConstant;
-    
     float c_sedimentCapacityConstant;
     float c_smoothness;
+    
+    float c_maxRegolith;
 };
 
 #ifndef __cplusplus

@@ -27,6 +27,8 @@ Terrain::Terrain(Renderer* pRenderer)
     m_pVelocity1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess, "Velocity1"));
     m_pSediment0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment0"));
     m_pSediment1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment1"));
+    m_pRegolith.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Regolith"));
+    m_pRegolithFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "RegolithFlux"));
 }
 
 RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
@@ -71,6 +73,12 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
         ifd::FileDialog::Instance().Open("LoadHeightmap", "Open Heightmap", "heightmap file (*.png){.png},.*");
     }
 
+    ImGui::SameLine();
+    if (ImGui::Button("Save##Terrain"))
+    {
+        ifd::FileDialog::Instance().Save("SaveHeightmap", "Save Heightmap", "heightmap file (*.png){.png},.*");
+    }
+
     if (bGenerateHeightmap || bInputTexture)
     {
         uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
@@ -84,15 +92,7 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
         pCommandList->SetComputeConstants(0, cb, sizeof(cb));
         pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 
-        float clear_value[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        pCommandList->ClearUAV(m_pSediment0->GetTexture(), m_pSediment0->GetUAV(), clear_value);
-        pCommandList->ClearUAV(m_pSediment1->GetTexture(), m_pSediment1->GetUAV(), clear_value);
-        pCommandList->ClearUAV(m_pWater->GetTexture(), m_pWater->GetUAV(), clear_value);
-        pCommandList->ClearUAV(m_pFlux->GetTexture(), m_pFlux->GetUAV(), clear_value);
-        pCommandList->ClearUAV(m_pVelocity0->GetTexture(), m_pVelocity0->GetUAV(), clear_value);
-        pCommandList->ClearUAV(m_pVelocity1->GetTexture(), m_pVelocity1->GetUAV(), clear_value);
-        pCommandList->UavBarrier(nullptr);
-
+        Clear(pCommandList);
         bGenerateHeightmap = false;
         bInputTexture = false;
     }
@@ -108,6 +108,15 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
 
         ifd::FileDialog::Instance().Close();
     }
+
+    if (ifd::FileDialog::Instance().IsDone("SaveHeightmap"))
+    {
+        if (ifd::FileDialog::Instance().HasResult())
+        {
+            eastl::string result = ifd::FileDialog::Instance().GetResult().u8string().c_str();
+            //todo : pCommandList->CopyTextureToBuffer(m_pStagingBuffer.get(), m_pHeightmap0->GetTexture(), 0, 0);
+        }
+    }
 }
 
 void Terrain::Erosion(IGfxCommandList* pCommandList)
@@ -119,15 +128,23 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     static float4 erosionConstant = float4(0.2f, 0.2f, 0.2f, 0.2f);
     static float depositionConstant = 0.3f;
     static float sedimentCapacityConstant = 0.001f;
+    static float maxRegolith = 0.00003;
     static float smoothness = 1.0f;
 
     ImGui::Separator();
-    ImGui::Checkbox("Rain##Terrain", &bRain);
+    if (ImGui::Checkbox("Rain##Terrain", &bRain))
+    {
+        if (!bRain)
+        {
+            Clear(pCommandList);
+        }
+    }
     ImGui::SliderFloat("Rain Rate##Terrain", &rainRate, 0.0, 0.0005, "%.4f");
     ImGui::SliderFloat("Evaporation##Terrain", &evaporationRate, 0.0, 10.0, "%.2f");
     ImGui::SliderFloat4("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.0001, 0.005, "%.4f");
+    ImGui::SliderFloat("Max Regolith##Terrain", &maxRegolith, 0.00000, 0.001, "%.5f");
     ImGui::SliderFloat("Smoothness##Terrain", &smoothness, 0.0, 1.0, "%.2f");
 
     pCommandList->SetPipelineState(m_pErosionPSO);
@@ -141,12 +158,15 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     cb.c_fluxUAV = m_pFlux->GetUAV()->GetHeapIndex();
     cb.c_velocityUAV0 = m_pVelocity0->GetUAV()->GetHeapIndex();
     cb.c_velocityUAV1 = m_pVelocity1->GetUAV()->GetHeapIndex();
+    cb.c_regolithUAV = m_pRegolith->GetUAV()->GetHeapIndex();
+    cb.c_regolithFluxUAV = m_pRegolithFlux->GetUAV()->GetHeapIndex();
     cb.c_bRain = bRain;
     cb.c_rainRate = rainRate;
     cb.c_evaporationRate = evaporationRate;
     cb.c_erosionConstant = erosionConstant;
     cb.c_depositionConstant = depositionConstant;
     cb.c_sedimentCapacityConstant = sedimentCapacityConstant * 0.05;
+    cb.c_maxRegolith = maxRegolith;
     cb.c_smoothness = smoothness;
         
     pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
@@ -154,7 +174,7 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
     uint32_t height = m_pHeightmap0->GetTexture()->GetDesc().height;
 
-    for (uint32_t i = 0; i < 9; ++i)
+    for (uint32_t i = 0; i < 12; ++i)
     {
         pCommandList->SetComputeConstants(0, &i, sizeof(uint32_t));
         pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
@@ -164,11 +184,6 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
 
 void Terrain::Raymarch(IGfxCommandList* pCommandList, RGTexture* output)
 {
-    static bool bShowLayers = true;
-
-    ImGui::Separator();
-    ImGui::Checkbox("Show Layers##Terrain", &bShowLayers);
-
     pCommandList->SetPipelineState(m_pRaymachPSO);
 
     uint32_t cb[] = {
@@ -177,12 +192,27 @@ void Terrain::Raymarch(IGfxCommandList* pCommandList, RGTexture* output)
         m_pFlux->GetSRV()->GetHeapIndex(),
         m_pVelocity0->GetSRV()->GetHeapIndex(),
         m_pSediment1->GetSRV()->GetHeapIndex(),
+        m_pRegolith->GetSRV()->GetHeapIndex(),
+        m_pRegolithFlux->GetSRV()->GetHeapIndex(),
         output->GetUAV()->GetHeapIndex(), 
-        bShowLayers 
     };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
 
     uint32_t width = output->GetTexture()->GetDesc().width;
     uint32_t height = output->GetTexture()->GetDesc().height;
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+}
+
+void Terrain::Clear(IGfxCommandList* pCommandList)
+{
+    float clear_value[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    pCommandList->ClearUAV(m_pSediment0->GetTexture(), m_pSediment0->GetUAV(), clear_value);
+    pCommandList->ClearUAV(m_pSediment1->GetTexture(), m_pSediment1->GetUAV(), clear_value);
+    pCommandList->ClearUAV(m_pWater->GetTexture(), m_pWater->GetUAV(), clear_value);
+    pCommandList->ClearUAV(m_pFlux->GetTexture(), m_pFlux->GetUAV(), clear_value);
+    pCommandList->ClearUAV(m_pVelocity0->GetTexture(), m_pVelocity0->GetUAV(), clear_value);
+    pCommandList->ClearUAV(m_pVelocity1->GetTexture(), m_pVelocity1->GetUAV(), clear_value);
+    pCommandList->ClearUAV(m_pRegolith->GetTexture(), m_pRegolith->GetUAV(), clear_value);
+    pCommandList->ClearUAV(m_pRegolithFlux->GetTexture(), m_pRegolithFlux->GetUAV(), clear_value);
+    pCommandList->UavBarrier(nullptr);
 }

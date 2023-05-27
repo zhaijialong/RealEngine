@@ -15,10 +15,13 @@ private:
     void Erosion(IGfxCommandList* pCommandList);
     void Raymarch(IGfxCommandList* pCommandList, RGTexture* output);
 
+    void Clear(IGfxCommandList* pCommandList);
+
 private:
     Renderer* m_pRenderer;
 
     eastl::unique_ptr<Texture2D> m_pInputTexture;
+    eastl::unique_ptr<IGfxBuffer> m_pStagingBuffer;
 
     eastl::unique_ptr<Texture2D> m_pHeightmap0;
     eastl::unique_ptr<Texture2D> m_pHeightmap1;
@@ -28,6 +31,8 @@ private:
     eastl::unique_ptr<Texture2D> m_pFlux;
     eastl::unique_ptr<Texture2D> m_pVelocity0;
     eastl::unique_ptr<Texture2D> m_pVelocity1;
+    eastl::unique_ptr<Texture2D> m_pRegolith;
+    eastl::unique_ptr<Texture2D> m_pRegolithFlux;
    
     IGfxPipelineState* m_pHeightmapPSO = nullptr;
     IGfxPipelineState* m_pErosionPSO = nullptr;

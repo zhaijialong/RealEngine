@@ -15,6 +15,8 @@ static RWTexture2D<float2> velocityUAV0 = ResourceDescriptorHeap[c_velocityUAV0]
 static RWTexture2D<float2> velocityUAV1 = ResourceDescriptorHeap[c_velocityUAV1];
 static RWTexture2D<float> sedimentUAV0 = ResourceDescriptorHeap[c_sedimentUAV0];
 static RWTexture2D<float> sedimentUAV1 = ResourceDescriptorHeap[c_sedimentUAV1];
+static RWTexture2D<float> regolithUAV = ResourceDescriptorHeap[c_regolithUAV];
+static RWTexture2D<float4> regolithFluxUAV = ResourceDescriptorHeap[c_regolithFluxUAV];
 
 float GetHeight(int2 pos)
 {
@@ -44,6 +46,27 @@ float4 GetWaterFlux(int2 pos)
     }
     
     return fluxUAV[pos];
+}
+
+float GetRegolith(int2 pos)
+{
+    uint width, height;
+    regolithUAV.GetDimensions(width, height);
+    
+    return regolithUAV[clamp(pos, 0, int2(width - 1, height - 1))];
+}
+
+float4 GetRegolithFlux(int2 pos)
+{
+    uint width, height;
+    regolithFluxUAV.GetDimensions(width, height);
+    
+    if (any(pos < 0) || any(pos >= int2(width, height)))
+    {
+        return 0.0;
+    }
+    
+    return regolithFluxUAV[pos];
 }
 
 uint GetTopmostLayer(float4 heights)
@@ -263,11 +286,98 @@ void advect_sediment(int2 pos)
     sedimentUAV1[pos] = BilinearSample(sedimentUAV0, float2(previousX, previousY));
 }
 
+void regolith_flow(int2 pos)
+{
+    float height = GetHeight(pos);
+    float heightL = GetHeight(pos + int2(-1, 0));
+    float heightR = GetHeight(pos + int2(1, 0));
+    float heightT = GetHeight(pos + int2(0, -1));
+    float heightB = GetHeight(pos + int2(0, 1));
+
+    float regolith = GetRegolith(pos);
+    float regolithL = GetRegolith(pos + int2(-1, 0));
+    float regolithR = GetRegolith(pos + int2(1, 0));
+    float regolithT = GetRegolith(pos + int2(0, -1));
+    float regolithB = GetRegolith(pos + int2(0, 1));
+    
+    float deltaL = height + regolith - heightL - regolithL;
+    float deltaR = height + regolith - heightR - regolithR;
+    float deltaT = height + regolith - heightT - regolithT;
+    float deltaB = height + regolith - heightB - regolithB;
+    
+    float staticPressureL = density * gravity * deltaL;
+    float staticPressureR = density * gravity * deltaR;
+    float staticPressureT = density * gravity * deltaT;
+    float staticPressureB = density * gravity * deltaB;
+    
+    float accelerationL = staticPressureL / (density * pipeLength);
+    float accelerationR = staticPressureR / (density * pipeLength);
+    float accelerationT = staticPressureT / (density * pipeLength);
+    float accelerationB = staticPressureB / (density * pipeLength);
+    
+    const float damping = 0.3;
+    float4 flux = regolithFluxUAV[pos] * damping;
+    float fluxL = max(0.0, flux.x + deltaTime * pipeArea * accelerationL);
+    float fluxR = max(0.0, flux.y + deltaTime * pipeArea * accelerationR);
+    float fluxT = max(0.0, flux.z + deltaTime * pipeArea * accelerationT);
+    float fluxB = max(0.0, flux.w + deltaTime * pipeArea * accelerationB);
+    
+    float regolithOutflow = deltaTime * (fluxL + fluxR + fluxT + fluxB);
+    float K = min(1.0, regolith * pipeLength * pipeLength / regolithOutflow);
+    
+    uint w, h;
+    regolithFluxUAV.GetDimensions(w, h);
+    
+    fluxL = pos.x == 0 ? 0 : fluxL;
+    fluxR = pos.x == w - 1 ? 0 : fluxR;
+    fluxT = pos.y == 0 ? 0 : fluxT;
+    fluxB = pos.y == h - 1 ? 0 : fluxB;
+    
+    regolithFluxUAV[pos] = float4(fluxL, fluxR, fluxT, fluxB) * K;
+}
+
+void regolith_update(int2 pos)
+{
+    float4 flux = GetRegolithFlux(pos);
+    float4 fluxL = GetRegolithFlux(pos + int2(-1, 0));
+    float4 fluxR = GetRegolithFlux(pos + int2(1, 0));
+    float4 fluxT = GetRegolithFlux(pos + int2(0, -1));
+    float4 fluxB = GetRegolithFlux(pos + int2(0, 1));
+    
+    float flowIn = fluxL.y + fluxR.x + fluxT.w + fluxB.z;
+    float flowOut = dot(flux, 1.0);
+
+    float regolith = regolithUAV[pos];
+    regolithUAV[pos] = regolith + (flowIn - flowOut) * deltaTime / (pipeLength * pipeLength);
+}
+
+void dissolution_based_erosion(int2 pos)
+{
+    float regolith = regolithUAV[pos];
+    float water = waterUAV[pos];
+    
+    float maxRegolith = min(c_maxRegolith, water);
+    if(regolith > maxRegolith)
+    {
+        float regolithDiff = regolith - maxRegolith;
+        regolithUAV[pos] -= regolithDiff;
+        heightmapUAV[pos][0] += regolithDiff;
+    }
+    else
+    {
+        float regolithDiff = maxRegolith - regolith;
+        regolithUAV[pos] += regolithDiff;
+        heightmapUAV[pos][0] -= regolithDiff;
+    }
+}
+
 void smooth_height(int2 pos)
 {    
     float4 C = heightmapUAV[pos];
     float sediment = sedimentUAV1[pos];
-    if (sediment > 0.0)
+    float regolith = regolithUAV[pos];
+    
+    if (sediment > 0.0 || regolith > 0.0)
     {
         uint width, height;
         heightmapUAV.GetDimensions(width, height);
@@ -335,9 +445,18 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
             advect_sediment(dispatchThreadID.xy);
             break;
         case 7:
-            evaporation(dispatchThreadID.xy);
+            regolith_flow(dispatchThreadID.xy);
             break;
         case 8:
+            regolith_update(dispatchThreadID.xy);
+            break;
+        case 9:
+            dissolution_based_erosion(dispatchThreadID.xy);
+            break;
+        case 10:
+            evaporation(dispatchThreadID.xy);
+            break;
+        case 11:
             smooth_height(dispatchThreadID.xy);
             break;
         default:
