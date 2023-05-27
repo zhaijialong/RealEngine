@@ -18,6 +18,8 @@ private:
 private:
     Renderer* m_pRenderer;
 
+    eastl::unique_ptr<Texture2D> m_pInputTexture;
+
     eastl::unique_ptr<Texture2D> m_pHeightmap0;
     eastl::unique_ptr<Texture2D> m_pHeightmap1;
     eastl::unique_ptr<Texture2D> m_pSediment0;

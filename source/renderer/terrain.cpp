@@ -1,6 +1,7 @@
 #include "terrain.h"
 #include "renderer.h"
 #include "utils/gui_util.h"
+#include "ImFileDialog/ImFileDialog.h"
 #include "terrain/constants.hlsli"
 
 Terrain::Terrain(Renderer* pRenderer)
@@ -58,18 +59,28 @@ RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
 void Terrain::Heightmap(IGfxCommandList* pCommandList)
 {
     static bool bGenerateHeightmap = true;
+    static bool bInputTexture = false;
     static uint seed = 556650;
 
     bGenerateHeightmap |= ImGui::SliderInt("Seed##Terrain", (int*)&seed, 0, 1000000);
     bGenerateHeightmap |= ImGui::Button("Generate##Terrain");
 
-    if (bGenerateHeightmap)
+    ImGui::SameLine();
+    if (ImGui::Button("Load##Terrain"))
+    {
+        ifd::FileDialog::Instance().Open("LoadHeightmap", "Open Heightmap", "heightmap file (*.png){.png},.*");
+    }
+
+    if (bGenerateHeightmap || bInputTexture)
     {
         uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
         uint32_t height = m_pHeightmap0->GetTexture()->GetDesc().height;
 
         pCommandList->SetPipelineState(m_pHeightmapPSO);
-        uint32_t cb[] = { seed, m_pHeightmap0->GetUAV()->GetHeapIndex() };
+        uint32_t cb[] = {
+            seed,
+            bInputTexture ? m_pInputTexture->GetSRV()->GetHeapIndex() : -1,
+            m_pHeightmap0->GetUAV()->GetHeapIndex() };
         pCommandList->SetComputeConstants(0, cb, sizeof(cb));
         pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 
@@ -83,6 +94,19 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
         pCommandList->UavBarrier(nullptr);
 
         bGenerateHeightmap = false;
+        bInputTexture = false;
+    }
+
+    if (ifd::FileDialog::Instance().IsDone("LoadHeightmap"))
+    {
+        if (ifd::FileDialog::Instance().HasResult())
+        {
+            eastl::string result = ifd::FileDialog::Instance().GetResult().u8string().c_str();
+            m_pInputTexture.reset(m_pRenderer->CreateTexture2D(result, false));
+            bInputTexture = true;
+        }
+
+        ifd::FileDialog::Instance().Close();
     }
 }
 
