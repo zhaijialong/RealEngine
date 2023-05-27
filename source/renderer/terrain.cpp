@@ -1,6 +1,7 @@
 #include "terrain.h"
 #include "renderer.h"
 #include "utils/gui_util.h"
+#include "terrain/constants.hlsli"
 
 Terrain::Terrain(Renderer* pRenderer)
 {
@@ -107,28 +108,7 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
 
     pCommandList->SetPipelineState(m_pErosionPSO);
 
-    struct
-    {
-        uint c_heightmapUAV0;
-        uint c_heightmapUAV1;
-        uint c_sedimentUAV0;
-        uint c_sedimentUAV1;
-
-        uint c_waterUAV;
-        uint c_fluxUAV;
-        uint c_velocityUAV0;
-        uint c_velocityUAV1;
-
-        float4 c_erosionConstant; //4 layers
-
-        uint c_bRain;
-        float c_rainRate;
-        float c_evaporationRate;
-        float c_depositionConstant;
-
-        float c_sedimentCapacityConstant;
-        float c_smoothness;
-    } cb;
+    ErosionConstants cb;
     cb.c_heightmapUAV0 = m_pHeightmap0->GetUAV()->GetHeapIndex();
     cb.c_heightmapUAV1 = m_pHeightmap1->GetUAV()->GetHeapIndex();
     cb.c_sedimentUAV0 = m_pSediment0->GetUAV()->GetHeapIndex();

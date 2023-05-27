@@ -2,6 +2,7 @@
 #include "../debug.hlsli"
 #include "../atmosphere.hlsli"
 #include "../brdf.hlsli"
+#include "constants.hlsli"
 
 cbuffer CB : register(b0)
 {
@@ -22,10 +23,6 @@ static Texture2D waterVelocityTexture = ResourceDescriptorHeap[c_waterVelocityTe
 static Texture2D sedimentTexture = ResourceDescriptorHeap[c_sedimentTexture];
 static RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 static SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
-
-static const float2 terrainOrigin = float2(-20.0, -20.0);
-static const float terrainSize = 40.0;
-static const float terrainHeightScale = 30.0;
 
 float2 GetUV(float x, float z)
 {

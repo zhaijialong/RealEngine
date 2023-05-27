@@ -1,33 +1,11 @@
 #include "../common.hlsli"
 #include "../random.hlsli"
+#include "constants.hlsli"
 #include "noise.hlsli"
 
 cbuffer CB0 : register(b0)
 {
     uint c_passIndex;
-}
-
-cbuffer CB1 : register(b1)
-{
-    uint c_heightmapUAV0;
-    uint c_heightmapUAV1;
-    uint c_sedimentUAV0;
-    uint c_sedimentUAV1;
-    
-    uint c_waterUAV;
-    uint c_fluxUAV;
-    uint c_velocityUAV0;    
-    uint c_velocityUAV1;
-    
-    float4 c_erosionConstant; //4 layers
-    
-    uint c_bRain;
-    float c_rainRate;
-    float c_evaporationRate;
-    float c_depositionConstant;
-    
-    float c_sedimentCapacityConstant;
-    float c_smoothness;
 }
 
 static RWTexture2D<float4> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV0];
@@ -37,17 +15,6 @@ static RWTexture2D<float2> velocityUAV0 = ResourceDescriptorHeap[c_velocityUAV0]
 static RWTexture2D<float2> velocityUAV1 = ResourceDescriptorHeap[c_velocityUAV1];
 static RWTexture2D<float> sedimentUAV0 = ResourceDescriptorHeap[c_sedimentUAV0];
 static RWTexture2D<float> sedimentUAV1 = ResourceDescriptorHeap[c_sedimentUAV1];
-
-static const float density = 1.0;
-static const float gravity = 9.8;
-static const float pipeLength = 0.8;
-static const float pipeArea = 2.0;
-static const float deltaTime = 0.05;
-static const float minTiltAngle = radians(1.0);
-
-// must match with terrain.hlsl
-static const float terrainSize = 40.0;
-static const float terrainHeightScale = 30.0;
 
 float GetHeight(int2 pos)
 {
@@ -297,9 +264,7 @@ void advect_sediment(int2 pos)
 }
 
 void smooth_height(int2 pos)
-{
-    RWTexture2D<float4> output = ResourceDescriptorHeap[c_heightmapUAV1];
-    
+{    
     float4 C = heightmapUAV[pos];
     float sediment = sedimentUAV1[pos];
     if (sediment > 0.0)
@@ -338,7 +303,8 @@ void smooth_height(int2 pos)
             C = (C * curWeight + L + R + T + B + TL + TR + BL + BR) / (curWeight + 8.0);
         }
     } 
-
+    
+    RWTexture2D<float4> output = ResourceDescriptorHeap[c_heightmapUAV1];
     output[pos] = C;
 }
 
