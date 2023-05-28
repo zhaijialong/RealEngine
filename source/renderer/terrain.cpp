@@ -147,10 +147,10 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
 
     static float rainRate = 0.0001;
     static float evaporationRate = 0.05;
-    static float erosionConstant = 0.2f;
-    static float depositionConstant = 0.1f;
-    static float sedimentCapacityConstant = 0.001f;
-    static float maxRegolith = 0.00003;
+    static float erosionConstant = 0.3f;
+    static float depositionConstant = 0.05f;
+    static float sedimentCapacityConstant = 0.00005f;
+    static float maxRegolith = 0.;
     static float smoothness = 1.0f;
 
     ImGui::Separator();
@@ -165,8 +165,8 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     ImGui::SliderFloat("Evaporation##Terrain", &evaporationRate, 0.0, 10.0, "%.2f");
     ImGui::SliderFloat("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.2f");
-    ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.0001, 0.005, "%.4f");
-    ImGui::SliderFloat("Max Regolith##Terrain", &maxRegolith, 0.00000, 0.001, "%.5f");
+    ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.00000, 0.0001, "%.5f");
+    ImGui::SliderFloat("Max Regolith##Terrain", &maxRegolith, 0.00000, 0.01, "%.5f");
     ImGui::SliderFloat("Smoothness##Terrain", &smoothness, 0.0, 1.0, "%.2f");
 
     pCommandList->SetPipelineState(m_pErosionPSO);
@@ -187,7 +187,7 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     cb.c_evaporationRate = evaporationRate;
     cb.c_erosionConstant = erosionConstant;
     cb.c_depositionConstant = depositionConstant;
-    cb.c_sedimentCapacityConstant = sedimentCapacityConstant * 0.05;
+    cb.c_sedimentCapacityConstant = sedimentCapacityConstant;
     cb.c_maxRegolith = maxRegolith;
     cb.c_smoothness = smoothness;
         

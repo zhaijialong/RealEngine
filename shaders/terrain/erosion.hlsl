@@ -162,14 +162,9 @@ void update_water(int2 pos)
     
     float deltaX = (fluxL.y - flux.x + flux.y - fluxR.x) * 0.5;
     float deltaY = (fluxT.w - flux.z + flux.w - fluxB.z) * 0.5;
-    
-    float avgHeight = (waterHeight + newWaterHeight) * 0.5;
-    float2 velocity = float2(deltaX, deltaY) / (pipeLength * avgHeight);
-    
-    if(newWaterHeight < 1e-4)
-    {
-        velocity = 0.0;
-    }
+
+    float velocityFactor = pipeLength * (waterHeight + newWaterHeight) * 0.5;
+    float2 velocity = (velocityFactor > 1e-4) ? float2(deltaX, deltaY) / velocityFactor : 0.0;
     
     waterUAV[pos] = newWaterHeight;
     velocityUAV0[pos] = velocity;

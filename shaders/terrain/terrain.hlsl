@@ -141,7 +141,7 @@ float3 TerrainColor(float3 position, float3 V)
 {
     float2 uv = GetUV(position.x, position.z);
     //return saturate(waterVelocityTexture.SampleLevel(linearSampler, uv, 0).xyz * 0.02);
-    //return saturate(waterFluxTexture.SampleLevel(linearSampler, uv, 0).xyz * 5.0);
+    //return saturate(waterFluxTexture.SampleLevel(linearSampler, uv, 0).xyz * 50.0);
     //return saturate(sedimentTexture.SampleLevel(linearSampler, uv, 0).xyz * 1000.0);
     
     float waterHeight = GetWaterHeight(position.x, position.z);
