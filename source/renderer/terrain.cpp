@@ -7,6 +7,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
+#include "lodepng.h"
+
 Terrain::Terrain(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
@@ -85,7 +87,7 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
     ImGui::SameLine();
     if (ImGui::Button("Save##Terrain"))
     {
-        ifd::FileDialog::Instance().Save("SaveHeightmap", "Save Heightmap", "heightmap file (*.hdr){.hdr},.*");
+        ifd::FileDialog::Instance().Save("SaveHeightmap", "Save Heightmap", "heightmap file (*.png){.png},.*");
     }
 
     if (bGenerateHeightmap || bInputTexture)
@@ -265,7 +267,7 @@ void Terrain::Save()
     uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
     uint32_t height = m_pHeightmap0->GetTexture()->GetDesc().height;
 
-    /*
+    
     eastl::vector<uint16_t> data;
     data.resize(width * height);
 
@@ -277,22 +279,25 @@ void Terrain::Save()
     }
 
     // it does not support 16bits !!
-    stbi_write_png(m_savePath.c_str(), width, height, 1, data.data(), width * sizeof(uint16_t));
-    */
+    //stbi_write_png(m_savePath.c_str(), width, height, 1, data.data(), width * sizeof(uint16_t));
 
-    eastl::vector<float> data;
-    data.reserve(width * height);
+    lodepng::State state;
+    state.info_raw.bitdepth = 16;
+    state.info_raw.colortype = LCT_GREY;
+    state.info_png.color.bitdepth = 16;
+    state.info_png.color.colortype = LCT_GREY;
+    state.encoder.auto_convert = 0;
 
-    for (uint32_t j = 0; j < height; ++j)
+    eastl::vector<uint16_t> data_big_endian;
+    data_big_endian.reserve(data.size());
+
+    for (uint32_t i = 0; i < data.size(); ++i)
     {
-        for (uint32_t i = 0; i < width; ++i)
-        {
-            uint16_t value;
-            memcpy(&value, readback_data + j * readback_pitch + i * sizeof(uint16_t), sizeof(uint16_t));
-
-            data.push_back(value / 65535.0f);
-        }
+        uint16_t x = data[i];
+        data_big_endian.push_back(((x & 0x00FF) << 8) | ((x & 0xFF00) >> 8));
     }
 
-    stbi_write_hdr(m_savePath.c_str(), width, height, 1, data.data());
+    std::vector<unsigned char> png;
+    lodepng::encode(png, (const unsigned char*)data_big_endian.data(), width, height, state);
+    lodepng::save_file(png, m_savePath.c_str());
 }

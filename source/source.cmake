@@ -185,6 +185,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/staging_buffer_allocator.h
     ${SOURCE_ROOT}/renderer/terrain.cpp
     ${SOURCE_ROOT}/renderer/terrain.h
+    ${SOURCE_ROOT}/renderer/lodepng.cpp
+    ${SOURCE_ROOT}/renderer/lodepng.h
     ${SOURCE_ROOT}/renderer/texture_loader.cpp
     ${SOURCE_ROOT}/renderer/texture_loader.h
     ${SOURCE_ROOT}/utils/assert.h
