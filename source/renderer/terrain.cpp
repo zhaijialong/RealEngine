@@ -142,7 +142,7 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
 
     if (bErosion)
     {
-        if (cycles++ > 10)
+        if (cycles++ > 5)
         {
             bErosion = false;
         }

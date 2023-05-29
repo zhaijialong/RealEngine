@@ -46,7 +46,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     const float evapRate = 0.001;
     const float depositionRate = 0.1;
     const float minVol = 0.01;
-    const float friction = 0.05;
+    const float friction = 0.02;
     
     uint width, height;
     heightmapUAV.GetDimensions(width, height);
