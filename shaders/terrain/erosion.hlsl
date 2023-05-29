@@ -37,7 +37,7 @@ struct Particle
     float sediment; //Fraction of Volume that is Sediment!
 };
 
-[numthreads(8, 8, 1)]
+[numthreads(32, 32, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
      //Particle Properties
@@ -77,8 +77,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         */
 
         //Check if Particle is still in-bounds
-        if (!all(drop.pos >=  0) ||
-            !all(drop.pos < int2(width, height)))
+        if (!all(drop.pos >=  0) || !all(drop.pos < int2(width, height)))
         {
             break;
         }

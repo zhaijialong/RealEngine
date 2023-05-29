@@ -23,7 +23,7 @@ Terrain::Terrain(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("terrain/erosion.hlsl", "main", "cs_6_6", {});
     m_pErosionPSO = pRenderer->GetPipelineState(desc, "terrain erosion PSO");
 
-    const uint32_t size = 256;
+    const uint32_t size = 1024;
     m_pHeightmap.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap0"));
 
     GfxBufferDesc bufferDesc;
@@ -132,12 +132,21 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
 void Terrain::Erosion(IGfxCommandList* pCommandList)
 {
     static bool bErosion = false;
+    static uint32_t cycles = 0;
 
     ImGui::Separator();
-    ImGui::Checkbox("Erosion##Terrain", &bErosion);
+    if (ImGui::Checkbox("Erosion##Terrain", &bErosion))
+    {
+        cycles = 0;
+    }
 
     if (bErosion)
     {
+        if (cycles++ > 10)
+        {
+            bErosion = false;
+        }
+
         ErosionConstants cb;
         cb.c_heightmapUAV = m_pHeightmap->GetUAV()->GetHeapIndex();
 
@@ -147,7 +156,7 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
         uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
         uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
 
-        pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+        pCommandList->Dispatch(DivideRoudingUp(width, 32), DivideRoudingUp(height, 32), 1);
         pCommandList->UavBarrier(nullptr);
     }
 }
