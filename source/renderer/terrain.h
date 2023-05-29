@@ -25,16 +25,7 @@ private:
     eastl::unique_ptr<IGfxBuffer> m_pStagingBuffer;
     eastl::string m_savePath;
 
-    eastl::unique_ptr<Texture2D> m_pHeightmap0;
-    eastl::unique_ptr<Texture2D> m_pHeightmap1;
-    eastl::unique_ptr<Texture2D> m_pSediment0;
-    eastl::unique_ptr<Texture2D> m_pSediment1;
-    eastl::unique_ptr<Texture2D> m_pWater;
-    eastl::unique_ptr<Texture2D> m_pFlux;
-    eastl::unique_ptr<Texture2D> m_pVelocity0;
-    eastl::unique_ptr<Texture2D> m_pVelocity1;
-    eastl::unique_ptr<Texture2D> m_pRegolith;
-    eastl::unique_ptr<Texture2D> m_pRegolithFlux;
+    eastl::unique_ptr<Texture2D> m_pHeightmap;
    
     IGfxPipelineState* m_pHeightmapPSO = nullptr;
     IGfxPipelineState* m_pErosionPSO = nullptr;

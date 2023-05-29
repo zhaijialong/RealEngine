@@ -7,23 +7,11 @@
 cbuffer CB : register(b0)
 {
     uint c_heightTexture;
-    uint c_waterTexture;
-    uint c_waterFluxTexture;
-    uint c_waterVelocityTexture;
-    uint c_sedimentTexture;
-    uint c_regolithTexture;
-    uint c_regolithFluxTexture;
     uint c_outputTexture;
 }
 
 
 static Texture2D heightTexture = ResourceDescriptorHeap[c_heightTexture];
-static Texture2D waterTexture = ResourceDescriptorHeap[c_waterTexture];
-static Texture2D waterFluxTexture = ResourceDescriptorHeap[c_waterFluxTexture];
-static Texture2D waterVelocityTexture = ResourceDescriptorHeap[c_waterVelocityTexture];
-static Texture2D sedimentTexture = ResourceDescriptorHeap[c_sedimentTexture];
-static Texture2D regolithTexture = ResourceDescriptorHeap[c_regolithTexture];
-static Texture2D regolithFluxTexture = ResourceDescriptorHeap[c_regolithFluxTexture];
 static RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 static SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
@@ -47,13 +35,7 @@ float GetTerrainHeight(float x, float z)
 
 float GetWaterHeight(float x, float z)
 {
-    float2 uv = GetUV(x, z);
-    if (any(uv < 0.0) || any(uv > 1.0))
-    {
-        return -10000000000.0;
-    }
-
-    return waterTexture.SampleLevel(linearSampler, uv, 0).x;    
+    return 0; //todo
 }
 
 float GetHeight(float x, float z)
@@ -188,6 +170,7 @@ void DrawRect(uint2 pos, uint4 rect, Texture2D texture, float scale = 1.0)
 
 void DebugUI(uint2 pos)
 {
+    /*
     uint width, height;
     outputTexture.GetDimensions(width, height);
     
@@ -216,6 +199,7 @@ void DebugUI(uint2 pos)
     
     DrawRect(pos, uint4(width - 200, 100, width, 300), regolithTexture, 1000.0);
     DrawRect(pos, uint4(width - 200, 320, width, 520), regolithFluxTexture, 500.0);
+*/
 }
 
 [numthreads(8, 8, 1)]

@@ -23,20 +23,11 @@ Terrain::Terrain(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("terrain/erosion.hlsl", "main", "cs_6_6", {});
     m_pErosionPSO = pRenderer->GetPipelineState(desc, "terrain erosion PSO");
 
-    const uint32_t size = 2048;
-    m_pHeightmap0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap0"));
-    m_pHeightmap1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap1"));
-    m_pWater.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Water"));
-    m_pFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "Flux"));
-    m_pVelocity0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess, "Velocity0"));
-    m_pVelocity1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess, "Velocity1"));
-    m_pSediment0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment0"));
-    m_pSediment1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment1"));
-    m_pRegolith.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Regolith"));
-    m_pRegolithFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "RegolithFlux"));
+    const uint32_t size = 256;
+    m_pHeightmap.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap0"));
 
     GfxBufferDesc bufferDesc;
-    bufferDesc.size = m_pHeightmap0->GetTexture()->GetRowPitch(0) * size;
+    bufferDesc.size = m_pHeightmap->GetTexture()->GetRowPitch(0) * size;
     bufferDesc.memory_type = GfxMemoryType::GpuToCpu;
     m_pStagingBuffer.reset(pRenderer->GetDevice()->CreateBuffer(bufferDesc, "Heightmap readback"));
 }
@@ -60,9 +51,6 @@ RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
             Erosion(pCommandList);
             Raymarch(pCommandList, pRenderGraph->GetTexture(data.output));
             ImGui::End();
-
-            eastl::swap(m_pSediment0, m_pSediment1);
-            eastl::swap(m_pHeightmap0, m_pHeightmap1);
         });
 
     return raymarching_pass->output;
@@ -92,14 +80,14 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
 
     if (bGenerateHeightmap || bInputTexture)
     {
-        uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
-        uint32_t height = m_pHeightmap0->GetTexture()->GetDesc().height;
+        uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
+        uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
 
         pCommandList->SetPipelineState(m_pHeightmapPSO);
         uint32_t cb[] = {
             seed,
             bInputTexture ? m_pInputTexture->GetSRV()->GetHeapIndex() : -1,
-            m_pHeightmap0->GetUAV()->GetHeapIndex() };
+            m_pHeightmap->GetUAV()->GetHeapIndex() };
         pCommandList->SetComputeConstants(0, cb, sizeof(cb));
         pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 
@@ -130,9 +118,9 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
     {
         if (ifd::FileDialog::Instance().HasResult())
         {
-            pCommandList->ResourceBarrier(m_pHeightmap0->GetTexture(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopySrc);
-            pCommandList->CopyTextureToBuffer(m_pStagingBuffer.get(), m_pHeightmap0->GetTexture(), 0, 0);
-            pCommandList->ResourceBarrier(m_pHeightmap0->GetTexture(), 0, GfxResourceState::CopySrc, GfxResourceState::UnorderedAccess);
+            pCommandList->ResourceBarrier(m_pHeightmap->GetTexture(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopySrc);
+            pCommandList->CopyTextureToBuffer(m_pStagingBuffer.get(), m_pHeightmap->GetTexture(), 0, 0);
+            pCommandList->ResourceBarrier(m_pHeightmap->GetTexture(), 0, GfxResourceState::CopySrc, GfxResourceState::UnorderedAccess);
             m_savePath = ifd::FileDialog::Instance().GetResult().u8string().c_str();
             bSaveTexture = true;
         }
@@ -143,82 +131,24 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
 
 void Terrain::Erosion(IGfxCommandList* pCommandList)
 {
-    static bool bRain = false;
-
-    static float rainRate = 0.0001;
-    static float evaporationRate = 0.05;
-    static float erosionConstant = 0.3f;
-    static float depositionConstant = 0.05f;
-    static float sedimentCapacityConstant = 0.00005f;
-    static float maxRegolith = 0.;
-    static float smoothness = 1.0f;
+    static bool bErosion = false;
 
     ImGui::Separator();
-    if (ImGui::Checkbox("Rain##Terrain", &bRain))
+    ImGui::Checkbox("Erosion##Terrain", &bErosion);
+
+    if (bErosion)
     {
-        if (!bRain)
-        {
-            Clear(pCommandList);
-        }
-    }
-    ImGui::SliderFloat("Rain Rate##Terrain", &rainRate, 0.0, 0.0005, "%.4f");
-    ImGui::SliderFloat("Evaporation##Terrain", &evaporationRate, 0.0, 10.0, "%.2f");
-    ImGui::SliderFloat("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.2f");
-    ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.2f");
-    ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.00000, 0.0001, "%.5f");
-    ImGui::SliderFloat("Max Regolith##Terrain", &maxRegolith, 0.00000, 0.01, "%.5f");
-    ImGui::SliderFloat("Smoothness##Terrain", &smoothness, 0.0, 1.0, "%.2f");
+        ErosionConstants cb;
+        cb.c_heightmapUAV = m_pHeightmap->GetUAV()->GetHeapIndex();
 
-    pCommandList->SetPipelineState(m_pErosionPSO);
+        pCommandList->SetPipelineState(m_pErosionPSO);
+        pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
 
-    ErosionConstants cb;
-    cb.c_heightmapUAV0 = m_pHeightmap0->GetUAV()->GetHeapIndex();
-    cb.c_heightmapUAV1 = m_pHeightmap1->GetUAV()->GetHeapIndex();
-    cb.c_sedimentUAV0 = m_pSediment0->GetUAV()->GetHeapIndex();
-    cb.c_sedimentUAV1 = m_pSediment1->GetUAV()->GetHeapIndex();
-    cb.c_waterUAV = m_pWater->GetUAV()->GetHeapIndex();
-    cb.c_fluxUAV = m_pFlux->GetUAV()->GetHeapIndex();
-    cb.c_velocityUAV0 = m_pVelocity0->GetUAV()->GetHeapIndex();
-    cb.c_velocityUAV1 = m_pVelocity1->GetUAV()->GetHeapIndex();
-    cb.c_regolithUAV = m_pRegolith->GetUAV()->GetHeapIndex();
-    cb.c_regolithFluxUAV = m_pRegolithFlux->GetUAV()->GetHeapIndex();
-    cb.c_bRain = bRain;
-    cb.c_rainRate = rainRate;
-    cb.c_evaporationRate = evaporationRate;
-    cb.c_erosionConstant = erosionConstant;
-    cb.c_depositionConstant = depositionConstant;
-    cb.c_sedimentCapacityConstant = sedimentCapacityConstant;
-    cb.c_maxRegolith = maxRegolith;
-    cb.c_smoothness = smoothness;
-        
-    pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
+        uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
+        uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
 
-    uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
-    uint32_t height = m_pHeightmap0->GetTexture()->GetDesc().height;
-
-    const char* pass_names[] =
-    {
-        "rain",
-        "flow",
-        "update_water",
-        "diffuse_velocity0",
-        "diffuse_velocity1",
-        "force_based_erosion",
-        "advect_sediment",
-        "regolith_flow",
-        "regolith_update",
-        "dissolution_based_erosion",
-        "evaporation",
-        "smooth_height",
-    };
-
-    for (uint32_t i = 0; i < 12; ++i)
-    {
-        pCommandList->BeginEvent(pass_names[i]);
-        pCommandList->SetComputeConstants(0, &i, sizeof(uint32_t));
         pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
         pCommandList->UavBarrier(nullptr);
-        pCommandList->EndEvent();
     }
 }
 
@@ -227,13 +157,7 @@ void Terrain::Raymarch(IGfxCommandList* pCommandList, RGTexture* output)
     pCommandList->SetPipelineState(m_pRaymachPSO);
 
     uint32_t cb[] = {
-        m_pHeightmap1->GetSRV()->GetHeapIndex(),
-        m_pWater->GetSRV()->GetHeapIndex(),
-        m_pFlux->GetSRV()->GetHeapIndex(),
-        m_pVelocity0->GetSRV()->GetHeapIndex(),
-        m_pSediment1->GetSRV()->GetHeapIndex(),
-        m_pRegolith->GetSRV()->GetHeapIndex(),
-        m_pRegolithFlux->GetSRV()->GetHeapIndex(),
+        m_pHeightmap->GetSRV()->GetHeapIndex(),
         output->GetUAV()->GetHeapIndex(), 
     };
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
@@ -245,16 +169,7 @@ void Terrain::Raymarch(IGfxCommandList* pCommandList, RGTexture* output)
 
 void Terrain::Clear(IGfxCommandList* pCommandList)
 {
-    float clear_value[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    pCommandList->ClearUAV(m_pSediment0->GetTexture(), m_pSediment0->GetUAV(), clear_value);
-    pCommandList->ClearUAV(m_pSediment1->GetTexture(), m_pSediment1->GetUAV(), clear_value);
-    pCommandList->ClearUAV(m_pWater->GetTexture(), m_pWater->GetUAV(), clear_value);
-    pCommandList->ClearUAV(m_pFlux->GetTexture(), m_pFlux->GetUAV(), clear_value);
-    pCommandList->ClearUAV(m_pVelocity0->GetTexture(), m_pVelocity0->GetUAV(), clear_value);
-    pCommandList->ClearUAV(m_pVelocity1->GetTexture(), m_pVelocity1->GetUAV(), clear_value);
-    pCommandList->ClearUAV(m_pRegolith->GetTexture(), m_pRegolith->GetUAV(), clear_value);
-    pCommandList->ClearUAV(m_pRegolithFlux->GetTexture(), m_pRegolithFlux->GetUAV(), clear_value);
-    pCommandList->UavBarrier(nullptr);
+
 }
 
 void Terrain::Save()
@@ -262,10 +177,10 @@ void Terrain::Save()
     m_pRenderer->WaitGpuFinished();
 
     uint8_t* readback_data = (uint8_t*)m_pStagingBuffer->GetCpuAddress();
-    uint32_t readback_pitch = m_pHeightmap0->GetTexture()->GetRowPitch(0);
+    uint32_t readback_pitch = m_pHeightmap->GetTexture()->GetRowPitch(0);
 
-    uint32_t width = m_pHeightmap0->GetTexture()->GetDesc().width;
-    uint32_t height = m_pHeightmap0->GetTexture()->GetDesc().height;
+    uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
+    uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
 
     
     eastl::vector<uint16_t> data;

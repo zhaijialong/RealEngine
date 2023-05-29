@@ -3,412 +3,97 @@
 #include "constants.hlsli"
 #include "noise.hlsli"
 
-cbuffer CB0 : register(b0)
+static RWTexture2D<float> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV];
+
+// https://github.com/weigert/SimpleErosion/blob/master/source/include/world/world.cpp
+
+float3 surfaceNormal(int i, int j)
 {
-    uint c_passIndex;
+  /*
+    Note: Surface normal is computed in this way, because the square-grid surface is meshed using triangles.
+    To avoid spatial artifacts, you need to weight properly with all neighbors.
+  */
+
+    float3 n = 0.15 * normalize(float3(terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i + 1, j)]), 1.0, 0.0)); //Positive X
+    n += 0.15 * normalize(float3(terrainHeightScale * (heightmapUAV[int2(i - 1, j)] - heightmapUAV[int2(i, j)]), 1.0, 0.0)); //Negative X
+    n += 0.15 * normalize(float3(0.0, 1.0, terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i, j + 1)]))); //Positive Y
+    n += 0.15 * normalize(float3(0.0, 1.0, terrainHeightScale * (heightmapUAV[int2(i, j - 1)] - heightmapUAV[int2(i, j)]))); //Negative Y
+
+    //Diagonals! (This removes the last spatial artifacts)
+    n += 0.1 * normalize(float3(terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i + 1, j + 1)]) / sqrt(2), sqrt(2), terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i + 1, j + 1)]) / sqrt(2))); //Positive Y
+    n += 0.1 * normalize(float3(terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i + 1, j - 1)]) / sqrt(2), sqrt(2), terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i + 1, j - 1)]) / sqrt(2))); //Positive Y
+    n += 0.1 * normalize(float3(terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i - 1, j + 1)]) / sqrt(2), sqrt(2), terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i - 1, j + 1)]) / sqrt(2))); //Positive Y
+    n += 0.1 * normalize(float3(terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i - 1, j - 1)]) / sqrt(2), sqrt(2), terrainHeightScale * (heightmapUAV[int2(i, j)] - heightmapUAV[int2(i - 1, j - 1)]) / sqrt(2))); //Positive Y
+
+    return n;
 }
 
-static RWTexture2D<float> heightmapUAV = ResourceDescriptorHeap[c_heightmapUAV0];
-static RWTexture2D<float> waterUAV = ResourceDescriptorHeap[c_waterUAV];
-static RWTexture2D<float4> fluxUAV = ResourceDescriptorHeap[c_fluxUAV];
-static RWTexture2D<float2> velocityUAV0 = ResourceDescriptorHeap[c_velocityUAV0];
-static RWTexture2D<float2> velocityUAV1 = ResourceDescriptorHeap[c_velocityUAV1];
-static RWTexture2D<float> sedimentUAV0 = ResourceDescriptorHeap[c_sedimentUAV0];
-static RWTexture2D<float> sedimentUAV1 = ResourceDescriptorHeap[c_sedimentUAV1];
-static RWTexture2D<float> regolithUAV = ResourceDescriptorHeap[c_regolithUAV];
-static RWTexture2D<float4> regolithFluxUAV = ResourceDescriptorHeap[c_regolithFluxUAV];
-
-float GetHeight(int2 pos)
+struct Particle
 {
-    uint width, height;
-    heightmapUAV.GetDimensions(width, height);
+    float2 pos;
+    float2 speed;
 
-    return heightmapUAV[clamp(pos, 0, int2(width - 1, height - 1))];
-}
-
-float GetWaterHeight(int2 pos)
-{
-    uint width, height;
-    waterUAV.GetDimensions(width, height);
-    
-    return waterUAV[clamp(pos, 0, int2(width - 1, height - 1))];
-}
-
-float4 GetWaterFlux(int2 pos)
-{
-    uint width, height;
-    fluxUAV.GetDimensions(width, height);
-    
-    if (any(pos < 0) || any(pos >= int2(width, height)))
-    {
-        return 0.0;
-    }
-    
-    return fluxUAV[pos];
-}
-
-float GetRegolith(int2 pos)
-{
-    uint width, height;
-    regolithUAV.GetDimensions(width, height);
-    
-    return regolithUAV[clamp(pos, 0, int2(width - 1, height - 1))];
-}
-
-float4 GetRegolithFlux(int2 pos)
-{
-    uint width, height;
-    regolithFluxUAV.GetDimensions(width, height);
-    
-    if (any(pos < 0) || any(pos >= int2(width, height)))
-    {
-        return 0.0;
-    }
-    
-    return regolithFluxUAV[pos];
-}
-
-template<typename T>
-T BilinearSample(RWTexture2D<T> sampledTexture, float2 pos)
-{
-    T s00 = sampledTexture[uint2(floor(pos.x), floor(pos.y))];
-    T s10 = sampledTexture[uint2(ceil(pos.x), floor(pos.y))];
-    T s01 = sampledTexture[uint2(floor(pos.x), ceil(pos.y))];
-    T s11 = sampledTexture[uint2(ceil(pos.x), ceil(pos.y))];
-    return lerp(lerp(s00, s10, frac(pos.x)), lerp(s01, s11, frac(pos.x)), frac(pos.y));
-}
-
-void rain(uint2 pos)
-{
-    if (c_bRain)
-    {
-        uint width, height;
-        waterUAV.GetDimensions(width, height);
-    
-        PRNG rng = PRNG::Create(pos, uint2(width, height));
-        float water = max(rng.RandomFloat(), 0.2);
-
-        waterUAV[pos] += water * c_rainRate * deltaTime;
-    }
-}
-
-void evaporation(uint2 pos)
-{
-    waterUAV[pos] = waterUAV[pos] * (1.0 - c_evaporationRate * deltaTime);
-}
-
-void flow(int2 pos)
-{
-    float height = GetHeight(pos);
-    float heightL = GetHeight(pos + int2(-1, 0));
-    float heightR = GetHeight(pos + int2(1, 0));
-    float heightT = GetHeight(pos + int2(0, -1));
-    float heightB = GetHeight(pos + int2(0, 1));
-
-    float waterHeight = GetWaterHeight(pos);
-    float waterHeightL = GetWaterHeight(pos + int2(-1, 0));
-    float waterHeightR = GetWaterHeight(pos + int2(1, 0));
-    float waterHeightT = GetWaterHeight(pos + int2(0, -1));
-    float waterHeightB = GetWaterHeight(pos + int2(0, 1));
-    
-    float deltaL = height + waterHeight - heightL - waterHeightL;
-    float deltaR = height + waterHeight - heightR - waterHeightR;
-    float deltaT = height + waterHeight - heightT - waterHeightT;
-    float deltaB = height + waterHeight - heightB - waterHeightB;
-    
-    float staticPressureL = density * gravity * deltaL;
-    float staticPressureR = density * gravity * deltaR;
-    float staticPressureT = density * gravity * deltaT;
-    float staticPressureB = density * gravity * deltaB;
-    
-    float accelerationL = staticPressureL / (density * pipeLength);
-    float accelerationR = staticPressureR / (density * pipeLength);
-    float accelerationT = staticPressureT / (density * pipeLength);
-    float accelerationB = staticPressureB / (density * pipeLength);
-    
-    float4 flux = fluxUAV[pos];
-    float fluxL = max(0.0, flux.x + deltaTime * pipeArea * accelerationL);
-    float fluxR = max(0.0, flux.y + deltaTime * pipeArea * accelerationR);
-    float fluxT = max(0.0, flux.z + deltaTime * pipeArea * accelerationT);
-    float fluxB = max(0.0, flux.w + deltaTime * pipeArea * accelerationB);
-    
-    float waterOutflow = deltaTime * (fluxL + fluxR + fluxT + fluxB);
-    float K = min(1.0, waterHeight * pipeLength * pipeLength / waterOutflow);
-    
-    uint w, h;
-    fluxUAV.GetDimensions(w, h);
-    
-    fluxL = pos.x == 0 ? 0 : fluxL;
-    fluxR = pos.x == w - 1 ? 0 : fluxR;
-    fluxT = pos.y == 0 ? 0 : fluxT;
-    fluxB = pos.y == h - 1 ? 0 : fluxB;
-    
-    fluxUAV[pos] = float4(fluxL, fluxR, fluxT, fluxB) * K;
-}
-
-void update_water(int2 pos)
-{
-    float4 flux = GetWaterFlux(pos);
-    float4 fluxL = GetWaterFlux(pos + int2(-1, 0));
-    float4 fluxR = GetWaterFlux(pos + int2(1, 0));
-    float4 fluxT = GetWaterFlux(pos + int2(0, -1));
-    float4 fluxB = GetWaterFlux(pos + int2(0, 1));
-    
-    float flowIn = fluxL.y + fluxR.x + fluxT.w + fluxB.z;
-    float flowOut = dot(flux, 1.0);
-
-    float waterHeight = waterUAV[pos];
-    float newWaterHeight = waterHeight + (flowIn - flowOut) * deltaTime / (pipeLength * pipeLength);
-    
-    float deltaX = (fluxL.y - flux.x + flux.y - fluxR.x) * 0.5;
-    float deltaY = (fluxT.w - flux.z + flux.w - fluxB.z) * 0.5;
-
-    float velocityFactor = pipeLength * (waterHeight + newWaterHeight) * 0.5;
-    float2 velocity = (velocityFactor > 1e-4) ? float2(deltaX, deltaY) / velocityFactor : 0.0;
-    
-    waterUAV[pos] = newWaterHeight;
-    velocityUAV0[pos] = velocity;
-}
-
-// velocityUAV0 -> velocityUAV1
-void diffuse_velocity0(int2 pos)
-{
-    uint width, height;
-    velocityUAV0.GetDimensions(width, height);
-    
-    float2 velocity = velocityUAV0[pos];
-    float2 velocityL = velocityUAV0[clamp(pos + int2(-1, 0), 0, int2(width - 1, height - 1))];
-    float2 velocityR = velocityUAV0[clamp(pos + int2(1, 0), 0, int2(width - 1, height - 1))];
-    float2 velocityT = velocityUAV0[clamp(pos + int2(0, -1), 0, int2(width - 1, height - 1))];
-    float2 velocityB = velocityUAV0[clamp(pos + int2(0, 1), 0, int2(width - 1, height - 1))];
-    
-    velocityUAV1[pos] = (velocityL + velocityR + velocityT + velocityB + 4.0 * velocity) / 8.0;
-}
-
-// velocityUAV1 -> velocityUAV0
-void diffuse_velocity1(int2 pos)
-{
-    uint width, height;
-    velocityUAV0.GetDimensions(width, height);
-    
-    float2 velocity = velocityUAV1[pos];
-    float2 velocityL = velocityUAV1[clamp(pos + int2(-1, 0), 0, int2(width - 1, height - 1))];
-    float2 velocityR = velocityUAV1[clamp(pos + int2(1, 0), 0, int2(width - 1, height - 1))];
-    float2 velocityT = velocityUAV1[clamp(pos + int2(0, -1), 0, int2(width - 1, height - 1))];
-    float2 velocityB = velocityUAV1[clamp(pos + int2(0, 1), 0, int2(width - 1, height - 1))];
-    
-    velocityUAV0[pos] = (velocityL + velocityR + velocityT + velocityB + 4.0 * velocity) / 8.0;
-}
-
-void force_based_erosion(int2 pos)
-{
-    float heightL = GetHeight(pos + int2(-1, 0));
-    float heightR = GetHeight(pos + int2(1, 0));
-    float heightT = GetHeight(pos + int2(0, -1));
-    float heightB = GetHeight(pos + int2(0, 1));
-    float3 normal = normalize(float3((heightL - heightR) * terrainHeightScale, (heightT - heightB) * terrainHeightScale, 2.0 / terrainSize));
-    float tiltAngle = acos(dot(normal, float3(0, 0, 1)));
-    tiltAngle = max(tiltAngle, minTiltAngle);
-    
-    float sediment = sedimentUAV0[pos];
-    float2 velocity = velocityUAV0[pos];
-    
-    float sedimentCapacity = length(velocity) * c_sedimentCapacityConstant * abs(sin(tiltAngle));
-
-    if (sediment > sedimentCapacity)
-    {
-        float sedimentDiff = (sediment - sedimentCapacity) * c_depositionConstant;
-        heightmapUAV[pos] += sedimentDiff;
-        sedimentUAV0[pos] -= sedimentDiff;
-    }
-    else
-    {
-        float sedimentDiff = (sedimentCapacity - sediment) * c_erosionConstant;
-        heightmapUAV[pos] -= sedimentDiff;
-        sedimentUAV0[pos] += sedimentDiff;
-    }
-}
-
-void advect_sediment(int2 pos)
-{    
-    float2 velocity = velocityUAV0[pos];
-    float previousX = pos.x - velocity.x * deltaTime;
-    float previousY = pos.y - velocity.y * deltaTime;
-
-    sedimentUAV1[pos] = BilinearSample(sedimentUAV0, float2(previousX, previousY));
-}
-
-void regolith_flow(int2 pos)
-{
-    float height = GetHeight(pos);
-    float heightL = GetHeight(pos + int2(-1, 0));
-    float heightR = GetHeight(pos + int2(1, 0));
-    float heightT = GetHeight(pos + int2(0, -1));
-    float heightB = GetHeight(pos + int2(0, 1));
-
-    float regolith = GetRegolith(pos);
-    float regolithL = GetRegolith(pos + int2(-1, 0));
-    float regolithR = GetRegolith(pos + int2(1, 0));
-    float regolithT = GetRegolith(pos + int2(0, -1));
-    float regolithB = GetRegolith(pos + int2(0, 1));
-    
-    float deltaL = height + regolith - heightL - regolithL;
-    float deltaR = height + regolith - heightR - regolithR;
-    float deltaT = height + regolith - heightT - regolithT;
-    float deltaB = height + regolith - heightB - regolithB;
-    
-    float staticPressureL = density * gravity * deltaL;
-    float staticPressureR = density * gravity * deltaR;
-    float staticPressureT = density * gravity * deltaT;
-    float staticPressureB = density * gravity * deltaB;
-    
-    float accelerationL = staticPressureL / (density * pipeLength);
-    float accelerationR = staticPressureR / (density * pipeLength);
-    float accelerationT = staticPressureT / (density * pipeLength);
-    float accelerationB = staticPressureB / (density * pipeLength);
-    
-    const float damping = 0.3;
-    float4 flux = regolithFluxUAV[pos] * damping;
-    float fluxL = max(0.0, flux.x + deltaTime * pipeArea * accelerationL);
-    float fluxR = max(0.0, flux.y + deltaTime * pipeArea * accelerationR);
-    float fluxT = max(0.0, flux.z + deltaTime * pipeArea * accelerationT);
-    float fluxB = max(0.0, flux.w + deltaTime * pipeArea * accelerationB);
-    
-    float regolithOutflow = deltaTime * (fluxL + fluxR + fluxT + fluxB);
-    float K = min(1.0, regolith * pipeLength * pipeLength / regolithOutflow);
-    
-    uint w, h;
-    regolithFluxUAV.GetDimensions(w, h);
-    
-    fluxL = pos.x == 0 ? 0 : fluxL;
-    fluxR = pos.x == w - 1 ? 0 : fluxR;
-    fluxT = pos.y == 0 ? 0 : fluxT;
-    fluxB = pos.y == h - 1 ? 0 : fluxB;
-    
-    regolithFluxUAV[pos] = float4(fluxL, fluxR, fluxT, fluxB) * K;
-}
-
-void regolith_update(int2 pos)
-{
-    float4 flux = GetRegolithFlux(pos);
-    float4 fluxL = GetRegolithFlux(pos + int2(-1, 0));
-    float4 fluxR = GetRegolithFlux(pos + int2(1, 0));
-    float4 fluxT = GetRegolithFlux(pos + int2(0, -1));
-    float4 fluxB = GetRegolithFlux(pos + int2(0, 1));
-    
-    float flowIn = fluxL.y + fluxR.x + fluxT.w + fluxB.z;
-    float flowOut = dot(flux, 1.0);
-
-    float regolith = regolithUAV[pos];
-    regolithUAV[pos] = regolith + (flowIn - flowOut) * deltaTime / (pipeLength * pipeLength);
-}
-
-void dissolution_based_erosion(int2 pos)
-{
-    float regolith = regolithUAV[pos];
-    float water = waterUAV[pos];
-    
-    float maxRegolith = min(c_maxRegolith, water);
-    if(regolith > maxRegolith)
-    {
-        float regolithDiff = regolith - maxRegolith;
-        regolithUAV[pos] -= regolithDiff;
-        heightmapUAV[pos] += regolithDiff;
-    }
-    else
-    {
-        float regolithDiff = maxRegolith - regolith;
-        regolithUAV[pos] += regolithDiff;
-        heightmapUAV[pos] -= regolithDiff;
-    }
-}
-
-void smooth_height(int2 pos)
-{    
-    float C = GetHeight(pos);
-    float sediment = sedimentUAV1[pos];
-    float regolith = regolithUAV[pos];
-    
-    if (sediment > 0.0 || regolith > 0.0)
-    {    
-        float T = GetHeight(pos);
-        float TR = GetHeight(pos + int2(1, -1));
-        float R = GetHeight(pos + int2(1, 0));
-        float BR = GetHeight(pos + int2(1, 1));
-        float B = GetHeight(pos + int2(0, 1));
-        float BL = GetHeight(pos + int2(-1, 1));
-        float L = GetHeight(pos + int2(-1, 0));
-        float TL = GetHeight(pos + int2(-1, -1));
-    
-        float deltaT = C - T;
-        float deltaTR = C - TR;
-        float deltaR = C - R;
-        float deltaBR = C - BR;
-        float deltaB = C - B;
-        float deltaBL = C - BL;
-        float deltaL = C - L;
-        float deltaTL = C - TL;
-    
-        float averageHeightDiff = abs((deltaL + deltaR + deltaT + deltaB + deltaTL + deltaTR + deltaBL + deltaBR) / 8.0);
-    
-        float threathhold = lerp(10.0, 200.0, 1.0 - c_smoothness) / 65536.0;
-    
-        if (((abs(deltaR) > threathhold && abs(deltaL) > threathhold) && deltaR * deltaL > 0.0) ||
-            ((abs(deltaT) > threathhold && abs(deltaB) > threathhold) && deltaT * deltaB > 0.0) ||
-            ((abs(deltaTR) > threathhold && abs(deltaBL) > threathhold) && deltaTR * deltaBL > 0.0) ||
-            ((abs(deltaTL) > threathhold && abs(deltaBR) > threathhold) && deltaTL * deltaBR > 0.0))
-        {
-            float curWeight = 5.0;
-            C = (C * curWeight + L + R + T + B + TL + TR + BL + BR) / (curWeight + 8.0);
-        }
-    } 
-    
-    RWTexture2D<float> output = ResourceDescriptorHeap[c_heightmapUAV1];
-    output[pos] = C;
-}
+    float volume; //This will vary in time
+    float sediment; //Fraction of Volume that is Sediment!
+};
 
 [numthreads(8, 8, 1)]
 void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    switch (c_passIndex)
+     //Particle Properties
+    const float dt = 1.2;
+    const float density = 1.0; //This gives varying amounts of inertia and stuff...
+    const float evapRate = 0.001;
+    const float depositionRate = 0.1;
+    const float minVol = 0.01;
+    const float friction = 0.05;
+    
+    uint width, height;
+    heightmapUAV.GetDimensions(width, height);
+    
+    PRNG rng = PRNG::Create(dispatchThreadID.xy, uint2(width, height));
+    
+    Particle drop;
+    drop.pos = float2(rng.RandomFloat() * width, rng.RandomFloat() * height);
+    drop.speed = 0.0;
+    drop.volume = 1.0;
+    drop.sediment = 0.0;
+
+    //As long as the droplet exists...
+    while (drop.volume > minVol)
     {
-        case 0:
-            rain(dispatchThreadID.xy);
+
+        int2 ipos = drop.pos; //Floored Droplet Initial Position
+        float3 n = surfaceNormal(ipos.x, ipos.y); //Surface Normal at Position
+
+        //Accelerate particle using newtonian mechanics using the surface normal.
+        drop.speed += dt * float2(n.x, n.z) / (drop.volume * density); //F = ma, so a = F/m
+        drop.pos += dt * drop.speed;
+        drop.speed *= (1.0 - dt * friction); //Friction Factor
+
+        /*
+        Note: For multiplied factors (e.g. friction, evaporation)
+        time-scaling is correctly implemented like above.
+        */
+
+        //Check if Particle is still in-bounds
+        if (!all(drop.pos >=  0) ||
+            !all(drop.pos < int2(width, height)))
+        {
             break;
-        case 1:
-            flow(dispatchThreadID.xy);
-            break;
-        case 2:
-            update_water(dispatchThreadID.xy);
-            break;
-        case 3:
-            diffuse_velocity0(dispatchThreadID.xy);
-            break;
-        case 4:
-            diffuse_velocity1(dispatchThreadID.xy);
-            break;
-        case 5:
-            force_based_erosion(dispatchThreadID.xy);
-            break;
-        case 6:
-            advect_sediment(dispatchThreadID.xy);
-            break;
-        case 7:
-            regolith_flow(dispatchThreadID.xy);
-            break;
-        case 8:
-            regolith_update(dispatchThreadID.xy);
-            break;
-        case 9:
-            dissolution_based_erosion(dispatchThreadID.xy);
-            break;
-        case 10:
-            evaporation(dispatchThreadID.xy);
-            break;
-        case 11:
-            smooth_height(dispatchThreadID.xy);
-            break;
-        default:
-            break;
+        }
+
+        //Compute sediment capacity difference
+        float maxsediment = drop.volume * length(drop.speed) * (heightmapUAV[int2(ipos.x, ipos.y)] - heightmapUAV[int2(drop.pos.x, drop.pos.y)]);
+        if (maxsediment < 0.0)
+            maxsediment = 0.0;
+        float sdiff = maxsediment - drop.sediment;
+
+        //Act on the Heightmap and Droplet!
+        drop.sediment += dt * depositionRate * sdiff;
+        heightmapUAV[int2(ipos.x, ipos.y)] -= dt * drop.volume * depositionRate * sdiff;
+
+        //Evaporate the Droplet (Note: Proportional to Volume! Better: Use shape factor to make proportional to the area instead.)
+        drop.volume *= (1.0 - dt * evapRate);
     }
 }
