@@ -31,6 +31,7 @@ private:
     eastl::unique_ptr<Texture2D> m_pWater;
     eastl::unique_ptr<Texture2D> m_pFlux;
     eastl::unique_ptr<Texture2D> m_pVelocity;
+    eastl::unique_ptr<Texture2D> m_pSoilFlux;
    
     IGfxPipelineState* m_pHeightmapPSO = nullptr;
     IGfxPipelineState* m_pErosionPSO = nullptr;

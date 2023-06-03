@@ -13,13 +13,17 @@ cbuffer CB1 : register(b1)
     
     uint c_fluxUAV;
     uint c_velocityUAV;
-    uint c_bRain;    
+    uint c_soilFluxUAV;
     float c_rainRate;
     
     float c_evaporationRate;
     float c_erosionConstant;
     float c_depositionConstant;
     float c_sedimentCapacityConstant;
+    
+    float c_thermalErosionConstant;
+    float c_talusAngleTan;
+    float c_talusAngleBias;
 };
 
 #ifndef __cplusplus

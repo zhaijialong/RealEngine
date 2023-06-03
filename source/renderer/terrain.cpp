@@ -30,6 +30,7 @@ Terrain::Terrain(Renderer* pRenderer)
     m_pVelocity.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RG16F, GfxTextureUsageUnorderedAccess, "Velocity"));
     m_pSediment0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment0"));
     m_pSediment1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment1"));
+    m_pSoilFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA32UI, GfxTextureUsageUnorderedAccess, "SoilFlux"));
 
     GfxBufferDesc bufferDesc;
     bufferDesc.size = m_pHeightmap->GetTexture()->GetRowPitch(0) * size;
@@ -138,18 +139,21 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
 
 void Terrain::Erosion(IGfxCommandList* pCommandList)
 {
-    static bool bRain = false;
+    static bool bErosion = false;
 
     static float rainRate = 0.0001;
     static float evaporationRate = 0.05;
     static float erosionConstant = 0.3f;
     static float depositionConstant = 0.05f;
     static float sedimentCapacityConstant = 0.00005f;
+    static float thermalErosionConstant = 0.3f;
+    static float talusAngleTan = tan(degree_to_radian(30.0f));
+    static float talusAngleBias = 0.1f;
 
     ImGui::Separator();
-    if (ImGui::Checkbox("Rain##Terrain", &bRain))
+    if (ImGui::Checkbox("Enable Erosion##Terrain", &bErosion))
     {
-        if (!bRain)
+        if (!bErosion)
         {
             Clear(pCommandList);
         }
@@ -159,45 +163,56 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     ImGui::SliderFloat("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.00000, 0.0001, "%.5f");
+    ImGui::SliderFloat("Thermal Erosion##Terrain", &thermalErosionConstant, 0.0, 5.0, "%.2f");
+    ImGui::SliderFloat("Talus Angle Tan##Terrain", &talusAngleTan, 0.0, 1.0, "%.2f");
+    ImGui::SliderFloat("Talus Angle Bias##Terrain", &talusAngleBias, 0.0, 0.3, "%.2f");
 
-    pCommandList->SetPipelineState(m_pErosionPSO);
-
-    ErosionConstants cb;
-    cb.c_heightmapUAV = m_pHeightmap->GetUAV()->GetHeapIndex();
-    cb.c_sedimentUAV0 = m_pSediment0->GetUAV()->GetHeapIndex();
-    cb.c_sedimentUAV1 = m_pSediment1->GetUAV()->GetHeapIndex();
-    cb.c_waterUAV = m_pWater->GetUAV()->GetHeapIndex();
-    cb.c_fluxUAV = m_pFlux->GetUAV()->GetHeapIndex();
-    cb.c_velocityUAV = m_pVelocity->GetUAV()->GetHeapIndex();
-    cb.c_bRain = bRain;
-    cb.c_rainRate = rainRate;
-    cb.c_evaporationRate = evaporationRate;
-    cb.c_erosionConstant = erosionConstant;
-    cb.c_depositionConstant = depositionConstant;
-    cb.c_sedimentCapacityConstant = sedimentCapacityConstant;
-        
-    pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
-
-    uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
-    uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
-
-    const char* pass_names[] =
+    if (bErosion)
     {
-        "rain",
-        "flow",
-        "update_water",
-        "force_based_erosion",
-        "advect_sediment",
-        "evaporation",
-    };
+        pCommandList->SetPipelineState(m_pErosionPSO);
 
-    for (uint32_t i = 0; i < 6; ++i)
-    {
-        pCommandList->BeginEvent(pass_names[i]);
-        pCommandList->SetComputeConstants(0, &i, sizeof(uint32_t));
-        pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
-        pCommandList->UavBarrier(nullptr);
-        pCommandList->EndEvent();
+        ErosionConstants cb;
+        cb.c_heightmapUAV = m_pHeightmap->GetUAV()->GetHeapIndex();
+        cb.c_sedimentUAV0 = m_pSediment0->GetUAV()->GetHeapIndex();
+        cb.c_sedimentUAV1 = m_pSediment1->GetUAV()->GetHeapIndex();
+        cb.c_waterUAV = m_pWater->GetUAV()->GetHeapIndex();
+        cb.c_fluxUAV = m_pFlux->GetUAV()->GetHeapIndex();
+        cb.c_velocityUAV = m_pVelocity->GetUAV()->GetHeapIndex();
+        cb.c_soilFluxUAV = m_pSoilFlux->GetUAV()->GetHeapIndex();
+        cb.c_rainRate = rainRate;
+        cb.c_evaporationRate = evaporationRate;
+        cb.c_erosionConstant = erosionConstant;
+        cb.c_depositionConstant = depositionConstant;
+        cb.c_sedimentCapacityConstant = sedimentCapacityConstant;
+        cb.c_thermalErosionConstant = thermalErosionConstant;
+        cb.c_talusAngleTan = talusAngleTan;
+        cb.c_talusAngleBias = talusAngleBias;
+
+        pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
+
+        uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
+        uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
+
+        const char* pass_names[] =
+        {
+            "rain",
+            "flow",
+            "update_water",
+            "thermal_flow",
+            "force_based_erosion",
+            "advect_sediment",
+            "thermal_erosion",
+            "evaporation",
+        };
+
+        for (uint32_t i = 0; i < 8; ++i)
+        {
+            pCommandList->BeginEvent(pass_names[i]);
+            pCommandList->SetComputeConstants(0, &i, sizeof(uint32_t));
+            pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+            pCommandList->UavBarrier(nullptr);
+            pCommandList->EndEvent();
+        }
     }
 }
 
