@@ -10,9 +10,8 @@ cbuffer CB : register(b0)
     uint c_waterTexture;
     uint c_waterFluxTexture;
     uint c_waterVelocityTexture;
+
     uint c_sedimentTexture;
-    uint c_regolithTexture;
-    uint c_regolithFluxTexture;
     uint c_outputTexture;
 }
 
@@ -22,8 +21,6 @@ static Texture2D waterTexture = ResourceDescriptorHeap[c_waterTexture];
 static Texture2D waterFluxTexture = ResourceDescriptorHeap[c_waterFluxTexture];
 static Texture2D waterVelocityTexture = ResourceDescriptorHeap[c_waterVelocityTexture];
 static Texture2D sedimentTexture = ResourceDescriptorHeap[c_sedimentTexture];
-static Texture2D regolithTexture = ResourceDescriptorHeap[c_regolithTexture];
-static Texture2D regolithFluxTexture = ResourceDescriptorHeap[c_regolithFluxTexture];
 static RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 static SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
@@ -202,11 +199,11 @@ void DebugUI(uint2 pos)
         screenPos = float2(0.0, 755.0);
         debug::PrintString(screenPos, float3(1, 1, 1), 's', 'e', 'd', 'i', 'm', 'e', 'n', 't');
                 
-        screenPos = float2(width - 200, 95.0);
-        debug::PrintString(screenPos, float3(1, 1, 1), 'r', 'e', 'g', 'o', 'l', 'i', 't', 'h');
-        screenPos = float2(width - 200, 315.0);
-        debug::PrintString(screenPos, float3(1, 1, 1), 'r', 'e', 'g', 'o', 'l', 'i', 't', 'h');
-        debug::PrintString(screenPos, float3(1, 1, 1), ' ', 'f', 'l', 'u', 'x');
+//        screenPos = float2(width - 200, 95.0);
+//        debug::PrintString(screenPos, float3(1, 1, 1), 'r', 'e', 'g', 'o', 'l', 'i', 't', 'h');
+//        screenPos = float2(width - 200, 315.0);
+//        debug::PrintString(screenPos, float3(1, 1, 1), 'r', 'e', 'g', 'o', 'l', 'i', 't', 'h');
+//        debug::PrintString(screenPos, float3(1, 1, 1), ' ', 'f', 'l', 'u', 'x');
     }
     
     DrawRect(pos, uint4(0, 100, 200, 300), waterTexture, 100.0);
@@ -214,8 +211,8 @@ void DebugUI(uint2 pos)
     DrawRect(pos, uint4(0, 540, 200, 740), waterVelocityTexture, 0.02);
     DrawRect(pos, uint4(0, 760, 200, 960), sedimentTexture, 1000.0);
     
-    DrawRect(pos, uint4(width - 200, 100, width, 300), regolithTexture, 1000.0);
-    DrawRect(pos, uint4(width - 200, 320, width, 520), regolithFluxTexture, 500.0);
+//    DrawRect(pos, uint4(width - 200, 100, width, 300), regolithTexture, 1000.0);
+//    DrawRect(pos, uint4(width - 200, 320, width, 520), regolithFluxTexture, 500.0);
 }
 
 [numthreads(8, 8, 1)]
