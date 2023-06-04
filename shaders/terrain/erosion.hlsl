@@ -15,6 +15,7 @@ static RWTexture2D<float2> velocityUAV = ResourceDescriptorHeap[c_velocityUAV];
 static RWTexture2D<float> sedimentUAV0 = ResourceDescriptorHeap[c_sedimentUAV0];
 static RWTexture2D<float> sedimentUAV1 = ResourceDescriptorHeap[c_sedimentUAV1];
 static RWTexture2D<uint4> soilFluxUAV = ResourceDescriptorHeap[c_soilFluxUAV];
+static RWTexture2D<float> hardnessUAV = ResourceDescriptorHeap[c_hardnessUAV];
 
 float GetHeight(int2 pos)
 {
@@ -47,7 +48,7 @@ float4 GetWaterFlux(int2 pos)
 
 float GetHardness(int2 pos)
 {
-    return 1.0; //todo
+    return hardnessUAV[pos];
 }
 
 template<typename T>
@@ -65,7 +66,9 @@ void rain(uint2 pos)
     uint width, height;
     waterUAV.GetDimensions(width, height);
     
-    PRNG rng = PRNG::Create(pos, uint2(width, height));
+    PRNG rng;
+    rng.seed = pos.x + pos.y * width;
+    
     float water = max(rng.RandomFloat(), 0.2);
 
     waterUAV[pos] += water * c_rainRate * deltaTime;
@@ -143,7 +146,7 @@ void update_water(int2 pos)
     float deltaY = (fluxT.w - flux.z + flux.w - fluxB.z) * 0.5;
 
     float velocityFactor = pipeLength * (waterHeight + newWaterHeight) * 0.5;
-    float2 velocity = (velocityFactor > 1e-4) ? float2(deltaX, deltaY) / velocityFactor : 0.0;
+    float2 velocity = (velocityFactor > 0.00005) ? float2(deltaX, deltaY) / velocityFactor : 0.0;
     
     waterUAV[pos] = newWaterHeight;
     velocityUAV[pos] = velocity;
@@ -161,21 +164,32 @@ void force_based_erosion(int2 pos)
     
     float sediment = sedimentUAV0[pos];
     float2 velocity = velocityUAV[pos];
+    float waterHeight = waterUAV[pos];
     
-    float sedimentCapacity = length(velocity) * c_sedimentCapacityConstant * abs(sin(tiltAngle));
+    const float maxErosionDepth = 0.0001; //todo
+    float lmax = saturate(1 - (maxErosionDepth - waterHeight) / maxErosionDepth);
+    float sedimentCapacity = length(velocity) * c_sedimentCapacityConstant * abs(sin(tiltAngle)) * lmax;
 
     if (sediment > sedimentCapacity)
     {
         float sedimentDiff = (sediment - sedimentCapacity) * c_depositionConstant;
+        sedimentDiff = clamp(sedimentDiff, 0.0, waterHeight);
+
         heightmapUAV[pos] += sedimentDiff;
         sedimentUAV0[pos] -= sedimentDiff;
+        //waterUAV[pos] -= sedimentDiff;
     }
     else
     {
-        float sedimentDiff = (sedimentCapacity - sediment) * c_erosionConstant;
+        float sedimentDiff = (sedimentCapacity - sediment) * c_erosionConstant * GetHardness(pos);
+        
         heightmapUAV[pos] -= sedimentDiff;
         sedimentUAV0[pos] += sedimentDiff;
+        //waterUAV[pos] += sedimentDiff;
     }
+    
+    hardnessUAV[pos] = max(0.1, GetHardness(pos) - c_sedimentSofteningConstant * c_erosionConstant * (sediment - sedimentCapacity));
+
 }
 
 void advect_sediment(int2 pos)

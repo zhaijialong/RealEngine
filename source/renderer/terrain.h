@@ -12,6 +12,7 @@ public:
 
 private:
     void Heightmap(IGfxCommandList* pCommandList);
+    void Hardness(IGfxCommandList* pCommandList);
     void Erosion(IGfxCommandList* pCommandList);
     void Raymarch(IGfxCommandList* pCommandList, RGTexture* output);
 
@@ -32,8 +33,13 @@ private:
     eastl::unique_ptr<Texture2D> m_pFlux;
     eastl::unique_ptr<Texture2D> m_pVelocity;
     eastl::unique_ptr<Texture2D> m_pSoilFlux;
+    eastl::unique_ptr<Texture2D> m_pHardness;
+    eastl::unique_ptr<Texture2D> m_pHardnessBlurTemp;
    
     IGfxPipelineState* m_pHeightmapPSO = nullptr;
     IGfxPipelineState* m_pErosionPSO = nullptr;
     IGfxPipelineState* m_pRaymachPSO = nullptr;
+
+    IGfxPipelineState* m_pHardnessPSO = nullptr;
+    IGfxPipelineState* m_pBlurPSO = nullptr;
 };

@@ -23,6 +23,13 @@ Terrain::Terrain(Renderer* pRenderer)
     desc.cs = pRenderer->GetShader("terrain/erosion.hlsl", "main", "cs_6_6", {});
     m_pErosionPSO = pRenderer->GetPipelineState(desc, "terrain erosion PSO");
 
+    desc.cs = pRenderer->GetShader("terrain/hardness.hlsl", "main", "cs_6_6", {});
+    m_pHardnessPSO = pRenderer->GetPipelineState(desc, "terrain hardness PSO");
+
+    desc.cs = pRenderer->GetShader("terrain/hardness.hlsl", "blur", "cs_6_6", {});
+    m_pBlurPSO = pRenderer->GetPipelineState(desc, "hardness blur PSO");
+
+
     const uint32_t size = 1024;
     m_pHeightmap.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16UNORM, GfxTextureUsageUnorderedAccess, "Heightmap"));
     m_pWater.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Water"));
@@ -31,6 +38,8 @@ Terrain::Terrain(Renderer* pRenderer)
     m_pSediment0.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment0"));
     m_pSediment1.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Sediment1"));
     m_pSoilFlux.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::RGBA32UI, GfxTextureUsageUnorderedAccess, "SoilFlux"));
+    m_pHardness.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "Hardness"));
+    m_pHardnessBlurTemp.reset(pRenderer->CreateTexture2D(size, size, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "HardnessTemp"));
 
     GfxBufferDesc bufferDesc;
     bufferDesc.size = m_pHeightmap->GetTexture()->GetRowPitch(0) * size;
@@ -54,6 +63,7 @@ RGHandle Terrain::Render(RenderGraph* pRenderGraph, RGHandle output)
         {
             ImGui::Begin("Terrain");
             Heightmap(pCommandList);
+            Hardness(pCommandList);
             Erosion(pCommandList);
             Raymarch(pCommandList, pRenderGraph->GetTexture(data.output));
             ImGui::End();
@@ -137,6 +147,60 @@ void Terrain::Heightmap(IGfxCommandList* pCommandList)
     }
 }
 
+void Terrain::Hardness(IGfxCommandList* pCommandList)
+{
+    static bool bGenerateHardness = true;
+    static uint32_t seed = 295678;
+    static float minHardness = 0.2;
+    static float maxHardness = 1.0;
+
+    ImGui::Separator();
+    bGenerateHardness |= ImGui::SliderInt("Hardness Seed##Terrain", (int*)&seed, 0, 1000000);
+    bGenerateHardness |= ImGui::SliderFloat("Hardness Min##Terrain", &minHardness, 0.0, 0.5);
+    bGenerateHardness |= ImGui::SliderFloat("Hardness Max##Terrain", &maxHardness, 0.5, 1.0);
+
+    if (bGenerateHardness)
+    {
+        pCommandList->BeginEvent("hardness");
+        uint32_t width = m_pHeightmap->GetTexture()->GetDesc().width;
+        uint32_t height = m_pHeightmap->GetTexture()->GetDesc().height;
+
+        struct HardnessConstants
+        {
+            uint c_hardnessSeed;
+            uint c_heightmap;
+            uint c_hardnessUAV;
+            float c_minHardness;
+            float c_maxHardness;
+        };
+        HardnessConstants cb;
+        cb.c_hardnessSeed = seed;
+        cb.c_heightmap = m_pHeightmap->GetSRV()->GetHeapIndex();
+        cb.c_hardnessUAV = m_pHardness->GetUAV()->GetHeapIndex();
+        cb.c_minHardness = minHardness;
+        cb.c_maxHardness = maxHardness;
+
+        pCommandList->SetPipelineState(m_pHardnessPSO);
+        pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
+        pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+        pCommandList->UavBarrier(nullptr);
+
+        pCommandList->SetPipelineState(m_pBlurPSO);
+        uint32_t cb1[] = { m_pHardness->GetSRV()->GetHeapIndex(), m_pHardnessBlurTemp->GetUAV()->GetHeapIndex(), 1 };
+        pCommandList->SetComputeConstants(0, cb1, sizeof(cb1));
+        pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+        pCommandList->UavBarrier(nullptr);
+
+        uint32_t cb2[] = { m_pHardnessBlurTemp->GetSRV()->GetHeapIndex(), m_pHardness->GetUAV()->GetHeapIndex(), 0 };
+        pCommandList->SetComputeConstants(0, cb2, sizeof(cb2));
+        pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+        pCommandList->UavBarrier(nullptr);
+
+        bGenerateHardness = false;
+        pCommandList->EndEvent();
+    }
+}
+
 void Terrain::Erosion(IGfxCommandList* pCommandList)
 {
     static bool bErosion = false;
@@ -146,6 +210,7 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     static float erosionConstant = 0.3f;
     static float depositionConstant = 0.05f;
     static float sedimentCapacityConstant = 0.00005f;
+    static float sedimentSofteningConstant = 0.01f;
     static float thermalErosionConstant = 0.3f;
     static float talusAngleTan = tan(degree_to_radian(30.0f));
     static float talusAngleBias = 0.1f;
@@ -163,6 +228,7 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
     ImGui::SliderFloat("Erosion##Terrain", (float*)&erosionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Deposition##Terrain", &depositionConstant, 0.001, 0.5, "%.2f");
     ImGui::SliderFloat("Sediment Capacity##Terrain", &sedimentCapacityConstant, 0.00000, 0.0001, "%.5f");
+    ImGui::SliderFloat("Sediment Softening##Terrain", &sedimentSofteningConstant, 0.0, 0.03, "%.4f");
     ImGui::SliderFloat("Thermal Erosion##Terrain", &thermalErosionConstant, 0.0, 5.0, "%.2f");
     ImGui::SliderFloat("Talus Angle Tan##Terrain", &talusAngleTan, 0.0, 1.0, "%.2f");
     ImGui::SliderFloat("Talus Angle Bias##Terrain", &talusAngleBias, 0.0, 0.3, "%.2f");
@@ -179,11 +245,13 @@ void Terrain::Erosion(IGfxCommandList* pCommandList)
         cb.c_fluxUAV = m_pFlux->GetUAV()->GetHeapIndex();
         cb.c_velocityUAV = m_pVelocity->GetUAV()->GetHeapIndex();
         cb.c_soilFluxUAV = m_pSoilFlux->GetUAV()->GetHeapIndex();
+        cb.c_hardnessUAV = m_pHardness->GetUAV()->GetHeapIndex();
         cb.c_rainRate = rainRate;
         cb.c_evaporationRate = evaporationRate;
         cb.c_erosionConstant = erosionConstant;
         cb.c_depositionConstant = depositionConstant;
         cb.c_sedimentCapacityConstant = sedimentCapacityConstant;
+        cb.c_sedimentSofteningConstant = sedimentSofteningConstant;
         cb.c_thermalErosionConstant = thermalErosionConstant;
         cb.c_talusAngleTan = talusAngleTan;
         cb.c_talusAngleBias = talusAngleBias;
