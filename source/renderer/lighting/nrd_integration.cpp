@@ -134,7 +134,7 @@ NRDIntegration::~NRDIntegration()
     Destroy();
 }
 
-bool NRDIntegration::Initialize(const nrd::MethodDesc& method)
+bool NRDIntegration::Initialize(const nrd::InstanceCreationDesc& desc)
 {
     const nrd::LibraryDesc& libraryDesc = nrd::GetLibraryDesc();
     if (libraryDesc.versionMajor != NRD_VERSION_MAJOR || libraryDesc.versionMinor != NRD_VERSION_MINOR)
@@ -142,31 +142,7 @@ bool NRDIntegration::Initialize(const nrd::MethodDesc& method)
         return false;
     }
 
-    nrd::DenoiserCreationDesc denoiserCreationDesc = {};
-    denoiserCreationDesc.memoryAllocatorInterface.Allocate = [](void* userArg, size_t size, size_t alignment) { return RE_ALLOC(size, alignment); };
-    denoiserCreationDesc.memoryAllocatorInterface.Reallocate = [](void* userArg, void* memory, size_t size, size_t alignment) { return RE_REALLOC(memory, size); };
-    denoiserCreationDesc.memoryAllocatorInterface.Free = [](void* userArg, void* memory) { RE_FREE(memory); };
-    denoiserCreationDesc.requestedMethods = &method;
-    denoiserCreationDesc.requestedMethodsNum = 1;
-
-    for (uint32_t i = 0; i < denoiserCreationDesc.requestedMethodsNum; i++)
-    {
-        uint32_t j = 0;
-        for (; j < libraryDesc.supportedMethodsNum; j++)
-        {
-            if (libraryDesc.supportedMethods[j] == denoiserCreationDesc.requestedMethods[i].method)
-            {
-                break;
-            }
-        }
-
-        if (j == libraryDesc.supportedMethodsNum)
-        {
-            return false;
-        }
-    }
-
-    if (nrd::CreateDenoiser(denoiserCreationDesc, m_pDenoiser) != nrd::Result::SUCCESS)
+    if (nrd::CreateInstance(desc, m_pInstance) != nrd::Result::SUCCESS)
     {
         return false;
     }
@@ -185,26 +161,34 @@ void NRDIntegration::Destroy()
     m_samplers.clear();
     m_textures.clear();
 
-    if (m_pDenoiser)
+    if (m_pInstance)
     {
-        nrd::DestroyDenoiser(*m_pDenoiser);
-        m_pDenoiser = nullptr;
+        nrd::DestroyInstance(*m_pInstance);
+        m_pInstance = nullptr;
     }
 }
 
-bool NRDIntegration::SetMethodSettings(nrd::Method method, const void* methodSettings)
+bool NRDIntegration::SetCommonSettings(const nrd::CommonSettings& commonSettings)
 {
-    nrd::Result result = nrd::SetMethodSettings(*m_pDenoiser, method, methodSettings);
+    nrd::Result result = nrd::SetCommonSettings(*m_pInstance, commonSettings);
     RE_ASSERT(result == nrd::Result::SUCCESS);
 
     return result == nrd::Result::SUCCESS;
 }
 
-void NRDIntegration::Denoise(IGfxCommandList* pCommandList, const nrd::CommonSettings& commonSettings, NRDUserPool& userPool)
+bool NRDIntegration::SetDenoiserSettings(nrd::Identifier denoiser, const void* denoiserSettings)
+{
+    nrd::Result result = nrd::SetDenoiserSettings(*m_pInstance, denoiser, denoiserSettings);
+    RE_ASSERT(result == nrd::Result::SUCCESS);
+
+    return result == nrd::Result::SUCCESS;
+}
+
+void NRDIntegration::Denoise(IGfxCommandList* pCommandList, nrd::Identifier denoiser, NRDUserPool& userPool)
 {
     const nrd::DispatchDesc* dispatchDescs = nullptr;
     uint32_t dispatchDescNum = 0;
-    nrd::GetComputeDispatches(*m_pDenoiser, commonSettings, dispatchDescs, dispatchDescNum);
+    nrd::GetComputeDispatches(*m_pInstance, &denoiser, 1, dispatchDescs, dispatchDescNum);
 
     for (uint32_t i = 0; i < dispatchDescNum; i++)
     {
@@ -217,11 +201,11 @@ void NRDIntegration::Denoise(IGfxCommandList* pCommandList, const nrd::CommonSet
 void NRDIntegration::CreatePipelines()
 {
     IGfxDevice* device = m_pRenderer->GetDevice();
-    const nrd::DenoiserDesc& denoiserDesc = nrd::GetDenoiserDesc(*m_pDenoiser);
+    const nrd::InstanceDesc& instanceDesc = nrd::GetInstanceDesc(*m_pInstance);
 
-    for (uint32_t i = 0; i < denoiserDesc.pipelinesNum; i++)
+    for (uint32_t i = 0; i < instanceDesc.pipelinesNum; i++)
     {
-        const nrd::PipelineDesc& nrdPipelineDesc = denoiserDesc.pipelines[i];
+        const nrd::PipelineDesc& nrdPipelineDesc = instanceDesc.pipelines[i];
         const nrd::ComputeShaderDesc& nrdComputeShader = nrdPipelineDesc.computeShaderDXIL; //todo : supports spirv when we have a vulkan backend
 
         GfxShaderDesc shaderDesc;
@@ -241,23 +225,23 @@ void NRDIntegration::CreatePipelines()
 void NRDIntegration::CreateTextures()
 {
     IGfxDevice* device = m_pRenderer->GetDevice();
-    const nrd::DenoiserDesc& denoiserDesc = nrd::GetDenoiserDesc(*m_pDenoiser);
+    const nrd::InstanceDesc& instanceDesc = nrd::GetInstanceDesc(*m_pInstance);
 
-    const uint32_t poolSize = denoiserDesc.permanentPoolSize + denoiserDesc.transientPoolSize;
+    const uint32_t poolSize = instanceDesc.permanentPoolSize + instanceDesc.transientPoolSize;
     for (uint32_t i = 0; i < poolSize; i++)
     {
-        const nrd::TextureDesc& nrdTextureDesc = (i < denoiserDesc.permanentPoolSize) ? denoiserDesc.permanentPool[i] : denoiserDesc.transientPool[i - denoiserDesc.permanentPoolSize];
+        const nrd::TextureDesc& nrdTextureDesc = (i < instanceDesc.permanentPoolSize) ? instanceDesc.permanentPool[i] : instanceDesc.transientPool[i - instanceDesc.permanentPoolSize];
 
         GfxFormat format = GetFormat(nrdTextureDesc.format);
 
         eastl::string name;
-        if (i < denoiserDesc.permanentPoolSize)
+        if (i < instanceDesc.permanentPoolSize)
         {
             name = fmt::format("NRD::PermamentPool{}", i).c_str();
         }
         else
         {
-            name = fmt::format("NRD::TransientPool{}", i - denoiserDesc.permanentPoolSize).c_str();
+            name = fmt::format("NRD::TransientPool{}", i - instanceDesc.permanentPoolSize).c_str();
         }
 
         NRDPoolTexture texture;
@@ -274,11 +258,11 @@ void NRDIntegration::CreateTextures()
 void NRDIntegration::CreateSamplers()
 {
     IGfxDevice* device = m_pRenderer->GetDevice();
-    const nrd::DenoiserDesc& denoiserDesc = nrd::GetDenoiserDesc(*m_pDenoiser);
+    const nrd::InstanceDesc& instanceDesc = nrd::GetInstanceDesc(*m_pInstance);
 
-    for (uint32_t i = 0; i < denoiserDesc.samplersNum; i++)
+    for (uint32_t i = 0; i < instanceDesc.samplersNum; i++)
     {
-        nrd::Sampler nrdSampler = denoiserDesc.samplers[i];
+        nrd::Sampler nrdSampler = instanceDesc.samplers[i];
 
         GfxSamplerDesc desc;
 
@@ -317,8 +301,8 @@ void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::Dispatch
 {
     GPU_EVENT(pCommandList, dispatchDesc.name);
 
-    const nrd::DenoiserDesc& denoiserDesc = nrd::GetDenoiserDesc(*m_pDenoiser);
-    const nrd::PipelineDesc& pipelineDesc = denoiserDesc.pipelines[dispatchDesc.pipelineIndex];
+    const nrd::InstanceDesc& instanceDesc = nrd::GetInstanceDesc(*m_pInstance);
+    const nrd::PipelineDesc& pipelineDesc = instanceDesc.pipelines[dispatchDesc.pipelineIndex];
 
     IGfxPipelineState* pso = m_pipelines[dispatchDesc.pipelineIndex].get();
     pCommandList->SetPipelineState(pso);
@@ -343,7 +327,7 @@ void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::Dispatch
                 NRDPoolTexture* nrdTexture = nullptr;
                 if (nrdResource.type == nrd::ResourceType::TRANSIENT_POOL)
                 {
-                    nrdTexture = &m_textures[nrdResource.indexInPool + denoiserDesc.permanentPoolSize];
+                    nrdTexture = &m_textures[nrdResource.indexInPool + instanceDesc.permanentPoolSize];
                 }
                 else if (nrdResource.type == nrd::ResourceType::PERMANENT_POOL)
                 {

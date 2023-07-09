@@ -3,8 +3,6 @@
 #include "utils/gui_util.h"
 #include "../renderer.h"
 
-static const nrd::Method NRDMethod = nrd::Method::REBLUR_DIFFUSE_SH;
-
 GIDenoiserNRD::GIDenoiserNRD(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
@@ -191,8 +189,9 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             commonSettings.isMotionVectorInWorldSpace = false;
             commonSettings.denoisingRange = camera->GetZFar();
 
-            m_pReblur->SetMethodSettings(NRDMethod, m_pReblurSettings.get());
-            m_pReblur->Denoise(pCommandList, commonSettings, userPool);
+            m_pReblur->SetCommonSettings(commonSettings);
+            m_pReblur->SetDenoiserSettings(0, m_pReblurSettings.get());
+            m_pReblur->Denoise(pCommandList, 0, userPool);
             m_bHistoryInvalid = false;
 
             m_pRenderer->SetupGlobalConstants(pCommandList);
@@ -228,8 +227,16 @@ void GIDenoiserNRD::CreateReblurDenoiser(uint32_t width, uint32_t height)
     {
         m_pReblur->Destroy();
 
-        nrd::MethodDesc methodDescs = { NRDMethod, (uint16_t)width, (uint16_t)height };
-        m_pReblur->Initialize(methodDescs);
+        nrd::DenoiserDesc reblurDesc = { 0, nrd::Denoiser::REBLUR_DIFFUSE_SH, (uint16_t)width, (uint16_t)height };
+
+        nrd::InstanceCreationDesc desc;
+        desc.memoryAllocatorInterface.Allocate = [](void* userArg, size_t size, size_t alignment) { return RE_ALLOC(size, alignment); };
+        desc.memoryAllocatorInterface.Reallocate = [](void* userArg, void* memory, size_t size, size_t alignment) { return RE_REALLOC(memory, size); };
+        desc.memoryAllocatorInterface.Free = [](void* userArg, void* memory) { RE_FREE(memory); };
+        desc.denoisersNum = 1;
+        desc.denoisers = &reblurDesc;
+
+        m_pReblur->Initialize(desc);
 
         m_bNeedCreateReblur = false;
     }

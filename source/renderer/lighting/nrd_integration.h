@@ -43,11 +43,13 @@ public:
     NRDIntegration(Renderer* pRenderer);
     ~NRDIntegration();
 
-    bool Initialize(const nrd::MethodDesc& method);
+    bool Initialize(const nrd::InstanceCreationDesc& desc);
     void Destroy();
 
-    bool SetMethodSettings(nrd::Method method, const void* methodSettings);
-    void Denoise(IGfxCommandList* pCommandList, const nrd::CommonSettings& commonSettings, NRDUserPool& userPool);
+    bool SetCommonSettings(const nrd::CommonSettings& commonSettings);
+    bool SetDenoiserSettings(nrd::Identifier denoiser, const void* denoiserSettings);
+
+    void Denoise(IGfxCommandList* pCommandList, nrd::Identifier denoiser, NRDUserPool& userPool);
 
 private:
     void CreatePipelines();
@@ -58,7 +60,7 @@ private:
 
 private:
     Renderer* m_pRenderer = nullptr;
-    nrd::Denoiser* m_pDenoiser = nullptr;
+    nrd::Instance* m_pInstance = nullptr;
     eastl::vector<eastl::unique_ptr<IGfxShader>> m_shaders;
     eastl::vector<eastl::unique_ptr<IGfxPipelineState>> m_pipelines;
     eastl::vector<NRDPoolTexture> m_textures;

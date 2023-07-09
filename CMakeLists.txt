@@ -32,6 +32,9 @@ add_subdirectory(${EXTERNAL_ROOT}/JoltPhysics/Build)
 set_target_properties(Jolt PROPERTIES FOLDER External)
 
 # NRD
+set(NRD_EMBEDS_SPIRV_SHADERS OFF)
+set(NRD_EMBEDS_DXIL_SHADERS ON)
+set(NRD_EMBEDS_DXBC_SHADERS OFF)
 set(DXC_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
 set(DXC_SPIRV_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
 set(NRD_SHADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD_Shaders)
