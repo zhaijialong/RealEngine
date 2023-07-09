@@ -48,6 +48,8 @@ set(EXTERNAL_FILES
     ${EXTERNAL_ROOT}/imgui/imstb_truetype.h
     ${EXTERNAL_ROOT}/ImGuizmo/ImGuizmo.cpp
     ${EXTERNAL_ROOT}/ImGuizmo/ImGuizmo.h
+    ${EXTERNAL_ROOT}/lodepng/lodepng.cpp
+    ${EXTERNAL_ROOT}/lodepng/lodepng.h
     ${EXTERNAL_ROOT}/meshoptimizer/allocator.cpp
     ${EXTERNAL_ROOT}/meshoptimizer/clusterizer.cpp
     ${EXTERNAL_ROOT}/meshoptimizer/indexcodec.cpp
