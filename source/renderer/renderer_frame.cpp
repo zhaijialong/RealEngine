@@ -42,7 +42,7 @@ void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
     outDepth = sceneDepthRT;
 
     m_pRenderGraph->Present(outColor, GfxResourceState::ShaderResourcePS);
-    m_pRenderGraph->Present(outDepth, GfxResourceState::DepthStencilReadOnly);
+    m_pRenderGraph->Present(outDepth, GfxResourceState::DepthStencil);
 }
 
 void Renderer::ForwardPass(RGHandle& color, RGHandle& depth)

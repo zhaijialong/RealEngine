@@ -90,9 +90,9 @@ void Engine::Shut()
     m_pTaskScheduler.reset();
 
     MicroProfileShutdown();
-    spdlog::shutdown();
-
     m_pRenderer.reset();
+
+    spdlog::shutdown();
 }
 
 void Engine::Tick()

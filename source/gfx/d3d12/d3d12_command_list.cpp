@@ -74,7 +74,6 @@ bool D3D12CommandList::Create()
         return false;
     }
 
-    m_pCommandList->SetName(string_to_wstring(m_name).c_str());
     m_pCommandList->Close();
 
     return true;
@@ -88,6 +87,7 @@ void D3D12CommandList::ResetAllocator()
 void D3D12CommandList::Begin()
 {
     m_pCommandList->Reset(m_pCommandAllocator, nullptr);
+    m_pCommandList->SetName(string_to_wstring(m_name).c_str());
 
     ClearState();
 }

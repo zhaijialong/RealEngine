@@ -414,7 +414,8 @@ bool D3D12Device::Init()
         m_featureSupport.RenderPassesTier() >= D3D12_RENDER_PASS_TIER_0 &&
         m_featureSupport.MeshShaderTier() >= D3D12_MESH_SHADER_TIER_1 &&
         m_featureSupport.WaveOps() &&
-        m_featureSupport.Native16BitShaderOpsSupported();
+        m_featureSupport.Native16BitShaderOpsSupported() &&
+        m_featureSupport.EnhancedBarriersSupported();
 
     if (!capableDevice)
     {
