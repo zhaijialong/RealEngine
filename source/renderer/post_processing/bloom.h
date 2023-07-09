@@ -28,6 +28,6 @@ private:
     uint2 m_mipSize[7];
 
     bool m_bEnable = true;
-    float m_threshold = 1.0f;
+    float m_threshold = 3.0f;
     float m_intensity = 0.5f;
 };

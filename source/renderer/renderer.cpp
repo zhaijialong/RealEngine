@@ -18,6 +18,9 @@
 #include "utils/profiler.h"
 #include "utils/log.h"
 #include "fmt/format.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
+#include "lodepng/lodepng.h"
 #include "global_constants.hlsli"
 
 Renderer::Renderer()
@@ -1095,4 +1098,58 @@ StagingBufferAllocator* Renderer::GetStagingBufferAllocator() const
     uint32_t frame_index = m_pDevice->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
     StagingBufferAllocator* pAllocator = m_pStagingBufferAllocator[frame_index].get();
     return pAllocator;
+}
+
+void Renderer::SaveTexture(const eastl::string& file, const void* data, uint32_t width, uint32_t height, GfxFormat format)
+{
+    if (strstr(file.c_str(), ".png"))
+    {
+        if (format == GfxFormat::R16UNORM)
+        {
+            lodepng::State state;
+            state.info_raw.bitdepth = 16;
+            state.info_raw.colortype = LCT_GREY;
+            state.info_png.color.bitdepth = 16;
+            state.info_png.color.colortype = LCT_GREY;
+            state.encoder.auto_convert = 0;
+
+            eastl::vector<uint16_t> data_big_endian;
+            data_big_endian.reserve(width * height);
+
+            for (uint32_t i = 0; i < width * height; ++i)
+            {
+                uint16_t x = ((const uint16_t*)data)[i];
+                data_big_endian.push_back(((x & 0x00FF) << 8) | ((x & 0xFF00) >> 8));
+            }
+
+            std::vector<unsigned char> png;
+            lodepng::encode(png, (const unsigned char*)data_big_endian.data(), width, height, state);
+            lodepng::save_file(png, file.c_str());
+        }
+        else
+        {
+            stbi_write_png(file.c_str(), width, height, GetFormatComponentNum(format), data, width * sizeof(uint16_t));
+        }
+    }
+    else if (strstr(file.c_str(), ".bmp"))
+    {
+        stbi_write_bmp(file.c_str(), width, height, GetFormatComponentNum(format), data);
+    }
+    else if (strstr(file.c_str(), ".tga"))
+    {
+        stbi_write_tga(file.c_str(), width, height, GetFormatComponentNum(format), data);
+    }
+    else if (strstr(file.c_str(), ".hdr"))
+    {
+        stbi_write_hdr(file.c_str(), width, height, GetFormatComponentNum(format), (const float*)data);
+    }
+    else if (strstr(file.c_str(), ".jpg"))
+    {
+        stbi_write_jpg(file.c_str(), width, height, GetFormatComponentNum(format), data, 0);
+    }   
+}
+
+void Renderer::SaveTexture(const eastl::string& file, IGfxTexture* texture)
+{
+    //todo
 }

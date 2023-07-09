@@ -18,6 +18,7 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc);
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width);
 uint32_t GetFormatBlockWidth(GfxFormat format);
 uint32_t GetFormatBlockHeight(GfxFormat format);
+uint32_t GetFormatComponentNum(GfxFormat format);
 bool IsDepthFormat(GfxFormat format);
 uint32_t CalcSubresource(const GfxTextureDesc& desc, uint32_t mip, uint32_t slice);
 void DecomposeSubresource(const GfxTextureDesc& desc, uint32_t subresource, uint32_t& mip, uint32_t& slice);

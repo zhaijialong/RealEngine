@@ -181,8 +181,7 @@ bool TextureLoader::Load(const eastl::string& file, bool srgb)
     }
     else
     {
-        bool hdr = file.find(".hdr") != eastl::string::npos;
-        return LoadSTB(srgb, hdr);
+        return LoadSTB(srgb);
     }
 }
 
@@ -211,21 +210,80 @@ bool TextureLoader::LoadDDS(bool srgb)
     return true;
 }
 
-bool TextureLoader::LoadSTB(bool srgb, bool hdr)
+bool TextureLoader::LoadSTB(bool srgb)
 {
     int x, y, comp;
+    stbi_info_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp);
 
-    if (hdr)
+    bool isHDR = stbi_is_hdr_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size());
+    bool is16Bits = stbi_is_16_bit_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size());
+
+    if (isHDR)
     {
-        m_pDecompressedData = stbi_loadf_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, STBI_rgb);
-        m_format = GfxFormat::RGB32F;
-        m_textureSize = x * y * 12;
+        m_pDecompressedData = stbi_loadf_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, 0);
+
+        switch (comp)
+        {
+        case 1:
+            m_format = GfxFormat::R32F;
+            break;
+        case 2:
+            m_format = GfxFormat::RG32F;
+            break;
+        case 3:
+            m_format = GfxFormat::RGB32F;
+            break;
+        case 4:
+            m_format = GfxFormat::RGBA32F;
+            break;
+        default:
+            RE_ASSERT(false);
+            break;
+        }
+    }
+    else if (is16Bits)
+    {
+        int desired_channels = comp == 3 ? 4 : 0;
+        m_pDecompressedData = stbi_load_16_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, desired_channels);
+
+        switch (comp)
+        {
+        case 1:
+            m_format = GfxFormat::R16UNORM;
+            break;
+        case 2:
+            m_format = GfxFormat::RG16UNORM;
+            break;
+        case 3:
+        case 4:
+            m_format = GfxFormat::RGBA16UNORM;
+            break;
+        default:
+            RE_ASSERT(false);
+            break;
+        }
     }
     else
     {
-        m_pDecompressedData = stbi_load_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, STBI_rgb_alpha);
-        m_format = srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM;
-        m_textureSize = x * y * 4;
+        int desired_channels = comp == 3 ? 4 : 0;
+        m_pDecompressedData = stbi_load_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, desired_channels);
+
+        switch (comp)
+        {
+        case 1:
+            m_format = GfxFormat::R8UNORM;
+            break;
+        case 2:
+            m_format = GfxFormat::RG8UNORM;
+            break;
+        case 3:
+        case 4:
+            m_format = srgb ? GfxFormat::RGBA8SRGB : GfxFormat::RGBA8UNORM;
+            break;
+        default:
+            RE_ASSERT(false);
+            break;
+        }
     }
 
     if (m_pDecompressedData == nullptr)
@@ -235,6 +293,7 @@ bool TextureLoader::LoadSTB(bool srgb, bool hdr)
 
     m_width = x;
     m_height = y;
+    m_textureSize = GetFormatRowPitch(m_format, x) * y;
 
     return true;
 }
