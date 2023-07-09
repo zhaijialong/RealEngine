@@ -332,6 +332,7 @@ void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pComm
             desc.depth.stencil_store_op = node->IsCulled() ? GfxRenderPassStoreOp::DontCare : GfxRenderPassStoreOp::Store;
             desc.depth.clear_depth = m_pDepthRT->GetClearDepth();
             desc.depth.clear_stencil = m_pDepthRT->GetClearStencil();
+            desc.depth.read_only = m_pDepthRT->IsReadOnly();
         }
 
         pCommandList->BeginRenderPass(desc);

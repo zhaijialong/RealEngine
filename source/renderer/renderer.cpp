@@ -472,6 +472,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
     render_pass.depth.stencil_load_op = GfxRenderPassLoadOp::DontCare;
     render_pass.depth.store_op = GfxRenderPassStoreOp::DontCare;
     render_pass.depth.stencil_store_op = GfxRenderPassStoreOp::DontCare;
+    render_pass.depth.read_only = true;
     pCommandList->BeginRenderPass(render_pass);
 
     CopyToBackbuffer(pCommandList, color, depth, needUpscaleDepth);

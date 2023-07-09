@@ -98,18 +98,21 @@ public:
         m_stencilLoadOp = stencil_load_op;
         m_clearDepth = clear_depth;
         m_clearStencil = clear_stencil;
+        m_bReadOnly = usage == GfxResourceState::DepthStencilReadOnly ? true : false;
     }
 
     GfxRenderPassLoadOp GetDepthLoadOp() const { return m_depthLoadOp; };
     GfxRenderPassLoadOp GetStencilLoadOp() const { return m_stencilLoadOp; };
     float GetClearDepth() const { return m_clearDepth; }
     uint32_t GetClearStencil() const { return m_clearStencil; };
+    bool IsReadOnly() const { return m_bReadOnly; }
 
 private:
     GfxRenderPassLoadOp m_depthLoadOp;
     GfxRenderPassLoadOp m_stencilLoadOp;
     float m_clearDepth;
     uint32_t m_clearStencil;
+    bool m_bReadOnly;
 };
 
 template<typename T>

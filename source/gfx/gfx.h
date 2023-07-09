@@ -20,6 +20,7 @@ uint32_t GetFormatBlockWidth(GfxFormat format);
 uint32_t GetFormatBlockHeight(GfxFormat format);
 uint32_t GetFormatComponentNum(GfxFormat format);
 bool IsDepthFormat(GfxFormat format);
+bool IsStencilFormat(GfxFormat format);
 uint32_t CalcSubresource(const GfxTextureDesc& desc, uint32_t mip, uint32_t slice);
 void DecomposeSubresource(const GfxTextureDesc& desc, uint32_t subresource, uint32_t& mip, uint32_t& slice);
 

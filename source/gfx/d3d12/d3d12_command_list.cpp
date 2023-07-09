@@ -403,6 +403,7 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 
     D3D12_RENDER_PASS_RENDER_TARGET_DESC rtDesc[8] = {};
     D3D12_RENDER_PASS_DEPTH_STENCIL_DESC dsDesc = {};
+    uint32_t flags = D3D12_RENDER_PASS_FLAG_NONE;
 
     uint32_t width = 0;
     uint32_t height = 0;
@@ -452,24 +453,45 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
         RE_ASSERT(width == render_pass.depth.texture->GetDesc().width);
         RE_ASSERT(height == render_pass.depth.texture->GetDesc().height);
 
-        dsDesc.cpuDescriptor = ((D3D12Texture*)render_pass.depth.texture)->GetDSV(render_pass.depth.mip_slice, render_pass.depth.array_slice);
+        if (render_pass.depth.read_only)
+        {
+            dsDesc.cpuDescriptor = ((D3D12Texture*)render_pass.depth.texture)->GetReadOnlyDSV(render_pass.depth.mip_slice, render_pass.depth.array_slice);
+
+            flags |= D3D12_RENDER_PASS_FLAG_BIND_READ_ONLY_DEPTH;
+            if (IsStencilFormat(render_pass.depth.texture->GetDesc().format))
+            {
+                flags |= D3D12_RENDER_PASS_FLAG_BIND_READ_ONLY_STENCIL;
+            }
+        }
+        else
+        {
+            dsDesc.cpuDescriptor = ((D3D12Texture*)render_pass.depth.texture)->GetDSV(render_pass.depth.mip_slice, render_pass.depth.array_slice);
+        }
+
         dsDesc.DepthBeginningAccess.Type = d3d12_render_pass_loadop(render_pass.depth.load_op);
         dsDesc.DepthBeginningAccess.Clear.ClearValue.Format = dxgi_format(render_pass.depth.texture->GetDesc().format);
         dsDesc.DepthBeginningAccess.Clear.ClearValue.DepthStencil.Depth = render_pass.depth.clear_depth;
         dsDesc.DepthBeginningAccess.Clear.ClearValue.DepthStencil.Stencil = render_pass.depth.clear_stencil;
-
-        dsDesc.StencilBeginningAccess.Type = d3d12_render_pass_loadop(render_pass.depth.stencil_load_op);
-        dsDesc.StencilBeginningAccess.Clear.ClearValue.Format = dxgi_format(render_pass.depth.texture->GetDesc().format);
-        dsDesc.StencilBeginningAccess.Clear.ClearValue.DepthStencil.Depth = render_pass.depth.clear_depth;
-        dsDesc.StencilBeginningAccess.Clear.ClearValue.DepthStencil.Stencil = render_pass.depth.clear_stencil;
-
         dsDesc.DepthEndingAccess.Type = d3d12_render_pass_storeop(render_pass.depth.store_op);
-        dsDesc.StencilEndingAccess.Type = d3d12_render_pass_storeop(render_pass.depth.stencil_store_op);
+
+        if (IsStencilFormat(render_pass.depth.texture->GetDesc().format))
+        {
+            dsDesc.StencilBeginningAccess.Type = d3d12_render_pass_loadop(render_pass.depth.stencil_load_op);
+            dsDesc.StencilBeginningAccess.Clear.ClearValue.Format = dxgi_format(render_pass.depth.texture->GetDesc().format);
+            dsDesc.StencilBeginningAccess.Clear.ClearValue.DepthStencil.Depth = render_pass.depth.clear_depth;
+            dsDesc.StencilBeginningAccess.Clear.ClearValue.DepthStencil.Stencil = render_pass.depth.clear_stencil;
+            dsDesc.StencilEndingAccess.Type = d3d12_render_pass_storeop(render_pass.depth.stencil_store_op);
+        }
+        else
+        {
+            dsDesc.StencilBeginningAccess.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS;
+            dsDesc.StencilEndingAccess.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_NO_ACCESS;
+        }
     }
 
     m_pCommandList->BeginRenderPass(rt_count, rtDesc, 
         render_pass.depth.texture != nullptr ? &dsDesc : nullptr,
-        D3D12_RENDER_PASS_FLAG_NONE);
+        (D3D12_RENDER_PASS_FLAGS)flags);
 
     ++m_commandCount;
 

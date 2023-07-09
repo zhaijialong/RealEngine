@@ -224,6 +224,11 @@ bool IsDepthFormat(GfxFormat format)
     return format == GfxFormat::D32FS8 || format == GfxFormat::D32F || format == GfxFormat::D16;
 }
 
+bool IsStencilFormat(GfxFormat format)
+{
+    return format == GfxFormat::D32FS8;
+}
+
 uint32_t CalcSubresource(const GfxTextureDesc& desc, uint32_t mip, uint32_t slice)
 {
     return mip + desc.mip_levels * slice;

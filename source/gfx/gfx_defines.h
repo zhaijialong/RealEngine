@@ -368,6 +368,7 @@ struct GfxRenderPassDepthAttachment
     GfxRenderPassStoreOp stencil_store_op = GfxRenderPassStoreOp::Store;
     float clear_depth = 0.0f;
     uint32_t clear_stencil = 0;
+    bool read_only = false;
 };
 
 struct GfxRenderPassDesc
