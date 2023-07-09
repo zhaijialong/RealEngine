@@ -21,8 +21,13 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
-extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 700; }
+extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 711; }
 extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
+
+static void __stdcall D3D12MessageCallback(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
+{
+    RE_DEBUG(pDescription);
+}
 
 static IDXGIAdapter1* FindAdapter(IDXGIFactory6* pDXGIFactory, D3D_FEATURE_LEVEL minimumFeatureLevel)
 {
@@ -416,6 +421,17 @@ bool D3D12Device::Init()
         RE_ERROR("the device is not capable of running RealEngine.");
         return false;
     }
+
+#if _DEBUG
+    ID3D12InfoQueue1* pInfoQueue1 = nullptr;
+    m_pDevice->QueryInterface(IID_PPV_ARGS(&pInfoQueue1));
+    if (pInfoQueue1)
+    {
+        DWORD CallbackCookie;
+        pInfoQueue1->RegisterMessageCallback(D3D12MessageCallback, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &CallbackCookie);
+    }
+    SAFE_RELEASE(pInfoQueue1);
+#endif
 
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
