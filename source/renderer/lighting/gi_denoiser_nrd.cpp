@@ -181,9 +181,11 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             memcpy(commonSettings.worldToViewMatrixPrev, &camera->GetPrevViewMatrix(), sizeof(float4x4));
             commonSettings.motionVectorScale[0] = -0.5f;
             commonSettings.motionVectorScale[1] = 0.5f;
-            commonSettings.motionVectorScale[2] = 1.0f;
+            commonSettings.motionVectorScale[2] = 0.0f; //looks like 2.5D MV is broken after NRD 4.2
             commonSettings.cameraJitter[0] = camera->GetJitter().x;
             commonSettings.cameraJitter[1] = camera->GetJitter().y;
+            commonSettings.cameraJitterPrev[0] = camera->GetPrevJitter().x;
+            commonSettings.cameraJitterPrev[1] = camera->GetPrevJitter().y;
             commonSettings.frameIndex = (uint32_t)m_pRenderer->GetFrameID();
             commonSettings.accumulationMode = m_bHistoryInvalid ? nrd::AccumulationMode::RESTART : nrd::AccumulationMode::CONTINUE;
             commonSettings.isMotionVectorInWorldSpace = false;
