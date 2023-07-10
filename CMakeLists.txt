@@ -45,6 +45,10 @@ set_target_properties(NRD_Shaders PROPERTIES FOLDER External)
 set_target_properties(ShaderMake PROPERTIES FOLDER External)
 set_target_properties(ShaderMakeBlob PROPERTIES FOLDER External)
 
+# OffsetAllocator
+add_library(OffsetAllocator ${EXTERNAL_ROOT}/OffsetAllocator/offsetAllocator.cpp ${EXTERNAL_ROOT}/OffsetAllocator/offsetAllocator.hpp)
+set_target_properties(OffsetAllocator PROPERTIES FOLDER External CXX_STANDARD 20)
+
 # RealEngine
 add_executable(RealEngine WIN32 ${ENGINE_SRC_FILES} ${EXTERNAL_FILES} ${SHADER_FILES})
 target_include_directories(RealEngine PUBLIC 
@@ -73,7 +77,7 @@ target_compile_definitions(RealEngine PUBLIC
     _CRT_SECURE_NO_WARNINGS
     NOMINMAX
 )
-target_link_libraries(RealEngine ws2_32 Jolt NRD)
+target_link_libraries(RealEngine ws2_32 Jolt NRD OffsetAllocator)
 
 add_custom_command(
     TARGET RealEngine POST_BUILD

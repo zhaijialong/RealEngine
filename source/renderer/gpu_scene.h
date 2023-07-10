@@ -2,10 +2,10 @@
 
 #include "resource/raw_buffer.h"
 #include "utils/math.h"
+#include "OffsetAllocator/offsetAllocator.hpp"
 #include "gpu_scene.hlsli"
 
 class Renderer;
-namespace D3D12MA { class VirtualBlock; }
 
 class GpuScene
 {
@@ -13,11 +13,11 @@ public:
     GpuScene(Renderer* pRenderer);
     ~GpuScene();
 
-    uint32_t AllocateStaticBuffer(uint32_t size, uint32_t alignment);
-    void FreeStaticBuffer(uint32_t address);
+    OffsetAllocator::Allocation AllocateStaticBuffer(uint32_t size);
+    void FreeStaticBuffer(OffsetAllocator::Allocation allocation);
 
-    uint32_t AllocateAnimationBuffer(uint32_t size, uint32_t alignment);
-    void FreeAnimationBuffer(uint32_t address);
+    OffsetAllocator::Allocation AllocateAnimationBuffer(uint32_t size);
+    void FreeAnimationBuffer(OffsetAllocator::Allocation allocation);
 
     uint32_t AllocateConstantBuffer(uint32_t size);
 
@@ -52,10 +52,10 @@ private:
     uint32_t m_instanceDataAddress = 0;
 
     eastl::unique_ptr<RawBuffer> m_pSceneStaticBuffer;
-    D3D12MA::VirtualBlock* m_pSceneStaticBufferAllocator = nullptr;
+    eastl::unique_ptr<OffsetAllocator::Allocator> m_pSceneStaticBufferAllocator;
 
     eastl::unique_ptr<RawBuffer> m_pSceneAnimationBuffer;
-    D3D12MA::VirtualBlock* m_pSceneAnimationBufferAllocator = nullptr;
+    eastl::unique_ptr<OffsetAllocator::Allocator> m_pSceneAnimationBufferAllocator;
 
     eastl::unique_ptr<RawBuffer> m_pConstantBuffer[GFX_MAX_INFLIGHT_FRAMES]; //todo : change to gpu memory, and only update dirty regions
     uint32_t m_nConstantBufferOffset = 0;

@@ -946,21 +946,21 @@ IGfxBuffer* Renderer::GetSceneStaticBuffer() const
     return m_pGpuScene->GetSceneStaticBuffer();
 }
 
-uint32_t Renderer::AllocateSceneStaticBuffer(const void* data, uint32_t size, uint32_t alignment)
+OffsetAllocator::Allocation Renderer::AllocateSceneStaticBuffer(const void* data, uint32_t size)
 {
-    uint32_t address = m_pGpuScene->AllocateStaticBuffer(size, alignment);
+    OffsetAllocator::Allocation allocation = m_pGpuScene->AllocateStaticBuffer(size);
 
     if (data)
     {
-        UploadBuffer(m_pGpuScene->GetSceneStaticBuffer(), address, data, size);
+        UploadBuffer(m_pGpuScene->GetSceneStaticBuffer(), allocation.offset, data, size);
     }
 
-    return address;
+    return allocation;
 }
 
-void Renderer::FreeSceneStaticBuffer(uint32_t address)
+void Renderer::FreeSceneStaticBuffer(OffsetAllocator::Allocation allocation)
 {
-    m_pGpuScene->FreeStaticBuffer(address);
+    m_pGpuScene->FreeStaticBuffer(allocation);
 }
 
 IGfxBuffer* Renderer::GetSceneAnimationBuffer() const
@@ -968,14 +968,14 @@ IGfxBuffer* Renderer::GetSceneAnimationBuffer() const
     return m_pGpuScene->GetSceneAnimationBuffer();
 }
 
-uint32_t Renderer::AllocateSceneAnimationBuffer(uint32_t size, uint32_t alignment)
+OffsetAllocator::Allocation Renderer::AllocateSceneAnimationBuffer(uint32_t size)
 {
-    return m_pGpuScene->AllocateAnimationBuffer(size, alignment);
+    return m_pGpuScene->AllocateAnimationBuffer(size);
 }
 
-void Renderer::FreeSceneAnimationBuffer(uint32_t address)
+void Renderer::FreeSceneAnimationBuffer(OffsetAllocator::Allocation allocation)
 {
-    m_pGpuScene->FreeAnimationBuffer(address);
+    m_pGpuScene->FreeAnimationBuffer(allocation);
 }
 
 uint32_t Renderer::AllocateSceneConstant(const void* data, uint32_t size)

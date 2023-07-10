@@ -14,21 +14,21 @@ struct SkeletalMeshData
     eastl::unique_ptr<MeshMaterial> material;
     eastl::unique_ptr<IGfxRayTracingBLAS> blas;
 
-    uint32_t uvBufferAddress = -1;
-    uint32_t jointIDBufferAddress = -1;
-    uint32_t jointWeightBufferAddress = -1;
+    OffsetAllocator::Allocation uvBuffer;
+    OffsetAllocator::Allocation jointIDBuffer;
+    OffsetAllocator::Allocation jointWeightBuffer;
 
-    uint32_t staticPosBufferAddress = -1;
-    uint32_t staticNormalBufferAddress = -1;
-    uint32_t staticTangentBufferAddress = -1;
+    OffsetAllocator::Allocation staticPosBuffer;
+    OffsetAllocator::Allocation staticNormalBuffer;
+    OffsetAllocator::Allocation staticTangentBuffer;
 
-    uint32_t animPosBufferAddress = -1;
-    uint32_t animNormalBufferAddress = -1;
-    uint32_t animTangentBufferAddress = -1;
+    OffsetAllocator::Allocation animPosBuffer;
+    OffsetAllocator::Allocation animNormalBuffer;
+    OffsetAllocator::Allocation animTangentBuffer;
 
-    uint32_t prevAnimPosBufferAddress = -1;
+    OffsetAllocator::Allocation prevAnimPosBuffer;
 
-    uint32_t indexBufferAddress = -1;
+    OffsetAllocator::Allocation indexBuffer;
     GfxFormat indexBufferFormat;
     uint32_t indexCount = 0;
     uint32_t vertexCount = 0;

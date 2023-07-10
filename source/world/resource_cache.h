@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/resource/texture_2d.h"
+#include "renderer/renderer.h"
 #include "EASTL/hash_map.h"
 
 class ResourceCache
@@ -11,8 +11,8 @@ public:
     Texture2D* GetTexture2D(const eastl::string& file, bool srgb = true);
     void ReleaseTexture2D(Texture2D* texture);
 
-    uint32_t GetSceneBuffer(const eastl::string& name, const void* data, uint32_t size);
-    void RelaseSceneBuffer(uint32_t address);
+    OffsetAllocator::Allocation GetSceneBuffer(const eastl::string& name, const void* data, uint32_t size);
+    void RelaseSceneBuffer(OffsetAllocator::Allocation allocation);
 
 private:
     struct Resource
@@ -23,7 +23,7 @@ private:
 
     struct SceneBuffer
     {
-        uint32_t address;
+        OffsetAllocator::Allocation allocation;
         uint32_t refCount;
     };
 

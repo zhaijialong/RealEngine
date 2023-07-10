@@ -10,22 +10,22 @@ SkeletalMeshData::~SkeletalMeshData()
 {
     ResourceCache* cache = ResourceCache::GetInstance();
 
-    cache->RelaseSceneBuffer(uvBufferAddress);
-    cache->RelaseSceneBuffer(jointIDBufferAddress);
-    cache->RelaseSceneBuffer(jointWeightBufferAddress);
+    cache->RelaseSceneBuffer(uvBuffer);
+    cache->RelaseSceneBuffer(jointIDBuffer);
+    cache->RelaseSceneBuffer(jointWeightBuffer);
 
-    cache->RelaseSceneBuffer(staticPosBufferAddress);
-    cache->RelaseSceneBuffer(staticNormalBufferAddress);
-    cache->RelaseSceneBuffer(staticTangentBufferAddress);
+    cache->RelaseSceneBuffer(staticPosBuffer);
+    cache->RelaseSceneBuffer(staticNormalBuffer);
+    cache->RelaseSceneBuffer(staticTangentBuffer);
 
-    cache->RelaseSceneBuffer(indexBufferAddress);
+    cache->RelaseSceneBuffer(indexBuffer);
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    pRenderer->FreeSceneAnimationBuffer(animPosBufferAddress);
-    pRenderer->FreeSceneAnimationBuffer(animNormalBufferAddress);
-    pRenderer->FreeSceneAnimationBuffer(animTangentBufferAddress);
+    pRenderer->FreeSceneAnimationBuffer(animPosBuffer);
+    pRenderer->FreeSceneAnimationBuffer(animNormalBuffer);
+    pRenderer->FreeSceneAnimationBuffer(animTangentBuffer);
 
-    pRenderer->FreeSceneAnimationBuffer(prevAnimPosBufferAddress);
+    pRenderer->FreeSceneAnimationBuffer(prevAnimPosBuffer);
 }
 
 SkeletalMesh::SkeletalMesh(const eastl::string& name)
@@ -52,17 +52,17 @@ void SkeletalMesh::Create(SkeletalMeshData* mesh)
 {
     if (mesh->material->IsVertexSkinned())
     {
-        mesh->animPosBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
-        mesh->prevAnimPosBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
+        mesh->animPosBuffer = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
+        mesh->prevAnimPosBuffer = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
 
-        if (mesh->staticNormalBufferAddress != -1)
+        if (mesh->staticNormalBuffer.metadata != OffsetAllocator::Allocation::NO_SPACE)
         {
-            mesh->animNormalBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
+            mesh->animNormalBuffer = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float3) * mesh->vertexCount);
         }
 
-        if (mesh->staticTangentBufferAddress != -1)
+        if (mesh->staticTangentBuffer.metadata != OffsetAllocator::Allocation::NO_SPACE)
         {
-            mesh->animTangentBufferAddress = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float4) * mesh->vertexCount);
+            mesh->animTangentBuffer = m_pRenderer->AllocateSceneAnimationBuffer(sizeof(float4) * mesh->vertexCount);
         }
     }
 
@@ -70,18 +70,18 @@ void SkeletalMesh::Create(SkeletalMeshData* mesh)
     if (mesh->material->IsVertexSkinned())
     {
         geometry.vertex_buffer = m_pRenderer->GetSceneAnimationBuffer();
-        geometry.vertex_buffer_offset = mesh->prevAnimPosBufferAddress;
+        geometry.vertex_buffer_offset = mesh->prevAnimPosBuffer.offset;
     }
     else
     {
         geometry.vertex_buffer = m_pRenderer->GetSceneStaticBuffer();
-        geometry.vertex_buffer_offset = mesh->staticPosBufferAddress;
+        geometry.vertex_buffer_offset = mesh->staticPosBuffer.offset;
     }
     geometry.vertex_count = mesh->vertexCount;
     geometry.vertex_stride = sizeof(float3);
     geometry.vertex_format = GfxFormat::RGB32F;
     geometry.index_buffer = m_pRenderer->GetSceneStaticBuffer();
-    geometry.index_buffer_offset = mesh->indexBufferAddress;
+    geometry.index_buffer_offset = mesh->indexBuffer.offset;
     geometry.index_count = mesh->indexCount;
     geometry.index_format = mesh->indexBufferFormat;
     geometry.opaque = mesh->material->IsAlphaTest() ? false : true; //todo : alpha blend
@@ -174,29 +174,29 @@ void SkeletalMesh::UpdateMeshConstants(SkeletalMeshNode* node)
     {
         SkeletalMeshData* mesh = node->meshes[i].get();
 
-        eastl::swap(mesh->prevAnimPosBufferAddress, mesh->animPosBufferAddress);
+        eastl::swap(mesh->prevAnimPosBuffer, mesh->animPosBuffer);
 
         mesh->material->UpdateConstants();
 
         mesh->instanceData.instanceType = (uint)InstanceType::Model;
-        mesh->instanceData.indexBufferAddress = mesh->indexBufferAddress;
+        mesh->instanceData.indexBufferAddress = mesh->indexBuffer.offset;
         mesh->instanceData.indexStride = mesh->indexBufferFormat == GfxFormat::R32UI ? 4 : 2;
         mesh->instanceData.triangleCount = mesh->indexCount / 3;
 
-        mesh->instanceData.uvBufferAddress = mesh->uvBufferAddress;
+        mesh->instanceData.uvBufferAddress = mesh->uvBuffer.offset;
 
         bool isSkinnedMesh = mesh->material->IsVertexSkinned();
         if (isSkinnedMesh)
         {
-            mesh->instanceData.posBufferAddress = mesh->animPosBufferAddress;
-            mesh->instanceData.normalBufferAddress = mesh->animNormalBufferAddress;
-            mesh->instanceData.tangentBufferAddress = mesh->animTangentBufferAddress;
+            mesh->instanceData.posBufferAddress = mesh->animPosBuffer.offset;
+            mesh->instanceData.normalBufferAddress = mesh->animNormalBuffer.offset;
+            mesh->instanceData.tangentBufferAddress = mesh->animTangentBuffer.offset;
         }
         else
         {
-            mesh->instanceData.posBufferAddress = mesh->staticPosBufferAddress;
-            mesh->instanceData.normalBufferAddress = mesh->staticNormalBufferAddress;
-            mesh->instanceData.tangentBufferAddress = mesh->staticTangentBufferAddress;
+            mesh->instanceData.posBufferAddress = mesh->staticPosBuffer.offset;
+            mesh->instanceData.normalBufferAddress = mesh->staticNormalBuffer.offset;
+            mesh->instanceData.tangentBufferAddress = mesh->staticTangentBuffer.offset;
         }
 
         mesh->instanceData.bVertexAnimation = isSkinnedMesh;
@@ -221,7 +221,7 @@ void SkeletalMesh::UpdateMeshConstants(SkeletalMeshNode* node)
 
         if (mesh->material->IsVertexSkinned())
         {
-            m_pRenderer->UpdateRayTracingBLAS(mesh->blas.get(), m_pRenderer->GetSceneAnimationBuffer(), mesh->animPosBufferAddress);
+            m_pRenderer->UpdateRayTracingBLAS(mesh->blas.get(), m_pRenderer->GetSceneAnimationBuffer(), mesh->animPosBuffer.offset);
         }
     }
 
@@ -274,16 +274,16 @@ void SkeletalMesh::UpdateVertexSkinning(ComputeBatch& batch, const SkeletalMeshD
     uint32_t cb[10] = {
         mesh->vertexCount,
 
-        mesh->staticPosBufferAddress,
-        mesh->staticNormalBufferAddress,
-        mesh->staticTangentBufferAddress,
+        mesh->staticPosBuffer.offset,
+        mesh->staticNormalBuffer.offset,
+        mesh->staticTangentBuffer.offset,
 
-        mesh->animPosBufferAddress,
-        mesh->animNormalBufferAddress,
-        mesh->animTangentBufferAddress,
+        mesh->animPosBuffer.offset,
+        mesh->animNormalBuffer.offset,
+        mesh->animTangentBuffer.offset,
 
-        mesh->jointIDBufferAddress,
-        mesh->jointWeightBufferAddress,
+        mesh->jointIDBuffer.offset,
+        mesh->jointWeightBuffer.offset,
         m_pSkeleton->GetJointMatricesAddress(),
     };
 
@@ -293,13 +293,13 @@ void SkeletalMesh::UpdateVertexSkinning(ComputeBatch& batch, const SkeletalMeshD
 
 void SkeletalMesh::Draw(RenderBatch& batch, const SkeletalMeshData* mesh, IGfxPipelineState* pso)
 {
-    uint32_t root_consts[2] = { mesh->instanceIndex, mesh->prevAnimPosBufferAddress };
+    uint32_t root_consts[2] = { mesh->instanceIndex, mesh->prevAnimPosBuffer.offset };
 
     batch.label = m_name.c_str();
     batch.SetPipelineState(pso);
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
 
-    batch.SetIndexBuffer(m_pRenderer->GetSceneStaticBuffer(), mesh->indexBufferAddress, mesh->indexBufferFormat);
+    batch.SetIndexBuffer(m_pRenderer->GetSceneStaticBuffer(), mesh->indexBuffer.offset, mesh->indexBufferFormat);
     batch.DrawIndexed(mesh->indexCount);
 }
 

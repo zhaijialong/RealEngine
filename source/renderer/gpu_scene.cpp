@@ -1,9 +1,8 @@
 #include "gpu_scene.h"
 #include "renderer.h"
 
-#include "d3d12ma/D3D12MemAlloc.h"
-
 #define MAX_CONSTANT_BUFFER_SIZE (8 * 1024 * 1024)
+#define ALLOCATION_ALIGNMENT (4)
 
 GpuScene::GpuScene(Renderer* pRenderer)
 {
@@ -11,16 +10,11 @@ GpuScene::GpuScene(Renderer* pRenderer)
 
     const uint32_t static_buffer_size = 448 * 1024 * 1024;
     m_pSceneStaticBuffer.reset(pRenderer->CreateRawBuffer(nullptr, static_buffer_size, "GpuScene::m_pSceneStaticBuffer"));
+    m_pSceneStaticBufferAllocator = eastl::make_unique<OffsetAllocator::Allocator>(static_buffer_size);
 
     const uint32_t animation_buffer_size = 32 * 1024 * 1024;
     m_pSceneAnimationBuffer.reset(pRenderer->CreateRawBuffer(nullptr, animation_buffer_size, "GpuScene::m_pSceneAnimationBuffer", GfxMemoryType::GpuOnly, true));
-
-    D3D12MA::VIRTUAL_BLOCK_DESC desc = {};
-    desc.Size = static_buffer_size;
-    D3D12MA::CreateVirtualBlock(&desc, &m_pSceneStaticBufferAllocator);
-
-    desc.Size = animation_buffer_size;
-    D3D12MA::CreateVirtualBlock(&desc, &m_pSceneAnimationBufferAllocator);
+    m_pSceneAnimationBufferAllocator = eastl::make_unique<OffsetAllocator::Allocator>(animation_buffer_size);
 
     for (int i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
@@ -30,58 +24,40 @@ GpuScene::GpuScene(Renderer* pRenderer)
 
 GpuScene::~GpuScene()
 {
-    m_pSceneStaticBufferAllocator->Release();
-    m_pSceneAnimationBufferAllocator->Release();
 }
 
-uint32_t GpuScene::AllocateStaticBuffer(uint32_t size, uint32_t alignment)
+OffsetAllocator::Allocation GpuScene::AllocateStaticBuffer(uint32_t size)
 {
     //todo : resize
 
-    D3D12MA::VIRTUAL_ALLOCATION_DESC desc = {};
-    desc.Size = size;
-    desc.Alignment = alignment;
-
-    uint64_t address;
-    HRESULT hr = m_pSceneStaticBufferAllocator->Allocate(&desc, &address);
-    RE_ASSERT(SUCCEEDED(hr));
-
-    return (uint32_t)address;
+    return m_pSceneStaticBufferAllocator->allocate(RoundUpPow2(size, ALLOCATION_ALIGNMENT));
 }
 
-void GpuScene::FreeStaticBuffer(uint32_t address)
+void GpuScene::FreeStaticBuffer(OffsetAllocator::Allocation allocation)
 {
-    if (address >= m_pSceneStaticBuffer->GetBuffer()->GetDesc().size)
+    if (allocation.offset >= m_pSceneStaticBuffer->GetBuffer()->GetDesc().size)
     {
         return;
     }
 
-    m_pSceneStaticBufferAllocator->FreeAllocation(address);
+    m_pSceneStaticBufferAllocator->free(allocation);
 }
 
-uint32_t GpuScene::AllocateAnimationBuffer(uint32_t size, uint32_t alignment)
+OffsetAllocator::Allocation GpuScene::AllocateAnimationBuffer(uint32_t size)
 {
     //todo : resize
 
-    D3D12MA::VIRTUAL_ALLOCATION_DESC desc = {};
-    desc.Size = size;
-    desc.Alignment = alignment;
-
-    uint64_t address;
-    HRESULT hr = m_pSceneAnimationBufferAllocator->Allocate(&desc, &address);
-    RE_ASSERT(SUCCEEDED(hr));
-
-    return (uint32_t)address;
+    return m_pSceneAnimationBufferAllocator->allocate(RoundUpPow2(size, ALLOCATION_ALIGNMENT));
 }
 
-void GpuScene::FreeAnimationBuffer(uint32_t address)
+void GpuScene::FreeAnimationBuffer(OffsetAllocator::Allocation allocation)
 {
-    if (address >= m_pSceneStaticBuffer->GetBuffer()->GetDesc().size)
+    if (allocation.offset >= m_pSceneStaticBuffer->GetBuffer()->GetDesc().size)
     {
         return;
     }
 
-    m_pSceneAnimationBufferAllocator->FreeAllocation(address);
+    m_pSceneAnimationBufferAllocator->free(allocation);
 }
 
 void GpuScene::Update()
@@ -118,10 +94,9 @@ void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
 uint32_t GpuScene::AllocateConstantBuffer(uint32_t size)
 {
     RE_ASSERT(m_nConstantBufferOffset + size <= MAX_CONSTANT_BUFFER_SIZE);
-    RE_ASSERT(size % 4 == 0);
 
     uint32_t address = m_nConstantBufferOffset;
-    m_nConstantBufferOffset += size;
+    m_nConstantBufferOffset += RoundUpPow2(size, ALLOCATION_ALIGNMENT);
 
     return address;
 }

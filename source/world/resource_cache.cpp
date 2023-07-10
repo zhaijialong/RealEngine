@@ -53,41 +53,42 @@ void ResourceCache::ReleaseTexture2D(Texture2D* texture)
     RE_ASSERT(false);
 }
 
-uint32_t ResourceCache::GetSceneBuffer(const eastl::string& name, const void* data, uint32_t size)
+OffsetAllocator::Allocation ResourceCache::GetSceneBuffer(const eastl::string& name, const void* data, uint32_t size)
 {
     auto iter = m_cachedSceneBuffer.find(name);
     if (iter != m_cachedSceneBuffer.end())
     {
         iter->second.refCount++;
-        return iter->second.address;
+        return iter->second.allocation;
     }
 
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
     SceneBuffer buffer;
     buffer.refCount = 1;
-    buffer.address = pRenderer->AllocateSceneStaticBuffer(data, size);
+    buffer.allocation = pRenderer->AllocateSceneStaticBuffer(data, size);
     m_cachedSceneBuffer.insert(eastl::make_pair(name, buffer));
 
-    return buffer.address;
+    return buffer.allocation;
 }
 
-void ResourceCache::RelaseSceneBuffer(uint32_t address)
+void ResourceCache::RelaseSceneBuffer(OffsetAllocator::Allocation allocation)
 {
-    if (address == -1)
+    if (allocation.metadata == OffsetAllocator::Allocation::NO_SPACE)
     {
         return;
     }
 
     for (auto iter = m_cachedSceneBuffer.begin(); iter != m_cachedSceneBuffer.end(); ++iter)
     {
-        if (iter->second.address == address)
+        if (iter->second.allocation.metadata == allocation.metadata &&
+            iter->second.allocation.offset == allocation.offset)
         {
             iter->second.refCount--;
 
             if (iter->second.refCount == 0)
             {
-                Engine::GetInstance()->GetRenderer()->FreeSceneStaticBuffer(address);
+                Engine::GetInstance()->GetRenderer()->FreeSceneStaticBuffer(allocation);
                 m_cachedSceneBuffer.erase(iter);
             }
 

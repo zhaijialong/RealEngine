@@ -43,17 +43,17 @@ private:
     eastl::unique_ptr<IPhysicsRigidBody> m_pRigidBody;
     eastl::unique_ptr<IPhysicsShape> m_pShape;
 
-    uint32_t m_posBufferAddress = -1;
-    uint32_t m_uvBufferAddress = -1;
-    uint32_t m_normalBufferAddress = -1;
-    uint32_t m_tangentBufferAddress = -1;
+    OffsetAllocator::Allocation m_posBuffer;
+    OffsetAllocator::Allocation m_uvBuffer;
+    OffsetAllocator::Allocation m_normalBuffer;
+    OffsetAllocator::Allocation m_tangentBuffer;
 
-    uint32_t m_meshletBufferAddress = -1;
-    uint32_t m_meshletVerticesBufferAddress = -1;
-    uint32_t m_meshletIndicesBufferAddress = -1;
+    OffsetAllocator::Allocation m_meshletBuffer;
+    OffsetAllocator::Allocation m_meshletVerticesBuffer;
+    OffsetAllocator::Allocation m_meshletIndicesBuffer;
     uint32_t m_nMeshletCount = 0;
 
-    uint32_t m_indexBufferAddress = -1;
+    OffsetAllocator::Allocation m_indexBuffer;
     GfxFormat m_indexBufferFormat;
     uint32_t m_nIndexCount = 0;
     uint32_t m_nVertexCount = 0;

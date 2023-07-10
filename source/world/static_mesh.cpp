@@ -13,16 +13,16 @@ StaticMesh::~StaticMesh()
 {
     ResourceCache* cache = ResourceCache::GetInstance();
 
-    cache->RelaseSceneBuffer(m_posBufferAddress);
-    cache->RelaseSceneBuffer(m_uvBufferAddress);
-    cache->RelaseSceneBuffer(m_normalBufferAddress);
-    cache->RelaseSceneBuffer(m_tangentBufferAddress);
+    cache->RelaseSceneBuffer(m_posBuffer);
+    cache->RelaseSceneBuffer(m_uvBuffer);
+    cache->RelaseSceneBuffer(m_normalBuffer);
+    cache->RelaseSceneBuffer(m_tangentBuffer);
 
-    cache->RelaseSceneBuffer(m_meshletBufferAddress);
-    cache->RelaseSceneBuffer(m_meshletVerticesBufferAddress);
-    cache->RelaseSceneBuffer(m_meshletIndicesBufferAddress);
+    cache->RelaseSceneBuffer(m_meshletBuffer);
+    cache->RelaseSceneBuffer(m_meshletVerticesBuffer);
+    cache->RelaseSceneBuffer(m_meshletIndicesBuffer);
 
-    cache->RelaseSceneBuffer(m_indexBufferAddress);
+    cache->RelaseSceneBuffer(m_indexBuffer);
 
     m_pRigidBody->RemoveFromPhysicsSystem();
 }
@@ -33,12 +33,12 @@ bool StaticMesh::Create()
 
     GfxRayTracingGeometry geometry;
     geometry.vertex_buffer = m_pRenderer->GetSceneStaticBuffer();
-    geometry.vertex_buffer_offset = m_posBufferAddress;
+    geometry.vertex_buffer_offset = m_posBuffer.offset;
     geometry.vertex_count = m_nVertexCount;
     geometry.vertex_stride = sizeof(float3);
     geometry.vertex_format = GfxFormat::RGB32F;
     geometry.index_buffer = m_pRenderer->GetSceneStaticBuffer();
-    geometry.index_buffer_offset = m_indexBufferAddress;
+    geometry.index_buffer_offset = m_indexBuffer.offset;
     geometry.index_count = m_nIndexCount;
     geometry.index_format = m_indexBufferFormat;
     geometry.opaque = m_pMaterial->IsAlphaTest() ? false : true; //todo : alpha blend
@@ -90,19 +90,19 @@ void StaticMesh::UpdateConstants()
     m_pMaterial->UpdateConstants();
 
     m_instanceData.instanceType = (uint)InstanceType::Model;
-    m_instanceData.indexBufferAddress = m_indexBufferAddress;
+    m_instanceData.indexBufferAddress = m_indexBuffer.offset;
     m_instanceData.indexStride = m_indexBufferFormat == GfxFormat::R32UI ? 4 : 2;
     m_instanceData.triangleCount = m_nIndexCount / 3;
 
     m_instanceData.meshletCount = m_nMeshletCount;
-    m_instanceData.meshletBufferAddress = m_meshletBufferAddress;
-    m_instanceData.meshletVerticesBufferAddress = m_meshletVerticesBufferAddress;
-    m_instanceData.meshletIndicesBufferAddress = m_meshletIndicesBufferAddress;
+    m_instanceData.meshletBufferAddress = m_meshletBuffer.offset;
+    m_instanceData.meshletVerticesBufferAddress = m_meshletVerticesBuffer.offset;
+    m_instanceData.meshletIndicesBufferAddress = m_meshletIndicesBuffer.offset;
 
-    m_instanceData.posBufferAddress = m_posBufferAddress;
-    m_instanceData.uvBufferAddress = m_uvBufferAddress;
-    m_instanceData.normalBufferAddress = m_normalBufferAddress;
-    m_instanceData.tangentBufferAddress = m_tangentBufferAddress;
+    m_instanceData.posBufferAddress = m_posBuffer.offset;
+    m_instanceData.uvBufferAddress = m_uvBuffer.offset;
+    m_instanceData.normalBufferAddress = m_normalBuffer.offset;
+    m_instanceData.tangentBufferAddress = m_tangentBuffer.offset;
 
     m_instanceData.bVertexAnimation = false;
     m_instanceData.materialDataAddress = m_pRenderer->AllocateSceneConstant((void*)m_pMaterial->GetConstants(), sizeof(ModelMaterialConstant));
@@ -173,7 +173,7 @@ void StaticMesh::Draw(RenderBatch& batch, IGfxPipelineState* pso)
     batch.SetPipelineState(pso);
     batch.SetConstantBuffer(0, root_consts, sizeof(root_consts));
 
-    batch.SetIndexBuffer(m_pRenderer->GetSceneStaticBuffer(), m_indexBufferAddress, m_indexBufferFormat);
+    batch.SetIndexBuffer(m_pRenderer->GetSceneStaticBuffer(), m_indexBuffer.offset, m_indexBufferFormat);
     batch.DrawIndexed(m_nIndexCount);
 }
 

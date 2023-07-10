@@ -584,7 +584,7 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const e
         indices.data = data;
     }
 
-    mesh->m_indexBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") IB", remapped_indices, (uint32_t)indices.stride * (uint32_t)index_count);
+    mesh->m_indexBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") IB", remapped_indices, (uint32_t)indices.stride * (uint32_t)index_count);
     mesh->m_indexBufferFormat = indices.stride == 4 ? GfxFormat::R32UI : GfxFormat::R16UI;
     mesh->m_nIndexCount = (uint32_t)index_count;
     mesh->m_nVertexCount = (uint32_t)remapped_vertex_count;
@@ -594,7 +594,7 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const e
         switch (vertex_types[i])
         {
         case cgltf_attribute_type_position:
-            mesh->m_posBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") pos", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
+            mesh->m_posBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") pos", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
 
             {
                 IPhysicsSystem* physics = Engine::GetInstance()->GetWorld()->GetPhysicsSystem();
@@ -611,13 +611,13 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const e
             }
             break;
         case cgltf_attribute_type_texcoord:
-            mesh->m_uvBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") UV", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
+            mesh->m_uvBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") UV", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
             break;
         case cgltf_attribute_type_normal:
-            mesh->m_normalBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") normal", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
+            mesh->m_normalBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") normal", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
             break;
         case cgltf_attribute_type_tangent:
-            mesh->m_tangentBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") tangent", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
+            mesh->m_tangentBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") tangent", remapped_vertices[i], (uint32_t)vertex_streams[i].stride * (uint32_t)remapped_vertex_count);
             break;
         default:
             break;
@@ -625,9 +625,9 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const e
     }
 
     mesh->m_nMeshletCount = (uint32_t)meshlet_count;
-    mesh->m_meshletBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet", meshlet_bounds.data(), sizeof(MeshletBound) * (uint32_t)meshlet_bounds.size());
-    mesh->m_meshletVerticesBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet vertices", meshlet_vertices.data(), sizeof(unsigned int) * (uint32_t)meshlet_vertices.size());
-    mesh->m_meshletIndicesBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet indices", meshlet_triangles16.data(), sizeof(unsigned short) * (uint32_t)meshlet_triangles16.size());
+    mesh->m_meshletBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet", meshlet_bounds.data(), sizeof(MeshletBound) * (uint32_t)meshlet_bounds.size());
+    mesh->m_meshletVerticesBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet vertices", meshlet_vertices.data(), sizeof(unsigned int) * (uint32_t)meshlet_vertices.size());
+    mesh->m_meshletIndicesBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") meshlet indices", meshlet_triangles16.data(), sizeof(unsigned short) * (uint32_t)meshlet_triangles16.size());
 
     mesh->Create();
     m_pWorld->AddObject(mesh);
@@ -817,7 +817,7 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
     size_t index_count;
     meshopt_Stream indices = LoadBufferStream(primitive->indices, false, index_count);
 
-    mesh->indexBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") IB", indices.data, (uint32_t)indices.stride * (uint32_t)index_count);
+    mesh->indexBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") IB", indices.data, (uint32_t)indices.stride * (uint32_t)index_count);
     mesh->indexBufferFormat = indices.stride == 4 ? GfxFormat::R32UI : GfxFormat::R16UI;
     mesh->indexCount = (uint32_t)index_count;
 
@@ -830,7 +830,7 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
         {
         case cgltf_attribute_type_position:
             vertices = LoadBufferStream(primitive->attributes[i].data, true, vertex_count);
-            mesh->staticPosBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") pos", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+            mesh->staticPosBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") pos", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
 
             {
                 float3 min = float3(primitive->attributes[i].data->min);
@@ -851,16 +851,16 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
             if (primitive->attributes[i].index == 0)
             {
                 vertices = LoadBufferStream(primitive->attributes[i].data, false, vertex_count);
-                mesh->uvBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") UV", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+                mesh->uvBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") UV", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
             }
             break;
         case cgltf_attribute_type_normal:
             vertices = LoadBufferStream(primitive->attributes[i].data, true, vertex_count);
-            mesh->staticNormalBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") normal", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+            mesh->staticNormalBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") normal", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
             break;
         case cgltf_attribute_type_tangent:
             vertices = LoadBufferStream(primitive->attributes[i].data, false, vertex_count);
-            mesh->staticTangentBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") tangent", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
+            mesh->staticTangentBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") tangent", vertices.data, (uint32_t)vertices.stride * (uint32_t)vertex_count);
             break;
         case cgltf_attribute_type_joints:
         {
@@ -877,7 +877,7 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
                 jointIDs.push_back(ushort4(id[0], id[1], id[2], id[3]));
             }
 
-            mesh->jointIDBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") joint ID", jointIDs.data(), sizeof(ushort4) * (uint32_t)accessor->count);
+            mesh->jointIDBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") joint ID", jointIDs.data(), sizeof(ushort4) * (uint32_t)accessor->count);
             break;
         }
         case cgltf_attribute_type_weights:
@@ -895,7 +895,7 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
                 jointWeights.push_back(float4(weight));
             }
 
-            mesh->jointWeightBufferAddress = cache->GetSceneBuffer("model(" + m_file + " " + name + ") joint weight", jointWeights.data(), sizeof(float4) * (uint32_t)accessor->count);
+            mesh->jointWeightBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") joint weight", jointWeights.data(), sizeof(float4) * (uint32_t)accessor->count);
             break;
         }
         }

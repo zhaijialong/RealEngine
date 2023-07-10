@@ -97,12 +97,12 @@ public:
     void SaveTexture(const eastl::string& file, IGfxTexture* texture);
 
     IGfxBuffer* GetSceneStaticBuffer() const;
-    uint32_t AllocateSceneStaticBuffer(const void* data, uint32_t size, uint32_t alignment = 4);
-    void FreeSceneStaticBuffer(uint32_t address);
+    OffsetAllocator::Allocation AllocateSceneStaticBuffer(const void* data, uint32_t size);
+    void FreeSceneStaticBuffer(OffsetAllocator::Allocation allocation);
 
     IGfxBuffer* GetSceneAnimationBuffer() const;
-    uint32_t AllocateSceneAnimationBuffer(uint32_t size, uint32_t alignment = 4);
-    void FreeSceneAnimationBuffer(uint32_t address);
+    OffsetAllocator::Allocation AllocateSceneAnimationBuffer(uint32_t size);
+    void FreeSceneAnimationBuffer(OffsetAllocator::Allocation allocation);
 
     uint32_t AllocateSceneConstant(const void* data, uint32_t size);
 
