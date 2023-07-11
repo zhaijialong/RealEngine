@@ -232,7 +232,7 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxComm
             }
             m_pendingBLASBuilds.clear();
 
-            pCommandList->UavBarrier(nullptr);
+            pCommandList->GlobalBarrier(GfxAccessMaskAS, GfxAccessMaskAS);
         }
 
         if (!m_pendingBLASUpdates.empty())
@@ -245,7 +245,7 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxComm
             }
             m_pendingBLASUpdates.clear();
 
-            pCommandList->UavBarrier(nullptr);
+            pCommandList->GlobalBarrier(GfxAccessMaskAS, GfxAccessMaskAS);
         }
 
         m_pGpuScene->BuildRayTracingAS(pCommandList);
@@ -449,7 +449,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
     m_pGpuDebugPrint->PrepareForDraw(pCommandList);
     m_pGpuDebugLine->PrepareForDraw(pCommandList);
 
-    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
+    pCommandList->TextureBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxAccessPresent, GfxAccessRTV);
 
     RGTexture* depthRT = m_pRenderGraph->GetTexture(depth);
 
@@ -482,7 +482,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
     Engine::GetInstance()->GetGUI()->Render(pCommandList);
 
     pCommandList->EndRenderPass();
-    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
+    pCommandList->TextureBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxAccessRTV, GfxAccessPresent);
 }
 
 void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RGHandle color, RGHandle depth, bool needUpscaleDepth)

@@ -41,21 +41,21 @@ void GpuDrivenDebugPrint::Clear(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "GpuDrivenDebugPrint clear");
 
-    pCommandList->ResourceBarrier(m_pTextCounterBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::CopyDst);
+    pCommandList->BufferBarrier(m_pTextCounterBuffer->GetBuffer(), GfxAccessComputeSRV | GfxAccessVertexShaderSRV, GfxAccessCopyDst);
 
     //reset count to 0
     pCommandList->WriteBuffer(m_pTextCounterBuffer->GetBuffer(), 0, 0);
 
-    pCommandList->ResourceBarrier(m_pTextCounterBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
-    pCommandList->ResourceBarrier(m_pTextBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
+    pCommandList->BufferBarrier(m_pTextCounterBuffer->GetBuffer(), GfxAccessCopyDst, GfxAccessMaskUAV);
+    pCommandList->BufferBarrier(m_pTextBuffer->GetBuffer(), GfxAccessVertexShaderSRV, GfxAccessMaskUAV);
 }
 
 void GpuDrivenDebugPrint::PrepareForDraw(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "GpuDrivenDebugPrint build command");
 
-    pCommandList->ResourceBarrier(m_pTextCounterBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
-    pCommandList->ResourceBarrier(m_pDrawArugumentsBuffer->GetBuffer(), 0, GfxResourceState::IndirectArg, GfxResourceState::UnorderedAccess);
+    pCommandList->BufferBarrier(m_pTextCounterBuffer->GetBuffer(), GfxAccessMaskUAV, GfxAccessComputeSRV | GfxAccessVertexShaderSRV);
+    pCommandList->BufferBarrier(m_pDrawArugumentsBuffer->GetBuffer(), GfxAccessIndirectArgs, GfxAccessComputeUAV);
 
     pCommandList->SetPipelineState(m_pBuildCommandPSO);
 
@@ -63,8 +63,8 @@ void GpuDrivenDebugPrint::PrepareForDraw(IGfxCommandList* pCommandList)
     pCommandList->SetComputeConstants(0, root_consts, sizeof(root_consts));
     pCommandList->Dispatch(1, 1, 1);
 
-    pCommandList->ResourceBarrier(m_pDrawArugumentsBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::IndirectArg);
-    pCommandList->ResourceBarrier(m_pTextBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
+    pCommandList->BufferBarrier(m_pDrawArugumentsBuffer->GetBuffer(), GfxAccessComputeUAV, GfxAccessIndirectArgs);
+    pCommandList->BufferBarrier(m_pTextBuffer->GetBuffer(), GfxAccessMaskUAV, GfxAccessVertexShaderSRV);
 }
 
 void GpuDrivenDebugPrint::Draw(IGfxCommandList* pCommandList)

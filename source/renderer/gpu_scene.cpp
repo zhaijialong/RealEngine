@@ -86,7 +86,7 @@ void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
     GPU_EVENT(pCommandList, "BuildTLAS");
 
     pCommandList->BuildRayTracingTLAS(m_pSceneTLAS.get(), m_raytracingInstances.data(), (uint32_t)m_raytracingInstances.size());
-    pCommandList->UavBarrier(m_pSceneTLAS.get());
+    pCommandList->GlobalBarrier(GfxAccessMaskAS, GfxAccessMaskSRV);
 
     m_raytracingInstances.clear();
 }
@@ -131,12 +131,12 @@ void GpuScene::ResetFrameData()
 
 void GpuScene::BeginAnimationUpdate(IGfxCommandList* pCommandList)
 {
-    pCommandList->ResourceBarrier(m_pSceneAnimationBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
+    pCommandList->BufferBarrier(m_pSceneAnimationBuffer->GetBuffer(), GfxAccessVertexShaderSRV, GfxAccessComputeUAV);
 }
 
 void GpuScene::EndAnimationUpdate(IGfxCommandList* pCommandList)
 {
-    pCommandList->ResourceBarrier(m_pSceneAnimationBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
+    pCommandList->BufferBarrier(m_pSceneAnimationBuffer->GetBuffer(), GfxAccessComputeUAV, GfxAccessVertexShaderSRV);
 }
 
 IGfxBuffer* GpuScene::GetSceneConstantBuffer() const

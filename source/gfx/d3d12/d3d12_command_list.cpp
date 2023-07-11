@@ -386,7 +386,7 @@ void D3D12CommandList::TextureBarrier(IGfxTexture* texture, uint32_t sub_resourc
     m_textureBarriers.push_back(barrier);
 }
 
-void D3D12CommandList::BufferBarrier(IGfxBuffer* buffer, uint32_t offset, uint32_t size, GfxAccessFlags access_before, GfxAccessFlags access_after)
+void D3D12CommandList::BufferBarrier(IGfxBuffer* buffer, GfxAccessFlags access_before, GfxAccessFlags access_after)
 {
     D3D12_BUFFER_BARRIER barrier = {};
     barrier.SyncBefore = d3d12_barrier_sync(access_before);
@@ -394,8 +394,8 @@ void D3D12CommandList::BufferBarrier(IGfxBuffer* buffer, uint32_t offset, uint32
     barrier.AccessBefore = d3d12_barrier_access(access_before);
     barrier.AccessAfter = d3d12_barrier_access(access_after);
     barrier.pResource = (ID3D12Resource*)buffer->GetHandle();
-    barrier.Offset = offset;
-    barrier.Size = size;
+    barrier.Offset = 0;
+    barrier.Size = UINT64_MAX;
 
     m_bufferBarriers.push_back(barrier);
 }

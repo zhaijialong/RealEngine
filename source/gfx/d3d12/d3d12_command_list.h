@@ -40,7 +40,7 @@ public:
     virtual void UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings) override;
 
     virtual void TextureBarrier(IGfxTexture* texture, uint32_t sub_resource, GfxAccessFlags access_before, GfxAccessFlags access_after) override;
-    virtual void BufferBarrier(IGfxBuffer* buffer, uint32_t offset, uint32_t size, GfxAccessFlags access_before, GfxAccessFlags access_after) override;
+    virtual void BufferBarrier(IGfxBuffer* buffer, GfxAccessFlags access_before, GfxAccessFlags access_after) override;
     virtual void GlobalBarrier(GfxAccessFlags access_before, GfxAccessFlags access_after) override;
     virtual void FlushBarriers() override;
 

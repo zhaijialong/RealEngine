@@ -254,7 +254,7 @@ bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList, uint32_t render
         NVSDK_NGX_Result result = NGX_D3D12_CREATE_DLSS_EXT(d3d12CommandList, 0, 0, &m_dlssFeature, m_ngxParameters, &dlssCreateParams);
         RE_ASSERT(NVSDK_NGX_SUCCEED(result));
 
-        pCommandList->UavBarrier(nullptr);
+        pCommandList->GlobalBarrier(GfxAccessComputeUAV, GfxAccessComputeUAV);
 
         m_needInitializeDlss = false;
     }

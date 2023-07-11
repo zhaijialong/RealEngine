@@ -73,6 +73,7 @@ inline D3D12_BARRIER_ACCESS d3d12_barrier_access(GfxAccessFlags flags)
     if (flags & GfxAccessDSVReadOnly)     access |= D3D12_BARRIER_ACCESS_DEPTH_STENCIL_READ;
     if (flags & GfxAccessMaskSRV)         access |= D3D12_BARRIER_ACCESS_SHADER_RESOURCE;
     if (flags & GfxAccessMaskUAV)         access |= D3D12_BARRIER_ACCESS_UNORDERED_ACCESS;
+    if (flags & GfxAccessClearUAV)        access |= D3D12_BARRIER_ACCESS_UNORDERED_ACCESS;
     if (flags & GfxAccessCopyDst)         access |= D3D12_BARRIER_ACCESS_COPY_DEST;
     if (flags & GfxAccessCopySrc)         access |= D3D12_BARRIER_ACCESS_COPY_SOURCE;
     if (flags & GfxAccessShadingRate)     access |= D3D12_BARRIER_ACCESS_SHADING_RATE_SOURCE;

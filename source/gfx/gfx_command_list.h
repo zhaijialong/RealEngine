@@ -46,7 +46,7 @@ public:
     void AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after) {};
 
     virtual void TextureBarrier(IGfxTexture* texture, uint32_t sub_resource, GfxAccessFlags access_before, GfxAccessFlags access_after) = 0;
-    virtual void BufferBarrier(IGfxBuffer* buffer, uint32_t offset, uint32_t size, GfxAccessFlags access_before, GfxAccessFlags access_after) = 0;
+    virtual void BufferBarrier(IGfxBuffer* buffer, GfxAccessFlags access_before, GfxAccessFlags access_after) = 0;
     virtual void GlobalBarrier(GfxAccessFlags access_before, GfxAccessFlags access_after) = 0;
     virtual void FlushBarriers() = 0;
 
