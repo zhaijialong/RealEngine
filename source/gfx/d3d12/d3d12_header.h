@@ -39,41 +39,66 @@ inline D3D12_HEAP_TYPE d3d12_heap_type(GfxMemoryType memory_type)
     }
 }
 
-inline D3D12_RESOURCE_STATES d3d12_resource_state(GfxResourceState state)
+inline D3D12_BARRIER_SYNC d3d12_barrier_sync(GfxAccessFlags flags)
 {
-    switch (state)
+    D3D12_BARRIER_SYNC sync = D3D12_BARRIER_SYNC_NONE;
+
+    if (flags & GfxAccessPresent)         sync |= D3D12_BARRIER_SYNC_ALL;
+    if (flags & GfxAccessRTV)             sync |= D3D12_BARRIER_SYNC_RENDER_TARGET;
+    if (flags & GfxAccessMaskDSV)         sync |= D3D12_BARRIER_SYNC_DEPTH_STENCIL;
+    if (flags & GfxAccessMaskVS)          sync |= D3D12_BARRIER_SYNC_VERTEX_SHADING;
+    if (flags & GfxAccessMaskPS)          sync |= D3D12_BARRIER_SYNC_PIXEL_SHADING;
+    if (flags & GfxAccessMaskCS)          sync |= D3D12_BARRIER_SYNC_COMPUTE_SHADING;
+    if (flags & GfxAccessClearUAV)        sync |= D3D12_BARRIER_SYNC_CLEAR_UNORDERED_ACCESS_VIEW;
+    if (flags & GfxAccessMaskCopy)        sync |= D3D12_BARRIER_SYNC_COPY;
+    if (flags & GfxAccessShadingRate)     sync |= D3D12_BARRIER_SYNC_PIXEL_SHADING;
+    if (flags & GfxAccessIndexBuffer)     sync |= D3D12_BARRIER_SYNC_INDEX_INPUT;
+    if (flags & GfxAccessIndirectArgs)    sync |= D3D12_BARRIER_SYNC_EXECUTE_INDIRECT;
+    if (flags & GfxAccessMaskAS)          sync |= D3D12_BARRIER_SYNC_BUILD_RAYTRACING_ACCELERATION_STRUCTURE;
+
+    return sync;
+}
+
+inline D3D12_BARRIER_ACCESS d3d12_barrier_access(GfxAccessFlags flags)
+{
+    if (flags & GfxAccessDiscard)
     {
-    case GfxResourceState::Common:
-        return D3D12_RESOURCE_STATE_COMMON;
-    case GfxResourceState::RenderTarget:
-        return D3D12_RESOURCE_STATE_RENDER_TARGET;
-    case GfxResourceState::UnorderedAccess:
-        return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-    case GfxResourceState::DepthStencil:
-        return D3D12_RESOURCE_STATE_DEPTH_WRITE;
-    case GfxResourceState::DepthStencilReadOnly:
-        return D3D12_RESOURCE_STATE_DEPTH_READ;
-    case GfxResourceState::ShaderResourceNonPS:
-        return D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-    case GfxResourceState::ShaderResourcePS:
-        return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-    case GfxResourceState::ShaderResourceAll:
-        return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
-    case GfxResourceState::IndirectArg:
-        return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
-    case GfxResourceState::CopyDst:
-        return D3D12_RESOURCE_STATE_COPY_DEST;
-    case GfxResourceState::CopySrc:
-        return D3D12_RESOURCE_STATE_COPY_SOURCE;
-    case GfxResourceState::ResolveDst:
-        return D3D12_RESOURCE_STATE_RESOLVE_DEST;
-    case GfxResourceState::ResolveSrc:
-        return D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
-    case GfxResourceState::Present:
-        return D3D12_RESOURCE_STATE_PRESENT;
-    default:
-        return D3D12_RESOURCE_STATE_COMMON;
+        return D3D12_BARRIER_ACCESS_NO_ACCESS;
     }
+
+    D3D12_BARRIER_ACCESS access = D3D12_BARRIER_ACCESS_COMMON;
+
+    if (flags & GfxAccessRTV)             access |= D3D12_BARRIER_ACCESS_RENDER_TARGET;
+    if (flags & GfxAccessDSV)             access |= D3D12_BARRIER_ACCESS_DEPTH_STENCIL_WRITE;
+    if (flags & GfxAccessDSVReadOnly)     access |= D3D12_BARRIER_ACCESS_DEPTH_STENCIL_READ;
+    if (flags & GfxAccessMaskSRV)         access |= D3D12_BARRIER_ACCESS_SHADER_RESOURCE;
+    if (flags & GfxAccessMaskUAV)         access |= D3D12_BARRIER_ACCESS_UNORDERED_ACCESS;
+    if (flags & GfxAccessCopyDst)         access |= D3D12_BARRIER_ACCESS_COPY_DEST;
+    if (flags & GfxAccessCopySrc)         access |= D3D12_BARRIER_ACCESS_COPY_SOURCE;
+    if (flags & GfxAccessShadingRate)     access |= D3D12_BARRIER_ACCESS_SHADING_RATE_SOURCE;
+    if (flags & GfxAccessIndexBuffer)     access |= D3D12_BARRIER_ACCESS_INDEX_BUFFER;
+    if (flags & GfxAccessIndirectArgs)    access |= D3D12_BARRIER_ACCESS_INDIRECT_ARGUMENT;
+    if (flags & GfxAccessASRead)          access |= D3D12_BARRIER_ACCESS_RAYTRACING_ACCELERATION_STRUCTURE_READ;
+    if (flags & GfxAccessASWrite)         access |= D3D12_BARRIER_ACCESS_RAYTRACING_ACCELERATION_STRUCTURE_WRITE;    
+
+    return access;
+}
+
+inline D3D12_BARRIER_LAYOUT d3d12_barrier_layout(GfxAccessFlags flags)
+{
+    if (flags & GfxAccessDiscard)         return D3D12_BARRIER_LAYOUT_UNDEFINED;
+    if (flags & GfxAccessPresent)         return D3D12_BARRIER_LAYOUT_PRESENT;
+    if (flags & GfxAccessRTV)             return D3D12_BARRIER_LAYOUT_RENDER_TARGET;
+    if (flags & GfxAccessDSV)             return D3D12_BARRIER_LAYOUT_DEPTH_STENCIL_WRITE;
+    if (flags & GfxAccessDSVReadOnly)     return D3D12_BARRIER_LAYOUT_DEPTH_STENCIL_READ;
+    if (flags & GfxAccessMaskSRV)         return D3D12_BARRIER_LAYOUT_SHADER_RESOURCE;
+    if (flags & GfxAccessMaskUAV)         return D3D12_BARRIER_LAYOUT_UNORDERED_ACCESS;
+    if (flags & GfxAccessCopyDst)         return D3D12_BARRIER_LAYOUT_COPY_DEST;
+    if (flags & GfxAccessCopySrc)         return D3D12_BARRIER_LAYOUT_COPY_SOURCE;
+    if (flags & GfxAccessShadingRate)     return D3D12_BARRIER_LAYOUT_SHADING_RATE_SOURCE;
+
+    RE_ASSERT(false);
+    return D3D12_BARRIER_LAYOUT_UNDEFINED;
 }
 
 inline DXGI_FORMAT dxgi_format(GfxFormat format, bool depth_srv = false, bool uav = false)

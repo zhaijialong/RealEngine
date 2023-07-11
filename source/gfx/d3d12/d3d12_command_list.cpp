@@ -366,35 +366,80 @@ void D3D12CommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, 
         D3D12_TILE_MAPPING_FLAG_NONE);
 }
 
-void D3D12CommandList::ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state)
+void D3D12CommandList::TextureBarrier(IGfxTexture* texture, uint32_t sub_resource, GfxAccessFlags access_before, GfxAccessFlags access_after)
 {
-    D3D12_RESOURCE_BARRIER barrier = {};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Transition.pResource = (ID3D12Resource*)resource->GetHandle();
-    barrier.Transition.Subresource = sub_resource;
-    barrier.Transition.StateBefore = d3d12_resource_state(old_state);
-    barrier.Transition.StateAfter = d3d12_resource_state(new_state);
+    D3D12_TEXTURE_BARRIER barrier = {};
+    barrier.SyncBefore = d3d12_barrier_sync(access_before);
+    barrier.SyncAfter = d3d12_barrier_sync(access_after);
+    barrier.AccessBefore = d3d12_barrier_access(access_before);
+    barrier.AccessAfter = d3d12_barrier_access(access_after);
+    barrier.LayoutBefore = d3d12_barrier_layout(access_before);
+    barrier.LayoutAfter = d3d12_barrier_layout(access_after);
+    barrier.pResource = (ID3D12Resource*)texture->GetHandle();
+    barrier.Subresources = CD3DX12_BARRIER_SUBRESOURCE_RANGE(sub_resource);
 
-    m_pendingBarriers.push_back(barrier);
+    if (access_before & GfxAccessDiscard)
+    {
+        barrier.Flags = D3D12_TEXTURE_BARRIER_FLAG_DISCARD;
+    }
+
+    m_textureBarriers.push_back(barrier);
 }
 
-void D3D12CommandList::UavBarrier(IGfxResource* resource)
+void D3D12CommandList::BufferBarrier(IGfxBuffer* buffer, uint32_t offset, uint32_t size, GfxAccessFlags access_before, GfxAccessFlags access_after)
 {
-    D3D12_RESOURCE_BARRIER barrier = {};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-    barrier.UAV.pResource = resource ? (ID3D12Resource*)resource->GetHandle() : nullptr;
+    D3D12_BUFFER_BARRIER barrier = {};
+    barrier.SyncBefore = d3d12_barrier_sync(access_before);
+    barrier.SyncAfter = d3d12_barrier_sync(access_after);
+    barrier.AccessBefore = d3d12_barrier_access(access_before);
+    barrier.AccessAfter = d3d12_barrier_access(access_after);
+    barrier.pResource = (ID3D12Resource*)buffer->GetHandle();
+    barrier.Offset = offset;
+    barrier.Size = size;
 
-    m_pendingBarriers.push_back(barrier);
+    m_bufferBarriers.push_back(barrier);
 }
 
-void D3D12CommandList::AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after)
+void D3D12CommandList::GlobalBarrier(GfxAccessFlags access_before, GfxAccessFlags access_after)
 {
-    D3D12_RESOURCE_BARRIER barrier = {};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
-    barrier.Aliasing.pResourceBefore = (ID3D12Resource*)resource_before->GetHandle();
-    barrier.Aliasing.pResourceAfter = (ID3D12Resource*)resource_after->GetHandle();
+    D3D12_GLOBAL_BARRIER barrier = {};
+    barrier.SyncBefore = d3d12_barrier_sync(access_before);
+    barrier.SyncAfter = d3d12_barrier_sync(access_after);
+    barrier.AccessBefore = d3d12_barrier_access(access_before);
+    barrier.AccessAfter = d3d12_barrier_access(access_after);
 
-    m_pendingBarriers.push_back(barrier);
+    m_globalBarriers.push_back(barrier);
+}
+
+void D3D12CommandList::FlushBarriers()
+{
+    eastl::vector<D3D12_BARRIER_GROUP> barrierGroup;
+    barrierGroup.reserve(3);
+
+    if (!m_textureBarriers.empty())
+    {
+        barrierGroup.push_back(CD3DX12_BARRIER_GROUP((UINT32)m_textureBarriers.size(), m_textureBarriers.data()));
+    }
+
+    if (!m_bufferBarriers.empty())
+    {
+        barrierGroup.push_back(CD3DX12_BARRIER_GROUP((UINT32)m_bufferBarriers.size(), m_bufferBarriers.data()));
+    }
+
+    if (!m_globalBarriers.empty())
+    {
+        barrierGroup.push_back(CD3DX12_BARRIER_GROUP((UINT32)m_globalBarriers.size(), m_globalBarriers.data()));
+    }
+
+    if (!barrierGroup.empty())
+    {
+        ++m_commandCount;
+        m_pCommandList->Barrier((UINT32)barrierGroup.size(), barrierGroup.data());
+    }
+
+    m_textureBarriers.clear();
+    m_bufferBarriers.clear();
+    m_globalBarriers.clear();
 }
 
 void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
@@ -724,13 +769,3 @@ MicroProfileThreadLogGpu* D3D12CommandList::GetProfileLog() const
 #endif
 }
 #endif
-
-void D3D12CommandList::FlushBarriers()
-{
-    if (!m_pendingBarriers.empty())
-    {
-        ++m_commandCount;
-        m_pCommandList->ResourceBarrier((UINT)m_pendingBarriers.size(), m_pendingBarriers.data());
-        m_pendingBarriers.clear();
-    }
-}

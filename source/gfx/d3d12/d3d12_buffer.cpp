@@ -33,21 +33,9 @@ bool D3D12Buffer::Create()
     D3D12MA::Allocator* pAllocator = ((D3D12Device*)m_pDevice)->GetResourceAllocator();
 
     D3D12_RESOURCE_FLAGS flags = (m_desc.usage & GfxBufferUsageUnorderedAccess) ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAG_NONE;
-    CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(m_desc.size, flags);
+    D3D12_RESOURCE_DESC1 resourceDesc1 = CD3DX12_RESOURCE_DESC1::Buffer(m_desc.size, flags);
 
-    D3D12_RESOURCE_STATES initial_state;
-    if (m_desc.memory_type == GfxMemoryType::CpuToGpu || m_desc.memory_type == GfxMemoryType::CpuOnly) //D3D12_HEAP_TYPE_UPLOAD
-    {
-        initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
-    }
-    else if (m_desc.memory_type == GfxMemoryType::GpuToCpu) //D3D12_HEAP_TYPE_READBACK
-    {
-        initial_state = D3D12_RESOURCE_STATE_COPY_DEST;
-    }
-    else
-    {
-        initial_state = D3D12_RESOURCE_STATE_COMMON;
-    }
+    D3D12_BARRIER_LAYOUT initial_layout = D3D12_BARRIER_LAYOUT_UNDEFINED;
 
     HRESULT hr;
 
@@ -57,8 +45,8 @@ bool D3D12Buffer::Create()
         RE_ASSERT(m_desc.memory_type == m_desc.heap->GetDesc().memory_type);
         RE_ASSERT(m_desc.size + m_desc.heap_offset <= m_desc.heap->GetDesc().size);
 
-        hr = pAllocator->CreateAliasingResource((D3D12MA::Allocation*)m_desc.heap->GetHandle(), m_desc.heap_offset,
-            &resourceDesc, initial_state, nullptr, IID_PPV_ARGS(&m_pBuffer));
+        hr = pAllocator->CreateAliasingResource2((D3D12MA::Allocation*)m_desc.heap->GetHandle(), m_desc.heap_offset,
+            &resourceDesc1, initial_layout, nullptr, 0, nullptr, IID_PPV_ARGS(&m_pBuffer));
     }
     else
     {
@@ -66,8 +54,8 @@ bool D3D12Buffer::Create()
         allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
         allocationDesc.Flags = m_desc.alloc_type == GfxAllocationType::Committed ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
 
-        hr = pAllocator->CreateResource(&allocationDesc, 
-            &resourceDesc, initial_state, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pBuffer));
+        hr = pAllocator->CreateResource3(&allocationDesc, 
+            &resourceDesc1, initial_layout, nullptr, 0, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pBuffer));
     }
 
     if (FAILED(hr))

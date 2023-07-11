@@ -161,57 +161,39 @@ enum class GfxResourceState
     Present,
 };
 
-enum GfxSyncStageBit
-{
-    GfxSyncStageNone              = 1 << 0,
-    GfxSyncStageAll               = 1 << 1,
-    GfxSyncStageDraw              = 1 << 2,
-    GfxSyncStageIndexInput        = 1 << 3,
-    GfxSyncStageVS                = 1 << 4,
-    GfxSyncStagePS                = 1 << 5,
-    GfxSyncStageDepthStencil      = 1 << 6,
-    GfxSyncStageRenderTarget      = 1 << 7,
-    GfxSyncStageCS                = 1 << 8,
-    GfxSyncStageCopy              = 1 << 9,
-    GfxSyncStageExecuteIndirect   = 1 << 10,
-    GfxSyncStageClearUAV          = 1 << 11,
-    GfxSyncStageBuildAS           = 1 << 12,
-};
-using GfxSyncStageFlags = uint32_t;
-
 enum GfxAccessBit
 {
-    GfxAccessNone              = 1 << 0,
-    GfxAccessCommon            = 1 << 1,
-    GfxAccessIndexBuffer       = 1 << 2,
-    GfxAccessRTV               = 1 << 3,
-    GfxAccessDSV               = 1 << 4,
-    GfxAccessDSVReadOnly       = 1 << 5,
-    GfxAccessUAV               = 1 << 6,
-    GfxAccessSRV               = 1 << 7,
-    GfxAccessIndirectArgs      = 1 << 8,
-    GfxAccessCopyDst           = 1 << 9,
-    GfxAccessCopySrc           = 1 << 10,
-    GfxAccessASRead            = 1 << 11,
-    GfxAccessASWrite           = 1 << 12,
-    GfxAccessShadingRate       = 1 << 13,
+    GfxAccessPresent              = 1 << 0,
+    GfxAccessRTV                  = 1 << 1,
+    GfxAccessDSV                  = 1 << 2,
+    GfxAccessDSVReadOnly          = 1 << 3,
+    GfxAccessVertexShaderSRV      = 1 << 4,
+    GfxAccessPixelShaderSRV       = 1 << 5,
+    GfxAccessComputeSRV           = 1 << 6,
+    GfxAccessVertexShaderUAV      = 1 << 7,
+    GfxAccessPixelShaderUAV       = 1 << 8,
+    GfxAccessComputeUAV           = 1 << 9,
+    GfxAccessClearUAV             = 1 << 10,
+    GfxAccessCopyDst              = 1 << 11,
+    GfxAccessCopySrc              = 1 << 12,
+    GfxAccessShadingRate          = 1 << 13,
+    GfxAccessIndexBuffer          = 1 << 14,
+    GfxAccessIndirectArgs         = 1 << 15,
+    GfxAccessASRead               = 1 << 16,
+    GfxAccessASWrite              = 1 << 17,
+    GfxAccessDiscard              = 1 << 18, //aliasing barrier
+
+
+    GfxAccessMaskVS = GfxAccessVertexShaderSRV | GfxAccessVertexShaderUAV,
+    GfxAccessMaskPS = GfxAccessPixelShaderSRV | GfxAccessPixelShaderUAV,
+    GfxAccessMaskCS = GfxAccessComputeSRV | GfxAccessComputeUAV,
+    GfxAccessMaskSRV = GfxAccessVertexShaderSRV | GfxAccessPixelShaderSRV | GfxAccessComputeSRV,
+    GfxAccessMaskUAV = GfxAccessVertexShaderUAV | GfxAccessPixelShaderUAV | GfxAccessComputeUAV,
+    GfxAccessMaskDSV = GfxAccessDSV | GfxAccessDSVReadOnly,
+    GfxAccessMaskCopy = GfxAccessCopyDst | GfxAccessCopySrc,
+    GfxAccessMaskAS = GfxAccessASRead | GfxAccessASWrite,
 };
 using GfxAccessFlags = uint32_t;
-
-enum class GfxTextureLayout
-{
-    Undefined,
-    Common,
-    Present,
-    RTV,
-    DSV,
-    DSVReadOnly,
-    UAV,
-    SRV,
-    CopyDst,
-    CopySrc,
-    ShadingRate,
-};
 
 enum class GfxRenderPassLoadOp
 {
