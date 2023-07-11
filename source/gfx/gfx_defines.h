@@ -161,6 +161,58 @@ enum class GfxResourceState
     Present,
 };
 
+enum GfxSyncStageBit
+{
+    GfxSyncStageNone              = 1 << 0,
+    GfxSyncStageAll               = 1 << 1,
+    GfxSyncStageDraw              = 1 << 2,
+    GfxSyncStageIndexInput        = 1 << 3,
+    GfxSyncStageVS                = 1 << 4,
+    GfxSyncStagePS                = 1 << 5,
+    GfxSyncStageDepthStencil      = 1 << 6,
+    GfxSyncStageRenderTarget      = 1 << 7,
+    GfxSyncStageCS                = 1 << 8,
+    GfxSyncStageCopy              = 1 << 9,
+    GfxSyncStageExecuteIndirect   = 1 << 10,
+    GfxSyncStageClearUAV          = 1 << 11,
+    GfxSyncStageBuildAS           = 1 << 12,
+};
+using GfxSyncStageFlags = uint32_t;
+
+enum GfxAccessBit
+{
+    GfxAccessNone              = 1 << 0,
+    GfxAccessCommon            = 1 << 1,
+    GfxAccessIndexBuffer       = 1 << 2,
+    GfxAccessRenderTarget      = 1 << 3,
+    GfxAccessDepthStencilRead  = 1 << 4,
+    GfxAccessDepthStencilWrite = 1 << 5,
+    GfxAccessUAV               = 1 << 6,
+    GfxAccessSRV               = 1 << 7,
+    GfxAccessIndirectArgs      = 1 << 8,
+    GfxAccessCopyDst           = 1 << 9,
+    GfxAccessCopySrc           = 1 << 10,
+    GfxAccessASRead            = 1 << 11,
+    GfxAccessASWrite           = 1 << 12,
+    GfxAccessShadingRate       = 1 << 13,
+};
+using GfxAccessFlags = uint32_t;
+
+enum class GfxTextureLayout
+{
+    Undefined,
+    Common,
+    Present,
+    RenderTarget,
+    DepthStencilRead,
+    DepthStencilWrite,
+    UAV,
+    SRV,
+    CopyDst,
+    CopySrc,
+    ShadingRate,
+};
+
 enum class GfxRenderPassLoadOp
 {
     Load,
