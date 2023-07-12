@@ -65,7 +65,22 @@ void RenderGraphPassBase::ResolveBarriers(const DirectedAcyclicGraph& graph)
             }
         }
 
-        if (old_state != new_state)
+        bool is_aliased = false;
+        GfxAccessFlags alias_state;
+
+        if (resource->IsOverlapping() && resource->GetFirstPassID() == this->GetId())
+        {
+            bool is_texture;
+            IGfxResource* aliased_resource = resource->GetAliasedPrevResource(is_texture, alias_state);
+            if (aliased_resource)
+            {
+                m_discardBarriers.push_back({ aliased_resource, is_texture, alias_state, new_state | GfxAccessDiscard });
+
+                is_aliased = true;
+            }
+        }
+
+        if (old_state != new_state || is_aliased)
         {
             //TODO : uav barrier
             ResourceBarrier barrier;
@@ -74,18 +89,12 @@ void RenderGraphPassBase::ResolveBarriers(const DirectedAcyclicGraph& graph)
             barrier.old_state = old_state;
             barrier.new_state = new_state;
 
-            m_resourceBarriers.push_back(barrier);
-        }
-
-        if (resource->IsOverlapping() && resource->GetFirstPassID() == this->GetId())
-        {
-            IGfxResource* aliased_resource = resource->GetAliasedPrevResource();
-            if (aliased_resource)
+            if (is_aliased)
             {
-                AliasBarrier barrier = { aliased_resource, resource->GetResource() };
-
-                m_aliasBarriers.push_back(barrier);
+                barrier.old_state |= alias_state | GfxAccessDiscard;
             }
+
+            m_resourceBarriers.push_back(barrier);
         }
     }
 
@@ -280,9 +289,18 @@ void RenderGraphPassBase::Execute(const RenderGraph& graph, RenderGraphPassExecu
 
 void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pCommandList)
 {
-    for (size_t i = 0; i < m_aliasBarriers.size(); ++i)
+    for (size_t i = 0; i < m_discardBarriers.size(); ++i)
     {
-        pCommandList->AliasingBarrier(m_aliasBarriers[i].before, m_aliasBarriers[i].after);
+        const AliasDiscardBarrier& barrier = m_discardBarriers[i];
+
+        if (barrier.is_texture)
+        {
+            pCommandList->TextureBarrier((IGfxTexture*)barrier.resource, GFX_ALL_SUB_RESOURCE, barrier.acess_before, barrier.acess_after);
+        }
+        else
+        {
+            pCommandList->BufferBarrier((IGfxBuffer*)barrier.resource, barrier.acess_before, barrier.acess_after);
+        }
     }
 
     for (size_t i = 0; i < m_resourceBarriers.size(); ++i)

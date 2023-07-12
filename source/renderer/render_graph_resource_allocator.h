@@ -86,11 +86,11 @@ public:
     IGfxTexture* AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
     void FreeNonOverlappingTexture(IGfxTexture* texture, GfxAccessFlags state);
 
-    IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
-    IGfxBuffer* AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
-    void Free(IGfxResource* resource, GfxAccessFlags state);
+    IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, GfxAccessFlags lastState, const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
+    IGfxBuffer* AllocateBuffer(uint32_t firstPass, uint32_t lastPass, GfxAccessFlags lastState, const GfxBufferDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
+    void Free(IGfxResource* resource, GfxAccessFlags state, bool set_state);
 
-    IGfxResource* GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass);
+    IGfxResource* GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass, bool& is_texture, GfxAccessFlags& lastUsedState);
 
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc);
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc);

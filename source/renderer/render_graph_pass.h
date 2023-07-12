@@ -85,12 +85,14 @@ protected:
     };
     eastl::vector<ResourceBarrier> m_resourceBarriers;
 
-    struct AliasBarrier
+    struct AliasDiscardBarrier
     {
-        IGfxResource* before;
-        IGfxResource* after;
+        IGfxResource* resource;
+        bool is_texture;
+        GfxAccessFlags acess_before;
+        GfxAccessFlags acess_after;
     };
-    eastl::vector<AliasBarrier> m_aliasBarriers;
+    eastl::vector<AliasDiscardBarrier> m_discardBarriers;
 
     RenderGraphEdgeColorAttchment* m_pColorRT[8] = {};
     RenderGraphEdgeDepthAttchment* m_pDepthRT = nullptr;

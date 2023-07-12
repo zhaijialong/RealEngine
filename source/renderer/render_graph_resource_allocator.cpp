@@ -86,7 +86,8 @@ void RenderGraphResourceAllocator::CheckHeapUsage(Heap& heap)
     }
 }
 
-IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state)
+IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, uint32_t lastPass, GfxAccessFlags lastState, 
+    const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state)
 {
     LifetimeRange lifetime = { firstPass, lastPass };
     uint32_t texture_size = m_pDevice->GetAllocationSize(desc);
@@ -107,6 +108,7 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
             {
                 aliasedResource.lifetime = lifetime;
                 initial_state = aliasedResource.lastUsedState;
+                aliasedResource.lastUsedState = lastState;
                 return (IGfxTexture*)aliasedResource.resource;
             }
         }        
@@ -118,6 +120,7 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
         aliasedTexture.resource = m_pDevice->CreateTexture(newDesc, "RGTexture " + name);
         aliasedTexture.isTexture = true;
         aliasedTexture.lifetime = lifetime;
+        aliasedTexture.lastUsedState = lastState;
         heap.resources.push_back(aliasedTexture);
 
         if (IsDepthFormat(desc.format))
@@ -138,10 +141,11 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
     }
 
     AllocateHeap(texture_size);
-    return AllocateTexture(firstPass, lastPass, desc, name, initial_state);
+    return AllocateTexture(firstPass, lastPass, lastState, desc, name, initial_state);
 }
 
-IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state)
+IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uint32_t lastPass, GfxAccessFlags lastState,
+    const GfxBufferDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state)
 {
     LifetimeRange lifetime = { firstPass, lastPass };
     uint32_t buffer_size = desc.size;
@@ -162,6 +166,7 @@ IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uin
             {
                 aliasedResource.lifetime = lifetime;
                 initial_state = aliasedResource.lastUsedState;
+                aliasedResource.lastUsedState = lastState;
                 return (IGfxBuffer*)aliasedResource.resource;
             }
         }
@@ -173,6 +178,7 @@ IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uin
         aliasedBuffer.resource = m_pDevice->CreateBuffer(newDesc, "RGBuffer " + name);
         aliasedBuffer.isTexture = false;
         aliasedBuffer.lifetime = lifetime;
+        aliasedBuffer.lastUsedState = lastState;
         heap.resources.push_back(aliasedBuffer);
 
         initial_state = GfxAccessDiscard;
@@ -182,7 +188,7 @@ IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uin
     }
 
     AllocateHeap(buffer_size);
-    return AllocateBuffer(firstPass, lastPass, desc, name, initial_state);
+    return AllocateBuffer(firstPass, lastPass, lastState, desc, name, initial_state);
 }
 
 void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
@@ -197,7 +203,7 @@ void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
     m_allocatedHeaps.push_back(heap);
 }
 
-void RenderGraphResourceAllocator::Free(IGfxResource* resource, GfxAccessFlags state)
+void RenderGraphResourceAllocator::Free(IGfxResource* resource, GfxAccessFlags state, bool set_state)
 {
     if (resource != nullptr)
     {
@@ -212,7 +218,10 @@ void RenderGraphResourceAllocator::Free(IGfxResource* resource, GfxAccessFlags s
                 {
                     aliasedResource.lifetime.Reset();
                     aliasedResource.lastUsedFrame = m_pDevice->GetFrameID();
-                    aliasedResource.lastUsedState = state;
+                    if (set_state)
+                    {
+                        aliasedResource.lastUsedState = state;
+                    }
 
                     return;
                 }
@@ -223,30 +232,40 @@ void RenderGraphResourceAllocator::Free(IGfxResource* resource, GfxAccessFlags s
     }
 }
 
-IGfxResource* RenderGraphResourceAllocator::GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass)
+IGfxResource* RenderGraphResourceAllocator::GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass, bool& is_texture, GfxAccessFlags& lastUsedState)
 {
     for (size_t i = 0; i < m_allocatedHeaps.size(); ++i)
     {
-        const Heap& heap = m_allocatedHeaps[i];
+        Heap& heap = m_allocatedHeaps[i];
         if (!heap.Contains(resource))
         {
             continue;
         }
 
+        AliasedResource* aliased_resource = nullptr;
         IGfxResource* prev_resource = nullptr;
         uint32_t prev_resource_lastpass = 0;
 
         for (size_t j = 0; j < heap.resources.size(); ++j)
         {
-            const AliasedResource& aliasedResource = heap.resources[j];
+            AliasedResource& aliasedResource = heap.resources[j];
 
             if (aliasedResource.resource != resource &&
                 aliasedResource.lifetime.lastPass < firstPass &&
                 aliasedResource.lifetime.lastPass > prev_resource_lastpass)
             {
+                aliased_resource = &aliasedResource;
                 prev_resource = aliasedResource.resource;
+                is_texture = aliasedResource.isTexture;
+                lastUsedState = aliasedResource.lastUsedState;
+
                 prev_resource_lastpass = aliasedResource.lifetime.lastPass;
             }
+        }
+
+        if (aliased_resource)
+        {
+            aliased_resource->lastUsedState |= GfxAccessDiscard;
         }
 
         return prev_resource;

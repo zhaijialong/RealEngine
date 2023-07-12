@@ -46,7 +46,7 @@ RGTexture::~RGTexture()
         }
         else
         {
-            m_allocator.Free(m_pTexture, m_lastState);
+            m_allocator.Free(m_pTexture, m_lastState, m_bOutput);
         }
     }
 }
@@ -103,7 +103,7 @@ void RGTexture::Realize()
         }
         else
         {
-            m_pTexture = m_allocator.AllocateTexture(m_firstPass, m_lastPass, m_desc, m_name, m_initialState);
+            m_pTexture = m_allocator.AllocateTexture(m_firstPass, m_lastPass, m_lastState, m_desc, m_name, m_initialState);
         }
     }
 }
@@ -113,9 +113,9 @@ void RGTexture::Barrier(IGfxCommandList* pCommandList, uint32_t subresource, Gfx
     pCommandList->TextureBarrier(m_pTexture, subresource, acess_before, acess_after);
 }
 
-IGfxResource* RGTexture::GetAliasedPrevResource()
+IGfxResource* RGTexture::GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState)
 {
-    return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass);
+    return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass, is_texture, lastUsedState);
 }
 
 RGBuffer::RGBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
@@ -139,7 +139,7 @@ RGBuffer::~RGBuffer()
 {
     if (!m_bImported)
     {
-        m_allocator.Free(m_pBuffer, m_lastState);
+        m_allocator.Free(m_pBuffer, m_lastState, m_bOutput);
     }
 }
 
@@ -211,7 +211,7 @@ void RGBuffer::Realize()
 {
     if (!m_bImported)
     {
-        m_pBuffer = m_allocator.AllocateBuffer(m_firstPass, m_lastPass, m_desc, m_name, m_initialState);
+        m_pBuffer = m_allocator.AllocateBuffer(m_firstPass, m_lastPass, m_lastState, m_desc, m_name, m_initialState);
     }
 }
 
@@ -220,7 +220,7 @@ void RGBuffer::Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxA
     pCommandList->BufferBarrier(m_pBuffer, acess_before, acess_after);
 }
 
-IGfxResource* RGBuffer::GetAliasedPrevResource()
+IGfxResource* RGBuffer::GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState)
 {
-    return m_allocator.GetAliasedPrevResource(m_pBuffer, m_firstPass);
+    return m_allocator.GetAliasedPrevResource(m_pBuffer, m_firstPass, is_texture, lastUsedState);
 }

@@ -37,7 +37,7 @@ public:
 
     bool IsOverlapping() const { return !IsImported() && !IsOutput(); }
 
-    virtual IGfxResource* GetAliasedPrevResource() = 0;
+    virtual IGfxResource* GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState) = 0;
     virtual void Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxAccessFlags acess_before, GfxAccessFlags acess_after) = 0;
 
 protected:
@@ -70,7 +70,7 @@ public:
     virtual IGfxResource* GetResource() override { return m_pTexture; }
     virtual GfxAccessFlags GetInitialState() override { return m_initialState; }
     virtual void Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxAccessFlags acess_before, GfxAccessFlags acess_after) override;
-    virtual IGfxResource* GetAliasedPrevResource() override;
+    virtual IGfxResource* GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState) override;
 
 private:
     Desc m_desc;
@@ -97,7 +97,7 @@ public:
     virtual IGfxResource* GetResource() override { return m_pBuffer; }
     virtual GfxAccessFlags GetInitialState() override { return m_initialState; }
     virtual void Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxAccessFlags acess_before, GfxAccessFlags acess_after) override;
-    virtual IGfxResource* GetAliasedPrevResource() override;
+    virtual IGfxResource* GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState) override;
 
 private:
     Desc m_desc;
