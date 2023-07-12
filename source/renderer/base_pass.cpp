@@ -512,16 +512,16 @@ void BasePass::ResetCounter(IGfxCommandList* pCommandList, RGBuffer* firstPhaseM
     pCommandList->ClearUAV(secondPhaseObjectCounter->GetBuffer(), secondPhaseObjectCounter->GetUAV(), clear_value);
     pCommandList->ClearUAV(secondPhaseMeshletCounter->GetBuffer(), secondPhaseMeshletCounter->GetUAV(), clear_value);
 
-    pCommandList->UavBarrier(firstPhaseMeshletCounter->GetBuffer());
-    pCommandList->UavBarrier(secondPhaseObjectCounter->GetBuffer());
-    pCommandList->UavBarrier(secondPhaseMeshletCounter->GetBuffer());
+    pCommandList->BufferBarrier(firstPhaseMeshletCounter->GetBuffer(), GfxAccessClearUAV, GfxAccessComputeUAV);
+    pCommandList->BufferBarrier(secondPhaseObjectCounter->GetBuffer(), GfxAccessClearUAV, GfxAccessComputeUAV);
+    pCommandList->BufferBarrier(secondPhaseMeshletCounter->GetBuffer(), GfxAccessClearUAV, GfxAccessComputeUAV);
 }
 
 void BasePass::InstanceCulling1stPhase(IGfxCommandList* pCommandList, RGBuffer* cullingResultUAV, RGBuffer* secondPhaseObjectListUAV, RGBuffer* secondPhaseObjectListCounterUAV)
 {
     uint32_t clear_value[4] = { 0, 0, 0, 0 };
     pCommandList->ClearUAV(cullingResultUAV->GetBuffer(), cullingResultUAV->GetUAV(), clear_value);
-    pCommandList->UavBarrier(cullingResultUAV->GetBuffer());
+    pCommandList->BufferBarrier(cullingResultUAV->GetBuffer(), GfxAccessClearUAV, GfxAccessComputeUAV);
 
     pCommandList->SetPipelineState(m_p1stPhaseInstanceCullingPSO);
 
@@ -543,7 +543,7 @@ void BasePass::InstanceCulling2ndPhase(IGfxCommandList* pCommandList, RGBuffer* 
 {
     uint32_t clear_value[4] = { 0, 0, 0, 0 };
     pCommandList->ClearUAV(cullingResultUAV->GetBuffer(), cullingResultUAV->GetUAV(), clear_value);
-    pCommandList->UavBarrier(cullingResultUAV->GetBuffer());
+    pCommandList->BufferBarrier(cullingResultUAV->GetBuffer(), GfxAccessClearUAV, GfxAccessComputeUAV);
 
     pCommandList->SetPipelineState(m_p2ndPhaseInstanceCullingPSO);
 

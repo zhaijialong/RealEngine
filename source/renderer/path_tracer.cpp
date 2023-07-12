@@ -140,7 +140,7 @@ void PathTracer::Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGT
 
         float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
         pCommandList->ClearUAV(m_pHistoryAccumulation->GetTexture(), m_pHistoryAccumulation->GetUAV(), clear_value);
-        pCommandList->UavBarrier(m_pHistoryAccumulation->GetTexture());
+        pCommandList->TextureBarrier(m_pHistoryAccumulation->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
     }
 
     pCommandList->SetPipelineState(m_pAccumulationPSO);

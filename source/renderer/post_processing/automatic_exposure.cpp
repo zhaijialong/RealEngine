@@ -294,7 +294,7 @@ void AutomaticExposure::ReduceLuminance(IGfxCommandList* pCommandList, RGTexture
     for (uint32_t i = 1; i < m_luminanceMips - 1; ++i)
     {
         //todo : currently RG doesn't hanlde subresource last usage properly, this fixed validation warning
-        pCommandList->ResourceBarrier(texture->GetTexture(), i, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
+        pCommandList->TextureBarrier(texture->GetTexture(), i, GfxAccessComputeUAV, GfxAccessComputeSRV);
     }
 }
 
@@ -302,7 +302,7 @@ void AutomaticExposure::BuildHistogram(IGfxCommandList* pCommandList, RGTexture*
 {
     uint32_t clear_value[4] = { 0, 0, 0, 0 };
     pCommandList->ClearUAV(histogramBuffer->GetBuffer(), histogramBuffer->GetUAV(), clear_value);
-    pCommandList->UavBarrier(histogramBuffer->GetBuffer());
+    pCommandList->BufferBarrier(histogramBuffer->GetBuffer(), GfxAccessClearUAV, GfxAccessComputeUAV);
 
     eastl::vector<eastl::string> defines;
 
@@ -384,7 +384,7 @@ void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, RGTexture* avgLu
 
         float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
         pCommandList->ClearUAV(m_pPreviousEV100->GetTexture(), m_pPreviousEV100->GetUAV(), clear_value);
-        pCommandList->UavBarrier(m_pPreviousEV100->GetTexture());
+        pCommandList->TextureBarrier(m_pPreviousEV100->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
     }
 
     eastl::vector<eastl::string> defines;

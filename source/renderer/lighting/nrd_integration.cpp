@@ -248,7 +248,7 @@ void NRDIntegration::CreateTextures()
         texture.texture.reset(m_pRenderer->CreateTexture2D(nrdTextureDesc.width, nrdTextureDesc.height, nrdTextureDesc.mipNum, format, GfxTextureUsageUnorderedAccess, name));
         for (uint16_t i = 0; i < nrdTextureDesc.mipNum; ++i)
         {
-            texture.states.push_back(GfxResourceState::UnorderedAccess);
+            texture.states.push_back(GfxAccessComputeUAV);
         }
 
         m_textures.push_back(eastl::move(texture));
@@ -318,7 +318,7 @@ void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::Dispatch
         for (uint32_t j = 0; j < resourceRange.descriptorsNum; j++)
         {
             const nrd::ResourceDesc& nrdResource = dispatchDesc.resources[n++];
-            GfxResourceState stateNeeded = nrdResource.stateNeeded == nrd::DescriptorType::STORAGE_TEXTURE ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS;
+            GfxAccessFlags stateNeeded = nrdResource.stateNeeded == nrd::DescriptorType::STORAGE_TEXTURE ? GfxAccessComputeUAV : GfxAccessComputeSRV;
 
             IGfxDescriptor* descriptor = nullptr;
 

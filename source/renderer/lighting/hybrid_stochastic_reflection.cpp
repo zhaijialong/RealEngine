@@ -289,7 +289,7 @@ void HybridStochasticReflection::ClassifyTiles(IGfxCommandList* pCommandList, RG
 {
     uint32_t clear_value[4] = { 0, 0, 0, 0 };
     pCommandList->ClearUAV(rayCounterUAV->GetBuffer(), rayCounterUAV->GetUAV(), clear_value);
-    pCommandList->UavBarrier(rayCounterUAV->GetBuffer());
+    pCommandList->BufferBarrier(rayCounterUAV->GetBuffer(), GfxAccessClearUAV, GfxAccessComputeUAV);
 
     pCommandList->SetPipelineState(m_pTileClassificationPSO);
     SetRootConstants(pCommandList);
@@ -329,8 +329,8 @@ void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, RGTexture* n
     float clear_value1[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     pCommandList->ClearUAV(outputUAV->GetTexture(), outputUAV->GetUAV(), clear_value1); //todo : this clear should not be needed
 
-    pCommandList->UavBarrier(hwRayCounterUAV->GetBuffer());
-    pCommandList->UavBarrier(outputUAV->GetTexture());
+    pCommandList->BufferBarrier(hwRayCounterUAV->GetBuffer(), GfxAccessClearUAV, GfxAccessComputeUAV);
+    pCommandList->TextureBarrier(outputUAV->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxAccessClearUAV, GfxAccessComputeUAV);
 
     pCommandList->SetPipelineState(m_pSSRPSO);
     SetRootConstants(pCommandList);

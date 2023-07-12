@@ -164,13 +164,13 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             RGTexture* velocity = pRenderGraph->GetTexture(data.velocity);
 
             NRDUserPool userPool = {};
-            userPool[(size_t)nrd::ResourceType::IN_MV] = { velocity->GetTexture(), velocity->GetSRV(), velocity->GetUAV(), GfxResourceState::ShaderResourceNonPS };
-            userPool[(size_t)nrd::ResourceType::IN_NORMAL_ROUGHNESS] = { normal->GetTexture(), normal->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
-            userPool[(size_t)nrd::ResourceType::IN_VIEWZ] = { linearDepth->GetTexture(), linearDepth->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
-            userPool[(size_t)nrd::ResourceType::IN_DIFF_SH0] = { sh0->GetTexture(), sh0->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
-            userPool[(size_t)nrd::ResourceType::IN_DIFF_SH1] = { sh1->GetTexture(), sh1->GetSRV(), nullptr, GfxResourceState::ShaderResourceNonPS };
-            userPool[(size_t)nrd::ResourceType::OUT_DIFF_SH0] = { m_pOutputSH0->GetTexture(), m_pOutputSH0->GetSRV(), m_pOutputSH0->GetUAV(), GfxResourceState::UnorderedAccess };
-            userPool[(size_t)nrd::ResourceType::OUT_DIFF_SH1] = { m_pOutputSH1->GetTexture(), m_pOutputSH1->GetSRV(), m_pOutputSH1->GetUAV(), GfxResourceState::UnorderedAccess };
+            userPool[(size_t)nrd::ResourceType::IN_MV] = { velocity->GetTexture(), velocity->GetSRV(), velocity->GetUAV(), GfxAccessComputeSRV };
+            userPool[(size_t)nrd::ResourceType::IN_NORMAL_ROUGHNESS] = { normal->GetTexture(), normal->GetSRV(), nullptr, GfxAccessComputeSRV };
+            userPool[(size_t)nrd::ResourceType::IN_VIEWZ] = { linearDepth->GetTexture(), linearDepth->GetSRV(), nullptr, GfxAccessComputeSRV };
+            userPool[(size_t)nrd::ResourceType::IN_DIFF_SH0] = { sh0->GetTexture(), sh0->GetSRV(), nullptr, GfxAccessComputeSRV };
+            userPool[(size_t)nrd::ResourceType::IN_DIFF_SH1] = { sh1->GetTexture(), sh1->GetSRV(), nullptr, GfxAccessComputeSRV };
+            userPool[(size_t)nrd::ResourceType::OUT_DIFF_SH0] = { m_pOutputSH0->GetTexture(), m_pOutputSH0->GetSRV(), m_pOutputSH0->GetUAV(), GfxAccessComputeUAV };
+            userPool[(size_t)nrd::ResourceType::OUT_DIFF_SH1] = { m_pOutputSH1->GetTexture(), m_pOutputSH1->GetSRV(), m_pOutputSH1->GetUAV(), GfxAccessComputeUAV };
 
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 

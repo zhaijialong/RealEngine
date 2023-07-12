@@ -139,9 +139,9 @@ void Renderer::BeginFrame()
 
     if (m_pDevice->GetFrameID() == 0)
     {
-        pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopyDst);
+        pCommandList->BufferBarrier(m_pSPDCounterBuffer->GetBuffer(), GfxAccessComputeUAV, GfxAccessCopyDst);
         pCommandList->WriteBuffer(m_pSPDCounterBuffer->GetBuffer(), 0, 0);
-        pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
+        pCommandList->BufferBarrier(m_pSPDCounterBuffer->GetBuffer(), GfxAccessCopyDst, GfxAccessComputeUAV);
     }
 }
 

@@ -131,12 +131,12 @@ void GpuScene::ResetFrameData()
 
 void GpuScene::BeginAnimationUpdate(IGfxCommandList* pCommandList)
 {
-    pCommandList->BufferBarrier(m_pSceneAnimationBuffer->GetBuffer(), GfxAccessVertexShaderSRV, GfxAccessComputeUAV);
+    pCommandList->BufferBarrier(m_pSceneAnimationBuffer->GetBuffer(), GfxAccessVertexShaderSRV | GfxAccessASRead, GfxAccessComputeUAV);
 }
 
 void GpuScene::EndAnimationUpdate(IGfxCommandList* pCommandList)
 {
-    pCommandList->BufferBarrier(m_pSceneAnimationBuffer->GetBuffer(), GfxAccessComputeUAV, GfxAccessVertexShaderSRV);
+    pCommandList->BufferBarrier(m_pSceneAnimationBuffer->GetBuffer(), GfxAccessComputeUAV, GfxAccessVertexShaderSRV | GfxAccessASRead);
 }
 
 IGfxBuffer* GpuScene::GetSceneConstantBuffer() const

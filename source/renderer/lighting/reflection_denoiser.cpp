@@ -86,7 +86,10 @@ RGHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RGHandle indirect
                 pCommandList->ClearUAV(m_pVarianceHistory->GetTexture(), m_pVarianceHistory->GetUAV(), clear_value);
                 pCommandList->ClearUAV(m_pSampleCountInput->GetTexture(), m_pSampleCountInput->GetUAV(), clear_value);
                 pCommandList->ClearUAV(m_pSampleCountOutput->GetTexture(), m_pSampleCountOutput->GetUAV(), clear_value);
-                pCommandList->UavBarrier(m_pSampleCountOutput->GetTexture());
+                pCommandList->TextureBarrier(m_pRadianceHistory->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
+                pCommandList->TextureBarrier(m_pVarianceHistory->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
+                pCommandList->TextureBarrier(m_pSampleCountInput->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
+                pCommandList->TextureBarrier(m_pSampleCountOutput->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
                 m_bHistoryInvalid = false;
             });
 
@@ -280,7 +283,7 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, RGBuffer* indi
 {
     float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     pCommandList->ClearUAV(outputAvgRadianceUAV->GetTexture(), outputAvgRadianceUAV->GetUAV(), clear_value);
-    pCommandList->UavBarrier(outputAvgRadianceUAV->GetTexture());
+    pCommandList->TextureBarrier(outputAvgRadianceUAV->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
 
     pCommandList->SetPipelineState(m_pReprojectPSO);
 

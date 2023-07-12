@@ -6,13 +6,13 @@
 struct NRDPoolTexture
 {
     eastl::unique_ptr<Texture2D> texture;
-    eastl::vector<GfxResourceState> states;
+    eastl::vector<GfxAccessFlags> states;
 
-    void SetResourceSate(IGfxCommandList* pCommandList, uint32_t mip, GfxResourceState state)
+    void SetResourceSate(IGfxCommandList* pCommandList, uint32_t mip, GfxAccessFlags state)
     {
         if (states[mip] != state)
         {
-            pCommandList->ResourceBarrier(texture->GetTexture(), mip, states[mip], state);
+            pCommandList->TextureBarrier(texture->GetTexture(), mip, states[mip], state);
             states[mip] = state;
         }
     }
@@ -23,13 +23,13 @@ struct NRDUserTexture //always 1 mip
     IGfxTexture* texture;
     IGfxDescriptor* srv;
     IGfxDescriptor* uav;
-    GfxResourceState state;
+    GfxAccessFlags state;
 
-    void SetResourceSate(IGfxCommandList* pCommandList, GfxResourceState new_state)
+    void SetResourceSate(IGfxCommandList* pCommandList, GfxAccessFlags new_state)
     {
         if (state != state)
         {
-            pCommandList->ResourceBarrier(texture, 0, state, new_state);
+            pCommandList->TextureBarrier(texture, 0, state, new_state);
             state = new_state;
         }
     }
