@@ -149,14 +149,14 @@ void RenderGraph::Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IG
         const PresentTarget& target = m_outputResources[i];
         if (target.resource->GetFinalState() != target.state)
         {
-            pCommandList->ResourceBarrier(target.resource->GetResource(), 0, target.resource->GetFinalState(), target.state);
+            target.resource->Barrier(pCommandList, 0, target.resource->GetFinalState(), target.state);
             target.resource->SetFinalState(target.state);
         }
     }
     m_outputResources.clear();
 }
 
-void RenderGraph::Present(const RGHandle& handle, GfxResourceState filnal_state)
+void RenderGraph::Present(const RGHandle& handle, GfxAccessFlags filnal_state)
 {
     RE_ASSERT(handle.IsValid());
 
@@ -201,7 +201,7 @@ bool RenderGraph::Export(const eastl::string& file)
     return m_graph.ExportGraphviz(file.c_str());
 }
 
-RGHandle RenderGraph::Import(IGfxTexture* texture, GfxResourceState state)
+RGHandle RenderGraph::Import(IGfxTexture* texture, GfxAccessFlags state)
 {
     auto resource = Allocate<RGTexture>(m_resourceAllocator, texture, state);
     auto node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
@@ -216,7 +216,7 @@ RGHandle RenderGraph::Import(IGfxTexture* texture, GfxResourceState state)
     return handle;
 }
 
-RGHandle RenderGraph::Import(IGfxBuffer* buffer, GfxResourceState state)
+RGHandle RenderGraph::Import(IGfxBuffer* buffer, GfxAccessFlags state)
 {
     auto resource = Allocate<RGBuffer>(m_resourceAllocator, buffer, state);
     auto node = AllocatePOD<RenderGraphResourceNode>(m_graph, resource, 0);
@@ -231,7 +231,7 @@ RGHandle RenderGraph::Import(IGfxBuffer* buffer, GfxResourceState state)
     return handle;
 }
 
-RGHandle RenderGraph::Read(RenderGraphPassBase* pass, const RGHandle& input, GfxResourceState usage, uint32_t subresource)
+RGHandle RenderGraph::Read(RenderGraphPassBase* pass, const RGHandle& input, GfxAccessFlags usage, uint32_t subresource)
 {
     RE_ASSERT(input.IsValid());
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
@@ -241,7 +241,7 @@ RGHandle RenderGraph::Read(RenderGraphPassBase* pass, const RGHandle& input, Gfx
     return input;
 }
 
-RGHandle RenderGraph::Write(RenderGraphPassBase* pass, const RGHandle& input, GfxResourceState usage, uint32_t subresource)
+RGHandle RenderGraph::Write(RenderGraphPassBase* pass, const RGHandle& input, GfxAccessFlags usage, uint32_t subresource)
 {
     RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
@@ -266,7 +266,7 @@ RGHandle RenderGraph::WriteColor(RenderGraphPassBase* pass, uint32_t color_index
     RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
 
-    GfxResourceState usage = GfxResourceState::RenderTarget;
+    GfxAccessFlags usage = GfxAccessRTV;
 
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
     AllocatePOD<RenderGraphEdgeColorAttchment>(m_graph, input_node, pass, usage, subresource, color_index, load_op, clear_color);
@@ -288,7 +288,7 @@ RGHandle RenderGraph::WriteDepth(RenderGraphPassBase* pass, const RGHandle& inpu
     RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
 
-    GfxResourceState usage = GfxResourceState::DepthStencil;
+    GfxAccessFlags usage = GfxAccessDSV;
 
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
     AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, input_node, pass, usage, subresource, depth_load_op, stencil_load_op, clear_depth, clear_stencil);
@@ -310,7 +310,7 @@ RGHandle RenderGraph::ReadDepth(RenderGraphPassBase* pass, const RGHandle& input
     RE_ASSERT(input.IsValid());
     RenderGraphResource* resource = m_resources[input.index];
 
-    GfxResourceState usage = GfxResourceState::DepthStencilReadOnly;
+    GfxAccessFlags usage = GfxAccessDSVReadOnly;
 
     RenderGraphResourceNode* input_node = m_resourceNodes[input.node];
     AllocatePOD<RenderGraphEdgeDepthAttchment>(m_graph, input_node, pass, usage, subresource, GfxRenderPassLoadOp::Load, GfxRenderPassLoadOp::Load, 0.0f, 0);

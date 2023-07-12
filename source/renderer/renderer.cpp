@@ -139,9 +139,9 @@ void Renderer::BeginFrame()
 
     if (m_pDevice->GetFrameID() == 0)
     {
-        pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::CopyDst);
+        pCommandList->BufferBarrier(m_pSPDCounterBuffer->GetBuffer(), GfxAccessComputeUAV, GfxAccessCopyDst);
         pCommandList->WriteBuffer(m_pSPDCounterBuffer->GetBuffer(), 0, 0);
-        pCommandList->ResourceBarrier(m_pSPDCounterBuffer->GetBuffer(), 0, GfxResourceState::CopyDst, GfxResourceState::UnorderedAccess);
+        pCommandList->BufferBarrier(m_pSPDCounterBuffer->GetBuffer(), GfxAccessCopyDst, GfxAccessComputeUAV);
     }
 }
 
@@ -232,7 +232,7 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxComm
             }
             m_pendingBLASBuilds.clear();
 
-            pCommandList->UavBarrier(nullptr);
+            pCommandList->GlobalBarrier(GfxAccessMaskAS, GfxAccessMaskAS);
         }
 
         if (!m_pendingBLASUpdates.empty())
@@ -245,7 +245,7 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxComm
             }
             m_pendingBLASUpdates.clear();
 
-            pCommandList->UavBarrier(nullptr);
+            pCommandList->GlobalBarrier(GfxAccessMaskAS, GfxAccessMaskAS);
         }
 
         m_pGpuScene->BuildRayTracingAS(pCommandList);
@@ -366,9 +366,9 @@ void Renderer::ImportPrevFrameTextures()
         m_bHistoryValid = true;
     }
 
-    m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
-    m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
-    m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), m_bHistoryValid ? GfxResourceState::CopyDst : GfxResourceState::UnorderedAccess);
+    m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
+    m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
+    m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
 
     if (!m_bHistoryValid)
     {
@@ -449,7 +449,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
     m_pGpuDebugPrint->PrepareForDraw(pCommandList);
     m_pGpuDebugLine->PrepareForDraw(pCommandList);
 
-    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::Present, GfxResourceState::RenderTarget);
+    pCommandList->TextureBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxAccessPresent, GfxAccessRTV);
 
     RGTexture* depthRT = m_pRenderGraph->GetTexture(depth);
 
@@ -482,7 +482,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
     Engine::GetInstance()->GetGUI()->Render(pCommandList);
 
     pCommandList->EndRenderPass();
-    pCommandList->ResourceBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxResourceState::RenderTarget, GfxResourceState::Present);
+    pCommandList->TextureBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxAccessRTV, GfxAccessPresent);
 }
 
 void Renderer::CopyToBackbuffer(IGfxCommandList* pCommandList, RGHandle color, RGHandle depth, bool needUpscaleDepth)

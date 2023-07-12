@@ -26,7 +26,7 @@ RGTexture::RGTexture(RenderGraphResourceAllocator& allocator, const eastl::strin
     m_desc = desc;
 }
 
-RGTexture::RGTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state) :
+RGTexture::RGTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxAccessFlags state) :
     RenderGraphResource(texture->GetName()),
     m_allocator(allocator)
 {
@@ -46,7 +46,7 @@ RGTexture::~RGTexture()
         }
         else
         {
-            m_allocator.Free(m_pTexture, m_lastState);
+            m_allocator.Free(m_pTexture, m_lastState, m_bOutput);
         }
     }
 }
@@ -76,21 +76,20 @@ void RGTexture::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
 {
     RenderGraphResource::Resolve(edge, pass);
 
-    GfxResourceState usage = edge->GetUsage();
-    switch (usage)
+    GfxAccessFlags usage = edge->GetUsage();
+    if (usage & GfxAccessRTV)
     {
-    case GfxResourceState::RenderTarget:
         m_desc.usage |= GfxTextureUsageRenderTarget;
-        break;
-    case GfxResourceState::UnorderedAccess:
+    }
+
+    if (usage & GfxAccessMaskUAV)
+    {
         m_desc.usage |= GfxTextureUsageUnorderedAccess;
-        break;
-    case GfxResourceState::DepthStencil:
-    case GfxResourceState::DepthStencilReadOnly:
+    }
+
+    if (usage & (GfxAccessDSV | GfxAccessDSVReadOnly))
+    {
         m_desc.usage |= GfxTextureUsageDepthStencil;
-        break;
-    default:
-        break;
     }
 }
 
@@ -104,14 +103,19 @@ void RGTexture::Realize()
         }
         else
         {
-            m_pTexture = m_allocator.AllocateTexture(m_firstPass, m_lastPass, m_desc, m_name, m_initialState);
+            m_pTexture = m_allocator.AllocateTexture(m_firstPass, m_lastPass, m_lastState, m_desc, m_name, m_initialState);
         }
     }
 }
 
-IGfxResource* RGTexture::GetAliasedPrevResource()
+void RGTexture::Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxAccessFlags acess_before, GfxAccessFlags acess_after)
 {
-    return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass);
+    pCommandList->TextureBarrier(m_pTexture, subresource, acess_before, acess_after);
+}
+
+IGfxResource* RGTexture::GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState)
+{
+    return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass, is_texture, lastUsedState);
 }
 
 RGBuffer::RGBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
@@ -121,7 +125,7 @@ RGBuffer::RGBuffer(RenderGraphResourceAllocator& allocator, const eastl::string&
     m_desc = desc;
 }
 
-RGBuffer::RGBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxResourceState state) :
+RGBuffer::RGBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxAccessFlags state) :
     RenderGraphResource(buffer->GetName()),
     m_allocator(allocator)
 {
@@ -135,7 +139,7 @@ RGBuffer::~RGBuffer()
 {
     if (!m_bImported)
     {
-        m_allocator.Free(m_pBuffer, m_lastState);
+        m_allocator.Free(m_pBuffer, m_lastState, m_bOutput);
     }
 }
 
@@ -197,7 +201,7 @@ void RGBuffer::Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass)
 {
     RenderGraphResource::Resolve(edge, pass);
 
-    if (edge->GetUsage() == GfxResourceState::UnorderedAccess)
+    if (edge->GetUsage() & GfxAccessMaskUAV)
     {
         m_desc.usage |= GfxBufferUsageUnorderedAccess;
     }
@@ -207,11 +211,16 @@ void RGBuffer::Realize()
 {
     if (!m_bImported)
     {
-        m_pBuffer = m_allocator.AllocateBuffer(m_firstPass, m_lastPass, m_desc, m_name, m_initialState);
+        m_pBuffer = m_allocator.AllocateBuffer(m_firstPass, m_lastPass, m_lastState, m_desc, m_name, m_initialState);
     }
 }
 
-IGfxResource* RGBuffer::GetAliasedPrevResource()
+void RGBuffer::Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxAccessFlags acess_before, GfxAccessFlags acess_after)
 {
-    return m_allocator.GetAliasedPrevResource(m_pBuffer, m_firstPass);
+    pCommandList->BufferBarrier(m_pBuffer, acess_before, acess_after);
+}
+
+IGfxResource* RGBuffer::GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState)
+{
+    return m_allocator.GetAliasedPrevResource(m_pBuffer, m_firstPass, is_texture, lastUsedState);
 }

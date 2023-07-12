@@ -143,23 +143,39 @@ enum class GfxCommandQueue
     Copy,
 };
 
-enum class GfxResourceState
+enum GfxAccessBit
 {
-    Common,
-    RenderTarget,
-    UnorderedAccess,
-    DepthStencil,
-    DepthStencilReadOnly,
-    ShaderResourceNonPS,
-    ShaderResourcePS,
-    ShaderResourceAll,
-    IndirectArg,
-    CopyDst,
-    CopySrc,
-    ResolveDst,
-    ResolveSrc,
-    Present,
+    GfxAccessPresent              = 1 << 0,
+    GfxAccessRTV                  = 1 << 1,
+    GfxAccessDSV                  = 1 << 2,
+    GfxAccessDSVReadOnly          = 1 << 3,
+    GfxAccessVertexShaderSRV      = 1 << 4,
+    GfxAccessPixelShaderSRV       = 1 << 5,
+    GfxAccessComputeSRV           = 1 << 6,
+    GfxAccessVertexShaderUAV      = 1 << 7,
+    GfxAccessPixelShaderUAV       = 1 << 8,
+    GfxAccessComputeUAV           = 1 << 9,
+    GfxAccessClearUAV             = 1 << 10,
+    GfxAccessCopyDst              = 1 << 11,
+    GfxAccessCopySrc              = 1 << 12,
+    GfxAccessShadingRate          = 1 << 13,
+    GfxAccessIndexBuffer          = 1 << 14,
+    GfxAccessIndirectArgs         = 1 << 15,
+    GfxAccessASRead               = 1 << 16,
+    GfxAccessASWrite              = 1 << 17,
+    GfxAccessDiscard              = 1 << 18, //aliasing barrier
+
+
+    GfxAccessMaskVS = GfxAccessVertexShaderSRV | GfxAccessVertexShaderUAV,
+    GfxAccessMaskPS = GfxAccessPixelShaderSRV | GfxAccessPixelShaderUAV,
+    GfxAccessMaskCS = GfxAccessComputeSRV | GfxAccessComputeUAV,
+    GfxAccessMaskSRV = GfxAccessVertexShaderSRV | GfxAccessPixelShaderSRV | GfxAccessComputeSRV,
+    GfxAccessMaskUAV = GfxAccessVertexShaderUAV | GfxAccessPixelShaderUAV | GfxAccessComputeUAV,
+    GfxAccessMaskDSV = GfxAccessDSV | GfxAccessDSVReadOnly,
+    GfxAccessMaskCopy = GfxAccessCopyDst | GfxAccessCopySrc,
+    GfxAccessMaskAS = GfxAccessASRead | GfxAccessASWrite,
 };
+using GfxAccessFlags = uint32_t;
 
 enum class GfxRenderPassLoadOp
 {

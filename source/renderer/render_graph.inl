@@ -6,18 +6,18 @@
 class RenderGraphEdge : public DAGEdge
 {
 public:
-    RenderGraphEdge(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxResourceState usage, uint32_t subresource) :
+    RenderGraphEdge(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxAccessFlags usage, uint32_t subresource) :
         DAGEdge(graph, from, to)
     {
         m_usage = usage;
         m_subresource = subresource;
     }
 
-    GfxResourceState GetUsage() const { return m_usage; }
+    GfxAccessFlags GetUsage() const { return m_usage; }
     uint32_t GetSubresource() const { return m_subresource; }
 
 private:
-    GfxResourceState m_usage;
+    GfxAccessFlags m_usage;
     uint32_t m_subresource;
 };
 
@@ -65,7 +65,7 @@ private:
 class RenderGraphEdgeColorAttchment : public RenderGraphEdge
 {
 public:
-    RenderGraphEdgeColorAttchment(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxResourceState usage, uint32_t subresource, 
+    RenderGraphEdgeColorAttchment(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxAccessFlags usage, uint32_t subresource,
         uint32_t color_index, GfxRenderPassLoadOp load_op, const float4& clear_color) :
         RenderGraphEdge(graph, from, to, usage, subresource)
     {
@@ -90,7 +90,7 @@ private:
 class RenderGraphEdgeDepthAttchment : public RenderGraphEdge
 {
 public:
-    RenderGraphEdgeDepthAttchment(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxResourceState usage, uint32_t subresource,
+    RenderGraphEdgeDepthAttchment(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to, GfxAccessFlags usage, uint32_t subresource,
         GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil) :
         RenderGraphEdge(graph, from, to, usage, subresource)
     {
@@ -98,7 +98,7 @@ public:
         m_stencilLoadOp = stencil_load_op;
         m_clearDepth = clear_depth;
         m_clearStencil = clear_stencil;
-        m_bReadOnly = usage == GfxResourceState::DepthStencilReadOnly ? true : false;
+        m_bReadOnly = (usage & GfxAccessDSVReadOnly) ? true : false;
     }
 
     GfxRenderPassLoadOp GetDepthLoadOp() const { return m_depthLoadOp; };

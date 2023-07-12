@@ -134,7 +134,7 @@ private:
     IDXGIFactory6* m_pDxgiFactory = nullptr;
     IDXGIAdapter1* m_pDxgiAdapter = nullptr;
 
-    ID3D12Device5* m_pDevice = nullptr;
+    ID3D12Device10* m_pDevice = nullptr;
     ID3D12CommandQueue* m_pGraphicsQueue = nullptr;
     ID3D12CommandQueue* m_pComputeQueue = nullptr;
     ID3D12CommandQueue* m_pCopyQueue = nullptr;

@@ -98,15 +98,15 @@ void SkyCubeMap::Update(IGfxCommandList* pCommandList)
         bool first_frame = m_pRenderer->GetFrameID() == 0;
         if (!first_frame)
         {
-            pCommandList->ResourceBarrier(m_pSpecularTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::ShaderResourceAll, GfxResourceState::UnorderedAccess);
-            pCommandList->ResourceBarrier(m_pDiffuseTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::ShaderResourceAll, GfxResourceState::UnorderedAccess);
+            pCommandList->TextureBarrier(m_pSpecularTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxAccessMaskSRV, GfxAccessComputeUAV);
+            pCommandList->TextureBarrier(m_pDiffuseTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxAccessMaskSRV, GfxAccessComputeUAV);
         }
 
         UpdateSpecularCubeTexture(pCommandList);
         UpdateDiffuseCubeTexture(pCommandList);
 
-        pCommandList->ResourceBarrier(m_pSpecularTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceAll);
-        pCommandList->ResourceBarrier(m_pDiffuseTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceAll);
+        pCommandList->TextureBarrier(m_pSpecularTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxAccessComputeUAV, GfxAccessMaskSRV);
+        pCommandList->TextureBarrier(m_pDiffuseTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxAccessComputeUAV, GfxAccessMaskSRV);
     }
 }
 
@@ -117,7 +117,7 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
     bool first_frame = m_pRenderer->GetFrameID() == 0;
     if (!first_frame)
     {
-        pCommandList->ResourceBarrier(m_pTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxResourceState::ShaderResourceAll, GfxResourceState::UnorderedAccess);
+        pCommandList->TextureBarrier(m_pTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxAccessMaskSRV, GfxAccessComputeUAV);
     }
 
     pCommandList->SetPipelineState(m_source == SkySource::Realtime ? m_pRealtimeSkyPSO : m_pTexturedSkyPSO);
@@ -141,7 +141,7 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
     for (uint32_t slice = 0; slice < 6; ++slice)
     {
         uint32_t subresource = CalcSubresource(textureDesc, 0, slice);
-        pCommandList->ResourceBarrier(m_pTexture->GetTexture(), subresource, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceAll);
+        pCommandList->TextureBarrier(m_pTexture->GetTexture(), subresource, GfxAccessComputeUAV, GfxAccessComputeSRV);
     }
 
     //generate mipmaps, needed in specular filtering
@@ -196,7 +196,7 @@ void SkyCubeMap::UpdateCubeTexture(IGfxCommandList* pCommandList)
         for (uint32_t mip = 1; mip < textureDesc.mip_levels; ++mip)
         {
             uint32_t subresource = CalcSubresource(textureDesc, mip, slice);
-            pCommandList->ResourceBarrier(m_pTexture->GetTexture(), subresource, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceAll);
+            pCommandList->TextureBarrier(m_pTexture->GetTexture(), subresource, GfxAccessComputeUAV, GfxAccessMaskSRV);
         }
     }
 }

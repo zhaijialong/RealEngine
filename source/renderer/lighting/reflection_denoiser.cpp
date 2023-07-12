@@ -40,10 +40,10 @@ void ReflectionDenoiser::ImportTextures(RenderGraph* pRenderGraph, uint32_t widt
 
     eastl::swap(m_pSampleCountInput, m_pSampleCountOutput);
 
-    m_radianceHistory = pRenderGraph->Import(m_pRadianceHistory->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
-    m_varianceHistory = pRenderGraph->Import(m_pVarianceHistory->GetTexture(), GfxResourceState::UnorderedAccess);
-    m_sampleCountInput = pRenderGraph->Import(m_pSampleCountInput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
-    m_sampleCountOutput = pRenderGraph->Import(m_pSampleCountOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
+    m_radianceHistory = pRenderGraph->Import(m_pRadianceHistory->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV);
+    m_varianceHistory = pRenderGraph->Import(m_pVarianceHistory->GetTexture(), GfxAccessComputeUAV);
+    m_sampleCountInput = pRenderGraph->Import(m_pSampleCountInput->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV);
+    m_sampleCountOutput = pRenderGraph->Import(m_pSampleCountOutput->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV);
 }
 
 void ReflectionDenoiser::InvalidateHistory()
@@ -86,7 +86,10 @@ RGHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RGHandle indirect
                 pCommandList->ClearUAV(m_pVarianceHistory->GetTexture(), m_pVarianceHistory->GetUAV(), clear_value);
                 pCommandList->ClearUAV(m_pSampleCountInput->GetTexture(), m_pSampleCountInput->GetUAV(), clear_value);
                 pCommandList->ClearUAV(m_pSampleCountOutput->GetTexture(), m_pSampleCountOutput->GetUAV(), clear_value);
-                pCommandList->UavBarrier(m_pSampleCountOutput->GetTexture());
+                pCommandList->TextureBarrier(m_pRadianceHistory->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
+                pCommandList->TextureBarrier(m_pVarianceHistory->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
+                pCommandList->TextureBarrier(m_pSampleCountInput->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
+                pCommandList->TextureBarrier(m_pSampleCountOutput->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
                 m_bHistoryInvalid = false;
             });
 
@@ -280,7 +283,7 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, RGBuffer* indi
 {
     float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     pCommandList->ClearUAV(outputAvgRadianceUAV->GetTexture(), outputAvgRadianceUAV->GetUAV(), clear_value);
-    pCommandList->UavBarrier(outputAvgRadianceUAV->GetTexture());
+    pCommandList->TextureBarrier(outputAvgRadianceUAV->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
 
     pCommandList->SetPipelineState(m_pReprojectPSO);
 

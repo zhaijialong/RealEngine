@@ -57,8 +57,8 @@ RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle 
     auto taa_pass = pRenderGraph->AddPass<TAAPassData>("TAA", RenderPassType::Compute,
         [&](TAAPassData& data, RGBuilder& builder)
         {
-            RGHandle historyInputRT = builder.Import(m_pHistoryColorInput->GetTexture(), GfxResourceState::UnorderedAccess);
-            RGHandle historyOutputRT = builder.Import(m_pHistoryColorOutput->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
+            RGHandle historyInputRT = builder.Import(m_pHistoryColorInput->GetTexture(), GfxAccessComputeUAV);
+            RGHandle historyOutputRT = builder.Import(m_pHistoryColorOutput->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV);
 
             data.inputRT = builder.Read(sceneColorRT);
             data.historyInputRT = builder.Read(historyInputRT);

@@ -16,7 +16,6 @@ enum class RenderPassType
     Compute,
     AsyncCompute,
     Copy,
-    Resolve
 };
 
 struct RenderGraphAsyncResolveContext
@@ -81,17 +80,19 @@ protected:
     {
         RenderGraphResource* resource;
         uint32_t sub_resource;
-        GfxResourceState old_state;
-        GfxResourceState new_state;
+        GfxAccessFlags old_state;
+        GfxAccessFlags new_state;
     };
     eastl::vector<ResourceBarrier> m_resourceBarriers;
 
-    struct AliasBarrier
+    struct AliasDiscardBarrier
     {
-        IGfxResource* before;
-        IGfxResource* after;
+        IGfxResource* resource;
+        bool is_texture;
+        GfxAccessFlags acess_before;
+        GfxAccessFlags acess_after;
     };
-    eastl::vector<AliasBarrier> m_aliasBarriers;
+    eastl::vector<AliasDiscardBarrier> m_discardBarriers;
 
     RenderGraphEdgeColorAttchment* m_pColorRT[8] = {};
     RenderGraphEdgeDepthAttchment* m_pDepthRT = nullptr;

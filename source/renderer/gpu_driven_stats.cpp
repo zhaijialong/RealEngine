@@ -17,18 +17,18 @@ void GpuDrivenStats::Clear(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "GpuDrivenStats clear");
 
-    pCommandList->ResourceBarrier(m_pStatsBuffer->GetBuffer(), 0, GfxResourceState::ShaderResourceNonPS, GfxResourceState::UnorderedAccess);
+    pCommandList->BufferBarrier(m_pStatsBuffer->GetBuffer(), GfxAccessComputeSRV, GfxAccessClearUAV);
 
     uint32_t clear_value[4] = { 0, 0, 0, 0 };
     pCommandList->ClearUAV(m_pStatsBuffer->GetBuffer(), m_pStatsBuffer->GetUAV(), clear_value);
-    pCommandList->UavBarrier(m_pStatsBuffer->GetBuffer());
+    pCommandList->BufferBarrier(m_pStatsBuffer->GetBuffer(), GfxAccessClearUAV, GfxAccessMaskUAV);
 }
 
 void GpuDrivenStats::Draw(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "GpuDrivenStats");
 
-    pCommandList->ResourceBarrier(m_pStatsBuffer->GetBuffer(), 0, GfxResourceState::UnorderedAccess, GfxResourceState::ShaderResourceNonPS);
+    pCommandList->BufferBarrier(m_pStatsBuffer->GetBuffer(), GfxAccessMaskUAV, GfxAccessComputeSRV);
 
     uint32_t root_constants[1] = { m_pStatsBuffer->GetSRV()->GetHeapIndex() };
 

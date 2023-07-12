@@ -27,10 +27,10 @@ public:
     void Compile();
     void Execute(Renderer* pRenderer, IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
 
-    void Present(const RGHandle& handle, GfxResourceState filnal_state);
+    void Present(const RGHandle& handle, GfxAccessFlags filnal_state);
 
-    RGHandle Import(IGfxTexture* texture, GfxResourceState state);
-    RGHandle Import(IGfxBuffer* buffer, GfxResourceState state);
+    RGHandle Import(IGfxTexture* texture, GfxAccessFlags state);
+    RGHandle Import(IGfxBuffer* buffer, GfxAccessFlags state);
 
     RGTexture* GetTexture(const RGHandle& handle);
     RGBuffer* GetBuffer(const RGHandle& handle);
@@ -48,8 +48,8 @@ private:
     template<typename Resource>
     RGHandle Create(const typename Resource::Desc& desc, const eastl::string& name);
 
-    RGHandle Read(RenderGraphPassBase* pass, const RGHandle& input, GfxResourceState usage, uint32_t subresource);
-    RGHandle Write(RenderGraphPassBase* pass, const RGHandle& input, GfxResourceState usage, uint32_t subresource);
+    RGHandle Read(RenderGraphPassBase* pass, const RGHandle& input, GfxAccessFlags usage, uint32_t subresource);
+    RGHandle Write(RenderGraphPassBase* pass, const RGHandle& input, GfxAccessFlags usage, uint32_t subresource);
 
     RGHandle WriteColor(RenderGraphPassBase* pass, uint32_t color_index, const RGHandle& input, uint32_t subresource, GfxRenderPassLoadOp load_op, const float4& clear_color);
     RGHandle WriteDepth(RenderGraphPassBase* pass, const RGHandle& input, uint32_t subresource, GfxRenderPassLoadOp depth_load_op, GfxRenderPassLoadOp stencil_load_op, float clear_depth, uint32_t clear_stencil);
@@ -82,7 +82,7 @@ private:
     struct PresentTarget
     {
         RenderGraphResource* resource;
-        GfxResourceState state;
+        GfxAccessFlags state;
     };
     eastl::vector<PresentTarget> m_outputResources;
 };

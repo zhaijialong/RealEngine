@@ -252,7 +252,7 @@ void HZB::ReprojectDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDe
 {
     float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     pCommandList->ClearUAV(reprojectedDepthTexture->GetTexture(), reprojectedDepthTexture->GetUAV(), clear_value);
-    pCommandList->UavBarrier(reprojectedDepthTexture->GetTexture());
+    pCommandList->TextureBarrier(reprojectedDepthTexture->GetTexture(), GFX_ALL_SUB_RESOURCE, GfxAccessClearUAV, GfxAccessComputeUAV);
 
     pCommandList->SetPipelineState(m_pDepthReprojectionPSO);
 

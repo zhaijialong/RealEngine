@@ -39,9 +39,9 @@ public:
     virtual void WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data) override;
     virtual void UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings) override;
 
-    virtual void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) override;
-    virtual void UavBarrier(IGfxResource* resource) override;
-    virtual void AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after) override;
+    virtual void TextureBarrier(IGfxTexture* texture, uint32_t sub_resource, GfxAccessFlags access_before, GfxAccessFlags access_after) override;
+    virtual void BufferBarrier(IGfxBuffer* buffer, GfxAccessFlags access_before, GfxAccessFlags access_after) override;
+    virtual void GlobalBarrier(GfxAccessFlags access_before, GfxAccessFlags access_after) override;
     virtual void FlushBarriers() override;
 
     virtual void BeginRenderPass(const GfxRenderPassDesc& render_pass) override;
@@ -84,12 +84,15 @@ private:
     GfxCommandQueue m_queueType;
     ID3D12CommandQueue* m_pCommandQueue = nullptr;
     ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
-    ID3D12GraphicsCommandList6* m_pCommandList = nullptr;
+    ID3D12GraphicsCommandList7* m_pCommandList = nullptr;
 
     uint32_t m_commandCount = 0;
     IGfxPipelineState* m_pCurrentPSO = nullptr;
 
-    eastl::vector<D3D12_RESOURCE_BARRIER> m_pendingBarriers;
+    eastl::vector<D3D12_TEXTURE_BARRIER> m_textureBarriers;
+    eastl::vector<D3D12_BUFFER_BARRIER> m_bufferBarriers;
+    eastl::vector<D3D12_GLOBAL_BARRIER> m_globalBarriers;
+
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingWaits;
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
 

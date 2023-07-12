@@ -83,9 +83,9 @@ RGHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RGHandle input, RGHan
     auto classification_pass = pRenderGraph->AddPass<DenoiserTileClassificationData>("ShadowDenoiser tile classification", RenderPassType::Compute,
         [&](DenoiserTileClassificationData& data, RGBuilder& builder)
         {
-            RGHandle momentsTexture = builder.Import(m_pMomentsTexture->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
-            RGHandle prevMomentsTexture = builder.Import(m_pPrevMomentsTexture->GetTexture(), GfxResourceState::UnorderedAccess);
-            RGHandle historyTexture = builder.Import(m_pHistoryTexture->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
+            RGHandle momentsTexture = builder.Import(m_pMomentsTexture->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV);
+            RGHandle prevMomentsTexture = builder.Import(m_pPrevMomentsTexture->GetTexture(), GfxAccessComputeUAV);
+            RGHandle historyTexture = builder.Import(m_pHistoryTexture->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV);
 
             data.shadowMaskBuffer = builder.Read(prepare_pass->shadowMaskBuffer);
             data.depthTexture = builder.Read(depthRT);

@@ -37,23 +37,25 @@ bool D3D12Texture::Create()
     D3D12MA::Allocator* pAllocator = ((D3D12Device*)m_pDevice)->GetResourceAllocator();
 
     D3D12_RESOURCE_DESC resourceDesc = d3d12_resource_desc(m_desc);
+    D3D12_RESOURCE_DESC1 resourceDesc1 = CD3DX12_RESOURCE_DESC1(resourceDesc);
 
-    D3D12_RESOURCE_STATES initial_state;
+    D3D12_BARRIER_LAYOUT initial_layout;
+
     if (m_desc.usage & GfxTextureUsageRenderTarget)
     {
-        initial_state = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        initial_layout = D3D12_BARRIER_LAYOUT_RENDER_TARGET;
     }
     else if (m_desc.usage & GfxTextureUsageDepthStencil)
     {
-        initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+        initial_layout = D3D12_BARRIER_LAYOUT_DEPTH_STENCIL_WRITE;
     }
     else if (m_desc.usage & GfxTextureUsageUnorderedAccess)
     {
-        initial_state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        initial_layout = D3D12_BARRIER_LAYOUT_UNORDERED_ACCESS;
     }
     else
     {
-        initial_state = D3D12_RESOURCE_STATE_COMMON;
+        initial_layout = D3D12_BARRIER_LAYOUT_COMMON;
     }
 
     HRESULT hr;
@@ -63,13 +65,13 @@ bool D3D12Texture::Create()
         RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Placed);
         RE_ASSERT(m_desc.memory_type == m_desc.heap->GetDesc().memory_type);
 
-        hr = pAllocator->CreateAliasingResource((D3D12MA::Allocation*)m_desc.heap->GetHandle(), m_desc.heap_offset,
-            &resourceDesc, initial_state, nullptr, IID_PPV_ARGS(&m_pTexture));
+        hr = pAllocator->CreateAliasingResource2((D3D12MA::Allocation*)m_desc.heap->GetHandle(), m_desc.heap_offset,
+            &resourceDesc1, initial_layout, nullptr, 0, nullptr, IID_PPV_ARGS(&m_pTexture));
     }
     else if (m_desc.alloc_type == GfxAllocationType::Sparse)
     {
-        ID3D12Device* device = (ID3D12Device*)m_pDevice->GetHandle();
-        hr = device->CreateReservedResource(&resourceDesc, initial_state, nullptr, IID_PPV_ARGS(&m_pTexture));
+        ID3D12Device10* device = (ID3D12Device10*)m_pDevice->GetHandle();
+        hr = device->CreateReservedResource2(&resourceDesc, initial_layout, nullptr, nullptr, 0, nullptr, IID_PPV_ARGS(&m_pTexture));
     }
     else
     {
@@ -77,8 +79,8 @@ bool D3D12Texture::Create()
         allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
         allocationDesc.Flags = m_desc.alloc_type == GfxAllocationType::Committed ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
 
-        hr = pAllocator->CreateResource(&allocationDesc, 
-            &resourceDesc, initial_state, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pTexture));
+        hr = pAllocator->CreateResource3(&allocationDesc, 
+            &resourceDesc1, initial_layout, nullptr, 0, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pTexture));
     }
 
     if (FAILED(hr))

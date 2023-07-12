@@ -44,7 +44,7 @@ void GIDenoiser::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width
         m_bHistoryInvalid = true;
     }
 
-    m_historyIrradiance = pRenderGraph->Import(m_pHistoryIrradiance->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS);
+    m_historyIrradiance = pRenderGraph->Import(m_pHistoryIrradiance->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV);
 }
 
 void GIDenoiser::InvalidateHistory()
@@ -115,8 +115,8 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
         [&](TemporalAccumulationData& data, RGBuilder& builder)
         {
             data.inputSH = builder.Read(pre_blur->outputSH);
-            data.historySH = builder.Read(builder.Import(m_pTemporalAccumulationSH->GetTexture(), GfxResourceState::UnorderedAccess));
-            data.historyAccumulationCount = builder.Read(builder.Import(m_pTemporalAccumulationCount0->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS));
+            data.historySH = builder.Read(builder.Import(m_pTemporalAccumulationSH->GetTexture(), GfxAccessComputeUAV));
+            data.historyAccumulationCount = builder.Read(builder.Import(m_pTemporalAccumulationCount0->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV));
             data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
             data.velocity = builder.Read(velocity);
@@ -129,7 +129,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
             desc.format = GfxFormat::RGBA32UI;
             data.outputSH = builder.Write(builder.Create<RGTexture>(desc, "GI Denoiser/temporal accumulation outputSH"));
 
-            data.outputAccumulationCount = builder.Write(builder.Import(m_pTemporalAccumulationCount1->GetTexture(), m_bHistoryInvalid ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS));
+            data.outputAccumulationCount = builder.Write(builder.Import(m_pTemporalAccumulationCount1->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV));
         },
         [=](const TemporalAccumulationData& data, IGfxCommandList* pCommandList)
         {
@@ -267,7 +267,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
             data.normal = builder.Read(normal);
             data.outputSH = builder.Write(temporal_accumulation->historySH);
 
-            data.outputIrradiance = builder.Write(pRenderGraph->Import(m_pHistoryIrradiance->GetTexture(), GfxResourceState::ShaderResourceNonPS));
+            data.outputIrradiance = builder.Write(pRenderGraph->Import(m_pHistoryIrradiance->GetTexture(), GfxAccessComputeSRV));
         },
         [=](const BlurData& data, IGfxCommandList* pCommandList)
         {

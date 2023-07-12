@@ -87,7 +87,7 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
     Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
     m_bHistoryInvalid = camera->IsMoved() ? true : false;
 
-    RGHandle history = pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxResourceState::UnorderedAccess);
+    RGHandle history = pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxAccessComputeUAV);
 
     auto accumulation_pass = pRenderGraph->AddPass<AccumulationData>("Accumulation", RenderPassType::Compute,
         [&](AccumulationData& data, RGBuilder& builder)
@@ -140,7 +140,7 @@ void PathTracer::Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGT
 
         float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
         pCommandList->ClearUAV(m_pHistoryAccumulation->GetTexture(), m_pHistoryAccumulation->GetUAV(), clear_value);
-        pCommandList->UavBarrier(m_pHistoryAccumulation->GetTexture());
+        pCommandList->TextureBarrier(m_pHistoryAccumulation->GetTexture(), 0, GfxAccessClearUAV, GfxAccessComputeUAV);
     }
 
     pCommandList->SetPipelineState(m_pAccumulationPSO);

@@ -135,9 +135,9 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
                 data.candidateRadiance = builder.Read(raytrace_pass->outputRadiance);
                 data.candidateRayDirection = builder.Read(raytrace_pass->outputRayDirection);
 
-                GfxResourceState textureState = initialFrame ? GfxResourceState::UnorderedAccess : GfxResourceState::ShaderResourceNonPS;
+                GfxAccessFlags textureState = initialFrame ? GfxAccessComputeUAV : GfxAccessComputeSRV;
 
-                data.historyReservoirDepthNormal = builder.Read(builder.Import(m_temporalReservoir[0].depthNormal->GetTexture(), GfxResourceState::UnorderedAccess));
+                data.historyReservoirDepthNormal = builder.Read(builder.Import(m_temporalReservoir[0].depthNormal->GetTexture(), GfxAccessComputeUAV));
                 data.historyReservoirSampleRadiance = builder.Read(builder.Import(m_temporalReservoir[0].sampleRadiance->GetTexture(), textureState));
                 data.historyReservoirRayDirection = builder.Read(builder.Import(m_temporalReservoir[0].rayDirection->GetTexture(), textureState));
                 data.historyReservoir = builder.Read(builder.Import(m_temporalReservoir[0].reservoir->GetTexture(), textureState));
