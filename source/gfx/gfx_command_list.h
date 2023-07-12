@@ -41,7 +41,6 @@ public:
     virtual void UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings) = 0;
 
     //todo : remove these
-    void ResourceBarrier(IGfxResource* resource, uint32_t sub_resource, GfxResourceState old_state, GfxResourceState new_state) {}
     void AliasingBarrier(IGfxResource* resource_before, IGfxResource* resource_after) {}
 
     virtual void TextureBarrier(IGfxTexture* texture, uint32_t sub_resource, GfxAccessFlags access_before, GfxAccessFlags access_after) = 0;

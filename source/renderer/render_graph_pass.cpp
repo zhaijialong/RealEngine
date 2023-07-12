@@ -32,8 +32,8 @@ void RenderGraphPassBase::ResolveBarriers(const DirectedAcyclicGraph& graph)
         RE_ASSERT(resource_incoming.size() <= 1);
         RE_ASSERT(resource_outgoing.size() >= 1);
 
-        GfxResourceState old_state = GfxResourceState::Present;
-        GfxResourceState new_state = edge->GetUsage();
+        GfxAccessFlags old_state = GfxAccessPresent;
+        GfxAccessFlags new_state = edge->GetUsage();
 
         //try to find previous state from last pass which used this resource
         if (resource_outgoing.size() > 1) //todo : should merge states if possible, eg. shader resource ps + shader resource non-ps -> shader resource all
@@ -52,7 +52,7 @@ void RenderGraphPassBase::ResolveBarriers(const DirectedAcyclicGraph& graph)
         }
 
         //if not found, get the state from the pass which output the resource
-        if (old_state == GfxResourceState::Present)
+        if (old_state == GfxAccessPresent)
         {
             if (resource_incoming.empty())
             {
@@ -95,16 +95,16 @@ void RenderGraphPassBase::ResolveBarriers(const DirectedAcyclicGraph& graph)
         RenderGraphEdge* edge = (RenderGraphEdge*)edges[i];
         RE_ASSERT(edge->GetFromNode() == this->GetId());
 
-        GfxResourceState new_state = edge->GetUsage();
+        GfxAccessFlags new_state = edge->GetUsage();
 
-        if (new_state == GfxResourceState::RenderTarget)
+        if (new_state == GfxAccessRTV)
         {
             RE_ASSERT(dynamic_cast<RenderGraphEdgeColorAttchment*>(edge) != nullptr);
 
             RenderGraphEdgeColorAttchment* color_rt = (RenderGraphEdgeColorAttchment*)edge;
             m_pColorRT[color_rt->GetColorIndex()] = color_rt;
         }
-        else if (new_state == GfxResourceState::DepthStencil || new_state == GfxResourceState::DepthStencilReadOnly)
+        else if (new_state == GfxAccessDSV || new_state == GfxAccessDSVReadOnly)
         {
             RE_ASSERT(dynamic_cast<RenderGraphEdgeDepthAttchment*>(edge) != nullptr);
 
@@ -288,8 +288,7 @@ void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pComm
     for (size_t i = 0; i < m_resourceBarriers.size(); ++i)
     {
         const ResourceBarrier& barrier = m_resourceBarriers[i];
-
-        pCommandList->ResourceBarrier(barrier.resource->GetResource(), barrier.sub_resource, barrier.old_state, barrier.new_state);
+        barrier.resource->Barrier(pCommandList, barrier.sub_resource, barrier.old_state, barrier.new_state);
     }
 
     if (HasGfxRenderPass())

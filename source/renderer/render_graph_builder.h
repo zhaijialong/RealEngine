@@ -27,19 +27,14 @@ public:
         return m_pGraph->Create<Resource>(desc, name);
     }
 
-    RGHandle Import(IGfxTexture* texture, GfxResourceState state)
+    RGHandle Import(IGfxTexture* texture, GfxAccessFlags state)
     {
         return m_pGraph->Import(texture, state);
     }
 
-    RGHandle Read(const RGHandle& input, GfxResourceState usage, uint32_t subresource = 0)
+    RGHandle Read(const RGHandle& input, GfxAccessFlags usage, uint32_t subresource)
     {
-        RE_ASSERT(usage == GfxResourceState::ShaderResourceNonPS ||
-            usage == GfxResourceState::ShaderResourcePS ||
-            usage == GfxResourceState::ShaderResourceAll ||
-            usage == GfxResourceState::IndirectArg ||
-            usage == GfxResourceState::CopySrc ||
-            usage == GfxResourceState::ResolveSrc);
+        RE_ASSERT(usage & (GfxAccessMaskSRV | GfxAccessIndirectArgs | GfxAccessCopySrc));
 
         RE_ASSERT(GFX_ALL_SUB_RESOURCE != subresource); //RG doesn't support GFX_ALL_SUB_RESOURCE currently
 
@@ -48,33 +43,30 @@ public:
 
     RGHandle Read(const RGHandle& input, uint32_t subresource = 0, RGBuilderFlag flag = RGBuilderFlag::None)
     {
-        GfxResourceState state;
+        GfxAccessFlags state;
 
         switch (m_pPass->GetType())
         {
         case RenderPassType::Graphics:
             if (flag == RGBuilderFlag::ShaderStagePS)
             {
-                state = GfxResourceState::ShaderResourcePS;
+                state = GfxAccessPixelShaderSRV;
             }
             else if (flag == RGBuilderFlag::ShaderStageNonPS)
             {
-                state = GfxResourceState::ShaderResourceNonPS;
+                state = GfxAccessVertexShaderSRV;
             }
             else
             {
-                state = GfxResourceState::ShaderResourceAll;
+                state = GfxAccessPixelShaderSRV | GfxAccessVertexShaderSRV;
             }
             break;
         case RenderPassType::Compute:
         case RenderPassType::AsyncCompute:
-            state = GfxResourceState::ShaderResourceNonPS;
+            state = GfxAccessComputeSRV;
             break;
         case RenderPassType::Copy:
-            state = GfxResourceState::CopySrc;
-            break;
-        case RenderPassType::Resolve:
-            state = GfxResourceState::ResolveSrc;
+            state = GfxAccessCopySrc;
             break;
         default:
             RE_ASSERT(false);
@@ -85,36 +77,44 @@ public:
 
     RGHandle ReadIndirectArg(const RGHandle& input, uint32_t subresource = 0)
     {
-        return Read(input, GfxResourceState::IndirectArg, subresource);
+        return Read(input, GfxAccessIndirectArgs, subresource);
     }
 
-    RGHandle Write(const RGHandle& input, GfxResourceState usage, uint32_t subresource = 0)
+    RGHandle Write(const RGHandle& input, GfxAccessFlags usage, uint32_t subresource)
     {
-        RE_ASSERT(usage == GfxResourceState::UnorderedAccess ||
-            usage == GfxResourceState::CopyDst ||
-            usage == GfxResourceState::ResolveDst);
+        RE_ASSERT(usage & (GfxAccessMaskUAV | GfxAccessCopyDst));
 
         RE_ASSERT(GFX_ALL_SUB_RESOURCE != subresource); //RG doesn't support GFX_ALL_SUB_RESOURCE currently
 
         return m_pGraph->Write(m_pPass, input, usage, subresource);
     }
 
-    RGHandle Write(const RGHandle& input, uint32_t subresource = 0)
+    RGHandle Write(const RGHandle& input, uint32_t subresource = 0, RGBuilderFlag flag = RGBuilderFlag::None)
     {
-        GfxResourceState state;
+        GfxAccessFlags state;
 
         switch (m_pPass->GetType())
         {
         case RenderPassType::Graphics:
+            if (flag == RGBuilderFlag::ShaderStagePS)
+            {
+                state = GfxAccessPixelShaderUAV;
+            }
+            else if (flag == RGBuilderFlag::ShaderStageNonPS)
+            {
+                state = GfxAccessVertexShaderUAV;
+            }
+            else
+            {
+                state = GfxAccessPixelShaderUAV | GfxAccessVertexShaderUAV;
+            }
+            break;
         case RenderPassType::Compute:
         case RenderPassType::AsyncCompute:
-            state = GfxResourceState::UnorderedAccess;
+            state = GfxAccessComputeUAV;
             break;
         case RenderPassType::Copy:
-            state = GfxResourceState::CopyDst;
-            break;
-        case RenderPassType::Resolve:
-            state = GfxResourceState::ResolveDst;
+            state = GfxAccessCopyDst;
             break;
         default:
             RE_ASSERT(false);

@@ -143,24 +143,6 @@ enum class GfxCommandQueue
     Copy,
 };
 
-enum class GfxResourceState
-{
-    Common,
-    RenderTarget,
-    UnorderedAccess,
-    DepthStencil,
-    DepthStencilReadOnly,
-    ShaderResourceNonPS,
-    ShaderResourcePS,
-    ShaderResourceAll,
-    IndirectArg,
-    CopyDst,
-    CopySrc,
-    ResolveDst,
-    ResolveSrc,
-    Present,
-};
-
 enum GfxAccessBit
 {
     GfxAccessPresent              = 1 << 0,

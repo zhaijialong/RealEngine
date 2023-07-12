@@ -16,7 +16,6 @@ enum class RenderPassType
     Compute,
     AsyncCompute,
     Copy,
-    Resolve
 };
 
 struct RenderGraphAsyncResolveContext
@@ -81,8 +80,8 @@ protected:
     {
         RenderGraphResource* resource;
         uint32_t sub_resource;
-        GfxResourceState old_state;
-        GfxResourceState new_state;
+        GfxAccessFlags old_state;
+        GfxAccessFlags new_state;
     };
     eastl::vector<ResourceBarrier> m_resourceBarriers;
 

@@ -20,7 +20,7 @@ public:
     virtual void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass);
     virtual void Realize() = 0;
     virtual IGfxResource* GetResource() = 0;
-    virtual GfxResourceState GetInitialState() = 0;
+    virtual GfxAccessFlags GetInitialState() = 0;
 
     const char* GetName() const { return m_name.c_str(); }
     DAGNodeID GetFirstPassID() const { return m_firstPass; }
@@ -29,8 +29,8 @@ public:
     bool IsUsed() const { return m_firstPass != UINT32_MAX; }
     bool IsImported() const { return m_bImported; }
 
-    GfxResourceState GetFinalState() const { return m_lastState; }
-    void SetFinalState(GfxResourceState state) { m_lastState = state; }
+    GfxAccessFlags GetFinalState() const { return m_lastState; }
+    virtual void SetFinalState(GfxAccessFlags state) { m_lastState = state; }
 
     bool IsOutput() const { return m_bOutput; }
     void SetOutput(bool value) { m_bOutput = value; }
@@ -38,13 +38,14 @@ public:
     bool IsOverlapping() const { return !IsImported() && !IsOutput(); }
 
     virtual IGfxResource* GetAliasedPrevResource() = 0;
+    virtual void Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxAccessFlags acess_before, GfxAccessFlags acess_after) = 0;
 
 protected:
     eastl::string m_name;
 
     DAGNodeID m_firstPass = UINT32_MAX;
     DAGNodeID m_lastPass = 0;
-    GfxResourceState m_lastState = GfxResourceState::Common;
+    GfxAccessFlags m_lastState = GfxAccessDiscard;
 
     bool m_bImported = false;
     bool m_bOutput = false;
@@ -56,7 +57,7 @@ public:
     using Desc = GfxTextureDesc;
 
     RGTexture(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc);
-    RGTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxResourceState state);
+    RGTexture(RenderGraphResourceAllocator& allocator, IGfxTexture* texture, GfxAccessFlags state);
     ~RGTexture();
 
     IGfxTexture* GetTexture() const { return m_pTexture; }
@@ -67,13 +68,14 @@ public:
     virtual void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass) override;
     virtual void Realize() override;
     virtual IGfxResource* GetResource() override { return m_pTexture; }
-    virtual GfxResourceState GetInitialState() override { return m_initialState; }
+    virtual GfxAccessFlags GetInitialState() override { return m_initialState; }
+    virtual void Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxAccessFlags acess_before, GfxAccessFlags acess_after) override;
     virtual IGfxResource* GetAliasedPrevResource() override;
 
 private:
     Desc m_desc;
     IGfxTexture* m_pTexture = nullptr;
-    GfxResourceState m_initialState = GfxResourceState::Common;
+    GfxAccessFlags m_initialState = GfxAccessDiscard;
     RenderGraphResourceAllocator& m_allocator;
 };
 
@@ -83,7 +85,7 @@ public:
     using Desc = GfxBufferDesc;
 
     RGBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc);
-    RGBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxResourceState state);
+    RGBuffer(RenderGraphResourceAllocator& allocator, IGfxBuffer* buffer, GfxAccessFlags state);
     ~RGBuffer();
 
     IGfxBuffer* GetBuffer() const { return m_pBuffer; }
@@ -93,12 +95,13 @@ public:
     virtual void Resolve(RenderGraphEdge* edge, RenderGraphPassBase* pass) override;
     virtual void Realize() override;
     virtual IGfxResource* GetResource() override { return m_pBuffer; }
-    virtual GfxResourceState GetInitialState() override { return m_initialState; }
+    virtual GfxAccessFlags GetInitialState() override { return m_initialState; }
+    virtual void Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxAccessFlags acess_before, GfxAccessFlags acess_after) override;
     virtual IGfxResource* GetAliasedPrevResource() override;
 
 private:
     Desc m_desc;
     IGfxBuffer* m_pBuffer = nullptr;
-    GfxResourceState m_initialState = GfxResourceState::Common;
+    GfxAccessFlags m_initialState = GfxAccessDiscard;
     RenderGraphResourceAllocator& m_allocator;
 };

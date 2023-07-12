@@ -30,7 +30,7 @@ class RenderGraphResourceAllocator
         bool isTexture = true;
         LifetimeRange lifetime;
         uint64_t lastUsedFrame = 0;
-        GfxResourceState lastUsedState = GfxResourceState::Present;
+        GfxAccessFlags lastUsedState = GfxAccessDiscard;
     };
 
     struct Heap
@@ -83,12 +83,12 @@ public:
 
     void Reset();
 
-    IGfxTexture* AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const eastl::string& name, GfxResourceState& initial_state);
-    void FreeNonOverlappingTexture(IGfxTexture* texture, GfxResourceState state);
+    IGfxTexture* AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
+    void FreeNonOverlappingTexture(IGfxTexture* texture, GfxAccessFlags state);
 
-    IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const eastl::string& name, GfxResourceState& initial_state);
-    IGfxBuffer* AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const eastl::string& name, GfxResourceState& initial_state);
-    void Free(IGfxResource* resource, GfxResourceState state);
+    IGfxTexture* AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
+    IGfxBuffer* AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
+    void Free(IGfxResource* resource, GfxAccessFlags state);
 
     IGfxResource* GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass);
 
@@ -108,7 +108,7 @@ private:
     struct NonOverlappingTexture
     {
         IGfxTexture* texture;
-        GfxResourceState lastUsedState;
+        GfxAccessFlags lastUsedState;
         uint64_t lastUsedFrame;
     };
     eastl::vector<NonOverlappingTexture> m_freeOverlappingTextures;

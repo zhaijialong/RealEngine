@@ -94,6 +94,7 @@ inline D3D12_BARRIER_LAYOUT d3d12_barrier_layout(GfxAccessFlags flags)
     if (flags & GfxAccessDSVReadOnly)     return D3D12_BARRIER_LAYOUT_DEPTH_STENCIL_READ;
     if (flags & GfxAccessMaskSRV)         return D3D12_BARRIER_LAYOUT_SHADER_RESOURCE;
     if (flags & GfxAccessMaskUAV)         return D3D12_BARRIER_LAYOUT_UNORDERED_ACCESS;
+    if (flags & GfxAccessClearUAV)        return D3D12_BARRIER_LAYOUT_UNORDERED_ACCESS;
     if (flags & GfxAccessCopyDst)         return D3D12_BARRIER_LAYOUT_COPY_DEST;
     if (flags & GfxAccessCopySrc)         return D3D12_BARRIER_LAYOUT_COPY_SOURCE;
     if (flags & GfxAccessShadingRate)     return D3D12_BARRIER_LAYOUT_SHADING_RATE_SOURCE;

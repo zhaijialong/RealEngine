@@ -87,7 +87,7 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
     Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
     m_bHistoryInvalid = camera->IsMoved() ? true : false;
 
-    RGHandle history = pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxResourceState::UnorderedAccess);
+    RGHandle history = pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxAccessComputeUAV);
 
     auto accumulation_pass = pRenderGraph->AddPass<AccumulationData>("Accumulation", RenderPassType::Compute,
         [&](AccumulationData& data, RGBuilder& builder)

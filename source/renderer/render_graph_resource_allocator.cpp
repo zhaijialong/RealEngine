@@ -86,7 +86,7 @@ void RenderGraphResourceAllocator::CheckHeapUsage(Heap& heap)
     }
 }
 
-IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const eastl::string& name, GfxResourceState& initial_state)
+IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, uint32_t lastPass, const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state)
 {
     LifetimeRange lifetime = { firstPass, lastPass };
     uint32_t texture_size = m_pDevice->GetAllocationSize(desc);
@@ -122,15 +122,15 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
 
         if (IsDepthFormat(desc.format))
         {
-            initial_state = GfxResourceState::DepthStencil;
+            initial_state = GfxAccessDSV;
         }
         else if (desc.usage & GfxTextureUsageRenderTarget)
         {
-            initial_state = GfxResourceState::RenderTarget;
+            initial_state = GfxAccessRTV;
         }
         else if (desc.usage & GfxTextureUsageUnorderedAccess)
         {
-            initial_state = GfxResourceState::UnorderedAccess;
+            initial_state = GfxAccessMaskUAV;
         }
 
         RE_ASSERT(aliasedTexture.resource != nullptr);
@@ -141,7 +141,7 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateTexture(uint32_t firstPass, u
     return AllocateTexture(firstPass, lastPass, desc, name, initial_state);
 }
 
-IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const eastl::string& name, GfxResourceState& initial_state)
+IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uint32_t lastPass, const GfxBufferDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state)
 {
     LifetimeRange lifetime = { firstPass, lastPass };
     uint32_t buffer_size = desc.size;
@@ -175,7 +175,7 @@ IGfxBuffer* RenderGraphResourceAllocator::AllocateBuffer(uint32_t firstPass, uin
         aliasedBuffer.lifetime = lifetime;
         heap.resources.push_back(aliasedBuffer);
 
-        initial_state = GfxResourceState::Common;
+        initial_state = GfxAccessDiscard;
 
         RE_ASSERT(aliasedBuffer.resource != nullptr);
         return (IGfxBuffer*)aliasedBuffer.resource;
@@ -197,7 +197,7 @@ void RenderGraphResourceAllocator::AllocateHeap(uint32_t size)
     m_allocatedHeaps.push_back(heap);
 }
 
-void RenderGraphResourceAllocator::Free(IGfxResource* resource, GfxResourceState state)
+void RenderGraphResourceAllocator::Free(IGfxResource* resource, GfxAccessFlags state)
 {
     if (resource != nullptr)
     {
@@ -256,7 +256,7 @@ IGfxResource* RenderGraphResourceAllocator::GetAliasedPrevResource(IGfxResource*
     return nullptr;
 }
 
-IGfxTexture* RenderGraphResourceAllocator::AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const eastl::string& name, GfxResourceState& initial_state)
+IGfxTexture* RenderGraphResourceAllocator::AllocateNonOverlappingTexture(const GfxTextureDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state)
 {
     for (auto iter = m_freeOverlappingTextures.begin(); iter != m_freeOverlappingTextures.end(); ++iter)
     {
@@ -270,21 +270,21 @@ IGfxTexture* RenderGraphResourceAllocator::AllocateNonOverlappingTexture(const G
     }
     if (IsDepthFormat(desc.format))
     {
-        initial_state = GfxResourceState::DepthStencil;
+        initial_state = GfxAccessDSV;
     }
     else if (desc.usage & GfxTextureUsageRenderTarget)
     {
-        initial_state = GfxResourceState::RenderTarget;
+        initial_state = GfxAccessDSVReadOnly;
     }
     else if (desc.usage & GfxTextureUsageUnorderedAccess)
     {
-        initial_state = GfxResourceState::UnorderedAccess;
+        initial_state = GfxAccessMaskUAV;
     }
 
     return m_pDevice->CreateTexture(desc, "RGTexture " + name);
 }
 
-void RenderGraphResourceAllocator::FreeNonOverlappingTexture(IGfxTexture* texture, GfxResourceState state)
+void RenderGraphResourceAllocator::FreeNonOverlappingTexture(IGfxTexture* texture, GfxAccessFlags state)
 {
     if (texture != nullptr)
     {
