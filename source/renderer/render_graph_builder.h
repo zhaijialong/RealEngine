@@ -111,7 +111,7 @@ public:
             break;
         case RenderPassType::Compute:
         case RenderPassType::AsyncCompute:
-            state = GfxAccessComputeUAV;
+            state = GfxAccessComputeUAV | GfxAccessClearUAV;
             break;
         case RenderPassType::Copy:
             state = GfxAccessCopyDst;

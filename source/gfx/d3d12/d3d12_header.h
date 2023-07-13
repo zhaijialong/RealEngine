@@ -42,6 +42,12 @@ inline D3D12_HEAP_TYPE d3d12_heap_type(GfxMemoryType memory_type)
 inline D3D12_BARRIER_SYNC d3d12_barrier_sync(GfxAccessFlags flags)
 {
     D3D12_BARRIER_SYNC sync = D3D12_BARRIER_SYNC_NONE;
+    bool discard = flags & GfxAccessDiscard;
+    if (!discard)
+    {
+        //d3d validation : "SyncAfter bits D3D12_BARRIER_SYNC_CLEAR_UNORDERED_ACCESS_VIEW are incompatible with AccessAfter bits D3D12_BARRIER_ACCESS_NO_ACCESS"
+        if (flags & GfxAccessClearUAV)    sync |= D3D12_BARRIER_SYNC_CLEAR_UNORDERED_ACCESS_VIEW;
+    }
 
     if (flags & GfxAccessPresent)         sync |= D3D12_BARRIER_SYNC_ALL;
     if (flags & GfxAccessRTV)             sync |= D3D12_BARRIER_SYNC_RENDER_TARGET;
@@ -49,7 +55,6 @@ inline D3D12_BARRIER_SYNC d3d12_barrier_sync(GfxAccessFlags flags)
     if (flags & GfxAccessMaskVS)          sync |= D3D12_BARRIER_SYNC_VERTEX_SHADING;
     if (flags & GfxAccessMaskPS)          sync |= D3D12_BARRIER_SYNC_PIXEL_SHADING;
     if (flags & GfxAccessMaskCS)          sync |= D3D12_BARRIER_SYNC_COMPUTE_SHADING;
-    if (flags & GfxAccessClearUAV)        sync |= D3D12_BARRIER_SYNC_CLEAR_UNORDERED_ACCESS_VIEW;
     if (flags & GfxAccessMaskCopy)        sync |= D3D12_BARRIER_SYNC_COPY;
     if (flags & GfxAccessShadingRate)     sync |= D3D12_BARRIER_SYNC_PIXEL_SHADING;
     if (flags & GfxAccessIndexBuffer)     sync |= D3D12_BARRIER_SYNC_INDEX_INPUT;
