@@ -7,6 +7,7 @@ class IGfxTexture : public IGfxResource
 public:
     const GfxTextureDesc& GetDesc() const { return m_desc; }
 
+    virtual bool IsTexture() const { return true; }
     virtual uint32_t GetRequiredStagingBufferSize() const = 0;
     virtual uint32_t GetRowPitch(uint32_t mip_level) const = 0;
     virtual GfxTilingDesc GetTilingDesc() const = 0;

@@ -88,7 +88,6 @@ protected:
     struct AliasDiscardBarrier
     {
         IGfxResource* resource;
-        bool is_texture;
         GfxAccessFlags acess_before;
         GfxAccessFlags acess_after;
     };

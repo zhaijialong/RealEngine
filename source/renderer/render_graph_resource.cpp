@@ -113,9 +113,9 @@ void RGTexture::Barrier(IGfxCommandList* pCommandList, uint32_t subresource, Gfx
     pCommandList->TextureBarrier(m_pTexture, subresource, acess_before, acess_after);
 }
 
-IGfxResource* RGTexture::GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState)
+IGfxResource* RGTexture::GetAliasedPrevResource(GfxAccessFlags& lastUsedState)
 {
-    return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass, is_texture, lastUsedState);
+    return m_allocator.GetAliasedPrevResource(m_pTexture, m_firstPass, lastUsedState);
 }
 
 RGBuffer::RGBuffer(RenderGraphResourceAllocator& allocator, const eastl::string& name, const Desc& desc) :
@@ -220,7 +220,7 @@ void RGBuffer::Barrier(IGfxCommandList* pCommandList, uint32_t subresource, GfxA
     pCommandList->BufferBarrier(m_pBuffer, acess_before, acess_after);
 }
 
-IGfxResource* RGBuffer::GetAliasedPrevResource(bool& is_texture, GfxAccessFlags& lastUsedState)
+IGfxResource* RGBuffer::GetAliasedPrevResource(GfxAccessFlags& lastUsedState)
 {
-    return m_allocator.GetAliasedPrevResource(m_pBuffer, m_firstPass, is_texture, lastUsedState);
+    return m_allocator.GetAliasedPrevResource(m_pBuffer, m_firstPass, lastUsedState);
 }

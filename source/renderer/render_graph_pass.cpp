@@ -70,11 +70,10 @@ void RenderGraphPassBase::ResolveBarriers(const DirectedAcyclicGraph& graph)
 
         if (resource->IsOverlapping() && resource->GetFirstPassID() == this->GetId())
         {
-            bool is_texture;
-            IGfxResource* aliased_resource = resource->GetAliasedPrevResource(is_texture, alias_state);
+            IGfxResource* aliased_resource = resource->GetAliasedPrevResource(alias_state);
             if (aliased_resource)
             {
-                m_discardBarriers.push_back({ aliased_resource, is_texture, alias_state, new_state | GfxAccessDiscard });
+                m_discardBarriers.push_back({ aliased_resource, alias_state, new_state | GfxAccessDiscard });
 
                 is_aliased = true;
             }
@@ -293,7 +292,7 @@ void RenderGraphPassBase::Begin(const RenderGraph& graph, IGfxCommandList* pComm
     {
         const AliasDiscardBarrier& barrier = m_discardBarriers[i];
 
-        if (barrier.is_texture)
+        if (barrier.resource->IsTexture())
         {
             pCommandList->TextureBarrier((IGfxTexture*)barrier.resource, GFX_ALL_SUB_RESOURCE, barrier.acess_before, barrier.acess_after);
         }

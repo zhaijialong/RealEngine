@@ -27,7 +27,6 @@ class RenderGraphResourceAllocator
     struct AliasedResource
     {
         IGfxResource* resource;
-        bool isTexture = true;
         LifetimeRange lifetime;
         uint64_t lastUsedFrame = 0;
         GfxAccessFlags lastUsedState = GfxAccessDiscard;
@@ -90,7 +89,7 @@ public:
     IGfxBuffer* AllocateBuffer(uint32_t firstPass, uint32_t lastPass, GfxAccessFlags lastState, const GfxBufferDesc& desc, const eastl::string& name, GfxAccessFlags& initial_state);
     void Free(IGfxResource* resource, GfxAccessFlags state, bool set_state);
 
-    IGfxResource* GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass, bool& is_texture, GfxAccessFlags& lastUsedState);
+    IGfxResource* GetAliasedPrevResource(IGfxResource* resource, uint32_t firstPass, GfxAccessFlags& lastUsedState);
 
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxShaderResourceViewDesc& desc);
     IGfxDescriptor* GetDescriptor(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc);

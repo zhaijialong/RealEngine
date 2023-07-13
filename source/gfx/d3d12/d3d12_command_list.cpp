@@ -275,6 +275,8 @@ void D3D12CommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t 
 
 void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
+    RE_ASSERT(resource->IsTexture() || resource->IsBuffer());
+
     FlushBarriers();
 
     D3D12Descriptor shaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetShaderVisibleDescriptor();
@@ -287,6 +289,8 @@ void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, con
 
 void D3D12CommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
+    RE_ASSERT(resource->IsTexture() || resource->IsBuffer());
+
     FlushBarriers();
 
     D3D12Descriptor shaderVisibleDescriptor = ((D3D12UnorderedAccessView*)uav)->GetShaderVisibleDescriptor();
