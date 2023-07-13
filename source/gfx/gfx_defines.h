@@ -395,10 +395,10 @@ struct GfxRenderPassDesc
 
 enum GfxShaderCompilerFlagBit
 {
-    GfxShaderCompilerFlagO0,
-    GfxShaderCompilerFlagO1,
-    GfxShaderCompilerFlagO2,
-    GfxShaderCompilerFlagO3
+    GfxShaderCompilerFlagO0 = 1 << 0,
+    GfxShaderCompilerFlagO1 = 1 << 1,
+    GfxShaderCompilerFlagO2 = 1 << 2,
+    GfxShaderCompilerFlagO3 = 1 << 3
 };
 using GfxShaderCompilerFlags = uint32_t;
 
