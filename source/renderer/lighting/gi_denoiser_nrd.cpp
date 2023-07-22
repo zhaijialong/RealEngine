@@ -189,7 +189,7 @@ RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGH
             commonSettings.frameIndex = (uint32_t)m_pRenderer->GetFrameID();
             commonSettings.accumulationMode = m_bHistoryInvalid ? nrd::AccumulationMode::RESTART : nrd::AccumulationMode::CONTINUE;
             commonSettings.isMotionVectorInWorldSpace = false;
-            commonSettings.denoisingRange = camera->GetZFar();
+            //commonSettings.denoisingRange = camera->GetZFar();
 
             m_pReblur->SetCommonSettings(commonSettings);
             m_pReblur->SetDenoiserSettings(0, m_pReblurSettings.get());

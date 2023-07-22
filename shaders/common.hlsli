@@ -203,18 +203,20 @@ void DecodeClearCoat(float4 data, out float clearCoat, out float roughness, out 
 
 float GetLinearDepth(float ndcDepth)
 {
-    float C1 = GetCameraCB().linearZParams.x;
-    float C2 = GetCameraCB().linearZParams.y;
-    
-    return 1.0f / (ndcDepth * C1 - C2);
+    //float C1 = GetCameraCB().linearZParams.x;
+    //float C2 = GetCameraCB().linearZParams.y;    
+    //return 1.0f / (ndcDepth * C1 - C2);   
+        
+    return GetCameraCB().nearZ / ndcDepth; //we are using infinite far plane
 }
 
 float GetNdcDepth(float linearDepth)
 {
-    float A = GetCameraCB().mtxProjection._33;
-    float B = GetCameraCB().mtxProjection._34;
+    //float A = GetCameraCB().mtxProjection._33;
+    //float B = GetCameraCB().mtxProjection._34;
+    //return A + B / linearDepth;
     
-    return A + B / linearDepth;
+    return GetCameraCB().nearZ / linearDepth; //we are using infinite far plane
 }
 
 float3 GetNdcPosition(float4 clipPos)

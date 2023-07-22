@@ -28,7 +28,7 @@ struct CameraConstant
     float spreadAngle;
     
     float nearZ;
-    float farZ;
+    float _padding;
     float2 linearZParams;
 
     float2 jitter;

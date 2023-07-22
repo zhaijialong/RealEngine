@@ -11,7 +11,7 @@ public:
     Camera();
     ~Camera();
 
-    void SetPerpective(float aspectRatio, float yfov, float znear, float zfar);
+    void SetPerpective(float aspectRatio, float yfov, float znear);
 
     void SetPosition(const float3& pos);
     const float3& GetPosition() const { return m_pos; }
@@ -58,7 +58,6 @@ public:
 
     bool IsMoved() const { return m_bMoved; }
     float GetZNear() const { return m_znear; }
-    float GetZFar() const { return m_zfar; }
 
 private:
     void UpdateJitter();
@@ -89,7 +88,6 @@ private:
     float m_aspectRatio = 0.0f;
     float m_fov = 0.0f;
     float m_znear = 0.0f;
-    float m_zfar = 0.0f;
     float m_moveSpeed = 10.0f;
 
     float m_aperture = 1.0f;

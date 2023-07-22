@@ -255,8 +255,7 @@ void World::CreateCamera(tinyxml2::XMLElement* element)
 
     m_pCamera->SetPerpective((float)window_width / window_height,
         element->FindAttribute("fov")->FloatValue(),
-        element->FindAttribute("znear")->FloatValue(),
-        element->FindAttribute("zfar")->FloatValue());
+        element->FindAttribute("znear")->FloatValue());
 }
 
 void World::CreateModel(tinyxml2::XMLElement* element)

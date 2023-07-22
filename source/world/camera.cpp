@@ -38,14 +38,23 @@ Camera::~Camera()
     Engine::GetInstance()->WindowResizeSignal.disconnect(this);
 }
 
-void Camera::SetPerpective(float aspectRatio, float yfov, float znear, float zfar)
+void Camera::SetPerpective(float aspectRatio, float yfov, float znear)
 {
     m_aspectRatio = aspectRatio;
     m_fov = yfov;
     m_znear = znear;
-    m_zfar = zfar;
 
-    m_projection = perspective_matrix(degree_to_radian(yfov), aspectRatio, zfar, znear, pos_z, zero_to_one);
+    //m_projection = perspective_matrix(degree_to_radian(yfov), aspectRatio, zfar, znear, pos_z, zero_to_one);
+
+    //LH + reversed z + infinite far plane
+    float h = 1.0 / std::tan(0.5f * degree_to_radian(yfov));
+    float w = h / aspectRatio;
+    m_projection = float4x4(0.0);
+    m_projection[0][0] = w;
+    m_projection[1][1] = h;
+    m_projection[2][2] = 0.0f;
+    m_projection[2][3] = 1.0f;
+    m_projection[3][2] = znear;
 }
 
 void Camera::SetPosition(const float3& pos)
@@ -62,7 +71,7 @@ void Camera::SetFov(float fov)
 {
     m_fov = fov;
 
-    SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
+    SetPerpective(m_aspectRatio, m_fov, m_znear);
 }
 
 void Camera::EnableJitter(bool value)
@@ -144,7 +153,6 @@ void Camera::SetupCameraCB(CameraConstant& cameraCB)
     cameraCB.cameraPos = GetPosition();
     cameraCB.spreadAngle = atanf(2.0f * tanf(degree_to_radian(m_fov) * 0.5f) / pRenderer->GetRenderHeight()); // "Texture Level-of-Detail Strategies for Real-Time Ray Tracing", Eq.20
     cameraCB.nearZ = m_znear;
-    cameraCB.farZ = m_zfar;
     cameraCB.linearZParams = CalcDepthLinearizationParams(m_projection);
     cameraCB.jitter = m_jitter;
     cameraCB.prevJitter = m_prevJitter;
@@ -305,7 +313,7 @@ void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
 {
     m_aspectRatio = (float)width / height;
 
-    SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
+    SetPerpective(m_aspectRatio, m_fov, m_znear);
 }
 
 void Camera::OnGui()
@@ -315,11 +323,10 @@ void Camera::OnGui()
     bool perspective_updated = false;
     perspective_updated |= ImGui::SliderFloat("Fov", &m_fov, 5.0f, 135.0f, "%.0f");
     perspective_updated |= ImGui::SliderFloat("Near Plane", &m_znear, 0.0001f, 3.0f, "%.4f");
-    perspective_updated |= ImGui::SliderFloat("Far Plane", &m_zfar, 10.0f, 5000.0f, "%.2f");
 
     if (perspective_updated)
     {
-        SetPerpective(m_aspectRatio, m_fov, m_znear, m_zfar);
+        SetPerpective(m_aspectRatio, m_fov, m_znear);
     }
 
     if (ImGui::TreeNode("Physical Camera"))

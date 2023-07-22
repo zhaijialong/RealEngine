@@ -108,7 +108,7 @@ RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth,
             dispatchDesc.preExposure = 1.0f;
             dispatchDesc.renderSize.width = renderWidth;
             dispatchDesc.renderSize.height = renderHeight;
-            dispatchDesc.cameraFar = camera->GetZFar();
+            //dispatchDesc.cameraFar = camera->GetZFar();
             dispatchDesc.cameraNear = camera->GetZNear();
             dispatchDesc.cameraFovAngleVertical = degree_to_radian(camera->GetFov());
 
@@ -156,7 +156,7 @@ void FSR2::CreateFsr2Context(uint32_t renderWidth, uint32_t renderHeight, uint32
         m_desc.maxRenderSize.height = renderHeight;
         m_desc.displaySize.width = displayWidth;
         m_desc.displaySize.height = displayHeight;
-        m_desc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE | FFX_FSR2_ENABLE_DEPTH_INVERTED;
+        m_desc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE | FFX_FSR2_ENABLE_DEPTH_INVERTED | FFX_FSR2_ENABLE_DEPTH_INFINITE;
 
         ffxFsr2ContextCreate(&m_context, &m_desc);
 
