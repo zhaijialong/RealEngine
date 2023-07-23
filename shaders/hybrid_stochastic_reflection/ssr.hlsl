@@ -78,7 +78,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     
     Buffer<uint> rayListBuffer = ResourceDescriptorHeap[c_rayListBufferSRV];
     uint packed_coords = rayListBuffer[ray_index];
-    
+ 
     int2 coords;
     bool copy_horizontal;
     bool copy_vertical;
@@ -87,8 +87,6 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     
     Texture2D normalRT = ResourceDescriptorHeap[c_normalRT];
     Texture2D<float> depthRT = ResourceDescriptorHeap[c_depthRT];
-    RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
-    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
 
     float2 uv = GetScreenUV(coords, SceneCB.rcpRenderSize);
     
@@ -102,31 +100,48 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
 
     float3 H = SampleGGXVNDF(bnds.RandomFloat2(), roughness, N, V);
     float3 direction = reflect(-V, H);
-
-    float3 radiance = float3(0, 0, 0);
-    float rayLength = 0.0;
-
-    ssrt::Ray ray;
-    ray.origin = position + N * 0.01;
-    ray.direction = direction;
-    ray.maxInteration = 32;
-
-    ssrt::HitInfo hitInfo;
-    bool valid_hit = c_bEnableSWRay && ssrt::HierarchicalRaymarch(ray, hitInfo) && ValidateHit(hitInfo, uv, direction);
     
+    ssrt::HitInfo hitInfo = (ssrt::HitInfo)0;
+    bool valid_hit = false;
+    
+    if (c_bEnableSWRay)
+    {
+#if 1
+        ssrt::HierarchicalTracingRay ray;
+        ray.origin = position + N * 0.01;
+        ray.direction = direction;
+        ray.maxInteration = 32;
+
+        bool hit = ssrt::CastRay(ray, hitInfo);
+#else
+        ssrt::LinearTracingRay ray;
+        ray.origin = position + N * 0.0;
+        ray.direction = direction;
+        ray.linearSteps = 16;
+        ray.bisectionStep = 4;
+        ray.depthTexture = depthRT;
+        
+        bool hit = ssrt::CastRay(ray, hitInfo);
+#endif
+        
+        valid_hit = hit && ValidateHit(hitInfo, uv, direction);
+    }    
+
     if (valid_hit)
     {
         Texture2D prevSceneColorTexture = ResourceDescriptorHeap[c_prevSceneColorTexture];
         Texture2D velocityRT = ResourceDescriptorHeap[c_velocityRT];
+        RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
         SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+        SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
         
         float2 velocity = velocityRT.SampleLevel(pointSampler, hitInfo.screenUV, 0).xy;
         float2 prevUV = hitInfo.screenUV - velocity * float2(0.5, -0.5); //velocity is in ndc space
         
-        radiance = prevSceneColorTexture.SampleLevel(linearSampler, prevUV, 0).xyz;
+        float3 radiance = prevSceneColorTexture.SampleLevel(linearSampler, prevUV, 0).xyz;
         
         float3 hitPosition = GetWorldPosition(hitInfo.screenUV, hitInfo.depth);
-        rayLength = length(hitPosition - position);
+        float rayLength = length(hitPosition - position);
         
         float4 output = float4(radiance, rayLength);
         outputTexture[coords] = output;

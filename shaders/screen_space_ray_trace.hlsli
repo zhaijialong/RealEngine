@@ -11,7 +11,7 @@ float FFX_SSSR_LoadDepth(int2 pixel_coordinate, int mip)
 
 namespace ssrt
 {
-    struct Ray
+    struct HierarchicalTracingRay
     {
         float3 origin;
         float3 direction;
@@ -24,7 +24,7 @@ namespace ssrt
         float depth;
     };
     
-    bool HierarchicalRaymarch(Ray ray, out HitInfo hitInfo)
+    bool CastRay(HierarchicalTracingRay ray, out HitInfo hitInfo)
     {
         float4 rayStartClip = mul(GetCameraCB().mtxViewProjection, float4(ray.origin, 1));
         float4 rayEndClip = mul(GetCameraCB().mtxViewProjection, float4(ray.origin + ray.direction, 1));
@@ -51,5 +51,109 @@ namespace ssrt
         }
         
         return valid_hit;
+    }
+    
+    struct LinearTracingRay
+    {
+        float3 origin;
+        float3 direction;
+        float linearSteps;
+        float bisectionStep;
+        Texture2D<float> depthTexture;
+    };
+    
+    struct IntersectionResult
+    {
+        bool intersected;
+        float depth;
+    };
+    
+    IntersectionResult IntersectionTest(LinearTracingRay ray, float3 rayPointNdc)
+    {
+        const float2 uv = GetScreenUV(rayPointNdc.xy);
+        const float ray_depth = GetLinearDepth(rayPointNdc.z);
+
+        SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+        const float depth = ray.depthTexture.SampleLevel(pointSampler, uv, 0);
+        
+        IntersectionResult res;
+        res.intersected = GetLinearDepth(depth) < ray_depth;
+        res.depth = depth;
+
+        return res;
+    }
+    
+    bool CastRay(LinearTracingRay ray, out HitInfo hitInfo)
+    {
+        float4 rayStartClip = mul(GetCameraCB().mtxViewProjection, float4(ray.origin, 1));
+        float4 rayEndClip = mul(GetCameraCB().mtxViewProjection, float4(ray.origin + ray.direction, 1));
+        
+        float3 rayStartNdc = clamp(GetNdcPosition(rayStartClip), -1, 1);
+        float3 rayEndNdc = clamp(GetNdcPosition(rayEndClip), -1, 1);
+        
+        {
+            float3 direction = rayEndNdc - rayStartNdc;
+        
+            // Clip the ray to the frustum
+            const float2 distToEdge = (sign(direction.xy) - rayStartNdc.xy) / direction.xy;        
+            rayEndNdc = rayStartNdc + direction * min(distToEdge.x, distToEdge.y);
+        }        
+        
+        
+        float minT = 0.0;
+        float maxT = 1.0;
+        float hitDepth = 0.0;
+        
+        const float3 rayDirectionNdc = rayEndNdc - rayStartNdc;
+        const float stepT = (maxT - minT) / ray.linearSteps;
+        
+        bool intersected = false;
+
+        for (uint step = 0; step < ray.linearSteps; ++step)
+        {
+            const float candidateT = minT + stepT;
+            const float3 candidate = rayStartNdc + rayDirectionNdc * candidateT;
+
+            const IntersectionResult result = IntersectionTest(ray, candidate);
+            intersected = result.intersected;
+
+            if (intersected)
+            {
+                maxT = candidateT;
+                hitDepth = result.depth;
+                break;
+            }
+            else
+            {
+                minT = candidateT;
+            }
+        }
+        
+        if(intersected)
+        {
+            for (uint step = 0; step < ray.bisectionStep; ++step)
+            {
+                const float midT = (minT + maxT) * 0.5;
+                const float3 candidate = rayStartNdc + rayDirectionNdc * midT;
+
+                const IntersectionResult result = IntersectionTest(ray, candidate);
+
+                if (result.intersected)
+                {
+                    maxT = midT;
+                    hitDepth = result.depth;
+                }
+                else
+                {
+                    minT = midT;
+                }
+            }
+            
+            hitInfo.depth = hitDepth;
+            hitInfo.screenUV = lerp(GetScreenUV(rayStartNdc.xy), GetScreenUV(rayEndNdc.xy), maxT);
+            return true;
+        }
+        
+        return false;
     }
 }
