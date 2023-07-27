@@ -115,10 +115,11 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
         bool hit = ssrt::CastRay(ray, hitInfo);
 #else
         ssrt::LinearTracingRay ray;
-        ray.origin = position + N * 0.0;
+        ray.origin = position + N * 0.01;
         ray.direction = direction;
         ray.linearSteps = 16;
         ray.bisectionStep = 4;
+        ray.jitter = InterleavedGradientNoise(coords, SceneCB.frameIndex);
         ray.depthTexture = depthRT;
         
         bool hit = ssrt::CastRay(ray, hitInfo);

@@ -59,6 +59,7 @@ namespace ssrt
         float3 direction;
         float linearSteps;
         float bisectionStep;
+        float jitter;
         Texture2D<float> depthTexture;
     };
     
@@ -71,13 +72,18 @@ namespace ssrt
     IntersectionResult IntersectionTest(LinearTracingRay ray, float3 rayPointNdc)
     {
         const float2 uv = GetScreenUV(rayPointNdc.xy);
-        const float ray_depth = GetLinearDepth(rayPointNdc.z);
-
+        const float rayDepth = rayPointNdc.z;
+        const float linearRayDepth = GetLinearDepth(rayDepth);
+        
         SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
         const float depth = ray.depthTexture.SampleLevel(pointSampler, uv, 0);
+        const float linearDepth = GetLinearDepth(depth);
+
+        const float thickness = 0.3;
+        const float penetration = linearRayDepth / linearDepth - 1.0;
         
         IntersectionResult res;
-        res.intersected = GetLinearDepth(depth) < ray_depth;
+        res.intersected = (rayDepth < depth) && (penetration < thickness);
         res.depth = depth;
 
         return res;
@@ -102,7 +108,6 @@ namespace ssrt
         
         float minT = 0.0;
         float maxT = 1.0;
-        float hitDepth = 0.0;
         
         const float3 rayDirectionNdc = rayEndNdc - rayStartNdc;
         const float stepT = (maxT - minT) / ray.linearSteps;
@@ -111,7 +116,7 @@ namespace ssrt
 
         for (uint step = 0; step < ray.linearSteps; ++step)
         {
-            const float candidateT = minT + stepT;
+            const float candidateT = minT + stepT * (step == 0 ? ray.jitter : 1.0);
             const float3 candidate = rayStartNdc + rayDirectionNdc * candidateT;
 
             const IntersectionResult result = IntersectionTest(ray, candidate);
@@ -120,7 +125,7 @@ namespace ssrt
             if (intersected)
             {
                 maxT = candidateT;
-                hitDepth = result.depth;
+                hitInfo.depth = result.depth;
                 break;
             }
             else
@@ -141,7 +146,7 @@ namespace ssrt
                 if (result.intersected)
                 {
                     maxT = midT;
-                    hitDepth = result.depth;
+                    hitInfo.depth = result.depth;
                 }
                 else
                 {
@@ -149,7 +154,6 @@ namespace ssrt
                 }
             }
             
-            hitInfo.depth = hitDepth;
             hitInfo.screenUV = lerp(GetScreenUV(rayStartNdc.xy), GetScreenUV(rayEndNdc.xy), maxT);
             return true;
         }

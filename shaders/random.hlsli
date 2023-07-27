@@ -69,6 +69,14 @@ float2 Hammersley(uint i, uint N)
     return float2(float(i) / float(N), RadicalInverse(i));
 }
 
+float InterleavedGradientNoise(int2 pos, int frame)
+{
+    frame = frame % 64;
+    float x = float(pos.x) + 5.588238f * float(frame);
+    float y = float(pos.y) + 5.588238f * float(frame);
+    return frac(52.9829189f * frac(0.06711056f * x + 0.00583715f * y));
+}
+
 struct PRNG
 {
     uint seed;
