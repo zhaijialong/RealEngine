@@ -38,6 +38,30 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/d3d12/d3d12_texture.h
     ${SOURCE_ROOT}/gfx/d3d12/pix_runtime.cpp
     ${SOURCE_ROOT}/gfx/d3d12/pix_runtime.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_buffer.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_buffer.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_command_list.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_command_list.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_device.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_device.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_fence.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_fence.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_heap.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_heap.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_pipeline_state.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_pipeline_state.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_rt_blas.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_rt_blas.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_rt_tlas.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_rt_tlas.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_shader.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_shader.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_swapchain.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_swapchain.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_texture.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_texture.h
     ${SOURCE_ROOT}/gfx/gfx.cpp
     ${SOURCE_ROOT}/gfx/gfx.h
     ${SOURCE_ROOT}/gfx/gfx_buffer.h
