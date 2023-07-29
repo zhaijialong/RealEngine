@@ -7,7 +7,6 @@ cbuffer CB : register(b1)
     uint c_normalTexture;
     uint c_velocityTexture;
     uint c_historyTexture;
-    uint c_prevLinearDepthTexture;
     uint c_prevMomentsTexture;
     uint c_momentsTexture; //RWTexture2D<float3>, r11g11b10f
     uint c_tileMetaDataBuffer; //RWStructuredBuffer<uint>
@@ -31,8 +30,8 @@ float FFX_DNSR_Shadows_ReadDepth(int2 p)
 
 float FFX_DNSR_Shadows_ReadPreviousLinearDepth(int2 p)
 {
-    Texture2D prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
-    return prevLinearDepthTexture[p].x;
+    Texture2D prevDepthTexture = ResourceDescriptorHeap[SceneCB.prevSceneDepthSRV];
+    return GetLinearDepth(prevDepthTexture[p].x);
 }
 
 float3 FFX_DNSR_Shadows_ReadNormals(int2 p)

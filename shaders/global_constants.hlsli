@@ -80,6 +80,11 @@ struct SceneConstant
     uint2 displaySize;
     float2 rcpDisplaySize;
 
+    uint prevSceneColorSRV;
+    uint prevSceneDepthSRV;
+    uint prevNormalSRV;
+    uint _padding0;
+    
     uint HZBWidth;
     uint HZBHeight;
     uint firstPhaseCullingHZBSRV;

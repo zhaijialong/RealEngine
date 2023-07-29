@@ -1,6 +1,8 @@
 #include "post_processor.h"
 #include "taa.h"
 #include "automatic_exposure.h"
+#include "dof.h"
+#include "motion_blur.h"
 #include "bloom.h"
 #include "tonemapper.h"
 #include "fxaa.h"
@@ -18,6 +20,8 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
 
     m_pTAA = eastl::make_unique<TAA>(pRenderer);
     m_pAutomaticExposure = eastl::make_unique<AutomaticExposure>(pRenderer);
+    m_pDOF = eastl::make_unique<DOF>(pRenderer);
+    m_pMotionBlur = eastl::make_unique<MotionBlur>(pRenderer);
     m_pBloom = eastl::make_unique<Bloom>(pRenderer);
     m_pToneMapper = eastl::make_unique<Tonemapper>(pRenderer);
     m_pFXAA = eastl::make_unique<FXAA>(pRenderer);
@@ -29,8 +33,7 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
 
 PostProcessor::~PostProcessor() = default;
 
-RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT,
-    RGHandle linearDepthRT, RGHandle velocityRT, 
+RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, 
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "PostProcess");
@@ -54,7 +57,7 @@ RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT,
         break;
     default:
         RE_ASSERT(renderWidth == displayWidth && renderHeight == displayHeight);
-        outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, linearDepthRT, velocityRT, displayWidth, displayHeight);
+        outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
         break;
     }
 
@@ -66,6 +69,9 @@ RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT,
     {
         return outputHandle;
     }
+
+    outputHandle = m_pDOF->Render(pRenderGraph, outputHandle, sceneDepthRT);
+    outputHandle = m_pMotionBlur->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT);
 
     RGHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
 

@@ -11,14 +11,13 @@ cbuffer RootConsts : register(b0)
 [numthreads(8, 8, 1)]
 void depth_reprojection(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_inputSRV];
+    Texture2D<float> prevDepthTexture = ResourceDescriptorHeap[SceneCB.prevSceneDepthSRV];
     RWTexture2D<float> reprojectedDepthTexture = ResourceDescriptorHeap[c_outputUAV];
     SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
     
     float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_hzbWidth, c_hzbHeight);
-    
-    float prevLinearDepth = prevLinearDepthTexture.Sample(maxReductionSampler, uv);
-    float prevNdcDepth = GetNdcDepth(prevLinearDepth);
+
+    float prevNdcDepth = prevDepthTexture.SampleLevel(maxReductionSampler, uv, 0);
     
     float4 clipPos = float4((uv * 2.0 - 1.0) * float2(1.0, -1.0), prevNdcDepth, 1.0);
     float4 worldPos = mul(GetCameraCB().mtxPrevViewProjectionInverse, clipPos);

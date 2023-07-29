@@ -108,7 +108,7 @@ RGHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RGHandle indirect
         RGHandle linearDepth;
         RGHandle normal;
         RGHandle velocity;
-        RGHandle prevLinearDepth;
+        RGHandle prevDepth;
         RGHandle prevNormal;
 
         RGHandle inputRadiance;
@@ -132,7 +132,7 @@ RGHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RGHandle indirect
             data.linearDepth = builder.Read(linear_depth);
             data.normal = builder.Read(normal);
             data.velocity = builder.Read(velocity);
-            data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
+            data.prevDepth = builder.Read(m_pRenderer->GetPrevSceneDepthHandle());
             data.prevNormal = builder.Read(m_pRenderer->GetPrevNormalHandle());
 
             data.inputRadiance = builder.Read(input);
@@ -290,12 +290,9 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, RGBuffer* indi
     struct Constants
     {
         uint tileListBuffer;
-
         uint depthTexture;
         uint normalTexture;
         uint velocityTexture;
-        uint prevLinearDepthTexture;
-        uint prevNormalTexture;
 
         uint inputRadianceTexture;
         uint historyRadianceTexture;
@@ -315,14 +312,10 @@ void ReflectionDenoiser::Reproject(IGfxCommandList* pCommandList, RGBuffer* indi
     constants.velocityTexture = velocity->GetSRV()->GetHeapIndex();
     if (m_pRenderer->IsHistoryTextureValid())
     {
-        constants.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
-        constants.prevNormalTexture = m_pRenderer->GetPrevNormalTexture()->GetSRV()->GetHeapIndex();
         constants.historyRadianceTexture = m_pRadianceHistory->GetSRV()->GetHeapIndex();
     }
     else
     {
-        constants.prevLinearDepthTexture = linearDepth->GetSRV()->GetHeapIndex();
-        constants.prevNormalTexture = normal->GetSRV()->GetHeapIndex();
         constants.historyRadianceTexture = inputRadiance->GetSRV()->GetHeapIndex();
     }
     constants.inputRadianceTexture = inputRadiance->GetSRV()->GetHeapIndex();

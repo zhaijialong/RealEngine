@@ -105,7 +105,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
         RGHandle depth;
         RGHandle normal;
         RGHandle velocity;
-        RGHandle prevLinearDepth;
+        RGHandle prevDepth;
         RGHandle prevNormal;
         RGHandle outputSH;
         RGHandle outputAccumulationCount;
@@ -120,7 +120,7 @@ RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHa
             data.depth = builder.Read(depth);
             data.normal = builder.Read(normal);
             data.velocity = builder.Read(velocity);
-            data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
+            data.prevDepth = builder.Read(m_pRenderer->GetPrevSceneDepthHandle());
             data.prevNormal = builder.Read(m_pRenderer->GetPrevNormalHandle());
 
             RGTexture::Desc desc;
@@ -319,8 +319,6 @@ void GIDenoiser::TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* 
         uint depthTexture;
         uint normalTexture;
         uint velocityTexture;
-        uint prevLinearDepthTexture;
-        uint prevNormalTexture;
         uint outputSHTexture;
         uint outputAccumulationCountTexture;
         uint bHistoryInvalid;
@@ -333,8 +331,6 @@ void GIDenoiser::TemporalAccumulation(IGfxCommandList* pCommandList, RGTexture* 
     constants.depthTexture = depth->GetSRV()->GetHeapIndex();
     constants.normalTexture = normal->GetSRV()->GetHeapIndex();
     constants.velocityTexture = velocity->GetSRV()->GetHeapIndex();
-    constants.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
-    constants.prevNormalTexture = m_pRenderer->GetPrevNormalTexture()->GetSRV()->GetHeapIndex();
     constants.outputSHTexture = outputSH->GetUAV()->GetHeapIndex();
     constants.outputAccumulationCountTexture = m_pTemporalAccumulationCount1->GetUAV()->GetHeapIndex();
     constants.bHistoryInvalid = m_bHistoryInvalid;

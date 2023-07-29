@@ -139,10 +139,7 @@ public:
     StagingBufferAllocator* GetStagingBufferAllocator() const;
 
     bool IsHistoryTextureValid() const { return m_bHistoryValid; }
-    Texture2D* GetPrevLinearDepthTexture() const { return m_pPrevLinearDepthTexture.get(); }
-    Texture2D* GetPrevNormalTexture() const { return m_pPrevNormalTexture.get(); }
-    Texture2D* GetPrevSceneColorTexture() const { return m_pPrevSceneColorTexture.get(); }
-    RGHandle GetPrevLinearDepthHandle() const { return m_prevLinearDepthHandle; }
+    RGHandle GetPrevSceneDepthHandle() const { return m_prevSceneDepthHandle; }
     RGHandle GetPrevNormalHandle() const { return m_prevNormalHandle; }
     RGHandle GetPrevSceneColorHandle() const { return m_prevSceneColorHandle; }
 
@@ -162,7 +159,7 @@ private:
     RGHandle VelocityPass(RGHandle& depth);
     RGHandle LinearizeDepthPass(RGHandle depth);
     void ObjectIDPass(RGHandle& depth);
-    void CopyHistoryPass(RGHandle linearDepth, RGHandle normal, RGHandle sceneColor);
+    void CopyHistoryPass(RGHandle sceneDepth, RGHandle normal, RGHandle sceneColor);
 
     void FlushComputePass(IGfxCommandList* pCommandList);
     void BuildRayTracingAS(IGfxCommandList* pCommandList, IGfxCommandList* pComputeCommandList);
@@ -268,10 +265,10 @@ private:
     eastl::unique_ptr<Texture3D> m_pTonyMcMapface;
     eastl::unique_ptr<class MarschnerHairLUT> m_pMarschnerHairLUT;
 
-    eastl::unique_ptr<Texture2D> m_pPrevLinearDepthTexture;
+    eastl::unique_ptr<Texture2D> m_pPrevSceneDepthTexture;
     eastl::unique_ptr<Texture2D> m_pPrevNormalTexture;
     eastl::unique_ptr<Texture2D> m_pPrevSceneColorTexture;
-    RGHandle m_prevLinearDepthHandle;
+    RGHandle m_prevSceneDepthHandle;
     RGHandle m_prevNormalHandle;
     RGHandle m_prevSceneColorHandle;
     bool m_bHistoryValid = false;

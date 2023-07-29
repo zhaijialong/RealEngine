@@ -335,13 +335,12 @@ void HybridStochasticReflection::SSR(IGfxCommandList* pCommandList, RGTexture* n
     pCommandList->SetPipelineState(m_pSSRPSO);
     SetRootConstants(pCommandList);
 
-    uint constants[9] = {
+    uint constants[8] = {
         rayCounter->GetSRV()->GetHeapIndex(),
         rayList->GetSRV()->GetHeapIndex(),
         normal->GetSRV()->GetHeapIndex(),
         depth->GetSRV()->GetHeapIndex(),
         velocity->GetSRV()->GetHeapIndex(),
-        m_pRenderer->GetPrevSceneColorTexture()->GetSRV()->GetHeapIndex(),
         outputUAV->GetUAV()->GetHeapIndex(),
         hwRayCounterUAV->GetUAV()->GetHeapIndex(),
         hwRayListUAV->GetUAV()->GetHeapIndex(),

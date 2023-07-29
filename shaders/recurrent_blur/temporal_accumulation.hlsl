@@ -10,8 +10,6 @@ cbuffer CB : register(b1)
     uint c_depthTexture;
     uint c_normalTexture;
     uint c_velocityTexture;
-    uint c_prevLinearDepthTexture;
-    uint c_prevNormalTexture;
     uint c_outputSHTexture;
     uint c_outputAccumulationCountTexture;
     uint c_bHistoryInvalid;
@@ -28,8 +26,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     Texture2D<float> depthTexture = ResourceDescriptorHeap[c_depthTexture];
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
     Texture2D velocityTexture = ResourceDescriptorHeap[c_velocityTexture];
-    Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
-    Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
+    Texture2D<float> prevDepthTexture = ResourceDescriptorHeap[SceneCB.prevSceneDepthSRV];
+    Texture2D prevNormalTexture = ResourceDescriptorHeap[SceneCB.prevNormalSRV];
     RWTexture2D<uint4> outputTexture = ResourceDescriptorHeap[c_outputSHTexture];
     RWTexture2D<uint> outputAccumulationCountTexture = ResourceDescriptorHeap[c_outputAccumulationCountTexture];
     SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
@@ -56,7 +54,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     Bilinear bilinearFilter = GetBilinearFilter(prevUV, SceneCB.renderSize);
     float2 prevGatherUV = (bilinearFilter.origin + 1.0) * SceneCB.rcpRenderSize;
-    float4 prevLinearDepth = prevLinearDepthTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
+    float4 prevDepth = prevDepthTexture.GatherRed(pointSampler, prevGatherUV).wzxy;
+    float4 prevLinearDepth = float4(GetLinearDepth(prevDepth.x), GetLinearDepth(prevDepth.y), GetLinearDepth(prevDepth.z), GetLinearDepth(prevDepth.w));
     
 #if 0    
     float4 prevClipPos = float4((prevUV * 2.0 - 1.0) * float2(1.0, -1.0), prevDepth, 1.0);

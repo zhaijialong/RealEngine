@@ -5,7 +5,7 @@ cbuffer CB : register(b1)
     uint c_inputRT;
     uint c_historyInputRT;
     uint c_velocityRT;
-    uint c_linearDepthRT;
+    uint c_depthRT;
 
     uint c_historyOutputRT;
     uint c_outputRT;
@@ -64,17 +64,18 @@ float3 VarianceClip(float3 history, float gamma, float3 c0, float3 c1, float3 c2
 
 float2 GetVelocity(uint2 screenPos)
 {
-    Texture2D linearDepthRT = ResourceDescriptorHeap[c_linearDepthRT];
+    Texture2D depthTexture = ResourceDescriptorHeap[c_depthRT];
     Texture2D velocityTexture = ResourceDescriptorHeap[c_velocityRT];
 
     int2 closestPosOffset = int2(0, 0);
-    float closestDepth = 1e8;
+    float closestDepth = 0.0;
+
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
-            float depth = linearDepthRT[screenPos + int2(x, y)].x;
-            if (depth < closestDepth)
+            float depth = depthTexture[screenPos + int2(x, y)].x;
+            if (depth > closestDepth)
             {
                 closestDepth = depth;
                 closestPosOffset = int2(x, y);

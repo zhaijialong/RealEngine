@@ -36,14 +36,14 @@ void HZB::Generate1stPhaseCullingHZB(RenderGraph* graph)
 
     struct DepthReprojectionData
     {
-        RGHandle prevLinearDepth;
+        RGHandle prevDepth;
         RGHandle reprojectedDepth;
     };
 
     auto reprojection_pass = graph->AddPass<DepthReprojectionData>("Depth Reprojection", RenderPassType::Compute,
         [&](DepthReprojectionData& data, RGBuilder& builder)
         {
-            data.prevLinearDepth = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
+            data.prevDepth = builder.Read(m_pRenderer->GetPrevSceneDepthHandle());
 
             RGTexture::Desc desc;
             desc.width = m_hzbSize.x;
@@ -257,7 +257,7 @@ void HZB::ReprojectDepth(IGfxCommandList* pCommandList, RGTexture* reprojectedDe
     pCommandList->SetPipelineState(m_pDepthReprojectionPSO);
 
     uint32_t root_consts[4] = { 
-        m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex(),
+        0,
         reprojectedDepthTexture->GetUAV()->GetHeapIndex(),
         m_hzbSize.x, 
         m_hzbSize.y

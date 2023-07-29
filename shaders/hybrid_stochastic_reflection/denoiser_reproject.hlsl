@@ -3,12 +3,9 @@
 cbuffer Constants : register(b1)
 {
     uint c_tileListBuffer;
-    
     uint c_depthTexture;
     uint c_normalTexture;
     uint c_velocityTexture;
-    uint c_prevLinearDepthTexture;
-    uint c_prevNormalTexture;
 
     uint c_inputRadianceTexture;
     uint c_historyRadianceTexture;
@@ -29,15 +26,15 @@ float FFX_DNSR_Reflections_LoadDepth(int2 pixel_coordinate)
 
 float FFX_DNSR_Reflections_LoadLinearDepthHistory(int2 pixel_coordinate)
 {
-    Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
-    return prevLinearDepthTexture[pixel_coordinate];
+    Texture2D<float> prevDepthTexture = ResourceDescriptorHeap[SceneCB.prevSceneDepthSRV];
+    return GetLinearDepth(prevDepthTexture[pixel_coordinate]);
 }
 
 float FFX_DNSR_Reflections_SampleLinearDepthHistory(float2 uv)
 {
-    Texture2D<float> prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
+    Texture2D<float> prevDepthTexture = ResourceDescriptorHeap[SceneCB.prevSceneDepthSRV];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
-    return prevLinearDepthTexture.SampleLevel(linearSampler, uv, 0);
+    return GetLinearDepth(prevDepthTexture.SampleLevel(linearSampler, uv, 0));
 }
 
 float16_t3 FFX_DNSR_Reflections_LoadRadiance(int2 pixel_coordinate)
@@ -74,13 +71,13 @@ float16_t3 FFX_DNSR_Reflections_LoadWorldSpaceNormal(int2 pixel_coordinate)
 
 float16_t3 FFX_DNSR_Reflections_LoadWorldSpaceNormalHistory(int2 pixel_coordinate)
 {
-    Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
+    Texture2D prevNormalTexture = ResourceDescriptorHeap[SceneCB.prevNormalSRV];
     return (float16_t3)DecodeNormal(prevNormalTexture[pixel_coordinate].xyz);
 }
 
 float16_t3 FFX_DNSR_Reflections_SampleWorldSpaceNormalHistory(float2 uv)
 {
-    Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
+    Texture2D prevNormalTexture = ResourceDescriptorHeap[SceneCB.prevNormalSRV];
     SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     return (float16_t3)DecodeNormal(prevNormalTexture.SampleLevel(pointSampler, uv, 0).xyz);
 }
@@ -93,7 +90,7 @@ float16_t FFX_DNSR_Reflections_LoadRoughness(int2 pixel_coordinate)
 
 float16_t FFX_DNSR_Reflections_SampleRoughnessHistory(float2 uv)
 {
-    Texture2D prevNormalTexture = ResourceDescriptorHeap[c_prevNormalTexture];
+    Texture2D prevNormalTexture = ResourceDescriptorHeap[SceneCB.prevNormalSRV];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     return (float16_t)prevNormalTexture.SampleLevel(linearSampler, uv, 0).w;
 }

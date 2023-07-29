@@ -12,7 +12,6 @@ cbuffer CB : register(b1)
     uint c_normalRT;
     uint c_depthRT;
     uint c_velocityRT;
-    uint c_prevSceneColorTexture;
     uint c_outputTexture;
 
     uint c_hwRayCounterBufferUAV;
@@ -130,7 +129,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
 
     if (valid_hit)
     {
-        Texture2D prevSceneColorTexture = ResourceDescriptorHeap[c_prevSceneColorTexture];
+        Texture2D prevSceneColorTexture = ResourceDescriptorHeap[SceneCB.prevSceneColorSRV];
         Texture2D velocityRT = ResourceDescriptorHeap[c_velocityRT];
         RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
         SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];

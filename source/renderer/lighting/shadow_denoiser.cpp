@@ -73,7 +73,7 @@ RGHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RGHandle input, RGHan
         RGHandle normalTexture;
         RGHandle velocityTexture;
         RGHandle historyTexture;
-        RGHandle prevLinearDepthTexture;
+        RGHandle prevDepthTexture;
         RGHandle prevMomentsTexture;
         RGHandle momentsTexture; //RWTexture2D<float3>, r11g11b10f
         RGHandle tileMetaDataBuffer; //RWStructuredBuffer<uint>
@@ -92,7 +92,7 @@ RGHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RGHandle input, RGHan
             data.normalTexture = builder.Read(normalRT);
             data.velocityTexture = builder.Read(velocityRT);
             data.historyTexture = builder.Read(historyTexture);
-            data.prevLinearDepthTexture = builder.Read(m_pRenderer->GetPrevLinearDepthHandle());
+            data.prevDepthTexture = builder.Read(m_pRenderer->GetPrevSceneDepthHandle());
             data.prevMomentsTexture = builder.Read(prevMomentsTexture);
 
             data.momentsTexture = builder.Write(momentsTexture);
@@ -239,7 +239,6 @@ void ShadowDenoiser::TileClassification(IGfxCommandList* pCommandList, RGBuffer*
         uint normalTexture;
         uint velocityTexture;
         uint historyTexture;
-        uint prevLinearDepthTexture;
         uint prevMomentsTexture;
         uint momentsTexture; //RWTexture2D<float3>, r11g11b10f
         uint tileMetaDataBuffer; //RWStructuredBuffer<uint>
@@ -253,7 +252,6 @@ void ShadowDenoiser::TileClassification(IGfxCommandList* pCommandList, RGBuffer*
     cb.normalTexture = normalTexture->GetSRV()->GetHeapIndex();
     cb.velocityTexture = velocityTexture->GetSRV()->GetHeapIndex();
     cb.historyTexture = m_pHistoryTexture->GetSRV()->GetHeapIndex();
-    cb.prevLinearDepthTexture = m_pRenderer->GetPrevLinearDepthTexture()->GetSRV()->GetHeapIndex();
     cb.prevMomentsTexture = m_pPrevMomentsTexture->GetSRV()->GetHeapIndex();
     cb.momentsTexture = m_pMomentsTexture->GetUAV()->GetHeapIndex();
     cb.tileMetaDataBuffer = tileMetaDataBufferUAV->GetUAV()->GetHeapIndex();

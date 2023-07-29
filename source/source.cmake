@@ -160,10 +160,14 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/post_processing/cas.h
     ${SOURCE_ROOT}/renderer/post_processing/dlss.cpp
     ${SOURCE_ROOT}/renderer/post_processing/dlss.h
+    ${SOURCE_ROOT}/renderer/post_processing/dof.cpp
+    ${SOURCE_ROOT}/renderer/post_processing/dof.h
     ${SOURCE_ROOT}/renderer/post_processing/fsr2.cpp
     ${SOURCE_ROOT}/renderer/post_processing/fsr2.h
     ${SOURCE_ROOT}/renderer/post_processing/fxaa.cpp
     ${SOURCE_ROOT}/renderer/post_processing/fxaa.h
+    ${SOURCE_ROOT}/renderer/post_processing/motion_blur.cpp
+    ${SOURCE_ROOT}/renderer/post_processing/motion_blur.h
     ${SOURCE_ROOT}/renderer/post_processing/post_processor.cpp
     ${SOURCE_ROOT}/renderer/post_processing/post_processor.h
     ${SOURCE_ROOT}/renderer/post_processing/taa.cpp

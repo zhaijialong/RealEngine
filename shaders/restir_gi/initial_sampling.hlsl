@@ -6,7 +6,6 @@
 cbuffer CB : register(b0)
 {
     uint c_halfDepthNormalTexture;
-    uint c_prevLinearDepthTexture;
     uint c_historyIrradiance;
     uint c_outputRadianceUAV;
     uint c_outputRayDirection;
@@ -22,13 +21,13 @@ float3 GetIndirectDiffuseLighting(float3 position, rt::MaterialData material)
     Texture2D historyIrradianceTexture = ResourceDescriptorHeap[c_historyIrradiance];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
-    Texture2D prevLinearDepthTexture = ResourceDescriptorHeap[c_prevLinearDepthTexture];
+    Texture2D prevDepthTexture = ResourceDescriptorHeap[SceneCB.prevSceneDepthSRV];
     SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
     
     float4 prevClipPos = mul(GetCameraCB().mtxPrevViewProjection, float4(position, 1.0));
     float3 prevNdcPos = GetNdcPosition(prevClipPos);
     float2 prevUV = GetScreenUV(prevNdcPos.xy);
-    float prevLinearDepth = prevLinearDepthTexture.SampleLevel(pointSampler, prevUV, 0.0).x;
+    float prevLinearDepth = GetLinearDepth(prevDepthTexture.SampleLevel(pointSampler, prevUV, 0.0).x);
     
     if (any(prevUV < 0.0) || any(prevUV > 1.0) ||
         abs(GetLinearDepth(prevNdcPos.z) - prevLinearDepth) > 0.05)

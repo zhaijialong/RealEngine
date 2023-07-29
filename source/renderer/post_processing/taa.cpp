@@ -11,8 +11,7 @@ TAA::TAA(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "TAA PSO");
 }
 
-RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle linearDepthRT,
-    RGHandle velocityRT, uint32_t width, uint32_t height)
+RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "TAA",
         [&]()
@@ -48,7 +47,7 @@ RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle 
         RGHandle inputRT;
         RGHandle historyInputRT;
         RGHandle velocityRT;
-        RGHandle linearDepthRT;
+        RGHandle depthRT;
 
         RGHandle outputRT;
         RGHandle historyOutputRT;
@@ -63,7 +62,7 @@ RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle 
             data.inputRT = builder.Read(sceneColorRT);
             data.historyInputRT = builder.Read(historyInputRT);
             data.velocityRT = builder.Read(velocityRT);
-            data.linearDepthRT = builder.Read(linearDepthRT);
+            data.depthRT = builder.Read(sceneDepthRT);
 
             RGTexture::Desc desc;
             desc.width = width;
@@ -79,14 +78,14 @@ RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle 
             Draw(pCommandList,
                 pRenderGraph->GetTexture(data.inputRT), 
                 pRenderGraph->GetTexture(data.velocityRT), 
-                pRenderGraph->GetTexture(data.linearDepthRT),
+                pRenderGraph->GetTexture(data.depthRT),
                 pRenderGraph->GetTexture(data.outputRT), width, height);
         });
 
     return taa_pass->outputRT;
 }
 
-void TAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* velocity, RGTexture* linearDepth, RGTexture* output, uint32_t width, uint32_t height)
+void TAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* velocity, RGTexture* depth, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 
@@ -95,7 +94,7 @@ void TAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* veloc
         uint inputRT;
         uint historyInputRT;
         uint velocityRT;
-        uint linearDepthRT;
+        uint depthRT;
 
         uint historyOutputRT;
         uint outputRT;
@@ -104,7 +103,7 @@ void TAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* veloc
     CB cb;
     cb.inputRT = input->GetSRV()->GetHeapIndex();
     cb.velocityRT = velocity->GetSRV()->GetHeapIndex();
-    cb.linearDepthRT = linearDepth->GetSRV()->GetHeapIndex();
+    cb.depthRT = depth->GetSRV()->GetHeapIndex();
     if (m_bHistoryInvalid)
     {
         cb.historyInputRT = input->GetSRV()->GetHeapIndex();

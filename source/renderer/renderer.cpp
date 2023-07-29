@@ -292,6 +292,9 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.rcpRenderSize = float2(1.0f / m_nRenderWidth, 1.0f / m_nRenderHeight);
     sceneCB.displaySize = uint2(m_nDisplayWidth, m_nDisplayHeight);
     sceneCB.rcpDisplaySize = float2(1.0f / m_nDisplayWidth, 1.0f / m_nDisplayHeight);
+    sceneCB.prevSceneColorSRV = m_pPrevSceneColorTexture->GetSRV()->GetHeapIndex();
+    sceneCB.prevSceneDepthSRV = m_pPrevSceneDepthTexture->GetSRV()->GetHeapIndex();
+    sceneCB.prevNormalSRV = m_pPrevNormalTexture->GetSRV()->GetHeapIndex();
     sceneCB.HZBWidth = m_pHZB->GetHZBWidth();
     sceneCB.HZBHeight = m_pHZB->GetHZBHeight();
     sceneCB.firstPhaseCullingHZBSRV = firstPhaseHZBTexture->GetSRV()->GetHeapIndex();
@@ -351,11 +354,11 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
 
 void Renderer::ImportPrevFrameTextures()
 {
-    if (m_pPrevLinearDepthTexture == nullptr ||
-        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().width != m_nRenderWidth ||
-        m_pPrevLinearDepthTexture->GetTexture()->GetDesc().height != m_nRenderHeight)
+    if (m_pPrevSceneDepthTexture == nullptr ||
+        m_pPrevSceneDepthTexture->GetTexture()->GetDesc().width != m_nRenderWidth ||
+        m_pPrevSceneDepthTexture->GetTexture()->GetDesc().height != m_nRenderHeight)
     {
-        m_pPrevLinearDepthTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::R32F, GfxTextureUsageUnorderedAccess, "Prev LinearDepth"));
+        m_pPrevSceneDepthTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::R32F, GfxTextureUsageUnorderedAccess, "Prev SceneDepth"));
         m_pPrevNormalTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA8UNORM, GfxTextureUsageUnorderedAccess, "Prev Normal"));
         m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "Prev SceneColor"));
 
@@ -366,7 +369,7 @@ void Renderer::ImportPrevFrameTextures()
         m_bHistoryValid = true;
     }
 
-    m_prevLinearDepthHandle = m_pRenderGraph->Import(m_pPrevLinearDepthTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
+    m_prevSceneDepthHandle = m_pRenderGraph->Import(m_pPrevSceneDepthTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
     m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
     m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
 
@@ -382,19 +385,19 @@ void Renderer::ImportPrevFrameTextures()
         auto clear_pass = m_pRenderGraph->AddPass<ClearHistoryPassData>("Clear Hisotry Textures", RenderPassType::Compute,
             [&](ClearHistoryPassData& data, RGBuilder& builder)
             {
-                data.linearDepth = builder.Write(m_prevLinearDepthHandle);
+                data.linearDepth = builder.Write(m_prevSceneDepthHandle);
                 data.normal = builder.Write(m_prevNormalHandle);
                 data.color = builder.Write(m_prevSceneColorHandle);
             },
             [=](const ClearHistoryPassData& data, IGfxCommandList* pCommandList)
             {
                 float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-                pCommandList->ClearUAV(m_pPrevLinearDepthTexture->GetTexture(), m_pPrevLinearDepthTexture->GetUAV(), clear_value);
+                pCommandList->ClearUAV(m_pPrevSceneDepthTexture->GetTexture(), m_pPrevSceneDepthTexture->GetUAV(), clear_value);
                 pCommandList->ClearUAV(m_pPrevNormalTexture->GetTexture(), m_pPrevNormalTexture->GetUAV(), clear_value);
                 pCommandList->ClearUAV(m_pPrevSceneColorTexture->GetTexture(), m_pPrevSceneColorTexture->GetUAV(), clear_value);
             });
 
-        m_prevLinearDepthHandle = clear_pass->linearDepth;
+        m_prevSceneDepthHandle = clear_pass->linearDepth;
         m_prevNormalHandle = clear_pass->normal;
         m_prevSceneColorHandle = clear_pass->color;
     }
