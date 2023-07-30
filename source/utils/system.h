@@ -19,6 +19,9 @@ inline uint32_t GetWindowHeight(void* window)
 
 inline int ExecuteCommand(const char* cmd)
 {
+#if 1
+    return system(cmd);
+#else
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
@@ -55,6 +58,7 @@ inline int ExecuteCommand(const char* cmd)
     CloseHandle(pi.hThread);
 
     return exit_code;
+#endif
 }
 
 inline void SetCurrentThreadName(const eastl::string& name)

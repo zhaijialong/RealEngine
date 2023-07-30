@@ -7,6 +7,8 @@
 #include "ImFileDialog/ImFileDialog.h"
 #include "ImGuizmo/ImGuizmo.h"
 
+#include <fstream>
+
 Editor::Editor()
 {
     ifd::FileDialog::Instance().CreateTexture = [this](uint8_t* data, int w, int h, char fmt) -> void* 
@@ -368,19 +370,40 @@ void Editor::ShowRenderGraph()
     Engine* pEngine = Engine::GetInstance();
     Renderer* pRenderer = pEngine->GetRenderer();
 
-    eastl::string path = pEngine->GetWorkPath();
-    eastl::string graph_file = path + "rendergraph";
+    eastl::string file = pEngine->GetWorkPath() + "tools/graphviz/rendergraph.html";
+    eastl::string graph = pRenderer->GetRenderGraph()->Export();
+    
+    std::ofstream stream;
+    stream.open(file.c_str());
+    stream << R"(<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Render Graph</title>
+  </head>
+  <body>
+    <script src="viz-standalone.js"></script>
+    <script>
+        Viz.instance()
+            .then(viz => {
+                document.body.appendChild(viz.renderSVGElement(`
+)";
+    stream << graph.c_str();
+    stream << R"(
+                `));
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    </script>
+  </body>
+</html>
+)";
+    
+    stream.close();
 
-    if (pRenderer->GetRenderGraph()->Export(graph_file))
-    {
-        eastl::string dot_exe = Engine::GetInstance()->GetWorkPath() + "tools/graphviz/dot.exe";
-        eastl::string cmd = dot_exe + " -Tsvg -O " + graph_file;
-        if (ExecuteCommand(cmd.c_str()) == 0)
-        {
-            eastl::string png_file = "explorer " + graph_file + ".svg";
-            ExecuteCommand(png_file.c_str());
-        }
-    }
+    eastl::string command = "start " + file;
+    ExecuteCommand(command.c_str());
 }
 
 void Editor::FlushPendingTextureDeletions()

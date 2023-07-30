@@ -1,6 +1,6 @@
 #include "directed_acyclic_graph.h"
 #include "utils/assert.h"
-#include <fstream>
+#include <sstream>
 #include <algorithm>
 
 DAGEdge::DAGEdge(DirectedAcyclicGraph& graph, DAGNode* from, DAGNode* to) :
@@ -122,14 +122,9 @@ void DirectedAcyclicGraph::GetOutgoingEdges(const DAGNode* node, eastl::vector<D
     }
 }
 
-bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
+eastl::string DirectedAcyclicGraph::ExportGraphviz()
 {
-    std::ofstream out;
-    out.open(file);
-    if (out.fail())
-    {
-        return false;
-    }
+    std::stringstream out;
 
     out << "digraph {\n";
     out << "  rankdir = LR\n";
@@ -185,8 +180,7 @@ bool DirectedAcyclicGraph::ExportGraphviz(const char* file)
 
     out << "}" << std::endl;
 
-    out.close();
-    return true;
+    return out.str().c_str();
 }
 
 eastl::string DAGNode::Graphvizify() const

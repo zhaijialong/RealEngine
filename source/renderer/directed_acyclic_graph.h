@@ -70,7 +70,7 @@ public:
     void GetOutgoingEdges(const DAGNode* node, eastl::vector<DAGEdge*>& edges) const;
 
     //dot.exe -Tpng -O file
-    bool ExportGraphviz(const char* file);
+    eastl::string ExportGraphviz();
 private:
     eastl::vector<DAGNode*> m_nodes;
     eastl::vector<DAGEdge*> m_edges;

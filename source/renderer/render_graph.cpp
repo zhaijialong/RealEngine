@@ -196,9 +196,9 @@ RGBuffer* RenderGraph::GetBuffer(const RGHandle& handle)
     return (RGBuffer*)resource;
 }
 
-bool RenderGraph::Export(const eastl::string& file)
+eastl::string RenderGraph::Export()
 {
-    return m_graph.ExportGraphviz(file.c_str());
+    return m_graph.ExportGraphviz();
 }
 
 RGHandle RenderGraph::Import(IGfxTexture* texture, GfxAccessFlags state)

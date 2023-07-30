@@ -36,7 +36,7 @@ public:
     RGBuffer* GetBuffer(const RGHandle& handle);
 
     const DirectedAcyclicGraph& GetDAG() const { return m_graph; }
-    bool Export(const eastl::string& file);
+    eastl::string Export();
 
 private:
     template<typename T, typename... ArgsT>

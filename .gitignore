@@ -42,3 +42,4 @@ bin/log.txt
 build
 bin/NRD.dll
 bin/Jolt.dll
+bin/tools/graphviz/rendergraph.html
