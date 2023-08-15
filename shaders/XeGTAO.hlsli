@@ -606,9 +606,9 @@ lpfloat XeGTAO_DepthMIPFilter( lpfloat depth0, lpfloat depth1, lpfloat depth2, l
 lpfloat XeGTAO_ClampDepth( float depth )
 {
 #ifdef XE_GTAO_USE_HALF_FLOAT_PRECISION
-    return (lpfloat)clamp( depth, 0.0, 65504.0 );
+    return isinf(depth) ? 65504.0 : (lpfloat)clamp( depth, 0.0, 65504.0 );
 #else
-    return clamp( depth, 0.0, 3.402823466e+38 );
+    return isinf(depth) ? 3.402823466e+38 : clamp( depth, 0.0, 3.402823466e+38 );
 #endif
 }
 
