@@ -31,7 +31,7 @@ bool D3D12ShaderResourceView::Create()
 
         bool depth = textureDesc.usage & GfxTextureUsageDepthStencil;
 
-        srvDesc.Format = dxgi_format(textureDesc.format, depth);
+        srvDesc.Format = dxgi_format(m_desc.format, depth);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MostDetailedMip = m_desc.texture.mip_slice;
         srvDesc.Texture2D.MipLevels = m_desc.texture.mip_levels;
@@ -42,7 +42,7 @@ bool D3D12ShaderResourceView::Create()
     {
         const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
 
-        srvDesc.Format = dxgi_format(textureDesc.format);
+        srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
         srvDesc.Texture2DArray.MostDetailedMip = m_desc.texture.mip_slice;
         srvDesc.Texture2DArray.MipLevels = m_desc.texture.mip_levels;
@@ -55,7 +55,7 @@ bool D3D12ShaderResourceView::Create()
     {
         const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
 
-        srvDesc.Format = dxgi_format(textureDesc.format);
+        srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
         srvDesc.Texture3D.MostDetailedMip = m_desc.texture.mip_slice;
         srvDesc.Texture3D.MipLevels = m_desc.texture.mip_levels;
@@ -65,7 +65,7 @@ bool D3D12ShaderResourceView::Create()
     {
         const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
 
-        srvDesc.Format = dxgi_format(textureDesc.format);
+        srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
         srvDesc.TextureCube.MostDetailedMip = m_desc.texture.mip_slice;
         srvDesc.TextureCube.MipLevels = m_desc.texture.mip_levels;
@@ -75,7 +75,7 @@ bool D3D12ShaderResourceView::Create()
     {
         const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
 
-        srvDesc.Format = dxgi_format(textureDesc.format);
+        srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
         srvDesc.TextureCubeArray.MostDetailedMip = m_desc.texture.mip_slice;
         srvDesc.TextureCubeArray.MipLevels = m_desc.texture.mip_levels;
@@ -87,6 +87,7 @@ bool D3D12ShaderResourceView::Create()
     {
         const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)m_pResource)->GetDesc();
         RE_ASSERT(bufferDesc.usage & GfxBufferUsageStructuredBuffer);
+        RE_ASSERT(m_desc.format == GfxFormat::Unknown);
         RE_ASSERT(m_desc.buffer.offset % bufferDesc.stride == 0);
         RE_ASSERT(m_desc.buffer.size % bufferDesc.stride == 0);
 
@@ -104,7 +105,7 @@ bool D3D12ShaderResourceView::Create()
         RE_ASSERT(m_desc.buffer.offset % bufferDesc.stride == 0);
         RE_ASSERT(m_desc.buffer.size % bufferDesc.stride == 0);
 
-        srvDesc.Format = dxgi_format(bufferDesc.format);
+        srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
         srvDesc.Buffer.FirstElement = m_desc.buffer.offset / bufferDesc.stride;
         srvDesc.Buffer.NumElements = m_desc.buffer.size / bufferDesc.stride;
@@ -169,7 +170,7 @@ bool D3D12UnorderedAccessView::Create()
         const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
         RE_ASSERT(textureDesc.usage & GfxTextureUsageUnorderedAccess);
 
-        uavDesc.Format = dxgi_format(textureDesc.format, false, true);
+        uavDesc.Format = dxgi_format(m_desc.format, false, true);
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
         uavDesc.Texture2D.MipSlice = m_desc.texture.mip_slice;
         uavDesc.Texture2D.PlaneSlice = m_desc.texture.plane_slice;
@@ -180,7 +181,7 @@ bool D3D12UnorderedAccessView::Create()
         const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
         RE_ASSERT(textureDesc.usage & GfxTextureUsageUnorderedAccess);
 
-        uavDesc.Format = dxgi_format(textureDesc.format, false, true);
+        uavDesc.Format = dxgi_format(m_desc.format, false, true);
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
         uavDesc.Texture2DArray.MipSlice = m_desc.texture.mip_slice;
         uavDesc.Texture2DArray.FirstArraySlice = m_desc.texture.array_slice;
@@ -193,7 +194,7 @@ bool D3D12UnorderedAccessView::Create()
         const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
         RE_ASSERT(textureDesc.usage & GfxTextureUsageUnorderedAccess);
 
-        uavDesc.Format = dxgi_format(textureDesc.format, false, true);
+        uavDesc.Format = dxgi_format(m_desc.format, false, true);
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
         uavDesc.Texture3D.MipSlice = m_desc.texture.mip_slice;
         uavDesc.Texture3D.FirstWSlice = 0;
@@ -205,6 +206,7 @@ bool D3D12UnorderedAccessView::Create()
         const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)m_pResource)->GetDesc();
         RE_ASSERT(bufferDesc.usage & GfxBufferUsageStructuredBuffer);
         RE_ASSERT(bufferDesc.usage & GfxBufferUsageUnorderedAccess);
+        RE_ASSERT(m_desc.format == GfxFormat::Unknown);
         RE_ASSERT(m_desc.buffer.offset % bufferDesc.stride == 0);
         RE_ASSERT(m_desc.buffer.size % bufferDesc.stride == 0);
 
@@ -223,7 +225,7 @@ bool D3D12UnorderedAccessView::Create()
         RE_ASSERT(m_desc.buffer.offset % bufferDesc.stride == 0);
         RE_ASSERT(m_desc.buffer.size % bufferDesc.stride == 0);
 
-        uavDesc.Format = dxgi_format(bufferDesc.format);
+        uavDesc.Format = dxgi_format(m_desc.format);
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
         uavDesc.Buffer.FirstElement = m_desc.buffer.offset / bufferDesc.stride;
         uavDesc.Buffer.NumElements = m_desc.buffer.size / bufferDesc.stride;

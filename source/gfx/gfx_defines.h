@@ -298,6 +298,7 @@ struct GfxConstantBufferViewDesc
 struct GfxShaderResourceViewDesc
 {
     GfxShaderResourceViewType type = GfxShaderResourceViewType::Texture2D;
+    GfxFormat format = GfxFormat::Unknown;
 
     union
     {
@@ -333,6 +334,7 @@ inline bool operator==(const GfxShaderResourceViewDesc& lhs, const GfxShaderReso
 struct GfxUnorderedAccessViewDesc
 {
     GfxUnorderedAccessViewType type = GfxUnorderedAccessViewType::Texture2D;
+    GfxFormat format = GfxFormat::Unknown;
 
     union
     {

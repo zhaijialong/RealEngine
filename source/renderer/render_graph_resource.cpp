@@ -54,19 +54,28 @@ RGTexture::~RGTexture()
 IGfxDescriptor* RGTexture::GetSRV()
 {
     RE_ASSERT(!IsImported()); 
-    return m_allocator.GetDescriptor(m_pTexture, GfxShaderResourceViewDesc());
+
+    GfxShaderResourceViewDesc desc;
+    desc.format = m_pTexture->GetDesc().format;
+
+    return m_allocator.GetDescriptor(m_pTexture, desc);
 }
 
 IGfxDescriptor* RGTexture::GetUAV()
 {
     RE_ASSERT(!IsImported()); 
-    return m_allocator.GetDescriptor(m_pTexture, GfxUnorderedAccessViewDesc());
+    
+    GfxUnorderedAccessViewDesc desc;
+    desc.format = m_pTexture->GetDesc().format;
+
+    return m_allocator.GetDescriptor(m_pTexture, desc);
 }
 
 IGfxDescriptor* RGTexture::GetUAV(uint32_t mip, uint32_t slice)
 {
     RE_ASSERT(!IsImported());
     GfxUnorderedAccessViewDesc desc;
+    desc.format = m_pTexture->GetDesc().format;
     desc.texture.mip_slice = mip;
     desc.texture.array_slice = slice;
     return m_allocator.GetDescriptor(m_pTexture, desc);
@@ -148,7 +157,9 @@ IGfxDescriptor* RGBuffer::GetSRV()
     RE_ASSERT(!IsImported());
 
     const GfxBufferDesc& bufferDesc = m_pBuffer->GetDesc();
+
     GfxShaderResourceViewDesc desc;
+    desc.format = bufferDesc.format;
 
     if (bufferDesc.usage & GfxBufferUsageStructuredBuffer)
     {
@@ -177,6 +188,7 @@ IGfxDescriptor* RGBuffer::GetUAV()
     RE_ASSERT(bufferDesc.usage & GfxBufferUsageUnorderedAccess);
 
     GfxUnorderedAccessViewDesc desc;
+    desc.format = bufferDesc.format;
 
     if (bufferDesc.usage & GfxBufferUsageStructuredBuffer)
     {

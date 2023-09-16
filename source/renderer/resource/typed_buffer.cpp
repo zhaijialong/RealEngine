@@ -34,6 +34,7 @@ bool TypedBuffer::Create(GfxFormat format, uint32_t element_count, GfxMemoryType
 
     GfxShaderResourceViewDesc srvDesc;
     srvDesc.type = GfxShaderResourceViewType::TypedBuffer;
+    srvDesc.format = format;
     srvDesc.buffer.size = stride * element_count;
     m_pSRV.reset(pDevice->CreateShaderResourceView(m_pBuffer.get(), srvDesc, m_name));
     if (m_pSRV == nullptr)
@@ -45,6 +46,7 @@ bool TypedBuffer::Create(GfxFormat format, uint32_t element_count, GfxMemoryType
     {
         GfxUnorderedAccessViewDesc uavDesc;
         uavDesc.type = GfxUnorderedAccessViewType::TypedBuffer;
+        uavDesc.format = format;
         uavDesc.buffer.size = stride * element_count;
         m_pUAV.reset(pDevice->CreateUnorderedAccessView(m_pBuffer.get(), uavDesc, m_name));
         if (m_pUAV == nullptr)

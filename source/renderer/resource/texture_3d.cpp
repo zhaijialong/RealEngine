@@ -34,6 +34,7 @@ bool Texture3D::Create(uint32_t width, uint32_t height, uint32_t depth, uint32_t
 
     GfxShaderResourceViewDesc srvDesc;
     srvDesc.type = GfxShaderResourceViewType::Texture3D;
+    srvDesc.format = format;
     m_pSRV.reset(pDevice->CreateShaderResourceView(m_pTexture.get(), srvDesc, m_name));
     if (m_pSRV == nullptr)
     {
@@ -44,6 +45,7 @@ bool Texture3D::Create(uint32_t width, uint32_t height, uint32_t depth, uint32_t
     {
         GfxUnorderedAccessViewDesc uavDesc;
         uavDesc.type = GfxUnorderedAccessViewType::Texture3D;
+        uavDesc.format = format;
         m_pUAV.reset(pDevice->CreateUnorderedAccessView(m_pTexture.get(), uavDesc, m_name));
         if (m_pUAV == nullptr)
         {

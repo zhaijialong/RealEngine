@@ -34,6 +34,7 @@ bool TextureCube::Create(uint32_t width, uint32_t height, uint32_t levels, GfxFo
 
     GfxShaderResourceViewDesc srvDesc;
     srvDesc.type = GfxShaderResourceViewType::TextureCube;
+    srvDesc.format = format;
     srvDesc.texture.array_size = 6;
 
     m_pSRV.reset(pDevice->CreateShaderResourceView(m_pTexture.get(), srvDesc, m_name));
@@ -54,6 +55,7 @@ bool TextureCube::Create(uint32_t width, uint32_t height, uint32_t levels, GfxFo
     {
         GfxUnorderedAccessViewDesc uavDesc;
         uavDesc.type = GfxUnorderedAccessViewType::Texture2DArray;
+        uavDesc.format = format;
         uavDesc.texture.array_size = 6;
 
         for (uint32_t i = 0; i < levels; ++i)

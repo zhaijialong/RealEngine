@@ -32,6 +32,7 @@ bool Texture2D::Create(uint32_t width, uint32_t height, uint32_t levels, GfxForm
     }
 
     GfxShaderResourceViewDesc srvDesc;
+    srvDesc.format = format;
     m_pSRV.reset(pDevice->CreateShaderResourceView(m_pTexture.get(), srvDesc, m_name));
     if (m_pSRV == nullptr)
     {
@@ -43,6 +44,7 @@ bool Texture2D::Create(uint32_t width, uint32_t height, uint32_t levels, GfxForm
         for (uint32_t i = 0; i < levels; ++i)
         {
             GfxUnorderedAccessViewDesc uavDesc;
+            uavDesc.format = format;
             uavDesc.texture.mip_slice = i;
 
             IGfxDescriptor* uav = pDevice->CreateUnorderedAccessView(m_pTexture.get(), uavDesc, m_name);
