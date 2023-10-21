@@ -67,7 +67,7 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     
     PRNG rng;
     rng.seed = PCG(dispatchThreadID.x + dispatchThreadID.y * SceneCB.displaySize.x);
-    float random = rng.RandomFloat();
+    float random = rng.RandomFloat() - 0.5;
     
     for (uint i = 0; i < c_sampleCount; ++i)
     {

@@ -23,5 +23,5 @@ private:
 
     bool m_bEnable = true;
     uint32_t m_maxBlurRadius = 16;
-    uint32_t m_sampleCount = 10;
+    uint32_t m_sampleCount = 15;
 };
