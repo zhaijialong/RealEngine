@@ -71,7 +71,7 @@ RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT,
     }
 
     outputHandle = m_pDOF->Render(pRenderGraph, outputHandle, sceneDepthRT);
-    outputHandle = m_pMotionBlur->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT);
+    outputHandle = m_pMotionBlur->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
 
     RGHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
 

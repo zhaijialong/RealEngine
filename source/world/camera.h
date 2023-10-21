@@ -91,8 +91,8 @@ private:
     float m_moveSpeed = 10.0f;
 
     float m_aperture = 1.0f;
-    int m_shutterSpeed = 1;
-    int m_iso = 100;
+    int m_shutterSpeed = 60;
+    int m_iso = 500;
     float m_exposureCompensation = 0.8f;
 
     bool m_bEnableJitter = false;

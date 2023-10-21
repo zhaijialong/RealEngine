@@ -31,7 +31,7 @@ It is not supposed to be used in production, and prefers clean design and code o
 - [x] a reference pathtracer
 - [x] FSR2/DLSS/XeSS
 - [ ] DOF
-- [ ] motion blur
+- [x] motion blur
 - [ ] visibility buffer
 - [ ] Direct Storage
 - [ ] maybe  volumetric cloud/fog, water/ocean simulation, large-scale landscape, or any random things
