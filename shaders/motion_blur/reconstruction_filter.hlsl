@@ -1,21 +1,18 @@
-#include "../common.hlsli"
+#include "motion_blur_common.hlsli"
 #include "../random.hlsli"
 
 cbuffer CB : register(b0)
 {
     uint c_colorTexture;
-    uint c_depthTexture;
-    uint c_velocityTexture;
+    uint c_velocityDepthTexture;
     uint c_neighborMaxTexture;
-
     uint c_outputTexture;
-    uint c_tileSize;
+
     uint c_sampleCount;
 };
 
 static Texture2D colorTexture = ResourceDescriptorHeap[c_colorTexture];
-static Texture2D depthTexture = ResourceDescriptorHeap[c_depthTexture];
-static Texture2D velocityTexture = ResourceDescriptorHeap[c_velocityTexture];
+static Texture2D velocityDepthTexture = ResourceDescriptorHeap[c_velocityDepthTexture];
 static Texture2D neighborMaxTexture = ResourceDescriptorHeap[c_neighborMaxTexture];
 static RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 static SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
@@ -48,7 +45,7 @@ float softDepthCompare(float za, float zb)
 [numthreads(8, 8, 1)]
 void main(uint2 dispatchThreadID : SV_DispatchThreadID)
 {
-    float2 maxNeighborVelocity = neighborMaxTexture[dispatchThreadID / c_tileSize].xy;
+    float2 maxNeighborVelocity = neighborMaxTexture[dispatchThreadID / MOTION_BLUR_TILE_SIZE].xy;
     float3 color = colorTexture[dispatchThreadID].xyz;
     
     if (GetVelocityLength(maxNeighborVelocity) <= 0.5) //convert to texture space
@@ -58,9 +55,9 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     }
     
     float2 uv = GetScreenUV(dispatchThreadID.xy, SceneCB.rcpDisplaySize);
-    float2 velocity = velocityTexture.SampleLevel(pointSampler, uv, 0.0).xy;
+    float2 velocity = velocityDepthTexture.SampleLevel(pointSampler, uv, 0.0).xy * 2.0 - 1.0;
     float velocityLength = GetVelocityLength(velocity);
-    float depth = GetLinearDepth(depthTexture.SampleLevel(pointSampler, uv, 0.0).x);
+    float depth = velocityDepthTexture.SampleLevel(pointSampler, uv, 0.0).z;
     
     float weight = 1.0 / max(0.000001, velocityLength);
     float3 sum = color * weight;
@@ -78,8 +75,8 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
         
         float t = lerp(-1.0, 1.0, (i + random + 1.0) / (c_sampleCount + 1.0));
         float2 uvY = uv + t * maxNeighborVelocity * float2(0.5, -0.5);
-        float zY = GetLinearDepth(depthTexture.SampleLevel(pointSampler, uvY, 0.0).x);
-        float2 vY = velocityTexture.SampleLevel(pointSampler, uvY, 0.0).xy;
+        float zY = velocityDepthTexture.SampleLevel(pointSampler, uvY, 0.0).z;
+        float2 vY = velocityDepthTexture.SampleLevel(pointSampler, uvY, 0.0).xy * 2.0 - 1.0;
         
         float dist = length((uv - uvY) * SceneCB.displaySize);
         float velocityLengthY = GetVelocityLength(vY);
@@ -92,7 +89,7 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
         aY += cylinder(dist, velocityLengthY) * cylinder(dist, velocityLength) * 2.0;
         
         weight += aY;
-        sum += aY * colorTexture.SampleLevel(linearSampler, uvY, 0.0).xyz;
+        sum += aY * colorTexture.SampleLevel(pointSampler, uvY, 0.0).xyz;
     }
     
     outputTexture[dispatchThreadID] = float4(sum / weight, 1);

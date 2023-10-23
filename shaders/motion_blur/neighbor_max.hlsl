@@ -1,4 +1,4 @@
-#include "../common.hlsli"
+#include "motion_blur_common.hlsli"
 
 cbuffer CB : register(b0)
 {

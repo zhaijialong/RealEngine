@@ -1,16 +1,13 @@
-#include "../common.hlsli"
+#include "motion_blur_common.hlsli"
 
 cbuffer CB : register(b0)
 {
     uint c_inputTexture;
     uint c_outputTexture;
-    float2 c_rcpTextureSize;
-    uint c_tileSize;
 };
 
 static Texture2D inputTexture = ResourceDescriptorHeap[c_inputTexture];
 static RWTexture2D<float2> outputTexture = ResourceDescriptorHeap[c_outputTexture];
-static SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
 
 [numthreads(8, 8, 1)]
 void main(uint2 dispatchThreadID : SV_DispatchThreadID)
@@ -18,14 +15,16 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     float2 maxVelocity = 0.0;
     float maxVelocityLengthSq = 0.0;
 
-    for (uint i = 0; i < c_tileSize; ++i)
+    [unroll]
+    for (uint i = 0; i < MOTION_BLUR_TILE_SIZE; ++i)
     {
 #ifdef VERTICAL_PASS
-        float2 uv = (float2(dispatchThreadID.x, dispatchThreadID.y * c_tileSize + i) + 0.5) * float2(c_rcpTextureSize.x, SceneCB.rcpDisplaySize.y);
+        uint2 pos = uint2(dispatchThreadID.x, dispatchThreadID.y * MOTION_BLUR_TILE_SIZE + i);
 #else
-        float2 uv = (float2(dispatchThreadID.x * c_tileSize + i, dispatchThreadID.y) + 0.5) * SceneCB.rcpDisplaySize;
+        uint2 pos = uint2(dispatchThreadID.x * MOTION_BLUR_TILE_SIZE + i, dispatchThreadID.y);
 #endif
-        float2 velocity = inputTexture.SampleLevel(pointSampler, uv, 0.0).xy;
+        
+        float2 velocity = inputTexture[pos].xy;
         float length = dot(velocity, velocity);
 
         if(length > maxVelocityLengthSq)
