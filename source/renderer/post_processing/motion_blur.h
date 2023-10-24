@@ -24,5 +24,5 @@ private:
     IGfxPipelineState* m_pReconstructionPSO = nullptr;
 
     bool m_bEnable = true;
-    uint32_t m_sampleCount = 15;
+    uint32_t m_sampleCount = 16;
 };

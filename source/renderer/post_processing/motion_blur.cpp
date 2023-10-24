@@ -5,6 +5,7 @@
 
 // references :
 // "A Reconstruction Filter for Plausible Motion Blur", Morgan McGuire, 2012
+// "Next Generation Post Processing in Call of Duty: Advanced Warfare", Jorge Jimenez, 2014
 
 MotionBlur::MotionBlur(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
@@ -31,7 +32,7 @@ RGHandle MotionBlur::Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHa
         [&]()
         {
             ImGui::Checkbox("Enable##MotionBlur", &m_bEnable);
-            ImGui::SliderInt("Sample Count##MotionBlur", (int*)&m_sampleCount, 0, 20);
+            ImGui::SliderInt("Sample Count##MotionBlur", (int*)&m_sampleCount, 10, 20);
         });
 
     if (!m_bEnable)

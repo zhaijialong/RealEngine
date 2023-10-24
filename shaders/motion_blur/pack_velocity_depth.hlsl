@@ -19,7 +19,9 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     
     //todo : polar coordinate
     float2 velocity = velocityTexture.SampleLevel(pointSampler, uv, 0).xy * 0.5 + 0.5; //[-1,1] -> [0,1]
-    float depth = GetLinearDepth(depthTexture.SampleLevel(pointSampler, uv, 0).x);
+
+    float depth = depthTexture.SampleLevel(pointSampler, uv, 0).x;
+    depth = depth > 0.0 ? GetLinearDepth(depth) : 65500.0;
     
     outputTexture[dispatchThreadID] = float3(velocity, depth);
 }

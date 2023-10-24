@@ -26,71 +26,75 @@ float GetVelocityLength(float2 v)
     return length(v * 0.5 * float2(SceneCB.displaySize) * exposureTime * frameRate);
 }
 
-float cone(float dist, float velocityLength)
-{
-    return saturate(1.0 - dist / velocityLength);
-}
-
-float cylinder(float dist, float velocityLength)
-{
-    return 1.0 - smoothstep(0.95 * velocityLength, 1.05 * velocityLength, dist);
-}
-
-float softDepthCompare(float za, float zb)
-{
-    const float SOFT_Z_EXTENT = 0.1;
-    return saturate(1.0 - (za - zb) / SOFT_Z_EXTENT);
+float GetRandomValue(uint2 pos)
+{    
+#if 0
+    PRNG rng;
+    rng.seed = PCG(pos.x + pos.y * SceneCB.displaySize.x);
+    return rng.RandomFloat() - 0.5;
+#else
+    return InterleavedGradientNoise(pos, 0) - 0.5;
+    //float scale = 0.25;
+    //float2 positionMod = float2(pos & 1);
+    //return (-scale + 2.0 * scale * positionMod.x) * (-1.0 + 2.0 * positionMod.y);
+#endif
 }
 
 [numthreads(8, 8, 1)]
 void main(uint2 dispatchThreadID : SV_DispatchThreadID)
 {
     float2 maxNeighborVelocity = neighborMaxTexture[dispatchThreadID / MOTION_BLUR_TILE_SIZE].xy;
-    float3 color = colorTexture[dispatchThreadID].xyz;
     
-    if (GetVelocityLength(maxNeighborVelocity) <= 0.5) //convert to texture space
+    if (GetVelocityLength(maxNeighborVelocity) <= 0.5)
     {
-        outputTexture[dispatchThreadID] = float4(color, 1.0);
+        outputTexture[dispatchThreadID] = colorTexture[dispatchThreadID];
         return;
     }
     
-    float2 uv = GetScreenUV(dispatchThreadID.xy, SceneCB.rcpDisplaySize);
-    float2 velocity = velocityDepthTexture.SampleLevel(pointSampler, uv, 0.0).xy * 2.0 - 1.0;
-    float velocityLength = GetVelocityLength(velocity);
-    float depth = velocityDepthTexture.SampleLevel(pointSampler, uv, 0.0).z;
+    float random = GetRandomValue(dispatchThreadID);
     
-    float weight = 1.0 / max(0.000001, velocityLength);
-    float3 sum = color * weight;
+    float2 centerUV = GetScreenUV(dispatchThreadID.xy, SceneCB.rcpDisplaySize);
+    float3 centerColor = colorTexture[dispatchThreadID].xyz;
+    float centerVelocity = GetVelocityLength(velocityDepthTexture[dispatchThreadID].xy * 2.0 - 1.0);
+    float centerDepth = velocityDepthTexture[dispatchThreadID].z;
+        
+    float sampleCount = 0.0;
+    float4 sum = 0.0;
     
-    PRNG rng;
-    rng.seed = PCG(dispatchThreadID.x + dispatchThreadID.y * SceneCB.displaySize.x);
-    float random = rng.RandomFloat() - 0.5;
-    
-    for (uint i = 0; i < c_sampleCount; ++i)
-    {
-        if (i == (c_sampleCount - 1) / 2)
-        {
-            continue;
-        }
+    for (int i = 1; i <= c_sampleCount / 2; ++i)
+    {        
+        float offset0 = float(i + random) / c_sampleCount;
+        float offset1 = float(-i + random) / c_sampleCount;
         
-        float t = lerp(-1.0, 1.0, (i + random + 1.0) / (c_sampleCount + 1.0));
-        float2 uvY = uv + t * maxNeighborVelocity * float2(0.5, -0.5);
-        float zY = velocityDepthTexture.SampleLevel(pointSampler, uvY, 0.0).z;
-        float2 vY = velocityDepthTexture.SampleLevel(pointSampler, uvY, 0.0).xy * 2.0 - 1.0;
+        float2 sampleUV0 = centerUV + maxNeighborVelocity * float2(0.5, -0.5) * offset0;
+        float2 sampleUV1 = centerUV + maxNeighborVelocity * float2(0.5, -0.5) * offset1;
         
-        float dist = length((uv - uvY) * SceneCB.displaySize);
-        float velocityLengthY = GetVelocityLength(vY);
+        float4 sampleVelocityDepth0 = velocityDepthTexture.SampleLevel(pointSampler, sampleUV0, 0.0);
+        float sampleDepth0 = sampleVelocityDepth0.z;
+        float sampleVelocity0 = GetVelocityLength(sampleVelocityDepth0.xy * 2.0 - 1.0);
         
-        float f = softDepthCompare(depth, zY);
-        float b = softDepthCompare(zY, depth);
+        float4 sampleVelocityDepth1 = velocityDepthTexture.SampleLevel(pointSampler, sampleUV1, 0.0);
+        float sampleDepth1 = sampleVelocityDepth1.z;
+        float sampleVelocity1 = GetVelocityLength(sampleVelocityDepth1.xy * 2.0 - 1.0);
         
-        float aY = f * cone(dist, velocityLengthY);
-        aY += b * cone(dist, velocityLength);
-        aY += cylinder(dist, velocityLengthY) * cylinder(dist, velocityLength) * 2.0;
+        float offsetLength0 = length((sampleUV0 - centerUV) * SceneCB.displaySize);
+        float offsetLength1 = length((sampleUV1 - centerUV) * SceneCB.displaySize);
         
-        weight += aY;
-        sum += aY * colorTexture.SampleLevel(pointSampler, uvY, 0.0).xyz;
+        float pixelToSampleScale = 1.0; //todo
+        
+        float weight0 = SampleWeight(centerDepth, sampleDepth0, offsetLength0, centerVelocity, sampleVelocity0, pixelToSampleScale, MOTION_BLUR_SOFT_DEPTH_EXTENT);
+        float weight1 = SampleWeight(centerDepth, sampleDepth1, offsetLength1, centerVelocity, sampleVelocity1, pixelToSampleScale, MOTION_BLUR_SOFT_DEPTH_EXTENT);
+        
+        bool2 mirror = bool2(sampleDepth0 > sampleDepth1, sampleVelocity1 > sampleVelocity0);
+        weight0 = all(mirror) ? weight1 : weight0;
+        weight1 = any(mirror) ? weight1 : weight0;
+        
+        sampleCount += 2.0;
+        sum += weight0 * float4(colorTexture.SampleLevel(pointSampler, sampleUV0, 0.0).xyz, 1.0);
+        sum += weight1 * float4(colorTexture.SampleLevel(pointSampler, sampleUV1, 0.0).xyz, 1.0);
     }
     
-    outputTexture[dispatchThreadID] = float4(sum / weight, 1);
+    sum *= rcp(sampleCount);
+    
+    outputTexture[dispatchThreadID] = float4(sum.rgb + (1.0 - sum.w) * centerColor, 1);
 }
