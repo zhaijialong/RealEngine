@@ -25,4 +25,6 @@ private:
 
     bool m_bEnable = true;
     uint32_t m_sampleCount = 16;
+    float m_minVelocityLength = 2.0f;
+    float m_maxVelocityLength = 50.0f;
 };

@@ -5,6 +5,8 @@ cbuffer CB : register(b0)
     uint c_velocityTexture;
     uint c_depthTexture;
     uint c_outputTexture;
+    float c_minVelocityLength;
+    float c_maxVelocityLength;
 };
 
 static Texture2D velocityTexture = ResourceDescriptorHeap[c_velocityTexture];
@@ -22,6 +24,9 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     
     float2 velocity = velocityTexture.SampleLevel(pointSampler, uv, 0).xy;
     velocity = EncodeVelocity(velocity * exposureTime * frameRate);
+    
+    velocity *= float(velocity.x >= c_minVelocityLength);
+    velocity.x = min(velocity.x, c_maxVelocityLength);
     
     float depth = clamp(GetLinearDepth(depthTexture.SampleLevel(pointSampler, uv, 0).x), 0.0, 65000.0);
     

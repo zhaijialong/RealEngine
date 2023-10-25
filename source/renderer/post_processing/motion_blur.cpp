@@ -33,6 +33,8 @@ RGHandle MotionBlur::Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHa
         {
             ImGui::Checkbox("Enable##MotionBlur", &m_bEnable);
             ImGui::SliderInt("Sample Count##MotionBlur", (int*)&m_sampleCount, 10, 20);
+            ImGui::SliderFloat("Min Velocity Length##MotionBlur", &m_minVelocityLength, 0.5f, 5.0f, "%.1f");
+            ImGui::SliderFloat("Max Velocity Length##MotionBlur", &m_maxVelocityLength, 20.0f, 200.0f, "%.1f");
         });
 
     if (!m_bEnable)
@@ -160,12 +162,23 @@ void MotionBlur::PackVelocityDepth(IGfxCommandList* pCommandList, RGTexture* vel
 {
     pCommandList->SetPipelineState(m_pPackVelocityPSO);
 
-    uint32_t cb[] = {
-        velocity->GetSRV()->GetHeapIndex(),
-        depth->GetSRV()->GetHeapIndex(),
-        output->GetUAV()->GetHeapIndex()
+    struct CB
+    {
+        uint velocityTexture;
+        uint depthTexture;
+        uint outputTexture;
+        float minVelocityLength;
+        float maxVelocityLength;
     };
-    pCommandList->SetComputeConstants(0, cb, sizeof(cb));
+
+    CB cb;
+    cb.velocityTexture = velocity->GetSRV()->GetHeapIndex();
+    cb.depthTexture = depth->GetSRV()->GetHeapIndex();
+    cb.outputTexture = output->GetUAV()->GetHeapIndex();
+    cb.minVelocityLength = m_minVelocityLength;
+    cb.maxVelocityLength = m_maxVelocityLength;
+
+    pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
 
     uint32_t width = output->GetTexture()->GetDesc().width;
     uint32_t height = output->GetTexture()->GetDesc().height;

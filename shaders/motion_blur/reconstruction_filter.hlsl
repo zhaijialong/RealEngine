@@ -39,7 +39,7 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     float tileVelocityLengthMax = neighborVelocity.x;
     float tileVelocityLengthMin = neighborVelocity.z;
     
-    bool earlyExit = neighborVelocity.x <= 0.5;
+    bool earlyExit = neighborVelocity.x == 0.0;
     bool fastPath = tileVelocityLengthMin > 0.6 * tileVelocityLengthMax;
     
     if (WaveActiveAllTrue(earlyExit))
@@ -52,7 +52,10 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     float2 centerUV = GetScreenUV(dispatchThreadID.xy, SceneCB.rcpDisplaySize);
     float3 centerColor = colorTexture[dispatchThreadID].xyz;
     
-    uint stepCount = c_sampleCount / 2;
+    uint sampleCount = min(ceil(tileVelocityLengthMax), c_sampleCount);
+    sampleCount = WaveActiveMax(sampleCount);
+    
+    uint stepCount = (sampleCount + 1) / 2;
     
     if (WaveActiveAllTrue(fastPath))
     {
@@ -60,8 +63,8 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
         
         for (int i = 1; i <= stepCount; ++i)
         {
-            float offset0 = float(i + randomValue.x) / c_sampleCount;
-            float offset1 = float(-i + randomValue.x) / c_sampleCount;
+            float offset0 = float(i + randomValue.x) / sampleCount;
+            float offset1 = float(-i + randomValue.x) / sampleCount;
         
             float2 sampleUV0 = centerUV + tileVelocity * float2(0.5, -0.5) * offset0;
             float2 sampleUV1 = centerUV + tileVelocity * float2(0.5, -0.5) * offset1;
@@ -76,34 +79,39 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     }
     else
     {
-        float centerVelocity = velocityDepthTexture[dispatchThreadID].x;
-        float centerDepth = velocityDepthTexture[dispatchThreadID].z;
+        float3 centerVelocityDepth = velocityDepthTexture[dispatchThreadID].xyz;
+        float2 centerVelocity = DecodeVelocity(centerVelocityDepth.xy);
+        float centerVelocityLength = centerVelocityDepth.x;
+        float centerDepth = centerVelocityDepth.z;
         
         float4 sum = 0.0;
     
         for (int i = 1; i <= stepCount; ++i)
         {
-            float offset0 = float(i + randomValue.x) / c_sampleCount;
-            float offset1 = float(-i + randomValue.x) / c_sampleCount;
+            //float2 velocity = ((i & 1u) == 0) ? centerVelocity : tileVelocity;
+            float2 velocity = tileVelocity;
+            
+            float offset0 = float(i + randomValue.x) / sampleCount;
+            float offset1 = float(-i + randomValue.x) / sampleCount;
         
-            float2 sampleUV0 = centerUV + tileVelocity * float2(0.5, -0.5) * offset0;
-            float2 sampleUV1 = centerUV + tileVelocity * float2(0.5, -0.5) * offset1;
+            float2 sampleUV0 = centerUV + velocity * float2(0.5, -0.5) * offset0;
+            float2 sampleUV1 = centerUV + velocity * float2(0.5, -0.5) * offset1;
         
-            float4 sampleVelocityDepth0 = velocityDepthTexture.SampleLevel(pointSampler, sampleUV0, 0.0);
+            float3 sampleVelocityDepth0 = velocityDepthTexture.SampleLevel(pointSampler, sampleUV0, 0.0).xyz;
+            float sampleVelocityLength0 = sampleVelocityDepth0.x;
             float sampleDepth0 = sampleVelocityDepth0.z;
-            float sampleVelocity0 = sampleVelocityDepth0.x;
         
-            float4 sampleVelocityDepth1 = velocityDepthTexture.SampleLevel(pointSampler, sampleUV1, 0.0);
+            float3 sampleVelocityDepth1 = velocityDepthTexture.SampleLevel(pointSampler, sampleUV1, 0.0).xyz;
+            float sampleVelocityLength1 = sampleVelocityDepth1.x;
             float sampleDepth1 = sampleVelocityDepth1.z;
-            float sampleVelocity1 = sampleVelocityDepth1.x;
         
             float offsetLength0 = length((sampleUV0 - centerUV) * SceneCB.displaySize);
             float offsetLength1 = length((sampleUV1 - centerUV) * SceneCB.displaySize);
         
-            float weight0 = SampleWeight(centerDepth, sampleDepth0, offsetLength0, centerVelocity, sampleVelocity0, 1.0, MOTION_BLUR_SOFT_DEPTH_EXTENT);
-            float weight1 = SampleWeight(centerDepth, sampleDepth1, offsetLength1, centerVelocity, sampleVelocity1, 1.0, MOTION_BLUR_SOFT_DEPTH_EXTENT);
+            float weight0 = SampleWeight(centerDepth, sampleDepth0, offsetLength0, centerVelocityLength, sampleVelocityLength0, 1.0, MOTION_BLUR_SOFT_DEPTH_EXTENT);
+            float weight1 = SampleWeight(centerDepth, sampleDepth1, offsetLength1, centerVelocityLength, sampleVelocityLength1, 1.0, MOTION_BLUR_SOFT_DEPTH_EXTENT);
         
-            bool2 mirror = bool2(sampleDepth0 > sampleDepth1, sampleVelocity1 > sampleVelocity0);
+            bool2 mirror = bool2(sampleDepth0 > sampleDepth1, sampleVelocityLength1 > sampleVelocityLength0);
             weight0 = all(mirror) ? weight1 : weight0;
             weight1 = any(mirror) ? weight1 : weight0;
         
