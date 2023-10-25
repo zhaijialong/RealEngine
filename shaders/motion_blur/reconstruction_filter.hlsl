@@ -26,32 +26,22 @@ float GetVelocityLength(float2 v)
     return length(v * 0.5 * float2(SceneCB.displaySize) * exposureTime * frameRate);
 }
 
-float GetRandomValue(uint2 pos)
-{    
-#if 0
-    PRNG rng;
-    rng.seed = PCG(pos.x + pos.y * SceneCB.displaySize.x);
-    return rng.RandomFloat() - 0.5;
-#else
-    return InterleavedGradientNoise(pos, 0) - 0.5;
-    //float scale = 0.25;
-    //float2 positionMod = float2(pos & 1);
-    //return (-scale + 2.0 * scale * positionMod.x) * (-1.0 + 2.0 * positionMod.y);
-#endif
-}
-
 [numthreads(8, 8, 1)]
 void main(uint2 dispatchThreadID : SV_DispatchThreadID)
 {
-    float2 maxNeighborVelocity = neighborMaxTexture[dispatchThreadID / MOTION_BLUR_TILE_SIZE].xy;
+    float2 randomValue = float2(InterleavedGradientNoise(dispatchThreadID, 0), InterleavedGradientNoise(dispatchThreadID, 1)) - 0.5;
+
+    float2 tilePos = (0.5f + dispatchThreadID) / MOTION_BLUR_TILE_SIZE;    
+    float2 tileTextureSize = (SceneCB.displaySize + MOTION_BLUR_TILE_SIZE - 1) / MOTION_BLUR_TILE_SIZE;
+    float2 tileUV = (tilePos + randomValue) / tileTextureSize;
+    
+    float2 maxNeighborVelocity = neighborMaxTexture.SampleLevel(pointSampler, tileUV, 0).xy;
     
     if (GetVelocityLength(maxNeighborVelocity) <= 0.5)
     {
         outputTexture[dispatchThreadID] = colorTexture[dispatchThreadID];
         return;
     }
-    
-    float random = GetRandomValue(dispatchThreadID);
     
     float2 centerUV = GetScreenUV(dispatchThreadID.xy, SceneCB.rcpDisplaySize);
     float3 centerColor = colorTexture[dispatchThreadID].xyz;
@@ -63,8 +53,8 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     
     for (int i = 1; i <= c_sampleCount / 2; ++i)
     {        
-        float offset0 = float(i + random) / c_sampleCount;
-        float offset1 = float(-i + random) / c_sampleCount;
+        float offset0 = float(i + randomValue.x) / c_sampleCount;
+        float offset1 = float(-i + randomValue.x) / c_sampleCount;
         
         float2 sampleUV0 = centerUV + maxNeighborVelocity * float2(0.5, -0.5) * offset0;
         float2 sampleUV1 = centerUV + maxNeighborVelocity * float2(0.5, -0.5) * offset1;
@@ -80,10 +70,8 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
         float offsetLength0 = length((sampleUV0 - centerUV) * SceneCB.displaySize);
         float offsetLength1 = length((sampleUV1 - centerUV) * SceneCB.displaySize);
         
-        float pixelToSampleScale = 1.0; //todo
-        
-        float weight0 = SampleWeight(centerDepth, sampleDepth0, offsetLength0, centerVelocity, sampleVelocity0, pixelToSampleScale, MOTION_BLUR_SOFT_DEPTH_EXTENT);
-        float weight1 = SampleWeight(centerDepth, sampleDepth1, offsetLength1, centerVelocity, sampleVelocity1, pixelToSampleScale, MOTION_BLUR_SOFT_DEPTH_EXTENT);
+        float weight0 = SampleWeight(centerDepth, sampleDepth0, offsetLength0, centerVelocity, sampleVelocity0, 1.0, MOTION_BLUR_SOFT_DEPTH_EXTENT);
+        float weight1 = SampleWeight(centerDepth, sampleDepth1, offsetLength1, centerVelocity, sampleVelocity1, 1.0, MOTION_BLUR_SOFT_DEPTH_EXTENT);
         
         bool2 mirror = bool2(sampleDepth0 > sampleDepth1, sampleVelocity1 > sampleVelocity0);
         weight0 = all(mirror) ? weight1 : weight0;
