@@ -17,11 +17,13 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
 {
     float2 uv = GetScreenUV(dispatchThreadID, SceneCB.rcpDisplaySize);
     
-    //todo : polar coordinate
-    float2 velocity = velocityTexture.SampleLevel(pointSampler, uv, 0).xy * 0.5 + 0.5; //[-1,1] -> [0,1]
-
-    float depth = depthTexture.SampleLevel(pointSampler, uv, 0).x;
-    depth = depth > 0.0 ? GetLinearDepth(depth) : 65500.0;
+    const float exposureTime = GetCameraCB().physicalCamera.shutterSpeed;
+    const float frameRate = 1.0 / SceneCB.frameTime;
+    
+    float2 velocity = velocityTexture.SampleLevel(pointSampler, uv, 0).xy;
+    velocity = EncodeVelocity(velocity * exposureTime * frameRate);
+    
+    float depth = clamp(GetLinearDepth(depthTexture.SampleLevel(pointSampler, uv, 0).x), 0.0, 65000.0);
     
     outputTexture[dispatchThreadID] = float3(velocity, depth);
 }

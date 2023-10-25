@@ -1,10 +1,38 @@
 #pragma once
 
-#define MOTION_BLUR_TILE_SIZE 16
+#define MOTION_BLUR_TILE_SIZE 32
 #define MOTION_BLUR_SOFT_DEPTH_EXTENT 20.0
 
 #ifndef __cplusplus
 #include "../common.hlsli"
+
+// velocity : [-1, 1], ndc space
+// output : in polar coordinates, texture space
+float2 EncodeVelocity(float2 velocity)
+{
+    float2 velocityInPixels = velocity * float2(0.5, -0.5) * SceneCB.displaySize;
+    float velocityLength = length(velocityInPixels);
+    if (velocityLength < 0.01)
+    {
+        return 0.0;
+    }
+    
+    float angle = atan2(velocityInPixels.y, velocityInPixels.x);
+    angle = angle * (0.5 / M_PI) + 0.5; // [0, 1]
+    
+    return float2(velocityLength, angle);
+}
+
+float2 DecodeVelocity(float2 velocity)
+{
+    float angle = velocity.y * (2.0 * M_PI) - M_PI; //[-pi, pi]
+    
+    float s, c;
+    sincos(angle, s, c);
+    
+    float2 velocityInPixels = velocity.x * float2(c, s);
+    return velocityInPixels * float2(2.0, -2.0) * SceneCB.rcpDisplaySize;
+}
 
 // "Next Generation Post Processing in Call of Duty: Advanced Warfare"
 

@@ -69,8 +69,6 @@ RGHandle MotionBlur::Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHa
                 pRenderGraph->GetTexture(data.output));
         });
 
-    const uint32_t K = MOTION_BLUR_TILE_SIZE;
-
     struct TileMaxPassData
     {
         RGHandle input;
@@ -80,12 +78,12 @@ RGHandle MotionBlur::Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHa
     auto tile_max_x = pRenderGraph->AddPass<TileMaxPassData>("TileMax - X", RenderPassType::Compute,
         [&](TileMaxPassData& data, RGBuilder& builder)
         {
-            data.input = builder.Read(velocity);
+            data.input = builder.Read(pack_velocity_depth->output);
 
             RGTexture::Desc desc;
-            desc.width = DivideRoudingUp(width, K);
+            desc.width = DivideRoudingUp(width, MOTION_BLUR_TILE_SIZE);
             desc.height = height;
-            desc.format = GfxFormat::RG16F;
+            desc.format = GfxFormat::R11G11B10F;
             data.output = builder.Write(builder.Create<RGTexture>(desc, "MotionBlur TileMaxX"));
         },
         [=](const TileMaxPassData& data, IGfxCommandList* pCommandList)
@@ -99,9 +97,9 @@ RGHandle MotionBlur::Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHa
             data.input = builder.Read(tile_max_x->output);
 
             RGTexture::Desc desc;
-            desc.width = DivideRoudingUp(width, K);
-            desc.height = DivideRoudingUp(height, K);
-            desc.format = GfxFormat::RG16F;
+            desc.width = DivideRoudingUp(width, MOTION_BLUR_TILE_SIZE);
+            desc.height = DivideRoudingUp(height, MOTION_BLUR_TILE_SIZE);
+            desc.format = GfxFormat::R11G11B10F;
             data.output = builder.Write(builder.Create<RGTexture>(desc, "MotionBlur TileMaxY"));
         },
         [=](const TileMaxPassData& data, IGfxCommandList* pCommandList)
@@ -115,9 +113,9 @@ RGHandle MotionBlur::Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHa
             data.input = builder.Read(tile_max_y->output);
 
             RGTexture::Desc desc;
-            desc.width = DivideRoudingUp(width, K);
-            desc.height = DivideRoudingUp(height, K);
-            desc.format = GfxFormat::RG16F;
+            desc.width = DivideRoudingUp(width, MOTION_BLUR_TILE_SIZE);
+            desc.height = DivideRoudingUp(height, MOTION_BLUR_TILE_SIZE);
+            desc.format = GfxFormat::R11G11B10F;
             data.output = builder.Write(builder.Create<RGTexture>(desc, "MotionBlur NeighborMax"));
         },
         [=](const TileMaxPassData& data, IGfxCommandList* pCommandList)
@@ -183,11 +181,14 @@ void MotionBlur::TileMax(IGfxCommandList* pCommandList, RGTexture* input, RGText
     {
         uint inputTexture;
         uint outputTexture;
+        uint2 inputTextureSize;
     };
 
     CB cb;
     cb.inputTexture = input->GetSRV()->GetHeapIndex();
     cb.outputTexture = output->GetUAV()->GetHeapIndex();
+    cb.inputTextureSize.x = input->GetTexture()->GetDesc().width;
+    cb.inputTextureSize.y = input->GetTexture()->GetDesc().height;
 
     pCommandList->SetComputeConstants(0, &cb, sizeof(cb));
 

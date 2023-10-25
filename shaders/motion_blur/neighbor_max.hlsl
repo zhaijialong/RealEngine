@@ -7,24 +7,24 @@ cbuffer CB : register(b0)
 };
 
 static Texture2D inputTexture = ResourceDescriptorHeap[c_inputTexture];
-static RWTexture2D<float2> outputTexture = ResourceDescriptorHeap[c_outputTexture];
+static RWTexture2D<float3> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 
 [numthreads(8, 8, 1)]
 void main(uint2 dispatchThreadID : SV_DispatchThreadID)
 {    
-    float2 maxVelocity = 0.0;
-    float maxVelocityLengthSq = 0.0;
+    float3 maxVelocity = 0.0;
+    float maxVelocityLength = 0.0;
     
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
-            float2 velocity = inputTexture[dispatchThreadID + int2(x, y)].xy;
-            float length = dot(velocity, velocity);
+            float3 velocity = inputTexture[dispatchThreadID + int2(x, y)].xyz;
+            float length = velocity.x;
 
-            if (length > maxVelocityLengthSq)
+            if (length > maxVelocityLength)
             {
-                maxVelocityLengthSq = length;
+                maxVelocityLength = length;
                 maxVelocity = velocity;
             }
         }
