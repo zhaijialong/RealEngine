@@ -1,6 +1,6 @@
 #pragma once
 
-#define MOTION_BLUR_TILE_SIZE 32
+#define MOTION_BLUR_TILE_SIZE 16
 #define MOTION_BLUR_SOFT_DEPTH_EXTENT 20.0
 
 #ifndef __cplusplus

@@ -17,9 +17,8 @@ static Texture2D neighborMaxTexture = ResourceDescriptorHeap[c_neighborMaxTextur
 static RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTexture];
 static SamplerState pointSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
 
-#define MOTION_BLUR_DEBUG 0
 
-#if MOTION_BLUR_DEBUG
+#ifdef MOTION_BLUR_DEBUG
 #define OUTPUT_COLOR(color, debugColor) color * debugColor
 #else
 #define OUTPUT_COLOR(color, debugColor) color
@@ -39,7 +38,7 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     float tileVelocityLengthMax = neighborVelocity.x;
     float tileVelocityLengthMin = neighborVelocity.z;
     
-    bool earlyExit = neighborVelocity.x == 0.0;
+    bool earlyExit = tileVelocityLengthMax == 0.0;
     bool fastPath = tileVelocityLengthMin > 0.6 * tileVelocityLengthMax;
     
     if (WaveActiveAllTrue(earlyExit))
