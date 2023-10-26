@@ -26,16 +26,20 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
         uint2 pos = uint2(dispatchThreadID.x * MOTION_BLUR_TILE_SIZE + i, dispatchThreadID.y);
 #endif
         
-        float2 velocity = inputTexture[clamp(pos, 0, c_inputTextureSize - 1)].xy;
+        float3 velocity = inputTexture[clamp(pos, 0, c_inputTextureSize - 1)].xyz;
         float length = velocity.x;
 
         if(length > maxVelocityLength)
         {
             maxVelocityLength = length;
-            maxVelocity = velocity;
+            maxVelocity = velocity.xy;
         }
         
+#ifdef VERTICAL_PASS
+        minVelocityLength = min(minVelocityLength, velocity.z);
+#else
         minVelocityLength = min(minVelocityLength, length);
+#endif
     }
 
     outputTexture[dispatchThreadID] = float3(maxVelocity, minVelocityLength);
