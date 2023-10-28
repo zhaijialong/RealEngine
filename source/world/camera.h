@@ -63,7 +63,8 @@ private:
     void UpdateJitter();
     void UpdateMatrix();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
-    void OnGui();
+    void OnCameraSettingGui();
+    void OnPostProcessSettingGui();
 
 private:
     float3 m_pos;

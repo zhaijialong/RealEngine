@@ -20,7 +20,7 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
 
     m_pTAA = eastl::make_unique<TAA>(pRenderer);
     m_pAutomaticExposure = eastl::make_unique<AutomaticExposure>(pRenderer);
-    m_pDOF = eastl::make_unique<DOF>(pRenderer);
+    m_pDoF = eastl::make_unique<DoF>(pRenderer);
     m_pMotionBlur = eastl::make_unique<MotionBlur>(pRenderer);
     m_pBloom = eastl::make_unique<Bloom>(pRenderer);
     m_pToneMapper = eastl::make_unique<Tonemapper>(pRenderer);
@@ -70,7 +70,7 @@ RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT,
         return outputHandle;
     }
 
-    outputHandle = m_pDOF->Render(pRenderGraph, outputHandle, sceneDepthRT);
+    outputHandle = m_pDoF->Render(pRenderGraph, outputHandle, sceneDepthRT, displayWidth, displayHeight);
     outputHandle = m_pMotionBlur->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
 
     RGHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);

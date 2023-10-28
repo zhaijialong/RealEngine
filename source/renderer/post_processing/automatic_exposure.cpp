@@ -22,7 +22,7 @@ AutomaticExposure::AutomaticExposure(Renderer* pRenderer)
 
 RGHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "AutomaticExposure",
+    GUI("PostProcess", "Auto Exposure",
         [&]()
         {
             ImGui::Combo("Exposure Mode##Exposure", (int*)&m_exposuremode, "Automatic\0AutomaticHistogram\0Manual\0\0");

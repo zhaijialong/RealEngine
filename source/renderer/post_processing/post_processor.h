@@ -21,7 +21,7 @@ private:
 
     eastl::unique_ptr<class TAA> m_pTAA;
     eastl::unique_ptr<class AutomaticExposure> m_pAutomaticExposure;
-    eastl::unique_ptr<class DOF> m_pDOF;
+    eastl::unique_ptr<class DoF> m_pDoF;
     eastl::unique_ptr<class MotionBlur> m_pMotionBlur;
     eastl::unique_ptr<class Bloom> m_pBloom;
     eastl::unique_ptr<class Tonemapper> m_pToneMapper;

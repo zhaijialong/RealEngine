@@ -2,10 +2,15 @@
 
 #include "../render_graph.h"
 
-class DOF
+class DoF
 {
 public:
-    DOF(Renderer* pRenderer);
+    DoF(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHandle sceneDepth);
+    RGHandle Render(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height);
+
+private:
+    Renderer* m_pRenderer = nullptr;
+
+    bool m_bEnable = true;
 };

@@ -87,7 +87,8 @@ void Camera::EnableJitter(bool value)
 
 void Camera::Tick(float delta_time)
 {
-    GUI("Settings", "Camera", [&]() { OnGui(); });
+    GUI("Settings", "Camera", [&]() { OnCameraSettingGui(); });
+    GUI("PostProcess", "Physical Camera", [&]() { OnPostProcessSettingGui(); });
 
     m_bMoved = false;
 
@@ -316,7 +317,7 @@ void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
     SetPerpective(m_aspectRatio, m_fov, m_znear);
 }
 
-void Camera::OnGui()
+void Camera::OnCameraSettingGui()
 {
     ImGui::SliderFloat("Move Speed", &m_moveSpeed, 1.0f, 200.0f, "%.0f");
 
@@ -328,16 +329,14 @@ void Camera::OnGui()
     {
         SetPerpective(m_aspectRatio, m_fov, m_znear);
     }
+}
 
-    if (ImGui::TreeNode("Physical Camera"))
-    {
-        ImGui::SliderFloat("Aperture", &m_aperture, 0.7f, 32.0f, "f/%.1f");
-        ImGui::SliderInt("Shutter Speed", &m_shutterSpeed, 1, 4000, "1/%d");
-        ImGui::SliderInt("ISO", &m_iso, 100, 20000, "%d");
-        ImGui::SliderFloat("Exposure Compensation", &m_exposureCompensation, -5.0f, 5.0f, "%.1f");
-
-        ImGui::TreePop();
-    }
+void Camera::OnPostProcessSettingGui()
+{
+    ImGui::SliderFloat("Aperture", &m_aperture, 0.7f, 32.0f, "f/%.1f");
+    ImGui::SliderInt("Shutter Speed", &m_shutterSpeed, 1, 4000, "1/%d");
+    ImGui::SliderInt("ISO", &m_iso, 100, 20000, "%d");
+    ImGui::SliderFloat("Exposure Compensation", &m_exposureCompensation, -5.0f, 5.0f, "%.1f");
 }
 
 void Camera::DrawViewFrustum(IGfxCommandList* pCommandList)

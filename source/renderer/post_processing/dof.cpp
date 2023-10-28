@@ -1,10 +1,25 @@
 #include "dof.h"
+#include "../renderer.h"
+#include "utils/gui_util.h"
 
-DOF::DOF(Renderer* pRenderer)
+DoF::DoF(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
 }
 
-RGHandle DOF::Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHandle sceneDepth)
+RGHandle DoF::Render(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height)
 {
-    return sceneColor;
+    GUI("PostProcess", "DoF",
+        [&]()
+        {
+            ImGui::Checkbox("Enable##DoF", &m_bEnable);
+        });
+
+    if (!m_bEnable)
+    {
+        return color;
+    }
+
+    RENDER_GRAPH_EVENT(pRenderGraph, "DoF");
+
+    return color;
 }

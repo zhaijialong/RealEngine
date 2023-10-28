@@ -9,7 +9,7 @@ Tonemapper::Tonemapper(Renderer* pRenderer)
 
 RGHandle Tonemapper::Render(RenderGraph* pRenderGraph, RGHandle inputHandle, RGHandle exposure, RGHandle bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "ToneMapping",
+    GUI("PostProcess", "Tone Mapping",
         [&]()
         {
             ImGui::Combo("Mode##Tonemapper", (int*)&m_mode, "Neutral\0ACES\0Tony McMapface\0\0");
