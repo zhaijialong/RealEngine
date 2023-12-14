@@ -79,6 +79,8 @@ public:
 #endif
 
 private:
+    void BeginRenderPassEmulation(unsigned int numRenderTargets, const D3D12_RENDER_PASS_RENDER_TARGET_DESC* renderTargets, const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* depthStencil);
+    void EndRenderPassEmulation();
 
 private:
     GfxCommandQueue m_queueType;

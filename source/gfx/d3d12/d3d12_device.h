@@ -119,6 +119,8 @@ public:
     int GetProfileCopyQueue() const { return m_nProfileCopyQueue; }
 #endif
 
+    bool IsSteamDeck() const { return m_bSteamDeck; }
+
 private:
     void DoDeferredDeletion(bool force_delete = false);
     void CreateRootSignature();
@@ -187,4 +189,6 @@ private:
     int m_nProfileComputeQueue = -1;
     int m_nProfileCopyQueue = -1;
 #endif
+
+    bool m_bSteamDeck = false;
 };

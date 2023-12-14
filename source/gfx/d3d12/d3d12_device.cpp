@@ -391,7 +391,9 @@ bool D3D12Device::Init()
     RE_INFO("Vendor : {}", magic_enum::enum_name(m_vendor));
     RE_INFO("GPU : {}", wstring_to_string(adapterDesc.Description));
 
-    if (m_vendor == GfxVendor::AMD)
+    m_bSteamDeck = m_vendor == GfxVendor::AMD && adapterDesc.DeviceId == 0x163F;
+
+    if ((m_vendor == GfxVendor::AMD) && !m_bSteamDeck)
     {
         if (FAILED(ags::CreateDevice(m_pDxgiAdapter, minimumFeatureLevel, IID_PPV_ARGS(&m_pDevice))))
         {
