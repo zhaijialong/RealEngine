@@ -94,31 +94,34 @@ void Camera::Tick(float delta_time)
 
     ImGuiIO& io = ImGui::GetIO();
 
-    if (!io.WantCaptureKeyboard)
+    if (!io.WantCaptureKeyboard && !io.NavActive)
     {
-        if (ImGui::IsKeyDown('A'))
+        if (ImGui::IsKeyDown('A') || io.NavInputs[ImGuiNavInput_LStickLeft] > 0.0f)
         {
             m_pos += GetLeft() * m_moveSpeed * delta_time;
             m_bMoved = true;
         }
-        else if (ImGui::IsKeyDown('S'))
+        
+        if (ImGui::IsKeyDown('S') || io.NavInputs[ImGuiNavInput_LStickDown] > 0.0f)
         {
             m_pos += GetBack() * m_moveSpeed * delta_time;
             m_bMoved = true;
         }
-        else if (ImGui::IsKeyDown('D'))
+        
+        if (ImGui::IsKeyDown('D') || io.NavInputs[ImGuiNavInput_LStickRight] > 0.0f)
         {
             m_pos += GetRight() * m_moveSpeed * delta_time;
             m_bMoved = true;
         }
-        else if (ImGui::IsKeyDown('W'))
+        
+        if (ImGui::IsKeyDown('W') || io.NavInputs[ImGuiNavInput_LStickUp] > 0.0f)
         {
             m_pos += GetForward() * m_moveSpeed * delta_time;
             m_bMoved = true;
         }
     }
 
-    if (!io.WantCaptureMouse)
+    if (!io.WantCaptureMouse) //todo : right stick 
     {
         if (!nearly_equal(io.MouseWheel, 0.0f))
         {

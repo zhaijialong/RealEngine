@@ -284,7 +284,9 @@ void World::CreateSky(tinyxml2::XMLElement* element)
 void World::PhysicsTest(Renderer* pRenderer)
 {
     ImGuiIO& io = ImGui::GetIO();
-    if (!io.WantCaptureKeyboard && ImGui::IsKeyReleased(' '))
+    if (!io.WantCaptureKeyboard && 
+        !io.NavActive && 
+        (ImGui::IsKeyReleased(' ') || io.NavInputsDownDuration[ImGuiNavInput_Activate] == 0.0f))
     {
         IPhysicsRigidBody* body = nullptr;
         GLTFLoader loader(this);
