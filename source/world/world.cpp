@@ -286,7 +286,7 @@ void World::PhysicsTest(Renderer* pRenderer)
     ImGuiIO& io = ImGui::GetIO();
     if (!io.WantCaptureKeyboard && 
         !io.NavActive && 
-        (ImGui::IsKeyReleased(' ') || io.NavInputsDownDuration[ImGuiNavInput_Activate] == 0.0f))
+        (ImGui::IsKeyReleased(ImGuiKey_Space) || ImGui::IsKeyReleased(ImGuiKey_GamepadFaceDown)))
     {
         IPhysicsRigidBody* body = nullptr;
         GLTFLoader loader(this);

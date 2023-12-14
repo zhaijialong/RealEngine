@@ -96,32 +96,32 @@ void Camera::Tick(float delta_time)
 
     if (!io.WantCaptureKeyboard && !io.NavActive)
     {
-        if (ImGui::IsKeyDown('A') || io.NavInputs[ImGuiNavInput_LStickLeft] > 0.0f)
+        if (ImGui::IsKeyDown(ImGuiKey_A) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickLeft))
         {
             m_pos += GetLeft() * m_moveSpeed * delta_time;
             m_bMoved = true;
         }
         
-        if (ImGui::IsKeyDown('S') || io.NavInputs[ImGuiNavInput_LStickDown] > 0.0f)
+        if (ImGui::IsKeyDown(ImGuiKey_S) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickDown))
         {
             m_pos += GetBack() * m_moveSpeed * delta_time;
             m_bMoved = true;
         }
         
-        if (ImGui::IsKeyDown('D') || io.NavInputs[ImGuiNavInput_LStickRight] > 0.0f)
+        if (ImGui::IsKeyDown(ImGuiKey_D) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickRight))
         {
             m_pos += GetRight() * m_moveSpeed * delta_time;
             m_bMoved = true;
         }
         
-        if (ImGui::IsKeyDown('W') || io.NavInputs[ImGuiNavInput_LStickUp] > 0.0f)
+        if (ImGui::IsKeyDown(ImGuiKey_W) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickUp))
         {
             m_pos += GetForward() * m_moveSpeed * delta_time;
             m_bMoved = true;
         }
     }
 
-    if (!io.WantCaptureMouse) //todo : right stick 
+    if (!io.WantCaptureMouse)
     {
         if (!nearly_equal(io.MouseWheel, 0.0f))
         {
@@ -136,6 +136,31 @@ void Camera::Tick(float delta_time)
             m_rotation.x = fmodf(m_rotation.x + io.MouseDelta.y * rotate_speed, 360.0f);
             m_rotation.y = fmodf(m_rotation.y + io.MouseDelta.x * rotate_speed, 360.0f);
             m_bMoved = true;
+        }
+    }
+
+    if (!io.NavActive)
+    {
+        const float rotate_speed = 120.0f;
+
+        if (ImGui::IsKeyDown(ImGuiKey_GamepadRStickRight))
+        {
+            m_rotation.y = fmodf(m_rotation.y + delta_time * rotate_speed, 360.0f);
+        }
+
+        if (ImGui::IsKeyDown(ImGuiKey_GamepadRStickLeft))
+        {
+            m_rotation.y = fmodf(m_rotation.y - delta_time * rotate_speed, 360.0f);
+        }
+
+        if (ImGui::IsKeyDown(ImGuiKey_GamepadRStickDown))
+        {
+            m_rotation.x = fmodf(m_rotation.x + delta_time * rotate_speed, 360.0f);
+        }
+
+        if (ImGui::IsKeyDown(ImGuiKey_GamepadRStickUp))
+        {
+            m_rotation.x = fmodf(m_rotation.x - delta_time * rotate_speed, 360.0f);
         }
     }
 

@@ -12,7 +12,7 @@ void DirectionalLight::Tick(float delta_time)
     m_lightDir = normalize(mul(R, float4(0.0f, 1.0f, 0.0f, 0.0f)).xyz());
 
     ImGuiIO& io = ImGui::GetIO();
-    if (!io.WantCaptureKeyboard && !io.WantCaptureMouse && ImGui::IsKeyDown('L'))
+    if (!io.WantCaptureKeyboard && !io.WantCaptureMouse && ImGui::IsKeyDown(ImGuiKey_L))
     {
         Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
         const float4x4& mtxView = camera->GetViewMatrix();
