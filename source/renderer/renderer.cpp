@@ -12,6 +12,7 @@
 #include "base_pass.h"
 #include "path_tracer.h"
 #include "sky_cubemap.h"
+#include "stbn.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
@@ -328,19 +329,11 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.blueNoiseTexture = m_pBlueNoise->GetSRV()->GetHeapIndex();
     sceneCB.sheenETexture = m_pSheenETexture->GetSRV()->GetHeapIndex();
     sceneCB.tonyMcMapfaceTexture = m_pTonyMcMapface->GetSRV()->GetHeapIndex();
+    sceneCB.scalarSTBN = m_pSTBN->GetScalarTextureSRV()->GetHeapIndex();
+    sceneCB.vec3STBN = m_pSTBN->GetVec3TextureSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
     sceneCB.frameIndex = (uint32_t)GetFrameID();
     sceneCB.mipBias = m_mipBias;
-    sceneCB.sobolSequenceTexture = m_pSobolSequenceTexture->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture1SPP = m_pScramblingRankingTexture1SPP->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture2SPP = m_pScramblingRankingTexture2SPP->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture4SPP = m_pScramblingRankingTexture4SPP->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture8SPP = m_pScramblingRankingTexture8SPP->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture16SPP = m_pScramblingRankingTexture16SPP->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture32SPP = m_pScramblingRankingTexture32SPP->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture64SPP = m_pScramblingRankingTexture64SPP->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture128SPP = m_pScramblingRankingTexture128SPP->GetSRV()->GetHeapIndex();
-    sceneCB.scramblingRankingTexture256SPP = m_pScramblingRankingTexture256SPP->GetSRV()->GetHeapIndex();
     sceneCB.marschnerTextureM = m_pMarschnerHairLUT->GetM()->GetSRV()->GetHeapIndex();
     sceneCB.marschnerTextureN = m_pMarschnerHairLUT->GetN()->GetSRV()->GetHeapIndex();
 
@@ -678,18 +671,10 @@ void Renderer::CreateCommonResources()
     m_pMarschnerHairLUT = eastl::make_unique<MarschnerHairLUT>(this);
     m_pMarschnerHairLUT->Generate();
 
-    m_pSobolSequenceTexture.reset(CreateTexture2D(asset_path + "textures/blue_noise/sobol_256_4d.png", false));
-    m_pScramblingRankingTexture1SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_1spp.png", false));
-    m_pScramblingRankingTexture2SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_2spp.png", false));
-    m_pScramblingRankingTexture4SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_4spp.png", false));
-    m_pScramblingRankingTexture8SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_8spp.png", false));
-    m_pScramblingRankingTexture16SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_16spp.png", false));
-    m_pScramblingRankingTexture32SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_32spp.png", false));
-    m_pScramblingRankingTexture64SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_64spp.png", false));
-    m_pScramblingRankingTexture128SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_128spp.png", false));
-    m_pScramblingRankingTexture256SPP.reset(CreateTexture2D(asset_path + "textures/blue_noise/scrambling_ranking_128x128_2d_256spp.png", false));
-
     m_pBlueNoise.reset(CreateTexture2D(asset_path + "textures/blue_noise/LDR_RGBA_0.png", false));
+
+    m_pSTBN = eastl::make_unique<STBN>(this);
+    m_pSTBN->Load(asset_path + "textures/blue_noise/STBN/");
 
     m_pSPDCounterBuffer.reset(CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "Renderer::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
 
@@ -859,14 +844,11 @@ Texture2D* Renderer::CreateTexture2D(const eastl::string& file, bool srgb)
         return nullptr;
     }
 
-    Texture2D* texture = new Texture2D(file);
-    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), 0))
+    Texture2D* texture = CreateTexture2D(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), 0, file);
+    if (texture)
     {
-        delete texture;
-        return nullptr;
+        UploadTexture(texture->GetTexture(), loader.GetData());
     }
-
-    UploadTexture(texture->GetTexture(), loader.GetData());
 
     return texture;
 }
@@ -890,14 +872,11 @@ Texture3D* Renderer::CreateTexture3D(const eastl::string& file, bool srgb)
         return nullptr;
     }
 
-    Texture3D* texture = new Texture3D(file);
-    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetDepth(), loader.GetMipLevels(), loader.GetFormat(), 0))
+    Texture3D* texture = CreateTexture3D(loader.GetWidth(), loader.GetHeight(), loader.GetDepth(), loader.GetMipLevels(), loader.GetFormat(), 0, file);
+    if (texture)
     {
-        delete texture;
-        return nullptr;
+        UploadTexture(texture->GetTexture(), loader.GetData());
     }
-
-    UploadTexture(texture->GetTexture(), loader.GetData());
 
     return texture;
 }
@@ -921,14 +900,11 @@ TextureCube* Renderer::CreateTextureCube(const eastl::string& file, bool srgb)
         return nullptr;
     }
 
-    TextureCube* texture = new TextureCube(file);
-    if (!texture->Create(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), 0))
+    TextureCube* texture = CreateTextureCube(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetFormat(), 0, file);
+    if (texture)
     {
-        delete texture;
-        return nullptr;
+        UploadTexture(texture->GetTexture(), loader.GetData());
     }
-
-    UploadTexture(texture->GetTexture(), loader.GetData());
 
     return texture;
 }
@@ -937,6 +913,34 @@ TextureCube* Renderer::CreateTextureCube(uint32_t width, uint32_t height, uint32
 {
     TextureCube* texture = new TextureCube(name);
     if (!texture->Create(width, height, levels, format, flags))
+    {
+        delete texture;
+        return nullptr;
+    }
+    return texture;
+}
+
+Texture2DArray* Renderer::CreateTexture2DArray(const eastl::string& file, bool srgb)
+{
+    TextureLoader loader;
+    if (!loader.Load(file, srgb))
+    {
+        return nullptr;
+    }
+
+    Texture2DArray* texture = CreateTexture2DArray(loader.GetWidth(), loader.GetHeight(), loader.GetMipLevels(), loader.GetArraySize(), loader.GetFormat(), 0, file);
+    if (texture)
+    {
+        UploadTexture(texture->GetTexture(), loader.GetData());
+    }
+
+    return texture;
+}
+
+Texture2DArray* Renderer::CreateTexture2DArray(uint32_t width, uint32_t height, uint32_t levels, uint32_t array_size, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name)
+{
+    Texture2DArray* texture = new Texture2DArray(name);
+    if (!texture->Create(width, height, levels, array_size, format, flags))
     {
         delete texture;
         return nullptr;

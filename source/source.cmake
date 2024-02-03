@@ -186,6 +186,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/resource/structured_buffer.h
     ${SOURCE_ROOT}/renderer/resource/texture_2d.cpp
     ${SOURCE_ROOT}/renderer/resource/texture_2d.h
+    ${SOURCE_ROOT}/renderer/resource/texture_2d_array.cpp
+    ${SOURCE_ROOT}/renderer/resource/texture_2d_array.h
     ${SOURCE_ROOT}/renderer/resource/texture_3d.cpp
     ${SOURCE_ROOT}/renderer/resource/texture_3d.h
     ${SOURCE_ROOT}/renderer/resource/texture_cube.cpp
@@ -235,6 +237,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/sky_cubemap.h
     ${SOURCE_ROOT}/renderer/staging_buffer_allocator.cpp
     ${SOURCE_ROOT}/renderer/staging_buffer_allocator.h
+    ${SOURCE_ROOT}/renderer/stbn.cpp
+    ${SOURCE_ROOT}/renderer/stbn.h
     ${SOURCE_ROOT}/renderer/texture_loader.cpp
     ${SOURCE_ROOT}/renderer/texture_loader.h
     ${SOURCE_ROOT}/utils/assert.h

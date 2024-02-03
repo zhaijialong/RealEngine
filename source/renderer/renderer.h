@@ -4,6 +4,7 @@
 #include "render_batch.h"
 #include "gpu_scene.h"
 #include "resource/texture_2d.h"
+#include "resource/texture_2d_array.h"
 #include "resource/texture_3d.h"
 #include "resource/texture_cube.h"
 #include "resource/index_buffer.h"
@@ -86,12 +87,14 @@ public:
     TypedBuffer* CreateTypedBuffer(const void* data, GfxFormat format, uint32_t element_count, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
     RawBuffer* CreateRawBuffer(const void* data, uint32_t size, const eastl::string& name, GfxMemoryType memory_type = GfxMemoryType::GpuOnly, bool uav = false);
 
-    Texture2D* CreateTexture2D(const eastl::string& file, bool srgb = true);
+    Texture2D* CreateTexture2D(const eastl::string& file, bool srgb);
     Texture2D* CreateTexture2D(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
-    Texture3D* CreateTexture3D(const eastl::string& file, bool srgb = true);
+    Texture3D* CreateTexture3D(const eastl::string& file, bool srgb);
     Texture3D* CreateTexture3D(uint32_t width, uint32_t height, uint32_t depth, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
-    TextureCube* CreateTextureCube(const eastl::string& file, bool srgb = true);
+    TextureCube* CreateTextureCube(const eastl::string& file, bool srgb);
     TextureCube* CreateTextureCube(uint32_t width, uint32_t height, uint32_t levels, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
+    Texture2DArray* CreateTexture2DArray(const eastl::string& file, bool srgb);
+    Texture2DArray* CreateTexture2DArray(uint32_t width, uint32_t height, uint32_t levels, uint32_t array_size, GfxFormat format, GfxTextureUsageFlags flags, const eastl::string& name);
 
     void SaveTexture(const eastl::string& file, const void* data, uint32_t width, uint32_t height, GfxFormat format);
     void SaveTexture(const eastl::string& file, IGfxTexture* texture);
@@ -247,18 +250,8 @@ private:
     eastl::unique_ptr<IGfxDescriptor> m_pMinReductionSampler;
     eastl::unique_ptr<IGfxDescriptor> m_pMaxReductionSampler;
 
-    eastl::unique_ptr<Texture2D> m_pSobolSequenceTexture;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture1SPP;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture2SPP;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture4SPP;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture8SPP;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture16SPP;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture32SPP;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture64SPP;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture128SPP;
-    eastl::unique_ptr<Texture2D> m_pScramblingRankingTexture256SPP;
-
     eastl::unique_ptr<Texture2D> m_pBlueNoise;
+    eastl::unique_ptr<class STBN> m_pSTBN;
 
     eastl::unique_ptr<Texture2D> m_pPreintegratedGFTexture;
     eastl::unique_ptr<Texture2D> m_pSheenETexture;

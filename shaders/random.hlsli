@@ -112,124 +112,19 @@ struct PRNG
     }
 };
 
-// "A Low-Discrepancy Sampler that Distributes Monte Carlo Errors as a Blue Noise in Screen Space"
-template<uint SPP>
-struct BNDS
+float GetScalarSTBN(uint2 screenPos, uint frameIndex)
 {
-    uint2 pixel;
-    uint sampleIndex;
+    uint3 pos = uint3(screenPos, frameIndex) & uint3(127, 127, 63);
 
-    static BNDS<SPP> Create(uint2 screenPos, uint2 screenSize)
-    {
-        BNDS<SPP> rng;
-
-        // Offset retarget for new seeds each frame
-        uint2 offset = float2(0.754877669, 0.569840296) * SceneCB.frameIndex * screenSize;
-        uint2 offsetId = screenPos + offset;
-        rng.pixel.x = offsetId.x % screenSize.x;
-		rng.pixel.y = offsetId.y % screenSize.y;
-        rng.sampleIndex = 0;
-
-        return rng;
-    }
-
-    Texture2D GetScramblingRankingTile();
-
-    float Sample(uint sampleIndex, uint sampleDimension)
-    {
-        // wrap arguments
-        uint pixel_i = pixel.x % 128;
-        uint pixel_j = pixel.y % 128;
-        sampleIndex = sampleIndex % 256;
-        sampleDimension = sampleDimension % 4;
-
-        Texture2D sobolSequenceTexture = ResourceDescriptorHeap[SceneCB.sobolSequenceTexture];
-        Texture2D scramblingRankingTile = GetScramblingRankingTile();
-
-        // xor index based on optimized ranking
-        uint rankedSampleIndex = sampleIndex ^ (uint)clamp(scramblingRankingTile[uint2(pixel_i, pixel_j)].b * 256.0f, 0, 255);
-
-        // fetch value in sequence
-        uint value = (uint)clamp(sobolSequenceTexture[uint2(rankedSampleIndex, 0)][sampleDimension] * 256.0f, 0, 255);
-
-        // If the dimension is optimized, xor sequence value based on optimized scrambling
-        value = value ^ (uint)clamp(scramblingRankingTile[uint2(pixel_i, pixel_j)][sampleDimension % 2] * 256.0f, 0, 255);
-
-        // convert to float and return
-        float v = (0.5f + value) / 256.0f;
-        return v;
-    }
-
-    float RandomFloat()
-    {
-        return Sample(sampleIndex++, 0);
-    }
-
-    float2 RandomFloat2()
-    {
-        float2 r = float2(Sample(sampleIndex, 0), Sample(sampleIndex, 1));
-        sampleIndex++;
-        return r;
-    }
-
-    float3 RandomFloat3()
-    {
-        float3 r = float3(Sample(sampleIndex, 0), Sample(sampleIndex, 1), Sample(sampleIndex, 2));
-        sampleIndex++;
-        return r;
-    }
-};
-
-template<>
-Texture2D BNDS<1>::GetScramblingRankingTile()
-{
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture1SPP];
+    Texture2DArray scalarSTBN = ResourceDescriptorHeap[SceneCB.scalarSTBN];
+    return scalarSTBN.Load(uint4(pos, 0)).x;
 }
 
-template<>
-Texture2D BNDS<2>::GetScramblingRankingTile()
+float3 GetVec3STBN(uint2 screenPos, uint frameIndex)
 {
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture2SPP];
+    uint3 pos = uint3(screenPos, frameIndex) & uint3(127, 127, 63);
+
+    Texture2DArray vec3STBN = ResourceDescriptorHeap[SceneCB.vec3STBN];
+    return vec3STBN.Load(uint4(pos, 0)).xyz;
 }
 
-template<>
-Texture2D BNDS<4>::GetScramblingRankingTile()
-{
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture4SPP];
-}
-
-template<>
-Texture2D BNDS<8>::GetScramblingRankingTile()
-{
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture8SPP];
-}
-
-template<>
-Texture2D BNDS<16>::GetScramblingRankingTile()
-{
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture16SPP];
-}
-
-template<>
-Texture2D BNDS<32>::GetScramblingRankingTile()
-{
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture32SPP];
-}
-
-template<>
-Texture2D BNDS<64>::GetScramblingRankingTile()
-{
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture64SPP];
-}
-
-template<>
-Texture2D BNDS<128>::GetScramblingRankingTile()
-{
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture128SPP];
-}
-
-template<>
-Texture2D BNDS<256>::GetScramblingRankingTile()
-{
-    return (Texture2D)ResourceDescriptorHeap[SceneCB.scramblingRankingTexture256SPP];
-}

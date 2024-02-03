@@ -58,8 +58,8 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 worldPos = GetWorldPosition(FullScreenPosition(dispatchThreadID.xy), depth);
     
-    BNDS<1> bnds = BNDS<1>::Create(dispatchThreadID.xy, (SceneCB.renderSize + 1) / 2);
-    float3 direction = SampleUniformHemisphere(bnds.RandomFloat2(), N); //uniform sample hemisphere, following the ReSTIR GI paper
+    float2 random = GetVec3STBN(dispatchThreadID.xy, SceneCB.frameIndex).xy;
+    float3 direction = SampleUniformHemisphere(random, N); //uniform sample hemisphere, following the ReSTIR GI paper
     float pdf = 1.0 / (2.0 * M_PI);
 
     RayDesc ray;

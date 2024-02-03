@@ -31,7 +31,7 @@ SkyCubeMap::SkyCubeMap(Renderer* pRenderer)
     m_pSpecularTexture.reset(pRenderer->CreateTextureCube(128, 128, 8, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pSpecularTexture"));
     m_pDiffuseTexture.reset(pRenderer->CreateTextureCube(128, 128, 1, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pDiffuseTexture"));
 
-    m_pHDRITexture.reset(pRenderer->CreateTexture2D(Engine::GetInstance()->GetAssetPath() + "textures/hdri/rural_landscape_1k.hdr"));
+    m_pHDRITexture.reset(pRenderer->CreateTexture2D(Engine::GetInstance()->GetAssetPath() + "textures/hdri/rural_landscape_1k.hdr", false));
 }
 
 void SkyCubeMap::Update(IGfxCommandList* pCommandList)
@@ -81,7 +81,7 @@ void SkyCubeMap::Update(IGfxCommandList* pCommandList)
                 if (ifd::FileDialog::Instance().HasResult())
                 {
                     eastl::string file = ifd::FileDialog::Instance().GetResult().u8string().c_str();
-                    m_pPendingHDRITexture.reset(m_pRenderer->CreateTexture2D(file));
+                    m_pPendingHDRITexture.reset(m_pRenderer->CreateTexture2D(file, false));
                 }
                 ifd::FileDialog::Instance().Close();
             }

@@ -14,6 +14,7 @@ public:
     uint32_t GetHeight() const { return m_height; }
     uint32_t GetDepth() const { return m_depth; }
     uint32_t GetMipLevels() const { return m_levels; }
+    uint32_t GetArraySize() const { return m_arraySize; }
     GfxFormat GetFormat() const { return m_format; }
 
     void* GetData() const { return m_pDecompressedData != nullptr ? m_pDecompressedData : m_pTextureData; }

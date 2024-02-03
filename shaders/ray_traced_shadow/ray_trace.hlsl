@@ -36,14 +36,11 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     #define SPP 1
 
-    BNDS<SPP> bnds = BNDS<SPP>::Create(pos.xy, SceneCB.renderSize);
-
     float visibility = 0;
 
     for (uint i = 0; i < SPP; ++i)
     {
-        //float2 random = rng.RandomFloat2();
-        float2 random = bnds.RandomFloat2();
+        float2 random = GetVec3STBN(pos, SceneCB.frameIndex + i).xy;
 
         RayDesc ray;
         ray.Origin = worldPos + N * 0.01;
