@@ -83,7 +83,7 @@ struct SceneConstant
     uint prevSceneColorSRV;
     uint prevSceneDepthSRV;
     uint prevNormalSRV;
-    uint _padding0;
+    uint preintegratedGFTexture;
     
     uint HZBWidth;
     uint HZBHeight;
@@ -117,10 +117,10 @@ struct SceneConstant
 
     uint minReductionSampler;
     uint maxReductionSampler;
-    uint blueNoiseTexture;
-    uint preintegratedGFTexture;
-    
+    uint blueNoiseTexture;    
     uint scalarSTBN;
+    
+    uint vec2STBN;
     uint vec3STBN;
     float frameTime;
     uint frameIndex;

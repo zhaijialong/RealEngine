@@ -40,7 +40,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     for (uint i = 0; i < SPP; ++i)
     {
-        float2 random = GetVec3STBN(pos, SceneCB.frameIndex + i).xy;
+        float2 random = GetVec2STBN(pos, SceneCB.frameIndex + i);
 
         RayDesc ray;
         ray.Origin = worldPos + N * 0.01;

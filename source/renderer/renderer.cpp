@@ -330,6 +330,7 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.sheenETexture = m_pSheenETexture->GetSRV()->GetHeapIndex();
     sceneCB.tonyMcMapfaceTexture = m_pTonyMcMapface->GetSRV()->GetHeapIndex();
     sceneCB.scalarSTBN = m_pSTBN->GetScalarTextureSRV()->GetHeapIndex();
+    sceneCB.vec2STBN = m_pSTBN->GetVec2TextureSRV()->GetHeapIndex();
     sceneCB.vec3STBN = m_pSTBN->GetVec3TextureSRV()->GetHeapIndex();
     sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
     sceneCB.frameIndex = (uint32_t)GetFrameID();

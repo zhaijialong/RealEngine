@@ -95,7 +95,7 @@ void main(uint group_index : SV_GroupIndex, uint group_id : SV_GroupID)
     float3 N = DecodeNormal(normalRT[coords].xyz);
     float roughness = normalRT[coords].w;
 
-    float3 H = SampleGGXVNDF(GetVec3STBN(coords, SceneCB.frameIndex).xy, roughness, N, V);
+    float3 H = SampleGGXVNDF(GetVec2STBN(coords, SceneCB.frameIndex), roughness, N, V);
     float3 direction = reflect(-V, H);
     
     ssrt::HitInfo hitInfo = (ssrt::HitInfo)0;

@@ -58,7 +58,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 worldPos = GetWorldPosition(FullScreenPosition(dispatchThreadID.xy), depth);
     
-    float2 random = GetVec3STBN(dispatchThreadID.xy, SceneCB.frameIndex).xy;
+    float2 random = GetVec2STBN(dispatchThreadID.xy, SceneCB.frameIndex);
     float3 direction = SampleUniformHemisphere(random, N); //uniform sample hemisphere, following the ReSTIR GI paper
     float pdf = 1.0 / (2.0 * M_PI);
 

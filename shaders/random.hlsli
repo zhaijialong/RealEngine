@@ -120,6 +120,14 @@ float GetScalarSTBN(uint2 screenPos, uint frameIndex)
     return scalarSTBN.Load(uint4(pos, 0)).x;
 }
 
+float2 GetVec2STBN(uint2 screenPos, uint frameIndex)
+{
+    uint3 pos = uint3(screenPos, frameIndex) & uint3(127, 127, 63);
+
+    Texture2DArray vec2STBN = ResourceDescriptorHeap[SceneCB.vec2STBN];
+    return vec2STBN.Load(uint4(pos, 0)).xy;
+}
+
 float3 GetVec3STBN(uint2 screenPos, uint frameIndex)
 {
     uint3 pos = uint3(screenPos, frameIndex) & uint3(127, 127, 63);
