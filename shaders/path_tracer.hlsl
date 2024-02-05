@@ -185,25 +185,34 @@ cbuffer AccumulationConstants : register(b0)
     uint c_accumulationTexture;
     uint c_accumulatedFrames;
     uint c_bEnableAccumulation;
+    uint c_bAccumulationFinished;
 };
 
 [numthreads(8, 8, 1)]
 void accumulation(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D currentFrameTexture = ResourceDescriptorHeap[c_currentFrameTexture];
+    RWTexture2D<float4> historyTexture = ResourceDescriptorHeap[c_historyTexture];
     RWTexture2D<float4> accumulationTexture = ResourceDescriptorHeap[c_accumulationTexture];
-
-    float3 current = currentFrameTexture[dispatchThreadID.xy].xyz;
-    float3 output = current;
-
+    
     if (c_bEnableAccumulation)
     {
-        RWTexture2D<float4> historyTexture = ResourceDescriptorHeap[c_historyTexture];
-        float3 history = historyTexture[dispatchThreadID.xy].xyz;
-
-        output = (c_accumulatedFrames * history + current) / (c_accumulatedFrames + 1);
-        historyTexture[dispatchThreadID.xy] = float4(output, 1.0);
+        if (c_bAccumulationFinished)
+        {
+            accumulationTexture[dispatchThreadID.xy] = clamp(historyTexture[dispatchThreadID.xy], 0.0, 65504.0);
+        }
+        else
+        {
+            float3 current = currentFrameTexture[dispatchThreadID.xy].xyz;
+            float3 history = historyTexture[dispatchThreadID.xy].xyz;
+            float3 output = (c_accumulatedFrames * history + current) / (c_accumulatedFrames + 1);
+            
+            historyTexture[dispatchThreadID.xy] = float4(output, 1.0);
+            accumulationTexture[dispatchThreadID.xy] = float4(clamp(output, 0.0, 65504.0), 1.0);
+        }
     }
-
-    accumulationTexture[dispatchThreadID.xy] = float4(clamp(output, 0.0, 65504.0), 1.0);
+    else
+    {
+        accumulationTexture[dispatchThreadID.xy] = currentFrameTexture[dispatchThreadID.xy];
+    }
 }

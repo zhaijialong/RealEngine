@@ -20,61 +20,12 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
 {
     GUI("Lighting", "PathTracer", [&]()
         {
-            if (ImGui::Checkbox("Enable Accumulation##PathTracer", &m_bEnableAccumulation))
-            {
-                m_bHistoryInvalid = true;
-            }
-            ImGui::SliderInt("Max Ray Length##PathTracer", (int*)&m_maxRayLength, 1, 32);
+            m_bHistoryInvalid |= ImGui::Checkbox("Enable Accumulation##PathTracer", &m_bEnableAccumulation);
+            m_bHistoryInvalid |= ImGui::SliderInt("Max Ray Length##PathTracer", (int*)&m_maxRayLength, 1, 16);
+            m_bHistoryInvalid |= ImGui::SliderInt("Max Samples##PathTracer", (int*)&m_spp, 1, 8192);
         });
 
     RENDER_GRAPH_EVENT(pRenderGraph, "PathTracer");
-
-    struct PathTracingData
-    {
-        RGHandle diffuseRT;
-        RGHandle specularRT;
-        RGHandle normalRT;
-        RGHandle emissiveRT;
-        RGHandle depthRT;
-        RGHandle output;
-    };
-
-    auto pt_pass = pRenderGraph->AddPass<PathTracingData>("PathTracing", RenderPassType::Compute,
-        [&](PathTracingData& data, RGBuilder& builder)
-        {
-            BasePass* pBasePass = m_pRenderer->GetBassPass();
-            
-            data.diffuseRT = builder.Read(pBasePass->GetDiffuseRT());
-            data.specularRT = builder.Read(pBasePass->GetSpecularRT());
-            data.normalRT = builder.Read(pBasePass->GetNormalRT());
-            data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT());
-            data.depthRT = builder.Read(depth);
-
-            RGTexture::Desc desc;
-            desc.width = width;
-            desc.height = height;
-            desc.format = GfxFormat::RGBA32F;
-            data.output = builder.Create<RGTexture>(desc, "PathTracing output");
-            data.output = builder.Write(data.output);
-        },
-        [=](const PathTracingData& data, IGfxCommandList* pCommandList)
-        {
-            PathTrace(pCommandList,
-                pRenderGraph->GetTexture(data.diffuseRT), 
-                pRenderGraph->GetTexture(data.specularRT),
-                pRenderGraph->GetTexture(data.normalRT),
-                pRenderGraph->GetTexture(data.emissiveRT),
-                pRenderGraph->GetTexture(data.depthRT),
-                pRenderGraph->GetTexture(data.output),
-                width, height);
-        });
-
-    struct AccumulationData
-    {
-        RGHandle currentFrame;
-        RGHandle history;
-        RGHandle output;
-    };
 
     if (m_pHistoryAccumulation == nullptr ||
         m_pHistoryAccumulation->GetTexture()->GetDesc().width != width ||
@@ -85,15 +36,80 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
     }
 
     Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
-    m_bHistoryInvalid = camera->IsMoved() ? true : false;
+    m_bHistoryInvalid |= camera->IsMoved();
 
-    RGHandle history = pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxAccessComputeUAV);
+    if (m_bHistoryInvalid)
+    {
+        m_currentSampleIndex = 0;
+    }
+
+    if (m_bEnableAccumulation)
+    {
+        RenderProgressBar();
+    }
+
+    RGHandle tracingOutput;
+
+    if (m_currentSampleIndex < m_spp || !m_bEnableAccumulation)
+    {
+        struct PathTracingData
+        {
+            RGHandle diffuseRT;
+            RGHandle specularRT;
+            RGHandle normalRT;
+            RGHandle emissiveRT;
+            RGHandle depthRT;
+            RGHandle output;
+        };
+
+        auto pt_pass = pRenderGraph->AddPass<PathTracingData>("PathTracing", RenderPassType::Compute,
+            [&](PathTracingData& data, RGBuilder& builder)
+            {
+                BasePass* pBasePass = m_pRenderer->GetBassPass();
+
+                data.diffuseRT = builder.Read(pBasePass->GetDiffuseRT());
+                data.specularRT = builder.Read(pBasePass->GetSpecularRT());
+                data.normalRT = builder.Read(pBasePass->GetNormalRT());
+                data.emissiveRT = builder.Read(pBasePass->GetEmissiveRT());
+                data.depthRT = builder.Read(depth);
+
+                RGTexture::Desc desc;
+                desc.width = width;
+                desc.height = height;
+                desc.format = GfxFormat::RGBA32F;
+                data.output = builder.Create<RGTexture>(desc, "PathTracing output");
+                data.output = builder.Write(data.output);
+            },
+            [=](const PathTracingData& data, IGfxCommandList* pCommandList)
+            {
+                PathTrace(pCommandList,
+                pRenderGraph->GetTexture(data.diffuseRT),
+                pRenderGraph->GetTexture(data.specularRT),
+                pRenderGraph->GetTexture(data.normalRT),
+                pRenderGraph->GetTexture(data.emissiveRT),
+                pRenderGraph->GetTexture(data.depthRT),
+                pRenderGraph->GetTexture(data.output),
+                width, height);
+            });
+
+        tracingOutput = pt_pass->output;
+    }
+
+    struct AccumulationData
+    {
+        RGHandle currentFrame;
+        RGHandle history;
+        RGHandle output;
+    };
 
     auto accumulation_pass = pRenderGraph->AddPass<AccumulationData>("Accumulation", RenderPassType::Compute,
         [&](AccumulationData& data, RGBuilder& builder)
         {
-            data.currentFrame = builder.Read(pt_pass->output);
-            data.history = builder.Write(history);
+            if (tracingOutput.IsValid())
+            {
+                data.currentFrame = builder.Read(tracingOutput);
+            }
+            data.history = builder.Write(pRenderGraph->Import(m_pHistoryAccumulation->GetTexture(), GfxAccessComputeUAV));
 
             RGTexture::Desc desc;
             desc.width = width;
@@ -136,7 +152,6 @@ void PathTracer::Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGT
     if (m_bHistoryInvalid)
     {
         m_bHistoryInvalid = false;
-        m_nAccumulatedFrames = 0;
 
         float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
         pCommandList->ClearUAV(m_pHistoryAccumulation->GetTexture(), m_pHistoryAccumulation->GetUAV(), clear_value);
@@ -145,13 +160,39 @@ void PathTracer::Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGT
 
     pCommandList->SetPipelineState(m_pAccumulationPSO);
 
-    uint32_t constants[5] = { 
-        input->GetSRV()->GetHeapIndex(),
+    bool accumulationFinished = m_bEnableAccumulation && (m_currentSampleIndex >= m_spp);
+
+    uint32_t constants[6] = { 
+        input ? input->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
         m_pHistoryAccumulation->GetUAV()->GetHeapIndex(), 
         outputUAV->GetUAV()->GetHeapIndex(), 
-        m_nAccumulatedFrames++, 
-        m_bEnableAccumulation
+        m_currentSampleIndex,
+        m_bEnableAccumulation,
+        accumulationFinished
     };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+
+    if (m_bEnableAccumulation && !accumulationFinished)
+    {
+        ++m_currentSampleIndex;
+    }
+}
+
+void PathTracer::RenderProgressBar()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    const uint32_t progressBarSize = 550;
+
+    ImGui::SetNextWindowPos(ImVec2((io.DisplaySize.x - progressBarSize) / 2 + 50, io.DisplaySize.y - 70));
+    ImGui::SetNextWindowSize(ImVec2(progressBarSize, 30));
+
+    ImGui::Begin("PathtracingProgress", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoNav |
+        ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground);
+
+    ImGui::ProgressBar((float)m_currentSampleIndex / m_spp, ImVec2(450, 0));
+    ImGui::SameLine();
+    ImGui::Text("%d/%d", m_currentSampleIndex, m_spp);
+
+    ImGui::End();
 }

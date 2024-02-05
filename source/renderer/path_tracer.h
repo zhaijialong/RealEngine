@@ -15,6 +15,8 @@ private:
         RGTexture* output, uint32_t width, uint32_t height);
     void Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* outputUAV, uint32_t width, uint32_t height);
 
+    void RenderProgressBar();
+
 private:
     Renderer* m_pRenderer;
 
@@ -23,8 +25,9 @@ private:
 
     eastl::unique_ptr<Texture2D> m_pHistoryAccumulation;
 
-    uint m_maxRayLength = 8;
-    uint m_nAccumulatedFrames = 0;
+    uint m_maxRayLength = 4;
+    uint m_spp = 256;
+    uint m_currentSampleIndex = 0;
     bool m_bEnableAccumulation = true;
     bool m_bHistoryInvalid = true;
 };
