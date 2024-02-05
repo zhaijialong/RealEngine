@@ -43,14 +43,9 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
         m_currentSampleIndex = 0;
     }
 
-    if (m_bEnableAccumulation)
-    {
-        RenderProgressBar();
-    }
-
     RGHandle tracingOutput;
 
-    if (m_currentSampleIndex < m_spp || !m_bEnableAccumulation)
+    if (m_currentSampleIndex < m_spp)
     {
         struct PathTracingData
         {
@@ -76,7 +71,7 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
                 RGTexture::Desc desc;
                 desc.width = width;
                 desc.height = height;
-                desc.format = GfxFormat::RGBA32F;
+                desc.format = GfxFormat::RGBA16F;
                 data.output = builder.Create<RGTexture>(desc, "PathTracing output");
                 data.output = builder.Write(data.output);
             },
@@ -94,6 +89,13 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
 
         tracingOutput = pt_pass->output;
     }
+
+    if (!m_bEnableAccumulation)
+    {
+        return tracingOutput;
+    }
+
+    RenderProgressBar();
 
     struct AccumulationData
     {
@@ -134,16 +136,17 @@ void PathTracer::PathTrace(IGfxCommandList* pCommandList, RGTexture* diffuse, RG
 {
     pCommandList->SetPipelineState(m_pPathTracingPSO);
 
-    uint32_t constants[7] = {
+    uint32_t constants[8] = {
         diffuse->GetSRV()->GetHeapIndex(),
         specular->GetSRV()->GetHeapIndex(),
         normal->GetSRV()->GetHeapIndex(),
         emissive->GetSRV()->GetHeapIndex(),
         depth->GetSRV()->GetHeapIndex(),
         m_maxRayLength,
+        m_currentSampleIndex,
         output->GetUAV()->GetHeapIndex()
     };
-    pCommandList->SetComputeConstants(1, constants, sizeof(constants));
+    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
@@ -160,20 +163,19 @@ void PathTracer::Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGT
 
     pCommandList->SetPipelineState(m_pAccumulationPSO);
 
-    bool accumulationFinished = m_bEnableAccumulation && (m_currentSampleIndex >= m_spp);
+    bool accumulationFinished = (m_currentSampleIndex >= m_spp);
 
-    uint32_t constants[6] = { 
+    uint32_t constants[5] = { 
         input ? input->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE,
         m_pHistoryAccumulation->GetUAV()->GetHeapIndex(), 
         outputUAV->GetUAV()->GetHeapIndex(), 
         m_currentSampleIndex,
-        m_bEnableAccumulation,
         accumulationFinished
     };
     pCommandList->SetComputeConstants(0, constants, sizeof(constants));
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 
-    if (m_bEnableAccumulation && !accumulationFinished)
+    if (!accumulationFinished)
     {
         ++m_currentSampleIndex;
     }

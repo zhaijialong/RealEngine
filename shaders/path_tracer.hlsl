@@ -3,15 +3,16 @@
 #include "importance_sampling.hlsli"
 #include "debug.hlsli"
 
-cbuffer PathTracingConstants : register(b1)
+cbuffer PathTracingConstants : register(b0)
 {
     uint c_diffuseRT;
     uint c_specularRT;
     uint c_normalRT;
     uint c_emissiveRT;
+    
     uint c_depthRT;
-
     uint c_maxRayLength;
+    uint c_currentSampleIndex;
     uint c_outputTexture;
 };
 
@@ -175,7 +176,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         radiance = float3(0, 0, 0);
     }
 
-    outputTexture[dispatchThreadID.xy] = float4(radiance, 1.0);
+    outputTexture[dispatchThreadID.xy] = float4(clamp(radiance, 0.0, 65504.0), 1.0);
 }
 
 cbuffer AccumulationConstants : register(b0)
@@ -184,7 +185,6 @@ cbuffer AccumulationConstants : register(b0)
     uint c_historyTexture;
     uint c_accumulationTexture;
     uint c_accumulatedFrames;
-    uint c_bEnableAccumulation;
     uint c_bAccumulationFinished;
 };
 
@@ -195,24 +195,17 @@ void accumulation(uint3 dispatchThreadID : SV_DispatchThreadID)
     RWTexture2D<float4> historyTexture = ResourceDescriptorHeap[c_historyTexture];
     RWTexture2D<float4> accumulationTexture = ResourceDescriptorHeap[c_accumulationTexture];
     
-    if (c_bEnableAccumulation)
+    if (c_bAccumulationFinished)
     {
-        if (c_bAccumulationFinished)
-        {
-            accumulationTexture[dispatchThreadID.xy] = clamp(historyTexture[dispatchThreadID.xy], 0.0, 65504.0);
-        }
-        else
-        {
-            float3 current = currentFrameTexture[dispatchThreadID.xy].xyz;
-            float3 history = historyTexture[dispatchThreadID.xy].xyz;
-            float3 output = (c_accumulatedFrames * history + current) / (c_accumulatedFrames + 1);
-            
-            historyTexture[dispatchThreadID.xy] = float4(output, 1.0);
-            accumulationTexture[dispatchThreadID.xy] = float4(clamp(output, 0.0, 65504.0), 1.0);
-        }
+        accumulationTexture[dispatchThreadID.xy] = clamp(historyTexture[dispatchThreadID.xy], 0.0, 65504.0);
     }
     else
     {
-        accumulationTexture[dispatchThreadID.xy] = currentFrameTexture[dispatchThreadID.xy];
+        float3 current = currentFrameTexture[dispatchThreadID.xy].xyz;
+        float3 history = historyTexture[dispatchThreadID.xy].xyz;
+        float3 output = (c_accumulatedFrames * history + current) / (c_accumulatedFrames + 1);
+            
+        historyTexture[dispatchThreadID.xy] = float4(output, 1.0);
+        accumulationTexture[dispatchThreadID.xy] = float4(clamp(output, 0.0, 65504.0), 1.0);
     }
 }
