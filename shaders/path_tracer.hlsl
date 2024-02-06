@@ -3,7 +3,7 @@
 #include "importance_sampling.hlsli"
 #include "debug.hlsli"
 
-cbuffer PathTracingConstants : register(b0)
+cbuffer PathTracingConstants : register(b1)
 {
     uint c_diffuseRT;
     uint c_specularRT;
@@ -13,6 +13,8 @@ cbuffer PathTracingConstants : register(b0)
     uint c_depthRT;
     uint c_maxRayLength;
     uint c_currentSampleIndex;
+    uint c_sampleNum;
+    
     uint c_outputTexture;
 };
 
@@ -35,6 +37,13 @@ float3 SkyColor(uint2 screenPos)
     return sky_color;
 }
 
+float2 RandomSample(uint2 pixel, inout uint sampleSet)
+{
+    uint permuation = sampleSet * SceneCB.renderSize.x * SceneCB.renderSize.y + (pixel.y * SceneCB.renderSize.x + pixel.x);
+    ++sampleSet;
+    return CMJ(c_currentSampleIndex, c_sampleNum, permuation);
+}
+
 [numthreads(8, 8, 1)]
 void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
@@ -52,8 +61,6 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         return;
     }
 
-    PRNG rng = PRNG::Create(dispatchThreadID.xy, SceneCB.renderSize);
-
     float3 position = GetWorldPosition(dispatchThreadID.xy, depth);
     float3 wo = normalize(GetCameraCB().cameraPos - position);
 
@@ -67,6 +74,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 throughput = 1.0;
     float pdf = 1.0;
     float roughness_bias = 0.5 * roughness; //reduce fireflies
+    uint sampleSetIndex = 0;
 
     rt::RayCone cone = rt::RayCone::FromGBuffer(GetLinearDepth(depth));
     
@@ -77,7 +85,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
         RayDesc ray;
         ray.Origin = position + N * 0.01;
-        ray.Direction = SampleConeUniform(rng.RandomFloat2(), SceneCB.lightRadius, wi);
+        ray.Direction = SampleConeUniform(RandomSample(dispatchThreadID.xy, sampleSetIndex), SceneCB.lightRadius, wi);
         ray.TMin = 0.00001;
         ray.TMax = 1000.0;
 
@@ -93,10 +101,13 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
         //indirect light
         float probDiffuse = ProbabilityToSampleDiffuse(diffuse, specular);
-        bool chooseDiffuse = rng.RandomFloat() < probDiffuse;
-        if (chooseDiffuse)
+        float2 randomSample = RandomSample(dispatchThreadID.xy, sampleSetIndex);
+        
+        if (randomSample.x < probDiffuse)
         {
-            wi = SampleCosHemisphere(rng.RandomFloat2(), N); //pdf : NdotL / M_PI
+            randomSample.x /= probDiffuse;
+            
+            wi = SampleCosHemisphere(randomSample, N); //pdf : NdotL / M_PI
 
             float3 diffuse_brdf = DiffuseBRDF(diffuse);
             float NdotL = saturate(dot(N, wi));
@@ -106,12 +117,13 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         }
         else
         {
-            #define GGX_VNDF 1
-
+            randomSample.x = (randomSample.x - probDiffuse) / (1.0 - probDiffuse);
+            
+#define GGX_VNDF 1
 #if GGX_VNDF
-            float3 H = SampleGGXVNDF(rng.RandomFloat2(), roughness, N, wo);
+            float3 H = SampleGGXVNDF(randomSample, roughness, N, wo);
 #else
-            float3 H = SampleGGX(rng.RandomFloat2(), roughness, N);
+            float3 H = SampleGGX(randomSample, roughness, N);
 #endif
             wi = reflect(-wo, H);
             

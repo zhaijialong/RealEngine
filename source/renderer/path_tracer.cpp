@@ -136,7 +136,7 @@ void PathTracer::PathTrace(IGfxCommandList* pCommandList, RGTexture* diffuse, RG
 {
     pCommandList->SetPipelineState(m_pPathTracingPSO);
 
-    uint32_t constants[8] = {
+    uint32_t constants[9] = {
         diffuse->GetSRV()->GetHeapIndex(),
         specular->GetSRV()->GetHeapIndex(),
         normal->GetSRV()->GetHeapIndex(),
@@ -144,9 +144,10 @@ void PathTracer::PathTrace(IGfxCommandList* pCommandList, RGTexture* diffuse, RG
         depth->GetSRV()->GetHeapIndex(),
         m_maxRayLength,
         m_currentSampleIndex,
+        m_spp,
         output->GetUAV()->GetHeapIndex()
     };
-    pCommandList->SetComputeConstants(0, constants, sizeof(constants));
+    pCommandList->SetComputeConstants(1, constants, sizeof(constants));
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
 
