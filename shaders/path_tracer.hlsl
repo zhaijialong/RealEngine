@@ -25,7 +25,7 @@ float ProbabilityToSampleDiffuse(float3 diffuse, float3 specular)
 
 float3 SkyColor(uint2 screenPos)
 {
-    float3 position = GetWorldPosition(screenPos, 0);
+    float3 position = GetWorldPosition(screenPos, 1e-10);
     float3 dir = normalize(position - GetCameraCB().cameraPos);
     
     TextureCube skyTexture = ResourceDescriptorHeap[SceneCB.skyCubeTexture];
