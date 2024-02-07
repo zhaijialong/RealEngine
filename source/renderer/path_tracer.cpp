@@ -1,5 +1,6 @@
 #include "path_tracer.h"
 #include "renderer.h"
+#include "oidn.h"
 #include "base_pass.h"
 #include "core/engine.h"
 #include "utils/gui_util.h"
@@ -7,6 +8,7 @@
 PathTracer::PathTracer(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
+    m_denoiser = eastl::make_unique<OIDN>(pRenderer);
 
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = pRenderer->GetShader("path_tracer.hlsl", "path_tracing", "cs_6_6", {});
@@ -15,6 +17,8 @@ PathTracer::PathTracer(Renderer* pRenderer)
     psoDesc.cs = pRenderer->GetShader("path_tracer.hlsl", "accumulation", "cs_6_6", {});
     m_pAccumulationPSO = pRenderer->GetPipelineState(psoDesc, "PathTracing accumulation PSO");
 }
+
+PathTracer::~PathTracer() = default;
 
 RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height)
 {
@@ -41,6 +45,7 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
     if (m_bHistoryInvalid)
     {
         m_currentSampleIndex = 0;
+        m_denoiser->Reset();
     }
 
     RGHandle tracingOutput;
@@ -127,6 +132,32 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
                 pRenderGraph->GetTexture(data.output), 
                 width, height);
         });
+
+    if (m_currentSampleIndex == m_spp)
+    {
+        struct OIDNPassData
+        {
+            RGHandle color;
+            RGHandle albedo;
+            RGHandle normal;
+        };
+
+        auto denoise_pass = pRenderGraph->AddPass<OIDNPassData>("OIDN", RenderPassType::Copy,
+            [&](OIDNPassData& data, RGBuilder& builder)
+            {
+                data.color = builder.Write(accumulation_pass->output);
+
+                builder.SkipCulling();
+            },
+            [=](const OIDNPassData& data, IGfxCommandList* pCommandList)
+            {
+                RGTexture* color = pRenderGraph->GetTexture(data.color);
+                //todo : albedo, normal
+                m_denoiser->Execute(pCommandList, color->GetTexture(), nullptr, nullptr);
+            });
+
+        return denoise_pass->color;
+    }
 
     return accumulation_pass->output;
 }

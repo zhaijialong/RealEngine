@@ -87,3 +87,8 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX_Loader.dll ${REAL_ENGINE_ROOT}/bin
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX.dll ${REAL_ENGINE_ROOT}/bin
 )
+
+# oidn
+target_include_directories(RealEngine PUBLIC ${EXTERNAL_ROOT}/oidn/include)
+target_link_directories(RealEngine PUBLIC ${EXTERNAL_ROOT}/oidn/lib)
+target_link_libraries(RealEngine OpenImageDenoise)

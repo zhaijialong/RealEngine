@@ -7,6 +7,7 @@ class PathTracer
 {
 public:
     PathTracer(Renderer* pRenderer);
+    ~PathTracer();
 
     RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height);
 
@@ -19,6 +20,7 @@ private:
 
 private:
     Renderer* m_pRenderer;
+    eastl::unique_ptr<class OIDN> m_denoiser;
 
     IGfxPipelineState* m_pPathTracingPSO = nullptr;
     IGfxPipelineState* m_pAccumulationPSO = nullptr;
