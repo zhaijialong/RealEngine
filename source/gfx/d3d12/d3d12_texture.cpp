@@ -79,6 +79,13 @@ bool D3D12Texture::Create()
         allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
         allocationDesc.Flags = m_desc.alloc_type == GfxAllocationType::Committed ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
 
+        if (m_desc.usage & GfxTextureUsageShared)
+        {
+            resourceDesc1.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            resourceDesc1.Flags |= D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER;
+            allocationDesc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED | D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER;
+        }
+
         hr = pAllocator->CreateResource3(&allocationDesc, 
             &resourceDesc1, initial_layout, nullptr, 0, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pTexture));
     }
@@ -94,6 +101,18 @@ bool D3D12Texture::Create()
     if (m_pAllocation)
     {
         m_pAllocation->SetName(name_wstr.c_str());
+    }
+
+    if (m_desc.usage & GfxTextureUsageShared)
+    {
+        ID3D12Device* device = (ID3D12Device*)m_pDevice->GetHandle();
+        hr = device->CreateSharedHandle(m_pTexture, nullptr, GENERIC_ALL, name_wstr.c_str(), &m_sharedHandle);
+
+        if (FAILED(hr))
+        {
+            RE_ERROR("[D3D12Texture] failed to create shared handle for {}", m_name);
+            return false;
+        }
     }
 
     return true;
