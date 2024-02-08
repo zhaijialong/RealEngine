@@ -216,7 +216,7 @@ void D3D12CommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mi
     ++m_commandCount;
 }
 
-void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
+void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, uint32_t offset, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
 {
     FlushBarriers();
 
@@ -231,6 +231,7 @@ void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, IGfxTexture* 
     D3D12_TEXTURE_COPY_LOCATION dst = {};
     dst.pResource = (ID3D12Resource*)dst_buffer->GetHandle();
     dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    dst.PlacedFootprint.Offset = offset;
     dst.PlacedFootprint.Footprint.Format = dxgi_format(desc.format);
     dst.PlacedFootprint.Footprint.Width = eastl::max(desc.width >> mip_level, 1u);
     dst.PlacedFootprint.Footprint.Height = eastl::max(desc.height >> mip_level, 1u);

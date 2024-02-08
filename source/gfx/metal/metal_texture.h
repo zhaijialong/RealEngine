@@ -10,4 +10,5 @@ public:
     virtual uint32_t GetRowPitch(uint32_t mip_level) const override;
     virtual GfxTilingDesc GetTilingDesc() const override;
     virtual GfxSubresourceTilingDesc GetTilingDesc(uint32_t subresource) const override;
+    virtual void* GetSharedHandle() const override;
 };

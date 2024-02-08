@@ -232,7 +232,7 @@ void Renderer::ObjectIDPass(RGHandle& depth)
                     m_pObjectIDBuffer.reset(m_pDevice->CreateBuffer(desc, "Renderer::m_pObjectIDBuffer"));
                 }
 
-                pCommandList->CopyTextureToBuffer(m_pObjectIDBuffer.get(), srcTexture->GetTexture(), 0, 0);
+                pCommandList->CopyTextureToBuffer(m_pObjectIDBuffer.get(), 0, srcTexture->GetTexture(), 0, 0);
             });
     }
 }
