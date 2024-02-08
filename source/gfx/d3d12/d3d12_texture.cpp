@@ -106,7 +106,7 @@ bool D3D12Texture::Create()
     if (m_desc.usage & GfxTextureUsageShared)
     {
         ID3D12Device* device = (ID3D12Device*)m_pDevice->GetHandle();
-        hr = device->CreateSharedHandle(m_pTexture, nullptr, GENERIC_ALL, name_wstr.c_str(), &m_sharedHandle);
+        hr = device->CreateSharedHandle(m_pTexture, nullptr, GENERIC_ALL, nullptr, &m_sharedHandle);
 
         if (FAILED(hr))
         {
