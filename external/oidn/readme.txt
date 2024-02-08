@@ -1,0 +1,1 @@
+copy OIDN bin/include/lib folders here, and regenerate the project

@@ -1,4 +1,6 @@
 #include "oidn.h"
+#if WITH_OIDN
+
 #include "renderer.h"
 #include "utils/log.h"
 #include "magic_enum/magic_enum.hpp"
@@ -197,3 +199,5 @@ void OIDN::InitGPUBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* 
     m_normalBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
         m_normalTexture->GetSharedHandle(), nullptr, m_normalTexture->GetRequiredStagingBufferSize());
 }
+
+#endif // #if WITH_OIDN

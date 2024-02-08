@@ -1,5 +1,7 @@
 #pragma once
 
+#if WITH_OIDN
+
 #include "gfx/gfx.h"
 #include "EASTL/unique_ptr.h"
 #include "OpenImageDenoise/oidn.h"
@@ -48,3 +50,5 @@ private:
     uint64_t m_fenceValue = 0;
     bool m_bDenoised = false;
 };
+
+#endif // WITH_OIDN

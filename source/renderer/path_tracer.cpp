@@ -8,7 +8,9 @@
 PathTracer::PathTracer(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
+#if WITH_OIDN
     m_denoiser = eastl::make_unique<OIDN>(pRenderer);
+#endif
 
     GfxComputePipelineDesc psoDesc;
     psoDesc.cs = pRenderer->GetShader("path_tracer.hlsl", "path_tracing", "cs_6_6", {});
@@ -25,6 +27,9 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
     GUI("Lighting", "PathTracer", [&]()
         {
             m_bHistoryInvalid |= ImGui::Checkbox("Enable Accumulation##PathTracer", &m_bEnableAccumulation);
+#if WITH_OIDN
+            ImGui::Checkbox("Enable OIDN##PathTracer", &m_bEnableOIDN);
+#endif
             m_bHistoryInvalid |= ImGui::SliderInt("Max Ray Length##PathTracer", (int*)&m_maxRayLength, 1, 16);
             m_bHistoryInvalid |= ImGui::SliderInt("Max Samples##PathTracer", (int*)&m_spp, 1, 8192);
         });
@@ -47,7 +52,9 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
     if (m_bHistoryInvalid)
     {
         m_currentSampleIndex = 0;
+#if WITH_OIDN
         m_denoiser->Reset();
+#endif
     }
 
     RGHandle tracingOutput;
@@ -151,7 +158,8 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
                 width, height);
         });
 
-    if (m_currentSampleIndex == m_spp)
+#if WITH_OIDN
+    if (m_bEnableOIDN && m_currentSampleIndex == m_spp)
     {
         struct OIDNPassData
         {
@@ -179,6 +187,7 @@ RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t 
 
         return denoise_pass->color;
     }
+#endif // WITH_OIDN
 
     return accumulation_pass->outputColor;
 }

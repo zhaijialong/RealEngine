@@ -24,7 +24,9 @@ private:
 
 private:
     Renderer* m_pRenderer;
+#if WITH_OIDN
     eastl::unique_ptr<class OIDN> m_denoiser;
+#endif
 
     IGfxPipelineState* m_pPathTracingPSO = nullptr;
     IGfxPipelineState* m_pAccumulationPSO = nullptr;
@@ -38,4 +40,5 @@ private:
     uint m_currentSampleIndex = 0;
     bool m_bEnableAccumulation = true;
     bool m_bHistoryInvalid = true;
+    bool m_bEnableOIDN = true;
 };
