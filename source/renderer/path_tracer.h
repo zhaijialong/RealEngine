@@ -14,7 +14,11 @@ public:
 private:
     void PathTrace(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal, RGTexture* emissive, RGTexture* depth, 
         RGTexture* output, uint32_t width, uint32_t height);
-    void Accumulate(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* outputUAV, uint32_t width, uint32_t height);
+    void Accumulate(IGfxCommandList* pCommandList, 
+        RGTexture* inputColor, RGTexture* outputColor, 
+        RGTexture* inputAlbedo, RGTexture* outputAlbedo,
+        RGTexture* inputNormal, RGTexture* outputNormal,
+        uint32_t width, uint32_t height);
 
     void RenderProgressBar();
 
@@ -25,7 +29,9 @@ private:
     IGfxPipelineState* m_pPathTracingPSO = nullptr;
     IGfxPipelineState* m_pAccumulationPSO = nullptr;
 
-    eastl::unique_ptr<Texture2D> m_pHistoryAccumulation;
+    eastl::unique_ptr<Texture2D> m_pHistoryColor;
+    eastl::unique_ptr<Texture2D> m_pHistoryAlbedo;
+    eastl::unique_ptr<Texture2D> m_pHistoryNormal;
 
     uint m_maxRayLength = 4;
     uint m_spp = 256;
