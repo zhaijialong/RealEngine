@@ -124,6 +124,7 @@ enum GfxTextureUsageBit
     GfxTextureUsageRenderTarget     = 1 << 0,
     GfxTextureUsageDepthStencil     = 1 << 1,
     GfxTextureUsageUnorderedAccess  = 1 << 2,
+    GfxTextureUsageShared           = 1 << 3,
 };
 using GfxTextureUsageFlags = uint32_t;
 

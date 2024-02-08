@@ -87,3 +87,30 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX_Loader.dll ${REAL_ENGINE_ROOT}/bin
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX.dll ${REAL_ENGINE_ROOT}/bin
 )
+
+# oidn
+if(EXISTS ${EXTERNAL_ROOT}/oidn/include/OpenImageDenoise/oidn.h)
+    target_compile_definitions(RealEngine PUBLIC WITH_OIDN=1)
+    target_include_directories(RealEngine PUBLIC ${EXTERNAL_ROOT}/oidn/include)
+    target_link_directories(RealEngine PUBLIC ${EXTERNAL_ROOT}/oidn/lib)
+    target_link_libraries(RealEngine OpenImageDenoise)
+    
+    add_custom_command(
+        TARGET RealEngine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_core.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_cpu.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_cuda.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_hip.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_sycl.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_sycl_xehpg.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_sycl_xelp.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/pi_level_zero.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/pi_win_proxy_loader.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/sycl7.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/tbb12.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/tbbbind.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/tbbbind_2_0.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/tbbbind_2_5.dll ${REAL_ENGINE_ROOT}/bin
+    )
+endif()

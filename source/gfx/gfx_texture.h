@@ -12,6 +12,7 @@ public:
     virtual uint32_t GetRowPitch(uint32_t mip_level) const = 0;
     virtual GfxTilingDesc GetTilingDesc() const = 0;
     virtual GfxSubresourceTilingDesc GetTilingDesc(uint32_t subresource) const = 0;
+    virtual void* GetSharedHandle() const = 0;
 
 protected:
     GfxTextureDesc m_desc = {};

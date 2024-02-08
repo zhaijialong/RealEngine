@@ -22,6 +22,7 @@ public:
     virtual uint32_t GetRowPitch(uint32_t mip_level) const override;
     virtual GfxTilingDesc GetTilingDesc() const override;
     virtual GfxSubresourceTilingDesc GetTilingDesc(uint32_t subresource) const override;
+    virtual void* GetSharedHandle() const { return m_sharedHandle; }
 
     bool Create();
     D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(uint32_t mip_slice, uint32_t array_slice);
@@ -34,6 +35,8 @@ private:
     eastl::vector<D3D12Descriptor> m_RTV;
     eastl::vector<D3D12Descriptor> m_DSV;
     eastl::vector<D3D12Descriptor> m_readonlyDSV;
+
+    HANDLE m_sharedHandle = 0;
 private:
     friend class D3D12Swapchain;
 };

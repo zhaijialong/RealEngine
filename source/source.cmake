@@ -210,6 +210,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/hierarchical_depth_buffer.h
     ${SOURCE_ROOT}/renderer/marschner_hair_lut.cpp
     ${SOURCE_ROOT}/renderer/marschner_hair_lut.h
+    ${SOURCE_ROOT}/renderer/oidn.cpp
+    ${SOURCE_ROOT}/renderer/oidn.h
     ${SOURCE_ROOT}/renderer/path_tracer.cpp
     ${SOURCE_ROOT}/renderer/path_tracer.h
     ${SOURCE_ROOT}/renderer/pipeline_cache.cpp

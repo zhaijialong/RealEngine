@@ -191,11 +191,17 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     outputTexture[dispatchThreadID.xy] = float4(clamp(radiance, 0.0, 65504.0), 1.0);
 }
 
-cbuffer AccumulationConstants : register(b0)
+cbuffer AccumulationConstants : register(b1)
 {
-    uint c_currentFrameTexture;
-    uint c_historyTexture;
-    uint c_accumulationTexture;
+    uint c_currentColorTexture;
+    uint c_currentAlbedoTexture;
+    uint c_currentNormalTexture;
+    uint c_historyColorTexture;
+    uint c_historyAlbedoTexture;
+    uint c_historyNormalTexture;
+    uint c_outputColorTexture;
+    uint c_outputAlebdoTexture;
+    uint c_outputNormalTexture;
     uint c_accumulatedFrames;
     uint c_bAccumulationFinished;
 };
@@ -203,21 +209,40 @@ cbuffer AccumulationConstants : register(b0)
 [numthreads(8, 8, 1)]
 void accumulation(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D currentFrameTexture = ResourceDescriptorHeap[c_currentFrameTexture];
-    RWTexture2D<float4> historyTexture = ResourceDescriptorHeap[c_historyTexture];
-    RWTexture2D<float4> accumulationTexture = ResourceDescriptorHeap[c_accumulationTexture];
+    Texture2D currentColorTexture = ResourceDescriptorHeap[c_currentColorTexture];
+    Texture2D currentAlbedoTexture = ResourceDescriptorHeap[c_currentAlbedoTexture];
+    Texture2D currentNormalTexture = ResourceDescriptorHeap[c_currentNormalTexture];
+    RWTexture2D<float4> historyColorTexture = ResourceDescriptorHeap[c_historyColorTexture];
+    RWTexture2D<float4> historyAlbedoTexture = ResourceDescriptorHeap[c_historyAlbedoTexture];
+    RWTexture2D<float4> historyNormalTexture = ResourceDescriptorHeap[c_historyNormalTexture];
+    RWTexture2D<float4> outputColorTexture = ResourceDescriptorHeap[c_outputColorTexture];
+    RWTexture2D<float4> outputAlebdoTexture = ResourceDescriptorHeap[c_outputAlebdoTexture];
+    RWTexture2D<float4> outputNormalTexture = ResourceDescriptorHeap[c_outputNormalTexture];
     
     if (c_bAccumulationFinished)
     {
-        accumulationTexture[dispatchThreadID.xy] = clamp(historyTexture[dispatchThreadID.xy], 0.0, 65504.0);
+        outputColorTexture[dispatchThreadID.xy] = clamp(historyColorTexture[dispatchThreadID.xy], 0.0, 65504.0);
+        outputAlebdoTexture[dispatchThreadID.xy] = historyAlbedoTexture[dispatchThreadID.xy];
+        outputNormalTexture[dispatchThreadID.xy] = historyNormalTexture[dispatchThreadID.xy];
     }
     else
     {
-        float3 current = currentFrameTexture[dispatchThreadID.xy].xyz;
-        float3 history = historyTexture[dispatchThreadID.xy].xyz;
-        float3 output = (c_accumulatedFrames * history + current) / (c_accumulatedFrames + 1);
+        float3 currentColor = currentColorTexture[dispatchThreadID.xy].xyz;
+        float3 currentAlbedo = currentAlbedoTexture[dispatchThreadID.xy].xyz;
+        float3 currentNormal = DecodeNormal(currentNormalTexture[dispatchThreadID.xy].xyz);
+        float3 historyColor = historyColorTexture[dispatchThreadID.xy].xyz;
+        float3 historyAlbedo = historyAlbedoTexture[dispatchThreadID.xy].xyz;
+        float3 historyNormal = historyNormalTexture[dispatchThreadID.xy].xyz;
+        
+        float3 outputColor = (c_accumulatedFrames * historyColor + currentColor) / (c_accumulatedFrames + 1);
+        float3 outputAlbedo = (c_accumulatedFrames * historyAlbedo + currentAlbedo) / (c_accumulatedFrames + 1);
+        float3 outputNormal = (c_accumulatedFrames * historyNormal + currentNormal) / (c_accumulatedFrames + 1);
             
-        historyTexture[dispatchThreadID.xy] = float4(output, 1.0);
-        accumulationTexture[dispatchThreadID.xy] = float4(clamp(output, 0.0, 65504.0), 1.0);
+        historyColorTexture[dispatchThreadID.xy] = float4(outputColor, 1.0);
+        historyAlbedoTexture[dispatchThreadID.xy] = float4(outputAlbedo, 1.0);
+        historyNormalTexture[dispatchThreadID.xy] = float4(outputNormal, 1.0);
+        outputColorTexture[dispatchThreadID.xy] = float4(clamp(outputColor, 0.0, 65504.0), 1.0);
+        outputAlebdoTexture[dispatchThreadID.xy] = float4(outputAlbedo, 1.0);
+        outputNormalTexture[dispatchThreadID.xy] = float4(outputNormal, 1.0);
     }
 }
