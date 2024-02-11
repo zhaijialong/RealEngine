@@ -130,10 +130,10 @@ void OIDN::InitBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* nor
         const uint32_t width = color->GetDesc().width;
         const uint32_t height = color->GetDesc().height;
 
-        oidnSetFilterImage(m_filter, "color", m_colorBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, color->GetRowPitch(0));
-        oidnSetFilterImage(m_filter, "albedo", m_albedoBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, albedo->GetRowPitch(0));
-        oidnSetFilterImage(m_filter, "normal", m_normalBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, normal->GetRowPitch(0));
-        oidnSetFilterImage(m_filter, "output", m_colorBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, color->GetRowPitch(0));
+        oidnSetFilterImage(m_filter, "color", m_colorBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, color->GetRowPitch());
+        oidnSetFilterImage(m_filter, "albedo", m_albedoBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, albedo->GetRowPitch());
+        oidnSetFilterImage(m_filter, "normal", m_normalBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, normal->GetRowPitch());
+        oidnSetFilterImage(m_filter, "output", m_colorBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, color->GetRowPitch());
 
         oidnSetFilterBool(m_filter, "hdr", true);
         oidnSetFilterBool(m_filter, "cleanAux", true);

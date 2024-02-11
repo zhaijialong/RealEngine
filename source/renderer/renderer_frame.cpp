@@ -222,7 +222,7 @@ void Renderer::ObjectIDPass(RGHandle& depth)
             {
                 RGTexture* srcTexture = m_pRenderGraph->GetTexture(data.srcTexture);
 
-                m_nObjectIDRowPitch = srcTexture->GetTexture()->GetRowPitch(0);
+                m_nObjectIDRowPitch = srcTexture->GetTexture()->GetRowPitch();
                 uint32_t size = m_nObjectIDRowPitch * srcTexture->GetTexture()->GetDesc().height;
                 if (m_pObjectIDBuffer == nullptr || m_pObjectIDBuffer->GetDesc().size < size)
                 {
