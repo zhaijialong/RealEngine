@@ -42,6 +42,10 @@ float3 ApplyToneMapping(float3 color)
     return neutral_tonemap(color);
 #elif TONY_MC_MAPFACE
     return tony_mc_mapface(color);
+#elif AGX
+    color = agx(color);
+    color = agxLook(color);
+    return agxEotf(color);
 #endif
 }
 

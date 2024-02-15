@@ -12,7 +12,7 @@ RGHandle Tonemapper::Render(RenderGraph* pRenderGraph, RGHandle inputHandle, RGH
     GUI("PostProcess", "Tone Mapping",
         [&]()
         {
-            ImGui::Combo("Mode##Tonemapper", (int*)&m_mode, "Neutral\0ACES\0Tony McMapface\0\0");
+            ImGui::Combo("Mode##Tonemapper", (int*)&m_mode, "Neutral\0ACES\0Tony McMapface\0AgX\0\0");
             ImGui::Checkbox("Enable Dither##Tonemapper", &m_bEnableDither);
         });
 
@@ -70,6 +70,9 @@ void Tonemapper::Draw(IGfxCommandList* pCommandList, RGTexture* pHdrSRV, RGTextu
         break;
     case TonemappingMode::TonyMcMapface:
         defines.push_back("TONY_MC_MAPFACE=1");
+        break;
+    case TonemappingMode::AgX:
+        defines.push_back("AGX=1");
         break;
     default:
         break;

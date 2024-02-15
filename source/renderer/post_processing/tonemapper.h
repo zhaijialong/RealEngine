@@ -22,6 +22,7 @@ private:
         Neutral,
         ACES,
         TonyMcMapface,
+        AgX,
     };
     TonemappingMode m_mode = TonemappingMode::TonyMcMapface;
 
