@@ -103,8 +103,8 @@ if(EXISTS ${EXTERNAL_ROOT}/oidn/include/OpenImageDenoise/oidn.h)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_cuda.dll ${REAL_ENGINE_ROOT}/bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_hip.dll ${REAL_ENGINE_ROOT}/bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_sycl.dll ${REAL_ENGINE_ROOT}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_sycl_xehpg.dll ${REAL_ENGINE_ROOT}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_sycl_xelp.dll ${REAL_ENGINE_ROOT}/bin
+        #COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_sycl_xehpg.dll ${REAL_ENGINE_ROOT}/bin
+        #COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise_device_sycl_xelp.dll ${REAL_ENGINE_ROOT}/bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/pi_level_zero.dll ${REAL_ENGINE_ROOT}/bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/pi_win_proxy_loader.dll ${REAL_ENGINE_ROOT}/bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/sycl7.dll ${REAL_ENGINE_ROOT}/bin
