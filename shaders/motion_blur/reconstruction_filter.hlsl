@@ -118,7 +118,7 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
             sum += weight1 * float4(colorTexture.SampleLevel(pointSampler, sampleUV1, 0.0).xyz, 1.0);
         }
     
-        sum *= rcp(stepCount * 2.0 + 1.0);
+        sum *= rcp(stepCount * 2.0);
         float4 result = float4(sum.rgb + (1.0 - sum.w) * centerColor, 1);
         
         outputTexture[dispatchThreadID] = OUTPUT_COLOR(result, float4(1, 0, 0, 1));
