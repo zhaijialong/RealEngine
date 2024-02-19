@@ -19,7 +19,7 @@ public:
     RGHandle GetHistoryRadiance() const { return m_radianceHistory; }
     IGfxDescriptor* GetHistoryRadianceSRV() const { return m_pRadianceHistory->GetSRV(); }
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle indirectArgs, RGHandle tileListBuffer, RGHandle input, 
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle indirectArgs, RGHandle tileListBuffer, RGHandle input, 
         RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height,
         float maxRoughness, float temporalStability);
 

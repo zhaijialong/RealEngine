@@ -8,13 +8,14 @@ public:
     PostProcessor(Renderer* pRenderer);
     ~PostProcessor();
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, 
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, 
         uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
 
     bool RequiresCameraJitter();
 
 private:
     void UpdateUpsacleMode();
+    bool ShouldRenderPostProcess();
 
 private:
     Renderer* m_pRenderer = nullptr;

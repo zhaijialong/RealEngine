@@ -45,7 +45,7 @@ void GIDenoiserNRD::ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t wi
     m_historyIrradiance = pRenderGraph->Import(m_pResolvedOutput->GetTexture(), m_bHistoryInvalid ? GfxAccessComputeUAV : GfxAccessComputeSRV);
 }
 
-RGHandle GIDenoiserNRD::Render(RenderGraph* pRenderGraph, RGHandle radiance, RGHandle rayDirection, RGHandle normal, RGHandle linearDepth, RGHandle velocity, uint32_t width, uint32_t height)
+RGHandle GIDenoiserNRD::AddPass(RenderGraph* pRenderGraph, RGHandle radiance, RGHandle rayDirection, RGHandle normal, RGHandle linearDepth, RGHandle velocity, uint32_t width, uint32_t height)
 {
     CreateReblurDenoiser(width, height);
 

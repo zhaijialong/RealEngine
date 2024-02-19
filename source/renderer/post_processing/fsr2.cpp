@@ -16,7 +16,7 @@ FSR2::~FSR2()
     DestroyFsr2Context();
 }
 
-RGHandle FSR2::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
+RGHandle FSR2::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     GUI("PostProcess", fmt::format("FSR {}.{}.{}", FFX_FSR2_VERSION_MAJOR, FFX_FSR2_VERSION_MINOR, FFX_FSR2_VERSION_PATCH).c_str(),

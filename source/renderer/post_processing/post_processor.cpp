@@ -10,7 +10,6 @@
 #include "fsr2.h"
 #include "dlss.h"
 #include "xess.h"
-
 #include "../renderer.h"
 #include "utils/gui_util.h"
 
@@ -33,55 +32,55 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
 
 PostProcessor::~PostProcessor() = default;
 
-RGHandle PostProcessor::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, 
+RGHandle PostProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, 
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "PostProcess");
 
     UpdateUpsacleMode();
+    bool needPostProcess = ShouldRenderPostProcess();
 
     RGHandle outputHandle = sceneColorRT;
-    RGHandle exposure = m_pAutomaticExposure->Render(pRenderGraph, outputHandle, renderWidth, renderHeight);
+
+    if (needPostProcess)
+    {
+        outputHandle = m_pDoF->AddPass(pRenderGraph, outputHandle, sceneDepthRT, renderWidth, renderHeight);
+    }
+
+    RGHandle exposure = m_pAutomaticExposure->AddPass(pRenderGraph, outputHandle, renderWidth, renderHeight);
 
     TemporalSuperResolution upscaleMode = m_pRenderer->GetTemporalUpscaleMode();
     switch (upscaleMode)
     {
     case TemporalSuperResolution::FSR2:
-        outputHandle = m_pFSR2->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
+        outputHandle = m_pFSR2->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
         break;
     case TemporalSuperResolution::DLSS:
-        outputHandle = m_pDLSS->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
+        outputHandle = m_pDLSS->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
         break;
     case TemporalSuperResolution::XeSS:
-        outputHandle = m_pXeSS->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
+        outputHandle = m_pXeSS->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
         break;
     default:
         RE_ASSERT(renderWidth == displayWidth && renderHeight == displayHeight);
-        outputHandle = m_pTAA->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
+        outputHandle = m_pTAA->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
         break;
     }
 
-    if (m_pRenderer->GetOutputType() != RendererOutput::Default &&
-        m_pRenderer->GetOutputType() != RendererOutput::PathTracing &&
-        m_pRenderer->GetOutputType() != RendererOutput::DirectLighting &&
-        m_pRenderer->GetOutputType() != RendererOutput::IndirectDiffuse &&
-        m_pRenderer->GetOutputType() != RendererOutput::IndirectSpecular)
+    if (needPostProcess)
     {
-        return outputHandle;
-    }
+        outputHandle = m_pMotionBlur->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
 
-    outputHandle = m_pDoF->Render(pRenderGraph, outputHandle, sceneDepthRT, displayWidth, displayHeight);
-    outputHandle = m_pMotionBlur->Render(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
+        RGHandle bloom = m_pBloom->AddPass(pRenderGraph, outputHandle, displayWidth, displayHeight);
+        outputHandle = m_pToneMapper->AddPass(pRenderGraph, outputHandle, exposure, bloom, m_pBloom->GetIntensity(), displayWidth, displayHeight);
 
-    RGHandle bloom = m_pBloom->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
+        outputHandle = m_pFXAA->AddPass(pRenderGraph, outputHandle, displayWidth, displayHeight);
 
-    outputHandle = m_pToneMapper->Render(pRenderGraph, outputHandle, exposure, bloom, m_pBloom->GetIntensity(), displayWidth, displayHeight);
-    outputHandle = m_pFXAA->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
-
-    if (upscaleMode == TemporalSuperResolution::None ||
-        upscaleMode == TemporalSuperResolution::XeSS)
-    {
-        outputHandle = m_pCAS->Render(pRenderGraph, outputHandle, displayWidth, displayHeight);
+        if (upscaleMode == TemporalSuperResolution::None ||
+            upscaleMode == TemporalSuperResolution::XeSS)
+        {
+            outputHandle = m_pCAS->AddPass(pRenderGraph, outputHandle, displayWidth, displayHeight);
+        }
     }
 
     return outputHandle;
@@ -122,4 +121,13 @@ void PostProcessor::UpdateUpsacleMode()
                 break;
             }
         });
+}
+
+bool PostProcessor::ShouldRenderPostProcess()
+{
+    return m_pRenderer->GetOutputType() == RendererOutput::Default ||
+        m_pRenderer->GetOutputType() == RendererOutput::PathTracing ||
+        m_pRenderer->GetOutputType() == RendererOutput::DirectLighting ||
+        m_pRenderer->GetOutputType() == RendererOutput::IndirectDiffuse ||
+        m_pRenderer->GetOutputType() == RendererOutput::IndirectSpecular;
 }

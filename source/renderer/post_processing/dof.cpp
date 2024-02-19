@@ -6,7 +6,7 @@ DoF::DoF(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
 }
 
-RGHandle DoF::Render(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height)
+RGHandle DoF::AddPass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "DoF",
         [&]()

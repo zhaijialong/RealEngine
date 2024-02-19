@@ -25,7 +25,7 @@ HybridStochasticReflection::HybridStochasticReflection(Renderer* pRenderer)
     m_pRaytracePSO = pRenderer->GetPipelineState(desc, "RT reflection PSO");
 }
 
-RGHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
+RGHandle HybridStochasticReflection::AddPass(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {
     GUI("Lighting", "Hybrid Stochastic Reflection",
         [&]()
@@ -275,7 +275,7 @@ RGHandle HybridStochasticReflection::Render(RenderGraph* pRenderGraph, RGHandle 
 
     if (m_bEnableDenoiser)
     {
-        return m_pDenoiser->Render(pRenderGraph, prepare_indirect_args_pass->denoiserArgsBuffer, tile_classification_pass->tileListBuffer, raytrace_pass->output, 
+        return m_pDenoiser->AddPass(pRenderGraph, prepare_indirect_args_pass->denoiserArgsBuffer, tile_classification_pass->tileListBuffer, raytrace_pass->output, 
             depth, linear_depth, normal, velocity, width, height, m_maxRoughness, m_temporalStability);
     }
     else

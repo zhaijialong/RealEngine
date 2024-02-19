@@ -18,7 +18,7 @@ Bloom::Bloom(Renderer* pRenderer)
     m_pUpsamplePSO = pRenderer->GetPipelineState(desc, "Bloom upsample PSO");
 }
 
-RGHandle Bloom::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height)
+RGHandle Bloom::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "Bloom",
         [&]()

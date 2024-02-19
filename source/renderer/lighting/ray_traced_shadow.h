@@ -7,7 +7,7 @@ class RTShadow
 public:
     RTShadow(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height);
 
 private:
     void RayTrace(IGfxCommandList* pCommandList, RGTexture* depthSRV, RGTexture* normalSRV, RGTexture* shadowUAV, uint32_t width, uint32_t height);

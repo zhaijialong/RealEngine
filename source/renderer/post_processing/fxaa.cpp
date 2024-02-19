@@ -11,7 +11,7 @@ FXAA::FXAA(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "FXAA PSO");
 }
 
-RGHandle FXAA::Render(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t width, uint32_t height)
+RGHandle FXAA::AddPass(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "FXAA",
         [&]()
@@ -44,7 +44,7 @@ RGHandle FXAA::Render(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t 
         },
         [=](const FXAAData& data, IGfxCommandList* pCommandList)
         {
-            Draw(pCommandList, 
+            Render(pCommandList, 
                 pRenderGraph->GetTexture(data.input), 
                 pRenderGraph->GetTexture(data.output), 
                 width, height);
@@ -53,7 +53,7 @@ RGHandle FXAA::Render(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t 
     return fxaa_pass->output;
 }
 
-void FXAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height)
+void FXAA::Render(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 

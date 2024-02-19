@@ -7,7 +7,7 @@ class DoF
 public:
     DoF(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

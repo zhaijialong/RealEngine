@@ -13,10 +13,10 @@ class FXAA
 public:
     FXAA(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t width, uint32_t height);
 
 private:
-    void Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height);
+    void Render(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* output, uint32_t width, uint32_t height);
 
 private:
     Renderer* m_pRenderer = nullptr;

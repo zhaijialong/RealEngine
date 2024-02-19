@@ -25,7 +25,7 @@ ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
 
 ReSTIRGI::~ReSTIRGI() = default;
 
-RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
+RGHandle ReSTIRGI::AddPass(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {
     GUI("Lighting", "ReSTIR GI (WIP)",
         [&]()
@@ -307,11 +307,11 @@ RGHandle ReSTIRGI::Render(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, R
 
     if (m_denoiserType == DenoiserType::NRD)
     {
-        return m_pDenoiserNRD->Render(pRenderGraph, resolve_pass->output, resolve_pass->outputRayDirection, normal, linear_depth, velocity, width, height);
+        return m_pDenoiserNRD->AddPass(pRenderGraph, resolve_pass->output, resolve_pass->outputRayDirection, normal, linear_depth, velocity, width, height);
     }
     else if (m_denoiserType == DenoiserType::Custom)
     {
-        return m_pDenoiser->Render(pRenderGraph, resolve_pass->output, resolve_pass->outputVariance, depth, linear_depth, normal, velocity, width, height);
+        return m_pDenoiser->AddPass(pRenderGraph, resolve_pass->output, resolve_pass->outputVariance, depth, linear_depth, normal, velocity, width, height);
     }
     else
     {

@@ -8,7 +8,7 @@ public:
     LightingProcessor(Renderer* pRenderer);
     ~LightingProcessor();
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height);
     
 private:
     RGHandle CompositeLight(RenderGraph* pRenderGraph, RGHandle depth, RGHandle ao, RGHandle direct_lighting, 

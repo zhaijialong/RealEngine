@@ -9,7 +9,7 @@ class AutomaticExposure
 public:
     AutomaticExposure(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height);
 
 private:
     void ComputeLuminanceSize(uint32_t width, uint32_t height);

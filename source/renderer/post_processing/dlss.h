@@ -11,7 +11,7 @@ public:
     DLSS(Renderer* pRenderer);
     ~DLSS();
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
         uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
 
     bool IsSupported() const { return m_dlssAvailable; }

@@ -8,14 +8,14 @@ class GTAO
 public:
     GTAO(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, uint32_t width, uint32_t height);
 
 private:
     void CreateHilbertLUT();
     void UpdateGTAOConstants(IGfxCommandList* pCommandList, uint32_t width, uint32_t height);
 
     void FilterDepth(IGfxCommandList* pCommandList, RGTexture* depth, RGTexture* hzb, uint32_t width, uint32_t height);
-    void Draw(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal, RGTexture* outputAO, RGTexture* outputEdge, uint32_t width, uint32_t height);
+    void RenderAO(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal, RGTexture* outputAO, RGTexture* outputEdge, uint32_t width, uint32_t height);
     void Denoise(IGfxCommandList* pCommandList, RGTexture* inputAO, RGTexture* edge, RGTexture* outputAO, uint32_t width, uint32_t height);
 
 private:

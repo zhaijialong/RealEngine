@@ -7,7 +7,7 @@ class Bloom
 public:
     Bloom(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height);
 
     float GetIntensity() const { return m_intensity; }
 

@@ -20,7 +20,7 @@ AutomaticExposure::AutomaticExposure(Renderer* pRenderer)
     m_pPreviousEV100.reset(pRenderer->CreateTexture2D(1, 1, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "AutomaticExposure::m_pPreviousEV100"));
 }
 
-RGHandle AutomaticExposure::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height)
+RGHandle AutomaticExposure::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "Auto Exposure",
         [&]()

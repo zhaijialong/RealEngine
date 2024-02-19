@@ -13,7 +13,7 @@ public:
     ~GIDenoiserNRD();
 
     void ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle radiance, RGHandle rayDirection, RGHandle normal, RGHandle linearDepth, RGHandle velocity, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle radiance, RGHandle rayDirection, RGHandle normal, RGHandle linearDepth, RGHandle velocity, uint32_t width, uint32_t height);
 
     RGHandle GetHistoryIrradiance() const { return m_historyIrradiance; }
     IGfxDescriptor* GetHistoryIrradianceSRV() const { return m_pResolvedOutput->GetSRV(); }

@@ -9,7 +9,7 @@ public:
     PathTracer(Renderer* pRenderer);
     ~PathTracer();
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height);
 
 private:
     void PathTrace(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal, RGTexture* emissive, RGTexture* depth, 

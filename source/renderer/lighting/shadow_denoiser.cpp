@@ -21,7 +21,7 @@ ShadowDenoiser::ShadowDenoiser(Renderer* pRenderer)
     }
 }
 
-RGHandle ShadowDenoiser::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height)
+RGHandle ShadowDenoiser::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "ShadowDenoiser");
 

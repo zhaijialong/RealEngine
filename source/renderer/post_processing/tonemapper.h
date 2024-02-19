@@ -7,11 +7,11 @@ class Tonemapper
 public:
     Tonemapper(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle inputHandle, RGHandle exposure, 
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle inputHandle, RGHandle exposure,
         RGHandle bloom, float bloom_intensity, uint32_t width, uint32_t height);
 
 private:
-    void Draw(IGfxCommandList* pCommandList, RGTexture* pHdrSRV, RGTexture* exposure, RGTexture* pLdrUAV,
+    void Render(IGfxCommandList* pCommandList, RGTexture* pHdrSRV, RGTexture* exposure, RGTexture* pLdrUAV,
         RGTexture* bloom, float bloom_intensity, uint32_t width, uint32_t height);
 
 private:

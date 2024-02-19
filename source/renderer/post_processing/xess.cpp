@@ -45,7 +45,7 @@ XeSS::~XeSS()
     xessDestroyContext(m_context);
 }
 
-RGHandle XeSS::Render(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
+RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
     xess_version_t version;

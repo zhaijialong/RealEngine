@@ -29,7 +29,7 @@ MotionBlur::MotionBlur(Renderer* pRenderer) : m_pRenderer(pRenderer)
     m_pReconstructionDebugPSO = pRenderer->GetPipelineState(psoDesc, "MotionBlur Reconstruction PSO");
 }
 
-RGHandle MotionBlur::Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHandle sceneDepth, RGHandle velocity, uint32_t width, uint32_t height)
+RGHandle MotionBlur::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHandle sceneDepth, RGHandle velocity, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "Motion Blur",
         [&]()

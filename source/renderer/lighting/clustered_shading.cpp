@@ -11,7 +11,7 @@ ClusteredShading::ClusteredShading(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "ClusteredShading PSO");
 }
 
-RGHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal, 
+RGHandle ClusteredShading::AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal, 
     RGHandle customData, RGHandle depth, RGHandle shadow, uint32_t width, uint32_t height)
 {
     struct ClusteredShadingData
@@ -44,7 +44,7 @@ RGHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RGHandle diffuse, R
         },
         [=](const ClusteredShadingData& data, IGfxCommandList* pCommandList)
         {
-            Draw(pCommandList, 
+            Render(pCommandList,
                 pRenderGraph->GetTexture(data.diffuseRT), 
                 pRenderGraph->GetTexture(data.specularRT),
                 pRenderGraph->GetTexture(data.normalRT),
@@ -58,7 +58,7 @@ RGHandle ClusteredShading::Render(RenderGraph* pRenderGraph, RGHandle diffuse, R
     return clustered_shading->output;
 }
 
-void ClusteredShading::Draw(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal, 
+void ClusteredShading::Render(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal,
     RGTexture* customData, RGTexture* depth, RGTexture* shadow, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);

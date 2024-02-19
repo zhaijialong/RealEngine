@@ -7,7 +7,7 @@ class MotionBlur
 public:
     MotionBlur(Renderer* pRenderer);
 
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHandle sceneDepth, RGHandle velocity, uint32_t width, uint32_t height);
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHandle sceneDepth, RGHandle velocity, uint32_t width, uint32_t height);
 
 private:
     void PackVelocityDepth(IGfxCommandList* pCommandList, RGTexture* velocity, RGTexture* depth, RGTexture* output);

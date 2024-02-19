@@ -15,7 +15,7 @@ public:
     GIDenoiser(Renderer* pRenderer);
 
     void ImportHistoryTextures(RenderGraph* pRenderGraph, uint32_t width, uint32_t height);
-    RGHandle Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, 
+    RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, 
         RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
     RGHandle GetHistoryIrradiance() const { return m_historyIrradiance; }

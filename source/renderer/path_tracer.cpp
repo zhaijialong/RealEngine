@@ -22,7 +22,7 @@ PathTracer::PathTracer(Renderer* pRenderer)
 
 PathTracer::~PathTracer() = default;
 
-RGHandle PathTracer::Render(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height)
+RGHandle PathTracer::AddPass(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height)
 {
     GUI("Lighting", "PathTracer", [&]()
         {

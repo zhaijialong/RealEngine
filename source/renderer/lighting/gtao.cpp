@@ -63,7 +63,7 @@ GTAO::GTAO(Renderer* pRenderer)
     CreateHilbertLUT();
 }
 
-RGHandle GTAO::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, uint32_t width, uint32_t height)
+RGHandle GTAO::AddPass(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, uint32_t width, uint32_t height)
 {
     GUI("Lighting", "GTAO",
         [&]()
@@ -149,7 +149,7 @@ RGHandle GTAO::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle norm
         },
         [=](const GTAOPassData& data, IGfxCommandList* pCommandList)
         {
-            Draw(pCommandList,
+            RenderAO(pCommandList,
                 pRenderGraph->GetTexture(data.inputFilteredDepth),
                 pRenderGraph->GetTexture(data.inputNormal),
                 pRenderGraph->GetTexture(data.outputAOTerm),
@@ -221,7 +221,7 @@ void GTAO::FilterDepth(IGfxCommandList* pCommandList, RGTexture* depth, RGTextur
     pCommandList->Dispatch(DivideRoudingUp(width, 16), DivideRoudingUp(height, 16), 1);
 }
 
-void GTAO::Draw(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal, RGTexture* outputAO, RGTexture* outputEdge, uint32_t width, uint32_t height)
+void GTAO::RenderAO(IGfxCommandList* pCommandList, RGTexture* hzb, RGTexture* normal, RGTexture* outputAO, RGTexture* outputEdge, uint32_t width, uint32_t height)
 {
     switch (m_qualityLevel)
     {

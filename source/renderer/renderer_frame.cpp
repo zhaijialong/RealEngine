@@ -23,16 +23,16 @@ void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
     RGHandle sceneColorRT;
     if (m_outputType == RendererOutput::PathTracing)
     {
-        sceneColorRT = m_pPathTracer->Render(m_pRenderGraph.get(), sceneDepthRT, m_nRenderWidth, m_nRenderHeight);
+        sceneColorRT = m_pPathTracer->AddPass(m_pRenderGraph.get(), sceneDepthRT, m_nRenderWidth, m_nRenderHeight);
     }
     else
     {
-        sceneColorRT = m_pLightingProcessor->Render(m_pRenderGraph.get(), sceneDepthRT, linearDepthRT, velocityRT, m_nRenderWidth, m_nRenderHeight);
+        sceneColorRT = m_pLightingProcessor->AddPass(m_pRenderGraph.get(), sceneDepthRT, linearDepthRT, velocityRT, m_nRenderWidth, m_nRenderHeight);
 
         ForwardPass(sceneColorRT, sceneDepthRT);
     }
 
-    RGHandle output = m_pPostProcessor->Render(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, velocityRT,
+    RGHandle output = m_pPostProcessor->AddPass(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, velocityRT,
         m_nRenderWidth, m_nRenderHeight, m_nDisplayWidth, m_nDisplayHeight);
 
     ObjectIDPass(sceneDepthRT);

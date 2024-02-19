@@ -12,7 +12,7 @@ RTShadow::RTShadow(Renderer* pRenderer)
     m_pRaytracePSO = pRenderer->GetPipelineState(psoDesc, "RTShadow PSO");
 }
 
-RGHandle RTShadow::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height)
+RGHandle RTShadow::AddPass(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height)
 {
     GUI("Lighting", "Shadow", [&]()
         {
@@ -59,7 +59,7 @@ RGHandle RTShadow::Render(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle 
         return rtshadow_pass->shadow;
     }
     
-    return m_pDenoiser->Render(pRenderGraph, rtshadow_pass->shadow, depthRT, normalRT, velocityRT, width, height);
+    return m_pDenoiser->AddPass(pRenderGraph, rtshadow_pass->shadow, depthRT, normalRT, velocityRT, width, height);
 }
 
 void RTShadow::RayTrace(IGfxCommandList* pCommandList, RGTexture* depthSRV, RGTexture* normalSRV, RGTexture* shadowUAV, uint32_t width, uint32_t height)

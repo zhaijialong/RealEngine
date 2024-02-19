@@ -55,7 +55,7 @@ void ReflectionDenoiser::InvalidateHistory()
     m_pSampleCountOutput.reset();
 }
 
-RGHandle ReflectionDenoiser::Render(RenderGraph* pRenderGraph, RGHandle indirectArgs, RGHandle tileListBuffer, RGHandle input, 
+RGHandle ReflectionDenoiser::AddPass(RenderGraph* pRenderGraph, RGHandle indirectArgs, RGHandle tileListBuffer, RGHandle input, 
     RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height,
     float maxRoughness, float temporalStability)
 {

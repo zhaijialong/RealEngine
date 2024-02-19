@@ -56,7 +56,7 @@ void GIDenoiser::InvalidateHistory()
     m_pHistoryIrradiance.reset();
 }
 
-RGHandle GIDenoiser::Render(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, 
+RGHandle GIDenoiser::AddPass(RenderGraph* pRenderGraph, RGHandle radianceSH, RGHandle variance, 
     RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "GI Denoiser");

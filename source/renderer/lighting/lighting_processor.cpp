@@ -20,7 +20,7 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
 
 LightingProcessor::~LightingProcessor() = default;
 
-RGHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height)
+RGHandle LightingProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");
 
@@ -33,11 +33,11 @@ RGHandle LightingProcessor::Render(RenderGraph* pRenderGraph, RGHandle depth, RG
 
     RGHandle half_normal_depth = ExtractHalfDepthNormal(pRenderGraph, depth, normal, width, height);
 
-    RGHandle gtao = m_pGTAO->Render(pRenderGraph, depth, normal, width, height);
-    RGHandle shadow = m_pRTShdow->Render(pRenderGraph, depth, normal, velocity, width, height);
-    RGHandle direct_lighting = m_pClusteredShading->Render(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
-    RGHandle indirect_specular = m_pReflection->Render(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
-    RGHandle indirect_diffuse = m_pReSTIRGI->Render(pRenderGraph, half_normal_depth, depth, linear_depth, normal, velocity, width, height);
+    RGHandle gtao = m_pGTAO->AddPass(pRenderGraph, depth, normal, width, height);
+    RGHandle shadow = m_pRTShdow->AddPass(pRenderGraph, depth, normal, velocity, width, height);
+    RGHandle direct_lighting = m_pClusteredShading->AddPass(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
+    RGHandle indirect_specular = m_pReflection->AddPass(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
+    RGHandle indirect_diffuse = m_pReSTIRGI->AddPass(pRenderGraph, half_normal_depth, depth, linear_depth, normal, velocity, width, height);
 
     return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, indirect_specular, indirect_diffuse, width, height);
 }

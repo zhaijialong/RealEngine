@@ -11,7 +11,7 @@ TAA::TAA(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "TAA PSO");
 }
 
-RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, uint32_t width, uint32_t height)
+RGHandle TAA::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, uint32_t width, uint32_t height)
 {
     GUI("PostProcess", "TAA",
         [&]()
@@ -75,7 +75,7 @@ RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle 
         },
         [=](const TAAPassData& data, IGfxCommandList* pCommandList)
         {
-            Draw(pCommandList,
+            Render(pCommandList,
                 pRenderGraph->GetTexture(data.inputRT), 
                 pRenderGraph->GetTexture(data.velocityRT), 
                 pRenderGraph->GetTexture(data.depthRT),
@@ -85,7 +85,7 @@ RGHandle TAA::Render(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle 
     return taa_pass->outputRT;
 }
 
-void TAA::Draw(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* velocity, RGTexture* depth, RGTexture* output, uint32_t width, uint32_t height)
+void TAA::Render(IGfxCommandList* pCommandList, RGTexture* input, RGTexture* velocity, RGTexture* depth, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);
 
