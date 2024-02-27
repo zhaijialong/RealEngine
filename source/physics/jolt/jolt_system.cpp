@@ -105,9 +105,8 @@ void JoltSystem::Tick(float delta_time)
 
     const float cDeltaTime = 1.0f / 60.0f;
     const int cCollisionSteps = 1;
-    const int cIntegrationSubSteps = 1;
 
-    m_pSystem->Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, m_pTempAllocator.get(), m_pJobSystem.get());
+    m_pSystem->Update(cDeltaTime, cCollisionSteps, m_pTempAllocator.get(), m_pJobSystem.get());
 
     if (m_pRenderer->GetOutputType() == RendererOutput::Physics)
     {
