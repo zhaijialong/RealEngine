@@ -7,6 +7,7 @@ if(MSVC)
     add_definitions(/MP)
     add_definitions(-DUNICODE)
     add_definitions(-D_UNICODE)
+    add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
