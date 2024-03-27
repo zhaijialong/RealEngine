@@ -59,6 +59,9 @@ public:
     bool IsMoved() const { return m_bMoved; }
     float GetZNear() const { return m_znear; }
 
+    float GetFocalLength() const { return m_focalLength; }
+    float GetSensorWidth() const { return m_sensorWidth; }
+
 private:
     void UpdateJitter();
     void UpdateMatrix();
@@ -91,10 +94,12 @@ private:
     float m_znear = 0.0f;
     float m_moveSpeed = 10.0f;
 
-    float m_aperture = 1.0f;
+    float m_aperture = 1.5f;
     int m_shutterSpeed = 60;
     int m_iso = 500;
     float m_exposureCompensation = 0.8f;
+    float m_sensorWidth = 36.0f; //in mm
+    float m_focalLength = 50.0f; //in mm
 
     bool m_bEnableJitter = false;
     float2 m_prevJitter{ 0.0f, 0.0f };

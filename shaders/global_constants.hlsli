@@ -14,12 +14,10 @@ struct PhysicalCamera
     float shutterSpeed;
     int iso;
     float exposureCompensation;
-
-    /* add more physical params when adding dof in the future
+    
     float focalLength;
-    float focusDistance;
-    float bladeNum;
-    */
+    float sensorWidth;
+    float2 _padding;
 };
 
 struct CameraConstant
