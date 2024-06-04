@@ -72,6 +72,7 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_device.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_fence.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_fence.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_header.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_heap.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_heap.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_pipeline_state.cpp

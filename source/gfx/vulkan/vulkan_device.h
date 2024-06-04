@@ -1,11 +1,15 @@
 #pragma once
 
 #include "../gfx_device.h"
-
+#include "vulkan_header.h"
 
 class VulkanDevice : public IGfxDevice
 {
 public:
+    VulkanDevice(const GfxDeviceDesc& desc);
+    ~VulkanDevice();
+
+    virtual bool Init() override;
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
     virtual uint64_t GetFrameID() const override;
@@ -31,4 +35,17 @@ public:
 
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
     virtual bool DumpMemoryStats(const eastl::string& file) override;
+
+private:
+    VkResult CreateInstance();
+    VkResult CreateDebugMessenger();
+
+private:
+    GfxDeviceDesc m_desc;
+    GfxVendor m_vendor = GfxVendor::Unkown;
+    uint64_t m_frameID = 0;
+
+    VkInstance m_instance = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
+    VkDevice m_device = VK_NULL_HANDLE;
 };

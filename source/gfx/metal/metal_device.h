@@ -6,6 +6,7 @@
 class MetalDevice : public IGfxDevice
 {
 public:
+    virtual bool Init() override;
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
     virtual uint64_t GetFrameID() const override;

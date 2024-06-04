@@ -52,6 +52,7 @@ private:
     CSimpleIniA m_configIni;
 
     void* m_windowHandle = nullptr;
+    GfxRenderBackend m_renderBackend = GfxRenderBackend::D3D12;
     eastl::string m_workPath;
     eastl::string m_assetPath;
     eastl::string m_shaderPath;

@@ -52,6 +52,7 @@ public:
     D3D12Device(const GfxDeviceDesc& desc);
     ~D3D12Device();
 
+    virtual bool Init() override;
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
     virtual uint64_t GetFrameID() const override { return m_nFrameID; }
@@ -78,7 +79,6 @@ public:
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
     virtual bool DumpMemoryStats(const eastl::string& file) override;
 
-    bool Init();
     IDXGIFactory5* GetDxgiFactory() const { return m_pDxgiFactory; }
     ID3D12CommandQueue* GetGraphicsQueue() const { return m_pGraphicsQueue; }
     ID3D12CommandQueue* GetComputeQueue() const { return m_pComputeQueue; }

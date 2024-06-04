@@ -17,7 +17,8 @@ static const uint32_t GFX_MAX_CBV_BINDINGS = 3; //root constants in slot 0
 enum class GfxRenderBackend
 {
     D3D12,
-    //todo : maybe Vulkan
+    Vulkan,
+    Metal
 };
 
 enum class GfxFormat
@@ -220,7 +221,6 @@ static const uint32_t GFX_INVALID_RESOURCE = 0xFFFFFFFF;
 struct GfxDeviceDesc
 {
     GfxRenderBackend backend = GfxRenderBackend::D3D12;
-    uint32_t max_frame_lag = 3;
 };
 
 struct GfxSwapchainDesc

@@ -593,7 +593,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_deletionQueue.empty())
     {
         auto item = m_deletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_nFrameID)
         {
             break;
         }
@@ -605,7 +605,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_allocationDeletionQueue.empty())
     {
         auto item = m_allocationDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_nFrameID)
         {
             break;
         }
@@ -617,7 +617,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_rtvDeletionQueue.empty())
     {
         auto item = m_rtvDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_nFrameID)
         {
             break;
         }
@@ -629,7 +629,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_dsvDeletionQueue.empty())
     {
         auto item = m_dsvDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_nFrameID)
         {
             break;
         }
@@ -641,7 +641,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_resourceDeletionQueue.empty())
     {
         auto item = m_resourceDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_nFrameID)
         {
             break;
         }
@@ -653,7 +653,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_samplerDeletionQueue.empty())
     {
         auto item = m_samplerDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_nFrameID)
         {
             break;
         }
@@ -665,7 +665,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_nonShaderVisibleUAVDeletionQueue.empty())
     {
         auto item = m_nonShaderVisibleUAVDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_nFrameID)
         {
             break;
         }

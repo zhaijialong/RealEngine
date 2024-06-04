@@ -1,5 +1,6 @@
 #include "gfx.h"
 #include "d3d12/d3d12_device.h"
+#include "vulkan/vulkan_device.h"
 #include "utils/assert.h"
 #include "xxHash/xxhash.h"
 #include "microprofile/microprofile.h"
@@ -12,14 +13,21 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
     {
     case GfxRenderBackend::D3D12:
         pDevice = new D3D12Device(desc);
-        if (!((D3D12Device*)pDevice)->Init())
-        {
-            delete pDevice;
-            pDevice = nullptr;
-        }
+        break;
+    case GfxRenderBackend::Vulkan:
+        pDevice = new VulkanDevice(desc);
+        break;
+    case GfxRenderBackend::Metal:
+        // todo : pDevice = new MetalDevice(desc);
         break;
     default:
         break;
+    }
+
+    if (pDevice && !pDevice->Init())
+    {
+        delete pDevice;
+        pDevice = nullptr;
     }
     
     return pDevice;
