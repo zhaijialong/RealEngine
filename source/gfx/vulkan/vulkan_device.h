@@ -38,7 +38,9 @@ public:
 
 private:
     VkResult CreateInstance();
-    VkResult CreateDebugMessenger();
+    VkResult CreateDevice();
+    VkResult CreateVmaAllocator();
+    void FindQueueFamilyIndex();
 
 private:
     GfxDeviceDesc m_desc;
@@ -47,5 +49,14 @@ private:
 
     VkInstance m_instance = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
+    VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
     VkDevice m_device = VK_NULL_HANDLE;
+    VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
+
+    uint32_t m_graphicsQueueIndex = uint32_t(-1);
+    uint32_t m_computeQueueIndex = uint32_t(-1);
+    uint32_t m_copyQueueIndex = uint32_t(-1);
+    VkQueue m_graphicsQueue = VK_NULL_HANDLE;
+    VkQueue m_computeQueue = VK_NULL_HANDLE;
+    VkQueue m_copyQueue = VK_NULL_HANDLE;
 };
