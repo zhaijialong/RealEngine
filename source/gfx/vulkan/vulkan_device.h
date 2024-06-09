@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../gfx_device.h"
 #include "vulkan_header.h"
+#include "vulkan_deletion_queue.h"
+#include "../gfx_device.h"
 
 class VulkanDevice : public IGfxDevice
 {
@@ -12,9 +13,9 @@ public:
     virtual bool Init() override;
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
-    virtual uint64_t GetFrameID() const override;
-    virtual void* GetHandle() const override;
-    virtual GfxVendor GetVendor() const override;
+    virtual uint64_t GetFrameID() const override { return m_frameID; }
+    virtual void* GetHandle() const override { return m_device; }
+    virtual GfxVendor GetVendor() const override { return m_vendor; }
 
     virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name) override;
     virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name) override;
@@ -35,6 +36,12 @@ public:
 
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
     virtual bool DumpMemoryStats(const eastl::string& file) override;
+
+    VkDevice GetDevice() const { return m_device; }
+    VmaAllocator GetVmaAllocator() const { return m_vmaAllocator; }
+
+    template<typename T>
+    void Delete(T objectHandle);
 
 private:
     VkResult CreateInstance();
@@ -59,4 +66,15 @@ private:
     VkQueue m_graphicsQueue = VK_NULL_HANDLE;
     VkQueue m_computeQueue = VK_NULL_HANDLE;
     VkQueue m_copyQueue = VK_NULL_HANDLE;
+
+    VulkanDeletionQueue* m_deferredDeletionQueue = nullptr;
 };
+
+template<typename T>
+inline void VulkanDevice::Delete(T objectHandle)
+{
+    if (objectHandle != VK_NULL_HANDLE)
+    {
+        m_deferredDeletionQueue->Delete(objectHandle, m_frameID);
+    }
+}

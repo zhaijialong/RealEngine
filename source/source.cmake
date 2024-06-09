@@ -66,6 +66,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_buffer.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_command_list.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_command_list.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_deletion_queue.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_deletion_queue.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_device.cpp

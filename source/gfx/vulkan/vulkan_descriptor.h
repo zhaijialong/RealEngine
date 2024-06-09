@@ -1,31 +1,70 @@
 #pragma once
 
+#include "vulkan_header.h"
 #include "../gfx_descriptor.h"
+
+class VulkanDevice;
 
 class VulkanShaderResourceView : public IGfxDescriptor
 {
 public:
-    virtual void* GetHandle() const override;
-    virtual uint32_t GetHeapIndex() const override;
+    VulkanShaderResourceView(VulkanDevice* pDevice, IGfxResource* pResource, const GfxShaderResourceViewDesc& desc, const eastl::string& name);
+    ~VulkanShaderResourceView();
+
+    bool Create();
+
+    virtual void* GetHandle() const override { return nullptr; }
+    virtual uint32_t GetHeapIndex() const override { return 0; }
+
+private:
+    IGfxResource* m_pResource = nullptr;
+    GfxShaderResourceViewDesc m_desc = {};
 };
 
 class VulkanUnorderedAccessView : public IGfxDescriptor
 {
 public:
-    virtual void* GetHandle() const override;
-    virtual uint32_t GetHeapIndex() const override;
+    VulkanUnorderedAccessView(VulkanDevice* pDevice, IGfxResource* pResource, const GfxUnorderedAccessViewDesc& desc, const eastl::string& name);
+    ~VulkanUnorderedAccessView();
+
+    bool Create();
+
+    virtual void* GetHandle() const override { return nullptr; }
+    virtual uint32_t GetHeapIndex() const override { return 0; }
+
+private:
+    IGfxResource* m_pResource = nullptr;
+    GfxUnorderedAccessViewDesc m_desc = {};
 };
 
 class VulkanConstantBufferView : public IGfxDescriptor
 {
 public:
-    virtual void* GetHandle() const override;
-    virtual uint32_t GetHeapIndex() const override;
+    VulkanConstantBufferView(VulkanDevice* pDevice, IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const eastl::string& name);
+    ~VulkanConstantBufferView();
+
+    bool Create();
+
+    virtual void* GetHandle() const override { return nullptr; }
+    virtual uint32_t GetHeapIndex() const override { return 0; }
+
+private:
+    IGfxBuffer* m_pBuffer = nullptr;
+    GfxConstantBufferViewDesc m_desc = {};
 };
 
 class VulkanSampler : public IGfxDescriptor
 {
 public:
-    virtual void* GetHandle() const override;
-    virtual uint32_t GetHeapIndex() const override;
+    VulkanSampler(VulkanDevice* pDevice, const GfxSamplerDesc& desc, const eastl::string& name);
+    ~VulkanSampler();
+
+    bool Create();
+
+    virtual void* GetHandle() const override { return m_sampler; }
+    virtual uint32_t GetHeapIndex() const override { return 0; }
+
+private:
+    GfxSamplerDesc m_desc;
+    VkSampler m_sampler = VK_NULL_HANDLE;
 };

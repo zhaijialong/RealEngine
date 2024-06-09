@@ -32,7 +32,10 @@ VulkanDevice::VulkanDevice(const GfxDeviceDesc& desc)
 
 VulkanDevice::~VulkanDevice()
 {
-    //vkDestroyDevice(m_device, nullptr);
+    delete m_deferredDeletionQueue;
+
+    vmaDestroyAllocator(m_vmaAllocator);
+    vkDestroyDevice(m_device, nullptr);
     vkDestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
     vkDestroyInstance(m_instance, nullptr);
 }
@@ -46,12 +49,15 @@ bool VulkanDevice::Init()
     CHECK_VK_RESULT(CreateDevice());
     CHECK_VK_RESULT(CreateVmaAllocator());
 
+    m_deferredDeletionQueue = new VulkanDeletionQueue(this);
+
     return true;
 #undef CHECK_VK_RESULT
 }
 
 void VulkanDevice::BeginFrame()
 {
+    m_deferredDeletionQueue->Flush();
 }
 
 void VulkanDevice::EndFrame()
@@ -59,24 +65,15 @@ void VulkanDevice::EndFrame()
     ++m_frameID;
 }
 
-uint64_t VulkanDevice::GetFrameID() const
-{
-    return 0;
-}
-
-void* VulkanDevice::GetHandle() const
-{
-    return nullptr;
-}
-
-GfxVendor VulkanDevice::GetVendor() const
-{
-    return GfxVendor();
-}
-
 IGfxSwapchain* VulkanDevice::CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name)
 {    
-    return nullptr;
+    VulkanSwapchain* swapchain = new VulkanSwapchain(this, desc, name);
+    if (!swapchain->Create())
+    {
+        delete swapchain;
+        return nullptr;
+    }
+    return swapchain;
 }
 
 IGfxCommandList* VulkanDevice::CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name)
@@ -91,17 +88,35 @@ IGfxFence* VulkanDevice::CreateFence(const eastl::string& name)
 
 IGfxHeap* VulkanDevice::CreateHeap(const GfxHeapDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanHeap* heap = new VulkanHeap(this, desc, name);
+    if (!heap->Create())
+    {
+        delete heap;
+        return nullptr;
+    }
+    return heap;
 }
 
 IGfxBuffer* VulkanDevice::CreateBuffer(const GfxBufferDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanBuffer* buffer = new VulkanBuffer(this, desc, name);
+    if (!buffer->Create())
+    {
+        delete buffer;
+        return nullptr;
+    }
+    return buffer;
 }
 
 IGfxTexture* VulkanDevice::CreateTexture(const GfxTextureDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanTexture* texture = new VulkanTexture(this, desc, name);
+    if (!texture->Create())
+    {
+        delete texture;
+        return nullptr;
+    }
+    return texture;
 }
 
 IGfxShader* VulkanDevice::CreateShader(const GfxShaderDesc& desc, eastl::span<uint8_t> data, const eastl::string& name)
@@ -126,22 +141,46 @@ IGfxPipelineState* VulkanDevice::CreateComputePipelineState(const GfxComputePipe
 
 IGfxDescriptor* VulkanDevice::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanShaderResourceView* srv = new VulkanShaderResourceView(this, resource, desc, name);
+    if (!srv->Create())
+    {
+        delete srv;
+        return nullptr;
+    }
+    return srv;
 }
 
 IGfxDescriptor* VulkanDevice::CreateUnorderedAccessView(IGfxResource* resource, const GfxUnorderedAccessViewDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanUnorderedAccessView* uav = new VulkanUnorderedAccessView(this, resource, desc, name);
+    if (!uav->Create())
+    {
+        delete uav;
+        return nullptr;
+    }
+    return uav;
 }
 
 IGfxDescriptor* VulkanDevice::CreateConstantBufferView(IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanConstantBufferView* cbv = new VulkanConstantBufferView(this, buffer, desc, name);
+    if (!cbv->Create())
+    {
+        delete cbv;
+        return nullptr;
+    }
+    return cbv;
 }
 
 IGfxDescriptor* VulkanDevice::CreateSampler(const GfxSamplerDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanSampler* sampler = new VulkanSampler(this, desc, name);
+    if (!sampler->Create())
+    {
+        delete sampler;
+        return nullptr;
+    }
+    return sampler;
 }
 
 IGfxRayTracingBLAS* VulkanDevice::CreateRayTracingBLAS(const GfxRayTracingBLASDesc& desc, const eastl::string& name)
@@ -258,6 +297,7 @@ VkResult VulkanDevice::CreateDevice()
     {
         "VK_KHR_swapchain",
         "VK_KHR_maintenance4",
+        "VK_KHR_buffer_device_address",
         "VK_KHR_deferred_host_operations",
         "VK_KHR_acceleration_structure",
         "VK_KHR_ray_query",
@@ -298,7 +338,11 @@ VkResult VulkanDevice::CreateDevice()
     VkPhysicalDeviceFeatures features;
     vkGetPhysicalDeviceFeatures(m_physicalDevice, &features);
 
+    VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddress = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
+    bufferDeviceAddress.bufferDeviceAddress = VK_TRUE;
+
     VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    device_info.pNext = &bufferDeviceAddress;
     device_info.queueCreateInfoCount = 3;
     device_info.pQueueCreateInfos = queue_info;
     device_info.enabledExtensionCount = (uint32_t)required_extensions.size();
@@ -327,7 +371,7 @@ VkResult VulkanDevice::CreateVmaAllocator()
     functions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
 
     VmaAllocatorCreateInfo create_info = {};
-    create_info.flags = 0;
+    create_info.flags = VMA_ALLOCATOR_CREATE_KHR_BIND_MEMORY2_BIT | VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
     create_info.physicalDevice = m_physicalDevice;
     create_info.device = m_device;
     create_info.instance = m_instance;
