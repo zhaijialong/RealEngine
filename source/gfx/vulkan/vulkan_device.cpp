@@ -83,7 +83,13 @@ IGfxCommandList* VulkanDevice::CreateCommandList(GfxCommandQueue queue_type, con
 
 IGfxFence* VulkanDevice::CreateFence(const eastl::string& name)
 {
-    return nullptr;
+    VulkanFence* fence = new VulkanFence(this, name);
+    if (!fence->Create())
+    {
+        delete fence;
+        return nullptr;
+    }
+    return fence;
 }
 
 IGfxHeap* VulkanDevice::CreateHeap(const GfxHeapDesc& desc, const eastl::string& name)
@@ -341,8 +347,12 @@ VkResult VulkanDevice::CreateDevice()
     VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddress = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
     bufferDeviceAddress.bufferDeviceAddress = VK_TRUE;
 
+    VkPhysicalDeviceTimelineSemaphoreFeatures timelineSemaphore = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
+    timelineSemaphore.pNext = &bufferDeviceAddress;
+    timelineSemaphore.timelineSemaphore = VK_TRUE;
+
     VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    device_info.pNext = &bufferDeviceAddress;
+    device_info.pNext = &timelineSemaphore;
     device_info.queueCreateInfoCount = 3;
     device_info.pQueueCreateInfos = queue_info;
     device_info.enabledExtensionCount = (uint32_t)required_extensions.size();
