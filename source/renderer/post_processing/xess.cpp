@@ -31,11 +31,15 @@ XeSS::XeSS(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
-    ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
-    xess_result_t result = xessD3D12CreateContext(device, &m_context);
-    RE_ASSERT(result == XESS_RESULT_SUCCESS);
+    IGfxDevice* pDevice = m_pRenderer->GetDevice();
+    if (pDevice->GetDesc().backend == GfxRenderBackend::D3D12)
+    {
+        ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
+        xess_result_t result = xessD3D12CreateContext(device, &m_context);
+        RE_ASSERT(result == XESS_RESULT_SUCCESS);
 
-    xessSetLoggingCallback(m_context, XESS_LOGGING_LEVEL_DEBUG, XeSSLog);
+        xessSetLoggingCallback(m_context, XESS_LOGGING_LEVEL_DEBUG, XeSSLog);
+    }
 
     Engine::GetInstance()->WindowResizeSignal.connect(&XeSS::OnWindowResize, this);
 }

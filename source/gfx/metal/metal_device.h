@@ -6,12 +6,10 @@
 class MetalDevice : public IGfxDevice
 {
 public:
-    virtual bool Init() override;
+    virtual bool Create() override;
+    virtual void* GetHandle() const override;
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
-    virtual uint64_t GetFrameID() const override;
-    virtual void* GetHandle() const override;
-    virtual GfxVendor GetVendor() const override;
 
     virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name) override;
     virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name) override;

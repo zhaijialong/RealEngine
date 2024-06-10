@@ -40,7 +40,7 @@ VulkanDevice::~VulkanDevice()
     vkDestroyInstance(m_instance, nullptr);
 }
 
-bool VulkanDevice::Init()
+bool VulkanDevice::Create()
 {
 #define CHECK_VK_RESULT(x) if((x) != VK_SUCCESS) return false;
 
@@ -63,6 +63,8 @@ void VulkanDevice::BeginFrame()
 void VulkanDevice::EndFrame()
 {
     ++m_frameID;
+
+    vmaSetCurrentFrameIndex(m_vmaAllocator, m_frameID);
 }
 
 IGfxSwapchain* VulkanDevice::CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name)
@@ -78,7 +80,13 @@ IGfxSwapchain* VulkanDevice::CreateSwapchain(const GfxSwapchainDesc& desc, const
 
 IGfxCommandList* VulkanDevice::CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name)
 {
-    return nullptr;
+    VulkanCommandList* commandList = new VulkanCommandList(this, queue_type, name);
+    if (!commandList->Create())
+    {
+        delete commandList;
+        return nullptr;
+    }
+    return commandList;
 }
 
 IGfxFence* VulkanDevice::CreateFence(const eastl::string& name)
@@ -127,7 +135,7 @@ IGfxTexture* VulkanDevice::CreateTexture(const GfxTextureDesc& desc, const eastl
 
 IGfxShader* VulkanDevice::CreateShader(const GfxShaderDesc& desc, eastl::span<uint8_t> data, const eastl::string& name)
 {
-    return nullptr;
+    return new VulkanShader(this, desc, data, name);
 }
 
 IGfxPipelineState* VulkanDevice::CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
@@ -286,6 +294,28 @@ VkResult VulkanDevice::CreateDevice()
     vkEnumeratePhysicalDevices(m_instance, &gpu_count, physical_devices.data());
 
     m_physicalDevice = physical_devices[0]; //todo : better gpu selection
+
+    VkPhysicalDeviceProperties physicalDeviceProperties;
+    vkGetPhysicalDeviceProperties(m_physicalDevice, &physicalDeviceProperties);
+
+    RE_INFO("GPU : {}", physicalDeviceProperties.deviceName);
+    RE_INFO("API version : {}.{}.{}", VK_API_VERSION_MAJOR(physicalDeviceProperties.apiVersion), 
+        VK_API_VERSION_MINOR(physicalDeviceProperties.apiVersion), VK_API_VERSION_PATCH(physicalDeviceProperties.apiVersion));
+
+    switch (physicalDeviceProperties.vendorID)
+    {
+    case 0x1002:
+        m_vendor = GfxVendor::AMD;
+        break;
+    case 0x10DE:
+        m_vendor = GfxVendor::Nvidia;
+        break;
+    case 0x8086:
+        m_vendor = GfxVendor::Intel;
+        break;
+    default:
+        break;
+    }
 
     uint32_t extension_count;
     vkEnumerateDeviceExtensionProperties(m_physicalDevice, NULL, &extension_count, NULL);

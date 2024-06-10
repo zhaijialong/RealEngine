@@ -10,12 +10,10 @@ public:
     VulkanDevice(const GfxDeviceDesc& desc);
     ~VulkanDevice();
 
-    virtual bool Init() override;
+    virtual bool Create() override;
+    virtual void* GetHandle() const override { return m_device; }
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
-    virtual uint64_t GetFrameID() const override { return m_frameID; }
-    virtual void* GetHandle() const override { return m_device; }
-    virtual GfxVendor GetVendor() const override { return m_vendor; }
 
     virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name) override;
     virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name) override;
@@ -37,6 +35,7 @@ public:
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
     virtual bool DumpMemoryStats(const eastl::string& file) override;
 
+    VkInstance GetInstance() const { return m_instance; }
     VkDevice GetDevice() const { return m_device; }
     VmaAllocator GetVmaAllocator() const { return m_vmaAllocator; }
 
@@ -50,10 +49,6 @@ private:
     void FindQueueFamilyIndex();
 
 private:
-    GfxDeviceDesc m_desc;
-    GfxVendor m_vendor = GfxVendor::Unkown;
-    uint64_t m_frameID = 0;
-
     VkInstance m_instance = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;

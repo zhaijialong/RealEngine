@@ -27,4 +27,6 @@ private:
     eastl::queue<eastl::pair<VkPipeline, uint64_t>> m_pipelineQueue;
     eastl::queue<eastl::pair<VkShaderModule, uint64_t>> m_shaderQueue;
     eastl::queue<eastl::pair<VkSemaphore, uint64_t>> m_semaphoreQueue;
+    eastl::queue<eastl::pair<VkSwapchainKHR, uint64_t>> m_swapchainQueue;
+    eastl::queue<eastl::pair<VkSurfaceKHR, uint64_t>> m_surfaceQueue;
 };

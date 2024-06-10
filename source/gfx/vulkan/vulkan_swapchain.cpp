@@ -16,11 +16,15 @@ VulkanSwapchain::~VulkanSwapchain()
         delete m_backBuffers[i];
     }
     m_backBuffers.clear();
+
+    VulkanDevice* pDevice = (VulkanDevice*)m_pDevice;
+    pDevice->Delete(m_swapchain);
+    pDevice->Delete(m_surface);
 }
 
 bool VulkanSwapchain::Create()
 {
-    return false;
+    return true;
 }
 
 bool VulkanSwapchain::Present()

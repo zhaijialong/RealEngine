@@ -24,7 +24,7 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
         break;
     }
 
-    if (pDevice && !pDevice->Init())
+    if (pDevice && !pDevice->Create())
     {
         delete pDevice;
         pDevice = nullptr;

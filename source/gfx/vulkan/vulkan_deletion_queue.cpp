@@ -14,6 +14,7 @@ VulkanDeletionQueue::~VulkanDeletionQueue()
 void VulkanDeletionQueue::Flush(bool force_delete)
 {
     uint64_t frameID = m_device->GetFrameID();
+    VkInstance instance = m_device->GetInstance();
     VkDevice device = m_device->GetDevice();
     VmaAllocator allocator = m_device->GetVmaAllocator();
 
@@ -36,6 +37,19 @@ void VulkanDeletionQueue::Flush(bool force_delete)
     ITERATE_QUEUE(m_pipelineQueue, vkDestroyPipeline);
     ITERATE_QUEUE(m_shaderQueue, vkDestroyShaderModule);
     ITERATE_QUEUE(m_semaphoreQueue, vkDestroySemaphore);
+    ITERATE_QUEUE(m_swapchainQueue, vkDestroySwapchainKHR);
+
+    while (!m_surfaceQueue.empty())
+    {
+        auto item = m_surfaceQueue.front();
+        if (!force_delete && item.second + GFX_MAX_INFLIGHT_FRAMES > frameID)
+        {
+            break;
+        }
+
+        vkDestroySurfaceKHR(instance, item.first, nullptr);
+        m_surfaceQueue.pop();
+    }
 
     while (!m_allocationQueue.empty())
     {
@@ -96,4 +110,16 @@ template<>
 void VulkanDeletionQueue::Delete(VkSemaphore object, uint64_t frameID)
 {
     m_semaphoreQueue.push(eastl::make_pair(object, frameID));
+}
+
+template<>
+void VulkanDeletionQueue::Delete(VkSwapchainKHR object, uint64_t frameID)
+{
+    m_swapchainQueue.push(eastl::make_pair(object, frameID));
+}
+
+template<>
+void VulkanDeletionQueue::Delete(VkSurfaceKHR object, uint64_t frameID)
+{
+    m_surfaceQueue.push(eastl::make_pair(object, frameID));
 }

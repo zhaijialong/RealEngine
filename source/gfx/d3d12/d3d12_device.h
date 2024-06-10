@@ -52,12 +52,10 @@ public:
     D3D12Device(const GfxDeviceDesc& desc);
     ~D3D12Device();
 
-    virtual bool Init() override;
+    virtual bool Create() override;
+    virtual void* GetHandle() const override { return m_pDevice; }
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
-    virtual uint64_t GetFrameID() const override { return m_nFrameID; }
-    virtual void* GetHandle() const override { return m_pDevice; }
-    virtual GfxVendor GetVendor() const override { return m_vendor; }
 
     virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name) override;
     virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name) override;
@@ -128,10 +126,7 @@ private:
     void CreateIndirectCommandSignatures();
 
 private:
-    GfxDeviceDesc m_desc;
-    GfxVendor m_vendor = GfxVendor::Unkown;
     CD3DX12FeatureSupport m_featureSupport;
-    uint64_t m_nFrameID = 0;
 
     IDXGIFactory6* m_pDxgiFactory = nullptr;
     IDXGIAdapter1* m_pDxgiAdapter = nullptr;

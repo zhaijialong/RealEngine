@@ -1,12 +1,20 @@
 #pragma once
 
+#include "vulkan_header.h"
 #include "../gfx_command_list.h"
+
+class VulkanDevice;
 
 class VulkanCommandList : public IGfxCommandList
 {
 public:
-    virtual void* GetHandle() const override;
-    virtual GfxCommandQueue GetQueue() const override;
+    VulkanCommandList(VulkanDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name);
+    ~VulkanCommandList();
+
+    bool Create();
+
+    virtual void* GetHandle() const override { return m_commandBuffer; }
+    virtual GfxCommandQueue GetQueue() const override { return m_queueType; }
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;
@@ -68,4 +76,8 @@ public:
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;
 #endif
+
+private:
+    GfxCommandQueue m_queueType;
+    VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
 };
