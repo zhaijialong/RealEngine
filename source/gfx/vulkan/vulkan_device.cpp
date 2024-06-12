@@ -135,7 +135,13 @@ IGfxTexture* VulkanDevice::CreateTexture(const GfxTextureDesc& desc, const eastl
 
 IGfxShader* VulkanDevice::CreateShader(const GfxShaderDesc& desc, eastl::span<uint8_t> data, const eastl::string& name)
 {
-    return new VulkanShader(this, desc, data, name);
+    VulkanShader* shader = new VulkanShader(this, desc, name);
+    if (!shader->Create(data))
+    {
+        delete shader;
+        return nullptr;
+    }
+    return shader;
 }
 
 IGfxPipelineState* VulkanDevice::CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)

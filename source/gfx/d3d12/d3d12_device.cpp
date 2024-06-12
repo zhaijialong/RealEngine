@@ -196,7 +196,13 @@ IGfxCommandList* D3D12Device::CreateCommandList(GfxCommandQueue queue_type, cons
 
 IGfxShader* D3D12Device::CreateShader(const GfxShaderDesc& desc, eastl::span<uint8_t> data, const eastl::string& name)
 {
-    return new D3D12Shader(this, desc, data, name);
+    D3D12Shader* pShader = new D3D12Shader(this, desc, name);
+    if (!pShader->Create(data))
+    {
+        delete pShader;
+        return nullptr;
+    }
+    return pShader;
 }
 
 IGfxPipelineState* D3D12Device::CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)

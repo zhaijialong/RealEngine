@@ -9,7 +9,7 @@ public:
 
     uint64_t GetHash() const { return m_hash; }
 
-    virtual bool SetShaderData(const uint8_t* data, uint32_t data_size) = 0;
+    virtual bool Create(eastl::span<uint8_t> data) = 0;
 
 protected:
     GfxShaderDesc m_desc = {};

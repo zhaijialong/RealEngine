@@ -156,7 +156,7 @@ void ShaderCache::RecompileShader(IGfxShader* shader)
         return;
     }
 
-    shader->SetShaderData(shader_blob.data(), (uint32_t)shader_blob.size());
+    shader->Create(shader_blob);
 
     PipelineStateCache* pipelineCache = m_pRenderer->GetPipelineStateCache();
     pipelineCache->RecreatePSO(shader);
