@@ -10,6 +10,7 @@ class IGfxDescriptor;
 class IGfxPipelineState;
 class IGfxRayTracingBLAS;
 class IGfxRayTracingTLAS;
+class IGfxSwapchain;
 
 class IGfxCommandList : public IGfxResource
 {
@@ -23,6 +24,7 @@ public:
     virtual void End() = 0;
     virtual void Wait(IGfxFence* fence, uint64_t value) = 0;
     virtual void Signal(IGfxFence* fence, uint64_t value) = 0;
+    virtual void Present(IGfxSwapchain* swapchain) = 0;
     virtual void Submit() = 0;
     virtual void ClearState() = 0;
 

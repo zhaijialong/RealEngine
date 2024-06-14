@@ -22,6 +22,7 @@ public:
     virtual void End() override;
     virtual void Wait(IGfxFence* fence, uint64_t value) override;
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
+    virtual void Present(IGfxSwapchain* swapchain) override;
     virtual void Submit() override;
     virtual void ClearState() override;
 
@@ -97,6 +98,8 @@ private:
 
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingWaits;
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
+
+    eastl::vector<IGfxSwapchain*> m_pendingSwapchain;
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
     struct MicroProfileThreadLogGpu* m_pProfileLog = nullptr;

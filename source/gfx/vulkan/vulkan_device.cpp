@@ -146,17 +146,35 @@ IGfxShader* VulkanDevice::CreateShader(const GfxShaderDesc& desc, eastl::span<ui
 
 IGfxPipelineState* VulkanDevice::CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanGraphicsPipelineState* pipeline = new VulkanGraphicsPipelineState(this, desc, name);
+    if (!pipeline->Create())
+    {
+        delete pipeline;
+        return nullptr;
+    }
+    return pipeline;
 }
 
 IGfxPipelineState* VulkanDevice::CreateMeshShadingPipelineState(const GfxMeshShadingPipelineDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanMeshShadingPipelineState* pipeline = new VulkanMeshShadingPipelineState(this, desc, name);
+    if (!pipeline->Create())
+    {
+        delete pipeline;
+        return nullptr;
+    }
+    return pipeline;
 }
 
 IGfxPipelineState* VulkanDevice::CreateComputePipelineState(const GfxComputePipelineDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanComputePipelineState* pipeline = new VulkanComputePipelineState(this, desc, name);
+    if (!pipeline->Create())
+    {
+        delete pipeline;
+        return nullptr;
+    }
+    return pipeline;
 }
 
 IGfxDescriptor* VulkanDevice::CreateShaderResourceView(IGfxResource* resource, const GfxShaderResourceViewDesc& desc, const eastl::string& name)
@@ -258,6 +276,7 @@ VkResult VulkanDevice::CreateInstance()
     {
         "VK_KHR_surface",
         "VK_KHR_win32_surface",
+        //"VK_EXT_surface_maintenance1",
         "VK_EXT_debug_utils",
     };
 
@@ -338,20 +357,24 @@ VkResult VulkanDevice::CreateDevice()
     eastl::vector<const char*> required_extensions =
     {
         "VK_KHR_swapchain",
+        "VK_KHR_maintenance1",
+        "VK_KHR_maintenance2",
+        "VK_KHR_maintenance3",
         "VK_KHR_maintenance4",
         "VK_KHR_buffer_device_address",
         "VK_KHR_deferred_host_operations",
         "VK_KHR_acceleration_structure",
         "VK_KHR_ray_query",
-        "VK_EXT_mesh_shader",
-        "VK_EXT_descriptor_indexing",
-        "VK_EXT_mutable_descriptor_type",
         "VK_KHR_dynamic_rendering",
         "VK_KHR_synchronization2",
         "VK_KHR_copy_commands2",
         "VK_KHR_bind_memory2",
         "VK_KHR_timeline_semaphore",
         "VK_KHR_dedicated_allocation",
+        "VK_EXT_mesh_shader",
+        "VK_EXT_descriptor_indexing",
+        "VK_EXT_mutable_descriptor_type",
+        //"VK_EXT_swapchain_maintenance1",
     };
 
     float queue_priorities[1] = { 0.0 };

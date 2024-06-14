@@ -21,6 +21,7 @@ public:
     virtual void End() override;
     virtual void Wait(IGfxFence* fence, uint64_t value) override;
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
+    virtual void Present(IGfxSwapchain* swapchain) override;
     virtual void Submit() override;
     virtual void ClearState() override;
 

@@ -1,8 +1,8 @@
 #include "d3d12_swapchain.h"
 #include "d3d12_device.h"
 #include "d3d12_texture.h"
-#include "utils/assert.h"
 #include "utils/log.h"
+#include "utils/profiler.h"
 
 D3D12Swapchain::D3D12Swapchain(D3D12Device* pDevice, const GfxSwapchainDesc& desc, const eastl::string& name)
 {
@@ -23,8 +23,16 @@ D3D12Swapchain::~D3D12Swapchain()
     pDevice->Delete(m_pSwapChain);
 }
 
+void D3D12Swapchain::AcquireNextBackBuffer()
+{
+    // m_nCurrentBackBuffer = (m_nCurrentBackBuffer + 1) % m_desc.backbuffer_count;
+    m_nCurrentBackBuffer = (int32_t)m_pSwapChain->GetCurrentBackBufferIndex();
+}
+
 bool D3D12Swapchain::Present()
 {
+    CPU_EVENT("Render", "D3D12Swapchain::Present");
+
     UINT interval, flags;
     if (m_bEnableVsync)
     {
@@ -38,8 +46,6 @@ bool D3D12Swapchain::Present()
     }
 
     HRESULT hr = m_pSwapChain->Present(interval, flags);
-
-    m_nCurrentBackBuffer = (m_nCurrentBackBuffer + 1) % m_desc.backbuffer_count;
 
     return SUCCEEDED(hr);
 }

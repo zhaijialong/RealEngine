@@ -448,6 +448,8 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
 {
     GPU_EVENT(pCommandList, "Backbuffer Pass");
 
+    m_pSwapchain->AcquireNextBackBuffer();
+
     m_pGpuStats->Draw(pCommandList);
     m_pGpuDebugPrint->PrepareForDraw(pCommandList);
     m_pGpuDebugLine->PrepareForDraw(pCommandList);
@@ -517,12 +519,9 @@ void Renderer::EndFrame()
     m_nFrameFenceValue[frame_index] = ++m_nCurrentFrameFenceValue;
 
     pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
+    pCommandList->Present(m_pSwapchain.get());
     pCommandList->Submit();
     pCommandList->EndProfiling();
-    {
-        CPU_EVENT("Render", "IGfxSwapchain::Present");
-        m_pSwapchain->Present();
-    }
 
     m_pStagingBufferAllocator[frame_index]->Reset();
     m_cbAllocator->Reset();

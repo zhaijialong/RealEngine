@@ -14,15 +14,17 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_swapchain; }
-    virtual bool Present() override;
+    virtual void AcquireNextBackBuffer() override;
+    virtual IGfxTexture* GetBackBuffer() const override;
     virtual bool Resize(uint32_t width, uint32_t height) override;
     virtual void SetVSyncEnabled(bool value) override;
-    virtual IGfxTexture* GetBackBuffer() const override;
 
 private:
     VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
     VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 
     bool m_bEnableVsync = true;
+
+    int32_t m_currentBackBuffer = -1;
     eastl::vector<IGfxTexture*> m_backBuffers;
 };

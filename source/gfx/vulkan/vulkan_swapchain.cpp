@@ -27,9 +27,9 @@ bool VulkanSwapchain::Create()
     return true;
 }
 
-bool VulkanSwapchain::Present()
+void VulkanSwapchain::AcquireNextBackBuffer()
 {
-    return false;
+    //vkAcquireNextImage2KHR()
 }
 
 bool VulkanSwapchain::Resize(uint32_t width, uint32_t height)
@@ -43,5 +43,5 @@ void VulkanSwapchain::SetVSyncEnabled(bool value)
 
 IGfxTexture* VulkanSwapchain::GetBackBuffer() const
 {
-    return nullptr;
+    return m_backBuffers[m_currentBackBuffer];
 }

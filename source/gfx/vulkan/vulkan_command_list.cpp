@@ -15,7 +15,7 @@ VulkanCommandList::~VulkanCommandList()
 
 bool VulkanCommandList::Create()
 {
-    return false;
+    return true;
 }
 
 void VulkanCommandList::ResetAllocator()
@@ -35,6 +35,10 @@ void VulkanCommandList::Wait(IGfxFence* fence, uint64_t value)
 }
 
 void VulkanCommandList::Signal(IGfxFence* fence, uint64_t value)
+{
+}
+
+void VulkanCommandList::Present(IGfxSwapchain* swapchain)
 {
 }
 

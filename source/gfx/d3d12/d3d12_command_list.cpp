@@ -8,6 +8,7 @@
 #include "d3d12_descriptor.h"
 #include "d3d12_rt_blas.h"
 #include "d3d12_rt_tlas.h"
+#include "d3d12_swapchain.h"
 #include "pix_runtime.h"
 #include "ags.h"
 #include "../gfx.h"
@@ -109,6 +110,11 @@ void D3D12CommandList::Signal(IGfxFence* fence, uint64_t value)
     m_pendingSignals.emplace_back(fence, value);
 }
 
+void D3D12CommandList::Present(IGfxSwapchain* swapchain)
+{
+    m_pendingSwapchain.push_back(swapchain);
+}
+
 void D3D12CommandList::Submit()
 {
     for (size_t i = 0; i < m_pendingWaits.size(); ++i)
@@ -128,6 +134,12 @@ void D3D12CommandList::Submit()
         m_pCommandQueue->Signal((ID3D12Fence*)m_pendingSignals[i].first->GetHandle(), m_pendingSignals[i].second);
     }
     m_pendingSignals.clear();
+
+    for (size_t i = 0; i < m_pendingSwapchain.size(); ++i)
+    {
+        ((D3D12Swapchain*)m_pendingSwapchain[i])->Present();
+    }
+    m_pendingSwapchain.clear();
 }
 
 void D3D12CommandList::ClearState()
