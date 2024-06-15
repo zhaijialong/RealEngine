@@ -233,7 +233,30 @@ IGfxRayTracingTLAS* VulkanDevice::CreateRayTracingTLAS(const GfxRayTracingTLASDe
 
 uint32_t VulkanDevice::GetAllocationSize(const GfxTextureDesc& desc)
 {
-    return 0;
+    auto iter = m_textureSizeMap.find(desc);
+    if (iter != m_textureSizeMap.end())
+    {
+        return iter->second;
+    }
+
+    VkImageCreateInfo createInfo = ToVulkanImageCreateInfo(desc);
+    VkImage image;
+    VkResult result = vkCreateImage(m_device, &createInfo, nullptr, &image);
+    if (result != VK_SUCCESS)
+    {
+        return 0;
+    }
+
+    VkImageMemoryRequirementsInfo2 info = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2 };
+    info.image = image;
+
+    VkMemoryRequirements2 requirements = { VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2 };
+    vkGetImageMemoryRequirements2(m_device, &info, &requirements);
+
+    vkDestroyImage(m_device, image, nullptr);
+
+    m_textureSizeMap.emplace(desc, requirements.memoryRequirements.size);
+    return requirements.memoryRequirements.size;
 }
 
 bool VulkanDevice::DumpMemoryStats(const eastl::string& file)

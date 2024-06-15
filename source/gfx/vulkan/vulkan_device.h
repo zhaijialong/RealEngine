@@ -3,6 +3,20 @@
 #include "vulkan_header.h"
 #include "vulkan_deletion_queue.h"
 #include "../gfx_device.h"
+#include "EASTL/hash_map.h"
+#include "xxHash/xxhash.h"
+
+namespace eastl
+{
+    template <>
+    struct hash<GfxTextureDesc>
+    {
+        size_t operator()(const GfxTextureDesc& desc) const
+        {
+            return XXH3_64bits(&desc, sizeof(desc));
+        }
+    };
+}
 
 class VulkanDevice : public IGfxDevice
 {
@@ -69,6 +83,8 @@ private:
     VkQueue m_copyQueue = VK_NULL_HANDLE;
 
     VulkanDeletionQueue* m_deferredDeletionQueue = nullptr;
+
+    eastl::hash_map<GfxTextureDesc, uint32_t> m_textureSizeMap;
 };
 
 template<typename T>

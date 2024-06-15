@@ -54,7 +54,7 @@ bool VulkanCommandList::Create()
 
 void VulkanCommandList::ResetAllocator()
 {
-    vkResetCommandPool((VkDevice)m_pDevice->GetHandle(), m_commandPool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
+    vkResetCommandPool((VkDevice)m_pDevice->GetHandle(), m_commandPool, 0);
 }
 
 void VulkanCommandList::Begin()

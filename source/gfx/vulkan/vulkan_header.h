@@ -171,3 +171,48 @@ inline VmaMemoryUsage ToVmaUsage(GfxMemoryType type)
         return VMA_MEMORY_USAGE_AUTO;
     }
 }
+
+inline VkImageCreateInfo ToVulkanImageCreateInfo(const GfxTextureDesc& desc)
+{
+    VkImageCreateInfo createInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+    createInfo.imageType = desc.type == GfxTextureType::Texture3D ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
+    createInfo.format = ToVulkanFormat(desc.format);
+    createInfo.extent.width = desc.width;
+    createInfo.extent.height = desc.height;
+    createInfo.extent.depth = desc.depth;
+    createInfo.mipLevels = desc.mip_levels;
+    createInfo.arrayLayers = desc.array_size;
+    createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    createInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    createInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    if (desc.usage & GfxTextureUsageRenderTarget)
+    {
+        createInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    }
+
+    if (desc.usage & GfxTextureUsageDepthStencil)
+    {
+        createInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    }
+
+    if (desc.usage & GfxTextureUsageUnorderedAccess)
+    {
+        createInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
+    }
+
+    if (desc.type == GfxTextureType::TextureCube || desc.type == GfxTextureType::TextureCubeArray)
+    {
+        createInfo.arrayLayers *= 6; // cube faces count as array layers in Vulkan
+        createInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+    }
+
+    if (desc.alloc_type == GfxAllocationType::Sparse)
+    {
+        createInfo.flags |= VK_IMAGE_CREATE_SPARSE_BINDING_BIT | VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT;
+    }
+
+    return createInfo;
+}
