@@ -25,8 +25,7 @@ D3D12Swapchain::~D3D12Swapchain()
 
 void D3D12Swapchain::AcquireNextBackBuffer()
 {
-    // m_nCurrentBackBuffer = (m_nCurrentBackBuffer + 1) % m_desc.backbuffer_count;
-    m_nCurrentBackBuffer = (int32_t)m_pSwapChain->GetCurrentBackBufferIndex();
+    m_nCurrentBackBuffer = m_pSwapChain->GetCurrentBackBufferIndex();
 }
 
 bool D3D12Swapchain::Present()

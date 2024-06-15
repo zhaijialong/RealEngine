@@ -12,6 +12,9 @@ public:
     ~VulkanSwapchain();
 
     bool Create();
+    void Present(VkQueue queue);
+    VkSemaphore GetAcquireSemaphore();
+    VkSemaphore GetPresentSemaphore();
 
     virtual void* GetHandle() const override { return m_swapchain; }
     virtual void AcquireNextBackBuffer() override;
@@ -20,11 +23,21 @@ public:
     virtual void SetVSyncEnabled(bool value) override;
 
 private:
+    bool CreateSurface();
+    bool CreateSwapchain();
+    bool CreateTextures();
+    bool CreateSemaphores();
+
+private:
     VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
     VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 
     bool m_bEnableVsync = true;
 
-    int32_t m_currentBackBuffer = -1;
+    uint32_t m_currentBackBuffer = 0;
     eastl::vector<IGfxTexture*> m_backBuffers;
+
+    int32_t m_frameSemaphoreIndex = -1;
+    eastl::vector<VkSemaphore> m_acquireSemaphores;
+    eastl::vector<VkSemaphore> m_presentSemaphores;
 };

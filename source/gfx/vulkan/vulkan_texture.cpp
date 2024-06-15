@@ -15,8 +15,11 @@ VulkanTexture::~VulkanTexture()
 {
     VulkanDevice* pDevice = (VulkanDevice*)m_pDevice;
 
-    pDevice->Delete(m_image);
-    pDevice->Delete(m_allocation);
+    if (!m_bSwapchainImage)
+    {
+        pDevice->Delete(m_image);
+        pDevice->Delete(m_allocation);
+    }
 
     for (size_t i = 0; i < m_rtv.size(); ++i)
     {

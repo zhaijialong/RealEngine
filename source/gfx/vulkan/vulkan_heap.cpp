@@ -21,9 +21,27 @@ bool VulkanHeap::Create()
 
     VmaAllocator allocator = ((VulkanDevice*)m_pDevice)->GetVmaAllocator();
 
-    VkMemoryRequirements requirements;
+    VkMemoryRequirements requirements = {};
     requirements.size = m_desc.size;
-    //todo : requirements.memoryTypeBits = ?
+    requirements.alignment = 1; // not used for dedicated allocations
+    
+    switch (m_desc.memory_type)
+    {
+    case GfxMemoryType::GpuOnly:
+        requirements.memoryTypeBits = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        break;
+    case GfxMemoryType::CpuOnly:
+        requirements.memoryTypeBits = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        break;
+    case GfxMemoryType::CpuToGpu:
+        requirements.memoryTypeBits = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        break;
+    case GfxMemoryType::GpuToCpu:
+        requirements.memoryTypeBits = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        break;
+    default:
+        break;
+    }
 
     VmaAllocationCreateInfo createInfo = {};
     createInfo.usage = ToVmaUsage(m_desc.memory_type);

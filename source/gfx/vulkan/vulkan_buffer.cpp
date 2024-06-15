@@ -54,11 +54,6 @@ bool VulkanBuffer::Create()
         }
     }
 
-    if (m_desc.alloc_type == GfxAllocationType::Sparse)
-    {
-        createInfo.flags |= VK_IMAGE_CREATE_SPARSE_BINDING_BIT | VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT;
-    }
-
     VkResult result;
 
     if (m_desc.heap != nullptr)

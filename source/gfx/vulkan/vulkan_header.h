@@ -18,7 +18,7 @@ inline void SetDebugName(VkDevice device, VkObjectType type, T object, const cha
     vkSetDebugUtilsObjectNameEXT(device, &info);
 }
 
-inline VkFormat ToVulkanFormat(GfxFormat format)
+inline VkFormat ToVulkanFormat(GfxFormat format, bool srv_or_rtv = false)
 {
     switch (format)
     {
@@ -49,11 +49,11 @@ inline VkFormat ToVulkanFormat(GfxFormat format)
     case GfxFormat::RGBA8SNORM:
         return VK_FORMAT_R8G8B8A8_SNORM;
     case GfxFormat::RGBA8SRGB:
-        return VK_FORMAT_R8G8B8A8_SRGB;
+        return srv_or_rtv ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
     case GfxFormat::BGRA8UNORM:
         return VK_FORMAT_B8G8R8A8_UNORM;
     case GfxFormat::BGRA8SRGB:
-        return VK_FORMAT_B8G8R8A8_SRGB;
+        return srv_or_rtv ? VK_FORMAT_B8G8R8A8_SRGB : VK_FORMAT_B8G8R8A8_UNORM;
     case GfxFormat::RGB10A2UI:
         return VK_FORMAT_A2R10G10B10_UINT_PACK32;
     case GfxFormat::RGB10A2UNORM:

@@ -7,6 +7,7 @@ class VulkanDevice;
 
 class VulkanTexture : public IGfxTexture
 {
+    friend class VulkanSwapchain;
 public:
     VulkanTexture(VulkanDevice* pDevice, const GfxTextureDesc& desc, const eastl::string& name);
     ~VulkanTexture();
@@ -23,6 +24,7 @@ public:
 private:
     VkImage m_image = VK_NULL_HANDLE;
     VmaAllocation m_allocation = VK_NULL_HANDLE;
+    bool m_bSwapchainImage = false;
 
     eastl::vector<VkImageView> m_rtv;
     eastl::vector<VkImageView> m_dsv;

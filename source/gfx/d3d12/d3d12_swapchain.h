@@ -29,6 +29,6 @@ private:
     bool m_bEnableVsync = true;
     bool m_bSupportTearing = false;
     bool m_bWindowMode = true;
-    int32_t m_nCurrentBackBuffer = -1;
+    uint32_t m_nCurrentBackBuffer = 0;
     eastl::vector<IGfxTexture*> m_backBuffers;
 };
