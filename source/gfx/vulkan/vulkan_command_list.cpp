@@ -1,5 +1,7 @@
 #include "vulkan_command_list.h"
 #include "vulkan_device.h"
+#include "vulkan_swapchain.h"
+#include "vulkan_fence.h"
 #include "utils/profiler.h"
 
 VulkanCommandList::VulkanCommandList(VulkanDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
@@ -11,39 +13,148 @@ VulkanCommandList::VulkanCommandList(VulkanDevice* pDevice, GfxCommandQueue queu
 
 VulkanCommandList::~VulkanCommandList()
 {
+    ((VulkanDevice*)m_pDevice)->Delete(m_commandPool);
 }
 
 bool VulkanCommandList::Create()
 {
+    VulkanDevice* pDevice = (VulkanDevice*)m_pDevice;
+
+    VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+
+    switch (m_queueType)
+    {
+    case GfxCommandQueue::Graphics:
+        createInfo.queueFamilyIndex = pDevice->GetGraphicsQueueIndex();
+        m_queue = pDevice->GetGraphicsQueue();
+        break;
+    case GfxCommandQueue::Compute:
+        createInfo.queueFamilyIndex = pDevice->GetComputeQueueIndex();
+        m_queue = pDevice->GetComputeQueue();
+        break;
+    case GfxCommandQueue::Copy:
+        createInfo.queueFamilyIndex = pDevice->GetCopyQueueIndex();
+        m_queue = pDevice->GetCopyQueue();
+        break;
+    default:
+        break;
+    }
+
+    VkResult result = vkCreateCommandPool(pDevice->GetDevice(), &createInfo, nullptr, &m_commandPool);
+    if (result != VK_SUCCESS)
+    {
+        return false;
+    }
+
+    SetDebugName(pDevice->GetDevice(), VK_OBJECT_TYPE_COMMAND_POOL, m_commandPool, m_name.c_str());
+
     return true;
 }
 
 void VulkanCommandList::ResetAllocator()
 {
+    vkResetCommandPool((VkDevice)m_pDevice->GetHandle(), m_commandPool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
 }
 
 void VulkanCommandList::Begin()
 {
+    VkCommandBufferAllocateInfo info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+    info.commandPool = m_commandPool;
+    info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    info.commandBufferCount = 1;
+
+    vkAllocateCommandBuffers((VkDevice)m_pDevice->GetHandle(), &info, &m_commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
+
+    ClearState();
 }
 
 void VulkanCommandList::End()
 {
+    FlushBarriers();
+
+    vkEndCommandBuffer(m_commandBuffer);
 }
 
 void VulkanCommandList::Wait(IGfxFence* fence, uint64_t value)
 {
+    m_pendingWaits.emplace_back(fence, value);
 }
 
 void VulkanCommandList::Signal(IGfxFence* fence, uint64_t value)
 {
+    m_pendingSignals.emplace_back(fence, value);
 }
 
 void VulkanCommandList::Present(IGfxSwapchain* swapchain)
 {
+    m_pendingSwapchain.push_back(swapchain);
 }
 
 void VulkanCommandList::Submit()
 {
+    eastl::vector<VkSemaphore> waitSemaphores;
+    eastl::vector<VkSemaphore> signalSemaphores;
+    eastl::vector<uint64_t> waitValues;
+    eastl::vector<uint64_t> signalValues;
+    eastl::vector<VkPipelineStageFlags> waitStages;
+
+    for (size_t i = 0; i < m_pendingWaits.size(); ++i)
+    {
+        waitSemaphores.push_back((VkSemaphore)m_pendingWaits[i].first->GetHandle());
+        waitStages.push_back(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+        waitValues.push_back(m_pendingWaits[i].second);
+    }
+    m_pendingWaits.clear();
+
+    for (size_t i = 0; i < m_pendingSignals.size(); ++i)
+    {
+        signalSemaphores.push_back((VkSemaphore)m_pendingSignals[i].first->GetHandle());
+        signalValues.push_back(m_pendingSignals[i].second);
+    }
+    m_pendingSignals.clear();
+
+    for (size_t i = 0; i < m_pendingSwapchain.size(); ++i)
+    {
+        VulkanSwapchain* swapchain = (VulkanSwapchain*)m_pendingSwapchain[i];
+        
+        waitSemaphores.push_back(swapchain->GetAcquireSemaphore());
+        waitStages.push_back(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+        signalSemaphores.push_back(swapchain->GetPresentSemaphore());
+
+        // these are binary semaphores, wait/signal values are just ignored
+        waitValues.push_back(0);
+        signalValues.push_back(0);
+    }
+
+    VkTimelineSemaphoreSubmitInfo timelineInfo = { VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO };
+    timelineInfo.waitSemaphoreValueCount = (uint32_t)waitValues.size();
+    timelineInfo.pWaitSemaphoreValues = waitValues.data();
+    timelineInfo.signalSemaphoreValueCount = (uint32_t)signalValues.size();
+    timelineInfo.pSignalSemaphoreValues = signalValues.data();
+
+    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    submitInfo.pNext = &timelineInfo;
+    submitInfo.waitSemaphoreCount = (uint32_t)waitSemaphores.size();
+    submitInfo.pWaitSemaphores = waitSemaphores.data();
+    submitInfo.pWaitDstStageMask = waitStages.data();
+    submitInfo.signalSemaphoreCount = (uint32_t)signalSemaphores.size();
+    submitInfo.pSignalSemaphores = signalSemaphores.data();
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &m_commandBuffer;
+
+    vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE);
+
+    for (size_t i = 0; i < m_pendingSwapchain.size(); ++i)
+    {
+        ((VulkanSwapchain*)m_pendingSwapchain[i])->Present(m_queue);
+    }
+    m_pendingSwapchain.clear();
 }
 
 void VulkanCommandList::ClearState()

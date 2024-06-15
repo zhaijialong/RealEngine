@@ -46,7 +46,10 @@ XeSS::XeSS(Renderer* pRenderer)
 
 XeSS::~XeSS()
 {
-    xessDestroyContext(m_context);
+    if (m_context)
+    {
+        xessDestroyContext(m_context);
+    }
 }
 
 RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,

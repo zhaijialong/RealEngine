@@ -38,6 +38,12 @@ public:
     VkInstance GetInstance() const { return m_instance; }
     VkDevice GetDevice() const { return m_device; }
     VmaAllocator GetVmaAllocator() const { return m_vmaAllocator; }
+    uint32_t GetGraphicsQueueIndex() const { return m_graphicsQueueIndex; }
+    uint32_t GetComputeQueueIndex() const { return m_computeQueueIndex; }
+    uint32_t GetCopyQueueIndex() const { return m_copyQueueIndex; }
+    VkQueue GetGraphicsQueue() const { return m_graphicsQueue; }
+    VkQueue GetComputeQueue() const { return m_computeQueue; }
+    VkQueue GetCopyQueue() const { return m_copyQueue; }
 
     template<typename T>
     void Delete(T objectHandle);

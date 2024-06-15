@@ -28,6 +28,8 @@ private:
     bool CreateTextures();
     bool CreateSemaphores();
 
+    bool RecreateSwapchain();
+
 private:
     VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
     VkSurfaceKHR m_surface = VK_NULL_HANDLE;

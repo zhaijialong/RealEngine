@@ -15,7 +15,6 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_pCommandList; }
-    virtual GfxCommandQueue GetQueue() const override { return m_queueType; }
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;
@@ -84,7 +83,6 @@ private:
     void EndRenderPassEmulation();
 
 private:
-    GfxCommandQueue m_queueType;
     ID3D12CommandQueue* m_pCommandQueue = nullptr;
     ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
     ID3D12GraphicsCommandList7* m_pCommandList = nullptr;

@@ -29,4 +29,5 @@ private:
     eastl::queue<eastl::pair<VkSemaphore, uint64_t>> m_semaphoreQueue;
     eastl::queue<eastl::pair<VkSwapchainKHR, uint64_t>> m_swapchainQueue;
     eastl::queue<eastl::pair<VkSurfaceKHR, uint64_t>> m_surfaceQueue;
+    eastl::queue<eastl::pair<VkCommandPool, uint64_t>> m_commandPoolQueue;
 };

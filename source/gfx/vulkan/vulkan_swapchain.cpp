@@ -2,6 +2,7 @@
 #include "vulkan_device.h"
 #include "vulkan_texture.h"
 #include "utils/log.h"
+#include "utils/assert.h"
 
 VulkanSwapchain::VulkanSwapchain(VulkanDevice* pDevice, const GfxSwapchainDesc& desc, const eastl::string& name)
 {
@@ -54,8 +55,7 @@ bool VulkanSwapchain::Resize(uint32_t width, uint32_t height)
     m_desc.width = width;
     m_desc.height = height;
 
-    //todo
-    return false;
+    return RecreateSwapchain();
 }
 
 void VulkanSwapchain::SetVSyncEnabled(bool value)
@@ -74,7 +74,12 @@ void VulkanSwapchain::Present(VkQueue queue)
     info.pSwapchains = &m_swapchain;
     info.pImageIndices = &m_currentBackBuffer;
 
-    vkQueuePresentKHR(queue, &info);
+    VkResult result = vkQueuePresentKHR(queue, &info);
+    
+    if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        RecreateSwapchain();
+    }
 }
 
 void VulkanSwapchain::AcquireNextBackBuffer()
@@ -83,7 +88,15 @@ void VulkanSwapchain::AcquireNextBackBuffer()
 
     VkSemaphore signalSemaphore = GetAcquireSemaphore();
 
-    vkAcquireNextImageKHR((VkDevice)m_pDevice->GetHandle(), m_swapchain, UINT64_MAX, signalSemaphore, VK_NULL_HANDLE, &m_currentBackBuffer);
+    VkResult result = vkAcquireNextImageKHR((VkDevice)m_pDevice->GetHandle(), m_swapchain, UINT64_MAX, signalSemaphore, VK_NULL_HANDLE, &m_currentBackBuffer);
+    
+    if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        RecreateSwapchain();
+
+        result = vkAcquireNextImageKHR((VkDevice)m_pDevice->GetHandle(), m_swapchain, UINT64_MAX, signalSemaphore, VK_NULL_HANDLE, &m_currentBackBuffer);
+        RE_ASSERT(result == VK_SUCCESS);
+    }
 }
 
 IGfxTexture* VulkanSwapchain::GetBackBuffer() const
@@ -137,6 +150,7 @@ bool VulkanSwapchain::CreateSwapchain()
     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR; // todo
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = m_swapchain;
 
@@ -216,4 +230,10 @@ bool VulkanSwapchain::CreateSemaphores()
     }
 
     return true;
+}
+
+bool VulkanSwapchain::RecreateSwapchain()
+{
+    //todo
+    return false;
 }

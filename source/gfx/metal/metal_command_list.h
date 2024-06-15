@@ -6,7 +6,6 @@ class MetalCommandList : public IGfxCommandList
 {
 public:
     virtual void* GetHandle() const override;
-    virtual GfxCommandQueue GetQueue() const override;
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;

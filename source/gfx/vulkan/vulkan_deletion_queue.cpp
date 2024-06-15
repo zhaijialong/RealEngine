@@ -38,6 +38,7 @@ void VulkanDeletionQueue::Flush(bool force_delete)
     ITERATE_QUEUE(m_shaderQueue, vkDestroyShaderModule);
     ITERATE_QUEUE(m_semaphoreQueue, vkDestroySemaphore);
     ITERATE_QUEUE(m_swapchainQueue, vkDestroySwapchainKHR);
+    ITERATE_QUEUE(m_commandPoolQueue, vkDestroyCommandPool);
 
     while (!m_surfaceQueue.empty())
     {
@@ -122,4 +123,10 @@ template<>
 void VulkanDeletionQueue::Delete(VkSurfaceKHR object, uint64_t frameID)
 {
     m_surfaceQueue.push(eastl::make_pair(object, frameID));
+}
+
+template<>
+void VulkanDeletionQueue::Delete(VkCommandPool object, uint64_t frameID)
+{
+    m_commandPoolQueue.push(eastl::make_pair(object, frameID));
 }

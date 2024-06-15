@@ -14,7 +14,6 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_commandBuffer; }
-    virtual GfxCommandQueue GetQueue() const override { return m_queueType; }
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;
@@ -79,6 +78,13 @@ public:
 #endif
 
 private:
-    GfxCommandQueue m_queueType;
+    VkQueue m_queue = VK_NULL_HANDLE;
+    VkCommandPool m_commandPool = VK_NULL_HANDLE;
     VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
+
+
+    eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingWaits;
+    eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
+
+    eastl::vector<IGfxSwapchain*> m_pendingSwapchain;
 };

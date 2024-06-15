@@ -17,7 +17,7 @@ class IGfxCommandList : public IGfxResource
 public:
     virtual ~IGfxCommandList() {}
 
-    virtual GfxCommandQueue GetQueue() const = 0;
+    GfxCommandQueue GetQueue() const { return m_queueType; }
 
     virtual void ResetAllocator() = 0;
     virtual void Begin() = 0;
@@ -80,4 +80,7 @@ public:
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const = 0;
 #endif
+
+protected:
+    GfxCommandQueue m_queueType;
 };
