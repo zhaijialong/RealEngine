@@ -150,7 +150,7 @@ inline VkFormat ToVulkanFormat(GfxFormat format, bool srv_or_rtv = false)
         return VK_FORMAT_BC7_UNORM_BLOCK;
     case GfxFormat::BC7SRGB:
         return VK_FORMAT_BC7_SRGB_BLOCK;
-	default:
+    default:
         return VK_FORMAT_UNDEFINED;
     }
 }

@@ -7,12 +7,12 @@ class VulkanDevice;
 
 class VulkanTexture : public IGfxTexture
 {
-    friend class VulkanSwapchain;
 public:
     VulkanTexture(VulkanDevice* pDevice, const GfxTextureDesc& desc, const eastl::string& name);
     ~VulkanTexture();
 
     bool Create();
+    bool Create(VkImage image); // used only by the swapchain
 
     virtual void* GetHandle() const override { return m_image; }
     virtual uint32_t GetRequiredStagingBufferSize() const override;

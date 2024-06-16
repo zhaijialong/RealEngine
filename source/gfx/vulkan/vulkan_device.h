@@ -50,6 +50,7 @@ public:
     virtual bool DumpMemoryStats(const eastl::string& file) override;
 
     VkInstance GetInstance() const { return m_instance; }
+    VkPhysicalDevice GetPhysicalDevice() const { return m_physicalDevice; }
     VkDevice GetDevice() const { return m_device; }
     VmaAllocator GetVmaAllocator() const { return m_vmaAllocator; }
     uint32_t GetGraphicsQueueIndex() const { return m_graphicsQueueIndex; }

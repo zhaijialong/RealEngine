@@ -9,6 +9,7 @@
 #include "magic_enum/magic_enum.hpp"
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
+#include "imgui/imgui.h"
 
 Engine* Engine::GetInstance()
 {
@@ -105,10 +106,21 @@ void Engine::Tick()
     m_frameTime = (float)stm_sec(stm_laptime(&m_lastFrameTime));
 
     m_pGUI->Tick();
-    m_pEditor->Tick();
-    m_pWorld->Tick(m_frameTime);
 
-    m_pRenderer->RenderFrame();
+    ImGuiIO& io = ImGui::GetIO();
+    bool isMinimized = (io.DisplaySize.x <= 0.0f || io.DisplaySize.y <= 0.0f);
+
+    if (isMinimized)
+    {
+        ImGui::Render(); //this has to be called every frame
+    }
+    else
+    {
+        m_pEditor->Tick();
+        m_pWorld->Tick(m_frameTime);
+
+        m_pRenderer->RenderFrame();
+    }
 
     MicroProfileFlip(0);
 }

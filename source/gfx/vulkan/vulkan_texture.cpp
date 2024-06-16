@@ -77,6 +77,16 @@ bool VulkanTexture::Create()
     return true;
 }
 
+bool VulkanTexture::Create(VkImage image)
+{
+    m_image = image;
+    m_bSwapchainImage = true;
+
+    SetDebugName((VkDevice)m_pDevice->GetHandle(), VK_OBJECT_TYPE_IMAGE, m_image, m_name.c_str());
+
+    return true;
+}
+
 uint32_t VulkanTexture::GetRequiredStagingBufferSize() const
 {
     //todo

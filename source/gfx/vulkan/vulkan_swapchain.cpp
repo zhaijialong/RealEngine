@@ -137,6 +137,7 @@ bool VulkanSwapchain::CreateSurface()
 bool VulkanSwapchain::CreateSwapchain()
 {
     VkDevice device = (VkDevice)m_pDevice->GetHandle();
+    VkSwapchainKHR oldSwapchain = m_swapchain;
 
     VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
     createInfo.surface = m_surface;
@@ -152,7 +153,7 @@ bool VulkanSwapchain::CreateSwapchain()
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR; // todo
     createInfo.clipped = VK_TRUE;
-    createInfo.oldSwapchain = m_swapchain;
+    createInfo.oldSwapchain = oldSwapchain;
 
     VkResult result = vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_swapchain);
     if (result != VK_SUCCESS)
@@ -161,6 +162,11 @@ bool VulkanSwapchain::CreateSwapchain()
     }
 
     SetDebugName(device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, m_swapchain, m_name.c_str());
+
+    if (oldSwapchain != VK_NULL_HANDLE)
+    {
+        ((VulkanDevice*)m_pDevice)->Delete(oldSwapchain);
+    }
 
     return true;
 }
@@ -184,11 +190,8 @@ bool VulkanSwapchain::CreateTextures()
     {
         eastl::string name = fmt::format("{} texture {}", m_name, i).c_str();
 
-        SetDebugName(device, VK_OBJECT_TYPE_IMAGE, images[i], name.c_str());
-
         VulkanTexture* texture = new VulkanTexture((VulkanDevice*)m_pDevice, textureDesc, name);
-        texture->m_image = images[i];
-        texture->m_bSwapchainImage = true;
+        texture->Create(images[i]);
 
         m_backBuffers.push_back(texture);
     }
@@ -234,6 +237,27 @@ bool VulkanSwapchain::CreateSemaphores()
 
 bool VulkanSwapchain::RecreateSwapchain()
 {
-    //todo
-    return false;
+    vkDeviceWaitIdle((VkDevice)m_pDevice->GetHandle());
+
+    for (size_t i = 0; i < m_backBuffers.size(); ++i)
+    {
+        delete m_backBuffers[i];
+    }
+    m_backBuffers.clear();
+
+    VulkanDevice* pDevice = (VulkanDevice*)m_pDevice;
+
+    for (size_t i = 0; i < m_acquireSemaphores.size(); ++i)
+    {
+        pDevice->Delete(m_acquireSemaphores[i]);
+    }
+    m_acquireSemaphores.clear();
+
+    for (size_t i = 0; i < m_presentSemaphores.size(); ++i)
+    {
+        pDevice->Delete(m_presentSemaphores[i]);
+    }
+    m_presentSemaphores.clear();
+
+    return CreateSwapchain() && CreateTextures() && CreateSemaphores();
 }
