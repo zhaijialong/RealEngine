@@ -129,17 +129,17 @@ void D3D12CommandList::Submit()
         m_pCommandQueue->ExecuteCommandLists(1, ppCommandLists);
     }
 
-    for (size_t i = 0; i < m_pendingSignals.size(); ++i)
-    {
-        m_pCommandQueue->Signal((ID3D12Fence*)m_pendingSignals[i].first->GetHandle(), m_pendingSignals[i].second);
-    }
-    m_pendingSignals.clear();
-
     for (size_t i = 0; i < m_pendingSwapchain.size(); ++i)
     {
         ((D3D12Swapchain*)m_pendingSwapchain[i])->Present();
     }
     m_pendingSwapchain.clear();
+
+    for (size_t i = 0; i < m_pendingSignals.size(); ++i)
+    {
+        m_pCommandQueue->Signal((ID3D12Fence*)m_pendingSignals[i].first->GetHandle(), m_pendingSignals[i].second);
+    }
+    m_pendingSignals.clear();
 }
 
 void D3D12CommandList::ResetState()
