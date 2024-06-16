@@ -1,4 +1,7 @@
 #include "EASTL/allocator.h"
+#if !MICROPROFILE_ENABLED
+#define STB_SPRINTF_IMPLEMENTATION
+#endif
 #include "stb/stb_sprintf.h"
 #include "utils/memory.h"
 #include <stdio.h> //vsnwprintf
