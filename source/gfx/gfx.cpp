@@ -1,6 +1,7 @@
 #include "gfx.h"
 #include "d3d12/d3d12_device.h"
 #include "vulkan/vulkan_device.h"
+#include "mock/mock_device.h"
 #include "utils/assert.h"
 #include "xxHash/xxhash.h"
 #include "microprofile/microprofile.h"
@@ -19,6 +20,9 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
         break;
     case GfxRenderBackend::Metal:
         // todo : pDevice = new MetalDevice(desc);
+        break;
+    case GfxRenderBackend::Mock:
+        pDevice = new MockDevice(desc);
         break;
     default:
         break;

@@ -18,7 +18,8 @@ enum class GfxRenderBackend
 {
     D3D12,
     Vulkan,
-    Metal
+    Metal,
+    Mock,
 };
 
 enum class GfxFormat
