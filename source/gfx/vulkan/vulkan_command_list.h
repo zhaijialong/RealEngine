@@ -22,7 +22,7 @@ public:
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
     virtual void Present(IGfxSwapchain* swapchain) override;
     virtual void Submit() override;
-    virtual void ClearState() override;
+    virtual void ResetState() override;
 
     virtual void BeginProfiling() override;
     virtual void EndProfiling() override;

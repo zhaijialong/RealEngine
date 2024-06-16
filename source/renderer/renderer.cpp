@@ -448,12 +448,11 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
 {
     GPU_EVENT(pCommandList, "Backbuffer Pass");
 
-    m_pSwapchain->AcquireNextBackBuffer();
-
     m_pGpuStats->Draw(pCommandList);
     m_pGpuDebugPrint->PrepareForDraw(pCommandList);
     m_pGpuDebugLine->PrepareForDraw(pCommandList);
 
+    m_pSwapchain->AcquireNextBackBuffer();
     pCommandList->TextureBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxAccessPresent, GfxAccessRTV);
 
     RGTexture* depthRT = m_pRenderGraph->GetTexture(depth);
@@ -518,8 +517,8 @@ void Renderer::EndFrame()
 
     m_nFrameFenceValue[frame_index] = ++m_nCurrentFrameFenceValue;
 
-    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
     pCommandList->Present(m_pSwapchain.get());
+    pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
     pCommandList->Submit();
     pCommandList->EndProfiling();
 

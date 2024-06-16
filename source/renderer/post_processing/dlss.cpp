@@ -117,7 +117,7 @@ RGHandle DLSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
             NVSDK_NGX_Result result = NGX_D3D12_EVALUATE_DLSS_EXT((ID3D12GraphicsCommandList*)pCommandList->GetHandle(), m_dlssFeature, m_ngxParameters, &dlssEvalParams);
             RE_ASSERT(NVSDK_NGX_SUCCEED(result));
 
-            pCommandList->ClearState();
+            pCommandList->ResetState();
             m_pRenderer->SetupGlobalConstants(pCommandList);
         });
 

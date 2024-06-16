@@ -26,7 +26,7 @@ public:
     virtual void Signal(IGfxFence* fence, uint64_t value) = 0;
     virtual void Present(IGfxSwapchain* swapchain) = 0;
     virtual void Submit() = 0;
-    virtual void ClearState() = 0;
+    virtual void ResetState() = 0;
 
     virtual void BeginProfiling() = 0;
     virtual void EndProfiling() = 0;

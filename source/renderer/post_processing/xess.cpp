@@ -132,7 +132,7 @@ RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
             xess_result_t result = xessD3D12Execute(m_context, (ID3D12GraphicsCommandList*)pCommandList->GetHandle(), &params);
             RE_ASSERT(result == XESS_RESULT_SUCCESS);
 
-            pCommandList->ClearState();
+            pCommandList->ResetState();
             m_pRenderer->SetupGlobalConstants(pCommandList);
         });
 

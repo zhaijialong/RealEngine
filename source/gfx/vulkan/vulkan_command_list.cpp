@@ -71,7 +71,7 @@ void VulkanCommandList::Begin()
 
     vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
 
-    ClearState();
+    ResetState();
 }
 
 void VulkanCommandList::End()
@@ -157,7 +157,7 @@ void VulkanCommandList::Submit()
     m_pendingSwapchain.clear();
 }
 
-void VulkanCommandList::ClearState()
+void VulkanCommandList::ResetState()
 {
 }
 

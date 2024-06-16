@@ -90,7 +90,7 @@ void D3D12CommandList::Begin()
     m_pCommandList->Reset(m_pCommandAllocator, nullptr);
     m_pCommandList->SetName(string_to_wstring(m_name).c_str());
 
-    ClearState();
+    ResetState();
 }
 
 void D3D12CommandList::End()
@@ -142,7 +142,7 @@ void D3D12CommandList::Submit()
     m_pendingSwapchain.clear();
 }
 
-void D3D12CommandList::ClearState()
+void D3D12CommandList::ResetState()
 {
     m_commandCount = 0;
     m_pCurrentPSO = nullptr;
