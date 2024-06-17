@@ -74,6 +74,8 @@ bool VulkanTexture::Create()
         vmaSetAllocationName(allocator, m_allocation, m_name.c_str());
     }
 
+    ((VulkanDevice*)m_pDevice)->DefaultLayoutTransition(this);
+
     return true;
 }
 
@@ -83,6 +85,8 @@ bool VulkanTexture::Create(VkImage image)
     m_bSwapchainImage = true;
 
     SetDebugName((VkDevice)m_pDevice->GetHandle(), VK_OBJECT_TYPE_IMAGE, m_image, m_name.c_str());
+
+    ((VulkanDevice*)m_pDevice)->DefaultLayoutTransition(this);
 
     return true;
 }

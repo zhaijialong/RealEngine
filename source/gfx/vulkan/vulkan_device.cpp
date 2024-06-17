@@ -394,10 +394,11 @@ VkResult VulkanDevice::CreateDevice()
         "VK_KHR_bind_memory2",
         "VK_KHR_timeline_semaphore",
         "VK_KHR_dedicated_allocation",
+        //"VK_EXT_swapchain_maintenance1",
         "VK_EXT_mesh_shader",
         "VK_EXT_descriptor_indexing",
         "VK_EXT_mutable_descriptor_type",
-        //"VK_EXT_swapchain_maintenance1",
+        "VK_EXT_descriptor_buffer",
     };
 
     float queue_priorities[1] = { 0.0 };
@@ -518,4 +519,13 @@ void VulkanDevice::FindQueueFamilyIndex()
     RE_ASSERT(m_graphicsQueueIndex != uint32_t(-1));
     RE_ASSERT(m_copyQueueIndex != uint32_t(-1));
     RE_ASSERT(m_computeQueueIndex != uint32_t(-1));
+}
+
+void VulkanDevice::DefaultLayoutTransition(IGfxTexture* texture)
+{
+}
+
+void VulkanDevice::FlushLayoutTransition(GfxCommandQueue queue_type)
+{
+
 }

@@ -82,6 +82,8 @@ private:
     VkCommandPool m_commandPool = VK_NULL_HANDLE;
     VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
 
+    eastl::vector<VkCommandBuffer> m_freeCommandBuffers;
+    eastl::vector<VkCommandBuffer> m_pendingCommandBuffers;
 
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingWaits;
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;

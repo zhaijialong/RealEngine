@@ -63,6 +63,9 @@ public:
     template<typename T>
     void Delete(T objectHandle);
 
+    void DefaultLayoutTransition(IGfxTexture* texture);
+    void FlushLayoutTransition(GfxCommandQueue queue_type);
+
 private:
     VkResult CreateInstance();
     VkResult CreateDevice();

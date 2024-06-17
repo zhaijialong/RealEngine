@@ -13,6 +13,7 @@ public:
 
     bool Create();
     bool Create(VkImage image); // used only by the swapchain
+    bool IsSwapchainTexture() const { return m_bSwapchainImage; }
 
     virtual void* GetHandle() const override { return m_image; }
     virtual uint32_t GetRequiredStagingBufferSize() const override;

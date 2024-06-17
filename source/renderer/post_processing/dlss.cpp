@@ -157,6 +157,11 @@ bool DLSS::InitializeNGX()
         return false;
     }
 
+    if (m_pRenderer->GetDevice()->GetDesc().backend != GfxRenderBackend::D3D12) //todo : vulkan
+    {
+        return false;
+    }
+
     ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
     NVSDK_NGX_Result result = NVSDK_NGX_D3D12_Init(APP_ID, L".", device); // this throws std::runtime_error ...
     if(NVSDK_NGX_FAILED(result))

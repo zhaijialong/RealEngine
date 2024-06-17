@@ -21,7 +21,6 @@ bool VulkanCommandList::Create()
     VulkanDevice* pDevice = (VulkanDevice*)m_pDevice;
 
     VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-    createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 
     switch (m_queueType)
     {
@@ -55,16 +54,30 @@ bool VulkanCommandList::Create()
 void VulkanCommandList::ResetAllocator()
 {
     vkResetCommandPool((VkDevice)m_pDevice->GetHandle(), m_commandPool, 0);
+
+    for (size_t i = 0; i < m_pendingCommandBuffers.size(); ++i)
+    {
+        m_freeCommandBuffers.push_back(m_pendingCommandBuffers[i]);
+    }
+    m_pendingCommandBuffers.clear();
 }
 
 void VulkanCommandList::Begin()
 {
-    VkCommandBufferAllocateInfo info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-    info.commandPool = m_commandPool;
-    info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    info.commandBufferCount = 1;
+    if (!m_freeCommandBuffers.empty())
+    {
+        m_commandBuffer = m_freeCommandBuffers.back();
+        m_freeCommandBuffers.pop_back();
+    }
+    else
+    {
+        VkCommandBufferAllocateInfo info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+        info.commandPool = m_commandPool;
+        info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        info.commandBufferCount = 1;
 
-    vkAllocateCommandBuffers((VkDevice)m_pDevice->GetHandle(), &info, &m_commandBuffer);
+        vkAllocateCommandBuffers((VkDevice)m_pDevice->GetHandle(), &info, &m_commandBuffer);
+    }
 
     VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -79,6 +92,8 @@ void VulkanCommandList::End()
     FlushBarriers();
 
     vkEndCommandBuffer(m_commandBuffer);
+
+    m_pendingCommandBuffers.push_back(m_commandBuffer);
 }
 
 void VulkanCommandList::Wait(IGfxFence* fence, uint64_t value)
@@ -98,6 +113,8 @@ void VulkanCommandList::Present(IGfxSwapchain* swapchain)
 
 void VulkanCommandList::Submit()
 {
+    ((VulkanDevice*)m_pDevice)->FlushLayoutTransition(m_queueType);
+
     eastl::vector<VkSemaphore> waitSemaphores;
     eastl::vector<VkSemaphore> signalSemaphores;
     eastl::vector<uint64_t> waitValues;
