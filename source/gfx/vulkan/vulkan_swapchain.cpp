@@ -140,6 +140,7 @@ bool VulkanSwapchain::CreateSwapchain()
     VkSwapchainKHR oldSwapchain = m_swapchain;
 
     VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+    createInfo.flags = VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
     createInfo.surface = m_surface;
     createInfo.minImageCount = m_desc.backbuffer_count;
     createInfo.imageFormat = ToVulkanFormat(m_desc.backbuffer_format);

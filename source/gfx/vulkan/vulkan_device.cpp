@@ -438,8 +438,12 @@ VkResult VulkanDevice::CreateDevice()
     synchronization2.pNext = &timelineSemaphore;
     synchronization2.synchronization2 = VK_TRUE;
 
+    VkPhysicalDeviceDynamicRenderingFeatures dynamicRendering = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES };
+    dynamicRendering.pNext = &synchronization2;
+    dynamicRendering.dynamicRendering = VK_TRUE;
+
     VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    device_info.pNext = &synchronization2;
+    device_info.pNext = &dynamicRendering;
     device_info.queueCreateInfoCount = 3;
     device_info.pQueueCreateInfos = queue_info;
     device_info.enabledExtensionCount = (uint32_t)required_extensions.size();

@@ -14,6 +14,7 @@ public:
     bool Create();
     bool Create(VkImage image); // used only by the swapchain
     bool IsSwapchainTexture() const { return m_bSwapchainImage; }
+    VkImageView GetRenderView(uint32_t mip_slice, uint32_t array_slice);
 
     virtual void* GetHandle() const override { return m_image; }
     virtual uint32_t GetRequiredStagingBufferSize() const override;
@@ -27,6 +28,5 @@ private:
     VmaAllocation m_allocation = VK_NULL_HANDLE;
     bool m_bSwapchainImage = false;
 
-    eastl::vector<VkImageView> m_rtv;
-    eastl::vector<VkImageView> m_dsv;
+    eastl::vector<VkImageView> m_renderViews;
 };

@@ -21,14 +21,9 @@ VulkanTexture::~VulkanTexture()
         pDevice->Delete(m_allocation);
     }
 
-    for (size_t i = 0; i < m_rtv.size(); ++i)
+    for (size_t i = 0; i < m_renderViews.size(); ++i)
     {
-        pDevice->Delete(m_rtv[i]);
-    }
-
-    for (size_t i = 0; i < m_dsv.size(); ++i)
-    {
-        pDevice->Delete(m_dsv[i]);
+        pDevice->Delete(m_renderViews[i]);
     }
 }
 
@@ -119,4 +114,32 @@ void* VulkanTexture::GetSharedHandle() const
 {
     //todo
     return nullptr;
+}
+
+VkImageView VulkanTexture::GetRenderView(uint32_t mip_slice, uint32_t array_slice)
+{
+    RE_ASSERT(m_desc.usage & (GfxTextureUsageRenderTarget | GfxTextureUsageDepthStencil));
+
+    if (m_renderViews.empty())
+    {
+        m_renderViews.resize(m_desc.mip_levels * m_desc.array_size);
+    }
+
+    uint32_t index = m_desc.mip_levels * array_slice + mip_slice;
+    if (m_renderViews[index] == VK_NULL_HANDLE)
+    {
+        VkImageViewCreateInfo createInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        createInfo.image = m_image;
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = ToVulkanFormat(m_desc.format, true);
+        createInfo.subresourceRange.aspectMask = GetAspectFlags(m_desc.format);
+        createInfo.subresourceRange.baseMipLevel = mip_slice;
+        createInfo.subresourceRange.baseArrayLayer = array_slice;
+        createInfo.subresourceRange.layerCount = 1;
+        createInfo.subresourceRange.levelCount = 1;
+
+        vkCreateImageView((VkDevice)m_pDevice->GetHandle(), &createInfo, nullptr, &m_renderViews[index]);
+    }
+
+    return m_renderViews[index];
 }

@@ -215,6 +215,8 @@ inline VkImageCreateInfo ToVulkanImageCreateInfo(const GfxTextureDesc& desc)
         createInfo.flags |= VK_IMAGE_CREATE_SPARSE_BINDING_BIT | VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT;
     }
 
+    createInfo.flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+
     return createInfo;
 }
 
@@ -300,4 +302,32 @@ inline VkImageLayout GetImageLayout(GfxAccessFlags flags)
 
     RE_ASSERT(false);
     return VK_IMAGE_LAYOUT_UNDEFINED;
+}
+
+inline VkAttachmentLoadOp GetLoadOp(GfxRenderPassLoadOp load_op)
+{
+    switch (load_op)
+    {
+    case GfxRenderPassLoadOp::Load:
+        return VK_ATTACHMENT_LOAD_OP_LOAD;
+    case GfxRenderPassLoadOp::Clear:
+        return VK_ATTACHMENT_LOAD_OP_CLEAR;
+    case GfxRenderPassLoadOp::DontCare:
+        return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    default:
+        return VK_ATTACHMENT_LOAD_OP_LOAD;
+    }
+}
+
+inline VkAttachmentStoreOp GetStoreOp(GfxRenderPassStoreOp store_op)
+{
+    switch (store_op)
+    {
+    case GfxRenderPassStoreOp::Store:
+        return VK_ATTACHMENT_STORE_OP_STORE;
+    case GfxRenderPassStoreOp::DontCare:
+        return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    default:
+        return VK_ATTACHMENT_STORE_OP_STORE;
+    }
 }

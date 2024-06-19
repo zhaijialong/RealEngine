@@ -4,6 +4,7 @@
 #include "vulkan_fence.h"
 #include "vulkan_texture.h"
 #include "utils/profiler.h"
+#include "../gfx.h"
 
 VulkanCommandList::VulkanCommandList(VulkanDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
 {
@@ -284,10 +285,97 @@ void VulkanCommandList::FlushBarriers()
 void VulkanCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 {
     FlushBarriers();
+
+    VkRenderingAttachmentInfo colorAttachments[8] = {};
+    VkRenderingAttachmentInfo depthAttachments = { VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
+    VkRenderingAttachmentInfo stencilAttachments = { VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
+    uint32_t width = 0;
+    uint32_t height = 0;
+    uint32_t colorAttachmentCount = 0;
+
+    for (uint32_t i = 0; i < 8; ++i)
+    {
+        if (render_pass.color[i].texture == nullptr)
+        {
+            continue;
+        }
+
+        if (width == 0)
+        {
+            width = render_pass.color[i].texture->GetDesc().width;
+        }
+
+        if (height == 0)
+        {
+            height = render_pass.color[i].texture->GetDesc().height;
+        }
+
+        RE_ASSERT(width == render_pass.color[i].texture->GetDesc().width);
+        RE_ASSERT(height == render_pass.color[i].texture->GetDesc().height);
+
+        colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        colorAttachments[i].imageView = ((VulkanTexture*)render_pass.color[i].texture)->GetRenderView(render_pass.color[i].mip_slice, render_pass.color[i].array_slice);
+        colorAttachments[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachments[i].loadOp = GetLoadOp(render_pass.color[i].load_op);
+        colorAttachments[i].storeOp = GetStoreOp(render_pass.color[i].store_op);
+        memcpy(colorAttachments[i].clearValue.color.float32, render_pass.color[i].clear_color, sizeof(float) * 4);
+
+        ++colorAttachmentCount;
+    }
+
+    if (render_pass.depth.texture != nullptr)
+    {
+        if (width == 0)
+        {
+            width = render_pass.depth.texture->GetDesc().width;
+        }
+
+        if (height == 0)
+        {
+            height = render_pass.depth.texture->GetDesc().height;
+        }
+
+        RE_ASSERT(width == render_pass.depth.texture->GetDesc().width);
+        RE_ASSERT(height == render_pass.depth.texture->GetDesc().height);
+
+        depthAttachments.imageView = ((VulkanTexture*)render_pass.depth.texture)->GetRenderView(render_pass.depth.mip_slice, render_pass.depth.array_slice);
+        depthAttachments.imageLayout = render_pass.depth.read_only ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthAttachments.loadOp = GetLoadOp(render_pass.depth.load_op);
+        depthAttachments.storeOp = GetStoreOp(render_pass.depth.store_op);
+
+        if (IsStencilFormat(render_pass.depth.texture->GetDesc().format))
+        {
+            stencilAttachments.imageView = ((VulkanTexture*)render_pass.depth.texture)->GetRenderView(render_pass.depth.mip_slice, render_pass.depth.array_slice);
+            stencilAttachments.imageLayout = render_pass.depth.read_only ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            stencilAttachments.loadOp = GetLoadOp(render_pass.depth.stencil_load_op);
+            stencilAttachments.storeOp = GetStoreOp(render_pass.depth.stencil_store_op);
+        }
+    }
+
+    VkRenderingInfo info = { VK_STRUCTURE_TYPE_RENDERING_INFO };
+    info.renderArea.extent.width = width;
+    info.renderArea.extent.height = height;
+    info.layerCount = 1;
+    info.viewMask = 0;
+    info.colorAttachmentCount = colorAttachmentCount;
+    info.pColorAttachments = colorAttachments;
+
+    if (depthAttachments.imageView != VK_NULL_HANDLE)
+    {
+        info.pDepthAttachment = &depthAttachments;
+    }
+
+    if (stencilAttachments.imageView != VK_NULL_HANDLE)
+    {
+        info.pStencilAttachment = &stencilAttachments;
+    }
+
+    vkCmdBeginRendering(m_commandBuffer, &info);
 }
 
 void VulkanCommandList::EndRenderPass()
 {
+    vkCmdEndRendering(m_commandBuffer);
 }
 
 void VulkanCommandList::SetPipelineState(IGfxPipelineState* state)
