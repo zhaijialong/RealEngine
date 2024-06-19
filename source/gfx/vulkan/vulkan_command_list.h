@@ -85,8 +85,11 @@ private:
     eastl::vector<VkCommandBuffer> m_freeCommandBuffers;
     eastl::vector<VkCommandBuffer> m_pendingCommandBuffers;
 
+    eastl::vector<VkMemoryBarrier2> m_memoryBarriers;
+    eastl::vector<VkBufferMemoryBarrier2> m_bufferBarriers;
+    eastl::vector<VkImageMemoryBarrier2> m_imageBarriers;
+
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingWaits;
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
-
     eastl::vector<IGfxSwapchain*> m_pendingSwapchain;
 };

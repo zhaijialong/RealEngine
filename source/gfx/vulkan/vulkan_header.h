@@ -6,6 +6,7 @@
 #include "vma/vk_mem_alloc.h"
 
 #include "../gfx_defines.h"
+#include "utils/assert.h"
 
 template<typename T>
 inline void SetDebugName(VkDevice device, VkObjectType type, T object, const char* name)
@@ -215,4 +216,88 @@ inline VkImageCreateInfo ToVulkanImageCreateInfo(const GfxTextureDesc& desc)
     }
 
     return createInfo;
+}
+
+inline VkImageAspectFlags GetAspectFlags(GfxFormat format)
+{
+    VkImageAspectFlags aspectMask = 0;
+
+    if (format == GfxFormat::D32FS8)
+    {
+        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+    else if (format == GfxFormat::D32F || format == GfxFormat::D16)
+    {
+        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+    else
+    {
+        aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+
+    return aspectMask;
+}
+
+inline VkPipelineStageFlags2 GetStageMask(GfxAccessFlags flags)
+{
+    VkPipelineStageFlags2 stage = VK_PIPELINE_STAGE_2_NONE;
+
+    if (flags & GfxAccessPresent)         stage |= VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
+    if (flags & GfxAccessRTV)             stage |= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+    if (flags & GfxAccessMaskDSV)         stage |= VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
+    if (flags & GfxAccessMaskVS)          stage |= VK_PIPELINE_STAGE_2_TASK_SHADER_BIT_EXT | VK_PIPELINE_STAGE_2_MESH_SHADER_BIT_EXT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+    if (flags & GfxAccessMaskPS)          stage |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+    if (flags & GfxAccessMaskCS)          stage |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+    if (flags & GfxAccessMaskCopy)        stage |= VK_PIPELINE_STAGE_2_COPY_BIT;
+    if (flags & GfxAccessClearUAV)        stage |= VK_PIPELINE_STAGE_2_CLEAR_BIT;
+    if (flags & GfxAccessShadingRate)     stage |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR;
+    if (flags & GfxAccessIndexBuffer)     stage |= VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT;
+    if (flags & GfxAccessIndirectArgs)    stage |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT;
+    if (flags & GfxAccessMaskAS)          stage |= VK_PIPELINE_STAGE_2_ACCELERATION_STRUCTURE_BUILD_BIT_KHR;
+
+    return stage;
+}
+
+inline VkAccessFlags2 GetAccessMask(GfxAccessFlags flags)
+{
+    VkAccessFlags2 access = VK_ACCESS_2_NONE;
+
+    if (flags & GfxAccessDiscard)
+    {
+        return access;
+    }
+
+    if (flags & GfxAccessRTV)             access |= VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+    if (flags & GfxAccessDSV)             access |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    if (flags & GfxAccessDSVReadOnly)     access |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+    if (flags & GfxAccessMaskSRV)         access |= VK_ACCESS_2_SHADER_SAMPLED_READ_BIT | VK_ACCESS_2_SHADER_STORAGE_READ_BIT;
+    if (flags & GfxAccessMaskUAV)         access |= VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT;
+    if (flags & GfxAccessClearUAV)        access |= VK_ACCESS_2_TRANSFER_WRITE_BIT;
+    if (flags & GfxAccessCopyDst)         access |= VK_ACCESS_2_TRANSFER_WRITE_BIT;
+    if (flags & GfxAccessCopySrc)         access |= VK_ACCESS_2_TRANSFER_READ_BIT;
+    if (flags & GfxAccessShadingRate)     access |= VK_ACCESS_2_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR;
+    if (flags & GfxAccessIndexBuffer)     access |= VK_ACCESS_2_INDEX_READ_BIT;
+    if (flags & GfxAccessIndirectArgs)    access |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT;
+    if (flags & GfxAccessASRead)          access |= VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR;
+    if (flags & GfxAccessASWrite)         access |= VK_ACCESS_2_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
+
+    return access;
+}
+
+inline VkImageLayout GetImageLayout(GfxAccessFlags flags)
+{
+    if (flags & GfxAccessDiscard)         return VK_IMAGE_LAYOUT_UNDEFINED;
+    if (flags & GfxAccessPresent)         return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    if (flags & GfxAccessRTV)             return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    if (flags & GfxAccessDSV)             return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    if (flags & GfxAccessDSVReadOnly)     return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+    if (flags & GfxAccessMaskSRV)         return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (flags & GfxAccessMaskUAV)         return VK_IMAGE_LAYOUT_GENERAL;
+    if (flags & GfxAccessClearUAV)        return VK_IMAGE_LAYOUT_GENERAL;
+    if (flags & GfxAccessCopyDst)         return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    if (flags & GfxAccessCopySrc)         return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    if (flags & GfxAccessShadingRate)     return VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR;
+
+    RE_ASSERT(false);
+    return VK_IMAGE_LAYOUT_UNDEFINED;
 }

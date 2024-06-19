@@ -2,6 +2,7 @@
 #include "vulkan_device.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_fence.h"
+#include "vulkan_texture.h"
 #include "utils/profiler.h"
 
 VulkanCommandList::VulkanCommandList(VulkanDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
@@ -196,30 +197,37 @@ void VulkanCommandList::EndEvent()
 
 void VulkanCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, uint32_t offset, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
@@ -228,6 +236,21 @@ void VulkanCommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap,
 
 void VulkanCommandList::TextureBarrier(IGfxTexture* texture, uint32_t sub_resource, GfxAccessFlags access_before, GfxAccessFlags access_after)
 {
+    VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+    barrier.image = (VkImage)texture->GetHandle();
+    barrier.srcStageMask = GetStageMask(access_before);
+    barrier.dstStageMask = GetStageMask(access_after);
+    barrier.srcAccessMask = GetAccessMask(access_before);
+    barrier.dstAccessMask = GetAccessMask(access_after);
+    barrier.oldLayout = GetImageLayout(access_before);
+    barrier.newLayout = GetImageLayout(access_after);
+    barrier.subresourceRange.aspectMask = GetAspectFlags(texture->GetDesc().format);
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+
+    m_imageBarriers.push_back(barrier);
 }
 
 void VulkanCommandList::BufferBarrier(IGfxBuffer* buffer, GfxAccessFlags access_before, GfxAccessFlags access_after)
@@ -240,10 +263,27 @@ void VulkanCommandList::GlobalBarrier(GfxAccessFlags access_before, GfxAccessFla
 
 void VulkanCommandList::FlushBarriers()
 {
+    if (!m_memoryBarriers.empty() || !m_bufferBarriers.empty() || !m_imageBarriers.empty())
+    {
+        VkDependencyInfo info = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+        info.memoryBarrierCount = (uint32_t)m_memoryBarriers.size();
+        info.pMemoryBarriers = m_memoryBarriers.data();
+        info.bufferMemoryBarrierCount = (uint32_t)m_bufferBarriers.size();
+        info.pBufferMemoryBarriers = m_bufferBarriers.data();
+        info.imageMemoryBarrierCount = (uint32_t)m_imageBarriers.size();
+        info.pImageMemoryBarriers = m_imageBarriers.data();
+
+        vkCmdPipelineBarrier2(m_commandBuffer, &info);
+
+        m_memoryBarriers.clear();
+        m_bufferBarriers.clear();
+        m_imageBarriers.clear();
+    }
 }
 
 void VulkanCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::EndRenderPass()
@@ -292,6 +332,7 @@ void VulkanCommandList::DrawIndexed(uint32_t index_count, uint32_t instance_coun
 
 void VulkanCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
@@ -308,6 +349,7 @@ void VulkanCommandList::DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset)
 
 void VulkanCommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset)
@@ -332,14 +374,17 @@ void VulkanCommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer
 
 void VulkanCommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
 {
+    FlushBarriers();
 }
 
 void VulkanCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
 {
+    FlushBarriers();
 }
 
 #if MICROPROFILE_GPU_TIMERS
