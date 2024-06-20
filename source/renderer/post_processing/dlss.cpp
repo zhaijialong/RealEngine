@@ -117,7 +117,7 @@ RGHandle DLSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
             NVSDK_NGX_Result result = NGX_D3D12_EVALUATE_DLSS_EXT((ID3D12GraphicsCommandList*)pCommandList->GetHandle(), m_dlssFeature, m_ngxParameters, &dlssEvalParams);
             RE_ASSERT(NVSDK_NGX_SUCCEED(result));
 
-            pCommandList->ClearState();
+            pCommandList->ResetState();
             m_pRenderer->SetupGlobalConstants(pCommandList);
         });
 
@@ -153,6 +153,11 @@ void DLSS::OnWindowResize(void* window, uint32_t width, uint32_t height)
 bool DLSS::InitializeNGX()
 {
     if (m_pRenderer->GetDevice()->GetVendor() != GfxVendor::Nvidia)
+    {
+        return false;
+    }
+
+    if (m_pRenderer->GetDevice()->GetDesc().backend != GfxRenderBackend::D3D12) //todo : vulkan
     {
         return false;
     }

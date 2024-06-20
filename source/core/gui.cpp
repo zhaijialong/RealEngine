@@ -62,7 +62,7 @@ bool GUI::Init()
     psoDesc.blend_state[0].color_dst = GfxBlendFactor::InvSrcAlpha;
     psoDesc.blend_state[0].alpha_src = GfxBlendFactor::One;
     psoDesc.blend_state[0].alpha_dst = GfxBlendFactor::InvSrcAlpha;
-    psoDesc.rt_format[0] = pRenderer->GetSwapchain()->GetBackBuffer()->GetDesc().format;
+    psoDesc.rt_format[0] = pRenderer->GetSwapchain()->GetDesc().backbuffer_format;
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "GUI PSO");
 
     return true;

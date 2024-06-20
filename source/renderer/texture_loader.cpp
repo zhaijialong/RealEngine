@@ -217,10 +217,11 @@ bool TextureLoader::LoadSTB(bool srgb)
 
     bool isHDR = stbi_is_hdr_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size());
     bool is16Bits = stbi_is_16_bit_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size());
+    int desired_channels = comp == 3 ? 4 : 0;
 
     if (isHDR)
     {
-        m_pDecompressedData = stbi_loadf_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, 0);
+        m_pDecompressedData = stbi_loadf_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, desired_channels);
 
         switch (comp)
         {
@@ -231,8 +232,6 @@ bool TextureLoader::LoadSTB(bool srgb)
             m_format = GfxFormat::RG32F;
             break;
         case 3:
-            m_format = GfxFormat::RGB32F;
-            break;
         case 4:
             m_format = GfxFormat::RGBA32F;
             break;
@@ -243,7 +242,6 @@ bool TextureLoader::LoadSTB(bool srgb)
     }
     else if (is16Bits)
     {
-        int desired_channels = comp == 3 ? 4 : 0;
         m_pDecompressedData = stbi_load_16_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, desired_channels);
 
         switch (comp)
@@ -265,7 +263,6 @@ bool TextureLoader::LoadSTB(bool srgb)
     }
     else
     {
-        int desired_channels = comp == 3 ? 4 : 0;
         m_pDecompressedData = stbi_load_from_memory((stbi_uc*)m_fileData.data(), (int)m_fileData.size(), &x, &y, &comp, desired_channels);
 
         switch (comp)

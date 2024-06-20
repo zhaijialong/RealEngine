@@ -62,16 +62,43 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/metal/metal_swapchain.h
     ${SOURCE_ROOT}/gfx/metal/metal_texture.cpp
     ${SOURCE_ROOT}/gfx/metal/metal_texture.h
+    ${SOURCE_ROOT}/gfx/mock/mock_buffer.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_buffer.h
+    ${SOURCE_ROOT}/gfx/mock/mock_command_list.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_command_list.h
+    ${SOURCE_ROOT}/gfx/mock/mock_descriptor.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_descriptor.h
+    ${SOURCE_ROOT}/gfx/mock/mock_device.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_device.h
+    ${SOURCE_ROOT}/gfx/mock/mock_fence.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_fence.h
+    ${SOURCE_ROOT}/gfx/mock/mock_heap.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_heap.h
+    ${SOURCE_ROOT}/gfx/mock/mock_pipeline_state.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_pipeline_state.h
+    ${SOURCE_ROOT}/gfx/mock/mock_rt_blas.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_rt_blas.h
+    ${SOURCE_ROOT}/gfx/mock/mock_rt_tlas.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_rt_tlas.h
+    ${SOURCE_ROOT}/gfx/mock/mock_shader.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_shader.h
+    ${SOURCE_ROOT}/gfx/mock/mock_swapchain.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_swapchain.h
+    ${SOURCE_ROOT}/gfx/mock/mock_texture.cpp
+    ${SOURCE_ROOT}/gfx/mock/mock_texture.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_buffer.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_buffer.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_command_list.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_command_list.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_deletion_queue.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_deletion_queue.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_device.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_device.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_fence.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_fence.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_header.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_heap.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_heap.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_pipeline_state.cpp

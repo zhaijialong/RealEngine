@@ -31,18 +31,25 @@ XeSS::XeSS(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
-    ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
-    xess_result_t result = xessD3D12CreateContext(device, &m_context);
-    RE_ASSERT(result == XESS_RESULT_SUCCESS);
+    IGfxDevice* pDevice = m_pRenderer->GetDevice();
+    if (pDevice->GetDesc().backend == GfxRenderBackend::D3D12)
+    {
+        ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
+        xess_result_t result = xessD3D12CreateContext(device, &m_context);
+        RE_ASSERT(result == XESS_RESULT_SUCCESS);
 
-    xessSetLoggingCallback(m_context, XESS_LOGGING_LEVEL_DEBUG, XeSSLog);
+        xessSetLoggingCallback(m_context, XESS_LOGGING_LEVEL_DEBUG, XeSSLog);
+    }
 
     Engine::GetInstance()->WindowResizeSignal.connect(&XeSS::OnWindowResize, this);
 }
 
 XeSS::~XeSS()
 {
-    xessDestroyContext(m_context);
+    if (m_context)
+    {
+        xessDestroyContext(m_context);
+    }
 }
 
 RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
@@ -125,7 +132,7 @@ RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
             xess_result_t result = xessD3D12Execute(m_context, (ID3D12GraphicsCommandList*)pCommandList->GetHandle(), &params);
             RE_ASSERT(result == XESS_RESULT_SUCCESS);
 
-            pCommandList->ClearState();
+            pCommandList->ResetState();
             m_pRenderer->SetupGlobalConstants(pCommandList);
         });
 

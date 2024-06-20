@@ -20,11 +20,14 @@ class IGfxDevice
 public:
     virtual ~IGfxDevice() {}
 
+    const GfxDeviceDesc& GetDesc() const { return m_desc; }
+    uint64_t GetFrameID() const { return m_frameID; }
+    GfxVendor GetVendor() const { return m_vendor; }
+
+    virtual bool Create() = 0;
+    virtual void* GetHandle() const = 0;
     virtual void BeginFrame() = 0;
     virtual void EndFrame() = 0;
-    virtual uint64_t GetFrameID() const = 0;
-    virtual void* GetHandle() const = 0;
-    virtual GfxVendor GetVendor() const = 0;
 
     virtual IGfxSwapchain* CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name) = 0;
     virtual IGfxCommandList* CreateCommandList(GfxCommandQueue queue_type, const eastl::string& name) = 0;
@@ -45,4 +48,9 @@ public:
 
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) = 0;
     virtual bool DumpMemoryStats(const eastl::string& file) = 0;
+
+protected:
+    GfxDeviceDesc m_desc;
+    GfxVendor m_vendor = GfxVendor::Unkown;
+    uint64_t m_frameID = 0;
 };

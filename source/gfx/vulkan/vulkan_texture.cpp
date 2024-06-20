@@ -1,1 +1,146 @@
 #include "vulkan_texture.h"
+#include "vulkan_device.h"
+#include "vulkan_heap.h"
+#include "utils/log.h"
+#include "utils/assert.h"
+
+VulkanTexture::VulkanTexture(VulkanDevice* pDevice, const GfxTextureDesc& desc, const eastl::string& name)
+{
+    m_pDevice = pDevice;
+    m_desc = desc;
+    m_name = name;
+}
+
+VulkanTexture::~VulkanTexture()
+{
+    VulkanDevice* pDevice = (VulkanDevice*)m_pDevice;
+    pDevice->CancelDefaultLayoutTransition(this);
+
+    if (!m_bSwapchainImage)
+    {
+        pDevice->Delete(m_image);
+        pDevice->Delete(m_allocation);
+    }
+
+    for (size_t i = 0; i < m_renderViews.size(); ++i)
+    {
+        pDevice->Delete(m_renderViews[i]);
+    }
+}
+
+bool VulkanTexture::Create()
+{
+    VkDevice device = ((VulkanDevice*)m_pDevice)->GetDevice();
+    VmaAllocator allocator = ((VulkanDevice*)m_pDevice)->GetVmaAllocator();
+
+    VkImageCreateInfo createInfo = ToVulkanImageCreateInfo(m_desc);
+
+    VkResult result;
+
+    if (m_desc.heap != nullptr)
+    {
+        RE_ASSERT(m_desc.alloc_type == GfxAllocationType::Placed);
+        RE_ASSERT(m_desc.memory_type == m_desc.heap->GetDesc().memory_type);
+
+        result = vmaCreateAliasingImage2(allocator, (VmaAllocation)m_desc.heap->GetHandle(), (VkDeviceSize)m_desc.heap_offset, &createInfo, &m_image);
+    }
+    else
+    {
+        VmaAllocationCreateInfo allocationInfo = {};
+        allocationInfo.usage = ToVmaUsage(m_desc.memory_type);
+
+        if (m_desc.alloc_type == GfxAllocationType::Committed)
+        {
+            allocationInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        }
+
+        result = vmaCreateImage(allocator, &createInfo, &allocationInfo, &m_image, &m_allocation, nullptr);
+    }
+
+    if (result != VK_SUCCESS)
+    {
+        RE_ERROR("[VulkanTexture] failed to create {}", m_name);
+        return false;
+    }
+
+    SetDebugName(device, VK_OBJECT_TYPE_IMAGE, m_image, m_name.c_str());
+
+    if (m_allocation)
+    {
+        vmaSetAllocationName(allocator, m_allocation, m_name.c_str());
+    }
+
+    ((VulkanDevice*)m_pDevice)->EnqueueDefaultLayoutTransition(this);
+
+    return true;
+}
+
+bool VulkanTexture::Create(VkImage image)
+{
+    m_image = image;
+    m_bSwapchainImage = true;
+
+    SetDebugName((VkDevice)m_pDevice->GetHandle(), VK_OBJECT_TYPE_IMAGE, m_image, m_name.c_str());
+
+    ((VulkanDevice*)m_pDevice)->EnqueueDefaultLayoutTransition(this);
+
+    return true;
+}
+
+uint32_t VulkanTexture::GetRequiredStagingBufferSize() const
+{
+    //todo
+    return 0;
+}
+
+uint32_t VulkanTexture::GetRowPitch(uint32_t mip_level) const
+{
+    //todo
+    return 0;
+}
+
+GfxTilingDesc VulkanTexture::GetTilingDesc() const
+{
+    //todo
+    return GfxTilingDesc();
+}
+
+GfxSubresourceTilingDesc VulkanTexture::GetTilingDesc(uint32_t subresource) const
+{
+    //todo
+    return GfxSubresourceTilingDesc();
+}
+
+void* VulkanTexture::GetSharedHandle() const
+{
+    //todo
+    return nullptr;
+}
+
+VkImageView VulkanTexture::GetRenderView(uint32_t mip_slice, uint32_t array_slice)
+{
+    RE_ASSERT(m_desc.usage & (GfxTextureUsageRenderTarget | GfxTextureUsageDepthStencil));
+
+    if (m_renderViews.empty())
+    {
+        m_renderViews.resize(m_desc.mip_levels * m_desc.array_size);
+    }
+
+    uint32_t index = m_desc.mip_levels * array_slice + mip_slice;
+    if (m_renderViews[index] == VK_NULL_HANDLE)
+    {
+        VkImageViewCreateInfo createInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        createInfo.image = m_image;
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = ToVulkanFormat(m_desc.format, true);
+        createInfo.subresourceRange.aspectMask = GetAspectFlags(m_desc.format);
+        createInfo.subresourceRange.baseMipLevel = mip_slice;
+        createInfo.subresourceRange.baseArrayLayer = array_slice;
+        createInfo.subresourceRange.layerCount = 1;
+        createInfo.subresourceRange.levelCount = 1;
+
+        vkCreateImageView((VkDevice)m_pDevice->GetHandle(), &createInfo, nullptr, &m_renderViews[index]);
+    }
+
+    return m_renderViews[index];
+}

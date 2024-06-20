@@ -15,15 +15,15 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_pCommandList; }
-    virtual GfxCommandQueue GetQueue() const override { return m_queueType; }
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;
     virtual void End() override;
     virtual void Wait(IGfxFence* fence, uint64_t value) override;
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
+    virtual void Present(IGfxSwapchain* swapchain) override;
     virtual void Submit() override;
-    virtual void ClearState() override;
+    virtual void ResetState() override;
 
     virtual void BeginProfiling() override;
     virtual void EndProfiling() override;
@@ -83,7 +83,6 @@ private:
     void EndRenderPassEmulation();
 
 private:
-    GfxCommandQueue m_queueType;
     ID3D12CommandQueue* m_pCommandQueue = nullptr;
     ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
     ID3D12GraphicsCommandList7* m_pCommandList = nullptr;
@@ -97,6 +96,8 @@ private:
 
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingWaits;
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
+
+    eastl::vector<IGfxSwapchain*> m_pendingSwapchain;
 
 #if MICROPROFILE_GPU_TIMERS_D3D12
     struct MicroProfileThreadLogGpu* m_pProfileLog = nullptr;

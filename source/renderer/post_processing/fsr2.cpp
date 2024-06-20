@@ -115,7 +115,7 @@ RGHandle FSR2::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
             FfxErrorCode errorCode = ffxFsr2ContextDispatch(&m_context, &dispatchDesc);
             FFX_ASSERT(errorCode == FFX_OK);
 
-            pCommandList->ClearState();
+            pCommandList->ResetState();
             m_pRenderer->SetupGlobalConstants(pCommandList);
         });
 

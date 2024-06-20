@@ -196,7 +196,13 @@ IGfxCommandList* D3D12Device::CreateCommandList(GfxCommandQueue queue_type, cons
 
 IGfxShader* D3D12Device::CreateShader(const GfxShaderDesc& desc, eastl::span<uint8_t> data, const eastl::string& name)
 {
-    return new D3D12Shader(this, desc, data, name);
+    D3D12Shader* pShader = new D3D12Shader(this, desc, name);
+    if (!pShader->Create(data))
+    {
+        delete pShader;
+        return nullptr;
+    }
+    return pShader;
 }
 
 IGfxPipelineState* D3D12Device::CreateGraphicsPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
@@ -329,18 +335,18 @@ void D3D12Device::BeginFrame()
 {
     DoDeferredDeletion();
 
-    uint32_t index = m_nFrameID % GFX_MAX_INFLIGHT_FRAMES;
+    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
     m_pConstantBufferAllocators[index]->Reset();
 }
 
 void D3D12Device::EndFrame()
 {
-    ++m_nFrameID;
+    ++m_frameID;
 
-    m_pResourceAllocator->SetCurrentFrameIndex((UINT)m_nFrameID);
+    m_pResourceAllocator->SetCurrentFrameIndex((UINT)m_frameID);
 }
 
-bool D3D12Device::Init()
+bool D3D12Device::Create()
 {
     UINT dxgiFactoryFlags = 0;
 
@@ -494,7 +500,7 @@ D3D12_GPU_VIRTUAL_ADDRESS D3D12Device::AllocateConstantBuffer(const void* data, 
     void* cpu_address;
     uint64_t gpu_address;
 
-    uint32_t index = m_nFrameID % GFX_MAX_INFLIGHT_FRAMES;
+    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
     m_pConstantBufferAllocators[index]->Allocate((uint32_t)data_size, &cpu_address, &gpu_address);
 
     memcpy(cpu_address, data, data_size);
@@ -511,7 +517,7 @@ void D3D12Device::Delete(IUnknown* object)
 {
     if (object)
     {
-        m_deletionQueue.push({ object, m_nFrameID });
+        m_deletionQueue.push({ object, m_frameID });
     }
 }
 
@@ -519,7 +525,7 @@ void D3D12Device::Delete(D3D12MA::Allocation* allocation)
 {
     if (allocation)
     {
-        m_allocationDeletionQueue.push({ allocation, m_nFrameID });
+        m_allocationDeletionQueue.push({ allocation, m_frameID });
     }
 }
 
@@ -552,7 +558,7 @@ void D3D12Device::DeleteRTV(const D3D12Descriptor& descriptor)
 {
     if (!IsNullDescriptor(descriptor))
     {
-        m_rtvDeletionQueue.push({ descriptor, m_nFrameID });
+        m_rtvDeletionQueue.push({ descriptor, m_frameID });
     }
 }
 
@@ -560,7 +566,7 @@ void D3D12Device::DeleteDSV(const D3D12Descriptor& descriptor)
 {
     if (!IsNullDescriptor(descriptor))
     {
-        m_dsvDeletionQueue.push({ descriptor, m_nFrameID });
+        m_dsvDeletionQueue.push({ descriptor, m_frameID });
     }
 }
 
@@ -568,7 +574,7 @@ void D3D12Device::DeleteResourceDescriptor(const D3D12Descriptor& descriptor)
 {
     if (!IsNullDescriptor(descriptor))
     {
-        m_resourceDeletionQueue.push({ descriptor, m_nFrameID });
+        m_resourceDeletionQueue.push({ descriptor, m_frameID });
     }
 }
 
@@ -576,7 +582,7 @@ void D3D12Device::DeleteSampler(const D3D12Descriptor& descriptor)
 {
     if (!IsNullDescriptor(descriptor))
     {
-        m_samplerDeletionQueue.push({ descriptor, m_nFrameID });
+        m_samplerDeletionQueue.push({ descriptor, m_frameID });
     }
 }
 
@@ -584,7 +590,7 @@ void D3D12Device::DeleteNonShaderVisibleUAV(const D3D12Descriptor& descriptor)
 {
     if (!IsNullDescriptor(descriptor))
     {
-        m_nonShaderVisibleUAVDeletionQueue.push({ descriptor, m_nFrameID });
+        m_nonShaderVisibleUAVDeletionQueue.push({ descriptor, m_frameID });
     }
 }
 
@@ -593,7 +599,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_deletionQueue.empty())
     {
         auto item = m_deletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
         {
             break;
         }
@@ -605,7 +611,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_allocationDeletionQueue.empty())
     {
         auto item = m_allocationDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
         {
             break;
         }
@@ -617,7 +623,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_rtvDeletionQueue.empty())
     {
         auto item = m_rtvDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
         {
             break;
         }
@@ -629,7 +635,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_dsvDeletionQueue.empty())
     {
         auto item = m_dsvDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
         {
             break;
         }
@@ -641,7 +647,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_resourceDeletionQueue.empty())
     {
         auto item = m_resourceDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
         {
             break;
         }
@@ -653,7 +659,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_samplerDeletionQueue.empty())
     {
         auto item = m_samplerDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
         {
             break;
         }
@@ -665,7 +671,7 @@ void D3D12Device::DoDeferredDeletion(bool force_delete)
     while (!m_nonShaderVisibleUAVDeletionQueue.empty())
     {
         auto item = m_nonShaderVisibleUAVDeletionQueue.front();
-        if (!force_delete && item.frame + m_desc.max_frame_lag > m_nFrameID)
+        if (!force_delete && item.frame + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
         {
             break;
         }

@@ -37,12 +37,16 @@ Renderer::Renderer()
 Renderer::~Renderer()
 {
     WaitGpuFinished();
-    m_pRenderGraph->Clear();
+    
+    if (m_pRenderGraph)
+    {
+        m_pRenderGraph->Clear();
+    }
 
     Engine::GetInstance()->WindowResizeSignal.disconnect(this);
 }
 
-void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t window_height)
+bool Renderer::CreateDevice(GfxRenderBackend backend, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
     m_nDisplayWidth = window_width;
     m_nDisplayHeight = window_height;
@@ -50,12 +54,12 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_nRenderHeight = window_height;
 
     GfxDeviceDesc desc;
-    desc.max_frame_lag = GFX_MAX_INFLIGHT_FRAMES;
+    desc.backend = backend;
     m_pDevice.reset(CreateGfxDevice(desc));
     if (m_pDevice == nullptr)
     {
         RE_ERROR("[Renderer::CreateDevice] failed to create the gfx device.");
-        return;
+        return false;
     }
 
     GfxSwapchainDesc swapchainDesc;
@@ -103,6 +107,8 @@ void Renderer::CreateDevice(void* window_handle, uint32_t window_width, uint32_t
     m_pGpuStats = eastl::make_unique<GpuDrivenStats>(this);
     m_pPathTracer = eastl::make_unique<PathTracer>(this);
     m_pSkyCubeMap = eastl::make_unique<SkyCubeMap>(this);
+
+    return true;
 }
 
 void Renderer::RenderFrame()
@@ -446,6 +452,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
     m_pGpuDebugPrint->PrepareForDraw(pCommandList);
     m_pGpuDebugLine->PrepareForDraw(pCommandList);
 
+    m_pSwapchain->AcquireNextBackBuffer();
     pCommandList->TextureBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxAccessPresent, GfxAccessRTV);
 
     RGTexture* depthRT = m_pRenderGraph->GetTexture(depth);
@@ -510,13 +517,10 @@ void Renderer::EndFrame()
 
     m_nFrameFenceValue[frame_index] = ++m_nCurrentFrameFenceValue;
 
+    pCommandList->Present(m_pSwapchain.get());
     pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
     pCommandList->Submit();
     pCommandList->EndProfiling();
-    {
-        CPU_EVENT("Render", "IGfxSwapchain::Present");
-        m_pSwapchain->Present();
-    }
 
     m_pStagingBufferAllocator[frame_index]->Reset();
     m_cbAllocator->Reset();
@@ -532,7 +536,10 @@ void Renderer::EndFrame()
 
 void Renderer::WaitGpuFinished()
 {
-    m_pFrameFence->Wait(m_nCurrentFrameFenceValue);
+    if (m_pFrameFence)
+    {
+        m_pFrameFence->Wait(m_nCurrentFrameFenceValue);
+    }
 }
 
 void Renderer::RequestMouseHitTest(uint32_t x, uint32_t y)

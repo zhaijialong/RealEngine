@@ -6,15 +6,15 @@ class MetalCommandList : public IGfxCommandList
 {
 public:
     virtual void* GetHandle() const override;
-    virtual GfxCommandQueue GetQueue() const override;
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;
     virtual void End() override;
     virtual void Wait(IGfxFence* fence, uint64_t value) override;
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
+    virtual void Present(IGfxSwapchain* swapchain) override;
     virtual void Submit() override;
-    virtual void ClearState() override;
+    virtual void ResetState() override;
 
     virtual void BeginProfiling() override;
     virtual void EndProfiling() override;

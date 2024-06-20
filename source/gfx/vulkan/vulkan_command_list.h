@@ -1,20 +1,28 @@
 #pragma once
 
+#include "vulkan_header.h"
 #include "../gfx_command_list.h"
+
+class VulkanDevice;
 
 class VulkanCommandList : public IGfxCommandList
 {
 public:
-    virtual void* GetHandle() const override;
-    virtual GfxCommandQueue GetQueue() const override;
+    VulkanCommandList(VulkanDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name);
+    ~VulkanCommandList();
+
+    bool Create();
+
+    virtual void* GetHandle() const override { return m_commandBuffer; }
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;
     virtual void End() override;
     virtual void Wait(IGfxFence* fence, uint64_t value) override;
     virtual void Signal(IGfxFence* fence, uint64_t value) override;
+    virtual void Present(IGfxSwapchain* swapchain) override;
     virtual void Submit() override;
-    virtual void ClearState() override;
+    virtual void ResetState() override;
 
     virtual void BeginProfiling() override;
     virtual void EndProfiling() override;
@@ -68,4 +76,20 @@ public:
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;
 #endif
+
+private:
+    VkQueue m_queue = VK_NULL_HANDLE;
+    VkCommandPool m_commandPool = VK_NULL_HANDLE;
+    VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
+
+    eastl::vector<VkCommandBuffer> m_freeCommandBuffers;
+    eastl::vector<VkCommandBuffer> m_pendingCommandBuffers;
+
+    eastl::vector<VkMemoryBarrier2> m_memoryBarriers;
+    eastl::vector<VkBufferMemoryBarrier2> m_bufferBarriers;
+    eastl::vector<VkImageMemoryBarrier2> m_imageBarriers;
+
+    eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingWaits;
+    eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
+    eastl::vector<IGfxSwapchain*> m_pendingSwapchain;
 };

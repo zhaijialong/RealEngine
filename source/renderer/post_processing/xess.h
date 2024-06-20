@@ -22,7 +22,7 @@ private:
 private:
     Renderer* m_pRenderer = nullptr;
 
-    xess_context_handle_t m_context;
+    xess_context_handle_t m_context = nullptr;
     xess_quality_settings_t m_quality = XESS_QUALITY_SETTING_QUALITY;
     bool m_needInitialization = true;
 };

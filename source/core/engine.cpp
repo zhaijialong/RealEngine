@@ -6,9 +6,10 @@
 #include "rpmalloc/rpmalloc.h"
 #include "spdlog/sinks/msvc_sink.h"
 #include "spdlog/sinks/basic_file_sink.h"
-
+#include "magic_enum/magic_enum.hpp"
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
+#include "imgui/imgui.h"
 
 Engine* Engine::GetInstance()
 {
@@ -66,8 +67,11 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
     LoadEngineConfig();
 
     m_pRenderer = eastl::make_unique<Renderer>();
-    m_pRenderer->CreateDevice(window_handle, window_width, window_height);
     m_pRenderer->SetAsyncComputeEnabled(m_configIni.GetBoolValue("Render", "AsyncCompute"));
+    if (!m_pRenderer->CreateDevice(m_renderBackend, window_handle, window_width, window_height))
+    {
+        exit(0);
+    }
 
     m_pWorld = eastl::make_unique<World>();
     m_pWorld->LoadScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
@@ -102,10 +106,21 @@ void Engine::Tick()
     m_frameTime = (float)stm_sec(stm_laptime(&m_lastFrameTime));
 
     m_pGUI->Tick();
-    m_pEditor->Tick();
-    m_pWorld->Tick(m_frameTime);
 
-    m_pRenderer->RenderFrame();
+    ImGuiIO& io = ImGui::GetIO();
+    bool isMinimized = (io.DisplaySize.x <= 0.0f || io.DisplaySize.y <= 0.0f);
+
+    if (isMinimized)
+    {
+        ImGui::Render(); //this has to be called every frame
+    }
+    else
+    {
+        m_pEditor->Tick();
+        m_pWorld->Tick(m_frameTime);
+
+        m_pRenderer->RenderFrame();
+    }
 
     MicroProfileFlip(0);
 }
@@ -123,4 +138,7 @@ void Engine::LoadEngineConfig()
 
     m_assetPath = m_workPath + m_configIni.GetValue("RealEngine", "AssetPath");
     m_shaderPath = m_workPath + m_configIni.GetValue("RealEngine", "ShaderPath");
+
+    const char* backend = m_configIni.GetValue("Render", "Backend");
+    m_renderBackend = magic_enum::enum_cast<GfxRenderBackend>(backend).value_or(m_renderBackend);
 }

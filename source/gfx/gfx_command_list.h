@@ -10,21 +10,23 @@ class IGfxDescriptor;
 class IGfxPipelineState;
 class IGfxRayTracingBLAS;
 class IGfxRayTracingTLAS;
+class IGfxSwapchain;
 
 class IGfxCommandList : public IGfxResource
 {
 public:
     virtual ~IGfxCommandList() {}
 
-    virtual GfxCommandQueue GetQueue() const = 0;
+    GfxCommandQueue GetQueue() const { return m_queueType; }
 
     virtual void ResetAllocator() = 0;
     virtual void Begin() = 0;
     virtual void End() = 0;
     virtual void Wait(IGfxFence* fence, uint64_t value) = 0;
     virtual void Signal(IGfxFence* fence, uint64_t value) = 0;
+    virtual void Present(IGfxSwapchain* swapchain) = 0;
     virtual void Submit() = 0;
-    virtual void ClearState() = 0;
+    virtual void ResetState() = 0;
 
     virtual void BeginProfiling() = 0;
     virtual void EndProfiling() = 0;
@@ -78,4 +80,7 @@ public:
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const = 0;
 #endif
+
+protected:
+    GfxCommandQueue m_queueType;
 };

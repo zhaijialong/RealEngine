@@ -12,12 +12,13 @@ public:
     ~D3D12Swapchain();
 
     virtual void* GetHandle() const override { return m_pSwapChain; }
-    virtual bool Present() override;
+    virtual void AcquireNextBackBuffer() override;
+    virtual IGfxTexture* GetBackBuffer() const override;
     virtual bool Resize(uint32_t width, uint32_t height) override;
     virtual void SetVSyncEnabled(bool value) override { m_bEnableVsync = value; }
-    virtual IGfxTexture* GetBackBuffer() const override;
 
     bool Create();
+    bool Present();
 
 private:
     bool CreateTextures();
