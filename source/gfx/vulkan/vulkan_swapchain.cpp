@@ -3,6 +3,7 @@
 #include "vulkan_texture.h"
 #include "utils/log.h"
 #include "utils/assert.h"
+#include "../gfx.h"
 
 VulkanSwapchain::VulkanSwapchain(VulkanDevice* pDevice, const GfxSwapchainDesc& desc, const eastl::string& name)
 {
@@ -139,8 +140,15 @@ bool VulkanSwapchain::CreateSwapchain()
     VkDevice device = (VkDevice)m_pDevice->GetHandle();
     VkSwapchainKHR oldSwapchain = m_swapchain;
 
+    VkFormat viewFormats[2];
+    viewFormats[0] = ToVulkanFormat(m_desc.backbuffer_format);
+    viewFormats[1] = ToVulkanFormat(m_desc.backbuffer_format, true);
+
+    VkImageFormatListCreateInfo formatInfo = { VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO };
+    formatInfo.viewFormatCount = 2;
+    formatInfo.pViewFormats = viewFormats;
+
     VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-    createInfo.flags = VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
     createInfo.surface = m_surface;
     createInfo.minImageCount = m_desc.backbuffer_count;
     createInfo.imageFormat = ToVulkanFormat(m_desc.backbuffer_format);
@@ -155,6 +163,12 @@ bool VulkanSwapchain::CreateSwapchain()
     createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR; // todo
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = oldSwapchain;
+    
+    if (IsSRGBFormat(m_desc.backbuffer_format))
+    {
+        createInfo.pNext = &formatInfo;
+        createInfo.flags = VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
+    }
 
     VkResult result = vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_swapchain);
     if (result != VK_SUCCESS)

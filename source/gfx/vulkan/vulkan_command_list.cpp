@@ -199,6 +199,28 @@ void VulkanCommandList::EndEvent()
 void VulkanCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)
 {
     FlushBarriers();
+
+    const GfxTextureDesc& desc = dst_texture->GetDesc();
+
+    VkBufferImageCopy2 copy = { VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2 };
+    copy.bufferOffset = offset;
+    //copy.bufferRowLength
+    copy.imageSubresource.aspectMask = GetAspectFlags(desc.format);
+    copy.imageSubresource.mipLevel = mip_level;
+    copy.imageSubresource.baseArrayLayer = array_slice;
+    copy.imageSubresource.layerCount = 1;
+    copy.imageExtent.width = eastl::max(desc.width >> mip_level, 1u);
+    copy.imageExtent.height = eastl::max(desc.height >> mip_level, 1u);
+    copy.imageExtent.depth = eastl::max(desc.depth >> mip_level, 1u);
+
+    VkCopyBufferToImageInfo2 info = { VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2 };
+    info.srcBuffer = (VkBuffer)src_buffer->GetHandle();
+    info.dstImage = (VkImage)dst_texture->GetHandle();
+    info.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    info.regionCount = 1;
+    info.pRegions = &copy;
+
+    vkCmdCopyBufferToImage2(m_commandBuffer, &info);
 }
 
 void VulkanCommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, uint32_t offset, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
@@ -209,6 +231,19 @@ void VulkanCommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, uint32_t off
 void VulkanCommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size)
 {
     FlushBarriers();
+
+    VkBufferCopy2 copy = { VK_STRUCTURE_TYPE_BUFFER_COPY_2 };
+    copy.srcOffset = src_offset;
+    copy.dstOffset = dst_offset;
+    copy.size = size;
+
+    VkCopyBufferInfo2 info = { VK_STRUCTURE_TYPE_COPY_BUFFER_INFO_2 };
+    info.srcBuffer = (VkBuffer)src->GetHandle();
+    info.dstBuffer = (VkBuffer)dst->GetHandle();
+    info.regionCount = 1;
+    info.pRegions = &copy;
+
+    vkCmdCopyBuffer2(m_commandBuffer, &info);
 }
 
 void VulkanCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array)
@@ -256,10 +291,27 @@ void VulkanCommandList::TextureBarrier(IGfxTexture* texture, uint32_t sub_resour
 
 void VulkanCommandList::BufferBarrier(IGfxBuffer* buffer, GfxAccessFlags access_before, GfxAccessFlags access_after)
 {
+    VkBufferMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2 };
+    barrier.buffer = (VkBuffer)buffer->GetHandle();
+    barrier.offset = 0;
+    barrier.size = buffer->GetDesc().size;
+    barrier.srcStageMask = GetStageMask(access_before);
+    barrier.dstStageMask = GetStageMask(access_after);
+    barrier.srcAccessMask = GetAccessMask(access_before);
+    barrier.dstAccessMask = GetAccessMask(access_after);
+
+    m_bufferBarriers.push_back(barrier);
 }
 
 void VulkanCommandList::GlobalBarrier(GfxAccessFlags access_before, GfxAccessFlags access_after)
 {
+    VkMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+    barrier.srcStageMask = GetStageMask(access_before);
+    barrier.dstStageMask = GetStageMask(access_after);
+    barrier.srcAccessMask = GetAccessMask(access_before);
+    barrier.dstAccessMask = GetAccessMask(access_after);
+
+    m_memoryBarriers.push_back(barrier);
 }
 
 void VulkanCommandList::FlushBarriers()

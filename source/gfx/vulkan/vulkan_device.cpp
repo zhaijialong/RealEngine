@@ -32,6 +32,11 @@ VulkanDevice::VulkanDevice(const GfxDeviceDesc& desc)
 
 VulkanDevice::~VulkanDevice()
 {
+    for (size_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
+    {
+        delete m_transitionCopyCommandList[i];
+        delete m_transitionGraphicsCommandList[i];
+    }
     delete m_deferredDeletionQueue;
 
     vmaDestroyAllocator(m_vmaAllocator);
@@ -51,6 +56,12 @@ bool VulkanDevice::Create()
 
     m_deferredDeletionQueue = new VulkanDeletionQueue(this);
 
+    for (size_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
+    {
+        m_transitionCopyCommandList[i] = CreateCommandList(GfxCommandQueue::Copy, "Transition CommandList(Copy)");
+        m_transitionGraphicsCommandList[i] = CreateCommandList(GfxCommandQueue::Graphics, "Transition CommandList(Graphics)");
+    }
+
     return true;
 #undef CHECK_VK_RESULT
 }
@@ -58,6 +69,10 @@ bool VulkanDevice::Create()
 void VulkanDevice::BeginFrame()
 {
     m_deferredDeletionQueue->Flush();
+
+    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
+    m_transitionCopyCommandList[index]->ResetAllocator();
+    m_transitionGraphicsCommandList[index]->ResetAllocator();
 }
 
 void VulkanDevice::EndFrame()
@@ -380,6 +395,7 @@ VkResult VulkanDevice::CreateDevice()
     eastl::vector<const char*> required_extensions =
     {
         "VK_KHR_swapchain",
+        "VK_KHR_swapchain_mutable_format",
         "VK_KHR_maintenance1",
         "VK_KHR_maintenance2",
         "VK_KHR_maintenance3",
@@ -442,8 +458,13 @@ VkResult VulkanDevice::CreateDevice()
     dynamicRendering.pNext = &synchronization2;
     dynamicRendering.dynamicRendering = VK_TRUE;
 
+    VkPhysicalDeviceMeshShaderFeaturesEXT meshShader = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT };
+    meshShader.pNext = &dynamicRendering;
+    meshShader.meshShader = VK_TRUE;
+    meshShader.taskShader = VK_TRUE;
+
     VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    device_info.pNext = &dynamicRendering;
+    device_info.pNext = &meshShader;
     device_info.queueCreateInfoCount = 3;
     device_info.pQueueCreateInfos = queue_info;
     device_info.enabledExtensionCount = (uint32_t)required_extensions.size();
@@ -529,11 +550,100 @@ void VulkanDevice::FindQueueFamilyIndex()
     RE_ASSERT(m_computeQueueIndex != uint32_t(-1));
 }
 
-void VulkanDevice::DefaultLayoutTransition(IGfxTexture* texture)
+void VulkanDevice::EnqueueDefaultLayoutTransition(IGfxTexture* texture)
 {
+    // vulkan images is always in undefined layout after created, we translate them to default layouts which match d3d12 behaviors
+
+    const GfxTextureDesc& desc = texture->GetDesc();
+
+    if (((VulkanTexture*)texture)->IsSwapchainTexture())
+    {
+        m_pendingGraphicsTransitions.emplace_back(texture, GfxAccessPresent);
+    }
+    else if (desc.usage & GfxTextureUsageRenderTarget)
+    {
+        m_pendingGraphicsTransitions.emplace_back(texture, GfxAccessRTV);
+    }
+    else if (desc.usage & GfxTextureUsageDepthStencil)
+    {
+        m_pendingGraphicsTransitions.emplace_back(texture, GfxAccessDSV);
+    }
+    else if (desc.usage & GfxTextureUsageUnorderedAccess)
+    {
+        m_pendingGraphicsTransitions.emplace_back(texture, GfxAccessMaskUAV);
+    }
+    else
+    {
+        m_pendingCopyTransitions.emplace_back(texture, GfxAccessCopyDst);
+    }
+}
+
+void VulkanDevice::CancelDefaultLayoutTransition(IGfxTexture* texture)
+{
+    auto iter = eastl::find(m_pendingGraphicsTransitions.begin(), m_pendingGraphicsTransitions.end(), texture, 
+        [](const eastl::pair<IGfxTexture*, GfxAccessFlags>& transition, IGfxTexture* texture)
+        {
+            return transition.first == texture;
+        });
+
+    if (iter != m_pendingGraphicsTransitions.end())
+    {
+        m_pendingGraphicsTransitions.erase(iter);
+    }
+
+    iter = eastl::find(m_pendingCopyTransitions.begin(), m_pendingCopyTransitions.end(), texture,
+        [](const eastl::pair<IGfxTexture*, GfxAccessFlags>& transition, IGfxTexture* texture)
+        {
+            return transition.first == texture;
+        });
+
+    if (iter != m_pendingCopyTransitions.end())
+    {
+        m_pendingCopyTransitions.erase(iter);
+    }
 }
 
 void VulkanDevice::FlushLayoutTransition(GfxCommandQueue queue_type)
 {
+    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
 
+    if (queue_type == GfxCommandQueue::Graphics) // todo : compute queue ?
+    {
+        if (!m_pendingGraphicsTransitions.empty() || !m_pendingCopyTransitions.empty())
+        {
+            m_transitionGraphicsCommandList[index]->Begin();
+            
+            for (size_t i = 0; i < m_pendingGraphicsTransitions.size(); ++i)
+            {
+                m_transitionGraphicsCommandList[index]->TextureBarrier(m_pendingGraphicsTransitions[i].first, GFX_ALL_SUB_RESOURCE, GfxAccessDiscard, m_pendingGraphicsTransitions[i].second);
+            }
+            m_pendingGraphicsTransitions.clear();
+
+            for (size_t i = 0; i < m_pendingCopyTransitions.size(); ++i)
+            {
+                m_transitionGraphicsCommandList[index]->TextureBarrier(m_pendingCopyTransitions[i].first, GFX_ALL_SUB_RESOURCE, GfxAccessDiscard, m_pendingCopyTransitions[i].second);
+            }
+            m_pendingCopyTransitions.clear();
+
+            m_transitionGraphicsCommandList[index]->End();
+            m_transitionGraphicsCommandList[index]->Submit();
+        }
+    }
+    
+    if (queue_type == GfxCommandQueue::Copy)
+    {
+        if (!m_pendingCopyTransitions.empty())
+        {
+            m_transitionCopyCommandList[index]->Begin();
+
+            for (size_t i = 0; i < m_pendingCopyTransitions.size(); ++i)
+            {
+                m_transitionCopyCommandList[index]->TextureBarrier(m_pendingCopyTransitions[i].first, GFX_ALL_SUB_RESOURCE, GfxAccessDiscard, m_pendingCopyTransitions[i].second);
+            }
+            m_pendingCopyTransitions.clear();
+
+            m_transitionCopyCommandList[index]->End();
+            m_transitionCopyCommandList[index]->Submit();
+        }
+    }
 }

@@ -63,7 +63,8 @@ public:
     template<typename T>
     void Delete(T objectHandle);
 
-    void DefaultLayoutTransition(IGfxTexture* texture);
+    void EnqueueDefaultLayoutTransition(IGfxTexture* texture);
+    void CancelDefaultLayoutTransition(IGfxTexture* texture);
     void FlushLayoutTransition(GfxCommandQueue queue_type);
 
 private:
@@ -87,6 +88,11 @@ private:
     VkQueue m_copyQueue = VK_NULL_HANDLE;
 
     VulkanDeletionQueue* m_deferredDeletionQueue = nullptr;
+    IGfxCommandList* m_transitionCopyCommandList[GFX_MAX_INFLIGHT_FRAMES] = {};
+    IGfxCommandList* m_transitionGraphicsCommandList[GFX_MAX_INFLIGHT_FRAMES] = {};
+
+    eastl::vector<eastl::pair<IGfxTexture*, GfxAccessFlags>> m_pendingGraphicsTransitions;
+    eastl::vector<eastl::pair<IGfxTexture*, GfxAccessFlags>> m_pendingCopyTransitions;
 
     eastl::hash_map<GfxTextureDesc, uint32_t> m_textureSizeMap;
 };

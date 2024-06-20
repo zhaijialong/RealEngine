@@ -14,6 +14,7 @@ VulkanTexture::VulkanTexture(VulkanDevice* pDevice, const GfxTextureDesc& desc, 
 VulkanTexture::~VulkanTexture()
 {
     VulkanDevice* pDevice = (VulkanDevice*)m_pDevice;
+    pDevice->CancelDefaultLayoutTransition(this);
 
     if (!m_bSwapchainImage)
     {
@@ -69,7 +70,7 @@ bool VulkanTexture::Create()
         vmaSetAllocationName(allocator, m_allocation, m_name.c_str());
     }
 
-    ((VulkanDevice*)m_pDevice)->DefaultLayoutTransition(this);
+    ((VulkanDevice*)m_pDevice)->EnqueueDefaultLayoutTransition(this);
 
     return true;
 }
@@ -81,7 +82,7 @@ bool VulkanTexture::Create(VkImage image)
 
     SetDebugName((VkDevice)m_pDevice->GetHandle(), VK_OBJECT_TYPE_IMAGE, m_image, m_name.c_str());
 
-    ((VulkanDevice*)m_pDevice)->DefaultLayoutTransition(this);
+    ((VulkanDevice*)m_pDevice)->EnqueueDefaultLayoutTransition(this);
 
     return true;
 }
