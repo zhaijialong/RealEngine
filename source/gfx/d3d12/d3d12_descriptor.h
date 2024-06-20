@@ -46,7 +46,6 @@ private:
 class D3D12ConstantBufferView : public IGfxDescriptor
 {
 public:
-public:
     D3D12ConstantBufferView(D3D12Device* pDevice, IGfxBuffer* buffer, const GfxConstantBufferViewDesc& desc, const eastl::string& name);
     ~D3D12ConstantBufferView();
 

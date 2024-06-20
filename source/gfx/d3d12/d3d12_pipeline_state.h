@@ -32,7 +32,6 @@ public:
     virtual bool Create() override;
 
 private:
-private:
     ID3D12PipelineState* m_pPipelineState = nullptr;
     GfxMeshShadingPipelineDesc m_desc;
 };

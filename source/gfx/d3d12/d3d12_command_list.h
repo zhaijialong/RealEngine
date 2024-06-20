@@ -3,13 +3,12 @@
 #include "d3d12_header.h"
 #include "../gfx_command_list.h"
 
-class IGfxDevice;
-class IGfxFence;
+class D3D12Device;
 
 class D3D12CommandList : public IGfxCommandList
 {
 public:
-    D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name);
+    D3D12CommandList(D3D12Device* pDevice, GfxCommandQueue queue_type, const eastl::string& name);
     ~D3D12CommandList();
 
     bool Create();

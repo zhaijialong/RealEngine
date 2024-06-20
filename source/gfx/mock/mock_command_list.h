@@ -2,9 +2,16 @@
 
 #include "../gfx_command_list.h"
 
+class MockDevice;
+
 class MockCommandList : public IGfxCommandList
 {
 public:
+    MockCommandList(MockDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name);
+    ~MockCommandList();
+
+    bool Create();
+
     virtual void* GetHandle() const override;
 
     virtual void ResetAllocator() override;

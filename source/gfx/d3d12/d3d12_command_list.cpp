@@ -15,7 +15,7 @@
 #include "utils/assert.h"
 #include "utils/profiler.h"
 
-D3D12CommandList::D3D12CommandList(IGfxDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
+D3D12CommandList::D3D12CommandList(D3D12Device* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
 {
     m_pDevice = pDevice;
     m_name = name;
