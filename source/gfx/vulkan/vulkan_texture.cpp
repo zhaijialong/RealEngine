@@ -3,6 +3,7 @@
 #include "vulkan_heap.h"
 #include "utils/log.h"
 #include "utils/assert.h"
+#include "../gfx.h"
 
 VulkanTexture::VulkanTexture(VulkanDevice* pDevice, const GfxTextureDesc& desc, const eastl::string& name)
 {
@@ -89,14 +90,19 @@ bool VulkanTexture::Create(VkImage image)
 
 uint32_t VulkanTexture::GetRequiredStagingBufferSize() const
 {
-    //todo
-    return 0;
+    VkMemoryRequirements requirements;
+    vkGetImageMemoryRequirements((VkDevice)m_pDevice->GetHandle(), m_image, &requirements);
+    return requirements.size;
 }
 
 uint32_t VulkanTexture::GetRowPitch(uint32_t mip_level) const
 {
-    //todo
-    return 0;
+    //vkGetImageSubresourceLayout is only valid for linear tiling
+
+    uint32_t min_width = GetFormatBlockWidth(m_desc.format);
+    uint32_t width = eastl::max(m_desc.width >> mip_level, min_width);
+
+    return GetFormatRowPitch(m_desc.format, width) * GetFormatBlockHeight(m_desc.format);
 }
 
 GfxTilingDesc VulkanTexture::GetTilingDesc() const

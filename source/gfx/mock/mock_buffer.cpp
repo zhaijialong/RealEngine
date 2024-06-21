@@ -19,8 +19,11 @@ MockBuffer::~MockBuffer()
 
 bool MockBuffer::Create()
 {
-    m_pCpuAddress = RE_ALLOC(m_desc.size);
-    memset(m_pCpuAddress, 0, m_desc.size);
+    if (m_desc.memory_type != GfxMemoryType::GpuOnly)
+    {
+        m_pCpuAddress = RE_ALLOC(m_desc.size);
+        memset(m_pCpuAddress, 0, m_desc.size);
+    }
 
     return true;
 }

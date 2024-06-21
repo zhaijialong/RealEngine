@@ -24,7 +24,7 @@ VulkanMeshShadingPipelineState::VulkanMeshShadingPipelineState(VulkanDevice* pDe
     m_pDevice = pDevice;
     m_name = name;
     m_desc = desc;
-    m_type = GfxPipelineType::Compute;
+    m_type = GfxPipelineType::MeshShading;
 }
 
 VulkanMeshShadingPipelineState::~VulkanMeshShadingPipelineState()
@@ -42,7 +42,7 @@ VulkanComputePipelineState::VulkanComputePipelineState(VulkanDevice* pDevice, co
     m_pDevice = pDevice;
     m_name = name;
     m_desc = desc;
-    m_type = GfxPipelineType::MeshShading;
+    m_type = GfxPipelineType::Compute;
 }
 
 VulkanComputePipelineState::~VulkanComputePipelineState()

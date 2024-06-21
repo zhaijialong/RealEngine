@@ -204,7 +204,6 @@ void VulkanCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t m
 
     VkBufferImageCopy2 copy = { VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2 };
     copy.bufferOffset = offset;
-    //copy.bufferRowLength
     copy.imageSubresource.aspectMask = GetAspectFlags(desc.format);
     copy.imageSubresource.mipLevel = mip_level;
     copy.imageSubresource.baseArrayLayer = array_slice;
@@ -226,6 +225,27 @@ void VulkanCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t m
 void VulkanCommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, uint32_t offset, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
 {
     FlushBarriers();
+
+    const GfxTextureDesc& desc = src_texture->GetDesc();
+
+    VkBufferImageCopy2 copy = { VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2 };
+    copy.bufferOffset = offset;
+    copy.imageSubresource.aspectMask = GetAspectFlags(desc.format);
+    copy.imageSubresource.mipLevel = mip_level;
+    copy.imageSubresource.baseArrayLayer = array_slice;
+    copy.imageSubresource.layerCount = 1;
+    copy.imageExtent.width = eastl::max(desc.width >> mip_level, 1u);
+    copy.imageExtent.height = eastl::max(desc.height >> mip_level, 1u);
+    copy.imageExtent.depth = eastl::max(desc.depth >> mip_level, 1u);
+
+    VkCopyImageToBufferInfo2 info = { VK_STRUCTURE_TYPE_COPY_IMAGE_TO_BUFFER_INFO_2 };
+    info.srcImage = (VkImage)src_texture->GetHandle();
+    info.srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    info.dstBuffer = (VkBuffer)dst_buffer->GetHandle();
+    info.regionCount = 1;
+    info.pRegions = &copy;
+
+    vkCmdCopyImageToBuffer2(m_commandBuffer, &info);
 }
 
 void VulkanCommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size)
@@ -249,21 +269,50 @@ void VulkanCommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuf
 void VulkanCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array)
 {
     FlushBarriers();
+
+    VkImageCopy2 copy = { VK_STRUCTURE_TYPE_IMAGE_COPY_2 };
+    copy.srcSubresource.aspectMask = GetAspectFlags(src->GetDesc().format);
+    copy.srcSubresource.mipLevel = src_mip;
+    copy.srcSubresource.baseArrayLayer = src_array;
+    copy.srcSubresource.layerCount = 1;
+    copy.dstSubresource.aspectMask = GetAspectFlags(dst->GetDesc().format);
+    copy.dstSubresource.mipLevel = dst_mip;
+    copy.dstSubresource.baseArrayLayer = dst_array;
+    copy.dstSubresource.layerCount = 1;
+    copy.extent.width = eastl::max(src->GetDesc().width >> src_mip, 1u);
+    copy.extent.height = eastl::max(src->GetDesc().height >> src_mip, 1u);
+    copy.extent.depth = eastl::max(src->GetDesc().depth >> src_mip, 1u);
+
+    VkCopyImageInfo2 info = { VK_STRUCTURE_TYPE_COPY_IMAGE_INFO_2 };
+    info.srcImage = (VkImage)src->GetHandle();
+    info.srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    info.dstImage = (VkImage)dst->GetHandle();
+    info.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    info.regionCount = 1;
+    info.pRegions = &copy;
+
+    vkCmdCopyImage2(m_commandBuffer, &info);
 }
 
 void VulkanCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
     FlushBarriers();
+
+    //todo : need a CS implementation
 }
 
 void VulkanCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
     FlushBarriers();
+
+    //todo : need a CS implementation
 }
 
 void VulkanCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
 {
     FlushBarriers();
+
+    vkCmdUpdateBuffer(m_commandBuffer, (VkBuffer)buffer->GetHandle(), offset, sizeof(uint32_t), &data);
 }
 
 void VulkanCommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
@@ -279,12 +328,26 @@ void VulkanCommandList::TextureBarrier(IGfxTexture* texture, uint32_t sub_resour
     barrier.srcAccessMask = GetAccessMask(access_before);
     barrier.dstAccessMask = GetAccessMask(access_after);
     barrier.oldLayout = GetImageLayout(access_before);
-    barrier.newLayout = GetImageLayout(access_after);
+    barrier.newLayout = GetImageLayout(access_after & ~GfxAccessDiscard); // new layout can't be undefined
     barrier.subresourceRange.aspectMask = GetAspectFlags(texture->GetDesc().format);
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+
+    if (sub_resource == GFX_ALL_SUB_RESOURCE)
+    {
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    }
+    else
+    {
+        uint32_t mip, slice;
+        DecomposeSubresource(texture->GetDesc(), sub_resource, mip, slice);
+
+        barrier.subresourceRange.baseMipLevel = mip;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = slice;
+        barrier.subresourceRange.layerCount = 1;
+    }
 
     m_imageBarriers.push_back(barrier);
 }
@@ -423,6 +486,8 @@ void VulkanCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     }
 
     vkCmdBeginRendering(m_commandBuffer, &info);
+
+    SetViewport(0, 0, width, height);
 }
 
 void VulkanCommandList::EndRenderPass()

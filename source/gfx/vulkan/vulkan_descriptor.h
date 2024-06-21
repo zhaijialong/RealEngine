@@ -2,6 +2,7 @@
 
 #include "vulkan_header.h"
 #include "../gfx_descriptor.h"
+#include "../gfx_buffer.h"
 
 class VulkanDevice;
 
@@ -13,7 +14,7 @@ public:
 
     bool Create();
 
-    virtual void* GetHandle() const override { return nullptr; }
+    virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
     virtual uint32_t GetHeapIndex() const override { return 0; }
 
 private:
@@ -29,7 +30,7 @@ public:
 
     bool Create();
 
-    virtual void* GetHandle() const override { return nullptr; }
+    virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
     virtual uint32_t GetHeapIndex() const override { return 0; }
 
 private:
@@ -45,7 +46,7 @@ public:
 
     bool Create();
 
-    virtual void* GetHandle() const override { return nullptr; }
+    virtual void* GetHandle() const override { return m_pBuffer->GetHandle(); }
     virtual uint32_t GetHeapIndex() const override { return 0; }
 
 private:

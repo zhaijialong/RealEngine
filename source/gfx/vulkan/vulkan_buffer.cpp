@@ -116,6 +116,7 @@ uint64_t VulkanBuffer::GetGpuAddress()
 
 uint32_t VulkanBuffer::GetRequiredStagingBufferSize() const
 {
-    //todo
-    return 0;
+    VkMemoryRequirements requirements;
+    vkGetBufferMemoryRequirements((VkDevice)m_pDevice->GetHandle(), m_buffer, &requirements);
+    return requirements.size;
 }

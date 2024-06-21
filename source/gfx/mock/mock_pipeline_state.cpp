@@ -28,7 +28,7 @@ MockMeshShadingPipelineState::MockMeshShadingPipelineState(MockDevice* pDevice, 
     m_pDevice = pDevice;
     m_name = name;
     m_desc = desc;
-    m_type = GfxPipelineType::Compute;
+    m_type = GfxPipelineType::MeshShading;
 }
 
 MockMeshShadingPipelineState::~MockMeshShadingPipelineState()
@@ -50,7 +50,7 @@ MockComputePipelineState::MockComputePipelineState(MockDevice* pDevice, const Gf
     m_pDevice = pDevice;
     m_name = name;
     m_desc = desc;
-    m_type = GfxPipelineType::MeshShading;
+    m_type = GfxPipelineType::Compute;
 }
 
 MockComputePipelineState::~MockComputePipelineState()
