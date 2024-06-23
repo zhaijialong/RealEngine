@@ -190,10 +190,15 @@ void VulkanCommandList::EndProfiling()
 
 void VulkanCommandList::BeginEvent(const eastl::string& event_name)
 {
+    VkDebugUtilsLabelEXT info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
+    info.pLabelName = event_name.c_str();
+
+    vkCmdBeginDebugUtilsLabelEXT(m_commandBuffer, &info);
 }
 
 void VulkanCommandList::EndEvent()
 {
+    vkCmdEndDebugUtilsLabelEXT(m_commandBuffer);
 }
 
 void VulkanCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)
@@ -501,22 +506,46 @@ void VulkanCommandList::SetPipelineState(IGfxPipelineState* state)
 
 void VulkanCommandList::SetStencilReference(uint8_t stencil)
 {
+    vkCmdSetStencilReference(m_commandBuffer, VK_STENCIL_FACE_FRONT_AND_BACK, stencil);
 }
 
 void VulkanCommandList::SetBlendFactor(const float* blend_factor)
 {
+    vkCmdSetBlendConstants(m_commandBuffer, blend_factor);
 }
 
 void VulkanCommandList::SetIndexBuffer(IGfxBuffer* buffer, uint32_t offset, GfxFormat format)
 {
+    VkIndexType type = format == GfxFormat::R16UI ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
+    vkCmdBindIndexBuffer(m_commandBuffer, (VkBuffer)buffer->GetHandle(), (VkDeviceSize)offset, type);
 }
 
 void VulkanCommandList::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
+    // negate the height and move the origin to the bottom left, to match d3d12's ndc space
+
+    VkViewport viewport;
+    viewport.x = x;
+    viewport.y = (float)height - (float)y;
+    viewport.width = width;
+    viewport.height = -(float)height;
+    viewport.minDepth = 0.0;
+    viewport.maxDepth = 1.0;
+
+    vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
+
+    SetScissorRect(x, y, width, height);
 }
 
 void VulkanCommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
+    VkRect2D scissor;
+    scissor.offset.x = x;
+    scissor.offset.y = y;
+    scissor.extent.width = width;
+    scissor.extent.height = height;
+
+    vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
 }
 
 void VulkanCommandList::SetGraphicsConstants(uint32_t slot, const void* data, size_t data_size)

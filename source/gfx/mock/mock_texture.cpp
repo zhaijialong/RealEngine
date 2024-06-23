@@ -41,8 +41,10 @@ uint32_t MockTexture::GetRequiredStagingBufferSize() const
 
 uint32_t MockTexture::GetRowPitch(uint32_t mip_level) const
 {
-    uint32_t width = eastl::max(m_desc.width >> mip_level, 1u);
-    return GetFormatRowPitch(m_desc.format, width);
+    uint32_t min_width = GetFormatBlockWidth(m_desc.format);
+    uint32_t width = eastl::max(m_desc.width >> mip_level, min_width);
+
+    return GetFormatRowPitch(m_desc.format, width) * GetFormatBlockHeight(m_desc.format);
 }
 
 GfxTilingDesc MockTexture::GetTilingDesc() const
