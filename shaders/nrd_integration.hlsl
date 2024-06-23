@@ -8,17 +8,27 @@ cbuffer PackNormalRoughnessCB : register(b0)
     uint c_packedNormalTexture;
 };
 
-[numthreads(8, 8, 1)]
-void pack_normal_roughness(uint3 dispatchThreadID : SV_DispatchThreadID)
+float4 pack_normal_roughness_vs(uint vertex_id : SV_VertexID) : SV_Position
+{
+    float4 pos;
+    pos.x = (float) (vertex_id / 2) * 4.0 - 1.0;
+    pos.y = (float) (vertex_id % 2) * 4.0 - 1.0;
+    pos.z = 0.0;
+    pos.w = 1.0;
+
+    return pos;
+}
+
+float4 pack_normal_roughness_ps(float4 pos : SV_Position) : SV_Target
 {
     Texture2D normalTexture = ResourceDescriptorHeap[c_normalTexture];
     RWTexture2D<float4> packedNormalTexture = ResourceDescriptorHeap[c_packedNormalTexture];
 
-    float4 normal = normalTexture[dispatchThreadID.xy];
+    float4 normal = normalTexture[int2(pos.xy)];
     float3 N = DecodeNormal(normal.xyz);
     float roughness = normal.w;
 
-    packedNormalTexture[dispatchThreadID.xy] = NRD_FrontEnd_PackNormalAndRoughness(N, roughness);
+    return NRD_FrontEnd_PackNormalAndRoughness(N, roughness);
 }
 
 cbuffer PackRadianceCB : register(b1)

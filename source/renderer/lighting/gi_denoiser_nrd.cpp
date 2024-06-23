@@ -11,10 +11,14 @@ GIDenoiserNRD::GIDenoiserNRD(Renderer* pRenderer)
     m_pReblurSettings->antilagIntensitySettings.enable = true;
     m_pReblurSettings->antilagIntensitySettings.sensitivityToDarkness = 0.01f;
 
-    GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_normal_roughness", "cs_6_6", {});
-    m_pPackNormalRoughnessPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - pack normal/roughness PSO");
+    GfxGraphicsPipelineDesc gfxPsoDesc;
+    gfxPsoDesc.vs = pRenderer->GetShader("nrd_integration.hlsl", "pack_normal_roughness_vs", "vs_6_6", {});
+    gfxPsoDesc.ps = pRenderer->GetShader("nrd_integration.hlsl", "pack_normal_roughness_ps", "ps_6_6", {});
+    gfxPsoDesc.depthstencil_state.depth_write = false;
+    gfxPsoDesc.rt_format[0] = GfxFormat::RGB10A2UNORM;
+    m_pPackNormalRoughnessPSO = pRenderer->GetPipelineState(gfxPsoDesc, "ReBlur - pack normal/roughness PSO");
 
+    GfxComputePipelineDesc psoDesc;
     psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_radiance_hitT", "cs_6_6", {});
     m_pPackRadianceHitTPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - pack radiance/hitT PSO");
 
@@ -55,7 +59,8 @@ RGHandle GIDenoiserNRD::AddPass(RenderGraph* pRenderGraph, RGHandle radiance, RG
         RGHandle packedNormal;
     };
 
-    auto pack_normal_pass = pRenderGraph->AddPass<PackNormalRoughnessData>("ReBLUR - pack normal/roughness", RenderPassType::Compute,
+    // nvidia vulkan drivers don't support rgb10a2 unorm UAV, so we are using a PS here
+    auto pack_normal_pass = pRenderGraph->AddPass<PackNormalRoughnessData>("ReBLUR - pack normal/roughness", RenderPassType::Graphics,
         [&](PackNormalRoughnessData& data, RGBuilder& builder)
         {
             data.normal = builder.Read(normal);
@@ -64,7 +69,9 @@ RGHandle GIDenoiserNRD::AddPass(RenderGraph* pRenderGraph, RGHandle radiance, RG
             desc.width = width;
             desc.height = height;
             desc.format = GfxFormat::RGB10A2UNORM;
-            data.packedNormal = builder.Write(builder.Create<RGTexture>(desc, "ReBlur - packed normal"));
+            data.packedNormal = builder.Create<RGTexture>(desc, "ReBlur - packed normal");
+
+            data.packedNormal = builder.WriteColor(0, data.packedNormal, 0, GfxRenderPassLoadOp::DontCare);
         },
         [=](const PackNormalRoughnessData& data, IGfxCommandList* pCommandList)
         {
@@ -248,10 +255,10 @@ void GIDenoiserNRD::PackNormalRoughness(IGfxCommandList* pCommandList, RGTexture
 {
     pCommandList->SetPipelineState(m_pPackNormalRoughnessPSO);
 
-    uint32_t cb[2] = { normal->GetSRV()->GetHeapIndex(), packedNormal->GetUAV()->GetHeapIndex() };
-    pCommandList->SetComputeConstants(0, cb, sizeof(cb));
+    uint32_t cb[1] = { normal->GetSRV()->GetHeapIndex() };
+    pCommandList->SetGraphicsConstants(0, cb, sizeof(cb));
 
-    pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+    pCommandList->Draw(3);
 }
 
 void GIDenoiserNRD::PackRadiance(IGfxCommandList* pCommandList, RGTexture* radiance, RGTexture* rayDirection, RGTexture* linearDepth, RGTexture* outputSH0, RGTexture* outputSH1, uint32_t width, uint32_t height)

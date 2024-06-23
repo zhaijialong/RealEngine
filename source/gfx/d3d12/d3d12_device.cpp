@@ -428,6 +428,14 @@ bool D3D12Device::Create()
     if (!capableDevice)
     {
         RE_ERROR("the device is not capable of running RealEngine.");
+        RE_INFO("SM 6.6 : {}", m_featureSupport.HighestShaderModel() >= D3D_SHADER_MODEL_6_6 ? "Yes" : "No");
+        RE_INFO("Resource Binding Tier 3 : {}", m_featureSupport.ResourceBindingTier() >= D3D12_RESOURCE_BINDING_TIER_3 ? "Yes" : "No");
+        RE_INFO("Raytracing Tier 1.1 : {}", m_featureSupport.RaytracingTier() >= D3D12_RAYTRACING_TIER_1_1 ? "Yes" : "No");
+        RE_INFO("Render Pass : {}", m_featureSupport.RenderPassesTier() >= D3D12_RENDER_PASS_TIER_0 ? "Yes" : "No");
+        RE_INFO("Mesh Shader : {}", m_featureSupport.MeshShaderTier() >= D3D12_MESH_SHADER_TIER_1 ? "Yes" : "No");
+        RE_INFO("Wave Ops : {}", m_featureSupport.WaveOps() ? "Yes" : "No");
+        RE_INFO("FP16 : {}", m_featureSupport.Native16BitShaderOpsSupported() ? "Yes" : "No");
+        RE_INFO("Enhanced Barrier : {}", m_featureSupport.EnhancedBarriersSupported() ? "Yes" : "No");
         return false;
     }
 
