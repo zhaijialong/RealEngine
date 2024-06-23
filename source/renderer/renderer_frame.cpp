@@ -239,11 +239,33 @@ void Renderer::ObjectIDPass(RGHandle& depth)
 
 void Renderer::CopyHistoryPass(RGHandle sceneDepth, RGHandle normal, RGHandle sceneColor)
 {
-    struct CopyPassData
+    struct CopyDepthPassData
     {
         RGHandle srcSceneDepthTexture;
         RGHandle dstSceneDepthTexture;
+    };
 
+    m_pRenderGraph->AddPass<CopyDepthPassData>("Copy History Depth Textures", RenderPassType::Compute,
+        [&](CopyDepthPassData& data, RGBuilder& builder)
+        {
+            data.srcSceneDepthTexture = builder.Read(sceneDepth);
+            data.dstSceneDepthTexture = builder.Write(m_prevSceneDepthHandle);
+
+            builder.SkipCulling();
+        },
+        [&](const CopyDepthPassData& data, IGfxCommandList* pCommandList)
+        {
+            RGTexture* srcSceneDepthTexture = m_pRenderGraph->GetTexture(data.srcSceneDepthTexture);
+
+            uint32_t cb[2] = { srcSceneDepthTexture->GetSRV()->GetHeapIndex(), m_pPrevSceneDepthTexture->GetUAV()->GetHeapIndex() };
+
+            pCommandList->SetPipelineState(m_pCopyDepthPSO);
+            pCommandList->SetComputeConstants(0, cb, sizeof(cb));
+            pCommandList->Dispatch(DivideRoudingUp(m_nRenderWidth, 8), DivideRoudingUp(m_nRenderHeight, 8), 1);
+        });
+
+    struct CopyPassData
+    {
         RGHandle srcNormalTexture;
         RGHandle dstNormalTexture;
 
@@ -254,9 +276,6 @@ void Renderer::CopyHistoryPass(RGHandle sceneDepth, RGHandle normal, RGHandle sc
     m_pRenderGraph->AddPass<CopyPassData>("Copy History Textures", RenderPassType::Copy,
         [&](CopyPassData& data, RGBuilder& builder)
         {
-            data.srcSceneDepthTexture = builder.Read(sceneDepth);
-            data.dstSceneDepthTexture = builder.Write(m_prevSceneDepthHandle);
-
             data.srcNormalTexture = builder.Read(normal);
             data.dstNormalTexture = builder.Write(m_prevNormalHandle);
 
@@ -267,11 +286,9 @@ void Renderer::CopyHistoryPass(RGHandle sceneDepth, RGHandle normal, RGHandle sc
         },
         [&](const CopyPassData& data, IGfxCommandList* pCommandList)
         {
-            RGTexture* srcSceneDepthTexture = m_pRenderGraph->GetTexture(data.srcSceneDepthTexture);
             RGTexture* srcNormalTexture = m_pRenderGraph->GetTexture(data.srcNormalTexture);
             RGTexture* srcSceneColorTexture = m_pRenderGraph->GetTexture(data.srcSceneColorTexture);
 
-            pCommandList->CopyTexture(m_pPrevSceneDepthTexture->GetTexture(), 0, 0, srcSceneDepthTexture->GetTexture(), 0, 0);
             pCommandList->CopyTexture(m_pPrevNormalTexture->GetTexture(), 0, 0, srcNormalTexture->GetTexture(), 0, 0);
             pCommandList->CopyTexture(m_pPrevSceneColorTexture->GetTexture(), 0, 0, srcSceneColorTexture->GetTexture(), 0, 0);
         });

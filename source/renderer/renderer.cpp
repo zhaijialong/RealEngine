@@ -369,7 +369,7 @@ void Renderer::ImportPrevFrameTextures()
         m_bHistoryValid = true;
     }
 
-    m_prevSceneDepthHandle = m_pRenderGraph->Import(m_pPrevSceneDepthTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
+    m_prevSceneDepthHandle = m_pRenderGraph->Import(m_pPrevSceneDepthTexture->GetTexture(), GfxAccessComputeUAV);
     m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
     m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
 
@@ -700,6 +700,10 @@ void Renderer::CreateCommonResources()
     psoDesc.rt_format[0] = m_pSwapchain->GetDesc().backbuffer_format;
     psoDesc.depthstencil_format = GfxFormat::D32F;
     m_pCopyColorDepthPSO = GetPipelineState(psoDesc, "Copy PSO");
+
+    GfxComputePipelineDesc computePsoDesc;
+    computePsoDesc.cs = GetShader("copy.hlsl", "cs_copy_depth", "cs_6_6", {});
+    m_pCopyDepthPSO = GetPipelineState(computePsoDesc, "Copy Depth PSO");
 }
 
 void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)

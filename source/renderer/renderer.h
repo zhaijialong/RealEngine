@@ -282,6 +282,7 @@ private:
 
     IGfxPipelineState* m_pCopyColorPSO = nullptr;
     IGfxPipelineState* m_pCopyColorDepthPSO = nullptr;
+    IGfxPipelineState* m_pCopyDepthPSO = nullptr;
 
     eastl::unique_ptr<class HZB> m_pHZB;
     eastl::unique_ptr<class BasePass> m_pBasePass;

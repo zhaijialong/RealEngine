@@ -42,3 +42,19 @@ float4 ps_main(VSOutput input
 
     return inputTexture.SampleLevel(pointSampler, input.uv, 0);
 }
+
+
+cbuffer CopyDepthTextureCB : register(b0)
+{
+    uint c_srcDepthTexture;
+    uint c_dstDepthTexture;
+}
+
+[numthreads(8, 8, 1)]
+void cs_copy_depth(uint2 dispatchThreadID : SV_DispatchThreadID)
+{
+    Texture2D<float> srcDepthTexture = ResourceDescriptorHeap[c_srcDepthTexture];
+    RWTexture2D<float> dstDepthTexture = ResourceDescriptorHeap[c_dstDepthTexture];
+    
+    dstDepthTexture[dispatchThreadID] = srcDepthTexture[dispatchThreadID];
+}
