@@ -333,7 +333,14 @@ void VulkanCommandList::TextureBarrier(IGfxTexture* texture, uint32_t sub_resour
     barrier.srcAccessMask = GetAccessMask(access_before);
     barrier.dstAccessMask = GetAccessMask(access_after);
     barrier.oldLayout = GetImageLayout(access_before);
-    barrier.newLayout = GetImageLayout(access_after & ~GfxAccessDiscard); // new layout can't be undefined
+    if (access_after & GfxAccessDiscard)
+    {
+        barrier.newLayout = barrier.oldLayout; // new layout can't be undefined
+    }
+    else
+    {
+        barrier.newLayout = GetImageLayout(access_after);
+    }
     barrier.subresourceRange.aspectMask = GetAspectFlags(texture->GetDesc().format);
 
     if (sub_resource == GFX_ALL_SUB_RESOURCE)
