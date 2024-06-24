@@ -32,20 +32,6 @@ set(USE_AVX512 OFF)
 add_subdirectory(${EXTERNAL_ROOT}/JoltPhysics/Build)
 set_target_properties(Jolt PROPERTIES FOLDER External)
 
-# NRD
-set(NRD_EMBEDS_SPIRV_SHADERS OFF)
-set(NRD_EMBEDS_DXIL_SHADERS ON)
-set(NRD_EMBEDS_DXBC_SHADERS OFF)
-set(DXC_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
-set(DXC_SPIRV_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
-set(NRD_SHADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD_Shaders)
-set(GLOBAL_BIN_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD)
-add_subdirectory(${EXTERNAL_ROOT}/RayTracingDenoiser)	
-set_target_properties(NRD PROPERTIES FOLDER	External)
-set_target_properties(NRD_Shaders PROPERTIES FOLDER External)
-set_target_properties(ShaderMake PROPERTIES FOLDER External)
-set_target_properties(ShaderMakeBlob PROPERTIES FOLDER External)
-
 # OffsetAllocator
 add_library(OffsetAllocator ${EXTERNAL_ROOT}/OffsetAllocator/offsetAllocator.cpp ${EXTERNAL_ROOT}/OffsetAllocator/offsetAllocator.hpp)
 set_target_properties(OffsetAllocator PROPERTIES FOLDER External CXX_STANDARD 20)
@@ -77,16 +63,34 @@ target_compile_definitions(RealEngine PUBLIC
     _CRT_SECURE_NO_WARNINGS
     NOMINMAX
 )
-target_link_libraries(RealEngine ws2_32 Jolt NRD OffsetAllocator)
+target_link_libraries(RealEngine ws2_32 Jolt OffsetAllocator)
 
-add_custom_command(
-    TARGET RealEngine POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/DLSS/lib/Windows_x86_64/rel/nvngx_dlss.dll ${REAL_ENGINE_ROOT}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/libxess.dll ${REAL_ENGINE_ROOT}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/igxess.dll ${REAL_ENGINE_ROOT}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX_Loader.dll ${REAL_ENGINE_ROOT}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX.dll ${REAL_ENGINE_ROOT}/bin
-)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    # NRD
+    set(NRD_EMBEDS_SPIRV_SHADERS OFF)
+    set(NRD_EMBEDS_DXIL_SHADERS ON)
+    set(NRD_EMBEDS_DXBC_SHADERS OFF)
+    set(DXC_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
+    set(DXC_SPIRV_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
+    set(NRD_SHADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD_Shaders)
+    set(GLOBAL_BIN_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD)
+    add_subdirectory(${EXTERNAL_ROOT}/RayTracingDenoiser)	
+    set_target_properties(NRD PROPERTIES FOLDER	External)
+    set_target_properties(NRD_Shaders PROPERTIES FOLDER External)
+    set_target_properties(ShaderMake PROPERTIES FOLDER External)
+    set_target_properties(ShaderMakeBlob PROPERTIES FOLDER External)
+
+    target_link_libraries(RealEngine NRD)
+
+    add_custom_command(
+        TARGET RealEngine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/DLSS/lib/Windows_x86_64/rel/nvngx_dlss.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/libxess.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/igxess.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX_Loader.dll ${REAL_ENGINE_ROOT}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX.dll ${REAL_ENGINE_ROOT}/bin
+    )
+endif()
 
 # oidn
 if(EXISTS ${EXTERNAL_ROOT}/oidn/include/OpenImageDenoise/oidn.h)
