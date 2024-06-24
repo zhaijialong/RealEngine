@@ -120,6 +120,7 @@ bool VulkanSwapchain::CreateSurface()
     VkInstance instance = ((VulkanDevice*)m_pDevice)->GetInstance();
     VkDevice device = (VkDevice)m_pDevice->GetHandle();
 
+#if defined(RE_PLATFORM_WINDOWS)
     VkWin32SurfaceCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
     createInfo.hinstance = GetModuleHandle(nullptr);
     createInfo.hwnd = (HWND)m_desc.window_handle;
@@ -129,7 +130,8 @@ bool VulkanSwapchain::CreateSurface()
     {
         return false;
     }
-
+#endif
+    
     SetDebugName(device, VK_OBJECT_TYPE_SURFACE_KHR, m_surface, m_name.c_str());
 
     return true;

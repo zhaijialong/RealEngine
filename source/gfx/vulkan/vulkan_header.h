@@ -1,12 +1,22 @@
 #pragma once
 
+#include "core/platform.h"
+#include "../gfx_defines.h"
+#include "utils/assert.h"
+
 #define VK_NO_PROTOTYPES
-#define VK_USE_PLATFORM_WIN32_KHR
+
+#if RE_PLATFORM_WINDOWS
+    #define VK_USE_PLATFORM_WIN32_KHR
+#elif RE_PLATFORM_MAC
+    #define VK_USE_PLATFORM_MACOS_MVK
+#elif RE_PLATFORM_IOS
+    #define VK_USE_PLATFORM_IOS_MVK
+#endif
+
 #include "volk/volk.h"
 #include "vma/vk_mem_alloc.h"
 
-#include "../gfx_defines.h"
-#include "utils/assert.h"
 
 template<typename T>
 inline void SetDebugName(VkDevice device, VkObjectType type, T object, const char* name)

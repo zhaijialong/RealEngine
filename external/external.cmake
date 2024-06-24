@@ -2,9 +2,6 @@ set(EXTERNAL_ROOT ${REAL_ENGINE_ROOT}/external)
 
 set(EXTERNAL_FILES
     ${EXTERNAL_ROOT}/external.cmake
-    ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.cpp
-    ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.h
-    ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.natvis
     ${EXTERNAL_ROOT}/EASTL/source/allocator_eastl.cpp
     ${EXTERNAL_ROOT}/EASTL/source/assert.cpp
     ${EXTERNAL_ROOT}/EASTL/source/atomic.cpp
@@ -22,24 +19,12 @@ set(EXTERNAL_FILES
     ${EXTERNAL_ROOT}/enkiTS/TaskScheduler_c.cpp
     ${EXTERNAL_ROOT}/enkiTS/TaskScheduler_c.h
     ${EXTERNAL_ROOT}/fmt/src/format.cc
-    ${EXTERNAL_ROOT}/FSR2/dx12/shaders/ffx_fsr2_shaders_dx12.cpp
-    ${EXTERNAL_ROOT}/FSR2/dx12/shaders/ffx_fsr2_shaders_dx12.h
-    ${EXTERNAL_ROOT}/FSR2/dx12/ffx_fsr2_dx12.cpp
-    ${EXTERNAL_ROOT}/FSR2/dx12/ffx_fsr2_dx12.h
-    ${EXTERNAL_ROOT}/FSR2/ffx_assert.cpp
-    ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
-    ${EXTERNAL_ROOT}/FSR2/ffx_fsr2.cpp
-    ${EXTERNAL_ROOT}/FSR2/ffx_fsr2.h
-    ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
-    ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
     ${EXTERNAL_ROOT}/ImFileDialog/ImFileDialog.cpp
     ${EXTERNAL_ROOT}/ImFileDialog/ImFileDialog.h
     ${EXTERNAL_ROOT}/imgui/imgui.cpp
     ${EXTERNAL_ROOT}/imgui/imgui.h
     ${EXTERNAL_ROOT}/imgui/imgui_demo.cpp
     ${EXTERNAL_ROOT}/imgui/imgui_draw.cpp
-    ${EXTERNAL_ROOT}/imgui/imgui_impl_win32.cpp
-    ${EXTERNAL_ROOT}/imgui/imgui_impl_win32.h
     ${EXTERNAL_ROOT}/imgui/imgui_internal.h
     ${EXTERNAL_ROOT}/imgui/imgui_tables.cpp
     ${EXTERNAL_ROOT}/imgui/imgui_widgets.cpp
@@ -79,5 +64,25 @@ set(EXTERNAL_FILES
     ${EXTERNAL_ROOT}/xxHash/xxhash.c
     ${EXTERNAL_ROOT}/xxHash/xxhash.h
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    list(APPEND ENGINE_SRC_FILES 
+        ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.cpp
+        ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.h
+        ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.natvis
+        ${EXTERNAL_ROOT}/FSR2/dx12/shaders/ffx_fsr2_shaders_dx12.cpp
+        ${EXTERNAL_ROOT}/FSR2/dx12/shaders/ffx_fsr2_shaders_dx12.h
+        ${EXTERNAL_ROOT}/FSR2/dx12/ffx_fsr2_dx12.cpp
+        ${EXTERNAL_ROOT}/FSR2/dx12/ffx_fsr2_dx12.h
+        ${EXTERNAL_ROOT}/FSR2/ffx_assert.cpp
+        ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
+        ${EXTERNAL_ROOT}/FSR2/ffx_fsr2.cpp
+        ${EXTERNAL_ROOT}/FSR2/ffx_fsr2.h
+        ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
+        ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
+        ${EXTERNAL_ROOT}/imgui/imgui_impl_win32.cpp
+        ${EXTERNAL_ROOT}/imgui/imgui_impl_win32.h
+    )
+endif()
 
 source_group(TREE ${EXTERNAL_ROOT} PREFIX external FILES ${EXTERNAL_FILES})
