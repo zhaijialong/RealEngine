@@ -1,4 +1,7 @@
 #include "fsr2.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "../renderer.h"
 #include "utils/gui_util.h"
 #include "FSR2/dx12/ffx_fsr2_dx12.h"
@@ -176,3 +179,5 @@ void FSR2::DestroyFsr2Context()
         m_desc.callbacks.scratchBuffer = nullptr;
     }
 }
+
+#endif // #if RE_PLATFORM_WINDOWS

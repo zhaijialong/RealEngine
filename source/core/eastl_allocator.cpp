@@ -1,4 +1,5 @@
 #include "EASTL/allocator.h"
+#include "platform.h"
 #if !MICROPROFILE_ENABLED
 #define STB_SPRINTF_IMPLEMENTATION
 #endif
@@ -94,6 +95,7 @@ int Vsnprintf8(char* p, size_t n, const char* pFormat, va_list arguments)
     return stbsp_vsnprintf(p, (int)n, pFormat, arguments);
 }
 
+#if RE_PLATFORM_WINDOWS
 int VsnprintfW(wchar_t* pDestination, size_t n, const wchar_t* pFormat, va_list arguments)
 {
 #ifdef _MSC_VER
@@ -102,3 +104,4 @@ int VsnprintfW(wchar_t* pDestination, size_t n, const wchar_t* pFormat, va_list 
     return vsnwprintf(pDestination, n, pFormat, arguments);
 #endif
 }
+#endif

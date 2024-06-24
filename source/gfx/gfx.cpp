@@ -1,10 +1,18 @@
 #include "gfx.h"
-#include "d3d12/d3d12_device.h"
+#include "core/platform.h"
 #include "vulkan/vulkan_device.h"
 #include "mock/mock_device.h"
 #include "utils/assert.h"
 #include "xxHash/xxhash.h"
 #include "microprofile/microprofile.h"
+
+#if RE_PLATFORM_WINDOWS
+#include "d3d12/d3d12_device.h"
+#endif
+
+#if RE_PLATFORM_MAC || RE_PLATFORM_IOS
+#include "metal/metal_device.h"
+#endif
 
 IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
 {
@@ -12,15 +20,19 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
 
     switch (desc.backend)
     {
+#if RE_PLATFORM_WINDOWS
     case GfxRenderBackend::D3D12:
         pDevice = new D3D12Device(desc);
         break;
+#endif
     case GfxRenderBackend::Vulkan:
         pDevice = new VulkanDevice(desc);
         break;
+#if RE_PLATFORM_MAC || RE_PLATFORM_IOS
     case GfxRenderBackend::Metal:
         // todo : pDevice = new MetalDevice(desc);
         break;
+#endif
     case GfxRenderBackend::Mock:
         pDevice = new MockDevice(desc);
         break;

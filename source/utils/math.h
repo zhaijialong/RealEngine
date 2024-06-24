@@ -1,6 +1,7 @@
 #pragma once
 
 #include "assert.h"
+#include "float.h" // for FLT_EPSILON
 #include "linalg/linalg.h"
 #include "hlslpp/hlsl++.h"
 
@@ -10,7 +11,7 @@ using namespace linalg::aliases;
 using uint = uint32_t;
 using quaternion = float4;
 
-static const float M_PI = 3.14159265f;
+static const float PI = 3.14159265f;
 
 #define ENABLE_HLSLPP 1
 

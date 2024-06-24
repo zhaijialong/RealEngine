@@ -17,7 +17,7 @@ static const float absorption = 0.2f;
 // https://en.wikipedia.org/wiki/Normal_distribution
 float NormalDistribution(float sigma, float x_mu)
 {
-    return expf(-0.5f * x_mu * x_mu / (sigma * sigma)) / (sqrtf(2.0f * M_PI) * sigma);
+    return expf(-0.5f * x_mu * x_mu / (sigma * sigma)) / (sqrtf(2.0f * PI) * sigma);
 }
 
 // https://en.wikipedia.org/wiki/Cubic_equation
@@ -80,8 +80,8 @@ struct CubicEquationSolver
                     float sqrtQ = sqrtf(-Q);
 
                     roots[0] = 2.0f * sqrtQ * cos(theta / 3.0f);
-                    roots[1] = 2.0f * sqrtQ * cos((theta + 2.0f * M_PI) / 3.0f);
-                    roots[2] = 2.0f * sqrtQ * cos((theta + 4.0f * M_PI) / 3.0f);
+                    roots[1] = 2.0f * sqrtQ * cos((theta + 2.0f * PI) / 3.0f);
+                    roots[2] = 2.0f * sqrtQ * cos((theta + 4.0f * PI) / 3.0f);
 
                     rootCount = 3;
                 }
@@ -176,7 +176,7 @@ float A(uint32_t p, float h, float perpendicularIOR, float parallelIOR)
 float DPhiDH(uint32_t p, float c, float h)
 {
     float gammaI = asin(h);
-    float dPhiDGammaI = (6.0f * p * c / M_PI - 2.0f) - 3.0f * 8.0f * p * c * gammaI * gammaI / (M_PI * M_PI * M_PI);
+    float dPhiDGammaI = (6.0f * p * c / PI - 2.0f) - 3.0f * 8.0f * p * c * gammaI * gammaI / (PI * PI * PI);
     float dGammaIDH = 1.0f / sqrtf(1.0f - h * h); //derivative of asin
 
     return dPhiDGammaI * dGammaIDH;
@@ -192,17 +192,17 @@ float Np(uint32_t p, float phi, float thetaD)
     //solve incident angles, Marschner's paper Equation 10
     float c = asin(1.0f / perpendicularIOR);
     cubicSolver.Solve(
-        -8.0f * p * c / (M_PI * M_PI * M_PI),
+        -8.0f * p * c / (PI * PI * PI),
         0.0f,
-        6.0f * p * c / M_PI - 2.0f,
-        p * M_PI - phi
+        6.0f * p * c / PI - 2.0f,
+        p * PI - phi
     );
 
     float N = 0.0f;
     for (uint32_t i = 0; i < cubicSolver.rootCount; ++i)
     {
         float gammaI = cubicSolver.roots[i];
-        if (p < 2 && abs(gammaI) > M_PI / 2.0f)
+        if (p < 2 && abs(gammaI) > PI / 2.0f)
         {
             continue;
         }

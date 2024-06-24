@@ -1,4 +1,7 @@
 #include "dlss.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "../renderer.h"
 #include "utils/gui_util.h"
 #include "nvsdk_ngx.h"
@@ -277,3 +280,5 @@ void DLSS::ReleaseDLSSFeatures()
         m_dlssFeature = nullptr;
     }
 }
+
+#endif // #if RE_PLATFORM_WINDOWS

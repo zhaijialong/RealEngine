@@ -3,7 +3,7 @@
 
 bool SkySphere::Create()
 {
-    const float M_PI = 3.141592653f;
+    const float PI = 3.141592653f;
 
     eastl::vector<float3> vertices;
     eastl::vector<uint16_t> indices;
@@ -14,13 +14,13 @@ bool SkySphere::Create()
 
     for (int latNumber = 0; latNumber <= latitudeBands; latNumber++)
     {
-        float theta = latNumber * M_PI / latitudeBands;
+        float theta = latNumber * PI / latitudeBands;
         float sinTheta = sin(theta);
         float cosTheta = cos(theta);
 
         for (int longNumber = 0; longNumber <= longitudeBands; longNumber++)
         {
-            float phi = longNumber * 2 * M_PI / longitudeBands;
+            float phi = longNumber * 2 * PI / longitudeBands;
             float sinPhi = sin(phi);
             float cosPhi = cos(phi);
 

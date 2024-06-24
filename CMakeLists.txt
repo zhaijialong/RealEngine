@@ -90,15 +90,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX_Loader.dll ${REAL_ENGINE_ROOT}/bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX.dll ${REAL_ENGINE_ROOT}/bin
     )
-endif()
 
-# oidn
-if(EXISTS ${EXTERNAL_ROOT}/oidn/include/OpenImageDenoise/oidn.h)
+    # oidn
+    if(EXISTS ${EXTERNAL_ROOT}/oidn/include/OpenImageDenoise/oidn.h)
     target_compile_definitions(RealEngine PUBLIC WITH_OIDN=1)
     target_include_directories(RealEngine PUBLIC ${EXTERNAL_ROOT}/oidn/include)
     target_link_directories(RealEngine PUBLIC ${EXTERNAL_ROOT}/oidn/lib)
     target_link_libraries(RealEngine OpenImageDenoise)
-    
+
     add_custom_command(
         TARGET RealEngine POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/OpenImageDenoise.dll ${REAL_ENGINE_ROOT}/bin
@@ -117,4 +116,5 @@ if(EXISTS ${EXTERNAL_ROOT}/oidn/include/OpenImageDenoise/oidn.h)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/tbbbind_2_0.dll ${REAL_ENGINE_ROOT}/bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/oidn/bin/tbbbind_2_5.dll ${REAL_ENGINE_ROOT}/bin
     )
+    endif()
 endif()

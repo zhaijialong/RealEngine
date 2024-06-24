@@ -1,4 +1,7 @@
 #include "xess.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "../renderer.h"
 #include "utils/gui_util.h"
 #include "utils/log.h"
@@ -171,3 +174,5 @@ void XeSS::InitializeXeSS(uint32_t displayWidth, uint32_t displayHeight)
         m_needInitialization = false;
     }
 }
+
+#endif // #if RE_PLATFORM_WINDOWS

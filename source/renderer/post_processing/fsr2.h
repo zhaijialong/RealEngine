@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/platform.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "../render_graph.h"
 #include "FSR2/ffx_fsr2.h"
 
@@ -31,3 +35,5 @@ private:
     float m_customUpscaleRatio = 1.0f;
     float m_sharpness = 0.5;
 };
+
+#endif // #if RE_PLATFORM_WINDOWS

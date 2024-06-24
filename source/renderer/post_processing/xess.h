@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/platform.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "../render_graph.h"
 #include "xess/xess.h"
 
@@ -26,3 +30,5 @@ private:
     xess_quality_settings_t m_quality = XESS_QUALITY_SETTING_QUALITY;
     bool m_needInitialization = true;
 };
+
+#endif // RE_PLATFORM_WINDOWS

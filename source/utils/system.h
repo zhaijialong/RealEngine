@@ -1,20 +1,30 @@
 #pragma once
 
 #include "string.h"
+#if RE_PLATFORM_WINDOWS
 #include <Windows.h>
+#endif
 
 inline uint32_t GetWindowWidth(void* window)
 {
+#if RE_PLATFORM_WINDOWS
     RECT rect;
     GetClientRect((HWND)window, &rect);
     return rect.right - rect.left;
+#else
+    return 0; //todo
+#endif
 }
 
 inline uint32_t GetWindowHeight(void* window)
 {
+#if RE_PLATFORM_WINDOWS
     RECT rect;
     GetClientRect((HWND)window, &rect);
     return rect.bottom - rect.top;
+#else
+    return 0; //todo
+#endif
 }
 
 inline int ExecuteCommand(const char* cmd)
@@ -63,5 +73,7 @@ inline int ExecuteCommand(const char* cmd)
 
 inline void SetCurrentThreadName(const eastl::string& name)
 {
+#if RE_PLATFORM_WINDOWS
     SetThreadDescription(GetCurrentThread(), string_to_wstring(name).c_str());
+#endif
 }

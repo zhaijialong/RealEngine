@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/platform.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "../render_graph.h"
 
 struct NVSDK_NGX_Parameter;
@@ -40,3 +44,5 @@ private:
     float m_customUpscaleRatio = 1.0f;
     float m_sharpness = 0.5f;
 };
+
+#endif // #if RE_PLATFORM_WINDOWS

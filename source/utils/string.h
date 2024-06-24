@@ -1,11 +1,16 @@
 #pragma once
 
-#include <Windows.h>
+#include "core/platform.h"
 #include "EASTL/string.h"
 #include "EASTL/vector.h"
 
+#if RE_PLATFORM_WINDOWS
+#include <Windows.h>
+#endif
+
 inline eastl::wstring string_to_wstring(const eastl::string& s)
 {
+#if RE_PLATFORM_WINDOWS
     DWORD size = MultiByteToWideChar(CP_ACP, 0, s.c_str(), -1, NULL, 0);
 
     eastl::wstring result;
@@ -14,10 +19,14 @@ inline eastl::wstring string_to_wstring(const eastl::string& s)
     MultiByteToWideChar(CP_ACP, 0, s.c_str(), -1, (LPWSTR)result.c_str(), size);
 
     return result;
+#else
+    return eastl::wstring(); //todo
+#endif
 }
 
 inline eastl::string wstring_to_string(const eastl::wstring& s)
 {
+#if RE_PLATFORM_WINDOWS
     DWORD size = WideCharToMultiByte(CP_ACP, 0, s.c_str(), -1, NULL, 0, NULL, FALSE);
 
     eastl::string result;
@@ -26,6 +35,9 @@ inline eastl::string wstring_to_string(const eastl::wstring& s)
     WideCharToMultiByte(CP_ACP, 0, s.c_str(), -1, (LPSTR)result.c_str(), size, NULL, FALSE);
 
     return result;
+#else
+    return eastl::string(); //todo
+#endif
 }
 
 inline void string_to_float_array(const eastl::string& str, eastl::vector<float>& output)
