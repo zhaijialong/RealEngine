@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../render_graph.h"
+#include "core/platform.h"
 
 class PostProcessor
 {
@@ -28,7 +29,9 @@ private:
     eastl::unique_ptr<class Tonemapper> m_pToneMapper;
     eastl::unique_ptr<class FXAA> m_pFXAA;
     eastl::unique_ptr<class CAS> m_pCAS;
+#if RE_PLATFORM_WINDOWS
     eastl::unique_ptr<class FSR2> m_pFSR2;
     eastl::unique_ptr<class DLSS> m_pDLSS;
     eastl::unique_ptr<class XeSS> m_pXeSS;
+#endif
 };

@@ -9,6 +9,8 @@ if(MSVC)
     add_definitions(-D_UNICODE)
     add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else()
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-extensions")
 endif()
 
 set(REAL_ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR})

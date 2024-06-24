@@ -25,9 +25,11 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
     m_pToneMapper = eastl::make_unique<Tonemapper>(pRenderer);
     m_pFXAA = eastl::make_unique<FXAA>(pRenderer);
     m_pCAS = eastl::make_unique<CAS>(pRenderer);
+#if RE_PLATFORM_WINDOWS
     m_pFSR2 = eastl::make_unique<FSR2>(pRenderer);
     m_pDLSS = eastl::make_unique<DLSS>(pRenderer);
     m_pXeSS = eastl::make_unique<XeSS>(pRenderer);
+#endif
 }
 
 PostProcessor::~PostProcessor() = default;
@@ -52,6 +54,7 @@ RGHandle PostProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT
     TemporalSuperResolution upscaleMode = m_pRenderer->GetTemporalUpscaleMode();
     switch (upscaleMode)
     {
+#if RE_PLATFORM_WINDOWS
     case TemporalSuperResolution::FSR2:
         outputHandle = m_pFSR2->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
         break;
@@ -61,6 +64,7 @@ RGHandle PostProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT
     case TemporalSuperResolution::XeSS:
         outputHandle = m_pXeSS->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
         break;
+#endif
     default:
         RE_ASSERT(renderWidth == displayWidth && renderHeight == displayHeight);
         outputHandle = m_pTAA->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, displayWidth, displayHeight);
@@ -93,20 +97,24 @@ bool PostProcessor::RequiresCameraJitter()
 
 void PostProcessor::UpdateUpsacleMode()
 {
+    
     GUI("PostProcess", "Temporal Super Resolution", [&]()
         {
             TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
             ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR2\0DLSS\0XeSS\0\0", (int)TemporalSuperResolution::Max);
 
+#if RE_PLATFORM_WINDOWS
             if (mode == TemporalSuperResolution::DLSS && !m_pDLSS->IsSupported())
             {
                 mode = TemporalSuperResolution::None;
             }
+#endif
 
             m_pRenderer->SetTemporalUpscaleMode(mode);
 
             switch (mode)
             {
+#if RE_PLATFORM_WINDOWS
             case TemporalSuperResolution::FSR2:
                 m_pRenderer->SetTemporalUpscaleRatio(m_pFSR2->GetUpscaleRatio());
                 break;
@@ -116,6 +124,7 @@ void PostProcessor::UpdateUpsacleMode()
             case TemporalSuperResolution::XeSS:
                 m_pRenderer->SetTemporalUpscaleRatio(m_pXeSS->GetUpscaleRatio(m_pRenderer->GetDisplayWidth(), m_pRenderer->GetDisplayHeight()));
                 break;
+#endif
             default:
                 m_pRenderer->SetTemporalUpscaleRatio(1.0f);
                 break;

@@ -128,7 +128,9 @@ void Editor::DrawMenu()
         {
             if (ImGui::MenuItem("Profiler"))
             {
+#if RE_PLATFORM_WINDOWS
                 ShellExecute(0, 0, L"http://localhost:1338/", 0, 0, SW_SHOW);
+#endif
             }
 
             if (ImGui::MenuItem("GPU Memory Stats", "", &m_bShowGpuMemoryStats))

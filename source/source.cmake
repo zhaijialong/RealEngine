@@ -288,8 +288,6 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/utils/profiler.h
     ${SOURCE_ROOT}/utils/string.h
     ${SOURCE_ROOT}/utils/system.h
-    ${SOURCE_ROOT}/windows/main.cpp
-    ${SOURCE_ROOT}/windows/RealEngine.rc
     ${SOURCE_ROOT}/world/animation.cpp
     ${SOURCE_ROOT}/world/animation.h
     ${SOURCE_ROOT}/world/camera.cpp
@@ -318,9 +316,19 @@ set(ENGINE_SRC_FILES
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    list(APPEND ENGINE_SRC_FILES ${D3D12_FILES})
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
-    list(APPEND ENGINE_SRC_FILES ${METAL_FILES})
+    list(APPEND ENGINE_SRC_FILES 
+        ${D3D12_FILES}
+        ${SOURCE_ROOT}/windows/main.cpp
+        ${SOURCE_ROOT}/windows/RealEngine.rc
+    )
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    list(APPEND ENGINE_SRC_FILES 
+        ${METAL_FILES}
+    )
+elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    list(APPEND ENGINE_SRC_FILES 
+        ${METAL_FILES}
+    )
 endif()
 
 source_group(TREE ${SOURCE_ROOT} PREFIX source FILES ${ENGINE_SRC_FILES})

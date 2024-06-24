@@ -6,7 +6,9 @@
 #include "utils/assert.h"
 
 #include <filesystem>
+#if RE_PLATFORM_WINDOWS
 #include <atlbase.h> //CComPtr
+#endif
 #include "dxc/dxcapi.h"
 
 class DXCIncludeHandler : public IDxcIncludeHandler
@@ -70,10 +72,18 @@ private:
 
 ShaderCompiler::ShaderCompiler(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
+#if RE_PLATFORM_WINDOWS
     HMODULE dxc = LoadLibrary(L"dxcompiler.dll");
+#else
+    void* dxc = dlopen("libdxcompiler.dylib", RTLD_LAZY);
+#endif
     if (dxc)
     {
+#if RE_PLATFORM_WINDOWS
         DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)GetProcAddress(dxc, "DxcCreateInstance");
+#else
+        DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)dlsym(dxc, "DxcCreateInstance");
+#endif
 
         DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_pDxcUtils));
         DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_pDxcCompiler));

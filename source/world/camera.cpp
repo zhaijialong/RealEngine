@@ -1,7 +1,6 @@
 #include "camera.h"
 #include "core/engine.h"
 #include "utils/gui_util.h"
-#include "FSR2/ffx_fsr2.h"
 
 static inline float2 CalcDepthLinearizationParams(const float4x4& mtxProjection)
 {
@@ -215,6 +214,27 @@ void Camera::SetupCameraCB(CameraConstant& cameraCB)
     }
 }
 
+static int32_t GetJitterPhaseCount(int32_t renderWidth, int32_t displayWidth)
+{
+    const float basePhaseCount = 8.0f;
+    const int32_t jitterPhaseCount = int32_t(basePhaseCount * pow((float(displayWidth) / renderWidth), 2.0f));
+    return jitterPhaseCount;
+}
+
+static float Halton(int32_t index, int32_t base)
+{
+    float f = 1.0f, result = 0.0f;
+
+    for (int32_t currentIndex = index; currentIndex > 0;) 
+    {
+        f /= (float)base;
+        result = result + f * (float)(currentIndex % base);
+        currentIndex = (uint32_t)(floorf((float)(currentIndex) / (float)(base)));
+    }
+
+    return result;
+}
+
 void Camera::UpdateJitter()
 {
     if (m_bEnableJitter)
@@ -230,9 +250,10 @@ void Camera::UpdateJitter()
         case TemporalSuperResolution::DLSS:
         case TemporalSuperResolution::XeSS:
         {
-            uint32_t phaseCount = ffxFsr2GetJitterPhaseCount(pRenderer->GetRenderWidth(), pRenderer->GetDisplayWidth());
+            uint32_t phaseCount = GetJitterPhaseCount(pRenderer->GetRenderWidth(), pRenderer->GetDisplayWidth());
             uint32_t index = frameIndex % phaseCount;
-            ffxFsr2GetJitterOffset(&m_jitter.x, &m_jitter.y, index, phaseCount);
+            m_jitter.x = Halton((index % phaseCount) + 1, 2) - 0.5f;
+            m_jitter.y = Halton((index % phaseCount) + 1, 3) - 0.5f;
             break;
         }
         default:

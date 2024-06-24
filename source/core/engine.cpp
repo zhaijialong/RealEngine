@@ -24,9 +24,14 @@ Engine::~Engine()
 
 void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
+#if RE_PLATFORM_WINDOWS
     auto msvc_sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>((work_path + "log.txt").c_str(), true);
     auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ msvc_sink, file_sink });
+#else
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>((work_path + "log.txt").c_str(), true);
+    auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ file_sink });
+#endif
     spdlog::set_default_logger(logger);
     spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [%l] [thread %t] %v");
     spdlog::set_level(spdlog::level::trace);
