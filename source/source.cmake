@@ -1,14 +1,6 @@
 set(SOURCE_ROOT ${REAL_ENGINE_ROOT}/source)
 
-set(ENGINE_SRC_FILES
-    ${SOURCE_ROOT}/source.cmake
-    ${SOURCE_ROOT}/core/eastl_allocator.cpp
-    ${SOURCE_ROOT}/core/engine.cpp
-    ${SOURCE_ROOT}/core/engine.h
-    ${SOURCE_ROOT}/core/gui.cpp
-    ${SOURCE_ROOT}/core/gui.h
-    ${SOURCE_ROOT}/editor/editor.cpp
-    ${SOURCE_ROOT}/editor/editor.h
+set(D3D12_FILES
     ${SOURCE_ROOT}/gfx/d3d12/ags.cpp
     ${SOURCE_ROOT}/gfx/d3d12/ags.h
     ${SOURCE_ROOT}/gfx/d3d12/d3d12_buffer.cpp
@@ -38,6 +30,9 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/d3d12/d3d12_texture.h
     ${SOURCE_ROOT}/gfx/d3d12/pix_runtime.cpp
     ${SOURCE_ROOT}/gfx/d3d12/pix_runtime.h
+)
+
+set(METAL_FILES
     ${SOURCE_ROOT}/gfx/metal/metal_buffer.cpp
     ${SOURCE_ROOT}/gfx/metal/metal_buffer.h
     ${SOURCE_ROOT}/gfx/metal/metal_command_list.cpp
@@ -62,6 +57,18 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/metal/metal_swapchain.h
     ${SOURCE_ROOT}/gfx/metal/metal_texture.cpp
     ${SOURCE_ROOT}/gfx/metal/metal_texture.h
+)
+
+set(ENGINE_SRC_FILES
+    ${SOURCE_ROOT}/source.cmake
+    ${SOURCE_ROOT}/core/eastl_allocator.cpp
+    ${SOURCE_ROOT}/core/engine.cpp
+    ${SOURCE_ROOT}/core/engine.h
+    ${SOURCE_ROOT}/core/gui.cpp
+    ${SOURCE_ROOT}/core/gui.h
+    ${SOURCE_ROOT}/core/platform.h
+    ${SOURCE_ROOT}/editor/editor.cpp
+    ${SOURCE_ROOT}/editor/editor.h
     ${SOURCE_ROOT}/gfx/mock/mock_buffer.cpp
     ${SOURCE_ROOT}/gfx/mock/mock_buffer.h
     ${SOURCE_ROOT}/gfx/mock/mock_command_list.cpp
@@ -309,5 +316,11 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/world/world.cpp
     ${SOURCE_ROOT}/world/world.h
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    list(APPEND ENGINE_SRC_FILES ${D3D12_FILES})
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    list(APPEND ENGINE_SRC_FILES ${METAL_FILES})
+endif()
 
 source_group(TREE ${SOURCE_ROOT} PREFIX source FILES ${ENGINE_SRC_FILES})
