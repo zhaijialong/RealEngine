@@ -169,21 +169,19 @@ void Renderer::UploadResources()
     {
         GPU_EVENT_DEBUG(pUploadCommandList, "Renderer::UploadResources");
 
-        for (size_t i = 0; i < m_pendingTextureUploads.size(); ++i)
-        {
-            const TextureUpload& upload = m_pendingTextureUploads[i];
-            pUploadCommandList->CopyBufferToTexture(upload.texture, upload.mip_level, upload.array_slice, 
-                upload.staging_buffer.buffer, upload.staging_buffer.offset + upload.offset);
-        }
-        m_pendingTextureUploads.clear();
-
         for (size_t i = 0; i < m_pendingBufferUpload.size(); ++i)
         {
             const BufferUpload& upload = m_pendingBufferUpload[i];
             pUploadCommandList->CopyBuffer(upload.buffer, upload.offset,
                 upload.staging_buffer.buffer, upload.staging_buffer.offset, upload.staging_buffer.size);
         }
-        m_pendingBufferUpload.clear();
+
+        for (size_t i = 0; i < m_pendingTextureUploads.size(); ++i)
+        {
+            const TextureUpload& upload = m_pendingTextureUploads[i];
+            pUploadCommandList->CopyBufferToTexture(upload.texture, upload.mip_level, upload.array_slice,
+                upload.staging_buffer.buffer, upload.staging_buffer.offset + upload.offset);
+        }
     }
 
     pUploadCommandList->End();
@@ -192,6 +190,19 @@ void Renderer::UploadResources()
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->Wait(m_pUploadFence.get(), m_nCurrentUploadFenceValue);
+
+    if (m_pDevice->GetDesc().backend == GfxRenderBackend::Vulkan)
+    {
+        for (size_t i = 0; i < m_pendingTextureUploads.size(); ++i)
+        {
+            const TextureUpload& upload = m_pendingTextureUploads[i];
+            pCommandList->TextureBarrier(upload.texture, CalcSubresource(upload.texture->GetDesc(), upload.mip_level, upload.array_slice),
+                GfxAccessCopyDst, GfxAccessMaskSRV);
+        }
+    }
+
+    m_pendingBufferUpload.clear();
+    m_pendingTextureUploads.clear();
 }
 
 void Renderer::FlushComputePass(IGfxCommandList* pCommandList)

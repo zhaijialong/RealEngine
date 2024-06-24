@@ -66,7 +66,7 @@ set(EXTERNAL_FILES
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    list(APPEND ENGINE_SRC_FILES 
+    list(APPEND EXTERNAL_FILES
         ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.cpp
         ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.h
         ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.natvis
