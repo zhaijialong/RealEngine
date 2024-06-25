@@ -66,7 +66,7 @@ target_compile_definitions(RealEngine PUBLIC
     _CRT_SECURE_NO_WARNINGS
     NOMINMAX
 )
-target_link_libraries(RealEngine ws2_32 Jolt OffsetAllocator)
+target_link_libraries(RealEngine Jolt OffsetAllocator)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     # NRD
@@ -83,7 +83,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set_target_properties(ShaderMake PROPERTIES FOLDER External)
     set_target_properties(ShaderMakeBlob PROPERTIES FOLDER External)
 
-    target_link_libraries(RealEngine NRD)
+    target_link_libraries(RealEngine NRD ws2_32)
 
     add_custom_command(
         TARGET RealEngine POST_BUILD

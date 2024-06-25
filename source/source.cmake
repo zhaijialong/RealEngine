@@ -318,8 +318,8 @@ set(ENGINE_SRC_FILES
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     list(APPEND ENGINE_SRC_FILES 
         ${D3D12_FILES}
-        ${SOURCE_ROOT}/windows/main.cpp
-        ${SOURCE_ROOT}/windows/RealEngine.rc
+        ${SOURCE_ROOT}/main/windows/main.cpp
+        ${SOURCE_ROOT}/main/windows/RealEngine.rc
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     list(APPEND ENGINE_SRC_FILES 
