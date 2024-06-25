@@ -261,7 +261,7 @@ inline VkPipelineStageFlags2 GetStageMask(GfxAccessFlags flags)
     if (flags & GfxAccessMaskPS)          stage |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
     if (flags & GfxAccessMaskCS)          stage |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
     if (flags & GfxAccessMaskCopy)        stage |= VK_PIPELINE_STAGE_2_COPY_BIT;
-    if (flags & GfxAccessClearUAV)        stage |= VK_PIPELINE_STAGE_2_CLEAR_BIT;
+    if (flags & GfxAccessClearUAV)        stage |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
     if (flags & GfxAccessShadingRate)     stage |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR;
     if (flags & GfxAccessIndexBuffer)     stage |= VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT;
     if (flags & GfxAccessIndirectArgs)    stage |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT;
@@ -284,7 +284,7 @@ inline VkAccessFlags2 GetAccessMask(GfxAccessFlags flags)
     if (flags & GfxAccessDSVReadOnly)     access |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
     if (flags & GfxAccessMaskSRV)         access |= VK_ACCESS_2_SHADER_SAMPLED_READ_BIT | VK_ACCESS_2_SHADER_STORAGE_READ_BIT;
     if (flags & GfxAccessMaskUAV)         access |= VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT;
-    if (flags & GfxAccessClearUAV)        access |= VK_ACCESS_2_TRANSFER_WRITE_BIT;
+    if (flags & GfxAccessClearUAV)        access |= VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT;
     if (flags & GfxAccessCopyDst)         access |= VK_ACCESS_2_TRANSFER_WRITE_BIT;
     if (flags & GfxAccessCopySrc)         access |= VK_ACCESS_2_TRANSFER_READ_BIT;
     if (flags & GfxAccessShadingRate)     access |= VK_ACCESS_2_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR;
