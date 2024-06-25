@@ -126,4 +126,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_compile_definitions(RealEngine PUBLIC
         IMGUI_IMPL_METAL_CPP_EXTENSIONS=1
     )
+    target_include_directories(RealEngine PUBLIC
+        ${EXTERNAL_ROOT}/metal-cpp
+    )
 endif()

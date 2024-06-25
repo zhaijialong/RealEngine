@@ -1,4 +1,7 @@
 #include "nrd_integration.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "../renderer.h"
 #include "../../utils/fmt.h"
 
@@ -380,3 +383,4 @@ void NRDIntegration::Dispatch(IGfxCommandList* pCommandList, const nrd::Dispatch
     pCommandList->Dispatch(dispatchDesc.gridWidth, dispatchDesc.gridHeight, 1);
 }
 
+#endif // #if RE_PLATFORM_WINDOWS

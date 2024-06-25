@@ -324,6 +324,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     list(APPEND ENGINE_SRC_FILES 
         ${METAL_FILES}
+        ${SOURCE_ROOT}/main/mac/main.cpp
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS")
     list(APPEND ENGINE_SRC_FILES 

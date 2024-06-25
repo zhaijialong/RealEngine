@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/platform.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "NRD.h"
 #include "../resource/texture_2d.h"
 
@@ -66,3 +70,5 @@ private:
     eastl::vector<NRDPoolTexture> m_textures;
     eastl::vector<eastl::unique_ptr<IGfxDescriptor>> m_samplers;
 };
+
+#endif // #if RE_PLATFORM_WINDOWS

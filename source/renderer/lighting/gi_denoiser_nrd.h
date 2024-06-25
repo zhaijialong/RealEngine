@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/platform.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "../render_graph.h"
 #include "../resource/texture_2d.h"
 
@@ -43,3 +47,5 @@ private:
     IGfxPipelineState* m_pPackVelocityPSO = nullptr;
     IGfxPipelineState* m_pResolveOutputPSO = nullptr;
 };
+
+#endif // #if RE_PLATFORM_WINDOWS

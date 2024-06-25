@@ -1,4 +1,7 @@
 #include "gi_denoiser_nrd.h"
+
+#if RE_PLATFORM_WINDOWS
+
 #include "nrd_integration.h"
 #include "utils/gui_util.h"
 #include "../renderer.h"
@@ -315,3 +318,5 @@ void GIDenoiserNRD::ResolveOutput(IGfxCommandList* pCommandList, RGTexture* norm
 
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }
+
+#endif // #if RE_PLATFORM_WINDOWS

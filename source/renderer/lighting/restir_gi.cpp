@@ -20,7 +20,9 @@ ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
     m_pSpatialResamplingPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/spatial resampling PSO");
 
     m_pDenoiser = eastl::make_unique<GIDenoiser>(pRenderer);
+#if RE_PLATFORM_WINDOWS
     m_pDenoiserNRD = eastl::make_unique<GIDenoiserNRD>(pRenderer);
+#endif
 }
 
 ReSTIRGI::~ReSTIRGI() = default;
@@ -75,8 +77,10 @@ RGHandle ReSTIRGI::AddPass(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, 
 
             if (m_denoiserType == DenoiserType::NRD)
             {
+#if RE_PLATFORM_WINDOWS
                 m_pDenoiserNRD->ImportHistoryTextures(pRenderGraph, width, height);
                 data.historyIrradiance = builder.Read(m_pDenoiserNRD->GetHistoryIrradiance());
+#endif
             }
             else if (m_denoiserType == DenoiserType::Custom)
             {
@@ -304,12 +308,14 @@ RGHandle ReSTIRGI::AddPass(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, 
                 width, height);
         });
 
-
+#if RE_PLATFORM_WINDOWS
     if (m_denoiserType == DenoiserType::NRD)
     {
         return m_pDenoiserNRD->AddPass(pRenderGraph, resolve_pass->output, resolve_pass->outputRayDirection, normal, linear_depth, velocity, width, height);
     }
-    else if (m_denoiserType == DenoiserType::Custom)
+    else
+#endif
+    if (m_denoiserType == DenoiserType::Custom)
     {
         return m_pDenoiser->AddPass(pRenderGraph, resolve_pass->output, resolve_pass->outputVariance, depth, linear_depth, normal, velocity, width, height);
     }
@@ -323,7 +329,11 @@ IGfxDescriptor* ReSTIRGI::GetOutputIrradianceSRV() const
 {
     if (m_denoiserType == DenoiserType::NRD)
     {
+#if RE_PLATFORM_WINDOWS
         return m_pDenoiserNRD->GetHistoryIrradianceSRV();
+#else
+        return nullptr;
+#endif
     }
     else
     {
@@ -347,7 +357,9 @@ void ReSTIRGI::InitialSampling(IGfxCommandList* pCommandList, RGTexture* halfDep
     constants.halfDepthNormalTexture = halfDepthNormal->GetSRV()->GetHeapIndex();
     if (m_denoiserType == DenoiserType::NRD)
     {
+#if RE_PLATFORM_WINDOWS
         constants.historyIrradiance = m_pDenoiserNRD->GetHistoryIrradianceSRV()->GetHeapIndex();
+#endif
     }
     else if (m_denoiserType == DenoiserType::Custom)
     {

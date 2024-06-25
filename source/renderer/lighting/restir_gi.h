@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/platform.h"
 #include "../render_graph.h"
 #include "../resource/texture_2d.h"
 
@@ -44,7 +45,9 @@ private:
     TemporalReservoirBuffer m_temporalReservoir[2];
 
     eastl::unique_ptr<class GIDenoiser> m_pDenoiser;
+#if RE_PLATFORM_WINDOWS
     eastl::unique_ptr<class GIDenoiserNRD> m_pDenoiserNRD;
+#endif
 
     bool m_bEnable = true;
     bool m_bEnableReSTIR = true;
