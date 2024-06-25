@@ -39,7 +39,12 @@ add_library(OffsetAllocator ${EXTERNAL_ROOT}/OffsetAllocator/offsetAllocator.cpp
 set_target_properties(OffsetAllocator PROPERTIES FOLDER External CXX_STANDARD 20)
 
 # RealEngine
-add_executable(RealEngine WIN32 ${ENGINE_SRC_FILES} ${EXTERNAL_FILES} ${SHADER_FILES})
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    add_executable(RealEngine WIN32 ${ENGINE_SRC_FILES} ${EXTERNAL_FILES} ${SHADER_FILES})
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    add_executable(RealEngine MACOSX_BUNDLE ${ENGINE_SRC_FILES} ${EXTERNAL_FILES} ${SHADER_FILES})
+endif()
+
 target_include_directories(RealEngine PUBLIC 
     ${SOURCE_ROOT}
     ${SHADER_ROOT}
@@ -128,5 +133,22 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     )
     target_include_directories(RealEngine PUBLIC
         ${EXTERNAL_ROOT}/metal-cpp
+    )
+
+    set_target_properties(RealEngine PROPERTIES
+        BUNDLE True
+        MACOSX_BUNDLE_GUI_IDENTIFIER com.zhaijialong.RealEngine
+        MACOSX_BUNDLE_BUNDLE_NAME RealEngine
+        MACOSX_BUNDLE_BUNDLE_VERSION "0.1"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "0.1"
+        MACOSX_BUNDLE_INFO_PLIST ${SOURCE_ROOT}/main/mac/info.plist.in
+    )
+
+    target_link_libraries(RealEngine
+        "-framework Foundation"
+        "-framework AppKit"
+        "-framework Metal"
+        "-framework MetalKit"
+        "-framework GameController"
     )
 endif()
