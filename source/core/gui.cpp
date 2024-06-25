@@ -1,7 +1,12 @@
 #include "gui.h"
 #include "engine.h"
+#include "platform.h"
 #include "imgui/imgui.h"
+#if RE_PLATFORM_WINDOWS
 #include "imgui/imgui_impl_win32.h"
+#elif RE_PLATFORM_MAC
+#include "imgui/imgui_impl_osx.h"
+#endif
 #include "ImGuizmo/ImGuizmo.h"
 
 GUI::GUI()
@@ -18,12 +23,20 @@ GUI::GUI()
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
+#if RE_PLATFORM_WINDOWS
     ImGui_ImplWin32_Init(Engine::GetInstance()->GetWindowHandle());
+#elif RE_PLATFORM_MAC
+    ImGui_ImplOSX_Init(Engine::GetInstance()->GetWindowHandle());
+#endif
 }
 
 GUI::~GUI()
 {
+#if RE_PLATFORM_WINDOWS
     ImGui_ImplWin32_Shutdown();
+#elif RE_PLATFORM_MAC
+    ImGui_ImplOSX_Shutdown();
+#endif
     ImGui::DestroyContext();
 }
 
@@ -32,7 +45,11 @@ bool GUI::Init()
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     IGfxDevice* pDevice = pRenderer->GetDevice();
 
+#if RE_PLATFORM_WINDOWS
     float scaling = ImGui_ImplWin32_GetDpiScaleForHwnd(Engine::GetInstance()->GetWindowHandle());
+#else
+    float scaling = 1.0f;
+#endif
     ImGui::GetStyle().ScaleAllSizes(scaling);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -70,7 +87,11 @@ bool GUI::Init()
 
 void GUI::Tick()
 {
+#if RE_PLATFORM_WINDOWS
     ImGui_ImplWin32_NewFrame();
+#elif RE_PLATFORM_MAC
+    ImGui_ImplOSX_NewFrame(Engine::GetInstance()->GetWindowHandle());
+#endif
     ImGui::NewFrame();
 
     ImGuizmo::BeginFrame();

@@ -83,6 +83,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         ${EXTERNAL_ROOT}/imgui/imgui_impl_win32.cpp
         ${EXTERNAL_ROOT}/imgui/imgui_impl_win32.h
     )
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    list(APPEND EXTERNAL_FILES
+        ${EXTERNAL_ROOT}/imgui/imgui_impl_osx.mm
+        ${EXTERNAL_ROOT}/imgui/imgui_impl_osx.h
+    )
 endif()
 
 source_group(TREE ${EXTERNAL_ROOT} PREFIX external FILES ${EXTERNAL_FILES})

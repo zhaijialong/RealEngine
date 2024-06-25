@@ -121,3 +121,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     )
     endif()
 endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    target_compile_definitions(RealEngine PUBLIC
+        IMGUI_IMPL_METAL_CPP_EXTENSIONS=1
+    )
+endif()
