@@ -59,7 +59,7 @@ bool GUI::Init()
     fontConfig.OversampleH = fontConfig.OversampleV = 3;
     
     eastl::string font_file = Engine::GetInstance()->GetAssetPath() + "fonts/DroidSans.ttf";
-    io.Fonts->AddFontFromFileTTF(font_file.c_str(), 12.0f, &fontConfig);
+    io.Fonts->AddFontFromFileTTF(font_file.c_str(), 13.0f, &fontConfig);
 
     unsigned char* pixels;
     int width, height;
