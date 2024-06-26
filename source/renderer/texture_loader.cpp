@@ -1,5 +1,6 @@
 #include "texture_loader.h"
 #include "utils/assert.h"
+#include "utils/log.h"
 #include "stb/stb_image.h"
 #include "ddspp/ddspp.h"
 #include <fstream>
@@ -162,6 +163,7 @@ bool TextureLoader::Load(const eastl::string& file, bool srgb)
     is.open(file.c_str(), std::ios::binary);
     if (is.fail())
     {
+        RE_DEBUG("[TextureLoader] failed to load {}", file);
         return false;
     }
 

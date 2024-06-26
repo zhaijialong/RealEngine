@@ -3,6 +3,8 @@
 #include "string.h"
 #if RE_PLATFORM_WINDOWS
 #include <Windows.h>
+#else
+#include "pthread.h"
 #endif
 
 inline uint32_t GetWindowWidth(void* window)
@@ -75,5 +77,7 @@ inline void SetCurrentThreadName(const eastl::string& name)
 {
 #if RE_PLATFORM_WINDOWS
     SetThreadDescription(GetCurrentThread(), string_to_wstring(name).c_str());
+#else
+    pthread_setname_np(name.c_str());
 #endif
 }

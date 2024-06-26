@@ -6,6 +6,7 @@
 #include "rpmalloc/rpmalloc.h"
 #include "spdlog/sinks/msvc_sink.h"
 #include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/stdout_sinks.h"
 #include "magic_enum/magic_enum.hpp"
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
@@ -29,8 +30,9 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>((work_path + "log.txt").c_str(), true);
     auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ msvc_sink, file_sink });
 #else
+    auto stdout_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>((work_path + "log.txt").c_str(), true);
-    auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ file_sink });
+    auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ stdout_sink, file_sink });
 #endif
     spdlog::set_default_logger(logger);
     spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [%l] [thread %t] %v");
