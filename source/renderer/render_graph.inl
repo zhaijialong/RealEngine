@@ -52,8 +52,8 @@ public:
         return s;
     }
 
-    virtual const char* GetGraphvizColor() const { return !IsCulled() ? "lightskyblue1" : "lightskyblue4"; }
-    virtual const char* GetGraphvizShape() const { return "ellipse"; }
+    virtual const char* GetGraphvizColor() const override { return !IsCulled() ? "lightskyblue1" : "lightskyblue4"; }
+    virtual const char* GetGraphvizShape() const override { return "ellipse"; }
 
 private:
     RenderGraphResource* m_pResource;

@@ -6,6 +6,8 @@
 
 #if RE_PLATFORM_WINDOWS
 #include <Windows.h>
+#else
+#include "stdlib.h"
 #endif
 
 inline eastl::wstring string_to_wstring(const eastl::string& s)
@@ -20,7 +22,16 @@ inline eastl::wstring string_to_wstring(const eastl::string& s)
 
     return result;
 #else
-    return eastl::wstring(); //todo
+    size_t length = mbstowcs(NULL, s.c_str(), 0);
+    
+    eastl::wstring result;
+    result.resize(length);
+    
+    mbstowcs(result.data(), s.c_str(), length);
+    
+    auto s1 = result.c_str();
+
+    return result;
 #endif
 }
 
@@ -36,7 +47,14 @@ inline eastl::string wstring_to_string(const eastl::wstring& s)
 
     return result;
 #else
-    return eastl::string(); //todo
+    size_t length = wcstombs(NULL, s.c_str(), 0);
+    
+    eastl::string result;
+    result.resize(length);
+    
+    wcstombs(result.data(), s.c_str(), length);
+    
+    return result;
 #endif
 }
 

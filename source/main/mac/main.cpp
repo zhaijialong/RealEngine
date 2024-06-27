@@ -13,7 +13,7 @@ public:
     
     virtual void drawableSizeWillChange(MTK::View* pView, CGSize size) override
     {
-        //todo Engine::GetInstance()->WindowResizeSignal();
+        Engine::GetInstance()->WindowResizeSignal(pView, size.width, size.height);
     }
 };
 
@@ -48,7 +48,9 @@ public:
         m_pViewDelegate = new ViewDelegate();
         m_pView->setDelegate(m_pViewDelegate);
         
-        m_pWindow = NS::Window::alloc()->init(frame, NS::WindowStyleMaskClosable | NS::WindowStyleMaskTitled, NS::BackingStoreBuffered, false);
+        m_pWindow = NS::Window::alloc()->init(frame,
+                NS::WindowStyleMaskClosable | NS::WindowStyleMaskMiniaturizable | NS::WindowStyleMaskResizable |NS::WindowStyleMaskTitled,
+                NS::BackingStoreBuffered, false);
         m_pWindow->setContentView(m_pView);
         m_pWindow->setTitle(NS::String::string("RealEngine", NS::StringEncoding::UTF8StringEncoding));
         m_pWindow->makeKeyAndOrderFront(nullptr);

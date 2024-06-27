@@ -52,7 +52,7 @@ public:
     void Execute(const RenderGraph& graph, RenderGraphPassExecuteContext& context);
 
     virtual eastl::string GetGraphvizName() const override { return m_name.c_str(); }
-    virtual const char* GetGraphvizColor() const { return !IsCulled() ? "darkgoldenrod1" : "darkgoldenrod4"; }
+    virtual const char* GetGraphvizColor() const override { return !IsCulled() ? "darkgoldenrod1" : "darkgoldenrod4"; }
 
     void BeginEvent(const eastl::string& name) { m_eventNames.push_back(name); }
     void EndEvent() { m_nEndEventNum++; }

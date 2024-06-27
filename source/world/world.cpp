@@ -319,7 +319,7 @@ void World::PhysicsTest(Renderer* pRenderer)
             x = x ^ (x >> 15);
             return x;
         };
-        uint hash = WangHash(m_objects.size());
+        uint hash = WangHash((uint)m_objects.size());
 
         MeshMaterial* material = mesh->GetMaterial();
         material->m_bPbrMetallicRoughness = true;

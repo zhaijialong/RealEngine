@@ -11,6 +11,7 @@
 #define SOKOL_IMPL
 #include "sokol/sokol_time.h"
 #include "imgui/imgui.h"
+#include "simpleini/SimpleIni.h"
 
 Engine* Engine::GetInstance()
 {
@@ -26,14 +27,13 @@ Engine::~Engine()
 void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t window_width, uint32_t window_height)
 {
 #if RE_PLATFORM_WINDOWS
-    auto msvc_sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>((work_path + "log.txt").c_str(), true);
-    auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ msvc_sink, file_sink });
+    auto console_sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
 #else
-    auto stdout_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>((work_path + "log.txt").c_str(), true);
-    auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ stdout_sink, file_sink });
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 #endif
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>((work_path + "log.txt").c_str(), true);
+    auto logger = std::make_shared<spdlog::logger>("RealEngine", spdlog::sinks_init_list{ console_sink, file_sink });
+    
     spdlog::set_default_logger(logger);
     spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [%l] [thread %t] %v");
     spdlog::set_level(spdlog::level::trace);
@@ -43,45 +43,63 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
     MicroProfileSetForceMetaCounters(true);
     MicroProfileOnThreadCreate("Main Thread");
 
-    enki::TaskSchedulerConfig config;
-    config.profilerCallbacks.threadStart = [](uint32_t i) 
-    { 
+    enki::TaskSchedulerConfig tsConfig;
+    tsConfig.profilerCallbacks.threadStart = [](uint32_t i)
+    {
         rpmalloc_thread_initialize();
 
         eastl::string thread_name = fmt::format("Worker Thread {}", i).c_str();
         MicroProfileOnThreadCreate(thread_name.c_str());
         SetCurrentThreadName(thread_name);
     };
-    config.profilerCallbacks.threadStop = [](uint32_t) 
-    { 
+    tsConfig.profilerCallbacks.threadStop = [](uint32_t)
+    {
         MicroProfileOnThreadExit();
         rpmalloc_thread_finalize(1); 
     };
-    config.customAllocator.alloc = [](size_t align, size_t size, void* userData, const char* file, int line)
+    tsConfig.customAllocator.alloc = [](size_t align, size_t size, void* userData, const char* file, int line)
     {
         return RE_ALLOC(size, align);
     };
-    config.customAllocator.free = [](void* ptr, size_t size, void* userData, const char* file, int line)
+    tsConfig.customAllocator.free = [](void* ptr, size_t size, void* userData, const char* file, int line)
     {
         RE_FREE(ptr);
     };
 
     m_pTaskScheduler.reset(new enki::TaskScheduler());
-    m_pTaskScheduler->Initialize(config);
+    m_pTaskScheduler->Initialize(tsConfig);
 
     m_windowHandle = window_handle;
     m_workPath = work_path;
-    LoadEngineConfig();
+    
+    eastl::string ini_file = m_workPath + "RealEngine.ini";
+    
+    CSimpleIniA configIni;
+    if (configIni.LoadFile(ini_file.c_str()) != SI_OK)
+    {
+        RE_ERROR("Failed to load RealEngine.ini !");
+    }
+
+    m_assetPath = m_workPath + configIni.GetValue("RealEngine", "AssetPath");
+    m_shaderPath = m_workPath + configIni.GetValue("RealEngine", "ShaderPath");
+
+    const char* backend = configIni.GetValue("Render", "Backend");
+    GfxRenderBackend renderBackend = magic_enum::enum_cast<GfxRenderBackend>(backend).
+#if RE_PLATFORM_WINDOWS
+        value_or(GfxRenderBackend::D3D12);
+#else
+        value_or(GfxRenderBackend::Metal);
+#endif
 
     m_pRenderer = eastl::make_unique<Renderer>();
-    m_pRenderer->SetAsyncComputeEnabled(m_configIni.GetBoolValue("Render", "AsyncCompute"));
-    if (!m_pRenderer->CreateDevice(m_renderBackend, window_handle, window_width, window_height))
+    m_pRenderer->SetAsyncComputeEnabled(configIni.GetBoolValue("Render", "AsyncCompute"));
+    if (!m_pRenderer->CreateDevice(renderBackend, window_handle, window_width, window_height))
     {
         exit(0);
     }
 
     m_pWorld = eastl::make_unique<World>();
-    m_pWorld->LoadScene(m_assetPath + m_configIni.GetValue("World", "Scene"));
+    m_pWorld->LoadScene(m_assetPath + configIni.GetValue("World", "Scene"));
 
     m_pGUI = eastl::make_unique<GUI>();
     m_pGUI->Init();
@@ -130,22 +148,4 @@ void Engine::Tick()
     }
 
     MicroProfileFlip(0);
-}
-
-void Engine::LoadEngineConfig()
-{
-    eastl::string ini_file = m_workPath + "RealEngine.ini";
-
-    SI_Error error = m_configIni.LoadFile(ini_file.c_str());
-    if (error != SI_OK)
-    {
-        RE_ERROR("Failed to load RealEngine.ini !");
-        return;
-    }
-
-    m_assetPath = m_workPath + m_configIni.GetValue("RealEngine", "AssetPath");
-    m_shaderPath = m_workPath + m_configIni.GetValue("RealEngine", "ShaderPath");
-
-    const char* backend = m_configIni.GetValue("Render", "Backend");
-    m_renderBackend = magic_enum::enum_cast<GfxRenderBackend>(backend).value_or(m_renderBackend);
 }

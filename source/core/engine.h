@@ -5,7 +5,6 @@
 #include "editor/editor.h"
 #include "renderer/renderer.h"
 #include "sigslot/signal.hpp"
-#include "simpleini/SimpleIni.h"
 
 namespace enki { class TaskScheduler; }
 
@@ -36,7 +35,6 @@ public:
 
 private:
     ~Engine();
-    void LoadEngineConfig();
 
 private:
     eastl::unique_ptr<Renderer> m_pRenderer;
@@ -49,10 +47,7 @@ private:
     uint64_t m_lastFrameTime = 0;
     float m_frameTime = 0.0f; //in seconds
 
-    CSimpleIniA m_configIni;
-
     void* m_windowHandle = nullptr;
-    GfxRenderBackend m_renderBackend = GfxRenderBackend::D3D12;
     eastl::string m_workPath;
     eastl::string m_assetPath;
     eastl::string m_shaderPath;

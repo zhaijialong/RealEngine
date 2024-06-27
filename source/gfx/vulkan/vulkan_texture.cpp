@@ -92,7 +92,7 @@ uint32_t VulkanTexture::GetRequiredStagingBufferSize() const
 {
     VkMemoryRequirements requirements;
     vkGetImageMemoryRequirements((VkDevice)m_pDevice->GetHandle(), m_image, &requirements);
-    return requirements.size;
+    return (uint32_t)requirements.size;
 }
 
 uint32_t VulkanTexture::GetRowPitch(uint32_t mip_level) const
