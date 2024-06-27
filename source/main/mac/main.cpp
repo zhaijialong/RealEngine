@@ -8,12 +8,20 @@ class ViewDelegate : public MTK::ViewDelegate
 public:
     virtual void drawInMTKView(MTK::View* pView) override
     {
+        NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
+        
         Engine::GetInstance()->Tick();
+        
+        pPool->release();
     }
     
     virtual void drawableSizeWillChange(MTK::View* pView, CGSize size) override
     {
+        NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
+        
         Engine::GetInstance()->WindowResizeSignal(pView, size.width, size.height);
+        
+        pPool->release();
     }
 };
 
