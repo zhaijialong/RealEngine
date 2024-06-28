@@ -1,4 +1,5 @@
 #include "core/engine.h"
+#include "utils/autorelease_pool.h"
 #include "Foundation/Foundation.hpp"
 #include "AppKit/AppKit.hpp"
 #include "MetalKit/MetalKit.hpp"
@@ -8,20 +9,16 @@ class ViewDelegate : public MTK::ViewDelegate
 public:
     virtual void drawInMTKView(MTK::View* pView) override
     {
-        NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
+        ScopedAutoreleasePool pool;
         
         Engine::GetInstance()->Tick();
-        
-        pPool->release();
     }
     
     virtual void drawableSizeWillChange(MTK::View* pView, CGSize size) override
     {
-        NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
+        ScopedAutoreleasePool pool;
         
         Engine::GetInstance()->WindowResizeSignal(pView, size.width, size.height);
-        
-        pPool->release();
     }
 };
 
@@ -63,6 +60,8 @@ public:
         m_pWindow->setTitle(NS::String::string("RealEngine", NS::StringEncoding::UTF8StringEncoding));
         m_pWindow->makeKeyAndOrderFront(nullptr);
 
+        ScopedAutoreleasePool pool;
+        
         Engine::GetInstance()->Init(GetWorkPath(), m_pView, m_pView->drawableSize().width, m_pView->drawableSize().height);
     }
     
@@ -82,15 +81,13 @@ int main(int argc, char* argv[])
 {
     rpmalloc_initialize();
     
-    NS::AutoreleasePool* pAutoreleasePool = NS::AutoreleasePool::alloc()->init();
+    ScopedAutoreleasePool pool;
 
     AppDelegate delegate;
     
     NS::Application* pSharedApplication = NS::Application::sharedApplication();
     pSharedApplication->setDelegate(&delegate);
     pSharedApplication->run();
-    
-    pAutoreleasePool->release();
     
     return 0;
 }

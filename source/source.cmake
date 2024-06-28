@@ -278,6 +278,7 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/texture_loader.cpp
     ${SOURCE_ROOT}/renderer/texture_loader.h
     ${SOURCE_ROOT}/utils/assert.h
+    ${SOURCE_ROOT}/utils/autorelease_pool.h
     ${SOURCE_ROOT}/utils/fmt.h
     ${SOURCE_ROOT}/utils/gui_util.h
     ${SOURCE_ROOT}/utils/linear_allocator.h
