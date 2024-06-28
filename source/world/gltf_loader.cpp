@@ -423,6 +423,8 @@ StaticMesh* GLTFLoader::LoadStaticMesh(const cgltf_primitive* primitive, const e
             vertex_streams.push_back(LoadBufferStream(primitive->attributes[i].data, false, vertex_count));
             vertex_types.push_back(primitive->attributes[i].type);
             break;
+        default:
+            break;
         }
     }
 

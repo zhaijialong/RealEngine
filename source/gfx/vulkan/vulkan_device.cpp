@@ -79,7 +79,7 @@ void VulkanDevice::EndFrame()
 {
     ++m_frameID;
 
-    vmaSetCurrentFrameIndex(m_vmaAllocator, m_frameID);
+    vmaSetCurrentFrameIndex(m_vmaAllocator, (uint32_t)m_frameID);
 }
 
 IGfxSwapchain* VulkanDevice::CreateSwapchain(const GfxSwapchainDesc& desc, const eastl::string& name)
@@ -271,7 +271,7 @@ uint32_t VulkanDevice::GetAllocationSize(const GfxTextureDesc& desc)
     vkDestroyImage(m_device, image, nullptr);
 
     m_textureSizeMap.emplace(desc, requirements.memoryRequirements.size);
-    return requirements.memoryRequirements.size;
+    return (uint32_t)requirements.memoryRequirements.size;
 }
 
 bool VulkanDevice::DumpMemoryStats(const eastl::string& file)
