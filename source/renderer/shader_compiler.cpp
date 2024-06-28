@@ -1,6 +1,7 @@
 #include "shader_compiler.h"
 #include "renderer.h"
 #include "shader_cache.h"
+#include "core/engine.h"
 #include "utils/log.h"
 #include "utils/string.h"
 #include "utils/assert.h"
@@ -75,7 +76,8 @@ ShaderCompiler::ShaderCompiler(Renderer* pRenderer) : m_pRenderer(pRenderer)
 #if RE_PLATFORM_WINDOWS
     HMODULE dxc = LoadLibrary(L"dxcompiler.dll");
 #else
-    void* dxc = dlopen("libdxcompiler.dylib", RTLD_LAZY);
+    eastl::string lib = Engine::GetInstance()->GetWorkPath() + "libdxcompiler.dylib";
+    void* dxc = dlopen(lib.c_str(), RTLD_LAZY);
 #endif
     if (dxc)
     {
