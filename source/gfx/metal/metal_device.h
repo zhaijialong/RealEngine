@@ -1,13 +1,16 @@
 #pragma once
 
+#include "Metal/MTLDevice.hpp"
 #include "../gfx_device.h"
-
 
 class MetalDevice : public IGfxDevice
 {
 public:
+    MetalDevice(const GfxDeviceDesc& desc);
+    ~MetalDevice();
+    
     virtual bool Create() override;
-    virtual void* GetHandle() const override;
+    virtual void* GetHandle() const override { return m_pDevice; }
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
 
@@ -30,4 +33,7 @@ public:
 
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
     virtual bool DumpMemoryStats(const eastl::string& file) override;
+    
+private:
+    MTL::Device* m_pDevice = nullptr;
 };

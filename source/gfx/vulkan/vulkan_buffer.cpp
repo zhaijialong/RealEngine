@@ -118,5 +118,5 @@ uint32_t VulkanBuffer::GetRequiredStagingBufferSize() const
 {
     VkMemoryRequirements requirements;
     vkGetBufferMemoryRequirements((VkDevice)m_pDevice->GetHandle(), m_buffer, &requirements);
-    return requirements.size;
+    return (uint32_t)requirements.size;
 }

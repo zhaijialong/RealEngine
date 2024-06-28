@@ -2,9 +2,16 @@
 
 #include "../gfx_command_list.h"
 
+class MetalDevice;
+
 class MetalCommandList : public IGfxCommandList
 {
 public:
+    MetalCommandList(MetalDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name);
+    ~MetalCommandList();
+
+    bool Create();
+    
     virtual void* GetHandle() const override;
 
     virtual void ResetAllocator() override;

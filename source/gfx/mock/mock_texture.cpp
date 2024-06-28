@@ -25,18 +25,7 @@ void* MockTexture::GetHandle() const
 
 uint32_t MockTexture::GetRequiredStagingBufferSize() const
 {
-    uint32_t size = 0;
-
-    for (uint32_t layer = 0; layer < m_desc.array_size; ++layer)
-    {
-        for (uint32_t mip = 0; mip < m_desc.mip_levels; ++mip)
-        {
-            uint32_t height = eastl::max(m_desc.height >> mip, 1u);
-            size += GetRowPitch(mip) * height;
-        }
-    }
-
-    return size;
+    return m_pDevice->GetAllocationSize(m_desc);
 }
 
 uint32_t MockTexture::GetRowPitch(uint32_t mip_level) const

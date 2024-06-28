@@ -30,7 +30,7 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
         break;
 #if RE_PLATFORM_MAC || RE_PLATFORM_IOS
     case GfxRenderBackend::Metal:
-        // todo : pDevice = new MetalDevice(desc);
+        pDevice = new MetalDevice(desc);
         break;
 #endif
     case GfxRenderBackend::Mock:

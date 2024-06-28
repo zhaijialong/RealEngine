@@ -57,6 +57,8 @@ set(METAL_FILES
     ${SOURCE_ROOT}/gfx/metal/metal_swapchain.h
     ${SOURCE_ROOT}/gfx/metal/metal_texture.cpp
     ${SOURCE_ROOT}/gfx/metal/metal_texture.h
+    ${SOURCE_ROOT}/gfx/metal/metal_utils.cpp
+    ${SOURCE_ROOT}/gfx/metal/metal_utils.h
 )
 
 set(ENGINE_SRC_FILES
