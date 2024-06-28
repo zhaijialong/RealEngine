@@ -179,6 +179,10 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
         arguments.push_back(L"-O3");
 #endif
     }
+    
+#if !RE_PLATFORM_WINDOWS
+    arguments.push_back(L"-Vd"); //disable dxil validation because we don't have a libdxil.so for mac
+#endif
 
     CComPtr<IDxcResult> pResults;
     m_pDxcCompiler->Compile(&sourceBuffer, arguments.data(), (UINT32)arguments.size(), m_pDxcIncludeHandler, IID_PPV_ARGS(&pResults));
