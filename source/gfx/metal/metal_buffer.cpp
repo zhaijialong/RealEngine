@@ -62,5 +62,5 @@ uint64_t MetalBuffer::GetGpuAddress()
 
 uint32_t MetalBuffer::GetRequiredStagingBufferSize() const
 {
-    return (uint32_t)m_pBuffer->allocatedSize();
+    return m_desc.size;
 }

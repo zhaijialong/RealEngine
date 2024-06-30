@@ -12,6 +12,7 @@ public:
     ~MetalTexture();
 
     bool Create();
+    void SetSwapchainTexture(MTL::Texture* texture);
     
     virtual void* GetHandle() const override { return m_pTexture; }
     virtual uint32_t GetRequiredStagingBufferSize() const override;
@@ -22,4 +23,5 @@ public:
     
 private:
     MTL::Texture* m_pTexture = nullptr;
+    bool m_bSwapchainTexture = false;
 };

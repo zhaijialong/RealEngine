@@ -4,6 +4,7 @@
 #include "../gfx_swapchain.h"
 
 class MetalDevice;
+class MetalTexture;
 
 class MetalSwapchain : public IGfxSwapchain
 {
@@ -22,4 +23,5 @@ public:
     
 private:
     MTK::View* m_pView = nullptr;
+    MetalTexture* m_pTexture = nullptr;
 };

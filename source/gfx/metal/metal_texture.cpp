@@ -15,7 +15,10 @@ MetalTexture::MetalTexture(MetalDevice* pDevice, const GfxTextureDesc& desc, con
 
 MetalTexture::~MetalTexture()
 {
-    m_pTexture->release();
+    if(!m_bSwapchainTexture)
+    {
+        m_pTexture->release();
+    }
 }
 
 bool MetalTexture::Create()
@@ -52,6 +55,15 @@ bool MetalTexture::Create()
     }
     
     return true;
+}
+
+void MetalTexture::SetSwapchainTexture(MTL::Texture* texture)
+{
+    m_pTexture = texture;
+    m_desc.width = (uint32_t)m_pTexture->width();
+    m_desc.height = (uint32_t)m_pTexture->height();
+    
+    m_bSwapchainTexture = true;
 }
 
 uint32_t MetalTexture::GetRequiredStagingBufferSize() const
