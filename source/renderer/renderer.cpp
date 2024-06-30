@@ -143,13 +143,6 @@ void Renderer::BeginFrame()
     pComputeCommandList->ResetAllocator();
     pComputeCommandList->Begin();
     pComputeCommandList->BeginProfiling();
-
-    if (m_pDevice->GetFrameID() == 0)
-    {
-        pCommandList->BufferBarrier(m_pSPDCounterBuffer->GetBuffer(), GfxAccessComputeUAV, GfxAccessCopyDst);
-        pCommandList->WriteBuffer(m_pSPDCounterBuffer->GetBuffer(), 0, 0);
-        pCommandList->BufferBarrier(m_pSPDCounterBuffer->GetBuffer(), GfxAccessCopyDst, GfxAccessComputeUAV);
-    }
 }
 
 void Renderer::UploadResources()
@@ -426,6 +419,13 @@ void Renderer::Render()
 
     GPU_EVENT_PROFILER(pCommandList, "Render Frame");
 
+    if (m_pDevice->GetFrameID() == 0)
+    {
+        pCommandList->BufferBarrier(m_pSPDCounterBuffer->GetBuffer(), GfxAccessComputeUAV, GfxAccessCopyDst);
+        pCommandList->WriteBuffer(m_pSPDCounterBuffer->GetBuffer(), 0, 0);
+        pCommandList->BufferBarrier(m_pSPDCounterBuffer->GetBuffer(), GfxAccessCopyDst, GfxAccessComputeUAV);
+    }
+    
     m_pRenderGraph->Clear();
     m_pGpuScene->Update();
     

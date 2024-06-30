@@ -78,9 +78,18 @@ public:
 #endif
     
 private:
+    void BeginBlitEncoder();
+    void EndBlitEncoder();
+    
+    void BeginComputeEncoder();
+    void EndComputeEncoder();
+    
+private:
     MTL::CommandBuffer* m_pCommandBuffer = nullptr;
     
+    MTL::BlitCommandEncoder* m_pBlitCommandEncoder = nullptr;
     MTL::RenderCommandEncoder* m_pRenderCommandEncoder = nullptr;
+    MTL::ComputeCommandEncoder* m_pComputeCommandEncoder = nullptr;
     
     MTL::Buffer* m_pIndexBuffer = nullptr;
     NS::UInteger m_indexBufferOffset = 0;

@@ -39,6 +39,9 @@ void MetalCommandList::Begin()
 
 void MetalCommandList::End()
 {
+    EndBlitEncoder();
+    EndComputeEncoder();
+    EndRenderPass();
 }
 
 void MetalCommandList::Wait(IGfxFence* fence, uint64_t value)
@@ -64,6 +67,10 @@ void MetalCommandList::Submit()
 
 void MetalCommandList::ResetState()
 {
+    m_pBlitCommandEncoder = nullptr;
+    m_pRenderCommandEncoder = nullptr;
+    m_pComputeCommandEncoder = nullptr;
+    
     m_pIndexBuffer = nullptr;
     m_indexBufferOffset = 0;
     m_indexType = MTL::IndexTypeUInt16;
@@ -91,18 +98,47 @@ void MetalCommandList::EndEvent()
 
 void MetalCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)
 {
+    BeginBlitEncoder();
+    
+    const GfxTextureDesc& desc = dst_texture->GetDesc();
+    
+    NS::UInteger bytesPerRow = ((MetalTexture*)dst_texture)->GetRowPitch(mip_level);
+    
+    uint32_t min_height = GetFormatBlockHeight(desc.format);
+    uint32_t height = eastl::max(desc.height >> mip_level, min_height);
+    uint32_t row_num = height / min_height;
+    NS::UInteger bytesPerImage = bytesPerRow * row_num;
+    
+    MTL::Size size = MTL::Size::Make(
+        eastl::max(desc.width >> mip_level, 1u),
+        eastl::max(desc.height >> mip_level, 1u),
+        eastl::max(desc.depth >> mip_level, 1u));
+    
+    m_pBlitCommandEncoder->copyFromBuffer(
+        (MTL::Buffer*)src_buffer->GetHandle(),
+        offset,
+        bytesPerRow,
+        bytesPerImage,
+        size,
+        (MTL::Texture*)dst_texture->GetHandle(),
+        array_slice,
+        mip_level,
+        MTL::Origin::Make(0, 0, 0));
 }
 
 void MetalCommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, uint32_t offset, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
 {
+    BeginBlitEncoder();
 }
 
 void MetalCommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size)
 {
+    BeginBlitEncoder();
 }
 
 void MetalCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array)
 {
+    BeginBlitEncoder();
 }
 
 void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
@@ -115,6 +151,9 @@ void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, con
 
 void MetalCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
 {
+    BeginBlitEncoder();
+    
+    //m_pBlitCommandEncoder->fillBuffer((MTL::Buffer*)buffer->GetHandle(), <#NS::Range range#>, <#uint8_t value#>)
 }
 
 void MetalCommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
@@ -139,6 +178,9 @@ void MetalCommandList::FlushBarriers()
 
 void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 {
+    EndBlitEncoder();
+    EndComputeEncoder();
+    
     MTL::RenderPassDescriptor* descriptor = MTL::RenderPassDescriptor::alloc()->init();
 
     MTL::RenderPassColorAttachmentDescriptorArray* colorAttachements = descriptor->colorAttachments();
@@ -192,8 +234,11 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 
 void MetalCommandList::EndRenderPass()
 {
-    m_pRenderCommandEncoder->endEncoding();
-    m_pRenderCommandEncoder = nullptr;
+    if(m_pRenderCommandEncoder)
+    {
+        m_pRenderCommandEncoder->endEncoding();
+        m_pRenderCommandEncoder = nullptr;
+    }
 }
 
 void MetalCommandList::SetPipelineState(IGfxPipelineState* state)
@@ -247,10 +292,12 @@ void MetalCommandList::SetComputeConstants(uint32_t slot, const void* data, size
 
 void MetalCommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_offset)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
@@ -259,14 +306,17 @@ void MetalCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, 
 
 void MetalCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::DrawIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
@@ -275,14 +325,17 @@ void MetalCommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
 
 void MetalCommandList::DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::MultiDrawIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::MultiDrawIndexedIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
@@ -291,6 +344,7 @@ void MetalCommandList::MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* arg
 
 void MetalCommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
+    RE_ASSERT(m_pRenderCommandEncoder != nullptr);
 }
 
 void MetalCommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
@@ -311,3 +365,43 @@ MicroProfileThreadLogGpu* MetalCommandList::GetProfileLog() const
     return nullptr;
 }
 #endif
+
+void MetalCommandList::BeginBlitEncoder()
+{
+    EndRenderPass();
+    EndComputeEncoder();
+    
+    if(m_pBlitCommandEncoder == nullptr)
+    {
+        m_pBlitCommandEncoder = m_pCommandBuffer->blitCommandEncoder();
+    }
+}
+
+void MetalCommandList::EndBlitEncoder()
+{
+    if(m_pBlitCommandEncoder)
+    {
+        m_pBlitCommandEncoder->endEncoding();
+        m_pBlitCommandEncoder = nullptr;
+    }
+}
+
+void MetalCommandList::BeginComputeEncoder()
+{
+    EndRenderPass();
+    EndBlitEncoder();
+    
+    if(m_pComputeCommandEncoder == nullptr)
+    {
+        m_pComputeCommandEncoder = m_pCommandBuffer->computeCommandEncoder();
+    }
+}
+
+void MetalCommandList::EndComputeEncoder()
+{
+    if(m_pComputeCommandEncoder)
+    {
+        m_pComputeCommandEncoder->endEncoding();
+        m_pComputeCommandEncoder = nullptr;
+    }
+}
