@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Metal/MTLCommandBuffer.hpp"
 #include "../gfx_command_list.h"
 
 class MetalDevice;
@@ -75,4 +76,7 @@ public:
 #if MICROPROFILE_GPU_TIMERS
     virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;
 #endif
+    
+private:
+    MTL::CommandBuffer* m_pCommandBuffer = nullptr;
 };

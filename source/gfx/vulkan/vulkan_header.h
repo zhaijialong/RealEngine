@@ -216,7 +216,7 @@ inline VkImageCreateInfo ToVulkanImageCreateInfo(const GfxTextureDesc& desc)
 
     if (desc.type == GfxTextureType::TextureCube || desc.type == GfxTextureType::TextureCubeArray)
     {
-        createInfo.arrayLayers *= 6; // cube faces count as array layers in Vulkan
+        RE_ASSERT(desc.array_size % 6 == 0);
         createInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
     }
 

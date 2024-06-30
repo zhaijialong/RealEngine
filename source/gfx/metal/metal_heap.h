@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Metal/MTLHeap.hpp"
 #include "../gfx_heap.h"
 
 class MetalDevice;
@@ -12,6 +13,8 @@ public:
 
     bool Create();
     
-    virtual void* GetHandle() const override;
+    virtual void* GetHandle() const override { return m_pHeap; }
 
+private:
+    MTL::Heap* m_pHeap = nullptr;
 };

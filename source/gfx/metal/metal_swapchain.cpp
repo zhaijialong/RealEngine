@@ -3,32 +3,36 @@
 
 MetalSwapchain::MetalSwapchain(MetalDevice* pDevice, const GfxSwapchainDesc& desc, const eastl::string& name)
 {
-    
+    m_pDevice = pDevice;
+    m_desc = desc;
+    m_name = name;
 }
 
 MetalSwapchain::~MetalSwapchain()
 {
-    
+    m_pView->release();
 }
 
 bool MetalSwapchain::Create()
 {
+    m_pView = (MTK::View*)m_desc.window_handle;
+    m_pView->setDevice((MTL::Device*)m_pDevice->GetHandle());
+    m_pView->retain();
+    
     return true;
 }
 
-void MetalSwapchain::Present()
+MTL::Drawable* MetalSwapchain::GetDrawable()
 {
-    
-}
-
-void* MetalSwapchain::GetHandle() const
-{
-    return nullptr;
+    return m_pView->currentDrawable();
 }
 
 void MetalSwapchain::AcquireNextBackBuffer()
 {
+    CA::MetalDrawable* drawable = m_pView->currentDrawable(); // this invokes CAMetalLayer::nextDrawable
+    MTL::Texture* texture = drawable->texture();
     
+    //todo
 }
 
 IGfxTexture* MetalSwapchain::GetBackBuffer() const

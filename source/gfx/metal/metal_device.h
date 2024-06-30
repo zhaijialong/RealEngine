@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Metal/MTLDevice.hpp"
+#include "Metal/MTLCommandQueue.hpp"
 #include "../gfx_device.h"
 
 class MetalDevice : public IGfxDevice
@@ -34,6 +35,9 @@ public:
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
     virtual bool DumpMemoryStats(const eastl::string& file) override;
     
+    MTL::CommandQueue* GetQueue() const { return m_pQueue; }
+    
 private:
     MTL::Device* m_pDevice = nullptr;
+    MTL::CommandQueue* m_pQueue = nullptr;
 };

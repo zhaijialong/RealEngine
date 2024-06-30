@@ -1,5 +1,7 @@
 #include "metal_command_list.h"
 #include "metal_device.h"
+#include "metal_swapchain.h"
+#include "metal_fence.h"
 
 MetalCommandList::MetalCommandList(MetalDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
 {
@@ -28,6 +30,9 @@ void MetalCommandList::ResetAllocator()
 
 void MetalCommandList::Begin()
 {
+    MTL::CommandQueue* queue = ((MetalDevice*)m_pDevice)->GetQueue();
+    
+    m_pCommandBuffer = queue->commandBuffer();
 }
 
 void MetalCommandList::End()
@@ -36,18 +41,23 @@ void MetalCommandList::End()
 
 void MetalCommandList::Wait(IGfxFence* fence, uint64_t value)
 {
+    m_pCommandBuffer->encodeWait((const MTL::Event*)fence->GetHandle(), value);
 }
 
 void MetalCommandList::Signal(IGfxFence* fence, uint64_t value)
 {
+    m_pCommandBuffer->encodeSignalEvent((const MTL::Event*)fence->GetHandle(), value);
 }
 
 void MetalCommandList::Present(IGfxSwapchain* swapchain)
 {
+    m_pCommandBuffer->presentDrawable(((MetalSwapchain*)swapchain)->GetDrawable());
 }
 
 void MetalCommandList::Submit()
 {
+    m_pCommandBuffer->commit();
+    m_pCommandBuffer = nullptr;
 }
 
 void MetalCommandList::ResetState()

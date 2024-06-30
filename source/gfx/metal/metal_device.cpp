@@ -19,11 +19,14 @@ MetalDevice::MetalDevice(const GfxDeviceDesc& desc)
 
 MetalDevice::~MetalDevice()
 {
+    m_pQueue->release();
+    m_pDevice->release();
 }
 
 bool MetalDevice::Create()
 {
     m_pDevice = MTL::CreateSystemDefaultDevice();
+    m_pQueue = m_pDevice->newCommandQueue();
     
     return true;
 }

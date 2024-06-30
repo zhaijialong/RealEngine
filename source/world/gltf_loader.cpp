@@ -900,6 +900,8 @@ SkeletalMeshData* GLTFLoader::LoadSkeletalMesh(const cgltf_primitive* primitive,
             mesh->jointWeightBuffer = cache->GetSceneBuffer("model(" + m_file + " " + name + ") joint weight", jointWeights.data(), sizeof(float4) * (uint32_t)accessor->count);
             break;
         }
+        default:
+            break;
         }
     }
 
