@@ -20,24 +20,7 @@ MetalTexture::~MetalTexture()
 
 bool MetalTexture::Create()
 {
-    MTL::TextureDescriptor* descriptor = MTL::TextureDescriptor::alloc()->init();
-    descriptor->setWidth(m_desc.width);
-    descriptor->setHeight(m_desc.height);
-    descriptor->setDepth(m_desc.depth);
-    descriptor->setMipmapLevelCount(m_desc.mip_levels);
-    if(m_desc.type == GfxTextureType::TextureCube || m_desc.type == GfxTextureType::TextureCubeArray)
-    {
-        RE_ASSERT(m_desc.array_size % 6 == 0);
-        descriptor->setArrayLength(m_desc.array_size / 6);
-    }
-    else
-    {
-        descriptor->setArrayLength(m_desc.array_size);
-    }
-    descriptor->setTextureType(ToTextureType(m_desc.type));
-    descriptor->setPixelFormat(ToPixelFormat(m_desc.format));
-    descriptor->setResourceOptions(ToResourceOptions(m_desc.memory_type));
-    descriptor->setUsage(ToTextureUsage(m_desc.usage));
+    MTL::TextureDescriptor* descriptor = ToTextureDescriptor(m_desc);
     
     if(m_desc.heap)
     {
@@ -63,12 +46,33 @@ bool MetalTexture::Create()
     
     SetDebugLabel(m_pTexture, m_name.c_str());
     
+    if(m_desc.heap)
+    {
+        m_pTexture->makeAliasable();
+    }
+    
     return true;
 }
 
 uint32_t MetalTexture::GetRequiredStagingBufferSize() const
 {
-    return m_pDevice->GetAllocationSize(m_desc);
+    uint32_t size = 0;
+
+    uint32_t min_width = GetFormatBlockWidth(m_desc.format);
+    uint32_t min_height = GetFormatBlockHeight(m_desc.format);
+
+    for (uint32_t layer = 0; layer < m_desc.array_size; ++layer)
+    {
+        for (uint32_t mip = 0; mip < m_desc.mip_levels; ++mip)
+        {
+            uint32_t width = eastl::max(m_desc.width >> mip, min_width);
+            uint32_t height = eastl::max(m_desc.height >> mip, min_height);
+
+            size += GetFormatRowPitch(m_desc.format, width) * height;
+        }
+    }
+
+    return size;
 }
 
 uint32_t MetalTexture::GetRowPitch(uint32_t mip_level) const

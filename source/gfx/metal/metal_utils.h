@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/assert.h"
 #include "Foundation/Foundation.hpp"
 
 template<typename T>
@@ -204,4 +205,28 @@ inline MTL::TextureUsage ToTextureUsage(GfxTextureUsageFlags flags)
     }
     
     return usage;
+}
+
+inline MTL::TextureDescriptor* ToTextureDescriptor(const GfxTextureDesc& desc)
+{
+    MTL::TextureDescriptor* descriptor = MTL::TextureDescriptor::alloc()->init();
+    descriptor->setWidth(desc.width);
+    descriptor->setHeight(desc.height);
+    descriptor->setDepth(desc.depth);
+    descriptor->setMipmapLevelCount(desc.mip_levels);
+    if(desc.type == GfxTextureType::TextureCube || desc.type == GfxTextureType::TextureCubeArray)
+    {
+        RE_ASSERT(desc.array_size % 6 == 0);
+        descriptor->setArrayLength(desc.array_size / 6);
+    }
+    else
+    {
+        descriptor->setArrayLength(desc.array_size);
+    }
+    descriptor->setTextureType(ToTextureType(desc.type));
+    descriptor->setPixelFormat(ToPixelFormat(desc.format));
+    descriptor->setResourceOptions(ToResourceOptions(desc.memory_type));
+    descriptor->setUsage(ToTextureUsage(desc.usage));
+    
+    return descriptor;
 }

@@ -10,6 +10,7 @@
 #include "metal_heap.h"
 #include "metal_rt_blas.h"
 #include "metal_rt_tlas.h"
+#include "metal_utils.h"
 #include "../gfx.h"
 
 MetalDevice::MetalDevice(const GfxDeviceDesc& desc)
@@ -218,23 +219,11 @@ IGfxRayTracingTLAS* MetalDevice::CreateRayTracingTLAS(const GfxRayTracingTLASDes
 
 uint32_t MetalDevice::GetAllocationSize(const GfxTextureDesc& desc)
 {
-    uint32_t size = 0;
-
-    uint32_t min_width = GetFormatBlockWidth(desc.format);
-    uint32_t min_height = GetFormatBlockHeight(desc.format);
-
-    for (uint32_t layer = 0; layer < desc.array_size; ++layer)
-    {
-        for (uint32_t mip = 0; mip < desc.mip_levels; ++mip)
-        {
-            uint32_t width = eastl::max(desc.width >> mip, min_width);
-            uint32_t height = eastl::max(desc.height >> mip, min_height);
-
-            size += GetFormatRowPitch(desc.format, width) * height;
-        }
-    }
-
-    return size;
+    MTL::TextureDescriptor* descriptor = ToTextureDescriptor(desc);
+    MTL::SizeAndAlign sizeAndAlign = m_pDevice->heapTextureSizeAndAlign(descriptor);
+    descriptor->release();
+    
+    return (uint32_t)sizeAndAlign.size;
 }
 
 bool MetalDevice::DumpMemoryStats(const eastl::string& file)
