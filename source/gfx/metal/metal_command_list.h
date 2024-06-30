@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Metal/MTLCommandBuffer.hpp"
+#include "Metal/Metal.hpp"
 #include "../gfx_command_list.h"
 
 class MetalDevice;
@@ -13,7 +13,7 @@ public:
 
     bool Create();
     
-    virtual void* GetHandle() const override;
+    virtual void* GetHandle() const override { m_pCommandBuffer; }
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;
@@ -79,4 +79,10 @@ public:
     
 private:
     MTL::CommandBuffer* m_pCommandBuffer = nullptr;
+    
+    MTL::RenderCommandEncoder* m_pRenderCommandEncoder = nullptr;
+    
+    MTL::Buffer* m_pIndexBuffer = nullptr;
+    NS::UInteger m_indexBufferOffset = 0;
+    MTL::IndexType m_indexType = MTL::IndexTypeUInt16;
 };

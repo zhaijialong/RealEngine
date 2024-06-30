@@ -2,6 +2,7 @@
 
 #include "utils/assert.h"
 #include "Foundation/Foundation.hpp"
+#include "Metal/Metal.hpp"
 
 template<typename T>
 inline void SetDebugLabel(T* resource, const char* name)
@@ -229,4 +230,32 @@ inline MTL::TextureDescriptor* ToTextureDescriptor(const GfxTextureDesc& desc)
     descriptor->setUsage(ToTextureUsage(desc.usage));
     
     return descriptor;
+}
+
+inline MTL::LoadAction ToLoadAction(GfxRenderPassLoadOp loadOp)
+{
+    switch (loadOp)
+    {
+        case GfxRenderPassLoadOp::Load:
+            return MTL::LoadActionLoad;
+        case GfxRenderPassLoadOp::Clear:
+            return MTL::LoadActionClear;
+        case GfxRenderPassLoadOp::DontCare:
+            return MTL::LoadActionDontCare;
+        default:
+            return MTL::LoadActionLoad;
+    }
+}
+
+inline MTL::StoreAction ToStoreAction(GfxRenderPassStoreOp storeOp)
+{
+    switch (storeOp)
+    {
+        case GfxRenderPassStoreOp::Store:
+            return MTL::StoreActionStore;
+        case GfxRenderPassStoreOp::DontCare:
+            return MTL::StoreActionDontCare;
+        default:
+            return MTL::StoreActionStore;
+    }
 }

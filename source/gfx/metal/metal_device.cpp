@@ -12,6 +12,7 @@
 #include "metal_rt_tlas.h"
 #include "metal_utils.h"
 #include "../gfx.h"
+#include "utils/log.h"
 
 MetalDevice::MetalDevice(const GfxDeviceDesc& desc)
 {
@@ -27,6 +28,15 @@ MetalDevice::~MetalDevice()
 bool MetalDevice::Create()
 {
     m_pDevice = MTL::CreateSystemDefaultDevice();
+    
+    RE_INFO("GPU : {}", m_pDevice->name()->utf8String());
+    
+    if(!m_pDevice->supportsFamily(MTL::GPUFamilyApple7))
+    {
+        RE_INFO("RealEngine requires a Metal GPU family Apple7+ device");
+        return false;
+    }
+    
     m_pQueue = m_pDevice->newCommandQueue();
     
     return true;
