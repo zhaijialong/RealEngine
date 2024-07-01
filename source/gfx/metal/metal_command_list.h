@@ -13,7 +13,7 @@ public:
 
     bool Create();
     
-    virtual void* GetHandle() const override { m_pCommandBuffer; }
+    virtual void* GetHandle() const override { return m_pCommandBuffer; }
 
     virtual void ResetAllocator() override;
     virtual void Begin() override;

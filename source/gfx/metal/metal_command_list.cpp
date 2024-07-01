@@ -104,22 +104,17 @@ void MetalCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mi
     
     NS::UInteger bytesPerRow = ((MetalTexture*)dst_texture)->GetRowPitch(mip_level);
     
-    uint32_t min_height = GetFormatBlockHeight(desc.format);
-    uint32_t height = eastl::max(desc.height >> mip_level, min_height);
-    uint32_t row_num = height / min_height;
+    uint32_t block_height = GetFormatBlockHeight(desc.format);
+    uint32_t height = eastl::max(desc.height >> mip_level, block_height);
+    uint32_t row_num = height / block_height;
     NS::UInteger bytesPerImage = bytesPerRow * row_num;
-    
-    MTL::Size size = MTL::Size::Make(
-        eastl::max(desc.width >> mip_level, 1u),
-        eastl::max(desc.height >> mip_level, 1u),
-        eastl::max(desc.depth >> mip_level, 1u));
     
     m_pBlitCommandEncoder->copyFromBuffer(
         (MTL::Buffer*)src_buffer->GetHandle(),
         offset,
         bytesPerRow,
-        bytesPerImage,
-        size,
+        desc.type == GfxTextureType::Texture3D ? bytesPerImage : 0,
+        MTL::Size::Make(eastl::max(desc.width >> mip_level, 1u), eastl::max(desc.height >> mip_level, 1u), eastl::max(desc.depth >> mip_level, 1u)),
         (MTL::Texture*)dst_texture->GetHandle(),
         array_slice,
         mip_level,

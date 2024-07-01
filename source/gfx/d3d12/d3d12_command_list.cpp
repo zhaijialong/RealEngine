@@ -245,9 +245,9 @@ void D3D12CommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, uint32_t offs
     dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     dst.PlacedFootprint.Offset = offset;
     dst.PlacedFootprint.Footprint.Format = dxgi_format(desc.format);
-    dst.PlacedFootprint.Footprint.Width = eastl::max(desc.width >> mip_level, 1u);
-    dst.PlacedFootprint.Footprint.Height = eastl::max(desc.height >> mip_level, 1u);
-    dst.PlacedFootprint.Footprint.Depth = eastl::max(desc.depth >> mip_level, 1u);
+    dst.PlacedFootprint.Footprint.Width = w;
+    dst.PlacedFootprint.Footprint.Height = h;
+    dst.PlacedFootprint.Footprint.Depth = d;
     dst.PlacedFootprint.Footprint.RowPitch = src_texture->GetRowPitch(mip_level);
 
     D3D12_TEXTURE_COPY_LOCATION src;

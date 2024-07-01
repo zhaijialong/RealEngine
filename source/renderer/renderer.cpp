@@ -1058,13 +1058,15 @@ void Renderer::UploadTexture(IGfxTexture* texture, const void* data)
     char* dst_data = (char*)buffer.buffer->GetCpuAddress() + buffer.offset;
     uint32_t dst_offset = 0;
     uint32_t src_offset = 0;
+    
+    const uint32_t min_width = GetFormatBlockWidth(desc.format);
+    const uint32_t min_height = GetFormatBlockHeight(desc.format);
+    const uint32_t alignment = m_pDevice->GetDesc().backend == GfxRenderBackend::D3D12 ? 512 : 1; //512 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
 
     for (uint32_t slice = 0; slice < desc.array_size; ++slice)
     {
         for (uint32_t mip = 0; mip < desc.mip_levels; ++mip)
         {
-            uint32_t min_width = GetFormatBlockWidth(desc.format);
-            uint32_t min_height = GetFormatBlockHeight(desc.format);
             uint32_t w = max(desc.width >> mip, min_width);
             uint32_t h = max(desc.height >> mip, min_height);
             uint32_t d = max(desc.depth >> mip, 1u);
@@ -1086,7 +1088,7 @@ void Renderer::UploadTexture(IGfxTexture* texture, const void* data)
             upload.offset = dst_offset;
             m_pendingTextureUploads.push_back(upload);
 
-            dst_offset += RoundUpPow2(dst_row_pitch * row_num, 512); //512 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT
+            dst_offset += RoundUpPow2(dst_row_pitch * row_num, alignment);
             src_offset += src_row_pitch * row_num;
         }
     }
