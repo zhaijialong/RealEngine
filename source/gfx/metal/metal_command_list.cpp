@@ -195,7 +195,17 @@ void MetalCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t
 {
     BeginBlitEncoder();
     
-    //m_pBlitCommandEncoder->fillBuffer((MTL::Buffer*)buffer->GetHandle(), <#NS::Range range#>, <#uint8_t value#>)
+    NS::String* label = NS::String::alloc()->init("IGfxCommandList::WriteBuffer", NS::StringEncoding::UTF8StringEncoding);
+    m_pBlitCommandEncoder->pushDebugGroup(label);
+    
+    MTL::Buffer* mtlBuffer = (MTL::Buffer*)buffer->GetHandle();
+    m_pBlitCommandEncoder->fillBuffer(mtlBuffer, NS::Range::Make(offset + 0, sizeof(uint8_t)), uint8_t(data >> 0));
+    m_pBlitCommandEncoder->fillBuffer(mtlBuffer, NS::Range::Make(offset + 1, sizeof(uint8_t)), uint8_t(data >> 8));
+    m_pBlitCommandEncoder->fillBuffer(mtlBuffer, NS::Range::Make(offset + 2, sizeof(uint8_t)), uint8_t(data >> 16));
+    m_pBlitCommandEncoder->fillBuffer(mtlBuffer, NS::Range::Make(offset + 3, sizeof(uint8_t)), uint8_t(data >> 24));
+    
+    m_pBlitCommandEncoder->popDebugGroup();
+    label->release();
 }
 
 void MetalCommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
