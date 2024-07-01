@@ -101,20 +101,24 @@ void MetalCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mi
     BeginBlitEncoder();
     
     const GfxTextureDesc& desc = dst_texture->GetDesc();
+    MTL::Size textureSize = MTL::Size::Make(
+        eastl::max(desc.width >> mip_level, 1u),
+        eastl::max(desc.height >> mip_level, 1u),
+        eastl::max(desc.depth >> mip_level, 1u));
     
-    NS::UInteger bytesPerRow = ((MetalTexture*)dst_texture)->GetRowPitch(mip_level);
+    uint32_t bytesPerRow = ((MetalTexture*)dst_texture)->GetRowPitch(mip_level);
     
     uint32_t block_height = GetFormatBlockHeight(desc.format);
     uint32_t height = eastl::max(desc.height >> mip_level, block_height);
     uint32_t row_num = height / block_height;
-    NS::UInteger bytesPerImage = bytesPerRow * row_num;
+    uint32_t bytesPerImage = bytesPerRow * row_num;
     
     m_pBlitCommandEncoder->copyFromBuffer(
         (MTL::Buffer*)src_buffer->GetHandle(),
         offset,
         bytesPerRow,
         desc.type == GfxTextureType::Texture3D ? bytesPerImage : 0,
-        MTL::Size::Make(eastl::max(desc.width >> mip_level, 1u), eastl::max(desc.height >> mip_level, 1u), eastl::max(desc.depth >> mip_level, 1u)),
+        textureSize,
         (MTL::Texture*)dst_texture->GetHandle(),
         array_slice,
         mip_level,
@@ -124,16 +128,59 @@ void MetalCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mi
 void MetalCommandList::CopyTextureToBuffer(IGfxBuffer* dst_buffer, uint32_t offset, IGfxTexture* src_texture, uint32_t mip_level, uint32_t array_slice)
 {
     BeginBlitEncoder();
+    
+    const GfxTextureDesc& desc = src_texture->GetDesc();
+    MTL::Size textureSize = MTL::Size::Make(
+        eastl::max(desc.width >> mip_level, 1u),
+        eastl::max(desc.height >> mip_level, 1u),
+        eastl::max(desc.depth >> mip_level, 1u));
+    
+    uint32_t bytesPerRow = ((MetalTexture*)src_texture)->GetRowPitch(mip_level);
+    
+    uint32_t block_height = GetFormatBlockHeight(desc.format);
+    uint32_t height = eastl::max(desc.height >> mip_level, block_height);
+    uint32_t row_num = height / block_height;
+    uint32_t bytesPerImage = bytesPerRow * row_num;
+    
+    m_pBlitCommandEncoder->copyFromTexture(
+        (MTL::Texture*)src_texture->GetHandle(),
+        array_slice,
+        mip_level,
+        MTL::Origin(0, 0, 0),
+        textureSize,
+        (MTL::Buffer*)dst_buffer->GetHandle(),
+        offset,
+        bytesPerRow,
+        desc.type == GfxTextureType::Texture3D ? bytesPerImage : 0);
 }
 
 void MetalCommandList::CopyBuffer(IGfxBuffer* dst, uint32_t dst_offset, IGfxBuffer* src, uint32_t src_offset, uint32_t size)
 {
     BeginBlitEncoder();
+    
+    m_pBlitCommandEncoder->copyFromBuffer((MTL::Buffer*)src->GetHandle(), src_offset, (MTL::Buffer*)dst->GetHandle(), dst_offset, size);
 }
 
 void MetalCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t dst_array, IGfxTexture* src, uint32_t src_mip, uint32_t src_array)
 {
     BeginBlitEncoder();
+    
+    const GfxTextureDesc& desc = src->GetDesc();
+    MTL::Size src_size = MTL::Size::Make(
+        eastl::max(desc.width >> src_mip, 1u),
+        eastl::max(desc.height >> src_mip, 1u),
+        eastl::max(desc.depth >> src_mip, 1u));
+    
+    m_pBlitCommandEncoder->copyFromTexture(
+        (MTL::Texture*)src->GetHandle(),
+        src_array,
+        src_mip,
+        MTL::Origin(0, 0, 0),
+        src_size,
+        (MTL::Texture*)dst->GetHandle(),
+        dst_array,
+        dst_mip,
+        MTL::Origin(0, 0, 0));
 }
 
 void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)

@@ -229,8 +229,9 @@ uint32_t MockDevice::GetAllocationSize(const GfxTextureDesc& desc)
         {
             uint32_t width = eastl::max(desc.width >> mip, min_width);
             uint32_t height = eastl::max(desc.height >> mip, min_height);
+            uint32_t depth = eastl::max(desc.depth >> mip, 1u);
 
-            size += GetFormatRowPitch(desc.format, width) * height;
+            size += GetFormatRowPitch(desc.format, width) * height * depth;
         }
     }
 

@@ -79,8 +79,9 @@ uint32_t MetalTexture::GetRequiredStagingBufferSize() const
         {
             uint32_t width = eastl::max(m_desc.width >> mip, min_width);
             uint32_t height = eastl::max(m_desc.height >> mip, min_height);
+            uint32_t depth = eastl::max(m_desc.depth >> mip, 1u);
 
-            size += GetFormatRowPitch(m_desc.format, width) * height;
+            size += GetFormatRowPitch(m_desc.format, width) * height * depth;
         }
     }
 
