@@ -71,8 +71,8 @@ bool GUI::Init()
     io.Fonts->TexID = (ImTextureID)m_pFontTexture->GetSRV();
 
     GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("imgui.hlsl", "vs_main", "vs_6_6", {});
-    psoDesc.ps = pRenderer->GetShader("imgui.hlsl", "ps_main", "ps_6_6", {});
+    psoDesc.vs = pRenderer->GetShader("imgui.hlsl", "vs_main", GfxShaderType::VS);
+    psoDesc.ps = pRenderer->GetShader("imgui.hlsl", "ps_main", GfxShaderType::PS);
     psoDesc.depthstencil_state.depth_write = false;
     psoDesc.blend_state[0].blend_enable = true;
     psoDesc.blend_state[0].color_src = GfxBlendFactor::SrcAlpha;

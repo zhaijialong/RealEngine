@@ -45,19 +45,19 @@ BasePass::BasePass(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "instance_culling", "cs_6_6", { "FIRST_PHASE=1" });
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "instance_culling", GfxShaderType::CS, { "FIRST_PHASE=1" });
     m_p1stPhaseInstanceCullingPSO = pRenderer->GetPipelineState(desc, "1st phase instance culling PSO");
 
-    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "instance_culling", "cs_6_6", { });
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "instance_culling", GfxShaderType::CS);
     m_p2ndPhaseInstanceCullingPSO = pRenderer->GetPipelineState(desc, "2nd phase instance culling PSO");
 
-    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_meshlet_list", "cs_6_6", { });
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_meshlet_list", GfxShaderType::CS);
     m_pBuildMeshletListPSO = pRenderer->GetPipelineState(desc, "build meshlet list PSO");
 
-    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_instance_culling_command", "cs_6_6", { });
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_instance_culling_command", GfxShaderType::CS);
     m_pBuildInstanceCullingCommandPSO = pRenderer->GetPipelineState(desc, "indirect instance culling command PSO");
 
-    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_indirect_command", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("instance_culling.hlsl", "build_indirect_command", GfxShaderType::CS);
     m_pBuildIndirectCommandPSO = pRenderer->GetPipelineState(desc, "indirect command PSO");
 }
 

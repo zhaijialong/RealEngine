@@ -7,7 +7,7 @@ ClusteredShading::ClusteredShading(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("clustered_shading.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("clustered_shading.hlsl", "main", GfxShaderType::CS);
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "ClusteredShading PSO");
 }
 

@@ -588,9 +588,9 @@ void Renderer::ReloadShaders()
     m_pShaderCache->ReloadShaders();
 }
 
-IGfxShader* Renderer::GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags)
+IGfxShader* Renderer::GetShader(const eastl::string& file, const eastl::string& entry_point, GfxShaderType type, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags)
 {
-    return m_pShaderCache->GetShader(file, entry_point, profile, defines, flags);
+    return m_pShaderCache->GetShader(file, entry_point, type, defines, flags);
 }
 
 IGfxPipelineState* Renderer::GetPipelineState(const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
@@ -698,13 +698,13 @@ void Renderer::CreateCommonResources()
     m_pSPDCounterBuffer.reset(CreateTypedBuffer(nullptr, GfxFormat::R32UI, 1, "Renderer::m_pSPDCounterBuffer", GfxMemoryType::GpuOnly, true));
 
     GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = GetShader("copy.hlsl", "vs_main", "vs_6_6", {});
-    psoDesc.ps = GetShader("copy.hlsl", "ps_main", "ps_6_6", {});
+    psoDesc.vs = GetShader("copy.hlsl", "vs_main", GfxShaderType::VS);
+    psoDesc.ps = GetShader("copy.hlsl", "ps_main", GfxShaderType::PS);
     psoDesc.depthstencil_state.depth_write = false;
     psoDesc.rt_format[0] = m_pSwapchain->GetDesc().backbuffer_format;
     m_pCopyColorPSO = GetPipelineState(psoDesc, "Copy PSO");
 
-    psoDesc.ps = GetShader("copy.hlsl", "ps_main", "ps_6_6", { "OUTPUT_DEPTH=1" });
+    psoDesc.ps = GetShader("copy.hlsl", "ps_main", GfxShaderType::PS, { "OUTPUT_DEPTH=1" });
     psoDesc.depthstencil_state.depth_write = true;
     psoDesc.depthstencil_state.depth_test = true;
     psoDesc.depthstencil_state.depth_func = GfxCompareFunc::Always;
@@ -713,7 +713,7 @@ void Renderer::CreateCommonResources()
     m_pCopyColorDepthPSO = GetPipelineState(psoDesc, "Copy PSO");
 
     GfxComputePipelineDesc computePsoDesc;
-    computePsoDesc.cs = GetShader("copy.hlsl", "cs_copy_depth", "cs_6_6", {});
+    computePsoDesc.cs = GetShader("copy.hlsl", "cs_copy_depth", GfxShaderType::CS);
     m_pCopyDepthPSO = GetPipelineState(computePsoDesc, "Copy Depth PSO");
 }
 

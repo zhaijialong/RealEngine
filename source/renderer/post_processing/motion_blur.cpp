@@ -10,22 +10,22 @@
 MotionBlur::MotionBlur(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("motion_blur/pack_velocity_depth.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("motion_blur/pack_velocity_depth.hlsl", "main", GfxShaderType::CS);
     m_pPackVelocityPSO = pRenderer->GetPipelineState(psoDesc, "MotionBlur Pack Velocity PSO");
 
-    psoDesc.cs = pRenderer->GetShader("motion_blur/tile_velocity.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("motion_blur/tile_velocity.hlsl", "main", GfxShaderType::CS);
     m_pTileVelocityXPSO = pRenderer->GetPipelineState(psoDesc, "MotionBlur TileVelocity X PSO");
 
-    psoDesc.cs = pRenderer->GetShader("motion_blur/tile_velocity.hlsl", "main", "cs_6_6", { "VERTICAL_PASS=1"});
+    psoDesc.cs = pRenderer->GetShader("motion_blur/tile_velocity.hlsl", "main", GfxShaderType::CS, { "VERTICAL_PASS=1"});
     m_pTileVelocityYPSO = pRenderer->GetPipelineState(psoDesc, "MotionBlur TileVelocity Y PSO");
 
-    psoDesc.cs = pRenderer->GetShader("motion_blur/neighbor_max.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("motion_blur/neighbor_max.hlsl", "main", GfxShaderType::CS);
     m_pNeighborMaxPSO = pRenderer->GetPipelineState(psoDesc, "MotionBlur NeighborMax PSO");
 
-    psoDesc.cs = pRenderer->GetShader("motion_blur/reconstruction_filter.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("motion_blur/reconstruction_filter.hlsl", "main", GfxShaderType::CS);
     m_pReconstructionPSO = pRenderer->GetPipelineState(psoDesc, "MotionBlur Reconstruction PSO");
 
-    psoDesc.cs = pRenderer->GetShader("motion_blur/reconstruction_filter.hlsl", "main", "cs_6_6", { "MOTION_BLUR_DEBUG=1" });
+    psoDesc.cs = pRenderer->GetShader("motion_blur/reconstruction_filter.hlsl", "main", GfxShaderType::CS, { "MOTION_BLUR_DEBUG=1" });
     m_pReconstructionDebugPSO = pRenderer->GetPipelineState(psoDesc, "MotionBlur Reconstruction PSO");
 }
 

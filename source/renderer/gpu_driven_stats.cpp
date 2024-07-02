@@ -7,7 +7,7 @@ GpuDrivenStats::GpuDrivenStats(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("stats.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("stats.hlsl", "main", GfxShaderType::CS);
     m_pPSO = pRenderer->GetPipelineState(desc, "GpuDrivenStats::m_pPSO");
 
     m_pStatsBuffer.reset(pRenderer->CreateTypedBuffer(nullptr, GfxFormat::R32UI, STATS_MAX_TYPE_COUNT, "GpuDrivenStats::m_pStatsBuffer", GfxMemoryType::GpuOnly, true));

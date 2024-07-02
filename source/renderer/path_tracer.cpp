@@ -13,10 +13,10 @@ PathTracer::PathTracer(Renderer* pRenderer)
 #endif
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("path_tracer.hlsl", "path_tracing", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("path_tracer.hlsl", "path_tracing", GfxShaderType::CS);
     m_pPathTracingPSO = pRenderer->GetPipelineState(psoDesc, "PathTracing PSO");
 
-    psoDesc.cs = pRenderer->GetShader("path_tracer.hlsl", "accumulation", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("path_tracer.hlsl", "accumulation", GfxShaderType::CS);
     m_pAccumulationPSO = pRenderer->GetPipelineState(psoDesc, "PathTracing accumulation PSO");
 }
 

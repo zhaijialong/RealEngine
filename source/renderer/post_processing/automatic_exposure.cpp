@@ -11,10 +11,10 @@ AutomaticExposure::AutomaticExposure(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("automatic_exposure.hlsl", "luminance_reduction", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("automatic_exposure.hlsl", "luminance_reduction", GfxShaderType::CS);
     m_pLuminanceReductionPSO = pRenderer->GetPipelineState(desc, "Luminance Reduction PSO");
     
-    desc.cs = m_pRenderer->GetShader("automatic_exposure_histogram.hlsl", "histogram_reduction", "cs_6_6", {});
+    desc.cs = m_pRenderer->GetShader("automatic_exposure_histogram.hlsl", "histogram_reduction", GfxShaderType::CS);
     m_pHistogramReductionPSO = pRenderer->GetPipelineState(desc, "Histogram Reduction PSO");
 
     m_pPreviousEV100.reset(pRenderer->CreateTexture2D(1, 1, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "AutomaticExposure::m_pPreviousEV100"));
@@ -217,7 +217,7 @@ void AutomaticExposure::InitLuminance(IGfxCommandList* pCommandList, RGTexture* 
     }
 
     GfxComputePipelineDesc desc;
-    desc.cs = m_pRenderer->GetShader("automatic_exposure.hlsl", "init_luminance", "cs_6_6", defines);
+    desc.cs = m_pRenderer->GetShader("automatic_exposure.hlsl", "init_luminance", GfxShaderType::CS, defines);
     IGfxPipelineState* pso = m_pRenderer->GetPipelineState(desc, "Init Luminance PSO");
 
     pCommandList->SetPipelineState(pso);
@@ -323,7 +323,7 @@ void AutomaticExposure::BuildHistogram(IGfxCommandList* pCommandList, RGTexture*
     }
 
     GfxComputePipelineDesc desc;
-    desc.cs = m_pRenderer->GetShader("automatic_exposure_histogram.hlsl", "build_histogram", "cs_6_6", defines);
+    desc.cs = m_pRenderer->GetShader("automatic_exposure_histogram.hlsl", "build_histogram", GfxShaderType::CS, defines);
     IGfxPipelineState* pso = m_pRenderer->GetPipelineState(desc, "Build Histogram PSO");
 
     pCommandList->SetPipelineState(pso);
@@ -411,7 +411,7 @@ void AutomaticExposure::Exposure(IGfxCommandList* pCommandList, RGTexture* avgLu
     }
 
     GfxComputePipelineDesc desc;
-    desc.cs = m_pRenderer->GetShader("automatic_exposure.hlsl", "exposure", "cs_6_6", defines);
+    desc.cs = m_pRenderer->GetShader("automatic_exposure.hlsl", "exposure", GfxShaderType::CS, defines);
     IGfxPipelineState* pso = m_pRenderer->GetPipelineState(desc, "Exposure PSO");
 
     pCommandList->SetPipelineState(pso);

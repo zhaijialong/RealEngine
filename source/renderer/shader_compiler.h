@@ -15,7 +15,7 @@ public:
     ~ShaderCompiler();
 
     bool Compile(const eastl::string& source, const eastl::string& file, const eastl::string& entry_point, 
-        const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags,
+        GfxShaderType type, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags,
         eastl::vector<uint8_t>& output_blob);
 
 private:

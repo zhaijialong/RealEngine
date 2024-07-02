@@ -12,19 +12,19 @@ SkyCubeMap::SkyCubeMap(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("sky_cubemap.hlsl", "main", "cs_6_6", { "HDRI_TEXTURE=1" });
+    desc.cs = pRenderer->GetShader("sky_cubemap.hlsl", "main", GfxShaderType::CS, { "HDRI_TEXTURE=1" });
     m_pTexturedSkyPSO = pRenderer->GetPipelineState(desc, "SkyCubeMap PSO");
 
-    desc.cs = pRenderer->GetShader("sky_cubemap.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("sky_cubemap.hlsl", "main", GfxShaderType::CS);
     m_pRealtimeSkyPSO = pRenderer->GetPipelineState(desc, "SkyCubeMap PSO");
 
-    desc.cs = pRenderer->GetShader("cubemap_spd.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("cubemap_spd.hlsl", "main", GfxShaderType::CS);
     m_pGenerateMipsPSO = pRenderer->GetPipelineState(desc, "Cubemap SPD PSO");
 
-    desc.cs = pRenderer->GetShader("ibl_prefilter.hlsl", "specular_filter", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("ibl_prefilter.hlsl", "specular_filter", GfxShaderType::CS);
     m_pSpecularFilterPSO = pRenderer->GetPipelineState(desc, "IBL specular PSO");
 
-    desc.cs = pRenderer->GetShader("ibl_prefilter.hlsl", "diffuse_filter", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("ibl_prefilter.hlsl", "diffuse_filter", GfxShaderType::CS);
     m_pDiffuseFilterPSO = pRenderer->GetPipelineState(desc, "IBL diffuse PSO");
 
     m_pTexture.reset(pRenderer->CreateTextureCube(128, 128, 8, GfxFormat::R11G11B10F, GfxTextureUsageUnorderedAccess, "SkyCubeMap::m_pTexture"));

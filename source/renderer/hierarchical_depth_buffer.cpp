@@ -9,22 +9,22 @@ HZB::HZB(Renderer* pRenderer) :
     m_pRenderer(pRenderer)
 {
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "depth_reprojection", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "depth_reprojection", GfxShaderType::CS);
     m_pDepthReprojectionPSO = pRenderer->GetPipelineState(desc, "HZB depth reprojection PSO");
 
-    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "depth_dilation", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "depth_dilation", GfxShaderType::CS);
     m_pDepthDilationPSO = pRenderer->GetPipelineState(desc, "HZB depth dilation PSO");
 
-    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "init_hzb", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "init_hzb", GfxShaderType::CS);
     m_pInitHZBPSO = pRenderer->GetPipelineState(desc, "HZB init PSO");
 
-    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "init_scene_hzb", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hzb_reprojection.hlsl", "init_scene_hzb", GfxShaderType::CS);
     m_pInitSceneHZBPSO = pRenderer->GetPipelineState(desc, "HZB init PSO");
 
-    desc.cs = pRenderer->GetShader("hzb.hlsl", "build_hzb", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hzb.hlsl", "build_hzb", GfxShaderType::CS);
     m_pDepthMipFilterPSO = pRenderer->GetPipelineState(desc, "HZB generate mips PSO");
 
-    desc.cs = pRenderer->GetShader("hzb.hlsl", "build_hzb", "cs_6_6", { "MIN_MAX_FILTER=1" });
+    desc.cs = pRenderer->GetShader("hzb.hlsl", "build_hzb", GfxShaderType::CS, { "MIN_MAX_FILTER=1" });
     m_pDepthMipFilterMinMaxPSO = pRenderer->GetPipelineState(desc, "HZB generate mips PSO");
 }
 

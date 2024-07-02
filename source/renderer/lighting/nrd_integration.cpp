@@ -212,9 +212,9 @@ void NRDIntegration::CreatePipelines()
         const nrd::ComputeShaderDesc& nrdComputeShader = nrdPipelineDesc.computeShaderDXIL; //todo : supports spirv when we have a vulkan backend
 
         GfxShaderDesc shaderDesc;
+        shaderDesc.type = GfxShaderType::CS;
         shaderDesc.file = nrdPipelineDesc.shaderFileName;
         shaderDesc.entry_point = nrdPipelineDesc.shaderEntryPointName;
-        shaderDesc.profile = "cs_6_6";
         IGfxShader* shader = device->CreateShader(shaderDesc, { (uint8_t*)nrdComputeShader.bytecode, (size_t)nrdComputeShader.size }, "");
         m_shaders.emplace_back(shader);
 

@@ -13,26 +13,26 @@ GTAO::GTAO(Renderer* pRenderer)
     defines.push_back("XE_GTAO_USE_HALF_FLOAT_PRECISION=0");
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_prefilter_depth_16x16", "cs_6_6", defines);
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_prefilter_depth_16x16", GfxShaderType::CS, defines);
     m_pPrefilterDepthPSO = pRenderer->GetPipelineState(psoDesc, "GTAO prefilter depth PSO");
 
-    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_denoise", "cs_6_6", defines);
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_denoise", GfxShaderType::CS, defines);
     m_pDenoisePSO = pRenderer->GetPipelineState(psoDesc, "GTAO denoise PSO");
 
     defines.push_back("QUALITY_LEVEL=0");
-    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", GfxShaderType::CS, defines);
     m_pGTAOLowPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
     defines.back() = "QUALITY_LEVEL=1";
-    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", GfxShaderType::CS, defines);
     m_pGTAOMediumPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
     defines.back() = "QUALITY_LEVEL=2";
-    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", GfxShaderType::CS, defines);
     m_pGTAOHighPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
     defines.back() = "QUALITY_LEVEL=3";
-    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+    psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", GfxShaderType::CS, defines);
     m_pGTAOUltraPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
     //PSOs with GTSO
@@ -40,23 +40,23 @@ GTAO::GTAO(Renderer* pRenderer)
         defines.pop_back();
         defines.push_back("XE_GTAO_COMPUTE_BENT_NORMALS=1");
 
-        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_denoise", "cs_6_6", defines);
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_denoise", GfxShaderType::CS, defines);
         m_pSODenoisePSO = pRenderer->GetPipelineState(psoDesc, "GTAO denoise PSO");
 
         defines.push_back("QUALITY_LEVEL=0");
-        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", GfxShaderType::CS, defines);
         m_pGTAOSOLowPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
         defines.back() = "QUALITY_LEVEL=1";
-        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", GfxShaderType::CS, defines);
         m_pGTAOSOMediumPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
         defines.back() = "QUALITY_LEVEL=2";
-        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", GfxShaderType::CS, defines);
         m_pGTAOSOHighPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
 
         defines.back() = "QUALITY_LEVEL=3";
-        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", "cs_6_6", defines);
+        psoDesc.cs = pRenderer->GetShader("gtao.hlsl", "gtao_main", GfxShaderType::CS, defines);
         m_pGTAOSOUltraPSO = pRenderer->GetPipelineState(psoDesc, "GTAO PSO");
     }
 

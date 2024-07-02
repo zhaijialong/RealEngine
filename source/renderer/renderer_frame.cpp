@@ -116,7 +116,7 @@ RGHandle Renderer::VelocityPass(RGHandle& depth)
         [=](const CameraVelocityPassData& data, IGfxCommandList* pCommandList)
         {
             GfxComputePipelineDesc psoDesc;
-            psoDesc.cs = GetShader("velocity.hlsl", "main", "cs_6_6", {});
+            psoDesc.cs = GetShader("velocity.hlsl", "main", GfxShaderType::CS);
             IGfxPipelineState* pPSO = GetPipelineState(psoDesc, "Velocity PSO");
 
             pCommandList->SetPipelineState(pPSO);
@@ -156,7 +156,7 @@ RGHandle Renderer::LinearizeDepthPass(RGHandle depth)
         [&](const LinearizeDepthPassData& data, IGfxCommandList* pCommandList)
         {
             GfxComputePipelineDesc psoDesc;
-            psoDesc.cs = GetShader("linearize_depth.hlsl", "main", "cs_6_6", {});
+            psoDesc.cs = GetShader("linearize_depth.hlsl", "main", GfxShaderType::CS);
             IGfxPipelineState* pPSO = GetPipelineState(psoDesc, "LinearizeDepth PSO");
 
             pCommandList->SetPipelineState(pPSO);

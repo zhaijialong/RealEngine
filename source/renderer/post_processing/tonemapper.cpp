@@ -89,7 +89,7 @@ void Tonemapper::Render(IGfxCommandList* pCommandList, RGTexture* pHdrSRV, RGTex
     }
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = m_pRenderer->GetShader("tone_mapping.hlsl", "cs_main", "cs_6_6", defines);
+    psoDesc.cs = m_pRenderer->GetShader("tone_mapping.hlsl", "cs_main", GfxShaderType::CS, defines);
     IGfxPipelineState* pso = m_pRenderer->GetPipelineState(psoDesc, "ToneMapping PSO");
 
     pCommandList->SetPipelineState(pso);

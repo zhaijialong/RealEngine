@@ -7,16 +7,16 @@ ShadowDenoiser::ShadowDenoiser(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/denoiser_prepare.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/denoiser_prepare.hlsl", "main", GfxShaderType::CS);
     m_pPrepareMaskPSO = pRenderer->GetPipelineState(psoDesc, "ShadowDenoiser PSO");
 
-    psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/denoiser_tileclassification.hlsl", "main", "cs_6_6", { "INVERTED_DEPTH_RANGE=1" });
+    psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/denoiser_tileclassification.hlsl", "main", GfxShaderType::CS, { "INVERTED_DEPTH_RANGE=1" });
     m_pTileClassificationPSO = pRenderer->GetPipelineState(psoDesc, "ShadowDenoiser PSO");
 
     for (int i = 0; i < 3; ++i)
     {
         eastl::string define = fmt::format("FILTER_PASS={}", i).c_str();
-        psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/denoiser_filter.hlsl", "main", "cs_6_6", { define });
+        psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/denoiser_filter.hlsl", "main", GfxShaderType::CS, { define });
         m_pFilterPSO[i] = pRenderer->GetPipelineState(psoDesc, "ShadowDenoiser PSO");
     }
 }

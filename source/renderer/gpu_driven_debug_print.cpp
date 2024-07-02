@@ -12,12 +12,12 @@ GpuDrivenDebugPrint::GpuDrivenDebugPrint(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("debug_print.hlsl", "build_command", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("debug_print.hlsl", "build_command", GfxShaderType::CS);
     m_pBuildCommandPSO = pRenderer->GetPipelineState(psoDesc, "GpuDrivenDebugPrint buildCommand PSO");
 
     GfxMeshShadingPipelineDesc drawPSODesc;
-    drawPSODesc.ms = pRenderer->GetShader("debug_print.hlsl", "main_ms", "ms_6_6", {});
-    drawPSODesc.ps = pRenderer->GetShader("debug_print.hlsl", "main_ps", "ps_6_6", {});
+    drawPSODesc.ms = pRenderer->GetShader("debug_print.hlsl", "main_ms", GfxShaderType::MS);
+    drawPSODesc.ps = pRenderer->GetShader("debug_print.hlsl", "main_ps", GfxShaderType::PS);
     drawPSODesc.depthstencil_state.depth_write = false;
     drawPSODesc.rt_format[0] = pRenderer->GetSwapchain()->GetDesc().backbuffer_format;
     drawPSODesc.blend_state[0].blend_enable = true;

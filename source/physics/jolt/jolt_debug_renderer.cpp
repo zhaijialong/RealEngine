@@ -53,8 +53,8 @@ JoltDebugRenderer::JoltDebugRenderer(Renderer* pRenderer) : m_pRenderer(pRendere
     Initialize();
 
     GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = m_pRenderer->GetShader("physics_debug.hlsl", "vs_main", "vs_6_6", {});
-    psoDesc.ps = m_pRenderer->GetShader("physics_debug.hlsl", "ps_main", "ps_6_6", {});
+    psoDesc.vs = m_pRenderer->GetShader("physics_debug.hlsl", "vs_main", GfxShaderType::VS);
+    psoDesc.ps = m_pRenderer->GetShader("physics_debug.hlsl", "ps_main", GfxShaderType::PS);
     psoDesc.rasterizer_state.wireframe = false;
     psoDesc.rasterizer_state.front_ccw = false; // Jolt uses CW order
     psoDesc.depthstencil_state.depth_test = true;

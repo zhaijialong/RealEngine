@@ -400,7 +400,7 @@ void Camera::DrawViewFrustum(IGfxCommandList* pCommandList)
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("view_frustum.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("view_frustum.hlsl", "main", GfxShaderType::CS);
     IGfxPipelineState* pso = pRenderer->GetPipelineState(psoDesc, "ViewFrustum PSO");
 
     pCommandList->SetPipelineState(pso);

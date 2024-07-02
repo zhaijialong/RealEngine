@@ -8,7 +8,7 @@ RTShadow::RTShadow(Renderer* pRenderer)
     m_pDenoiser = eastl::make_unique<ShadowDenoiser>(pRenderer);
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/ray_trace.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("ray_traced_shadow/ray_trace.hlsl", "main", GfxShaderType::CS);
     m_pRaytracePSO = pRenderer->GetPipelineState(psoDesc, "RTShadow PSO");
 }
 

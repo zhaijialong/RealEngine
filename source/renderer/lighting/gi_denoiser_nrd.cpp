@@ -15,20 +15,20 @@ GIDenoiserNRD::GIDenoiserNRD(Renderer* pRenderer)
     m_pReblurSettings->antilagIntensitySettings.sensitivityToDarkness = 0.01f;
 
     GfxGraphicsPipelineDesc gfxPsoDesc;
-    gfxPsoDesc.vs = pRenderer->GetShader("nrd_integration.hlsl", "pack_normal_roughness_vs", "vs_6_6", {});
-    gfxPsoDesc.ps = pRenderer->GetShader("nrd_integration.hlsl", "pack_normal_roughness_ps", "ps_6_6", {});
+    gfxPsoDesc.vs = pRenderer->GetShader("nrd_integration.hlsl", "pack_normal_roughness_vs", GfxShaderType::VS);
+    gfxPsoDesc.ps = pRenderer->GetShader("nrd_integration.hlsl", "pack_normal_roughness_ps", GfxShaderType::PS);
     gfxPsoDesc.depthstencil_state.depth_write = false;
     gfxPsoDesc.rt_format[0] = GfxFormat::RGB10A2UNORM;
     m_pPackNormalRoughnessPSO = pRenderer->GetPipelineState(gfxPsoDesc, "ReBlur - pack normal/roughness PSO");
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_radiance_hitT", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_radiance_hitT", GfxShaderType::CS);
     m_pPackRadianceHitTPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - pack radiance/hitT PSO");
 
-    psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_velocity", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "pack_velocity", GfxShaderType::CS);
     m_pPackVelocityPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - pack velocity PSO");
 
-    psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "resolve_output", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("nrd_integration.hlsl", "resolve_output", GfxShaderType::CS);
     m_pResolveOutputPSO = pRenderer->GetPipelineState(psoDesc, "ReBlur - resolve PSO");
 }
 

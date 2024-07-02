@@ -10,13 +10,13 @@ ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("restir_gi/initial_sampling.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("restir_gi/initial_sampling.hlsl", "main", GfxShaderType::CS);
     m_pInitialSamplingPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/initial sampling PSO");
 
-    desc.cs = pRenderer->GetShader("restir_gi/temporal_resampling.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("restir_gi/temporal_resampling.hlsl", "main", GfxShaderType::CS);
     m_pTemporalResamplingPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/temporal resampling PSO");
 
-    desc.cs = pRenderer->GetShader("restir_gi/spatial_resampling.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("restir_gi/spatial_resampling.hlsl", "main", GfxShaderType::CS);
     m_pSpatialResamplingPSO = pRenderer->GetPipelineState(desc, "ReSTIR GI/spatial resampling PSO");
 
     m_pDenoiser = eastl::make_unique<GIDenoiser>(pRenderer);
@@ -469,7 +469,7 @@ void ReSTIRGI::Resolve(IGfxCommandList* pCommandList, RGTexture* reservoir, RGTe
     }
 
     GfxComputePipelineDesc desc;
-    desc.cs = m_pRenderer->GetShader("restir_gi/restir_resolve.hlsl", "main", "cs_6_6", defines);
+    desc.cs = m_pRenderer->GetShader("restir_gi/restir_resolve.hlsl", "main", GfxShaderType::CS, defines);
     IGfxPipelineState* pso = m_pRenderer->GetPipelineState(desc, "ReSTIR GI/resolve PSO");
 
     pCommandList->SetPipelineState(pso);

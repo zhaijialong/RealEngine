@@ -10,7 +10,7 @@
 
 inline bool operator==(const GfxShaderDesc& lhs, const GfxShaderDesc& rhs)
 {
-    if (lhs.file != rhs.file || lhs.entry_point != rhs.entry_point || lhs.profile != rhs.profile)
+    if (lhs.file != rhs.file || lhs.entry_point != rhs.entry_point || lhs.type != rhs.type)
     {
         return false;
     }
@@ -58,15 +58,15 @@ ShaderCache::ShaderCache(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 }
 
-IGfxShader* ShaderCache::GetShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags)
+IGfxShader* ShaderCache::GetShader(const eastl::string& file, const eastl::string& entry_point, GfxShaderType type, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags)
 {
     eastl::string file_path = Engine::GetInstance()->GetShaderPath() + file;
     eastl::string absolute_path = std::filesystem::absolute(file_path.c_str()).string().c_str();
 
     GfxShaderDesc desc;
+    desc.type = type;
     desc.file = absolute_path;
     desc.entry_point = entry_point;
-    desc.profile = profile;
     desc.defines = defines;
     desc.flags = flags;
 
@@ -76,7 +76,7 @@ IGfxShader* ShaderCache::GetShader(const eastl::string& file, const eastl::strin
         return iter->second.get();
     }
 
-    IGfxShader* pShader = CreateShader(absolute_path, entry_point, profile, defines, flags);
+    IGfxShader* pShader = CreateShader(absolute_path, entry_point, type, defines, flags);
     if (pShader != nullptr)
     {
         m_cachedShaders.insert(eastl::make_pair(desc, eastl::unique_ptr<IGfxShader>(pShader)));
@@ -122,23 +122,23 @@ void ShaderCache::ReloadShaders()
     }
 }
 
-IGfxShader* ShaderCache::CreateShader(const eastl::string& file, const eastl::string& entry_point, const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags)
+IGfxShader* ShaderCache::CreateShader(const eastl::string& file, const eastl::string& entry_point, GfxShaderType type, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags)
 {
     eastl::string source = GetCachedFileContent(file);
 
     eastl::vector<uint8_t> shader_blob;
-    if (!m_pRenderer->GetShaderCompiler()->Compile(source, file, entry_point, profile, defines, flags, shader_blob))
+    if (!m_pRenderer->GetShaderCompiler()->Compile(source, file, entry_point, type, defines, flags, shader_blob))
     {
         return nullptr;
     }
 
     GfxShaderDesc desc;
+    desc.type = type;
     desc.file = file;
     desc.entry_point = entry_point;
-    desc.profile = profile;
     desc.defines = defines;
 
-    eastl::string name = file + " : " + entry_point + "(" + profile + ")";
+    eastl::string name = file + " : " + entry_point;
     IGfxShader* shader = m_pRenderer->GetDevice()->CreateShader(desc, shader_blob, name);
     return shader;
 }
@@ -151,7 +151,7 @@ void ShaderCache::RecompileShader(IGfxShader* shader)
     eastl::string source = GetCachedFileContent(desc.file);
 
     eastl::vector<uint8_t> shader_blob;
-    if (!m_pRenderer->GetShaderCompiler()->Compile(source, desc.file, desc.entry_point, desc.profile, desc.defines, desc.flags, shader_blob))
+    if (!m_pRenderer->GetShaderCompiler()->Compile(source, desc.file, desc.entry_point, desc.type, desc.defines, desc.flags, shader_blob))
     {
         return;
     }

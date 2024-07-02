@@ -179,7 +179,7 @@ RGHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RGHandle d
             }
 
             GfxComputePipelineDesc psoDesc;
-            psoDesc.cs = m_pRenderer->GetShader("composite_light.hlsl", "main", "cs_6_6", defines);
+            psoDesc.cs = m_pRenderer->GetShader("composite_light.hlsl", "main", GfxShaderType::CS, defines);
             IGfxPipelineState* pso = m_pRenderer->GetPipelineState(psoDesc, "CompositeLight PSO");
 
             pCommandList->SetPipelineState(pso);
@@ -263,7 +263,7 @@ RGHandle LightingProcessor::ExtractHalfDepthNormal(RenderGraph* pRenderGraph, RG
             if (pso == nullptr)
             {
                 GfxComputePipelineDesc psoDesc;
-                psoDesc.cs = m_pRenderer->GetShader("extract_half_depth_normal.hlsl", "main", "cs_6_6", {});
+                psoDesc.cs = m_pRenderer->GetShader("extract_half_depth_normal.hlsl", "main", GfxShaderType::CS);
                 pso = m_pRenderer->GetPipelineState(psoDesc, "extract half depth/normal PSO");
             }
 

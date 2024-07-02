@@ -10,22 +10,22 @@ GIDenoiser::GIDenoiser(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("recurrent_blur/pre_blur.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("recurrent_blur/pre_blur.hlsl", "main", GfxShaderType::CS);
     m_pPreBlurPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/pre blur PSO");
 
-    desc.cs = pRenderer->GetShader("recurrent_blur/temporal_accumulation.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("recurrent_blur/temporal_accumulation.hlsl", "main", GfxShaderType::CS);
     m_pTemporalAccumulationPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/temporal accumulation PSO");
 
-    desc.cs = pRenderer->GetShader("recurrent_blur/mip_generation.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("recurrent_blur/mip_generation.hlsl", "main", GfxShaderType::CS);
     m_pMipGenerationPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/mip generation PSO");
 
-    desc.cs = pRenderer->GetShader("recurrent_blur/mip_generation_depth.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("recurrent_blur/mip_generation_depth.hlsl", "main", GfxShaderType::CS);
     m_pMipGenerationDepthPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/depth mip generation PSO");
 
-    desc.cs = pRenderer->GetShader("recurrent_blur/history_reconstruction.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("recurrent_blur/history_reconstruction.hlsl", "main", GfxShaderType::CS);
     m_pHistoryReconstructionPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/history reconstruction PSO");
 
-    desc.cs = pRenderer->GetShader("recurrent_blur/blur.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("recurrent_blur/blur.hlsl", "main", GfxShaderType::CS);
     m_pBlurPSO = pRenderer->GetPipelineState(desc, "GIDenoiser/blur PSO");
 }
 

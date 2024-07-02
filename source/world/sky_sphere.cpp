@@ -60,8 +60,8 @@ bool SkySphere::Create()
     }
 
     GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("sky_sphere.hlsl", "vs_main", "vs_6_6", {});
-    psoDesc.ps = pRenderer->GetShader("sky_sphere.hlsl", "ps_main", "ps_6_6", {});
+    psoDesc.vs = pRenderer->GetShader("sky_sphere.hlsl", "vs_main", GfxShaderType::VS);
+    psoDesc.ps = pRenderer->GetShader("sky_sphere.hlsl", "ps_main", GfxShaderType::PS);
     psoDesc.depthstencil_state.depth_write = false;
     psoDesc.depthstencil_state.depth_test = true;
     psoDesc.depthstencil_state.depth_func = GfxCompareFunc::Greater;

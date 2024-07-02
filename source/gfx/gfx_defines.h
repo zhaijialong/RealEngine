@@ -397,6 +397,15 @@ struct GfxRenderPassDesc
     GfxRenderPassDepthAttachment depth;
 };
 
+enum class GfxShaderType
+{
+    AS,
+    MS,
+    VS,
+    PS,
+    CS,
+};
+
 enum GfxShaderCompilerFlagBit
 {
     GfxShaderCompilerFlagO0 = 1 << 0,
@@ -408,9 +417,9 @@ using GfxShaderCompilerFlags = uint32_t;
 
 struct GfxShaderDesc
 {
+    GfxShaderType type;
     eastl::string file;
     eastl::string entry_point;
-    eastl::string profile;
     eastl::vector<eastl::string> defines;
     GfxShaderCompilerFlags flags = 0;
 };

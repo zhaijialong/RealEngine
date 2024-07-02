@@ -12,7 +12,7 @@ CAS::CAS(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("cas.hlsl", "main", "cs_6_6", {"CAS_FP16=0"});
+    psoDesc.cs = pRenderer->GetShader("cas.hlsl", "main", GfxShaderType::CS, {"CAS_FP16=0"});
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "CAS PSO");
 }
 

@@ -9,19 +9,19 @@ HybridStochasticReflection::HybridStochasticReflection(Renderer* pRenderer)
     m_pDenoiser = eastl::make_unique<ReflectionDenoiser>(pRenderer);
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/classify_tiles.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/classify_tiles.hlsl", "main", GfxShaderType::CS);
     m_pTileClassificationPSO = pRenderer->GetPipelineState(desc, "HSR classify tiles PSO");
 
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/prepare_indirect_args.hlsl", "main", "cs_6_6", { "DENOISER_ARG=1"});
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/prepare_indirect_args.hlsl", "main", GfxShaderType::CS, { "DENOISER_ARG=1"});
     m_pPrepareIndirectArgsPSO = pRenderer->GetPipelineState(desc, "HSR prepare indirect args PSO");
 
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/ssr.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/ssr.hlsl", "main", GfxShaderType::CS);
     m_pSSRPSO = pRenderer->GetPipelineState(desc, "SSR PSO");
 
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/prepare_indirect_args.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/prepare_indirect_args.hlsl", "main", GfxShaderType::CS);
     m_pPrepareRTArgsPSO = pRenderer->GetPipelineState(desc, "HSR prepare indirect args PSO");
 
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/ray_trace.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/ray_trace.hlsl", "main", GfxShaderType::CS);
     m_pRaytracePSO = pRenderer->GetPipelineState(desc, "RT reflection PSO");
 }
 

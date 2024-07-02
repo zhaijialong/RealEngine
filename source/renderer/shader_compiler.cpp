@@ -103,8 +103,27 @@ ShaderCompiler::~ShaderCompiler()
     m_pDxcUtils->Release();
 }
 
+inline wchar_t* GetShaderProfile(GfxShaderType type)
+{
+    switch (type)
+    {
+    case GfxShaderType::AS:
+        return L"as_6_6";
+    case GfxShaderType::MS:
+        return L"ms_6_6";
+    case GfxShaderType::VS:
+        return L"vs_6_6";
+    case GfxShaderType::PS:
+        return L"ps_6_6";
+    case GfxShaderType::CS:
+        return L"cs_6_6";
+    default:
+        return L"";
+    }
+}
+
 bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& file, const eastl::string& entry_point,
-    const eastl::string& profile, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags,
+    GfxShaderType type, const eastl::vector<eastl::string>& defines, GfxShaderCompilerFlags flags,
     eastl::vector<uint8_t>& output_blob)
 {
     DxcBuffer sourceBuffer;
@@ -114,7 +133,7 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
 
     eastl::wstring wstrFile = string_to_wstring(file);
     eastl::wstring wstrEntryPoint = string_to_wstring(entry_point);
-    eastl::wstring wstrProfile = string_to_wstring(profile);
+    eastl::wstring wstrProfile = GetShaderProfile(type);
 
     eastl::vector<eastl::wstring> wstrDefines;
     for (size_t i = 0; i < defines.size(); ++i)

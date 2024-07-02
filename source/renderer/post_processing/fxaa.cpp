@@ -7,7 +7,7 @@ FXAA::FXAA(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("fxaa.hlsl", "cs_main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("fxaa.hlsl", "cs_main", GfxShaderType::CS);
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "FXAA PSO");
 }
 

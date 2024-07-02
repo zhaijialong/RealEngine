@@ -7,7 +7,7 @@ TAA::TAA(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("taa.hlsl", "main", "cs_6_6", {});
+    psoDesc.cs = pRenderer->GetShader("taa.hlsl", "main", GfxShaderType::CS);
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "TAA PSO");
 }
 

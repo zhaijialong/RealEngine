@@ -8,13 +8,13 @@ Bloom::Bloom(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("bloom.hlsl", "downsampling", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("bloom.hlsl", "downsampling", GfxShaderType::CS);
     m_pDownsamplePSO = pRenderer->GetPipelineState(desc, "Bloom downsample PSO");
 
-    desc.cs = pRenderer->GetShader("bloom.hlsl", "downsampling", "cs_6_6", { "FIRST_PASS=1" });
+    desc.cs = pRenderer->GetShader("bloom.hlsl", "downsampling", GfxShaderType::CS, { "FIRST_PASS=1" });
     m_pFirstDownsamplePSO = pRenderer->GetPipelineState(desc, "Bloom downsample PSO");
 
-    desc.cs = pRenderer->GetShader("bloom.hlsl", "upsampling", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("bloom.hlsl", "upsampling", GfxShaderType::CS);
     m_pUpsamplePSO = pRenderer->GetPipelineState(desc, "Bloom upsample PSO");
 }
 

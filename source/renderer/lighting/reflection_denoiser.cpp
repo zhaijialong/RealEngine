@@ -14,13 +14,13 @@ ReflectionDenoiser::ReflectionDenoiser(Renderer* pRenderer)
 #endif
 
     GfxComputePipelineDesc desc;
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_reproject.hlsl", "main", "cs_6_6", {}, flags);
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_reproject.hlsl", "main", GfxShaderType::CS, {}, flags);
     m_pReprojectPSO = pRenderer->GetPipelineState(desc, "HSR denoiser reproject PSO");
 
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_prefilter.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_prefilter.hlsl", "main", GfxShaderType::CS);
     m_pPrefilterPSO = pRenderer->GetPipelineState(desc, "HSR denoiser prefilter PSO");
 
-    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_resolve_temporal.hlsl", "main", "cs_6_6", {});
+    desc.cs = pRenderer->GetShader("hybrid_stochastic_reflection/denoiser_resolve_temporal.hlsl", "main", GfxShaderType::CS);
     m_pResolveTemporalPSO = pRenderer->GetPipelineState(desc, "HSR denoiser resolve temporal PSO");
 }
 

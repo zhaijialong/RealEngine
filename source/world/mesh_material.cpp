@@ -32,8 +32,8 @@ IGfxPipelineState* MeshMaterial::GetPSO()
         defines.push_back("UNIFORM_RESOURCE=1");
 
         GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", "vs_6_6", defines);
-        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.vs = pRenderer->GetShader("model.hlsl", "vs_main", GfxShaderType::VS, defines);
+        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", GfxShaderType::PS, defines);
         psoDesc.rasterizer_state.cull_mode = m_bDoubleSided ? GfxCullMode::None : GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_test = true;
@@ -60,9 +60,9 @@ IGfxPipelineState* MeshMaterial::GetMeshletPSO()
         AddMaterialDefines(defines);
 
         GfxMeshShadingPipelineDesc psoDesc;
-        psoDesc.as = pRenderer->GetShader("meshlet_culling.hlsl", "main_as", "as_6_6", defines);
-        psoDesc.ms = pRenderer->GetShader("model_meshlet.hlsl", "main_ms", "ms_6_6", defines);
-        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.as = pRenderer->GetShader("meshlet_culling.hlsl", "main_as", GfxShaderType::AS, defines);
+        psoDesc.ms = pRenderer->GetShader("model_meshlet.hlsl", "main_ms", GfxShaderType::MS, defines);
+        psoDesc.ps = pRenderer->GetShader("model.hlsl", "ps_main", GfxShaderType::PS, defines);
         psoDesc.rasterizer_state.cull_mode = m_bDoubleSided ? GfxCullMode::None : GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_test = true;
@@ -93,10 +93,10 @@ IGfxPipelineState* MeshMaterial::GetShadowPSO()
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
         GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = pRenderer->GetShader("model_shadow.hlsl", "vs_main", "vs_6_6", defines);
+        psoDesc.vs = pRenderer->GetShader("model_shadow.hlsl", "vs_main", GfxShaderType::VS, defines);
         if (m_pAlbedoTexture && m_bAlphaTest)
         {
-            psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", "ps_6_6", defines);
+            psoDesc.ps = pRenderer->GetShader("model_shadow.hlsl", "ps_main", GfxShaderType::PS, defines);
         }
         psoDesc.rasterizer_state.cull_mode = m_bDoubleSided ? GfxCullMode::None : GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
@@ -126,8 +126,8 @@ IGfxPipelineState* MeshMaterial::GetVelocityPSO()
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
         GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = pRenderer->GetShader("model_velocity.hlsl", "vs_main", "vs_6_6", defines);
-        psoDesc.ps = pRenderer->GetShader("model_velocity.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.vs = pRenderer->GetShader("model_velocity.hlsl", "vs_main", GfxShaderType::VS, defines);
+        psoDesc.ps = pRenderer->GetShader("model_velocity.hlsl", "ps_main", GfxShaderType::PS, defines);
         psoDesc.rasterizer_state.cull_mode = m_bDoubleSided ? GfxCullMode::None : GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_write = false;
@@ -155,8 +155,8 @@ IGfxPipelineState* MeshMaterial::GetIDPSO()
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
         GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = pRenderer->GetShader("model_id.hlsl", "vs_main", "vs_6_6", defines);
-        psoDesc.ps = pRenderer->GetShader("model_id.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.vs = pRenderer->GetShader("model_id.hlsl", "vs_main", GfxShaderType::VS, defines);
+        psoDesc.ps = pRenderer->GetShader("model_id.hlsl", "ps_main", GfxShaderType::PS, defines);
         psoDesc.rasterizer_state.cull_mode = m_bDoubleSided ? GfxCullMode::None : GfxCullMode::Back;
         psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_write = false;
@@ -184,8 +184,8 @@ IGfxPipelineState* MeshMaterial::GetOutlinePSO()
         if (m_bAlphaTest) defines.push_back("ALPHA_TEST=1");
 
         GfxGraphicsPipelineDesc psoDesc;
-        psoDesc.vs = pRenderer->GetShader("model_outline.hlsl", "vs_main", "vs_6_6", defines);
-        psoDesc.ps = pRenderer->GetShader("model_outline.hlsl", "ps_main", "ps_6_6", defines);
+        psoDesc.vs = pRenderer->GetShader("model_outline.hlsl", "vs_main", GfxShaderType::VS, defines);
+        psoDesc.ps = pRenderer->GetShader("model_outline.hlsl", "ps_main", GfxShaderType::PS, defines);
         psoDesc.rasterizer_state.cull_mode = GfxCullMode::Front;
         psoDesc.rasterizer_state.front_ccw = m_bFrontFaceCCW;
         psoDesc.depthstencil_state.depth_write = false;
@@ -206,7 +206,7 @@ IGfxPipelineState* MeshMaterial::GetVertexSkinningPSO()
         Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
         GfxComputePipelineDesc desc;
-        desc.cs = pRenderer->GetShader("vertex_skinning.hlsl", "main", "cs_6_6", {});
+        desc.cs = pRenderer->GetShader("vertex_skinning.hlsl", "main", GfxShaderType::CS);
         m_pVertexSkinningPSO = pRenderer->GetPipelineState(desc, "vertex skinning PSO");
     }
     return m_pVertexSkinningPSO;
