@@ -10,3 +10,6 @@
 [submodule "external/JoltPhysics"]
 	path = external/JoltPhysics
 	url = https://github.com/jrouwe/JoltPhysics.git
+[submodule "external/MetalShaderConverter"]
+	path = external/MetalShaderConverter
+	url = https://github.com/zhaijialong/MetalShaderConverter.git
