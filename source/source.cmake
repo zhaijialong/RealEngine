@@ -328,6 +328,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     list(APPEND ENGINE_SRC_FILES 
         ${METAL_FILES}
         ${SOURCE_ROOT}/main/mac/main.cpp
+        ${SOURCE_ROOT}/renderer/shader_compiler_metal.cpp
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS")
     list(APPEND ENGINE_SRC_FILES 

@@ -94,16 +94,35 @@ ShaderCompiler::ShaderCompiler(Renderer* pRenderer) : m_pRenderer(pRenderer)
         m_pDxcIncludeHandler = new DXCIncludeHandler(pRenderer->GetShaderCache(), m_pDxcUtils);
         m_pDxcIncludeHandler->AddRef();
     }
+    
+#if RE_PLATFORM_MAC
+    CreateMetalCompiler();
+#endif
 }
 
 ShaderCompiler::~ShaderCompiler()
 {
-    m_pDxcIncludeHandler->Release();
-    m_pDxcCompiler->Release();
-    m_pDxcUtils->Release();
+    if(m_pDxcIncludeHandler)
+    {
+        m_pDxcIncludeHandler->Release();
+    }
+    
+    if(m_pDxcCompiler)
+    {
+        m_pDxcCompiler->Release();
+    }
+    
+    if(m_pDxcUtils)
+    {
+        m_pDxcUtils->Release();
+    }
+    
+#if RE_PLATFORM_MAC
+    DestroyMetalCompiler();
+#endif
 }
 
-inline wchar_t* GetShaderProfile(GfxShaderType type)
+inline const wchar_t* GetShaderProfile(GfxShaderType type)
 {
     switch (type)
     {
@@ -229,8 +248,18 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
         return false;
     }
 
-    output_blob.resize(pShader->GetBufferSize());
-    memcpy(output_blob.data(), pShader->GetBufferPointer(), pShader->GetBufferSize());
-
+#if RE_PLATFORM_MAC
+    if(m_pRenderer->GetDevice()->GetDesc().backend == GfxRenderBackend::Metal)
+    {
+        return CompileMetalIR(file, entry_point, type, pShader->GetBufferPointer(), (uint32_t)pShader->GetBufferSize(), output_blob);
+    }
+    else
+#else
+    {
+        output_blob.resize(pShader->GetBufferSize());
+        memcpy(output_blob.data(), pShader->GetBufferPointer(), pShader->GetBufferSize());
+    }
+#endif
+    
     return true;
 }

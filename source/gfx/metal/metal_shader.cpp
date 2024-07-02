@@ -1,5 +1,7 @@
 #include "metal_shader.h"
 #include "metal_device.h"
+#include "metal_utils.h"
+#include "utils/log.h"
 #include "xxHash/xxhash.h"
 
 MetalShader::MetalShader(MetalDevice* pDevice, const GfxShaderDesc& desc, const eastl::string& name)
@@ -9,13 +11,36 @@ MetalShader::MetalShader(MetalDevice* pDevice, const GfxShaderDesc& desc, const 
     m_name = name;
 }
 
-void* MetalShader::GetHandle() const
+MetalShader::~MetalShader()
 {
-    return nullptr;
+    m_pFunction->release();
 }
 
 bool MetalShader::Create(eastl::span<uint8_t> data)
 {
+    MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
+    
+    dispatch_data_t metalIR = dispatch_data_create(data.data(), data.size(), dispatch_get_main_queue(), NULL);
+    
+    NS::Error* error;
+    MTL::Library* library = device->newLibrary(metalIR, &error);
+    CFRelease(metalIR);
+    
+    if(library == nullptr)
+    {
+        RE_ERROR("[MetalShader] failed to create {} \r\n{}", m_name, error->localizedDescription()->utf8String());
+
+        error->release();
+        return false;
+    }
+    
+    NS::String* functionName = NS::String::alloc()->init(m_desc.entry_point.c_str(), NS::StringEncoding::UTF8StringEncoding);
+    m_pFunction = library->newFunction(functionName);
+    library->release();
+    functionName->release();
+    
+    SetDebugLabel(m_pFunction, m_name.c_str());
+    
     m_hash = XXH3_64bits(data.data(), data.size());
 
     return true;

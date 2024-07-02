@@ -133,12 +133,16 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_compile_definitions(RealEngine PUBLIC
         IMGUI_IMPL_METAL_CPP_EXTENSIONS=1
     )
+
     target_include_directories(RealEngine PUBLIC
         ${EXTERNAL_ROOT}/metal-cpp
+        ${EXTERNAL_ROOT}/MetalShaderConverter/include
     )
 
     set_target_properties(RealEngine PROPERTIES
         BUNDLE True
+        XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
+        XCODE_EMBED_FRAMEWORKS ${EXTERNAL_ROOT}/MetalShaderConverter/lib/libmetalirconverter.dylib
         MACOSX_BUNDLE_GUI_IDENTIFIER com.zhaijialong.RealEngine
         MACOSX_BUNDLE_BUNDLE_NAME RealEngine
         MACOSX_BUNDLE_BUNDLE_VERSION "0.1"
@@ -147,6 +151,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     )
 
     target_link_libraries(RealEngine
+        ${EXTERNAL_ROOT}/MetalShaderConverter/lib/libmetalirconverter.dylib
         "-framework Foundation"
         "-framework AppKit"
         "-framework Metal"
