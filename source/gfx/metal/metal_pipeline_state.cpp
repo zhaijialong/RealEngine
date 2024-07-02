@@ -1,5 +1,8 @@
 #include "metal_pipeline_state.h"
 #include "metal_device.h"
+#include "metal_shader.h"
+#include "metal_utils.h"
+#include "utils/log.h"
 
 MetalGraphicsPipelineState::MetalGraphicsPipelineState(MetalDevice* pDevice, const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
 {
@@ -55,14 +58,27 @@ MetalComputePipelineState::MetalComputePipelineState(MetalDevice* pDevice, const
 
 MetalComputePipelineState::~MetalComputePipelineState()
 {
-}
-
-void* MetalComputePipelineState::GetHandle() const
-{
-    return nullptr;
+    m_pPSO->release();
 }
 
 bool MetalComputePipelineState::Create()
 {
+    if(m_pPSO)
+    {
+        m_pPSO->release();
+    }
+    
+    MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
+    
+    NS::Error* pError = nullptr;
+    m_pPSO = device->newComputePipelineState((MTL::Function*)m_desc.cs->GetHandle(), &pError);
+
+    if(!m_pPSO)
+    {
+        RE_ERROR("[MetalComputePipelineState] failed to create {} \r\n{}", m_name, pError->localizedDescription()->utf8String());
+        pError->release();
+        return false;
+    }
+    
     return true;
 }

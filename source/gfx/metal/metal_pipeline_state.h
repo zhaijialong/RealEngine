@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Metal/MTLComputePipeline.hpp"
 #include "../gfx_pipeline_state.h"
 
 class MetalDevice;
@@ -36,9 +37,10 @@ public:
     MetalComputePipelineState(MetalDevice* pDevice, const GfxComputePipelineDesc& desc, const eastl::string& name);
     ~MetalComputePipelineState();
 
-    virtual void* GetHandle() const override;
+    virtual void* GetHandle() const override { return m_pPSO; }
     virtual bool Create() override;
 
 private:
     GfxComputePipelineDesc m_desc;
+    MTL::ComputePipelineState* m_pPSO = nullptr;
 };

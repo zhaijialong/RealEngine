@@ -18,6 +18,11 @@ MetalShader::~MetalShader()
 
 bool MetalShader::Create(eastl::span<uint8_t> data)
 {
+    if(m_pFunction)
+    {
+        m_pFunction->release();
+    }
+    
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     
     dispatch_data_t metalIR = dispatch_data_create(data.data(), data.size(), dispatch_get_main_queue(), NULL);
