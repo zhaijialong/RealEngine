@@ -66,6 +66,10 @@ bool MetalGraphicsPipelineState::Create()
         return false;
     }
     
+    MTL::DepthStencilDescriptor* depthStencilDescriptor = ToDepthStencilDescriptor(m_desc.depthstencil_state);
+    m_pDepthStencilState = device->newDepthStencilState(depthStencilDescriptor);
+    depthStencilDescriptor->release();
+    
     return true;
 }
 

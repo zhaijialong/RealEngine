@@ -342,3 +342,81 @@ inline MTL::ColorWriteMask ToColorWriteMask(GfxColorWriteMask mask)
     
     return mtlMask;
 }
+
+inline MTL::CompareFunction ToCompareFunction(GfxCompareFunc func)
+{
+    switch (func)
+    {
+        case GfxCompareFunc::Never:
+            return MTL::CompareFunctionNever;
+        case GfxCompareFunc::Less:
+            return MTL::CompareFunctionLess;
+        case GfxCompareFunc::Equal:
+            return MTL::CompareFunctionEqual;
+        case GfxCompareFunc::LessEqual:
+            return MTL::CompareFunctionLessEqual;
+        case GfxCompareFunc::Greater:
+            return MTL::CompareFunctionGreater;
+        case GfxCompareFunc::NotEqual:
+            return MTL::CompareFunctionNotEqual;
+        case GfxCompareFunc::GreaterEqual:
+            return MTL::CompareFunctionGreaterEqual;
+        case GfxCompareFunc::Always:
+            return MTL::CompareFunctionAlways;
+        default:
+            return MTL::CompareFunctionAlways;
+    }
+}
+
+inline MTL::StencilOperation ToStencilOperation(GfxStencilOp stencil_op)
+{
+    switch (stencil_op)
+    {
+        case GfxStencilOp::Keep:
+            return MTL::StencilOperationKeep;
+        case GfxStencilOp::Zero:
+            return MTL::StencilOperationZero;
+        case GfxStencilOp::Replace:
+            return MTL::StencilOperationReplace;
+        case GfxStencilOp::IncreaseClamp:
+            return MTL::StencilOperationIncrementClamp;
+        case GfxStencilOp::DecreaseClamp:
+            return MTL::StencilOperationDecrementClamp;
+        case GfxStencilOp::Invert:
+            return MTL::StencilOperationInvert;
+        case GfxStencilOp::IncreaseWrap:
+            return MTL::StencilOperationIncrementWrap;
+        case GfxStencilOp::DecreaseWrap:
+            return MTL::StencilOperationDecrementWrap;
+        default:
+            return MTL::StencilOperationKeep;
+    }
+}
+
+inline MTL::DepthStencilDescriptor* ToDepthStencilDescriptor(GfxDepthStencilState state)
+{
+    MTL::DepthStencilDescriptor* descriptor = MTL::DepthStencilDescriptor::alloc()->init();
+    descriptor->setDepthCompareFunction(state.depth_test ? ToCompareFunction(state.depth_func) : MTL::CompareFunctionAlways);
+    descriptor->setDepthWriteEnabled(state.depth_write);
+    
+    if(state.stencil_test)
+    {
+        MTL::StencilDescriptor* front = descriptor->frontFaceStencil();
+        front->setStencilCompareFunction(ToCompareFunction(state.front.stencil_func));
+        front->setStencilFailureOperation(ToStencilOperation(state.front.stencil_fail));
+        front->setDepthFailureOperation(ToStencilOperation(state.front.depth_fail));
+        front->setDepthStencilPassOperation(ToStencilOperation(state.front.pass));
+        front->setReadMask(state.stencil_read_mask);
+        front->setWriteMask(state.stencil_write_mask);
+        
+        MTL::StencilDescriptor* back = descriptor->backFaceStencil();
+        back->setStencilCompareFunction(ToCompareFunction(state.back.stencil_func));
+        back->setStencilFailureOperation(ToStencilOperation(state.back.stencil_fail));
+        back->setDepthFailureOperation(ToStencilOperation(state.back.depth_fail));
+        back->setDepthStencilPassOperation(ToStencilOperation(state.back.pass));
+        back->setReadMask(state.stencil_read_mask);
+        back->setWriteMask(state.stencil_write_mask);
+    }
+    
+    return descriptor;
+}
