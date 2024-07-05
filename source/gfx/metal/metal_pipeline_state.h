@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Metal/MTLComputePipeline.hpp"
+#include "Metal/Metal.hpp"
 #include "../gfx_pipeline_state.h"
 
 class MetalDevice;
@@ -11,11 +11,15 @@ public:
     MetalGraphicsPipelineState(MetalDevice* pDevice, const GfxGraphicsPipelineDesc& desc, const eastl::string& name);
     ~MetalGraphicsPipelineState();
 
-    virtual void* GetHandle() const override;
+    MTL::DepthStencilState* GetDepthStencilState() const { return m_pDepthStencilState; }
+    
+    virtual void* GetHandle() const override { return m_pPSO; }
     virtual bool Create() override;
 
 private:
     GfxGraphicsPipelineDesc m_desc;
+    MTL::RenderPipelineState* m_pPSO = nullptr;
+    MTL::DepthStencilState* m_pDepthStencilState = nullptr;
 };
 
 class MetalMeshShadingPipelineState : public IGfxPipelineState
@@ -24,11 +28,15 @@ public:
     MetalMeshShadingPipelineState(MetalDevice* pDevice, const GfxMeshShadingPipelineDesc& desc, const eastl::string& name);
     ~MetalMeshShadingPipelineState();
 
-    virtual void* GetHandle() const override;
+    MTL::DepthStencilState* GetDepthStencilState() const { return m_pDepthStencilState; }
+    
+    virtual void* GetHandle() const override { return m_pPSO; }
     virtual bool Create() override;
 
 private:
     GfxMeshShadingPipelineDesc m_desc;
+    MTL::RenderPipelineState* m_pPSO = nullptr;
+    MTL::DepthStencilState* m_pDepthStencilState = nullptr;
 };
 
 class MetalComputePipelineState : public IGfxPipelineState

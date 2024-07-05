@@ -259,3 +259,86 @@ inline MTL::StoreAction ToStoreAction(GfxRenderPassStoreOp storeOp)
             return MTL::StoreActionStore;
     }
 }
+
+inline MTL::PrimitiveTopologyClass ToTopologyClass(GfxPrimitiveType type)
+{
+    switch (type)
+    {
+        case GfxPrimitiveType::PointList:
+            return MTL::PrimitiveTopologyClassPoint;
+        case GfxPrimitiveType::LineList:
+        case GfxPrimitiveType::LineStrip:
+            return MTL::PrimitiveTopologyClassLine;
+        case GfxPrimitiveType::TriangleList:
+        case GfxPrimitiveType::TriangleTrip:
+            return MTL::PrimitiveTopologyClassTriangle;
+        default:
+            return MTL::PrimitiveTopologyClassUnspecified;
+    }
+}
+
+inline MTL::BlendFactor ToBlendFactor(GfxBlendFactor blend_factor)
+{
+    switch (blend_factor)
+    {
+        case GfxBlendFactor::Zero:
+            return MTL::BlendFactorZero;
+        case GfxBlendFactor::One:
+            return MTL::BlendFactorOne;
+        case GfxBlendFactor::SrcColor:
+            return MTL::BlendFactorSourceColor;
+        case GfxBlendFactor::InvSrcColor:
+            return MTL::BlendFactorOneMinusSourceColor;
+        case GfxBlendFactor::SrcAlpha:
+            return MTL::BlendFactorSourceAlpha;
+        case GfxBlendFactor::InvSrcAlpha:
+            return MTL::BlendFactorOneMinusSourceAlpha;
+        case GfxBlendFactor::DstAlpha:
+            return MTL::BlendFactorDestinationAlpha;
+        case GfxBlendFactor::InvDstAlpha:
+            return MTL::BlendFactorOneMinusDestinationAlpha;
+        case GfxBlendFactor::DstColor:
+            return MTL::BlendFactorDestinationColor;
+        case GfxBlendFactor::InvDstColor:
+            return MTL::BlendFactorOneMinusDestinationColor;
+        case GfxBlendFactor::SrcAlphaClamp:
+            return MTL::BlendFactorSourceAlphaSaturated;
+        case GfxBlendFactor::ConstantFactor:
+            return MTL::BlendFactorBlendColor;
+        case GfxBlendFactor::InvConstantFactor:
+            return MTL::BlendFactorOneMinusBlendColor;
+        default:
+            return MTL::BlendFactorZero;
+    }
+}
+
+inline MTL::BlendOperation ToBlendOperation(GfxBlendOp blend_op)
+{
+    switch (blend_op)
+    {
+        case GfxBlendOp::Add:
+            return MTL::BlendOperationAdd;
+        case GfxBlendOp::Subtract:
+            return MTL::BlendOperationSubtract;
+        case GfxBlendOp::ReverseSubtract:
+            return MTL::BlendOperationReverseSubtract;
+        case GfxBlendOp::Min:
+            return MTL::BlendOperationMin;
+        case GfxBlendOp::Max:
+            return MTL::BlendOperationMax;
+        default:
+            return MTL::BlendOperationAdd;
+    }
+}
+
+inline MTL::ColorWriteMask ToColorWriteMask(GfxColorWriteMask mask)
+{
+    MTL::ColorWriteMask mtlMask = MTL::ColorWriteMaskNone;
+    
+    if(mask & GfxColorWriteMaskR) mtlMask |= MTL::ColorWriteMaskRed;
+    if(mask & GfxColorWriteMaskG) mtlMask |= MTL::ColorWriteMaskGreen;
+    if(mask & GfxColorWriteMaskB) mtlMask |= MTL::ColorWriteMaskBlue;
+    if(mask & GfxColorWriteMaskA) mtlMask |= MTL::ColorWriteMaskAlpha;
+    
+    return mtlMask;
+}

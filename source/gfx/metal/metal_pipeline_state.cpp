@@ -3,6 +3,7 @@
 #include "metal_shader.h"
 #include "metal_utils.h"
 #include "utils/log.h"
+#include "../gfx.h"
 
 MetalGraphicsPipelineState::MetalGraphicsPipelineState(MetalDevice* pDevice, const GfxGraphicsPipelineDesc& desc, const eastl::string& name)
 {
@@ -14,15 +15,57 @@ MetalGraphicsPipelineState::MetalGraphicsPipelineState(MetalDevice* pDevice, con
 
 MetalGraphicsPipelineState::~MetalGraphicsPipelineState()
 {
-}
-
-void* MetalGraphicsPipelineState::GetHandle() const
-{
-    return nullptr;
+    m_pPSO->release();
+    m_pDepthStencilState->release();
 }
 
 bool MetalGraphicsPipelineState::Create()
 {
+    m_pPSO->release();
+    m_pDepthStencilState->release();
+    
+    MTL::RenderPipelineDescriptor* descriptor = MTL::RenderPipelineDescriptor::alloc()->init();
+    descriptor->setVertexFunction((MTL::Function*)m_desc.vs->GetHandle());
+    descriptor->setFragmentFunction((MTL::Function*)m_desc.ps->GetHandle());
+    
+    for(uint32_t i = 0; i < 8; ++i)
+    {
+        if (m_desc.rt_format[i] != GfxFormat::Unknown)
+        {
+            MTL::RenderPipelineColorAttachmentDescriptor* colorAttachment = descriptor->colorAttachments()->object(i);
+            colorAttachment->setPixelFormat(ToPixelFormat(m_desc.rt_format[i]));
+            colorAttachment->setBlendingEnabled(m_desc.blend_state[i].blend_enable);
+            colorAttachment->setSourceRGBBlendFactor(ToBlendFactor(m_desc.blend_state[i].color_src));
+            colorAttachment->setDestinationRGBBlendFactor(ToBlendFactor(m_desc.blend_state[i].color_dst));
+            colorAttachment->setRgbBlendOperation(ToBlendOperation(m_desc.blend_state[i].color_op));
+            colorAttachment->setSourceAlphaBlendFactor(ToBlendFactor(m_desc.blend_state[i].alpha_src));
+            colorAttachment->setDestinationAlphaBlendFactor(ToBlendFactor(m_desc.blend_state[i].alpha_dst));
+            colorAttachment->setAlphaBlendOperation(ToBlendOperation(m_desc.blend_state[i].alpha_op));
+            colorAttachment->setWriteMask(ToColorWriteMask(m_desc.blend_state[i].write_mask));
+        }
+    }
+    
+    descriptor->setDepthAttachmentPixelFormat(ToPixelFormat(m_desc.depthstencil_format));
+    if(IsStencilFormat(m_desc.depthstencil_format))
+    {
+        descriptor->setStencilAttachmentPixelFormat(ToPixelFormat(m_desc.depthstencil_format));
+    }
+    
+    descriptor->setInputPrimitiveTopology(ToTopologyClass(m_desc.primitive_type));
+    descriptor->setRasterSampleCount(1);
+    
+    MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
+    NS::Error* pError = nullptr;
+    m_pPSO = device->newRenderPipelineState(descriptor, &pError);
+    descriptor->release();
+    
+    if(!m_pPSO)
+    {
+        RE_ERROR("[MetalGraphicsPipelineState] failed to create {} \r\n{}", m_name, pError->localizedDescription()->utf8String());
+        pError->release();
+        return false;
+    }
+    
     return true;
 }
 
@@ -36,11 +79,8 @@ MetalMeshShadingPipelineState::MetalMeshShadingPipelineState(MetalDevice* pDevic
 
 MetalMeshShadingPipelineState::~MetalMeshShadingPipelineState()
 {
-}
-
-void* MetalMeshShadingPipelineState::GetHandle() const
-{
-    return nullptr;
+    m_pPSO->release();
+    m_pDepthStencilState->release();
 }
 
 bool MetalMeshShadingPipelineState::Create()
@@ -63,10 +103,7 @@ MetalComputePipelineState::~MetalComputePipelineState()
 
 bool MetalComputePipelineState::Create()
 {
-    if(m_pPSO)
-    {
-        m_pPSO->release();
-    }
+    m_pPSO->release();
     
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     

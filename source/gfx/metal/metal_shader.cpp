@@ -18,10 +18,7 @@ MetalShader::~MetalShader()
 
 bool MetalShader::Create(eastl::span<uint8_t> data)
 {
-    if(m_pFunction)
-    {
-        m_pFunction->release();
-    }
+    m_pFunction->release();
     
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     
