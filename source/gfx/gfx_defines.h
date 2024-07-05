@@ -697,6 +697,7 @@ enum class GfxVendor
     AMD,
     Nvidia,
     Intel,
+    Apple,
 };
 
 enum GfxRayTracingASFlagBit

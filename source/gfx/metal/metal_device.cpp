@@ -17,6 +17,7 @@
 MetalDevice::MetalDevice(const GfxDeviceDesc& desc)
 {
     m_desc = desc;
+    m_vendor = GfxVendor::Apple;
 }
 
 MetalDevice::~MetalDevice()

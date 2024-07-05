@@ -75,6 +75,7 @@ bool ShaderCompiler::CompileMetalIR(const eastl::string& file, const eastl::stri
 {
     IRCompilerSetGlobalRootSignature(m_pMetalCompiler, m_pMetalRootSignature);
     IRCompilerSetMinimumGPUFamily(m_pMetalCompiler, IRGPUFamilyApple7);
+    IRCompilerSetMinimumDeploymentTarget(m_pMetalCompiler, IROperatingSystem_macOS, "15.0.0"); // mac os 15, metal 3.2
     IRCompilerSetEntryPointName(m_pMetalCompiler, entry_point.c_str());
     
     IRObject* pDXIL = IRObjectCreateFromDXIL((const uint8_t*)data, (size_t)data_size, IRBytecodeOwnershipNone);
