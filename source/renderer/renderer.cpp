@@ -702,14 +702,13 @@ void Renderer::CreateCommonResources()
     psoDesc.ps = GetShader("copy.hlsl", "ps_main", GfxShaderType::PS);
     psoDesc.depthstencil_state.depth_write = false;
     psoDesc.rt_format[0] = m_pSwapchain->GetDesc().backbuffer_format;
+    psoDesc.depthstencil_format = GfxFormat::D32F;
     m_pCopyColorPSO = GetPipelineState(psoDesc, "Copy PSO");
 
     psoDesc.ps = GetShader("copy.hlsl", "ps_main", GfxShaderType::PS, { "OUTPUT_DEPTH=1" });
     psoDesc.depthstencil_state.depth_write = true;
     psoDesc.depthstencil_state.depth_test = true;
     psoDesc.depthstencil_state.depth_func = GfxCompareFunc::Always;
-    psoDesc.rt_format[0] = m_pSwapchain->GetDesc().backbuffer_format;
-    psoDesc.depthstencil_format = GfxFormat::D32F;
     m_pCopyColorDepthPSO = GetPipelineState(psoDesc, "Copy PSO");
 
     GfxComputePipelineDesc computePsoDesc;

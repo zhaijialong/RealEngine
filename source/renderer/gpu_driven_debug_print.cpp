@@ -20,6 +20,7 @@ GpuDrivenDebugPrint::GpuDrivenDebugPrint(Renderer* pRenderer)
     drawPSODesc.ps = pRenderer->GetShader("debug_print.hlsl", "main_ps", GfxShaderType::PS);
     drawPSODesc.depthstencil_state.depth_write = false;
     drawPSODesc.rt_format[0] = pRenderer->GetSwapchain()->GetDesc().backbuffer_format;
+    drawPSODesc.depthstencil_format = GfxFormat::D32F;
     drawPSODesc.blend_state[0].blend_enable = true;
     drawPSODesc.blend_state[0].color_src = GfxBlendFactor::SrcAlpha;
     drawPSODesc.blend_state[0].color_dst = GfxBlendFactor::InvSrcAlpha;

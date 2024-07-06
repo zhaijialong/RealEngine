@@ -296,9 +296,9 @@ void MetalCommandList::EndRenderPass()
     {
         m_pRenderCommandEncoder->endEncoding();
         m_pRenderCommandEncoder = nullptr;
-    }
-    
-    ResetState();
+
+        ResetState();
+    }    
 }
 
 void MetalCommandList::SetPipelineState(IGfxPipelineState* state)
