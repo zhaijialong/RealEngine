@@ -3,8 +3,10 @@
 #include "metal_swapchain.h"
 #include "metal_fence.h"
 #include "metal_texture.h"
+#include "metal_pipeline_state.h"
 #include "metal_utils.h"
 #include "utils/assert.h"
+#include "utils/math.h"
 #include "../gfx.h"
 
 MetalCommandList::MetalCommandList(MetalDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
@@ -33,8 +35,6 @@ void MetalCommandList::Begin()
     MTL::CommandQueue* queue = ((MetalDevice*)m_pDevice)->GetQueue();
     
     m_pCommandBuffer = queue->commandBuffer();
-    
-    ResetState();
 }
 
 void MetalCommandList::End()
@@ -74,6 +74,14 @@ void MetalCommandList::ResetState()
     m_pIndexBuffer = nullptr;
     m_indexBufferOffset = 0;
     m_indexType = MTL::IndexTypeUInt16;
+    m_primitiveType = MTL::PrimitiveTypeTriangle;
+    m_cullMode = MTL::CullModeNone;
+    m_frontFaceWinding = MTL::WindingClockwise;
+    m_fillMode = MTL::TriangleFillModeFill;
+    m_clipMode = MTL::DepthClipModeClip;
+    m_depthBias = 0.0f;
+    m_depthBiasClamp = 0.0f;
+    m_depthSlopeScale = 0.0f;
 }
 
 void MetalCommandList::BeginProfiling()
@@ -289,10 +297,42 @@ void MetalCommandList::EndRenderPass()
         m_pRenderCommandEncoder->endEncoding();
         m_pRenderCommandEncoder = nullptr;
     }
+    
+    ResetState();
 }
 
 void MetalCommandList::SetPipelineState(IGfxPipelineState* state)
 {
+    if(state->GetType() == GfxPipelineType::Compute)
+    {
+        BeginComputeEncoder();
+        
+        m_pComputeCommandEncoder->setComputePipelineState((MTL::ComputePipelineState*)state->GetHandle());
+    }
+    else
+    {
+        RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+        
+        m_pRenderCommandEncoder->setRenderPipelineState((MTL::RenderPipelineState*)state->GetHandle());
+        
+        if(state->GetType() == GfxPipelineType::Graphics)
+        {
+            MetalGraphicsPipelineState* graphicsPSO = (MetalGraphicsPipelineState*)state;
+            const GfxGraphicsPipelineDesc& desc = graphicsPSO->GetDesc();
+
+            m_pRenderCommandEncoder->setDepthStencilState(graphicsPSO->GetDepthStencilState());
+            SetRasterizerState(desc.rasterizer_state);
+            m_primitiveType = ToPrimitiveType(desc.primitive_type);
+        }
+        else
+        {
+            MetalMeshShadingPipelineState* meshShadingPSO = (MetalMeshShadingPipelineState*)state;
+            const GfxMeshShadingPipelineDesc& desc = meshShadingPSO->GetDesc();
+                        
+            m_pRenderCommandEncoder->setDepthStencilState(meshShadingPSO->GetDepthStencilState());
+            SetRasterizerState(desc.rasterizer_state);
+        }
+    }
 }
 
 void MetalCommandList::SetStencilReference(uint8_t stencil)
@@ -453,5 +493,47 @@ void MetalCommandList::EndComputeEncoder()
     {
         m_pComputeCommandEncoder->endEncoding();
         m_pComputeCommandEncoder = nullptr;
+    }
+}
+
+void MetalCommandList::SetRasterizerState(const GfxRasterizerState& state)
+{
+    MTL::CullMode cullMode = ToCullMode(state.cull_mode);
+    if(m_cullMode != cullMode)
+    {
+        m_pRenderCommandEncoder->setCullMode(cullMode);
+        m_cullMode = cullMode;
+    }
+    
+    MTL::Winding frontFaceWinding = state.front_ccw ? MTL::WindingCounterClockwise : MTL::WindingClockwise;
+    if(m_frontFaceWinding != frontFaceWinding)
+    {
+        m_pRenderCommandEncoder->setFrontFacingWinding(frontFaceWinding);
+        m_frontFaceWinding = frontFaceWinding;
+    }
+        
+    MTL::TriangleFillMode fillMode = state.wireframe ? MTL::TriangleFillModeLines : MTL::TriangleFillModeFill;
+    if(m_fillMode != fillMode)
+    {
+        m_pRenderCommandEncoder->setTriangleFillMode(fillMode);
+        m_fillMode = fillMode;
+    }
+    
+    MTL::DepthClipMode clipMode = state.depth_clip ? MTL::DepthClipModeClip : MTL::DepthClipModeClamp;
+    if(m_clipMode != clipMode)
+    {
+        m_pRenderCommandEncoder->setDepthClipMode(clipMode);
+        m_clipMode = clipMode;
+    }
+    
+    if(!nearly_equal(state.depth_bias, m_depthBias) ||
+       !nearly_equal(state.depth_bias_clamp, m_depthBiasClamp) ||
+       !nearly_equal(state.depth_slope_scale, m_depthSlopeScale))
+    {
+        m_pRenderCommandEncoder->setDepthBias(state.depth_bias, state.depth_slope_scale, state.depth_bias_clamp);
+        
+        m_depthBias = state.depth_bias;
+        m_depthBiasClamp = state.depth_bias_clamp;
+        m_depthSlopeScale = state.depth_slope_scale;
     }
 }

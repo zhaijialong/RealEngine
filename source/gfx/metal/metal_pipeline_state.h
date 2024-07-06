@@ -11,6 +11,7 @@ public:
     MetalGraphicsPipelineState(MetalDevice* pDevice, const GfxGraphicsPipelineDesc& desc, const eastl::string& name);
     ~MetalGraphicsPipelineState();
 
+    const GfxGraphicsPipelineDesc& GetDesc() const { return m_desc; }
     MTL::DepthStencilState* GetDepthStencilState() const { return m_pDepthStencilState; }
     
     virtual void* GetHandle() const override { return m_pPSO; }
@@ -28,6 +29,7 @@ public:
     MetalMeshShadingPipelineState(MetalDevice* pDevice, const GfxMeshShadingPipelineDesc& desc, const eastl::string& name);
     ~MetalMeshShadingPipelineState();
 
+    const GfxMeshShadingPipelineDesc& GetDesc() const { return m_desc; }
     MTL::DepthStencilState* GetDepthStencilState() const { return m_pDepthStencilState; }
     
     virtual void* GetHandle() const override { return m_pPSO; }

@@ -277,6 +277,25 @@ inline MTL::PrimitiveTopologyClass ToTopologyClass(GfxPrimitiveType type)
     }
 }
 
+inline MTL::PrimitiveType ToPrimitiveType(GfxPrimitiveType type)
+{
+    switch (type)
+    {
+        case GfxPrimitiveType::PointList:
+            return MTL::PrimitiveTypePoint;
+        case GfxPrimitiveType::LineList:
+            return MTL::PrimitiveTypeLine;
+        case GfxPrimitiveType::LineStrip:
+            return MTL::PrimitiveTypeLineStrip;
+        case GfxPrimitiveType::TriangleList:
+            return MTL::PrimitiveTypeTriangle;
+        case GfxPrimitiveType::TriangleTrip:
+            return MTL::PrimitiveTypeTriangleStrip;
+        default:
+            return MTL::PrimitiveTypeTriangle;
+    }
+}
+
 inline MTL::BlendFactor ToBlendFactor(GfxBlendFactor blend_factor)
 {
     switch (blend_factor)
@@ -419,4 +438,18 @@ inline MTL::DepthStencilDescriptor* ToDepthStencilDescriptor(GfxDepthStencilStat
     }
     
     return descriptor;
+}
+
+inline MTL::CullMode ToCullMode(GfxCullMode mode)
+{
+    switch (mode)
+    {
+        case GfxCullMode::Front:
+            return MTL::CullModeFront;
+        case GfxCullMode::Back:
+            return MTL::CullModeBack;
+        case GfxCullMode::None:
+        default:
+            return MTL::CullModeNone;
+    }
 }

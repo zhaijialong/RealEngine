@@ -84,6 +84,7 @@ private:
     void BeginComputeEncoder();
     void EndComputeEncoder();
     
+    void SetRasterizerState(const GfxRasterizerState& state);
 private:
     MTL::CommandBuffer* m_pCommandBuffer = nullptr;
     
@@ -94,4 +95,12 @@ private:
     MTL::Buffer* m_pIndexBuffer = nullptr;
     NS::UInteger m_indexBufferOffset = 0;
     MTL::IndexType m_indexType = MTL::IndexTypeUInt16;
+    MTL::PrimitiveType m_primitiveType = MTL::PrimitiveTypeTriangle;
+    MTL::CullMode m_cullMode = MTL::CullModeNone;
+    MTL::Winding m_frontFaceWinding = MTL::WindingClockwise;
+    MTL::TriangleFillMode m_fillMode = MTL::TriangleFillModeFill;
+    MTL::DepthClipMode m_clipMode = MTL::DepthClipModeClip;
+    float m_depthBias = 0.0f;
+    float m_depthBiasClamp = 0.0f;
+    float m_depthSlopeScale = 0.0f;
 };
