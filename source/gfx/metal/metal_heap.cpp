@@ -1,8 +1,6 @@
 #include "metal_heap.h"
 #include "metal_device.h"
-#include "metal_utils.h"
 #include "utils/log.h"
-#include "utils/assert.h"
 
 MetalHeap::MetalHeap(MetalDevice* pDevice, const GfxHeapDesc& desc, const eastl::string& name)
 {

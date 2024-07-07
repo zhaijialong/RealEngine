@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Metal/Metal.hpp"
+#include "metal_utils.h"
 #include "../gfx_command_list.h"
 
 class MetalDevice;

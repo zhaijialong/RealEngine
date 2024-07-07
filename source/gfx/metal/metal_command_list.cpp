@@ -4,8 +4,6 @@
 #include "metal_fence.h"
 #include "metal_texture.h"
 #include "metal_pipeline_state.h"
-#include "metal_utils.h"
-#include "utils/assert.h"
 #include "utils/math.h"
 #include "../gfx.h"
 

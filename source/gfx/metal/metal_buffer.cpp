@@ -1,9 +1,7 @@
 #include "metal_buffer.h"
 #include "metal_device.h"
 #include "metal_heap.h"
-#include "metal_utils.h"
 #include "utils/log.h"
-#include "utils/assert.h"
 
 MetalBuffer::MetalBuffer(MetalDevice* pDevice, const GfxBufferDesc& desc, const eastl::string& name)
 {

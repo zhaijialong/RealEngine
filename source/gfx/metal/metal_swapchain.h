@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MetalKit/MetalKit.hpp"
+#include "metal_utils.h"
 #include "../gfx_swapchain.h"
 
 class MetalDevice;

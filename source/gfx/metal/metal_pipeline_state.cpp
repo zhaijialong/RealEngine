@@ -1,7 +1,6 @@
 #include "metal_pipeline_state.h"
 #include "metal_device.h"
 #include "metal_shader.h"
-#include "metal_utils.h"
 #include "utils/log.h"
 #include "../gfx.h"
 

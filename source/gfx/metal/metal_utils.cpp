@@ -3,5 +3,6 @@
 #define MTLFX_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
 #define NS_PRIVATE_IMPLEMENTATION
-#include "MetalKit/MetalKit.hpp"
-#include "Foundation/Foundation.hpp"
+#define IR_PRIVATE_IMPLEMENTATION
+
+#include "metal_utils.h"

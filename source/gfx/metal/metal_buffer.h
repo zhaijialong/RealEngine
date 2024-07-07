@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Metal/MTLBuffer.hpp"
+#include "metal_utils.h"
 #include "../gfx_buffer.h"
 
 class MetalDevice;

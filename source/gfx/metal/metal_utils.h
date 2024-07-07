@@ -1,8 +1,13 @@
 #pragma once
 
+#include "../gfx_defines.h"
 #include "utils/assert.h"
 #include "Foundation/Foundation.hpp"
 #include "Metal/Metal.hpp"
+#include "MetalKit/MetalKit.hpp"
+
+#define IR_RUNTIME_METALCPP
+#include "metal_irconverter_runtime/metal_irconverter_runtime.h"
 
 template<typename T>
 inline void SetDebugLabel(T* resource, const char* name)

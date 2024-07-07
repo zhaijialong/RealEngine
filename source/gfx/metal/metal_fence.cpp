@@ -1,6 +1,5 @@
 #include "metal_fence.h"
 #include "metal_device.h"
-#include "metal_utils.h"
 #include "utils/log.h"
 
 MetalFence::MetalFence(MetalDevice* pDevice, const eastl::string& name)

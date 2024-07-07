@@ -1,7 +1,6 @@
 #include "metal_swapchain.h"
 #include "metal_device.h"
 #include "metal_texture.h"
-#include "metal_utils.h"
 
 MetalSwapchain::MetalSwapchain(MetalDevice* pDevice, const GfxSwapchainDesc& desc, const eastl::string& name)
 {

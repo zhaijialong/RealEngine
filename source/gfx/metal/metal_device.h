@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Metal/MTLDevice.hpp"
-#include "Metal/MTLCommandQueue.hpp"
+#include "metal_utils.h"
 #include "../gfx_device.h"
 
 class MetalDevice : public IGfxDevice

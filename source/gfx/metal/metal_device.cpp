@@ -10,7 +10,6 @@
 #include "metal_heap.h"
 #include "metal_rt_blas.h"
 #include "metal_rt_tlas.h"
-#include "metal_utils.h"
 #include "../gfx.h"
 #include "utils/log.h"
 

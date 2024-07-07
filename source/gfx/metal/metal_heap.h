@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Metal/MTLHeap.hpp"
+#include "metal_utils.h"
 #include "../gfx_heap.h"
 
 class MetalDevice;

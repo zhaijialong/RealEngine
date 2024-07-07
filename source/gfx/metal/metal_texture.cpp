@@ -1,8 +1,6 @@
 #include "metal_texture.h"
 #include "metal_device.h"
 #include "metal_heap.h"
-#include "metal_utils.h"
-#include "utils/assert.h"
 #include "utils/log.h"
 #include "../gfx.h"
 

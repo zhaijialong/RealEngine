@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Metal/MTLLibrary.hpp"
+#include "metal_utils.h"
 #include "../gfx_shader.h"
 
 class MetalDevice;

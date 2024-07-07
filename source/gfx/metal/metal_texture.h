@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Metal/MTLTexture.hpp"
+#include "metal_utils.h"
 #include "../gfx_texture.h"
 
 class MetalDevice;
