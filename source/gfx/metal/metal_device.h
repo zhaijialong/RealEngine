@@ -2,6 +2,7 @@
 
 #include "metal_utils.h"
 #include "../gfx_device.h"
+#include "EASTL/unique_ptr.h"
 
 class MetalDevice : public IGfxDevice
 {
@@ -36,7 +37,11 @@ public:
     
     MTL::CommandQueue* GetQueue() const { return m_pQueue; }
     
+    uint64_t AllocateConstantBuffer(const void* data, size_t data_size);
+    
 private:
     MTL::Device* m_pDevice = nullptr;
     MTL::CommandQueue* m_pQueue = nullptr;
+    
+    eastl::unique_ptr<class MetalConstantBufferAllocator> m_pConstantBufferAllocators[GFX_MAX_INFLIGHT_FRAMES];
 };

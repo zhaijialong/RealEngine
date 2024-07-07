@@ -103,4 +103,14 @@ private:
     float m_depthBias = 0.0f;
     float m_depthBiasClamp = 0.0f;
     float m_depthSlopeScale = 0.0f;
+    
+    struct TopLevelArgumentBuffer
+    {
+        uint32_t cbv0[8]; //root constants
+        uint64_t cbv1; // gpu address
+        uint64_t cbv2;
+    };
+    
+    TopLevelArgumentBuffer m_graphicsArgumentBuffer;
+    TopLevelArgumentBuffer m_computeArgumentBuffer;
 };

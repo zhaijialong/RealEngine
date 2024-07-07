@@ -12,6 +12,44 @@
 #include "metal_rt_tlas.h"
 #include "../gfx.h"
 #include "utils/log.h"
+#include "utils/math.h"
+
+class MetalConstantBufferAllocator
+{
+public:
+    MetalConstantBufferAllocator(MTL::Device* device, uint32_t buffer_size, const eastl::string& name)
+    {
+        m_pBuffer = device->newBuffer(buffer_size, MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeUntracked);
+        m_pCpuAddress = m_pBuffer->contents();
+        m_bufferSize = buffer_size;
+    }
+    
+    ~MetalConstantBufferAllocator()
+    {
+        m_pBuffer->release();
+    }
+
+    void Allocate(uint32_t size, void** cpu_address, uint64_t* gpu_address)
+    {
+        RE_ASSERT(m_allocatedSize + size <= m_bufferSize);
+
+        *cpu_address = (char*)m_pCpuAddress + m_allocatedSize;
+        *gpu_address = m_pBuffer->gpuAddress() + m_allocatedSize;
+
+        m_allocatedSize += RoundUpPow2(size, 8); // Shader converter requires an alignment of 8-bytes:
+    }
+    
+    void Reset()
+    {
+        m_allocatedSize = 0;
+    }
+    
+private:
+    MTL::Buffer* m_pBuffer = nullptr;
+    void* m_pCpuAddress = nullptr;
+    uint32_t m_allocatedSize = 0;
+    uint32_t m_bufferSize = 0;
+};
 
 MetalDevice::MetalDevice(const GfxDeviceDesc& desc)
 {
@@ -21,6 +59,11 @@ MetalDevice::MetalDevice(const GfxDeviceDesc& desc)
 
 MetalDevice::~MetalDevice()
 {
+    for (uint32_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
+    {
+        m_pConstantBufferAllocators[i].reset();
+    }
+    
     m_pQueue->release();
     m_pDevice->release();
 }
@@ -39,11 +82,19 @@ bool MetalDevice::Create()
     
     m_pQueue = m_pDevice->newCommandQueue();
     
+    for (uint32_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
+    {
+        eastl::string name = fmt::format("CB Allocator {}", i).c_str();
+        m_pConstantBufferAllocators[i] = eastl::make_unique<MetalConstantBufferAllocator>(m_pDevice, 8 * 1024 * 1024, name);
+    }
+
     return true;
 }
 
 void MetalDevice::BeginFrame()
 {
+    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
+    m_pConstantBufferAllocators[index]->Reset();
 }
 
 void MetalDevice::EndFrame()
@@ -239,4 +290,17 @@ uint32_t MetalDevice::GetAllocationSize(const GfxTextureDesc& desc)
 bool MetalDevice::DumpMemoryStats(const eastl::string& file)
 {
     return false;
+}
+
+uint64_t MetalDevice::AllocateConstantBuffer(const void* data, size_t data_size)
+{
+    void* cpu_address;
+    uint64_t gpu_address;
+
+    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
+    m_pConstantBufferAllocators[index]->Allocate((uint32_t)data_size, &cpu_address, &gpu_address);
+
+    memcpy(cpu_address, data, data_size);
+
+    return gpu_address;
 }

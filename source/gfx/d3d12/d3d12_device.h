@@ -43,7 +43,7 @@ public:
     void Reset();
 private:
     eastl::unique_ptr<IGfxBuffer> m_pBuffer = nullptr;
-    uint32_t m_allcatedSize = 0;
+    uint32_t m_allocatedSize = 0;
 };
 
 class D3D12Device : public IGfxDevice

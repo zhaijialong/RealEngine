@@ -372,24 +372,86 @@ void MetalCommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, ui
 
 void MetalCommandList::SetGraphicsConstants(uint32_t slot, const void* data, size_t data_size)
 {
+    if(slot == 0)
+    {
+        RE_ASSERT(data_size <= GFX_MAX_ROOT_CONSTANTS * sizeof(uint32_t));
+        memcpy(m_graphicsArgumentBuffer.cbv0, data, data_size);
+    }
+    else
+    {
+        RE_ASSERT(slot < GFX_MAX_CBV_BINDINGS);
+        uint64_t gpuAddress = ((MetalDevice*)m_pDevice)->AllocateConstantBuffer(data, data_size);
+        
+        if(slot == 1)
+        {
+            m_graphicsArgumentBuffer.cbv1 = gpuAddress;
+        }
+        else
+        {
+            m_graphicsArgumentBuffer.cbv2 = gpuAddress;
+        }
+    }
 }
 
 void MetalCommandList::SetComputeConstants(uint32_t slot, const void* data, size_t data_size)
 {
+    if(slot == 0)
+    {
+        RE_ASSERT(data_size <= GFX_MAX_ROOT_CONSTANTS * sizeof(uint32_t));
+        memcpy(m_computeArgumentBuffer.cbv0, data, data_size);
+    }
+    else
+    {
+        RE_ASSERT(slot < GFX_MAX_CBV_BINDINGS);
+        uint64_t gpuAddress = ((MetalDevice*)m_pDevice)->AllocateConstantBuffer(data, data_size);
+        
+        if(slot == 1)
+        {
+            m_computeArgumentBuffer.cbv1 = gpuAddress;
+        }
+        else
+        {
+            m_computeArgumentBuffer.cbv2 = gpuAddress;
+        }
+    }
 }
 
 void MetalCommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    m_pRenderCommandEncoder->setVertexBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    m_pRenderCommandEncoder->setFragmentBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    
+    IRRuntimeDrawPrimitives(m_pRenderCommandEncoder, m_primitiveType, 0, vertex_count, instance_count);
 }
 
 void MetalCommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_offset)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    m_pRenderCommandEncoder->setVertexBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    m_pRenderCommandEncoder->setFragmentBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    
+    uint64_t indexBufferOffset = m_indexBufferOffset;
+    if(m_indexType == MTL::IndexTypeUInt16)
+    {
+        indexBufferOffset += sizeof(uint16_t) * index_offset;
+    }
+    else
+    {
+        indexBufferOffset += sizeof(uint32_t) * index_offset;
+    }
+    
+    IRRuntimeDrawIndexedPrimitives(m_pRenderCommandEncoder, m_primitiveType, index_count, m_indexType, m_pIndexBuffer, indexBufferOffset, instance_count, 0, 0);
 }
 
 void MetalCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
+    RE_ASSERT(m_pComputeCommandEncoder != nullptr);
+    
+    m_pComputeCommandEncoder->setBytes(&m_computeArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    //m_pComputeCommandEncoder->dispatchThreadgroups(<#MTL::Size threadgroupsPerGrid#>, <#MTL::Size threadsPerThreadgroup#>)
 }
 
 void MetalCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
