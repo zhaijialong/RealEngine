@@ -20,6 +20,8 @@ public:
     MetalConstantBufferAllocator(MTL::Device* device, uint32_t buffer_size, const eastl::string& name)
     {
         m_pBuffer = device->newBuffer(buffer_size, MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeUntracked);
+        SetDebugLabel(m_pBuffer, name.c_str());
+        
         m_pCpuAddress = m_pBuffer->contents();
         m_bufferSize = buffer_size;
     }
@@ -47,8 +49,60 @@ public:
 private:
     MTL::Buffer* m_pBuffer = nullptr;
     void* m_pCpuAddress = nullptr;
-    uint32_t m_allocatedSize = 0;
     uint32_t m_bufferSize = 0;
+    uint32_t m_allocatedSize = 0;
+};
+
+class MetalDescriptorAllocator
+{
+public:
+    MetalDescriptorAllocator(MTL::Device* device, uint32_t descriptor_count, const eastl::string& name)
+    {
+        m_pBuffer = device->newBuffer(sizeof(IRDescriptorTableEntry) * descriptor_count,
+            MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeUntracked);
+        SetDebugLabel(m_pBuffer, name.c_str());
+        
+        m_pCpuAddress = m_pBuffer->contents();
+        m_descirptorCount = descriptor_count;
+    }
+    
+    ~MetalDescriptorAllocator()
+    {
+        m_pBuffer->release();
+    }
+    
+    uint32_t Allocate(IRDescriptorTableEntry** descriptor)
+    {
+        uint32_t index = 0;
+        
+        if(!m_freeDescriptors.empty())
+        {
+            index = m_freeDescriptors.back();
+            m_freeDescriptors.pop_back();
+        }
+        else
+        {
+            index = m_allocatedCount;
+            ++m_allocatedCount;
+        }
+        
+        *descriptor = (IRDescriptorTableEntry*)((char*)m_pCpuAddress + sizeof(IRDescriptorTableEntry) * index);
+        return index;
+    }
+    
+    void Free(uint32_t index)
+    {
+        m_freeDescriptors.push_back(index);
+    }
+    
+    MTL::Buffer* GetBuffer() const { return m_pBuffer; }
+    
+private:
+    MTL::Buffer* m_pBuffer = nullptr;
+    void* m_pCpuAddress = nullptr;
+    uint32_t m_descirptorCount = 0;
+    uint32_t m_allocatedCount = 0;
+    eastl::vector<uint32_t> m_freeDescriptors;
 };
 
 MetalDevice::MetalDevice(const GfxDeviceDesc& desc)
@@ -63,6 +117,9 @@ MetalDevice::~MetalDevice()
     {
         m_pConstantBufferAllocators[i].reset();
     }
+    
+    m_pResDescriptorAllocator.reset();
+    m_pSamplerAllocator.reset();
     
     m_pQueue->release();
     m_pDevice->release();
@@ -88,6 +145,9 @@ bool MetalDevice::Create()
         m_pConstantBufferAllocators[i] = eastl::make_unique<MetalConstantBufferAllocator>(m_pDevice, 8 * 1024 * 1024, name);
     }
 
+    m_pResDescriptorAllocator = eastl::make_unique<MetalDescriptorAllocator>(m_pDevice, 65536, "Resource Heap");
+    m_pSamplerAllocator = eastl::make_unique<MetalDescriptorAllocator>(m_pDevice, 128, "Sampler Heap");
+
     return true;
 }
 
@@ -95,6 +155,30 @@ void MetalDevice::BeginFrame()
 {
     uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
     m_pConstantBufferAllocators[index]->Reset();
+    
+    while (!m_resDescriptorDeletionQueue.empty())
+    {
+        auto item = m_resDescriptorDeletionQueue.front();
+        if (item.second + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
+        {
+            break;
+        }
+
+        m_pResDescriptorAllocator->Free(item.first);
+        m_resDescriptorDeletionQueue.pop();
+    }
+
+    while (!m_samplerDescriptorDeletionQueue.empty())
+    {
+        auto item = m_samplerDescriptorDeletionQueue.front();
+        if (item.second + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
+        {
+            break;
+        }
+
+        m_pSamplerAllocator->Free(item.first);
+        m_samplerDescriptorDeletionQueue.pop();
+    }
 }
 
 void MetalDevice::EndFrame()
@@ -303,4 +387,34 @@ uint64_t MetalDevice::AllocateConstantBuffer(const void* data, size_t data_size)
     memcpy(cpu_address, data, data_size);
 
     return gpu_address;
+}
+
+uint32_t MetalDevice::AllocateResourceDescriptor(IRDescriptorTableEntry** descriptor)
+{
+    return m_pResDescriptorAllocator->Allocate(descriptor);
+}
+
+uint32_t MetalDevice::AllocateSamplerDescriptor(IRDescriptorTableEntry** descriptor)
+{
+    return m_pSamplerAllocator->Allocate(descriptor);
+}
+
+void MetalDevice::FreeResourceDescriptor(uint32_t index)
+{
+    m_resDescriptorDeletionQueue.push(eastl::make_pair(index, m_frameID));
+}
+
+void MetalDevice::FreeSamplerDescriptor(uint32_t index)
+{
+    m_samplerDescriptorDeletionQueue.push(eastl::make_pair(index, m_frameID));
+}
+
+MTL::Buffer* MetalDevice::GetResourceDescriptorBuffer() const
+{
+    return m_pResDescriptorAllocator->GetBuffer();
+}
+
+MTL::Buffer* MetalDevice::GetSamplerDescriptorBuffer() const
+{
+    return m_pSamplerAllocator->GetBuffer();
 }

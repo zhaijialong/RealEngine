@@ -285,6 +285,12 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     RE_ASSERT(m_pRenderCommandEncoder == nullptr);
     m_pRenderCommandEncoder = m_pCommandBuffer->renderCommandEncoder(descriptor);
     
+    MetalDevice* pDevice = (MetalDevice*)m_pDevice;
+    m_pRenderCommandEncoder->setVertexBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+    m_pRenderCommandEncoder->setVertexBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
+    m_pRenderCommandEncoder->setFragmentBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+    m_pRenderCommandEncoder->setFragmentBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
+    
     descriptor->release();
 }
 
@@ -544,6 +550,9 @@ void MetalCommandList::BeginComputeEncoder()
     if(m_pComputeCommandEncoder == nullptr)
     {
         m_pComputeCommandEncoder = m_pCommandBuffer->computeCommandEncoder();
+        
+        m_pComputeCommandEncoder->setBuffer(((MetalDevice*)m_pDevice)->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+        m_pComputeCommandEncoder->setBuffer(((MetalDevice*)m_pDevice)->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
     }
 }
 

@@ -3,6 +3,7 @@
 #include "metal_utils.h"
 #include "../gfx_device.h"
 #include "EASTL/unique_ptr.h"
+#include "EASTL/queue.h"
 
 class MetalDevice : public IGfxDevice
 {
@@ -39,9 +40,21 @@ public:
     
     uint64_t AllocateConstantBuffer(const void* data, size_t data_size);
     
+    uint32_t AllocateResourceDescriptor(IRDescriptorTableEntry** descriptor);
+    uint32_t AllocateSamplerDescriptor(IRDescriptorTableEntry** descriptor);
+    void FreeResourceDescriptor(uint32_t index);
+    void FreeSamplerDescriptor(uint32_t index);
+    MTL::Buffer* GetResourceDescriptorBuffer() const;
+    MTL::Buffer* GetSamplerDescriptorBuffer() const;
+    
 private:
     MTL::Device* m_pDevice = nullptr;
     MTL::CommandQueue* m_pQueue = nullptr;
     
     eastl::unique_ptr<class MetalConstantBufferAllocator> m_pConstantBufferAllocators[GFX_MAX_INFLIGHT_FRAMES];
+    eastl::unique_ptr<class MetalDescriptorAllocator> m_pResDescriptorAllocator;
+    eastl::unique_ptr<class MetalDescriptorAllocator> m_pSamplerAllocator;
+    
+    eastl::queue<eastl::pair<uint32_t, uint64_t>> m_resDescriptorDeletionQueue;
+    eastl::queue<eastl::pair<uint32_t, uint64_t>> m_samplerDescriptorDeletionQueue;
 };
