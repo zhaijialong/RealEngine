@@ -401,12 +401,18 @@ uint32_t MetalDevice::AllocateSamplerDescriptor(IRDescriptorTableEntry** descrip
 
 void MetalDevice::FreeResourceDescriptor(uint32_t index)
 {
-    m_resDescriptorDeletionQueue.push(eastl::make_pair(index, m_frameID));
+    if(index != GFX_INVALID_RESOURCE)
+    {
+        m_resDescriptorDeletionQueue.push(eastl::make_pair(index, m_frameID));
+    }
 }
 
 void MetalDevice::FreeSamplerDescriptor(uint32_t index)
 {
-    m_samplerDescriptorDeletionQueue.push(eastl::make_pair(index, m_frameID));
+    if(index != GFX_INVALID_RESOURCE)
+    {
+        m_samplerDescriptorDeletionQueue.push(eastl::make_pair(index, m_frameID));
+    }
 }
 
 MTL::Buffer* MetalDevice::GetResourceDescriptorBuffer() const

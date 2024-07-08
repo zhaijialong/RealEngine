@@ -458,3 +458,46 @@ inline MTL::CullMode ToCullMode(GfxCullMode mode)
             return MTL::CullModeNone;
     }
 }
+
+inline MTL::SamplerMinMagFilter ToSamplerMinMagFilter(GfxFilter filter)
+{
+    switch (filter)
+    {
+        case GfxFilter::Point:
+            return MTL::SamplerMinMagFilterNearest;
+        case GfxFilter::Linear:
+            return MTL::SamplerMinMagFilterLinear;
+        default:
+            return MTL::SamplerMinMagFilterNearest;
+    }
+}
+
+inline MTL::SamplerMipFilter ToSamplerMipFilter(GfxFilter filter)
+{
+    switch (filter)
+    {
+        case GfxFilter::Point:
+            return MTL::SamplerMipFilterNearest;
+        case GfxFilter::Linear:
+            return MTL::SamplerMipFilterLinear;
+        default:
+            return MTL::SamplerMipFilterNotMipmapped;
+    }
+}
+
+inline MTL::SamplerAddressMode ToSamplerAddressMode(GfxSamplerAddressMode mode)
+{
+    switch (mode)
+    {
+        case GfxSamplerAddressMode::Repeat:
+            return MTL::SamplerAddressModeRepeat;
+        case GfxSamplerAddressMode::MirroredRepeat:
+            return MTL::SamplerAddressModeMirrorRepeat;
+        case GfxSamplerAddressMode::ClampToEdge:
+            return MTL::SamplerAddressModeClampToEdge;
+        case GfxSamplerAddressMode::ClampToBorder:
+            return MTL::SamplerAddressModeClampToBorderColor;
+        default:
+            return MTL::SamplerAddressModeRepeat;
+    }
+}

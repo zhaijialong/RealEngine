@@ -1,5 +1,6 @@
 #pragma once
 
+#include "metal_utils.h"
 #include "../gfx_descriptor.h"
 
 class MetalDevice;
@@ -60,9 +61,11 @@ public:
 
     bool Create();
 
-    virtual void* GetHandle() const override;
-    virtual uint32_t GetHeapIndex() const override;
+    virtual void* GetHandle() const override { return m_pSampler; }
+    virtual uint32_t GetHeapIndex() const override { return m_heapIndex; }
 
 private:
     GfxSamplerDesc m_desc;
+    MTL::SamplerState* m_pSampler = nullptr;
+    uint32_t m_heapIndex = GFX_INVALID_RESOURCE;
 };
