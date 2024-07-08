@@ -148,11 +148,12 @@ void GUI::Render(IGfxCommandList* pCommandList)
 
     SetupRenderStates(pCommandList, frame_index);
 
-    // Render command lists
-    // (Because we merged all buffers into a single one, we maintain our own offset into them)
     int global_vtx_offset = 0;
     int global_idx_offset = 0;
+    
     ImVec2 clip_off = draw_data->DisplayPos;
+    ImVec2 clip_scale = draw_data->FramebufferScale;
+    
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -174,26 +175,24 @@ void GUI::Render(IGfxCommandList* pCommandList)
             }
             else
             {
-                // Apply Scissor, Bind texture, Draw
-                float x = pcmd->ClipRect.x - clip_off.x;
-                float y = pcmd->ClipRect.y - clip_off.y;
-                float width = pcmd->ClipRect.z - pcmd->ClipRect.x;
-                float height = pcmd->ClipRect.w - pcmd->ClipRect.y;
-
-                if (width > 0 && height > 0)
-                {				
-                    pCommandList->SetScissorRect((uint32_t)x, (uint32_t)y, (uint32_t)width, (uint32_t)height);
-
-                    uint32_t resource_ids[4] = { 
-                        m_pVertexBuffer[frame_index]->GetSRV()->GetHeapIndex(), 
-                        pcmd->VtxOffset + global_vtx_offset, 
-                        ((IGfxDescriptor*)pcmd->TextureId)->GetHeapIndex(),
-                        pRenderer->GetLinearSampler()->GetHeapIndex() };
-
-                    pCommandList->SetGraphicsConstants(0, resource_ids, sizeof(resource_ids));
-
-                    pCommandList->DrawIndexed(pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset);
+                ImVec2 clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
+                ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
+                if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
+                {
+                    continue;
                 }
+
+                pCommandList->SetScissorRect((uint32_t)clip_min.x, (uint32_t)clip_min.y, (uint32_t)(clip_max.x - clip_min.x), (uint32_t)(clip_max.y - clip_min.y));
+
+                uint32_t resource_ids[4] = {
+                    m_pVertexBuffer[frame_index]->GetSRV()->GetHeapIndex(),
+                    pcmd->VtxOffset + global_vtx_offset,
+                    ((IGfxDescriptor*)pcmd->TextureId)->GetHeapIndex(),
+                    pRenderer->GetLinearSampler()->GetHeapIndex() };
+
+                pCommandList->SetGraphicsConstants(0, resource_ids, sizeof(resource_ids));
+
+                pCommandList->DrawIndexed(pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset);
             }
         }
         global_idx_offset += cmd_list->IdxBuffer.Size;
@@ -205,7 +204,11 @@ void GUI::SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index)
 {
     ImDrawData* draw_data = ImGui::GetDrawData();
 
-    pCommandList->SetViewport(0, 0, (uint32_t)draw_data->DisplaySize.x, (uint32_t)draw_data->DisplaySize.y);
+    pCommandList->SetViewport(
+        0,
+        0,
+        (uint32_t)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x),
+        (uint32_t)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y));
     pCommandList->SetPipelineState(m_pPSO);
     pCommandList->SetIndexBuffer(m_pIndexBuffer[frame_index]->GetBuffer(), 0, m_pIndexBuffer[frame_index]->GetFormat());
 
