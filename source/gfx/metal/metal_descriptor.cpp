@@ -2,6 +2,7 @@
 #include "metal_device.h"
 #include "metal_texture.h"
 #include "utils/log.h"
+#include "../gfx.h"
 
 MetalShaderResourceView::MetalShaderResourceView(MetalDevice* pDevice, IGfxResource* pResource, const GfxShaderResourceViewDesc& desc, const eastl::string& name)
 {
@@ -26,59 +27,103 @@ bool MetalShaderResourceView::Create()
     IRDescriptorTableEntry* descriptorTableEntry = nullptr;
     m_heapIndex = ((MetalDevice*)m_pDevice)->AllocateResourceDescriptor(&descriptorTableEntry);
     
+    MTL::Texture* texture = nullptr;
+    MTL::Buffer* buffer = nullptr;
+    MTL::PixelFormat format = ToPixelFormat(m_desc.format);
+    NS::Range levelRange(0, 1);
+    
+    if(m_pResource->IsTexture())
+    {
+        const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
+        levelRange = NS::Range(m_desc.texture.mip_slice,
+            m_desc.texture.mip_levels == GFX_ALL_SUB_RESOURCE ? textureDesc.mip_levels - m_desc.texture.mip_slice : m_desc.texture.mip_levels);
+        
+        texture = (MTL::Texture*)m_pResource->GetHandle();
+    }
+    else
+    {
+        buffer = (MTL::Buffer*)m_pResource->GetHandle();
+    }
+    
     switch (m_desc.type)
     {
         case GfxShaderResourceViewType::Texture2D:
         {
-            const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
-            NS::Range levelRange = m_desc.texture.mip_levels == GFX_ALL_SUB_RESOURCE ?
-                NS::Range(m_desc.texture.mip_slice, textureDesc.mip_levels - m_desc.texture.mip_slice) :
-                NS::Range(m_desc.texture.mip_slice, m_desc.texture.mip_levels);
-            
-            MTL::Texture* texture = (MTL::Texture*)m_pResource->GetHandle();
-            m_pTextureView = texture->newTextureView(ToPixelFormat(m_desc.format), MTL::TextureType2DArray, levelRange, NS::Range(0, 1));
-            
+            m_pTextureView = texture->newTextureView(format, MTL::TextureType2DArray, levelRange, NS::Range(0, 1));
             IRDescriptorTableSetTexture(descriptorTableEntry, m_pTextureView, 0.0f, 0);
             break;
         }
         case GfxShaderResourceViewType::Texture2DArray:
         {
-            
+            m_pTextureView = texture->newTextureView(format, MTL::TextureType2DArray, levelRange, NS::Range(m_desc.texture.array_slice, m_desc.texture.array_size));
+            IRDescriptorTableSetTexture(descriptorTableEntry, m_pTextureView, 0.0f, 0);
             break;
         }
         case GfxShaderResourceViewType::Texture3D:
         {
-            IRDescriptorTableSetTexture(descriptorTableEntry, (MTL::Texture*)m_pResource->GetHandle(), 0.0f, 0);
+            m_pTextureView = texture->newTextureView(format, MTL::TextureType3D, levelRange, NS::Range(0, 1));
+            IRDescriptorTableSetTexture(descriptorTableEntry, m_pTextureView, 0.0f, 0);
             break;
         }
         case GfxShaderResourceViewType::TextureCube:
         {
-            
+            m_pTextureView = texture->newTextureView(format, MTL::TextureTypeCubeArray, levelRange, NS::Range(0, 1));
+            IRDescriptorTableSetTexture(descriptorTableEntry, m_pTextureView, 0.0f, 0);
             break;
         }
         case GfxShaderResourceViewType::TextureCubeArray:
         {
-            
+            m_pTextureView = texture->newTextureView(format, MTL::TextureTypeCubeArray, levelRange, NS::Range(m_desc.texture.array_slice / 6, m_desc.texture.array_size / 6));
+            IRDescriptorTableSetTexture(descriptorTableEntry, m_pTextureView, 0.0f, 0);
             break;
         }
         case GfxShaderResourceViewType::StructuredBuffer:
         {
+            const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)m_pResource)->GetDesc();
+            RE_ASSERT(bufferDesc.usage & GfxBufferUsageStructuredBuffer);
+            RE_ASSERT(m_desc.format == GfxFormat::Unknown);
+            RE_ASSERT(m_desc.buffer.offset % bufferDesc.stride == 0);
+            RE_ASSERT(m_desc.buffer.size % bufferDesc.stride == 0);
             
+            IRDescriptorTableSetBuffer(descriptorTableEntry, buffer->gpuAddress(), 0);
             break;
         }
         case GfxShaderResourceViewType::TypedBuffer:
         {
+            const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)m_pResource)->GetDesc();
+            RE_ASSERT(bufferDesc.usage & GfxBufferUsageTypedBuffer);
+            RE_ASSERT(m_desc.buffer.offset % bufferDesc.stride == 0);
+            RE_ASSERT(m_desc.buffer.size % bufferDesc.stride == 0);
             
+            uint32_t element_num = m_desc.buffer.size / bufferDesc.stride;
+            
+            MTL::TextureDescriptor* descriptor = MTL::TextureDescriptor::alloc()->textureBufferDescriptor(format, element_num, buffer->resourceOptions(), MTL::TextureUsageShaderRead);
+            m_pTextureView = buffer->newTexture(descriptor, m_desc.buffer.offset, GetFormatRowPitch(m_desc.format, element_num));
+            descriptor->release();
+            
+            IRBufferView bufferView = {};
+            bufferView.buffer = buffer;
+            bufferView.bufferOffset = m_desc.buffer.offset;
+            bufferView.bufferSize = m_desc.buffer.size;
+            bufferView.textureBufferView = m_pTextureView;
+            bufferView.typedBuffer = true;
+            IRDescriptorTableSetBufferView(descriptorTableEntry, &bufferView);
             break;
         }
         case GfxShaderResourceViewType::RawBuffer:
         {
+            const GfxBufferDesc& bufferDesc = ((IGfxBuffer*)m_pResource)->GetDesc();
+            RE_ASSERT(bufferDesc.usage & GfxBufferUsageRawBuffer);
+            RE_ASSERT(bufferDesc.stride % 4 == 0);
+            RE_ASSERT(m_desc.buffer.offset % 4 == 0);
+            RE_ASSERT(m_desc.buffer.size % 4 == 0);
             
+            IRDescriptorTableSetBuffer(descriptorTableEntry, buffer->gpuAddress(), 0);
             break;
         }
         case GfxShaderResourceViewType::RayTracingTLAS:
         {
-            
+            //todo
             break;
         }
         default:

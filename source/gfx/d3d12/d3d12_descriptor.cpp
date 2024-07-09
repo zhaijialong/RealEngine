@@ -79,7 +79,7 @@ bool D3D12ShaderResourceView::Create()
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
         srvDesc.TextureCubeArray.MostDetailedMip = m_desc.texture.mip_slice;
         srvDesc.TextureCubeArray.MipLevels = m_desc.texture.mip_levels;
-        srvDesc.TextureCubeArray.First2DArrayFace = 0;
+        srvDesc.TextureCubeArray.First2DArrayFace = m_desc.texture.array_slice;
         srvDesc.TextureCubeArray.NumCubes = m_desc.texture.array_size / 6;
         break;
     }
