@@ -67,13 +67,13 @@ bool MetalShaderResourceView::Create()
         }
         case GfxShaderResourceViewType::TextureCube:
         {
-            m_pTextureView = texture->newTextureView(format, MTL::TextureTypeCubeArray, levelRange, NS::Range(0, 1));
+            m_pTextureView = texture->newTextureView(format, MTL::TextureTypeCubeArray, levelRange, NS::Range(0, 6));
             IRDescriptorTableSetTexture(descriptorTableEntry, m_pTextureView, 0.0f, 0);
             break;
         }
         case GfxShaderResourceViewType::TextureCubeArray:
         {
-            m_pTextureView = texture->newTextureView(format, MTL::TextureTypeCubeArray, levelRange, NS::Range(m_desc.texture.array_slice / 6, m_desc.texture.array_size / 6));
+            m_pTextureView = texture->newTextureView(format, MTL::TextureTypeCubeArray, levelRange, NS::Range(m_desc.texture.array_slice, m_desc.texture.array_size));
             IRDescriptorTableSetTexture(descriptorTableEntry, m_pTextureView, 0.0f, 0);
             break;
         }
@@ -99,7 +99,6 @@ bool MetalShaderResourceView::Create()
             
             MTL::TextureDescriptor* descriptor = MTL::TextureDescriptor::alloc()->textureBufferDescriptor(format, element_num, buffer->resourceOptions(), MTL::TextureUsageShaderRead);
             m_pTextureView = buffer->newTexture(descriptor, m_desc.buffer.offset, GetFormatRowPitch(m_desc.format, element_num));
-            descriptor->release();
             
             IRBufferView bufferView = {};
             bufferView.buffer = buffer;
@@ -214,7 +213,6 @@ bool MetalUnorderedAccessView::Create()
             
             MTL::TextureDescriptor* descriptor = MTL::TextureDescriptor::alloc()->textureBufferDescriptor(format, element_num, buffer->resourceOptions(), MTL::TextureUsageShaderRead | MTL::TextureUsageShaderWrite); // todo MTL::TextureUsageShaderAtomic
             m_pTextureView = buffer->newTexture(descriptor, m_desc.buffer.offset, GetFormatRowPitch(m_desc.format, element_num));
-            descriptor->release();
             
             IRBufferView bufferView = {};
             bufferView.buffer = buffer;
