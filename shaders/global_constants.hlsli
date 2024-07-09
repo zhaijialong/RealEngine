@@ -115,7 +115,7 @@ struct SceneConstant
     uint aniso8xSampler;
     uint aniso16xSampler;
 
-    uint minReductionSampler;
+    uint minReductionSampler; // not supported in Metal
     uint maxReductionSampler;
     uint blueNoiseTexture;    
     uint scalarSTBN;

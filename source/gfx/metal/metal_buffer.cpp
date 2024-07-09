@@ -12,6 +12,7 @@ MetalBuffer::MetalBuffer(MetalDevice* pDevice, const GfxBufferDesc& desc, const 
 
 MetalBuffer::~MetalBuffer()
 {
+    ((MetalDevice*)m_pDevice)->Evict(m_pBuffer);
     m_pBuffer->release();
 }
 
@@ -37,6 +38,8 @@ bool MetalBuffer::Create()
         RE_ERROR("[MetalBuffer] failed to create {}", m_name);
         return false;
     }
+    
+    ((MetalDevice*)m_pDevice)->MakeResident(m_pBuffer);
     
     SetDebugLabel(m_pBuffer, m_name.c_str());
     

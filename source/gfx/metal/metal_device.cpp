@@ -121,6 +121,7 @@ MetalDevice::~MetalDevice()
     m_pResDescriptorAllocator.reset();
     m_pSamplerAllocator.reset();
     
+    m_pResidencySet->release();
     m_pQueue->release();
     m_pDevice->release();
 }
@@ -137,7 +138,13 @@ bool MetalDevice::Create()
         return false;
     }
     
+    MTL::ResidencySetDescriptor* descriptor = MTL::ResidencySetDescriptor::alloc()->init();
+    descriptor->setInitialCapacity(65536);
+    m_pResidencySet = m_pDevice->newResidencySet(descriptor, nullptr);
+    descriptor->release();
+    
     m_pQueue = m_pDevice->newCommandQueue();
+    m_pQueue->addResidencySet(m_pResidencySet);
     
     for (uint32_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
@@ -153,6 +160,8 @@ bool MetalDevice::Create()
 
 void MetalDevice::BeginFrame()
 {
+    m_pResidencySet->commit();
+    
     uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
     m_pConstantBufferAllocators[index]->Reset();
     
@@ -423,4 +432,14 @@ MTL::Buffer* MetalDevice::GetResourceDescriptorBuffer() const
 MTL::Buffer* MetalDevice::GetSamplerDescriptorBuffer() const
 {
     return m_pSamplerAllocator->GetBuffer();
+}
+
+void MetalDevice::MakeResident(const MTL::Allocation* allocation)
+{
+    m_pResidencySet->addAllocation(allocation);
+}
+
+void MetalDevice::Evict(const MTL::Allocation* allocation)
+{
+    m_pResidencySet->removeAllocation(allocation);
 }

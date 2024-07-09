@@ -13,6 +13,8 @@ MetalTexture::MetalTexture(MetalDevice* pDevice, const GfxTextureDesc& desc, con
 
 MetalTexture::~MetalTexture()
 {
+    ((MetalDevice*)m_pDevice)->Evict(m_pTexture);
+    
     if(!m_bSwapchainTexture)
     {
         m_pTexture->release();
@@ -44,6 +46,8 @@ bool MetalTexture::Create()
         RE_ERROR("[MetalTexture] failed to create {}", m_name);
         return false;
     }
+    
+    ((MetalDevice*)m_pDevice)->MakeResident(m_pTexture);
     
     SetDebugLabel(m_pTexture, m_name.c_str());
     

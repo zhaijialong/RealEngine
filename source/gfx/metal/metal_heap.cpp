@@ -11,6 +11,8 @@ MetalHeap::MetalHeap(MetalDevice* pDevice, const GfxHeapDesc& desc, const eastl:
 
 MetalHeap::~MetalHeap()
 {
+    ((MetalDevice*)m_pDevice)->Evict(m_pHeap);
+    
     m_pHeap->release();
 }
 
@@ -33,6 +35,8 @@ bool MetalHeap::Create()
         RE_ERROR("[MetalHeap] failed to create {}", m_name);
         return false;
     }
+    
+    ((MetalDevice*)m_pDevice)->MakeResident(m_pHeap);
     
     SetDebugLabel(m_pHeap, m_name.c_str());
     

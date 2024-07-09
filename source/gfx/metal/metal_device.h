@@ -47,9 +47,13 @@ public:
     MTL::Buffer* GetResourceDescriptorBuffer() const;
     MTL::Buffer* GetSamplerDescriptorBuffer() const;
     
+    void MakeResident(const MTL::Allocation* allocation);
+    void Evict(const MTL::Allocation* allocation);
+    
 private:
     MTL::Device* m_pDevice = nullptr;
     MTL::CommandQueue* m_pQueue = nullptr;
+    MTL::ResidencySet* m_pResidencySet = nullptr;
     
     eastl::unique_ptr<class MetalConstantBufferAllocator> m_pConstantBufferAllocators[GFX_MAX_INFLIGHT_FRAMES];
     eastl::unique_ptr<class MetalDescriptorAllocator> m_pResDescriptorAllocator;
