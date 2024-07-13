@@ -54,6 +54,7 @@ private:
     MTL::Device* m_pDevice = nullptr;
     MTL::CommandQueue* m_pQueue = nullptr;
     MTL::ResidencySet* m_pResidencySet = nullptr;
+    bool m_bResidencyDirty = false;
     
     eastl::unique_ptr<class MetalConstantBufferAllocator> m_pConstantBufferAllocators[GFX_MAX_INFLIGHT_FRAMES];
     eastl::unique_ptr<class MetalDescriptorAllocator> m_pResDescriptorAllocator;

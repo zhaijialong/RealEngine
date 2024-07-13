@@ -160,7 +160,11 @@ bool MetalDevice::Create()
 
 void MetalDevice::BeginFrame()
 {
-    m_pResidencySet->commit();
+    if(m_bResidencyDirty)
+    {
+        m_pResidencySet->commit();
+        m_bResidencyDirty = false;
+    }
     
     uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
     m_pConstantBufferAllocators[index]->Reset();
@@ -437,9 +441,11 @@ MTL::Buffer* MetalDevice::GetSamplerDescriptorBuffer() const
 void MetalDevice::MakeResident(const MTL::Allocation* allocation)
 {
     m_pResidencySet->addAllocation(allocation);
+    m_bResidencyDirty = true;
 }
 
 void MetalDevice::Evict(const MTL::Allocation* allocation)
 {
     m_pResidencySet->removeAllocation(allocation);
+    m_bResidencyDirty = true;
 }
