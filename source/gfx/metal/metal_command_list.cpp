@@ -237,8 +237,10 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     EndBlitEncoder();
     EndComputeEncoder();
     
+    uint32_t width = 0;
+    uint32_t height = 0;
+    
     MTL::RenderPassDescriptor* descriptor = MTL::RenderPassDescriptor::alloc()->init();
-
     MTL::RenderPassColorAttachmentDescriptorArray* colorAttachements = descriptor->colorAttachments();
     
     for (uint32_t i = 0; i < 8; ++i)
@@ -247,6 +249,19 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
         {
             continue;
         }
+        
+        if (width == 0)
+        {
+            width = render_pass.color[i].texture->GetDesc().width;
+        }
+
+        if (height == 0)
+        {
+            height = render_pass.color[i].texture->GetDesc().height;
+        }
+
+        RE_ASSERT(width == render_pass.color[i].texture->GetDesc().width);
+        RE_ASSERT(height == render_pass.color[i].texture->GetDesc().height);
 
         colorAttachements->object(i)->setTexture((MTL::Texture*)render_pass.color[i].texture->GetHandle());
         colorAttachements->object(i)->setLevel(render_pass.color[i].mip_slice);
@@ -262,6 +277,19 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     
     if (render_pass.depth.texture != nullptr)
     {
+        if (width == 0)
+        {
+            width = render_pass.depth.texture->GetDesc().width;
+        }
+
+        if (height == 0)
+        {
+            height = render_pass.depth.texture->GetDesc().height;
+        }
+
+        RE_ASSERT(width == render_pass.depth.texture->GetDesc().width);
+        RE_ASSERT(height == render_pass.depth.texture->GetDesc().height);
+        
         MTL::RenderPassDepthAttachmentDescriptor* depthAttachment = descriptor->depthAttachment();
         depthAttachment->setTexture((MTL::Texture*)render_pass.depth.texture->GetHandle());
         depthAttachment->setLevel(render_pass.depth.mip_slice);
@@ -284,6 +312,7 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     
     RE_ASSERT(m_pRenderCommandEncoder == nullptr);
     m_pRenderCommandEncoder = m_pCommandBuffer->renderCommandEncoder(descriptor);
+    descriptor->release();
     
     MetalDevice* pDevice = (MetalDevice*)m_pDevice;
     m_pRenderCommandEncoder->setVertexBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
@@ -291,7 +320,7 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     m_pRenderCommandEncoder->setFragmentBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
     m_pRenderCommandEncoder->setFragmentBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
     
-    descriptor->release();
+    SetViewport(0, 0, width, height);
 }
 
 void MetalCommandList::EndRenderPass()
@@ -366,6 +395,8 @@ void MetalCommandList::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint3
     
     MTL::Viewport viewport = { x, y, width, height, 0.0, 1.0 };
     m_pRenderCommandEncoder->setViewport(viewport);
+    
+    SetScissorRect(x, y, width, height);
 }
 
 void MetalCommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height)

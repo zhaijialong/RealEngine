@@ -17,9 +17,13 @@
 class MetalConstantBufferAllocator
 {
 public:
-    MetalConstantBufferAllocator(MTL::Device* device, uint32_t buffer_size, const eastl::string& name)
+    MetalConstantBufferAllocator(MetalDevice* device, uint32_t buffer_size, const eastl::string& name)
     {
-        m_pBuffer = device->newBuffer(buffer_size, MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeUntracked);
+        m_pDevice = device;
+        
+        MTL::Device* mtlDevice = (MTL::Device*)m_pDevice->GetHandle();
+        m_pBuffer = mtlDevice->newBuffer(buffer_size, MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeUntracked);
+        m_pDevice->MakeResident(m_pBuffer);
         SetDebugLabel(m_pBuffer, name.c_str());
         
         m_pCpuAddress = m_pBuffer->contents();
@@ -28,6 +32,7 @@ public:
     
     ~MetalConstantBufferAllocator()
     {
+        m_pDevice->Evict(m_pBuffer);
         m_pBuffer->release();
     }
 
@@ -47,6 +52,7 @@ public:
     }
     
 private:
+    MetalDevice* m_pDevice = nullptr;
     MTL::Buffer* m_pBuffer = nullptr;
     void* m_pCpuAddress = nullptr;
     uint32_t m_bufferSize = 0;
@@ -56,10 +62,14 @@ private:
 class MetalDescriptorAllocator
 {
 public:
-    MetalDescriptorAllocator(MTL::Device* device, uint32_t descriptor_count, const eastl::string& name)
+    MetalDescriptorAllocator(MetalDevice* device, uint32_t descriptor_count, const eastl::string& name)
     {
-        m_pBuffer = device->newBuffer(sizeof(IRDescriptorTableEntry) * descriptor_count,
+        m_pDevice = device;
+        
+        MTL::Device* mtlDevice = (MTL::Device*)m_pDevice->GetHandle();
+        m_pBuffer = mtlDevice->newBuffer(sizeof(IRDescriptorTableEntry) * descriptor_count,
             MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeUntracked);
+        m_pDevice->MakeResident(m_pBuffer);
         SetDebugLabel(m_pBuffer, name.c_str());
         
         m_pCpuAddress = m_pBuffer->contents();
@@ -68,6 +78,7 @@ public:
     
     ~MetalDescriptorAllocator()
     {
+        m_pDevice->Evict(m_pBuffer);
         m_pBuffer->release();
     }
     
@@ -98,6 +109,7 @@ public:
     MTL::Buffer* GetBuffer() const { return m_pBuffer; }
     
 private:
+    MetalDevice* m_pDevice = nullptr;
     MTL::Buffer* m_pBuffer = nullptr;
     void* m_pCpuAddress = nullptr;
     uint32_t m_descirptorCount = 0;
@@ -149,11 +161,11 @@ bool MetalDevice::Create()
     for (uint32_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         eastl::string name = fmt::format("CB Allocator {}", i).c_str();
-        m_pConstantBufferAllocators[i] = eastl::make_unique<MetalConstantBufferAllocator>(m_pDevice, 8 * 1024 * 1024, name);
+        m_pConstantBufferAllocators[i] = eastl::make_unique<MetalConstantBufferAllocator>(this, 8 * 1024 * 1024, name);
     }
 
-    m_pResDescriptorAllocator = eastl::make_unique<MetalDescriptorAllocator>(m_pDevice, 65536, "Resource Heap");
-    m_pSamplerAllocator = eastl::make_unique<MetalDescriptorAllocator>(m_pDevice, 128, "Sampler Heap");
+    m_pResDescriptorAllocator = eastl::make_unique<MetalDescriptorAllocator>(this, 65536, "Resource Heap");
+    m_pSamplerAllocator = eastl::make_unique<MetalDescriptorAllocator>(this, 128, "Sampler Heap");
 
     return true;
 }
