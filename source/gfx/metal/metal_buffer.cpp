@@ -47,12 +47,7 @@ bool MetalBuffer::Create()
     {
         m_pCpuAddress = m_pBuffer->contents();
     }
-    
-    if(m_desc.heap)
-    {
-        m_pBuffer->makeAliasable();
-    }
-    
+
     return true;
 }
 

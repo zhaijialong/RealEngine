@@ -51,11 +51,6 @@ bool MetalTexture::Create()
     
     SetDebugLabel(m_pTexture, m_name.c_str());
     
-    if(m_desc.heap)
-    {
-        m_pTexture->makeAliasable();
-    }
-    
     return true;
 }
 
