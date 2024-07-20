@@ -21,7 +21,8 @@ bool MetalShader::Create(eastl::span<uint8_t> data)
     
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     
-    dispatch_data_t metalIR = dispatch_data_create(data.data(), data.size(), dispatch_get_main_queue(), NULL);
+    memcpy(&m_reflection, data.data(), sizeof(MetalShaderReflection));
+    dispatch_data_t metalIR = dispatch_data_create(data.data() + sizeof(MetalShaderReflection), data.size() - sizeof(MetalShaderReflection), dispatch_get_main_queue(), NULL);
     
     NS::Error* error;
     MTL::Library* library = device->newLibrary(metalIR, &error);

@@ -120,5 +120,8 @@ bool MetalComputePipelineState::Create()
         return false;
     }
     
+    const MetalShaderReflection& reflection = ((MetalShader*)m_desc.cs)->GetReflection();
+    m_threadsPerThreadgroup = MTL::Size::Make(reflection.threadsPerThreadgroup[0], reflection.threadsPerThreadgroup[1], reflection.threadsPerThreadgroup[2]);
+    
     return true;
 }

@@ -47,10 +47,13 @@ public:
     MetalComputePipelineState(MetalDevice* pDevice, const GfxComputePipelineDesc& desc, const eastl::string& name);
     ~MetalComputePipelineState();
 
+    MTL::Size GetThreadsPerThreadgroup() const { return m_threadsPerThreadgroup; }
+    
     virtual void* GetHandle() const override { return m_pPSO; }
     virtual bool Create() override;
 
 private:
     GfxComputePipelineDesc m_desc;
     MTL::ComputePipelineState* m_pPSO = nullptr;
+    MTL::Size m_threadsPerThreadgroup;
 };

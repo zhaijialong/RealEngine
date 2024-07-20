@@ -69,6 +69,8 @@ void MetalCommandList::ResetState()
     m_pRenderCommandEncoder = nullptr;
     m_pComputeCommandEncoder = nullptr;
     
+    m_pCurrentPSO = nullptr;
+    
     m_pIndexBuffer = nullptr;
     m_indexBufferOffset = 0;
     m_indexType = MTL::IndexTypeUInt16;
@@ -336,6 +338,13 @@ void MetalCommandList::EndRenderPass()
 
 void MetalCommandList::SetPipelineState(IGfxPipelineState* state)
 {
+    if(m_pCurrentPSO == state)
+    {
+        return;
+    }
+    
+    m_pCurrentPSO = state;
+    
     if(state->GetType() == GfxPipelineType::Compute)
     {
         BeginComputeEncoder();
@@ -488,7 +497,10 @@ void MetalCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, 
     RE_ASSERT(m_pComputeCommandEncoder != nullptr);
     
     m_pComputeCommandEncoder->setBytes(&m_computeArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
-    //m_pComputeCommandEncoder->dispatchThreadgroups(<#MTL::Size threadgroupsPerGrid#>, <#MTL::Size threadsPerThreadgroup#>)
+    
+    MTL::Size threadgroupsPerGrid = MTL::Size::Make(group_count_x, group_count_y, group_count_z);
+    MTL::Size threadsPerThreadgroup = ((MetalComputePipelineState*)m_pCurrentPSO)->GetThreadsPerThreadgroup();
+    m_pComputeCommandEncoder->dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup);
 }
 
 void MetalCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)

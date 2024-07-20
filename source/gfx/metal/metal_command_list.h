@@ -92,6 +92,8 @@ private:
     MTL::RenderCommandEncoder* m_pRenderCommandEncoder = nullptr;
     MTL::ComputeCommandEncoder* m_pComputeCommandEncoder = nullptr;
     
+    IGfxPipelineState* m_pCurrentPSO = nullptr;
+    
     MTL::Buffer* m_pIndexBuffer = nullptr;
     NS::UInteger m_indexBufferOffset = 0;
     MTL::IndexType m_indexType = MTL::IndexTypeUInt16;

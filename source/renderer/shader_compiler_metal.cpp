@@ -1,5 +1,6 @@
 #include "shader_compiler.h"
 #include "gfx/gfx_defines.h"
+#include "gfx/metal/metal_shader_reflection.h"
 #include "utils/log.h"
 #include "magic_enum/magic_enum.hpp"
 #include "metal_irconverter/metal_irconverter.h"
@@ -20,6 +21,19 @@ inline IRShaderStage ToIRShaderStage(GfxShaderType type)
             return IRShaderStageCompute;
         default:
             return IRShaderStageInvalid;
+    }
+}
+
+inline void GetReflectionInfo(IRShaderReflection* pShaderReflection, MetalShaderReflection& out)
+{
+    IRVersionedCSInfo csInfo;
+    if(IRShaderReflectionCopyComputeInfo(pShaderReflection, IRReflectionVersion_1_0, &csInfo))
+    {
+        out.threadsPerThreadgroup[0] = csInfo.info_1_0.tg_size[0];
+        out.threadsPerThreadgroup[1] = csInfo.info_1_0.tg_size[1];
+        out.threadsPerThreadgroup[2] = csInfo.info_1_0.tg_size[2];
+        
+        IRShaderReflectionReleaseComputeInfo(&csInfo);
     }
 }
 
@@ -93,11 +107,21 @@ bool ShaderCompiler::CompileMetalIR(const eastl::string& file, const eastl::stri
         return false;
     }
     
+    IRShaderReflection* pShaderReflection = IRShaderReflectionCreate();
+    IRObjectGetReflection(pOutIR, ToIRShaderStage(type), pShaderReflection);
+    
     IRMetalLibBinary* pMetallib = IRMetalLibBinaryCreate();
     IRObjectGetMetalLibBinary(pOutIR, ToIRShaderStage(type), pMetallib);
-    output_blob.resize(IRMetalLibGetBytecodeSize(pMetallib));
-    IRMetalLibGetBytecode(pMetallib, output_blob.data());
     
+    MetalShaderReflection reflection = {};
+    GetReflectionInfo(pShaderReflection, reflection);
+    
+    output_blob.resize(sizeof(MetalShaderReflection) + IRMetalLibGetBytecodeSize(pMetallib));
+    
+    memcpy(output_blob.data(), &reflection, sizeof(MetalShaderReflection));
+    IRMetalLibGetBytecode(pMetallib, output_blob.data() + sizeof(MetalShaderReflection));
+    
+    IRShaderReflectionDestroy(pShaderReflection);
     IRMetalLibBinaryDestroy(pMetallib);
     IRObjectDestroy(pDXIL);
     IRObjectDestroy(pOutIR);

@@ -51,6 +51,7 @@ set(METAL_FILES
     ${SOURCE_ROOT}/gfx/metal/metal_rt_blas.h
     ${SOURCE_ROOT}/gfx/metal/metal_rt_tlas.cpp
     ${SOURCE_ROOT}/gfx/metal/metal_rt_tlas.h
+    ${SOURCE_ROOT}/gfx/metal/metal_shader_reflection.h
     ${SOURCE_ROOT}/gfx/metal/metal_shader.cpp
     ${SOURCE_ROOT}/gfx/metal/metal_shader.h
     ${SOURCE_ROOT}/gfx/metal/metal_swapchain.cpp
