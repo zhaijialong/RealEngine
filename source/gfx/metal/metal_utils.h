@@ -19,7 +19,7 @@ inline void SetDebugLabel(T* resource, const char* name)
 
 inline MTL::ResourceOptions ToResourceOptions(GfxMemoryType type)
 {
-    MTL::ResourceOptions options = MTL::ResourceHazardTrackingModeUntracked;
+    MTL::ResourceOptions options = MTL::ResourceHazardTrackingModeTracked;
     
     switch (type)
     {

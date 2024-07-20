@@ -22,7 +22,7 @@ public:
         m_pDevice = device;
         
         MTL::Device* mtlDevice = (MTL::Device*)m_pDevice->GetHandle();
-        m_pBuffer = mtlDevice->newBuffer(buffer_size, MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeUntracked);
+        m_pBuffer = mtlDevice->newBuffer(buffer_size, MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeTracked);
         m_pDevice->MakeResident(m_pBuffer);
         SetDebugLabel(m_pBuffer, name.c_str());
         
@@ -68,7 +68,7 @@ public:
         
         MTL::Device* mtlDevice = (MTL::Device*)m_pDevice->GetHandle();
         m_pBuffer = mtlDevice->newBuffer(sizeof(IRDescriptorTableEntry) * descriptor_count,
-            MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeUntracked);
+            MTL::ResourceStorageModeShared | MTL::ResourceCPUCacheModeWriteCombined | MTL::ResourceHazardTrackingModeTracked);
         m_pDevice->MakeResident(m_pBuffer);
         SetDebugLabel(m_pBuffer, name.c_str());
         
