@@ -551,17 +551,9 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
         }
     }
 
-    if (((D3D12Device*)m_pDevice)->IsSteamDeck()) //RenderPass is not supported in VKD3D currently
-    {
-        BeginRenderPassEmulation(rt_count, rtDesc,
-            render_pass.depth.texture != nullptr ? &dsDesc : nullptr);
-    }
-    else
-    {
-        m_pCommandList->BeginRenderPass(rt_count, rtDesc,
-            render_pass.depth.texture != nullptr ? &dsDesc : nullptr,
-            (D3D12_RENDER_PASS_FLAGS)flags);
-    }
+    m_pCommandList->BeginRenderPass(rt_count, rtDesc,
+        render_pass.depth.texture != nullptr ? &dsDesc : nullptr,
+        (D3D12_RENDER_PASS_FLAGS)flags);
 
     ++m_commandCount;
 
@@ -570,14 +562,7 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 
 void D3D12CommandList::EndRenderPass()
 {
-    if (((D3D12Device*)m_pDevice)->IsSteamDeck())
-    {
-        EndRenderPassEmulation();
-    }
-    else
-    {
-        m_pCommandList->EndRenderPass();
-    }
+    m_pCommandList->EndRenderPass();
 
     ++m_commandCount;
 }
@@ -802,52 +787,3 @@ MicroProfileThreadLogGpu* D3D12CommandList::GetProfileLog() const
 #endif
 }
 #endif
-
-void D3D12CommandList::BeginRenderPassEmulation(unsigned int numRenderTargets, const D3D12_RENDER_PASS_RENDER_TARGET_DESC* renderTargets, const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* depthStencil)
-{
-    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv;
-    const D3D12_CPU_DESCRIPTOR_HANDLE* dsv = nullptr;
- 
-    for (unsigned int i = 0; i < numRenderTargets; ++i)
-    {
-        rtv.push_back(renderTargets[i].cpuDescriptor);
-
-        if (renderTargets[i].BeginningAccess.Type == D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR)
-        {
-            m_pCommandList->ClearRenderTargetView(renderTargets[i].cpuDescriptor, renderTargets[i].BeginningAccess.Clear.ClearValue.Color, 0, nullptr);
-        }
-    }
-
-    if (depthStencil)
-    {
-        dsv = &depthStencil->cpuDescriptor;
-
-        D3D12_CLEAR_FLAGS clear_flags = (D3D12_CLEAR_FLAGS)0;
-        float clear_depth = 0.0;
-        UINT8 clear_stencil = 0;
-
-        if (depthStencil->DepthBeginningAccess.Type == D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR)
-        {
-            clear_flags |= D3D12_CLEAR_FLAG_DEPTH;
-            clear_depth = depthStencil->DepthBeginningAccess.Clear.ClearValue.DepthStencil.Depth;
-        }
-
-        if (depthStencil->StencilBeginningAccess.Type == D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR)
-        {
-            clear_flags |= D3D12_CLEAR_FLAG_STENCIL;
-            clear_stencil = depthStencil->StencilBeginningAccess.Clear.ClearValue.DepthStencil.Stencil;
-        }
-
-        if (clear_flags != 0)
-        {
-            m_pCommandList->ClearDepthStencilView(depthStencil->cpuDescriptor, clear_flags, clear_depth, clear_stencil, 0, nullptr);
-        }
-    }
-
-    m_pCommandList->OMSetRenderTargets(rtv.size(), rtv.data(), 0, dsv);
-}
-
-void D3D12CommandList::EndRenderPassEmulation()
-{
-    m_pCommandList->OMSetRenderTargets(0, nullptr, 0, nullptr);
-}

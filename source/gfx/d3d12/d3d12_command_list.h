@@ -78,10 +78,6 @@ public:
 #endif
 
 private:
-    void BeginRenderPassEmulation(unsigned int numRenderTargets, const D3D12_RENDER_PASS_RENDER_TARGET_DESC* renderTargets, const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* depthStencil);
-    void EndRenderPassEmulation();
-
-private:
     ID3D12CommandQueue* m_pCommandQueue = nullptr;
     ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
     ID3D12GraphicsCommandList7* m_pCommandList = nullptr;
