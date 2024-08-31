@@ -410,11 +410,11 @@ VkResult VulkanDevice::CreateDevice()
         "VK_KHR_bind_memory2",
         "VK_KHR_timeline_semaphore",
         "VK_KHR_dedicated_allocation",
-        //"VK_EXT_swapchain_maintenance1",
         "VK_EXT_mesh_shader",
         "VK_EXT_descriptor_indexing",
         "VK_EXT_mutable_descriptor_type",
         "VK_EXT_descriptor_buffer",
+        "VK_EXT_scalar_block_layout",
     };
 
     float queue_priorities[1] = { 0.0 };
@@ -443,23 +443,38 @@ VkResult VulkanDevice::CreateDevice()
     VkPhysicalDeviceFeatures features;
     vkGetPhysicalDeviceFeatures(m_physicalDevice, &features);
 
-    VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddress = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
-    bufferDeviceAddress.bufferDeviceAddress = VK_TRUE;
+    VkPhysicalDeviceVulkan12Features vulkan12 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
+    vulkan12.shaderInt8 = VK_TRUE;
+    vulkan12.shaderFloat16 = VK_TRUE;
+    vulkan12.descriptorIndexing = VK_TRUE;
+    vulkan12.shaderUniformTexelBufferArrayDynamicIndexing = VK_TRUE;
+    vulkan12.shaderStorageTexelBufferArrayDynamicIndexing = VK_TRUE;
+    vulkan12.shaderUniformBufferArrayNonUniformIndexing = VK_TRUE;
+    vulkan12.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+    vulkan12.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
+    vulkan12.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
+    vulkan12.shaderUniformTexelBufferArrayNonUniformIndexing = VK_TRUE;
+    vulkan12.shaderStorageTexelBufferArrayNonUniformIndexing = VK_TRUE;
+    vulkan12.runtimeDescriptorArray = VK_TRUE;
+    vulkan12.samplerFilterMinmax = VK_TRUE;
+    vulkan12.scalarBlockLayout = VK_TRUE;
+    vulkan12.timelineSemaphore = VK_TRUE;
+    vulkan12.bufferDeviceAddress = VK_TRUE;
 
-    VkPhysicalDeviceTimelineSemaphoreFeatures timelineSemaphore = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
-    timelineSemaphore.pNext = &bufferDeviceAddress;
-    timelineSemaphore.timelineSemaphore = VK_TRUE;
+    VkPhysicalDeviceVulkan13Features vulkan13 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+    vulkan13.pNext = &vulkan12;
+    vulkan13.inlineUniformBlock = VK_TRUE;
+    vulkan13.synchronization2 = VK_TRUE;
+    vulkan13.dynamicRendering = VK_TRUE;
+    vulkan13.subgroupSizeControl = VK_TRUE;
+    vulkan13.shaderDemoteToHelperInvocation = VK_TRUE;
 
-    VkPhysicalDeviceSynchronization2Features synchronization2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES };
-    synchronization2.pNext = &timelineSemaphore;
-    synchronization2.synchronization2 = VK_TRUE;
-
-    VkPhysicalDeviceDynamicRenderingFeatures dynamicRendering = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES };
-    dynamicRendering.pNext = &synchronization2;
-    dynamicRendering.dynamicRendering = VK_TRUE;
+    VkPhysicalDeviceRayQueryFeaturesKHR rayQuery = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR };
+    rayQuery.pNext = &vulkan13;
+    rayQuery.rayQuery = VK_TRUE;
 
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShader = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT };
-    meshShader.pNext = &dynamicRendering;
+    meshShader.pNext = &rayQuery;
     meshShader.meshShader = VK_TRUE;
     meshShader.taskShader = VK_TRUE;
 

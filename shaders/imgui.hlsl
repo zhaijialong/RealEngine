@@ -59,5 +59,5 @@ float4 ps_main(PS_INPUT input) : SV_Target
     Texture2D texture = ResourceDescriptorHeap[c_TextureID];
     SamplerState linear_sampler = SamplerDescriptorHeap[c_SamplerID];
     
-    return input.col * texture.Sample(linear_sampler, input.uv);
+    return input.col * texture.SampleLevel(linear_sampler, input.uv, 0);
 }

@@ -317,7 +317,7 @@ float3 SpecularIBL(float3 radiance, float3 N, float3 V, float roughness, float3 
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     float NdotV = saturate(dot(N, V));
-    float2 preintegratedGF = brdfTexture.Sample(linearSampler, float2(NdotV, roughness)).xy;
+    float2 preintegratedGF = brdfTexture.SampleLevel(linearSampler, float2(NdotV, roughness), 0).xy;
     
     return radiance * (specular * preintegratedGF.x + preintegratedGF.y);
 }

@@ -208,8 +208,9 @@ void NRDIntegration::CreatePipelines()
 
     for (uint32_t i = 0; i < instanceDesc.pipelinesNum; i++)
     {
+        bool useSpirv = device->GetDesc().backend == GfxRenderBackend::Vulkan;
         const nrd::PipelineDesc& nrdPipelineDesc = instanceDesc.pipelines[i];
-        const nrd::ComputeShaderDesc& nrdComputeShader = nrdPipelineDesc.computeShaderDXIL; //todo : supports spirv when we have a vulkan backend
+        const nrd::ComputeShaderDesc& nrdComputeShader = useSpirv ? nrdPipelineDesc.computeShaderSPIRV : nrdPipelineDesc.computeShaderDXIL;
 
         GfxShaderDesc shaderDesc;
         shaderDesc.type = GfxShaderType::CS;

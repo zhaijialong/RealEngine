@@ -72,7 +72,7 @@ target_link_libraries(RealEngine Jolt OffsetAllocator)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     # NRD
-    set(NRD_EMBEDS_SPIRV_SHADERS OFF)
+    set(NRD_EMBEDS_SPIRV_SHADERS ON)
     set(NRD_EMBEDS_DXIL_SHADERS ON)
     set(NRD_EMBEDS_DXBC_SHADERS OFF)
     set(DXC_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)

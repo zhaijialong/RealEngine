@@ -25,14 +25,14 @@ bool VulkanShader::Create(eastl::span<uint8_t> data)
     createInfo.codeSize = data.size();
     createInfo.pCode = (const uint32_t*)data.data();
 
-    VkResult result = VK_SUCCESS; //todo vkCreateShaderModule(device, &createInfo, nullptr, &m_shader);
+    VkResult result = vkCreateShaderModule(device, &createInfo, nullptr, &m_shader);
     if (result != VK_SUCCESS)
     {
         RE_ERROR("[VulkanShader] failed to create {}", m_name);
         return false;
     }
 
-    //todo SetDebugName(device, VK_OBJECT_TYPE_SHADER_MODULE, m_shader, m_name.c_str());
+    SetDebugName(device, VK_OBJECT_TYPE_SHADER_MODULE, m_shader, m_name.c_str());
 
     m_hash = XXH3_64bits(data.data(), data.size());
 

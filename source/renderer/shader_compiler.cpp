@@ -224,6 +224,13 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
     arguments.push_back(L"-Vd"); //disable dxil validation because we don't have a libdxil.so for mac
 #endif
 
+    if (m_pRenderer->GetDevice()->GetDesc().backend == GfxRenderBackend::Vulkan)
+    {
+        arguments.push_back(L"-spirv");
+        arguments.push_back(L"-fspv-target-env=vulkan1.3");
+        arguments.push_back(L"-fvk-use-dx-layout");
+    }
+
     CComPtr<IDxcResult> pResults;
     m_pDxcCompiler->Compile(&sourceBuffer, arguments.data(), (UINT32)arguments.size(), m_pDxcIncludeHandler, IID_PPV_ARGS(&pResults));
 
