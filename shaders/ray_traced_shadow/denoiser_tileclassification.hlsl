@@ -91,7 +91,7 @@ bool FFX_DNSR_Shadows_IsShadowReciever(uint2 p)
 
 #include "ffx-shadows-dnsr/ffx_denoiser_shadows_tileclassification.h"
 
-#if GFX_VENDOR_AMD
+#if GFX_VENDOR_AMD && GFX_BACKEND_D3D12
 [wavesize(64)] //faster than wave32 mode
 #endif
 [numthreads(8, 8, 1)]

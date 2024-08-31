@@ -183,6 +183,35 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
         arguments.push_back(L"-D");
         arguments.push_back(L"GFX_VENDOR_NV=1");
         break;
+    case GfxVendor::Apple:
+        arguments.push_back(L"-D");
+        arguments.push_back(L"GFX_VENDOR_APPLE=1");
+        break;
+    default:
+        break;
+    }
+
+    switch (m_pRenderer->GetDevice()->GetDesc().backend)
+    {
+    case GfxRenderBackend::D3D12:
+        arguments.push_back(L"-D");
+        arguments.push_back(L"GFX_BACKEND_D3D12=1");
+        break;
+    case GfxRenderBackend::Vulkan:
+        arguments.push_back(L"-D");
+        arguments.push_back(L"GFX_BACKEND_VULKAN=1");
+        arguments.push_back(L"-spirv");
+        arguments.push_back(L"-fspv-target-env=vulkan1.3");
+        arguments.push_back(L"-fvk-use-dx-layout");
+        break;
+    case GfxRenderBackend::Metal:
+        arguments.push_back(L"-D");
+        arguments.push_back(L"GFX_BACKEND_METAL=1");
+        break;
+    case GfxRenderBackend::Mock:
+        arguments.push_back(L"-D");
+        arguments.push_back(L"GFX_BACKEND_MOCK=1");
+        break;
     default:
         break;
     }
@@ -223,13 +252,6 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
 #if !RE_PLATFORM_WINDOWS
     arguments.push_back(L"-Vd"); //disable dxil validation because we don't have a libdxil.so for mac
 #endif
-
-    if (m_pRenderer->GetDevice()->GetDesc().backend == GfxRenderBackend::Vulkan)
-    {
-        arguments.push_back(L"-spirv");
-        arguments.push_back(L"-fspv-target-env=vulkan1.3");
-        arguments.push_back(L"-fvk-use-dx-layout");
-    }
 
     CComPtr<IDxcResult> pResults;
     m_pDxcCompiler->Compile(&sourceBuffer, arguments.data(), (UINT32)arguments.size(), m_pDxcIncludeHandler, IID_PPV_ARGS(&pResults));
