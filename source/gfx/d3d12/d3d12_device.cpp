@@ -481,8 +481,8 @@ bool D3D12Device::Create()
 
     m_pRTVAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false, 512, "RTV Heap");
     m_pDSVAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, false, 128, "DSV Heap");
-    m_pResDescriptorAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true, 65536, "Resource Heap");
-    m_pSamplerAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true, 128, "Sampler Heap");
+    m_pResDescriptorAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true, GFX_MAX_RESOURCE_DESCRIPTOR_COUNT, "Resource Heap");
+    m_pSamplerAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true, GFX_MAX_SAMPLER_DESCRIPTOR_COUNT, "Sampler Heap");
 
     m_pNonShaderVisibleUavAllocator = eastl::make_unique<D3D12DescriptorAllocator>(m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, false, 4096, "Non shader visible UAV Heap");
 

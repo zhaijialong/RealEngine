@@ -151,7 +151,7 @@ bool MetalDevice::Create()
     }
     
     MTL::ResidencySetDescriptor* descriptor = MTL::ResidencySetDescriptor::alloc()->init();
-    descriptor->setInitialCapacity(65536);
+    descriptor->setInitialCapacity(GFX_MAX_RESOURCE_DESCRIPTOR_COUNT);
     m_pResidencySet = m_pDevice->newResidencySet(descriptor, nullptr);
     descriptor->release();
     
@@ -164,8 +164,8 @@ bool MetalDevice::Create()
         m_pConstantBufferAllocators[i] = eastl::make_unique<MetalConstantBufferAllocator>(this, 8 * 1024 * 1024, name);
     }
 
-    m_pResDescriptorAllocator = eastl::make_unique<MetalDescriptorAllocator>(this, 65536, "Resource Heap");
-    m_pSamplerAllocator = eastl::make_unique<MetalDescriptorAllocator>(this, 128, "Sampler Heap");
+    m_pResDescriptorAllocator = eastl::make_unique<MetalDescriptorAllocator>(this, GFX_MAX_RESOURCE_DESCRIPTOR_COUNT, "Resource Heap");
+    m_pSamplerAllocator = eastl::make_unique<MetalDescriptorAllocator>(this, GFX_MAX_SAMPLER_DESCRIPTOR_COUNT, "Sampler Heap");
 
     return true;
 }

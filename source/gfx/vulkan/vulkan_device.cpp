@@ -561,12 +561,12 @@ VkResult VulkanDevice::CreatePipelineLayout()
 
     VkDescriptorSetLayoutBinding resourceDescriptorHeap = {};
     resourceDescriptorHeap.descriptorType = VK_DESCRIPTOR_TYPE_MUTABLE_EXT;
-    resourceDescriptorHeap.descriptorCount = 65536;
+    resourceDescriptorHeap.descriptorCount = GFX_MAX_RESOURCE_DESCRIPTOR_COUNT;
     resourceDescriptorHeap.stageFlags = VK_SHADER_STAGE_ALL;
 
     VkDescriptorSetLayoutBinding samplerDescriptorHeap = {};
     samplerDescriptorHeap.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-    samplerDescriptorHeap.descriptorCount = 128;
+    samplerDescriptorHeap.descriptorCount = GFX_MAX_SAMPLER_DESCRIPTOR_COUNT;
     samplerDescriptorHeap.stageFlags = VK_SHADER_STAGE_ALL;
 
     VkDescriptorSetLayoutCreateInfo setLayoutInfo0 = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO }; // constant buffers

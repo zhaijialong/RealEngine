@@ -341,3 +341,224 @@ inline VkAttachmentStoreOp GetStoreOp(GfxRenderPassStoreOp store_op)
         return VK_ATTACHMENT_STORE_OP_STORE;
     }
 }
+
+inline VkPrimitiveTopology ToVkPrimitiveTopology(GfxPrimitiveType type)
+{
+    switch (type)
+    {
+    case GfxPrimitiveType::PointList:
+        return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+    case GfxPrimitiveType::LineList:
+        return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+    case GfxPrimitiveType::LineStrip:
+        return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+    case GfxPrimitiveType::TriangleList:
+        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    case GfxPrimitiveType::TriangleTrip:
+        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+    default:
+        return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
+    }
+}
+
+inline VkCullModeFlags GetCullMode(GfxCullMode mode)
+{
+    switch (mode)
+    {
+    case GfxCullMode::None:
+        return VK_CULL_MODE_NONE;
+    case GfxCullMode::Front:
+        return VK_CULL_MODE_FRONT_BIT;
+    case GfxCullMode::Back:
+        return VK_CULL_MODE_BACK_BIT;
+    default:
+        return VK_CULL_MODE_NONE;
+    }
+}
+
+inline VkPipelineRasterizationStateCreateInfo ToVkPipelineRasterizationStateCreateInfo(const GfxRasterizerState& state)
+{
+    VkPipelineRasterizationStateCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+    createInfo.depthClampEnable = !state.depth_clip;
+    createInfo.polygonMode = state.wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
+    createInfo.cullMode = GetCullMode(state.cull_mode);
+    createInfo.frontFace = state.front_ccw ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE;
+    createInfo.depthBiasEnable = state.depth_bias != 0.0 || state.depth_slope_scale != 0.0;
+    createInfo.depthBiasConstantFactor = state.depth_bias;
+    createInfo.depthBiasClamp = state.depth_bias_clamp;
+    createInfo.depthBiasSlopeFactor = state.depth_slope_scale;
+
+    return createInfo;
+}
+
+inline VkCompareOp ToVkCompareOp(GfxCompareFunc func)
+{
+    switch (func)
+    {
+    case GfxCompareFunc::Never:
+        return VK_COMPARE_OP_NEVER;
+    case GfxCompareFunc::Less:
+        return VK_COMPARE_OP_LESS;
+    case GfxCompareFunc::Equal:
+        return VK_COMPARE_OP_EQUAL;
+    case GfxCompareFunc::LessEqual:
+        return VK_COMPARE_OP_LESS_OR_EQUAL;
+    case GfxCompareFunc::Greater:
+        return VK_COMPARE_OP_GREATER;
+    case GfxCompareFunc::NotEqual:
+        return VK_COMPARE_OP_NOT_EQUAL;
+    case GfxCompareFunc::GreaterEqual:
+        return VK_COMPARE_OP_GREATER_OR_EQUAL;
+    case GfxCompareFunc::Always:
+        return VK_COMPARE_OP_ALWAYS;
+    default:
+        return VK_COMPARE_OP_MAX_ENUM;
+    }
+}
+
+inline VkStencilOp ToVkStencilOp(GfxStencilOp stencilOp)
+{
+    switch (stencilOp)
+    {
+    case GfxStencilOp::Keep:
+        return VK_STENCIL_OP_KEEP;
+    case GfxStencilOp::Zero:
+        return VK_STENCIL_OP_ZERO;
+    case GfxStencilOp::Replace:
+        return VK_STENCIL_OP_REPLACE;
+    case GfxStencilOp::IncreaseClamp:
+        return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+    case GfxStencilOp::DecreaseClamp:
+        return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+    case GfxStencilOp::Invert:
+        return VK_STENCIL_OP_INVERT;
+    case GfxStencilOp::IncreaseWrap:
+        return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+    case GfxStencilOp::DecreaseWrap:
+        return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+    default:
+        return VK_STENCIL_OP_MAX_ENUM;
+    }
+}
+
+inline VkStencilOpState ToVkStencilOpState(GfxDepthStencilOp state, uint8_t readMask, uint8_t writeMask)
+{
+    VkStencilOpState stencilOpState = {};
+    stencilOpState.failOp = ToVkStencilOp(state.stencil_fail);
+    stencilOpState.depthFailOp = ToVkStencilOp(state.depth_fail);
+    stencilOpState.passOp = ToVkStencilOp(state.pass);
+    stencilOpState.compareOp = ToVkCompareOp(state.stencil_func);
+    stencilOpState.compareMask = readMask;
+    stencilOpState.writeMask = writeMask;
+
+    return stencilOpState;
+}
+
+inline VkPipelineDepthStencilStateCreateInfo ToVkPipelineDepthStencilStateCreateInfo(const GfxDepthStencilState& state)
+{
+    VkPipelineDepthStencilStateCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+    createInfo.depthTestEnable = state.depth_test;
+    createInfo.depthWriteEnable = state.depth_write;
+    createInfo.depthCompareOp = ToVkCompareOp(state.depth_func);
+    createInfo.stencilTestEnable = state.stencil_test;
+    createInfo.front = ToVkStencilOpState(state.front, state.stencil_read_mask, state.stencil_write_mask);
+    createInfo.back = ToVkStencilOpState(state.back, state.stencil_read_mask, state.stencil_write_mask);
+
+    return createInfo;
+}
+
+inline VkBlendFactor ToVkBlendFactor(GfxBlendFactor blendFactor, bool alpha = false)
+{
+    switch (blendFactor)
+    {
+    case GfxBlendFactor::Zero:
+        return VK_BLEND_FACTOR_ZERO;
+    case GfxBlendFactor::One:
+        return VK_BLEND_FACTOR_ONE;
+    case GfxBlendFactor::SrcColor:
+        return VK_BLEND_FACTOR_SRC_COLOR;
+    case GfxBlendFactor::InvSrcColor:
+        return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+    case GfxBlendFactor::SrcAlpha:
+        return VK_BLEND_FACTOR_SRC_ALPHA;
+    case GfxBlendFactor::InvSrcAlpha:
+        return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    case GfxBlendFactor::DstAlpha:
+        return VK_BLEND_FACTOR_DST_ALPHA;
+    case GfxBlendFactor::InvDstAlpha:
+        return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+    case GfxBlendFactor::DstColor:
+        return VK_BLEND_FACTOR_DST_COLOR;
+    case GfxBlendFactor::InvDstColor:
+        return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+    case GfxBlendFactor::SrcAlphaClamp:
+        return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+    case GfxBlendFactor::ConstantFactor:
+        return alpha ? VK_BLEND_FACTOR_CONSTANT_ALPHA : VK_BLEND_FACTOR_CONSTANT_COLOR;
+    case GfxBlendFactor::InvConstantFactor:
+        return alpha ? VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA : VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+    default:
+        return VK_BLEND_FACTOR_MAX_ENUM;
+    }
+}
+
+inline VkBlendOp ToVkBlendOp(GfxBlendOp blendOp)
+{
+    switch (blendOp)
+    {
+    case GfxBlendOp::Add:
+        return VK_BLEND_OP_ADD;
+    case GfxBlendOp::Subtract:
+        return VK_BLEND_OP_SUBTRACT;
+    case GfxBlendOp::ReverseSubtract:
+        return VK_BLEND_OP_REVERSE_SUBTRACT;
+    case GfxBlendOp::Min:
+        return VK_BLEND_OP_MIN;
+    case GfxBlendOp::Max:
+        return VK_BLEND_OP_MAX;
+    default:
+        return VK_BLEND_OP_MAX_ENUM;
+    }
+}
+
+inline VkPipelineColorBlendStateCreateInfo ToVkPipelineColorBlendStateCreateInfo(const GfxBlendState* states, VkPipelineColorBlendAttachmentState* vkStates)
+{
+    for (uint32_t i = 0; i < 8; ++i)
+    {
+        vkStates[i].blendEnable = states[i].blend_enable;
+        vkStates[i].srcColorBlendFactor = ToVkBlendFactor(states[i].color_src);
+        vkStates[i].dstColorBlendFactor = ToVkBlendFactor(states[i].color_dst);
+        vkStates[i].colorBlendOp = ToVkBlendOp(states[i].color_op);
+        vkStates[i].srcAlphaBlendFactor = ToVkBlendFactor(states[i].alpha_src, true);
+        vkStates[i].dstAlphaBlendFactor = ToVkBlendFactor(states[i].alpha_dst, true);
+        vkStates[i].alphaBlendOp = ToVkBlendOp(states[i].alpha_op);
+        vkStates[i].colorWriteMask = states[i].write_mask;
+    }
+
+    VkPipelineColorBlendStateCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+    createInfo.attachmentCount = 8;
+    createInfo.pAttachments = vkStates;
+
+    return createInfo;
+}
+
+template<typename T>
+inline VkPipelineRenderingCreateInfo ToVkPipelineRenderingCreateInfo(const T& pipelineDesc, VkFormat* colorFormats)
+{
+    for (uint32_t i = 0; i < 8; ++i)
+    {
+        colorFormats[i] = ToVulkanFormat(pipelineDesc.rt_format[i], true);
+    }
+
+    VkPipelineRenderingCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
+    createInfo.colorAttachmentCount = 8;
+    createInfo.pColorAttachmentFormats = colorFormats;
+    createInfo.depthAttachmentFormat = ToVulkanFormat(pipelineDesc.depthstencil_format);
+
+    if (pipelineDesc.depthstencil_format == GfxFormat::D32FS8)
+    {
+        createInfo.stencilAttachmentFormat = createInfo.depthAttachmentFormat;
+    }
+
+    return createInfo;
+}

@@ -13,6 +13,8 @@ class IGfxHeap;
 static const uint32_t GFX_MAX_INFLIGHT_FRAMES = 3;
 static const uint32_t GFX_MAX_ROOT_CONSTANTS = 8;
 static const uint32_t GFX_MAX_CBV_BINDINGS = 3; //root constants in slot 0
+static const uint32_t GFX_MAX_RESOURCE_DESCRIPTOR_COUNT = 65536;
+static const uint32_t GFX_MAX_SAMPLER_DESCRIPTOR_COUNT = 128;
 
 enum class GfxRenderBackend
 {
