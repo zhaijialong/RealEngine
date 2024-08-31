@@ -40,6 +40,7 @@ VulkanDevice::~VulkanDevice()
     delete m_deferredDeletionQueue;
 
     vmaDestroyAllocator(m_vmaAllocator);
+    vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
     vkDestroyDevice(m_device, nullptr);
     vkDestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
     vkDestroyInstance(m_instance, nullptr);
@@ -53,6 +54,7 @@ bool VulkanDevice::Create()
     CHECK_VK_RESULT(CreateInstance());
     CHECK_VK_RESULT(CreateDevice());
     CHECK_VK_RESULT(CreateVmaAllocator());
+    CHECK_VK_RESULT(CreatePipelineLayout());
 
     m_deferredDeletionQueue = new VulkanDeletionQueue(this);
 
@@ -478,8 +480,12 @@ VkResult VulkanDevice::CreateDevice()
     meshShader.meshShader = VK_TRUE;
     meshShader.taskShader = VK_TRUE;
 
+    VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT mutableDescriptor = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT };
+    mutableDescriptor.pNext = &meshShader;
+    mutableDescriptor.mutableDescriptorType = VK_TRUE;
+
     VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    device_info.pNext = &meshShader;
+    device_info.pNext = &mutableDescriptor;
     device_info.queueCreateInfoCount = 3;
     device_info.pQueueCreateInfos = queue_info;
     device_info.enabledExtensionCount = (uint32_t)required_extensions.size();
@@ -517,6 +523,84 @@ VkResult VulkanDevice::CreateVmaAllocator()
     create_info.pVulkanFunctions = &functions;
 
     return vmaCreateAllocator(&create_info, &m_vmaAllocator);
+}
+
+VkResult VulkanDevice::CreatePipelineLayout()
+{
+    VkDescriptorType mutableDescriptorTypes[7] =
+    {
+        VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+        VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,
+        VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
+    };
+
+    VkMutableDescriptorTypeListEXT mutableDescriptorList;
+    mutableDescriptorList.descriptorTypeCount = 7;
+    mutableDescriptorList.pDescriptorTypes = mutableDescriptorTypes;
+
+    VkMutableDescriptorTypeCreateInfoEXT mutableDescriptorInfo = { VK_STRUCTURE_TYPE_MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_EXT };
+    mutableDescriptorInfo.mutableDescriptorTypeListCount = 1;
+    mutableDescriptorInfo.pMutableDescriptorTypeLists = &mutableDescriptorList;
+
+    VkDescriptorSetLayoutBinding constantBuffer[GFX_MAX_CBV_BINDINGS] = {};
+    constantBuffer[0].descriptorType = VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK;
+    constantBuffer[0].descriptorCount = sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS;
+    constantBuffer[0].stageFlags = VK_SHADER_STAGE_ALL;
+
+    for (uint32_t i = 1; i < GFX_MAX_CBV_BINDINGS; ++i)
+    {
+        constantBuffer[i].binding = i;
+        constantBuffer[i].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        constantBuffer[i].descriptorCount = 1;
+        constantBuffer[i].stageFlags = VK_SHADER_STAGE_ALL;
+    }
+
+    VkDescriptorSetLayoutBinding resourceDescriptorHeap = {};
+    resourceDescriptorHeap.descriptorType = VK_DESCRIPTOR_TYPE_MUTABLE_EXT;
+    resourceDescriptorHeap.descriptorCount = 65536;
+    resourceDescriptorHeap.stageFlags = VK_SHADER_STAGE_ALL;
+
+    VkDescriptorSetLayoutBinding samplerDescriptorHeap = {};
+    samplerDescriptorHeap.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+    samplerDescriptorHeap.descriptorCount = 128;
+    samplerDescriptorHeap.stageFlags = VK_SHADER_STAGE_ALL;
+
+    VkDescriptorSetLayoutCreateInfo setLayoutInfo0 = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO }; // constant buffers
+    setLayoutInfo0.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+    setLayoutInfo0.bindingCount = GFX_MAX_CBV_BINDINGS;
+    setLayoutInfo0.pBindings = constantBuffer;
+
+    VkDescriptorSetLayoutCreateInfo setLayoutInfo1 = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO }; // resource descriptor heap
+    setLayoutInfo1.pNext = &mutableDescriptorInfo;
+    setLayoutInfo1.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+    setLayoutInfo1.bindingCount = 1;
+    setLayoutInfo1.pBindings = &resourceDescriptorHeap;
+
+    VkDescriptorSetLayoutCreateInfo setLayoutInfo2 = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO }; // sampler descriptor heap
+    setLayoutInfo2.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+    setLayoutInfo2.bindingCount = 1;
+    setLayoutInfo2.pBindings = &samplerDescriptorHeap;
+
+    VkDescriptorSetLayout setLayout[3];
+    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo0, nullptr, &setLayout[0]);
+    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo1, nullptr, &setLayout[1]);
+    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo2, nullptr, &setLayout[2]);
+
+    VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+    createInfo.setLayoutCount = 3;
+    createInfo.pSetLayouts = setLayout;
+
+    VkResult res = vkCreatePipelineLayout(m_device, &createInfo, nullptr, &m_pipelineLayout);
+
+    vkDestroyDescriptorSetLayout(m_device, setLayout[0], nullptr);
+    vkDestroyDescriptorSetLayout(m_device, setLayout[1], nullptr);
+    vkDestroyDescriptorSetLayout(m_device, setLayout[2], nullptr);
+
+    return res;
 }
 
 void VulkanDevice::FindQueueFamilyIndex()

@@ -59,6 +59,7 @@ public:
     VkQueue GetGraphicsQueue() const { return m_graphicsQueue; }
     VkQueue GetComputeQueue() const { return m_computeQueue; }
     VkQueue GetCopyQueue() const { return m_copyQueue; }
+    VkPipelineLayout GetPipelineLayout() const { return m_pipelineLayout; }
 
     template<typename T>
     void Delete(T objectHandle);
@@ -71,6 +72,7 @@ private:
     VkResult CreateInstance();
     VkResult CreateDevice();
     VkResult CreateVmaAllocator();
+    VkResult CreatePipelineLayout();
     void FindQueueFamilyIndex();
 
 private:
@@ -79,6 +81,7 @@ private:
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
     VkDevice m_device = VK_NULL_HANDLE;
     VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
+    VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
 
     uint32_t m_graphicsQueueIndex = uint32_t(-1);
     uint32_t m_computeQueueIndex = uint32_t(-1);
