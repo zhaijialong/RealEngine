@@ -11,6 +11,7 @@
 #include "vulkan_rt_blas.h"
 #include "vulkan_rt_tlas.h"
 #include "vulkan_descriptor_allocator.h"
+#include "vulkan_constant_buffer_allocator.h"
 #include "utils/log.h"
 #include "utils/assert.h"
 #define VOLK_IMPLEMENTATION
@@ -37,6 +38,7 @@ VulkanDevice::~VulkanDevice()
     {
         delete m_transitionCopyCommandList[i];
         delete m_transitionGraphicsCommandList[i];
+        delete m_constantBufferAllocators[i];
     }
     delete m_deferredDeletionQueue;
 
@@ -69,6 +71,8 @@ bool VulkanDevice::Create()
     {
         m_transitionCopyCommandList[i] = CreateCommandList(GfxCommandQueue::Copy, "Transition CommandList(Copy)");
         m_transitionGraphicsCommandList[i] = CreateCommandList(GfxCommandQueue::Graphics, "Transition CommandList(Graphics)");
+
+        m_constantBufferAllocators[i] = new VulkanConstantBufferAllocator(this, 8 * 1024 * 1024);
     }
 
     VkPhysicalDeviceDescriptorBufferPropertiesEXT descriptorBufferProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT };
@@ -100,6 +104,8 @@ void VulkanDevice::BeginFrame()
     uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
     m_transitionCopyCommandList[index]->ResetAllocator();
     m_transitionGraphicsCommandList[index]->ResetAllocator();
+
+    m_constantBufferAllocators[index]->Reset();
 }
 
 void VulkanDevice::EndFrame()
@@ -619,6 +625,10 @@ VkResult VulkanDevice::CreatePipelineLayout()
     vkCreateDescriptorSetLayout(m_device, &setLayoutInfo1, nullptr, &m_descriptorSetLayout[1]);
     vkCreateDescriptorSetLayout(m_device, &setLayoutInfo2, nullptr, &m_descriptorSetLayout[2]);
 
+    vkGetDescriptorSetLayoutSizeEXT(m_device, m_descriptorSetLayout[0], &m_cbvDescriptorSetSize);
+    vkGetDescriptorSetLayoutBindingOffsetEXT(m_device, m_descriptorSetLayout[0], 1, &m_cbv1DescriptorOffset);
+    vkGetDescriptorSetLayoutBindingOffsetEXT(m_device, m_descriptorSetLayout[0], 2, &m_cbv2DescriptorOffset);
+
     VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
     createInfo.setLayoutCount = 3;
     createInfo.pSetLayouts = m_descriptorSetLayout;
@@ -794,4 +804,50 @@ void VulkanDevice::FreeSamplerDescriptor(uint32_t index)
     {
         m_deferredDeletionQueue->FreeSamplerDescriptor(index, m_frameID);
     }
+}
+
+VulkanConstantBufferAllocator* VulkanDevice::GetConstantBufferAllocator() const
+{
+    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
+    return m_constantBufferAllocators[index];
+}
+
+VkDeviceAddress VulkanDevice::AllocateConstantBuffer(const void* data, size_t data_size)
+{
+    void* cpuAddress;
+    VkDeviceAddress gpuAddress;
+    GetConstantBufferAllocator()->Allocate(data_size, &cpuAddress, &gpuAddress);
+
+    memcpy(cpuAddress, data, data_size);
+
+    return gpuAddress;
+}
+
+VkDeviceSize VulkanDevice::AllocateConstantBufferDescriptor(const uint32_t* cbv0, const VkDescriptorAddressInfoEXT& cbv1, const VkDescriptorAddressInfoEXT& cbv2)
+{
+    void* cpuAddress;
+    VkDeviceAddress gpuAddress;
+    GetConstantBufferAllocator()->Allocate(m_cbvDescriptorSetSize, &cpuAddress, &gpuAddress);
+
+    memcpy(cpuAddress, cbv0, sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS);
+
+    const size_t descriptorSize = m_cbv2DescriptorOffset - m_cbv1DescriptorOffset;
+
+    VkDescriptorGetInfoEXT descriptorInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT };
+    descriptorInfo.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+    if (cbv1.address != 0)
+    {
+        descriptorInfo.data.pUniformBuffer = &cbv1;
+        vkGetDescriptorEXT(m_device, &descriptorInfo, descriptorSize, (char*)cpuAddress + m_cbv1DescriptorOffset);
+    }
+
+    if (cbv2.address != 0)
+    {
+        descriptorInfo.data.pUniformBuffer = &cbv2;
+        vkGetDescriptorEXT(m_device, &descriptorInfo, descriptorSize, (char*)cpuAddress + m_cbv2DescriptorOffset);
+    }
+
+    VkDeviceSize descriptorBufferOffset = gpuAddress - GetConstantBufferAllocator()->GetGpuAddress();
+    return descriptorBufferOffset;
 }

@@ -108,7 +108,7 @@ private:
     
     struct TopLevelArgumentBuffer
     {
-        uint32_t cbv0[8]; //root constants
+        uint32_t cbv0[GFX_MAX_ROOT_CONSTANTS]; //root constants
         uint64_t cbv1; // gpu address
         uint64_t cbv2;
     };

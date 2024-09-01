@@ -62,11 +62,15 @@ public:
     VkPipelineLayout GetPipelineLayout() const { return m_pipelineLayout; }
     class VulkanDescriptorAllocator* GetResourceDescriptorAllocator() const { return m_resourceDescriptorAllocator; }
     class VulkanDescriptorAllocator* GetSamplerDescriptorAllocator() const { return m_samplerDescriptorAllocator; }
+    class VulkanConstantBufferAllocator* GetConstantBufferAllocator() const;
 
     uint32_t AllocateResourceDescriptor(void** descriptor, size_t* size);
     uint32_t AllocateSamplerDescriptor(void** descriptor, size_t* size);
     void FreeResourceDescriptor(uint32_t index);
     void FreeSamplerDescriptor(uint32_t index);
+
+    VkDeviceAddress AllocateConstantBuffer(const void* data, size_t data_size);
+    VkDeviceSize AllocateConstantBufferDescriptor(const uint32_t* cbv0, const VkDescriptorAddressInfoEXT& cbv1, const VkDescriptorAddressInfoEXT& cbv2);
 
     template<typename T>
     void Delete(T objectHandle);
@@ -90,6 +94,10 @@ private:
     VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
     VkDescriptorSetLayout m_descriptorSetLayout[3] = {};
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
+
+    VkDeviceSize m_cbvDescriptorSetSize = 0;
+    VkDeviceSize m_cbv1DescriptorOffset = 0;
+    VkDeviceSize m_cbv2DescriptorOffset = 0;
 
     uint32_t m_graphicsQueueIndex = uint32_t(-1);
     uint32_t m_computeQueueIndex = uint32_t(-1);

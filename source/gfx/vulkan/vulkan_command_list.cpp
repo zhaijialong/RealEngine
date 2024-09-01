@@ -4,6 +4,7 @@
 #include "vulkan_fence.h"
 #include "vulkan_texture.h"
 #include "vulkan_descriptor_allocator.h"
+#include "vulkan_constant_buffer_allocator.h"
 #include "utils/profiler.h"
 #include "../gfx.h"
 
@@ -185,7 +186,7 @@ void VulkanCommandList::ResetState()
 
         VkDescriptorBufferBindingInfoEXT descriptorBuffer[3] = {};
         descriptorBuffer[0].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
-        descriptorBuffer[0].address = device->GetResourceDescriptorAllocator()->GetGpuAddress(); //todo
+        descriptorBuffer[0].address = device->GetConstantBufferAllocator()->GetGpuAddress();
         descriptorBuffer[0].usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT;
         descriptorBuffer[1].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
         descriptorBuffer[1].address = device->GetResourceDescriptorAllocator()->GetGpuAddress();
@@ -573,30 +574,72 @@ void VulkanCommandList::SetScissorRect(uint32_t x, uint32_t y, uint32_t width, u
 
 void VulkanCommandList::SetGraphicsConstants(uint32_t slot, const void* data, size_t data_size)
 {
+    if (slot == 0)
+    {
+        RE_ASSERT(data_size <= GFX_MAX_ROOT_CONSTANTS * sizeof(uint32_t));
+        memcpy(m_graphicsConstants.cbv0, data, data_size);
+    }
+    else
+    {
+        RE_ASSERT(slot < GFX_MAX_CBV_BINDINGS);
+        VkDeviceAddress gpuAddress = ((VulkanDevice*)m_pDevice)->AllocateConstantBuffer(data, data_size);
+
+        if (slot == 1)
+        {
+            m_graphicsConstants.cbv1.address = gpuAddress;
+            m_graphicsConstants.cbv1.range = data_size;
+        }
+        else
+        {
+            m_graphicsConstants.cbv2.address = gpuAddress;
+            m_graphicsConstants.cbv2.range = data_size;
+        }
+    }
 }
 
 void VulkanCommandList::SetComputeConstants(uint32_t slot, const void* data, size_t data_size)
 {
+    if (slot == 0)
+    {
+        RE_ASSERT(data_size <= GFX_MAX_ROOT_CONSTANTS * sizeof(uint32_t));
+        memcpy(m_computeConstants.cbv0, data, data_size);
+    }
+    else
+    {
+        RE_ASSERT(slot < GFX_MAX_CBV_BINDINGS);
+        VkDeviceAddress gpuAddress = ((VulkanDevice*)m_pDevice)->AllocateConstantBuffer(data, data_size);
+
+        if (slot == 1)
+        {
+            m_computeConstants.cbv1.address = gpuAddress;
+            m_computeConstants.cbv1.range = data_size;
+        }
+        else
+        {
+            m_computeConstants.cbv2.address = gpuAddress;
+            m_computeConstants.cbv2.range = data_size;
+        }
+    }
 }
 
 void VulkanCommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
 {
-    uint32_t bufferIndices[] = { 0, 1, 2 };
-    VkDeviceSize offsets[] = { 0, 0, 0 }; //todo : offset for cbv
-    vkCmdSetDescriptorBufferOffsetsEXT(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ((VulkanDevice*)m_pDevice)->GetPipelineLayout(), 
-        0, 3, bufferIndices, offsets);
+    UpdateGraphicsDescriptorBuffer();
 
     vkCmdDraw(m_commandBuffer, vertex_count, instance_count, 0, 0);
 }
 
 void VulkanCommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_offset)
 {
-    //vkCmdDrawIndexed(m_commandBuffer, index_count, instance_count, index_offset, 0, 0);
+    UpdateGraphicsDescriptorBuffer();
+
+    vkCmdDrawIndexed(m_commandBuffer, index_count, instance_count, index_offset, 0, 0);
 }
 
 void VulkanCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
     FlushBarriers();
+    UpdateComputeDescriptorBuffer();
 
     //vkCmdDispatch(m_commandBuffer, group_count_x, group_count_y, group_count_z);
 }
@@ -659,3 +702,25 @@ MicroProfileThreadLogGpu* VulkanCommandList::GetProfileLog() const
     return nullptr;
 }
 #endif
+
+void VulkanCommandList::UpdateGraphicsDescriptorBuffer()
+{
+    VulkanDevice* device = (VulkanDevice*)m_pDevice;
+    VkDeviceSize cbvDescriptorOffset = device->AllocateConstantBufferDescriptor(m_graphicsConstants.cbv0, m_graphicsConstants.cbv1, m_graphicsConstants.cbv2);
+
+    uint32_t bufferIndices[] = { 0, 1, 2 };
+    VkDeviceSize offsets[] = { cbvDescriptorOffset, 0, 0 };
+    vkCmdSetDescriptorBufferOffsetsEXT(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, device->GetPipelineLayout(),
+        0, 3, bufferIndices, offsets);
+}
+
+void VulkanCommandList::UpdateComputeDescriptorBuffer()
+{
+    VulkanDevice* device = (VulkanDevice*)m_pDevice;
+    VkDeviceSize cbvDescriptorOffset = device->AllocateConstantBufferDescriptor(m_computeConstants.cbv0, m_computeConstants.cbv1, m_computeConstants.cbv2);
+
+    uint32_t bufferIndices[] = { 0, 1, 2 };
+    VkDeviceSize offsets[] = { cbvDescriptorOffset, 0, 0 };
+    vkCmdSetDescriptorBufferOffsetsEXT(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, device->GetPipelineLayout(),
+        0, 3, bufferIndices, offsets);
+}
