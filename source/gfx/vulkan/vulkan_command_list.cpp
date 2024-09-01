@@ -418,36 +418,32 @@ void VulkanCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     VkRenderingAttachmentInfo stencilAttachments = { VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
     uint32_t width = 0;
     uint32_t height = 0;
-    uint32_t colorAttachmentCount = 0;
 
     for (uint32_t i = 0; i < 8; ++i)
     {
-        if (render_pass.color[i].texture == nullptr)
-        {
-            continue;
-        }
-
-        if (width == 0)
-        {
-            width = render_pass.color[i].texture->GetDesc().width;
-        }
-
-        if (height == 0)
-        {
-            height = render_pass.color[i].texture->GetDesc().height;
-        }
-
-        RE_ASSERT(width == render_pass.color[i].texture->GetDesc().width);
-        RE_ASSERT(height == render_pass.color[i].texture->GetDesc().height);
-
         colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        colorAttachments[i].imageView = ((VulkanTexture*)render_pass.color[i].texture)->GetRenderView(render_pass.color[i].mip_slice, render_pass.color[i].array_slice);
-        colorAttachments[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachments[i].loadOp = GetLoadOp(render_pass.color[i].load_op);
-        colorAttachments[i].storeOp = GetStoreOp(render_pass.color[i].store_op);
-        memcpy(colorAttachments[i].clearValue.color.float32, render_pass.color[i].clear_color, sizeof(float) * 4);
 
-        ++colorAttachmentCount;
+        if (render_pass.color[i].texture)
+        {
+            if (width == 0)
+            {
+                width = render_pass.color[i].texture->GetDesc().width;
+            }
+
+            if (height == 0)
+            {
+                height = render_pass.color[i].texture->GetDesc().height;
+            }
+
+            RE_ASSERT(width == render_pass.color[i].texture->GetDesc().width);
+            RE_ASSERT(height == render_pass.color[i].texture->GetDesc().height);
+
+            colorAttachments[i].imageView = ((VulkanTexture*)render_pass.color[i].texture)->GetRenderView(render_pass.color[i].mip_slice, render_pass.color[i].array_slice);
+            colorAttachments[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            colorAttachments[i].loadOp = GetLoadOp(render_pass.color[i].load_op);
+            colorAttachments[i].storeOp = GetStoreOp(render_pass.color[i].store_op);
+            memcpy(colorAttachments[i].clearValue.color.float32, render_pass.color[i].clear_color, sizeof(float) * 4);
+        }
     }
 
     if (render_pass.depth.texture != nullptr)
@@ -484,7 +480,7 @@ void VulkanCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     info.renderArea.extent.height = height;
     info.layerCount = 1;
     info.viewMask = 0;
-    info.colorAttachmentCount = colorAttachmentCount;
+    info.colorAttachmentCount = 8;
     info.pColorAttachments = colorAttachments;
 
     if (depthAttachments.imageView != VK_NULL_HANDLE)
@@ -509,6 +505,8 @@ void VulkanCommandList::EndRenderPass()
 
 void VulkanCommandList::SetPipelineState(IGfxPipelineState* state)
 {
+    VkPipelineBindPoint bindPoint = state->GetType() == GfxPipelineType::Compute ? VK_PIPELINE_BIND_POINT_COMPUTE : VK_PIPELINE_BIND_POINT_GRAPHICS;
+    vkCmdBindPipeline(m_commandBuffer, bindPoint, (VkPipeline)state->GetHandle());
 }
 
 void VulkanCommandList::SetStencilReference(uint8_t stencil)
