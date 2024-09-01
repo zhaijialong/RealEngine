@@ -15,6 +15,9 @@ public:
 
     template<typename T>
     void Delete(T object, uint64_t frameID);
+    
+    void FreeResourceDescriptor(uint32_t index, uint64_t frameID);
+    void FreeSamplerDescriptor(uint32_t index, uint64_t frameID);
 
 private:
     VulkanDevice* m_device = nullptr;
@@ -30,4 +33,7 @@ private:
     eastl::queue<eastl::pair<VkSwapchainKHR, uint64_t>> m_swapchainQueue;
     eastl::queue<eastl::pair<VkSurfaceKHR, uint64_t>> m_surfaceQueue;
     eastl::queue<eastl::pair<VkCommandPool, uint64_t>> m_commandPoolQueue;
+
+    eastl::queue<eastl::pair<uint32_t, uint64_t>> m_resourceDescriptorQueue;
+    eastl::queue<eastl::pair<uint32_t, uint64_t>> m_samplerDescritptorQueue;
 };

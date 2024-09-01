@@ -562,3 +562,63 @@ inline VkPipelineRenderingCreateInfo ToVkPipelineRenderingCreateInfo(const T& pi
 
     return createInfo;
 }
+
+inline VkFilter ToVkFilter(GfxFilter filter)
+{
+    switch (filter)
+    {
+    case GfxFilter::Point:
+        return VK_FILTER_NEAREST;
+    case GfxFilter::Linear:
+        return VK_FILTER_LINEAR;
+    default:
+        return VK_FILTER_MAX_ENUM;
+    }
+}
+
+inline VkSamplerMipmapMode ToVkSamplerMipmapMode(GfxFilter filter)
+{
+    switch (filter)
+    {
+    case GfxFilter::Point:
+        return VK_SAMPLER_MIPMAP_MODE_NEAREST;
+    case GfxFilter::Linear:
+        return VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    default:
+        return VK_SAMPLER_MIPMAP_MODE_MAX_ENUM;
+    }
+}
+
+inline VkSamplerAddressMode ToVkSamplerAddressMode(GfxSamplerAddressMode mode)
+{
+    switch (mode)
+    {
+    case GfxSamplerAddressMode::Repeat:
+        return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    case GfxSamplerAddressMode::MirroredRepeat:
+        return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+    case GfxSamplerAddressMode::ClampToEdge:
+        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    case GfxSamplerAddressMode::ClampToBorder:
+        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+    default:
+        return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
+    }
+}
+
+inline VkSamplerReductionMode ToVkSamplerReductionMode(GfxSamplerReductionMode mode)
+{
+    switch (mode)
+    {
+    case GfxSamplerReductionMode::Standard:
+        return VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE;
+    case GfxSamplerReductionMode::Compare:
+        return VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE;
+    case GfxSamplerReductionMode::Min:
+        return VK_SAMPLER_REDUCTION_MODE_MIN;
+    case GfxSamplerReductionMode::Max:
+        return VK_SAMPLER_REDUCTION_MODE_MAX;
+    default:
+        return VK_SAMPLER_REDUCTION_MODE_MAX_ENUM;
+    }
+}

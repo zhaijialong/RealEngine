@@ -68,6 +68,7 @@ bool VulkanGraphicsPipelineState::Create()
 
     VkGraphicsPipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
     createInfo.pNext = &formatInfo;
+    createInfo.flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
     createInfo.stageCount = m_desc.ps ? 2 : 1;
     createInfo.pStages = stages;
     createInfo.pVertexInputState = &vertexInput;
@@ -165,6 +166,7 @@ bool VulkanMeshShadingPipelineState::Create()
 
     VkGraphicsPipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
     createInfo.pNext = &formatInfo;
+    createInfo.flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
     createInfo.stageCount = stageCount;
     createInfo.pStages = stages;
     createInfo.pMultisampleState = &multisampleState;
@@ -206,6 +208,7 @@ bool VulkanComputePipelineState::Create()
     ((VulkanDevice*)m_pDevice)->Delete(m_pipeline);
 
     VkComputePipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+    createInfo.flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
     createInfo.stage = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
     createInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     createInfo.stage.module = (VkShaderModule)m_desc.cs->GetHandle();

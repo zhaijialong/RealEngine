@@ -104,6 +104,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_deletion_queue.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor.h
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor_allocator.cpp
+    ${SOURCE_ROOT}/gfx/vulkan/vulkan_descriptor_allocator.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_device.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_device.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_fence.cpp

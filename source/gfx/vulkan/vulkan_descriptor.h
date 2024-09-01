@@ -63,9 +63,10 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_sampler; }
-    virtual uint32_t GetHeapIndex() const override { return 0; }
+    virtual uint32_t GetHeapIndex() const override { return m_heapIndex; }
 
 private:
     GfxSamplerDesc m_desc;
     VkSampler m_sampler = VK_NULL_HANDLE;
+    uint32_t m_heapIndex = GFX_INVALID_RESOURCE;
 };

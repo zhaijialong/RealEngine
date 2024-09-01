@@ -60,6 +60,13 @@ public:
     VkQueue GetComputeQueue() const { return m_computeQueue; }
     VkQueue GetCopyQueue() const { return m_copyQueue; }
     VkPipelineLayout GetPipelineLayout() const { return m_pipelineLayout; }
+    class VulkanDescriptorAllocator* GetResourceDescriptorAllocator() const { return m_resourceDescriptorAllocator; }
+    class VulkanDescriptorAllocator* GetSamplerDescriptorAllocator() const { return m_samplerDescriptorAllocator; }
+
+    uint32_t AllocateResourceDescriptor(void** descriptor, size_t* size);
+    uint32_t AllocateSamplerDescriptor(void** descriptor, size_t* size);
+    void FreeResourceDescriptor(uint32_t index);
+    void FreeSamplerDescriptor(uint32_t index);
 
     template<typename T>
     void Delete(T objectHandle);
@@ -81,6 +88,7 @@ private:
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
     VkDevice m_device = VK_NULL_HANDLE;
     VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
+    VkDescriptorSetLayout m_descriptorSetLayout[3] = {};
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
 
     uint32_t m_graphicsQueueIndex = uint32_t(-1);
@@ -93,6 +101,10 @@ private:
     VulkanDeletionQueue* m_deferredDeletionQueue = nullptr;
     IGfxCommandList* m_transitionCopyCommandList[GFX_MAX_INFLIGHT_FRAMES] = {};
     IGfxCommandList* m_transitionGraphicsCommandList[GFX_MAX_INFLIGHT_FRAMES] = {};
+
+    class VulkanConstantBufferAllocator* m_constantBufferAllocators[GFX_MAX_INFLIGHT_FRAMES] = {};
+    class VulkanDescriptorAllocator* m_resourceDescriptorAllocator = nullptr;
+    class VulkanDescriptorAllocator* m_samplerDescriptorAllocator = nullptr;
 
     eastl::vector<eastl::pair<IGfxTexture*, GfxAccessFlags>> m_pendingGraphicsTransitions;
     eastl::vector<eastl::pair<IGfxTexture*, GfxAccessFlags>> m_pendingCopyTransitions;

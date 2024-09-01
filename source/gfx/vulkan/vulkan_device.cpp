@@ -10,6 +10,7 @@
 #include "vulkan_heap.h"
 #include "vulkan_rt_blas.h"
 #include "vulkan_rt_tlas.h"
+#include "vulkan_descriptor_allocator.h"
 #include "utils/log.h"
 #include "utils/assert.h"
 #define VOLK_IMPLEMENTATION
@@ -39,7 +40,13 @@ VulkanDevice::~VulkanDevice()
     }
     delete m_deferredDeletionQueue;
 
+    delete m_resourceDescriptorAllocator;
+    delete m_samplerDescriptorAllocator;
+
     vmaDestroyAllocator(m_vmaAllocator);
+    vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout[0], nullptr);
+    vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout[1], nullptr);
+    vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout[2], nullptr);
     vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
     vkDestroyDevice(m_device, nullptr);
     vkDestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
@@ -63,6 +70,24 @@ bool VulkanDevice::Create()
         m_transitionCopyCommandList[i] = CreateCommandList(GfxCommandQueue::Copy, "Transition CommandList(Copy)");
         m_transitionGraphicsCommandList[i] = CreateCommandList(GfxCommandQueue::Graphics, "Transition CommandList(Graphics)");
     }
+
+    VkPhysicalDeviceDescriptorBufferPropertiesEXT descriptorBufferProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT };
+    VkPhysicalDeviceProperties2 properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+    properties.pNext = &descriptorBufferProperties;
+    vkGetPhysicalDeviceProperties2(m_physicalDevice, &properties);
+
+    size_t resourceDescriptorSize = descriptorBufferProperties.sampledImageDescriptorSize;
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.storageImageDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.uniformTexelBufferDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.storageTexelBufferDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.uniformBufferDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.storageBufferDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.accelerationStructureDescriptorSize);
+
+    size_t samplerDescriptorSize = descriptorBufferProperties.samplerDescriptorSize;
+
+    m_resourceDescriptorAllocator = new VulkanDescriptorAllocator(this, (uint32_t)resourceDescriptorSize, GFX_MAX_RESOURCE_DESCRIPTOR_COUNT, VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT);
+    m_samplerDescriptorAllocator = new VulkanDescriptorAllocator(this, (uint32_t)samplerDescriptorSize, GFX_MAX_SAMPLER_DESCRIPTOR_COUNT, VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT);
 
     return true;
 #undef CHECK_VK_RESULT
@@ -484,8 +509,13 @@ VkResult VulkanDevice::CreateDevice()
     mutableDescriptor.pNext = &meshShader;
     mutableDescriptor.mutableDescriptorType = VK_TRUE;
 
+    VkPhysicalDeviceDescriptorBufferFeaturesEXT descriptorBuffer = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT };
+    descriptorBuffer.pNext = &mutableDescriptor;
+    descriptorBuffer.descriptorBuffer = VK_TRUE;
+    //descriptorBuffer.descriptorBufferImageLayoutIgnored = VK_TRUE;
+
     VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    device_info.pNext = &mutableDescriptor;
+    device_info.pNext = &descriptorBuffer;
     device_info.queueCreateInfoCount = 3;
     device_info.pQueueCreateInfos = queue_info;
     device_info.enabledExtensionCount = (uint32_t)required_extensions.size();
@@ -585,22 +615,15 @@ VkResult VulkanDevice::CreatePipelineLayout()
     setLayoutInfo2.bindingCount = 1;
     setLayoutInfo2.pBindings = &samplerDescriptorHeap;
 
-    VkDescriptorSetLayout setLayout[3];
-    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo0, nullptr, &setLayout[0]);
-    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo1, nullptr, &setLayout[1]);
-    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo2, nullptr, &setLayout[2]);
+    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo0, nullptr, &m_descriptorSetLayout[0]);
+    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo1, nullptr, &m_descriptorSetLayout[1]);
+    vkCreateDescriptorSetLayout(m_device, &setLayoutInfo2, nullptr, &m_descriptorSetLayout[2]);
 
     VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
     createInfo.setLayoutCount = 3;
-    createInfo.pSetLayouts = setLayout;
+    createInfo.pSetLayouts = m_descriptorSetLayout;
 
-    VkResult res = vkCreatePipelineLayout(m_device, &createInfo, nullptr, &m_pipelineLayout);
-
-    vkDestroyDescriptorSetLayout(m_device, setLayout[0], nullptr);
-    vkDestroyDescriptorSetLayout(m_device, setLayout[1], nullptr);
-    vkDestroyDescriptorSetLayout(m_device, setLayout[2], nullptr);
-
-    return res;
+    return vkCreatePipelineLayout(m_device, &createInfo, nullptr, &m_pipelineLayout);
 }
 
 void VulkanDevice::FindQueueFamilyIndex()
@@ -744,5 +767,31 @@ void VulkanDevice::FlushLayoutTransition(GfxCommandQueue queue_type)
             m_transitionCopyCommandList[index]->End();
             m_transitionCopyCommandList[index]->Submit();
         }
+    }
+}
+
+uint32_t VulkanDevice::AllocateResourceDescriptor(void** descriptor, size_t* size)
+{
+    return m_resourceDescriptorAllocator->Allocate(descriptor, size);
+}
+
+uint32_t VulkanDevice::AllocateSamplerDescriptor(void** descriptor, size_t* size)
+{
+    return m_samplerDescriptorAllocator->Allocate(descriptor, size);
+}
+
+void VulkanDevice::FreeResourceDescriptor(uint32_t index)
+{
+    if (index != GFX_INVALID_RESOURCE)
+    {
+        m_deferredDeletionQueue->FreeResourceDescriptor(index, m_frameID);
+    }
+}
+
+void VulkanDevice::FreeSamplerDescriptor(uint32_t index)
+{
+    if (index != GFX_INVALID_RESOURCE)
+    {
+        m_deferredDeletionQueue->FreeSamplerDescriptor(index, m_frameID);
     }
 }

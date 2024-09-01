@@ -823,7 +823,7 @@ D3D12Descriptor D3D12DescriptorAllocator::Allocate()
         return descriptor;
     }
     
-    RE_ASSERT(m_allocatedCount <= m_descirptorCount);
+    RE_ASSERT(m_allocatedCount < m_descirptorCount);
 
     D3D12Descriptor descriptor = GetDescriptor(m_allocatedCount);
 

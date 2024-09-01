@@ -3,6 +3,7 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_fence.h"
 #include "vulkan_texture.h"
+#include "vulkan_descriptor_allocator.h"
 #include "utils/profiler.h"
 #include "../gfx.h"
 
@@ -178,6 +179,23 @@ void VulkanCommandList::Submit()
 
 void VulkanCommandList::ResetState()
 {
+    if (m_queueType == GfxCommandQueue::Graphics || m_queueType == GfxCommandQueue::Compute)
+    {
+        VulkanDevice* device = (VulkanDevice*)m_pDevice;
+
+        VkDescriptorBufferBindingInfoEXT descriptorBuffer[3] = {};
+        descriptorBuffer[0].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
+        descriptorBuffer[0].address = device->GetResourceDescriptorAllocator()->GetGpuAddress(); //todo
+        descriptorBuffer[0].usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT;
+        descriptorBuffer[1].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
+        descriptorBuffer[1].address = device->GetResourceDescriptorAllocator()->GetGpuAddress();
+        descriptorBuffer[1].usage = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT;
+        descriptorBuffer[2].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
+        descriptorBuffer[2].address = device->GetSamplerDescriptorAllocator()->GetGpuAddress();
+        descriptorBuffer[2].usage = VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT;
+
+        vkCmdBindDescriptorBuffersEXT(m_commandBuffer, 3, descriptorBuffer);
+    }
 }
 
 void VulkanCommandList::BeginProfiling()
@@ -563,15 +581,24 @@ void VulkanCommandList::SetComputeConstants(uint32_t slot, const void* data, siz
 
 void VulkanCommandList::Draw(uint32_t vertex_count, uint32_t instance_count)
 {
+    uint32_t bufferIndices[] = { 0, 1, 2 };
+    VkDeviceSize offsets[] = { 0, 0, 0 }; //todo : offset for cbv
+    vkCmdSetDescriptorBufferOffsetsEXT(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ((VulkanDevice*)m_pDevice)->GetPipelineLayout(), 
+        0, 3, bufferIndices, offsets);
+
+    vkCmdDraw(m_commandBuffer, vertex_count, instance_count, 0, 0);
 }
 
 void VulkanCommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_offset)
 {
+    //vkCmdDrawIndexed(m_commandBuffer, index_count, instance_count, index_offset, 0, 0);
 }
 
 void VulkanCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
     FlushBarriers();
+
+    //vkCmdDispatch(m_commandBuffer, group_count_x, group_count_y, group_count_z);
 }
 
 void VulkanCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)

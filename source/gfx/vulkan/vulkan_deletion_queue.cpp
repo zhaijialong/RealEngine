@@ -1,5 +1,6 @@
 #include "vulkan_deletion_queue.h"
 #include "vulkan_device.h"
+#include "vulkan_descriptor_allocator.h"
 
 VulkanDeletionQueue::VulkanDeletionQueue(VulkanDevice* device)
 {
@@ -63,6 +64,40 @@ void VulkanDeletionQueue::Flush(bool force_delete)
         vmaFreeMemory(allocator, item.first);
         m_allocationQueue.pop();
     }
+
+    while (!m_resourceDescriptorQueue.empty())
+    {
+        auto item = m_resourceDescriptorQueue.front();
+        if (!force_delete && item.second + GFX_MAX_INFLIGHT_FRAMES > frameID)
+        {
+            break;
+        }
+
+        m_device->GetResourceDescriptorAllocator()->Free(item.first);
+        m_resourceDescriptorQueue.pop();
+    }
+
+    while (!m_samplerDescritptorQueue.empty())
+    {
+        auto item = m_samplerDescritptorQueue.front();
+        if (!force_delete && item.second + GFX_MAX_INFLIGHT_FRAMES > frameID)
+        {
+            break;
+        }
+
+        m_device->GetSamplerDescriptorAllocator()->Free(item.first);
+        m_samplerDescritptorQueue.pop();
+    }
+}
+
+void VulkanDeletionQueue::FreeResourceDescriptor(uint32_t index, uint64_t frameID)
+{
+    m_resourceDescriptorQueue.push(eastl::make_pair(index, frameID));
+}
+
+void VulkanDeletionQueue::FreeSamplerDescriptor(uint32_t index, uint64_t frameID)
+{
+    m_samplerDescritptorQueue.push(eastl::make_pair(index, frameID));
 }
 
 template<>
