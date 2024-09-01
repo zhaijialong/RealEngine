@@ -31,7 +31,7 @@ VulkanDescriptorAllocator::~VulkanDescriptorAllocator()
     vmaDestroyBuffer(m_device->GetVmaAllocator(), m_buffer, m_allocation);
 }
 
-uint32_t VulkanDescriptorAllocator::Allocate(void** descriptor, size_t* size)
+uint32_t VulkanDescriptorAllocator::Allocate(void** descriptor)
 {
     uint32_t index = 0;
 
@@ -49,7 +49,6 @@ uint32_t VulkanDescriptorAllocator::Allocate(void** descriptor, size_t* size)
     }
 
     *descriptor = (char*)m_cpuAddress + m_descriptorSize * index;
-    *size = m_descriptorSize;
 
     return index;
 }

@@ -10,7 +10,7 @@ public:
     VulkanDescriptorAllocator(VulkanDevice* device, uint32_t descriptor_size, uint32_t descriptor_count, VkBufferUsageFlags usage);
     ~VulkanDescriptorAllocator();
 
-    uint32_t Allocate(void** descriptor, size_t* size);
+    uint32_t Allocate(void** descriptor);
     void Free(uint32_t index);
 
     VkDeviceAddress GetGpuAddress() const { return m_gpuAddress; }

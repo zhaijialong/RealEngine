@@ -63,9 +63,10 @@ public:
     class VulkanDescriptorAllocator* GetResourceDescriptorAllocator() const { return m_resourceDescriptorAllocator; }
     class VulkanDescriptorAllocator* GetSamplerDescriptorAllocator() const { return m_samplerDescriptorAllocator; }
     class VulkanConstantBufferAllocator* GetConstantBufferAllocator() const;
+    const VkPhysicalDeviceDescriptorBufferPropertiesEXT& GetDescriptorBufferProperties() const { return m_descriptorBufferProperties; }
 
-    uint32_t AllocateResourceDescriptor(void** descriptor, size_t* size);
-    uint32_t AllocateSamplerDescriptor(void** descriptor, size_t* size);
+    uint32_t AllocateResourceDescriptor(void** descriptor);
+    uint32_t AllocateSamplerDescriptor(void** descriptor);
     void FreeResourceDescriptor(uint32_t index);
     void FreeSamplerDescriptor(uint32_t index);
 
@@ -94,10 +95,7 @@ private:
     VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
     VkDescriptorSetLayout m_descriptorSetLayout[3] = {};
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
-
-    VkDeviceSize m_cbvDescriptorSetSize = 0;
-    VkDeviceSize m_cbv1DescriptorOffset = 0;
-    VkDeviceSize m_cbv2DescriptorOffset = 0;
+    VkPhysicalDeviceDescriptorBufferPropertiesEXT m_descriptorBufferProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT };
 
     uint32_t m_graphicsQueueIndex = uint32_t(-1);
     uint32_t m_computeQueueIndex = uint32_t(-1);

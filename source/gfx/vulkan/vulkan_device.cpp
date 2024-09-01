@@ -75,20 +75,19 @@ bool VulkanDevice::Create()
         m_constantBufferAllocators[i] = new VulkanConstantBufferAllocator(this, 8 * 1024 * 1024);
     }
 
-    VkPhysicalDeviceDescriptorBufferPropertiesEXT descriptorBufferProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT };
     VkPhysicalDeviceProperties2 properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
-    properties.pNext = &descriptorBufferProperties;
+    properties.pNext = &m_descriptorBufferProperties;
     vkGetPhysicalDeviceProperties2(m_physicalDevice, &properties);
 
-    size_t resourceDescriptorSize = descriptorBufferProperties.sampledImageDescriptorSize;
-    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.storageImageDescriptorSize);
-    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.uniformTexelBufferDescriptorSize);
-    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.storageTexelBufferDescriptorSize);
-    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.uniformBufferDescriptorSize);
-    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.storageBufferDescriptorSize);
-    resourceDescriptorSize = eastl::max(resourceDescriptorSize, descriptorBufferProperties.accelerationStructureDescriptorSize);
+    size_t resourceDescriptorSize = m_descriptorBufferProperties.sampledImageDescriptorSize;
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, m_descriptorBufferProperties.storageImageDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, m_descriptorBufferProperties.robustUniformTexelBufferDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, m_descriptorBufferProperties.robustStorageTexelBufferDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, m_descriptorBufferProperties.robustUniformBufferDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, m_descriptorBufferProperties.robustStorageBufferDescriptorSize);
+    resourceDescriptorSize = eastl::max(resourceDescriptorSize, m_descriptorBufferProperties.accelerationStructureDescriptorSize);
 
-    size_t samplerDescriptorSize = descriptorBufferProperties.samplerDescriptorSize;
+    size_t samplerDescriptorSize = m_descriptorBufferProperties.samplerDescriptorSize;
 
     m_resourceDescriptorAllocator = new VulkanDescriptorAllocator(this, (uint32_t)resourceDescriptorSize, GFX_MAX_RESOURCE_DESCRIPTOR_COUNT, VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT);
     m_samplerDescriptorAllocator = new VulkanDescriptorAllocator(this, (uint32_t)samplerDescriptorSize, GFX_MAX_SAMPLER_DESCRIPTOR_COUNT, VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT);
@@ -625,10 +624,6 @@ VkResult VulkanDevice::CreatePipelineLayout()
     vkCreateDescriptorSetLayout(m_device, &setLayoutInfo1, nullptr, &m_descriptorSetLayout[1]);
     vkCreateDescriptorSetLayout(m_device, &setLayoutInfo2, nullptr, &m_descriptorSetLayout[2]);
 
-    vkGetDescriptorSetLayoutSizeEXT(m_device, m_descriptorSetLayout[0], &m_cbvDescriptorSetSize);
-    vkGetDescriptorSetLayoutBindingOffsetEXT(m_device, m_descriptorSetLayout[0], 1, &m_cbv1DescriptorOffset);
-    vkGetDescriptorSetLayoutBindingOffsetEXT(m_device, m_descriptorSetLayout[0], 2, &m_cbv2DescriptorOffset);
-
     VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
     createInfo.setLayoutCount = 3;
     createInfo.pSetLayouts = m_descriptorSetLayout;
@@ -780,14 +775,14 @@ void VulkanDevice::FlushLayoutTransition(GfxCommandQueue queue_type)
     }
 }
 
-uint32_t VulkanDevice::AllocateResourceDescriptor(void** descriptor, size_t* size)
+uint32_t VulkanDevice::AllocateResourceDescriptor(void** descriptor)
 {
-    return m_resourceDescriptorAllocator->Allocate(descriptor, size);
+    return m_resourceDescriptorAllocator->Allocate(descriptor);
 }
 
-uint32_t VulkanDevice::AllocateSamplerDescriptor(void** descriptor, size_t* size)
+uint32_t VulkanDevice::AllocateSamplerDescriptor(void** descriptor)
 {
-    return m_samplerDescriptorAllocator->Allocate(descriptor, size);
+    return m_samplerDescriptorAllocator->Allocate(descriptor);
 }
 
 void VulkanDevice::FreeResourceDescriptor(uint32_t index)
@@ -825,13 +820,12 @@ VkDeviceAddress VulkanDevice::AllocateConstantBuffer(const void* data, size_t da
 
 VkDeviceSize VulkanDevice::AllocateConstantBufferDescriptor(const uint32_t* cbv0, const VkDescriptorAddressInfoEXT& cbv1, const VkDescriptorAddressInfoEXT& cbv2)
 {
+    uint32_t descriptorBufferSize = sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS + m_descriptorBufferProperties.robustUniformBufferDescriptorSize * 2;
     void* cpuAddress;
     VkDeviceAddress gpuAddress;
-    GetConstantBufferAllocator()->Allocate(m_cbvDescriptorSetSize, &cpuAddress, &gpuAddress);
+    GetConstantBufferAllocator()->Allocate(descriptorBufferSize, &cpuAddress, &gpuAddress);
 
     memcpy(cpuAddress, cbv0, sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS);
-
-    const size_t descriptorSize = m_cbv2DescriptorOffset - m_cbv1DescriptorOffset;
 
     VkDescriptorGetInfoEXT descriptorInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT };
     descriptorInfo.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -839,13 +833,15 @@ VkDeviceSize VulkanDevice::AllocateConstantBufferDescriptor(const uint32_t* cbv0
     if (cbv1.address != 0)
     {
         descriptorInfo.data.pUniformBuffer = &cbv1;
-        vkGetDescriptorEXT(m_device, &descriptorInfo, descriptorSize, (char*)cpuAddress + m_cbv1DescriptorOffset);
+        vkGetDescriptorEXT(m_device, &descriptorInfo, m_descriptorBufferProperties.robustUniformBufferDescriptorSize, 
+            (char*)cpuAddress + sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS);
     }
 
     if (cbv2.address != 0)
     {
         descriptorInfo.data.pUniformBuffer = &cbv2;
-        vkGetDescriptorEXT(m_device, &descriptorInfo, descriptorSize, (char*)cpuAddress + m_cbv2DescriptorOffset);
+        vkGetDescriptorEXT(m_device, &descriptorInfo, m_descriptorBufferProperties.robustUniformBufferDescriptorSize, 
+            (char*)cpuAddress + sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS + m_descriptorBufferProperties.robustUniformBufferDescriptorSize);
     }
 
     VkDeviceSize descriptorBufferOffset = gpuAddress - GetConstantBufferAllocator()->GetGpuAddress();

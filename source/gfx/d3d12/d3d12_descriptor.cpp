@@ -28,7 +28,6 @@ bool D3D12ShaderResourceView::Create()
     case GfxShaderResourceViewType::Texture2D:
     {
         const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
-
         bool depth = textureDesc.usage & GfxTextureUsageDepthStencil;
 
         srvDesc.Format = dxgi_format(m_desc.format, depth);
@@ -40,8 +39,6 @@ bool D3D12ShaderResourceView::Create()
     }
     case GfxShaderResourceViewType::Texture2DArray:
     {
-        const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
-
         srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
         srvDesc.Texture2DArray.MostDetailedMip = m_desc.texture.mip_slice;
@@ -53,8 +50,6 @@ bool D3D12ShaderResourceView::Create()
     }
     case GfxShaderResourceViewType::Texture3D:
     {
-        const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
-
         srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
         srvDesc.Texture3D.MostDetailedMip = m_desc.texture.mip_slice;
@@ -63,8 +58,6 @@ bool D3D12ShaderResourceView::Create()
     }
     case GfxShaderResourceViewType::TextureCube:
     {
-        const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
-
         srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
         srvDesc.TextureCube.MostDetailedMip = m_desc.texture.mip_slice;
@@ -73,8 +66,6 @@ bool D3D12ShaderResourceView::Create()
     }
     case GfxShaderResourceViewType::TextureCubeArray:
     {
-        const GfxTextureDesc& textureDesc = ((IGfxTexture*)m_pResource)->GetDesc();
-
         srvDesc.Format = dxgi_format(m_desc.format);
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
         srvDesc.TextureCubeArray.MostDetailedMip = m_desc.texture.mip_slice;

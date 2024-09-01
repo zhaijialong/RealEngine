@@ -15,11 +15,13 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
-    virtual uint32_t GetHeapIndex() const override { return 0; }
+    virtual uint32_t GetHeapIndex() const override { return m_heapIndex; }
 
 private:
     IGfxResource* m_pResource = nullptr;
     GfxShaderResourceViewDesc m_desc = {};
+    VkImageView m_imageView = VK_NULL_HANDLE;
+    uint32_t m_heapIndex = GFX_INVALID_RESOURCE;
 };
 
 class VulkanUnorderedAccessView : public IGfxDescriptor
@@ -31,11 +33,13 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
-    virtual uint32_t GetHeapIndex() const override { return 0; }
+    virtual uint32_t GetHeapIndex() const override { return m_heapIndex; }
 
 private:
     IGfxResource* m_pResource = nullptr;
     GfxUnorderedAccessViewDesc m_desc = {};
+    VkImageView m_imageView = VK_NULL_HANDLE;
+    uint32_t m_heapIndex = GFX_INVALID_RESOURCE;
 };
 
 class VulkanConstantBufferView : public IGfxDescriptor
@@ -47,11 +51,12 @@ public:
     bool Create();
 
     virtual void* GetHandle() const override { return m_pBuffer->GetHandle(); }
-    virtual uint32_t GetHeapIndex() const override { return 0; }
+    virtual uint32_t GetHeapIndex() const override { return m_heapIndex; }
 
 private:
     IGfxBuffer* m_pBuffer = nullptr;
     GfxConstantBufferViewDesc m_desc = {};
+    uint32_t m_heapIndex = GFX_INVALID_RESOURCE;
 };
 
 class VulkanSampler : public IGfxDescriptor
