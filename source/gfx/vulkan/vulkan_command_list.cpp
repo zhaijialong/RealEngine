@@ -641,44 +641,76 @@ void VulkanCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y,
     FlushBarriers();
     UpdateComputeDescriptorBuffer();
 
-    //vkCmdDispatch(m_commandBuffer, group_count_x, group_count_y, group_count_z);
+    vkCmdDispatch(m_commandBuffer, group_count_x, group_count_y, group_count_z);
 }
 
 void VulkanCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
+    UpdateGraphicsDescriptorBuffer();
+
+    vkCmdDrawMeshTasksEXT(m_commandBuffer, group_count_x, group_count_y, group_count_z);
 }
 
 void VulkanCommandList::DrawIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
+    UpdateGraphicsDescriptorBuffer();
+
+    vkCmdDrawIndirect(m_commandBuffer, (VkBuffer)buffer->GetHandle(), offset, 1, 0);
 }
 
 void VulkanCommandList::DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
+    UpdateGraphicsDescriptorBuffer();
+
+    vkCmdDrawIndexedIndirect(m_commandBuffer, (VkBuffer)buffer->GetHandle(), offset, 1, 0);
 }
 
 void VulkanCommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
     FlushBarriers();
+    UpdateComputeDescriptorBuffer();
+
+    vkCmdDispatchIndirect(m_commandBuffer, (VkBuffer)buffer->GetHandle(), offset);
 }
 
 void VulkanCommandList::DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
+    UpdateGraphicsDescriptorBuffer();
+
+    vkCmdDrawMeshTasksIndirectEXT(m_commandBuffer, (VkBuffer)buffer->GetHandle(), offset, 1, 0);
 }
 
 void VulkanCommandList::MultiDrawIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
+    UpdateGraphicsDescriptorBuffer();
+
+    vkCmdDrawIndirectCount(m_commandBuffer, (VkBuffer)args_buffer->GetHandle(), args_buffer_offset,
+        (VkBuffer)count_buffer->GetHandle(), count_buffer_offset, max_count, sizeof(GfxDrawCommand));
 }
 
 void VulkanCommandList::MultiDrawIndexedIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
+    UpdateGraphicsDescriptorBuffer();
+
+    vkCmdDrawIndexedIndirectCount(m_commandBuffer, (VkBuffer)args_buffer->GetHandle(), args_buffer_offset,
+        (VkBuffer)count_buffer->GetHandle(), count_buffer_offset, max_count, sizeof(GfxDrawIndexedCommand));
 }
 
 void VulkanCommandList::MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
+    FlushBarriers();
+    UpdateComputeDescriptorBuffer();
+
+    // not supported
+    RE_ASSERT(false);
 }
 
 void VulkanCommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
+    UpdateGraphicsDescriptorBuffer();
+
+    vkCmdDrawMeshTasksIndirectCountEXT(m_commandBuffer, (VkBuffer)args_buffer->GetHandle(), args_buffer_offset,
+        (VkBuffer)count_buffer->GetHandle(), count_buffer_offset, max_count, sizeof(GfxDispatchCommand));
 }
 
 void VulkanCommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
