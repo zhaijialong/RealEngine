@@ -182,7 +182,11 @@ void GUI::Render(IGfxCommandList* pCommandList)
                     continue;
                 }
 
-                pCommandList->SetScissorRect((uint32_t)clip_min.x, (uint32_t)clip_min.y, (uint32_t)(clip_max.x - clip_min.x), (uint32_t)(clip_max.y - clip_min.y));
+                pCommandList->SetScissorRect(
+                    eastl::max(clip_min.x, 0), 
+                    eastl::max(clip_min.y, 0), 
+                    (uint32_t)(clip_max.x - clip_min.x), 
+                    (uint32_t)(clip_max.y - clip_min.y));
 
                 uint32_t resource_ids[4] = {
                     m_pVertexBuffer[frame_index]->GetSRV()->GetHeapIndex(),
