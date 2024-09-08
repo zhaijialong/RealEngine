@@ -153,6 +153,8 @@ void GUI::Render(IGfxCommandList* pCommandList)
     
     ImVec2 clip_off = draw_data->DisplayPos;
     ImVec2 clip_scale = draw_data->FramebufferScale;
+    uint32_t viewport_width = draw_data->DisplaySize.x * clip_scale.x;
+    uint32_t viewport_height = draw_data->DisplaySize.y * clip_scale.y;
     
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
@@ -185,8 +187,8 @@ void GUI::Render(IGfxCommandList* pCommandList)
                 pCommandList->SetScissorRect(
                     eastl::max(clip_min.x, 0), 
                     eastl::max(clip_min.y, 0), 
-                    (uint32_t)(clip_max.x - clip_min.x), 
-                    (uint32_t)(clip_max.y - clip_min.y));
+                    eastl::clamp((uint32_t)(clip_max.x - clip_min.x), 0u, viewport_width),
+                    eastl::clamp((uint32_t)(clip_max.y - clip_min.y), 0u, viewport_height));
 
                 uint32_t resource_ids[4] = {
                     m_pVertexBuffer[frame_index]->GetSRV()->GetHeapIndex(),
