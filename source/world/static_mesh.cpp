@@ -24,7 +24,10 @@ StaticMesh::~StaticMesh()
 
     cache->RelaseSceneBuffer(m_indexBuffer);
 
-    m_pRigidBody->RemoveFromPhysicsSystem();
+    if (m_pRigidBody)
+    {
+        m_pRigidBody->RemoveFromPhysicsSystem();
+    }
 }
 
 bool StaticMesh::Create()
@@ -51,9 +54,12 @@ bool StaticMesh::Create()
     m_pBLAS.reset(device->CreateRayTracingBLAS(desc, "BLAS : " + m_name));
     m_pRenderer->BuildRayTracingBLAS(m_pBLAS.get());
 
-    IPhysicsSystem* physics = Engine::GetInstance()->GetWorld()->GetPhysicsSystem();
-    m_pRigidBody.reset(physics->CreateRigidBody(m_pShape.get(), PhysicsMotion::Static, PhysicsLayers::STATIC, this));
-    m_pRigidBody->AddToPhysicsSystem(false);
+    if (m_pShape)
+    {
+        IPhysicsSystem* physics = Engine::GetInstance()->GetWorld()->GetPhysicsSystem();
+        m_pRigidBody.reset(physics->CreateRigidBody(m_pShape.get(), PhysicsMotion::Static, PhysicsLayers::STATIC, this));
+        m_pRigidBody->AddToPhysicsSystem(false);
+    }
 
     return true;
 }
@@ -65,7 +71,7 @@ void StaticMesh::Tick(float delta_time)
         return; //todo
     }
 
-    if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+    if (m_pRigidBody && m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
     {
         m_pos = m_pRigidBody->GetPosition();
         m_rotation = m_pRigidBody->GetRotation();
@@ -79,10 +85,13 @@ void StaticMesh::Tick(float delta_time)
 
 void StaticMesh::SetPhysicsBody(IPhysicsRigidBody* body)
 {
-    m_pRigidBody->RemoveFromPhysicsSystem();
+    if (m_pRigidBody)
+    {
+        m_pRigidBody->RemoveFromPhysicsSystem();
 
-    m_pRigidBody.reset(body);
-    m_pRigidBody->SetPositionAndRotation(GetPosition(), GetRotation());
+        m_pRigidBody.reset(body);
+        m_pRigidBody->SetPositionAndRotation(GetPosition(), GetRotation());
+    }
 }
 
 void StaticMesh::UpdateConstants()
@@ -206,10 +215,13 @@ void StaticMesh::SetPosition(const float3& pos)
 {
     IVisibleObject::SetPosition(pos);
 
-    m_pRigidBody->SetPosition(pos);
-    if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+    if (m_pRigidBody)
     {
-        m_pRigidBody->Activate();
+        m_pRigidBody->SetPosition(pos);
+        if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+        {
+            m_pRigidBody->Activate();
+        }
     }
 }
 
@@ -217,10 +229,13 @@ void StaticMesh::SetRotation(const quaternion& rotation)
 {
     IVisibleObject::SetRotation(rotation);
 
-    m_pRigidBody->SetRotation(rotation);
-    if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+    if (m_pRigidBody)
     {
-        m_pRigidBody->Activate();
+        m_pRigidBody->SetRotation(rotation);
+        if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+        {
+            m_pRigidBody->Activate();
+        }
     }
 }
 
@@ -228,9 +243,12 @@ void StaticMesh::SetScale(const float3& scale)
 {
     IVisibleObject::SetScale(scale);
 
-    m_pRigidBody->SetScale(scale);
-    if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+    if (m_pRigidBody)
     {
-        m_pRigidBody->Activate();
+        m_pRigidBody->SetScale(scale);
+        if (m_pRigidBody->GetMotionType() == PhysicsMotion::Dynamic)
+        {
+            m_pRigidBody->Activate();
+        }
     }
 }
