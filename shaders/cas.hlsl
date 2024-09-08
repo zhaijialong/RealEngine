@@ -49,6 +49,16 @@ void CasInput(inout AF1 r, inout AF1 g, inout AF1 b)
 #include "ffx_cas.h"
 #include "common.hlsli"
 
+void CasStore(int2 p, float3 c)
+{
+    RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_output];
+#if GFX_BACKEND_METAL
+    outputTexture[p] = float4(c, 1.0);
+#else
+    outputTexture[p] = float4(LinearToSrgb(c), 1.0);
+#endif
+}
+
 [numthreads(64, 1, 1)]
 void main(uint3 LocalThreadId : SV_GroupThreadID, uint3 WorkGroupId : SV_GroupID)
 {
@@ -56,7 +66,6 @@ void main(uint3 LocalThreadId : SV_GroupThreadID, uint3 WorkGroupId : SV_GroupID
     AU2 gxy = ARmp8x8(LocalThreadId.x) + AU2(WorkGroupId.x << 4u, WorkGroupId.y << 4u);
 
     bool sharpenOnly = true;
-    RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_output];
     
 #if CAS_FP16
     
@@ -66,14 +75,14 @@ void main(uint3 LocalThreadId : SV_GroupThreadID, uint3 WorkGroupId : SV_GroupID
     
     CasFilterH(cR, cG, cB, gxy, const0, const1, sharpenOnly);
     CasDepack(c0, c1, cR, cG, cB);
-    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c0.xyz), 1);
-    outputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(LinearToSrgb(c1.xyz), 1);
+    CasStore(ASU2(gxy), c0.xyz);
+    CasStore(ASU2(gxy) + ASU2(8, 0), c1.xyz);
     gxy.y += 8u;
     
     CasFilterH(cR, cG, cB, gxy, const0, const1, sharpenOnly);
     CasDepack(c0, c1, cR, cG, cB);
-    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c0.xyz), 1);
-    outputTexture[ASU2(gxy) + ASU2(8, 0)] = AF4(LinearToSrgb(c1.xyz), 1);
+    CasStore(ASU2(gxy), c0.xyz);
+    CasStore(ASU2(gxy) + ASU2(8, 0), c1.xyz);
     
 #else
     
@@ -81,19 +90,19 @@ void main(uint3 LocalThreadId : SV_GroupThreadID, uint3 WorkGroupId : SV_GroupID
     AF3 c;
     
     CasFilter(c.r, c.g, c.b, gxy, const0, const1, sharpenOnly);
-    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
+    CasStore(ASU2(gxy), c);
     gxy.x += 8u;
     
     CasFilter(c.r, c.g, c.b, gxy, const0, const1, sharpenOnly);
-    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
+    CasStore(ASU2(gxy), c);
     gxy.y += 8u;
     
     CasFilter(c.r, c.g, c.b, gxy, const0, const1, sharpenOnly);
-    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
+    CasStore(ASU2(gxy), c);
     gxy.x -= 8u;
     
     CasFilter(c.r, c.g, c.b, gxy, const0, const1, sharpenOnly);
-    outputTexture[ASU2(gxy)] = AF4(LinearToSrgb(c), 1);
+    CasStore(ASU2(gxy), c);
     
 #endif
 }

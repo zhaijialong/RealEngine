@@ -65,7 +65,9 @@ void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
         fxaaConsoleEdgeThresholdMin, 
         fxaaConsole360ConstDir);
     
+#if !GFX_BACKEND_METAL
     color.xyz = LinearToSrgb(color.xyz);
+#endif
     
     outTexture[dispatchThreadID.xy] = color;
 }

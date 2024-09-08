@@ -80,7 +80,9 @@ void cs_main(uint3 dispatchThreadID : SV_DispatchThreadID)
     color = ApplyExposure(color);
     color = ApplyToneMapping(color);
     
+#if !GFX_BACKEND_METAL
     color = LinearToSrgb(color.xyz);
+#endif
     color = ApplyDither(color, dispatchThreadID.xy);
     
     RWTexture2D<float4> ldrTexture = ResourceDescriptorHeap[c_ldrTexture];
