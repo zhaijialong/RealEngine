@@ -91,6 +91,7 @@ private:
     MTL::BlitCommandEncoder* m_pBlitCommandEncoder = nullptr;
     MTL::RenderCommandEncoder* m_pRenderCommandEncoder = nullptr;
     MTL::ComputeCommandEncoder* m_pComputeCommandEncoder = nullptr;
+    MTL::Fence* m_pFence = nullptr;
     
     IGfxPipelineState* m_pCurrentPSO = nullptr;
     

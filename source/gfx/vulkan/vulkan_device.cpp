@@ -811,7 +811,7 @@ VkDeviceAddress VulkanDevice::AllocateConstantBuffer(const void* data, size_t da
 {
     void* cpuAddress;
     VkDeviceAddress gpuAddress;
-    GetConstantBufferAllocator()->Allocate(data_size, &cpuAddress, &gpuAddress);
+    GetConstantBufferAllocator()->Allocate((uint32_t)data_size, &cpuAddress, &gpuAddress);
 
     memcpy(cpuAddress, data, data_size);
 
@@ -820,10 +820,10 @@ VkDeviceAddress VulkanDevice::AllocateConstantBuffer(const void* data, size_t da
 
 VkDeviceSize VulkanDevice::AllocateConstantBufferDescriptor(const uint32_t* cbv0, const VkDescriptorAddressInfoEXT& cbv1, const VkDescriptorAddressInfoEXT& cbv2)
 {
-    uint32_t descriptorBufferSize = sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS + m_descriptorBufferProperties.robustUniformBufferDescriptorSize * 2;
+    size_t descriptorBufferSize = sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS + m_descriptorBufferProperties.robustUniformBufferDescriptorSize * 2;
     void* cpuAddress;
     VkDeviceAddress gpuAddress;
-    GetConstantBufferAllocator()->Allocate(descriptorBufferSize, &cpuAddress, &gpuAddress);
+    GetConstantBufferAllocator()->Allocate((uint32_t)descriptorBufferSize, &cpuAddress, &gpuAddress);
 
     memcpy(cpuAddress, cbv0, sizeof(uint32_t) * GFX_MAX_ROOT_CONSTANTS);
 

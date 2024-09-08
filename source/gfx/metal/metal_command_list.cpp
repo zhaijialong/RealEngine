@@ -16,11 +16,14 @@ MetalCommandList::MetalCommandList(MetalDevice* pDevice, GfxCommandQueue queue_t
 
 MetalCommandList::~MetalCommandList()
 {
+    m_pFence->release();
 }
 
 bool MetalCommandList::Create()
 {
-    // nop here
+    MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
+    m_pFence = device->newFence();
+    
     return true;
 }
 
@@ -314,6 +317,7 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     
     RE_ASSERT(m_pRenderCommandEncoder == nullptr);
     m_pRenderCommandEncoder = m_pCommandBuffer->renderCommandEncoder(descriptor);
+    m_pRenderCommandEncoder->waitForFence(m_pFence, MTL::RenderStageVertex | MTL::RenderStageObject);
     descriptor->release();
     
     MetalDevice* pDevice = (MetalDevice*)m_pDevice;
@@ -329,6 +333,7 @@ void MetalCommandList::EndRenderPass()
 {
     if(m_pRenderCommandEncoder)
     {
+        m_pRenderCommandEncoder->updateFence(m_pFence, MTL::RenderStageFragment);
         m_pRenderCommandEncoder->endEncoding();
         m_pRenderCommandEncoder = nullptr;
 
@@ -338,41 +343,34 @@ void MetalCommandList::EndRenderPass()
 
 void MetalCommandList::SetPipelineState(IGfxPipelineState* state)
 {
-    if(m_pCurrentPSO == state)
+    if(m_pCurrentPSO != state)
     {
-        return;
-    }
-    
-    m_pCurrentPSO = state;
-    
-    if(state->GetType() == GfxPipelineType::Compute)
-    {
-        BeginComputeEncoder();
         
-        m_pComputeCommandEncoder->setComputePipelineState((MTL::ComputePipelineState*)state->GetHandle());
-    }
-    else
-    {
-        RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+        m_pCurrentPSO = state;
         
-        m_pRenderCommandEncoder->setRenderPipelineState((MTL::RenderPipelineState*)state->GetHandle());
-        
-        if(state->GetType() == GfxPipelineType::Graphics)
+        if(state->GetType() != GfxPipelineType::Compute)
         {
-            MetalGraphicsPipelineState* graphicsPSO = (MetalGraphicsPipelineState*)state;
-            const GfxGraphicsPipelineDesc& desc = graphicsPSO->GetDesc();
+            RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+            
+            m_pRenderCommandEncoder->setRenderPipelineState((MTL::RenderPipelineState*)state->GetHandle());
+            
+            if(state->GetType() == GfxPipelineType::Graphics)
+            {
+                MetalGraphicsPipelineState* graphicsPSO = (MetalGraphicsPipelineState*)state;
+                const GfxGraphicsPipelineDesc& desc = graphicsPSO->GetDesc();
 
-            m_pRenderCommandEncoder->setDepthStencilState(graphicsPSO->GetDepthStencilState());
-            SetRasterizerState(desc.rasterizer_state);
-            m_primitiveType = ToPrimitiveType(desc.primitive_type);
-        }
-        else
-        {
-            MetalMeshShadingPipelineState* meshShadingPSO = (MetalMeshShadingPipelineState*)state;
-            const GfxMeshShadingPipelineDesc& desc = meshShadingPSO->GetDesc();
-                        
-            m_pRenderCommandEncoder->setDepthStencilState(meshShadingPSO->GetDepthStencilState());
-            SetRasterizerState(desc.rasterizer_state);
+                m_pRenderCommandEncoder->setDepthStencilState(graphicsPSO->GetDepthStencilState());
+                SetRasterizerState(desc.rasterizer_state);
+                m_primitiveType = ToPrimitiveType(desc.primitive_type);
+            }
+            else
+            {
+                MetalMeshShadingPipelineState* meshShadingPSO = (MetalMeshShadingPipelineState*)state;
+                const GfxMeshShadingPipelineDesc& desc = meshShadingPSO->GetDesc();
+                            
+                m_pRenderCommandEncoder->setDepthStencilState(meshShadingPSO->GetDepthStencilState());
+                SetRasterizerState(desc.rasterizer_state);
+            }
         }
     }
 }
@@ -494,13 +492,16 @@ void MetalCommandList::DrawIndexed(uint32_t index_count, uint32_t instance_count
 
 void MetalCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
-    RE_ASSERT(m_pComputeCommandEncoder != nullptr);
+    BeginComputeEncoder();
     
+    m_pComputeCommandEncoder->setComputePipelineState((MTL::ComputePipelineState*)m_pCurrentPSO->GetHandle());
     m_pComputeCommandEncoder->setBytes(&m_computeArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
     
     MTL::Size threadgroupsPerGrid = MTL::Size::Make(group_count_x, group_count_y, group_count_z);
     MTL::Size threadsPerThreadgroup = ((MetalComputePipelineState*)m_pCurrentPSO)->GetThreadsPerThreadgroup();
     m_pComputeCommandEncoder->dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup);
+    
+    EndComputeEncoder();
 }
 
 void MetalCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
@@ -573,6 +574,7 @@ void MetalCommandList::BeginBlitEncoder()
     if(m_pBlitCommandEncoder == nullptr)
     {
         m_pBlitCommandEncoder = m_pCommandBuffer->blitCommandEncoder();
+        m_pBlitCommandEncoder->waitForFence(m_pFence);
     }
 }
 
@@ -580,6 +582,7 @@ void MetalCommandList::EndBlitEncoder()
 {
     if(m_pBlitCommandEncoder)
     {
+        m_pBlitCommandEncoder->updateFence(m_pFence);
         m_pBlitCommandEncoder->endEncoding();
         m_pBlitCommandEncoder = nullptr;
     }
@@ -593,6 +596,7 @@ void MetalCommandList::BeginComputeEncoder()
     if(m_pComputeCommandEncoder == nullptr)
     {
         m_pComputeCommandEncoder = m_pCommandBuffer->computeCommandEncoder();
+        m_pComputeCommandEncoder->waitForFence(m_pFence);
         
         m_pComputeCommandEncoder->setBuffer(((MetalDevice*)m_pDevice)->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
         m_pComputeCommandEncoder->setBuffer(((MetalDevice*)m_pDevice)->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
@@ -603,6 +607,7 @@ void MetalCommandList::EndComputeEncoder()
 {
     if(m_pComputeCommandEncoder)
     {
+        m_pComputeCommandEncoder->updateFence(m_pFence);
         m_pComputeCommandEncoder->endEncoding();
         m_pComputeCommandEncoder = nullptr;
     }
