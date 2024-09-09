@@ -341,6 +341,7 @@ void VulkanCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_
 
 void VulkanCommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
 {
+    //todo
 }
 
 void VulkanCommandList::TextureBarrier(IGfxTexture* texture, uint32_t sub_resource, GfxAccessFlags access_before, GfxAccessFlags access_after)
@@ -716,16 +717,22 @@ void VulkanCommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer
 void VulkanCommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
     FlushBarriers();
+    
+    //todo
 }
 
 void VulkanCommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
 {
     FlushBarriers();
+    
+    //todo
 }
 
 void VulkanCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
 {
     FlushBarriers();
+    
+    //todo
 }
 
 #if MICROPROFILE_GPU_TIMERS

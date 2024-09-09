@@ -196,10 +196,12 @@ void MetalCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t 
 
 void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
+    //todo
 }
 
 void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
+    //todo
 }
 
 void MetalCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
@@ -219,6 +221,7 @@ void MetalCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t
 
 void MetalCommandList::UpdateTileMappings(IGfxTexture* texture, IGfxHeap* heap, uint32_t mapping_count, const GfxTileMapping* mappings)
 {
+    //todo
 }
 
 void MetalCommandList::TextureBarrier(IGfxTexture* texture, uint32_t sub_resource, GfxAccessFlags access_before, GfxAccessFlags access_after)
@@ -507,56 +510,116 @@ void MetalCommandList::Dispatch(uint32_t group_count_x, uint32_t group_count_y, 
 void MetalCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count_y, uint32_t group_count_z)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    MetalDevice* pDevice = (MetalDevice*)m_pDevice;
+    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
+    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
+    
+    m_pRenderCommandEncoder->setObjectBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    m_pRenderCommandEncoder->setMeshBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    m_pRenderCommandEncoder->setFragmentBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    
+    MTL::Size threadgroupsPerGrid = MTL::Size::Make(group_count_x, group_count_y, group_count_z);
+    MTL::Size threadsPerObjectThreadgroup = ((MetalMeshShadingPipelineState*)m_pCurrentPSO)->GetThreadsPerObjectThreadgroup();
+    MTL::Size threadsPerMeshThreadgroup = ((MetalMeshShadingPipelineState*)m_pCurrentPSO)->GetThreadsPerMeshThreadgroup();
+    
+    m_pRenderCommandEncoder->drawMeshThreadgroups(threadgroupsPerGrid, threadsPerObjectThreadgroup, threadsPerMeshThreadgroup);
 }
 
 void MetalCommandList::DrawIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    m_pRenderCommandEncoder->setVertexBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    m_pRenderCommandEncoder->setFragmentBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    
+    IRRuntimeDrawPrimitives(m_pRenderCommandEncoder, m_primitiveType, (MTL::Buffer*)buffer->GetHandle(), offset);
 }
 
 void MetalCommandList::DrawIndexedIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    m_pRenderCommandEncoder->setVertexBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    m_pRenderCommandEncoder->setFragmentBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    
+    IRRuntimeDrawIndexedPrimitives(m_pRenderCommandEncoder, m_primitiveType, m_indexType, m_pIndexBuffer, m_indexBufferOffset, (MTL::Buffer*)buffer->GetHandle(), offset);
 }
 
 void MetalCommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
+    BeginComputeEncoder();
+    
+    m_pComputeCommandEncoder->setComputePipelineState((MTL::ComputePipelineState*)m_pCurrentPSO->GetHandle());
+    m_pComputeCommandEncoder->setBytes(&m_computeArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    
+    MTL::Size threadsPerThreadgroup = ((MetalComputePipelineState*)m_pCurrentPSO)->GetThreadsPerThreadgroup();
+    m_pComputeCommandEncoder->dispatchThreadgroups((MTL::Buffer*)buffer->GetHandle(), offset, threadsPerThreadgroup);
+    
+    EndComputeEncoder();
 }
 
 void MetalCommandList::DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    MetalDevice* pDevice = (MetalDevice*)m_pDevice;
+    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
+    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
+    
+    m_pRenderCommandEncoder->setObjectBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    m_pRenderCommandEncoder->setMeshBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    m_pRenderCommandEncoder->setFragmentBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
+    
+    MTL::Size threadsPerObjectThreadgroup = ((MetalMeshShadingPipelineState*)m_pCurrentPSO)->GetThreadsPerObjectThreadgroup();
+    MTL::Size threadsPerMeshThreadgroup = ((MetalMeshShadingPipelineState*)m_pCurrentPSO)->GetThreadsPerMeshThreadgroup();
+    
+    m_pRenderCommandEncoder->drawMeshThreadgroups((MTL::Buffer*)buffer->GetHandle(), offset, threadsPerObjectThreadgroup, threadsPerMeshThreadgroup);
 }
 
 void MetalCommandList::MultiDrawIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    //todo
 }
 
 void MetalCommandList::MultiDrawIndexedIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    //todo
 }
 
 void MetalCommandList::MultiDispatchIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
+    //todo
 }
 
 void MetalCommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer* args_buffer, uint32_t args_buffer_offset, IGfxBuffer* count_buffer, uint32_t count_buffer_offset)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
+    
+    //todo
 }
 
 void MetalCommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
+    //todo
 }
 
 void MetalCommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
 {
+    //todo
 }
 
 void MetalCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
 {
+    //todo
 }
 
 #if MICROPROFILE_GPU_TIMERS

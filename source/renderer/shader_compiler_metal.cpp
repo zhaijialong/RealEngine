@@ -24,16 +24,43 @@ inline IRShaderStage ToIRShaderStage(GfxShaderType type)
     }
 }
 
-inline void GetReflectionInfo(IRShaderReflection* pShaderReflection, MetalShaderReflection& out)
+inline void GetReflectionInfo(IRShaderReflection* pShaderReflection, IRShaderStage stage, MetalShaderReflection& out)
 {
-    IRVersionedCSInfo csInfo;
-    if(IRShaderReflectionCopyComputeInfo(pShaderReflection, IRReflectionVersion_1_0, &csInfo))
+    if(stage == IRShaderStageCompute)
     {
-        out.threadsPerThreadgroup[0] = csInfo.info_1_0.tg_size[0];
-        out.threadsPerThreadgroup[1] = csInfo.info_1_0.tg_size[1];
-        out.threadsPerThreadgroup[2] = csInfo.info_1_0.tg_size[2];
-        
-        IRShaderReflectionReleaseComputeInfo(&csInfo);
+        IRVersionedCSInfo csInfo;
+        if(IRShaderReflectionCopyComputeInfo(pShaderReflection, IRReflectionVersion_1_0, &csInfo))
+        {
+            out.threadsPerThreadgroup[0] = csInfo.info_1_0.tg_size[0];
+            out.threadsPerThreadgroup[1] = csInfo.info_1_0.tg_size[1];
+            out.threadsPerThreadgroup[2] = csInfo.info_1_0.tg_size[2];
+            
+            IRShaderReflectionReleaseComputeInfo(&csInfo);
+        }
+    }
+    else if(stage == IRShaderStageAmplification)
+    {
+        IRVersionedASInfo asInfo;
+        if(IRShaderReflectionCopyAmplificationInfo(pShaderReflection, IRReflectionVersion_1_0, &asInfo))
+        {
+            out.threadsPerThreadgroup[0] = asInfo.info_1_0.num_threads[0];
+            out.threadsPerThreadgroup[1] = asInfo.info_1_0.num_threads[1];
+            out.threadsPerThreadgroup[2] = asInfo.info_1_0.num_threads[2];
+            
+            IRShaderReflectionReleaseAmplificationInfo(&asInfo);
+        }
+    }
+    else if(stage == IRShaderStageMesh)
+    {
+        IRVersionedMSInfo msInfo;
+        if(IRShaderReflectionCopyMeshInfo(pShaderReflection, IRReflectionVersion_1_0, &msInfo))
+        {
+            out.threadsPerThreadgroup[0] = msInfo.info_1_0.num_threads[0];
+            out.threadsPerThreadgroup[1] = msInfo.info_1_0.num_threads[1];
+            out.threadsPerThreadgroup[2] = msInfo.info_1_0.num_threads[2];
+            
+            IRShaderReflectionReleaseMeshInfo(&msInfo);
+        }
     }
 }
 
@@ -114,7 +141,7 @@ bool ShaderCompiler::CompileMetalIR(const eastl::string& file, const eastl::stri
     IRObjectGetMetalLibBinary(pOutIR, ToIRShaderStage(type), pMetallib);
     
     MetalShaderReflection reflection = {};
-    GetReflectionInfo(pShaderReflection, reflection);
+    GetReflectionInfo(pShaderReflection, ToIRShaderStage(type), reflection);
     
     output_blob.resize(sizeof(MetalShaderReflection) + IRMetalLibGetBytecodeSize(pMetallib));
     

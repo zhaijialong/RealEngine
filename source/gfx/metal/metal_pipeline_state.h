@@ -31,6 +31,8 @@ public:
 
     const GfxMeshShadingPipelineDesc& GetDesc() const { return m_desc; }
     MTL::DepthStencilState* GetDepthStencilState() const { return m_pDepthStencilState; }
+    MTL::Size GetThreadsPerObjectThreadgroup() const { return m_threadsPerObjectThreadgroup; }
+    MTL::Size GetThreadsPerMeshThreadgroup() const { return m_threadsPerMeshThreadgroup; }
     
     virtual void* GetHandle() const override { return m_pPSO; }
     virtual bool Create() override;
@@ -39,6 +41,8 @@ private:
     GfxMeshShadingPipelineDesc m_desc;
     MTL::RenderPipelineState* m_pPSO = nullptr;
     MTL::DepthStencilState* m_pDepthStencilState = nullptr;
+    MTL::Size m_threadsPerObjectThreadgroup = {};
+    MTL::Size m_threadsPerMeshThreadgroup = {};
 };
 
 class MetalComputePipelineState : public IGfxPipelineState
