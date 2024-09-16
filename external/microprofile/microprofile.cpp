@@ -42,6 +42,9 @@ void MicroProfileGpuSetCallbacks(
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#ifdef _MSC_VER
+#include <malloc.h>
+#endif
 
 #define STB_SPRINTF_IMPLEMENTATION
 #include "stb/stb_sprintf.h"
