@@ -52,6 +52,7 @@ JoltSystem::JoltSystem()
 
 #if 1
     JPH::Allocate = RE_ALLOC;
+    JPH::Reallocate = [](void* inBlock, size_t inOldSize, size_t inNewSize) { return RE_REALLOC(inBlock, inNewSize); };
     JPH::Free = RE_FREE;
     JPH::AlignedAllocate = RE_ALLOC;
     JPH::AlignedFree = RE_FREE;
