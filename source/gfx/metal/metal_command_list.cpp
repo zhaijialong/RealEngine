@@ -4,6 +4,8 @@
 #include "metal_fence.h"
 #include "metal_texture.h"
 #include "metal_pipeline_state.h"
+#include "metal_descriptor.h"
+#include "renderer/clear_uav.h"
 #include "utils/math.h"
 #include "../gfx.h"
 
@@ -196,12 +198,14 @@ void MetalCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t 
 
 void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
-    //todo
+    const GfxUnorderedAccessViewDesc& desc = ((MetalUnorderedAccessView*)uav)->GetDesc();
+    ::ClearUAV(this, resource, uav, desc, clear_value);
 }
 
 void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
-    //todo
+    const GfxUnorderedAccessViewDesc& desc = ((MetalUnorderedAccessView*)uav)->GetDesc();
+    ::ClearUAV(this, resource, uav, desc, clear_value);
 }
 
 void MetalCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)

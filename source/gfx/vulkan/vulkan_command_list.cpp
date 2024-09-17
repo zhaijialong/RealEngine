@@ -3,8 +3,10 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_fence.h"
 #include "vulkan_texture.h"
+#include "vulkan_descriptor.h"
 #include "vulkan_descriptor_allocator.h"
 #include "vulkan_constant_buffer_allocator.h"
+#include "renderer/clear_uav.h"
 #include "utils/profiler.h"
 #include "../gfx.h"
 
@@ -320,16 +322,14 @@ void VulkanCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t
 
 void VulkanCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
-    FlushBarriers();
-
-    //todo : need a CS implementation
+    const GfxUnorderedAccessViewDesc& desc = ((VulkanUnorderedAccessView*)uav)->GetDesc();
+    ::ClearUAV(this, resource, uav, desc, clear_value);
 }
 
 void VulkanCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
-    FlushBarriers();
-
-    //todo : need a CS implementation
+    const GfxUnorderedAccessViewDesc& desc = ((VulkanUnorderedAccessView*)uav)->GetDesc();
+    ::ClearUAV(this, resource, uav, desc, clear_value);
 }
 
 void VulkanCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)

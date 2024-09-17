@@ -31,6 +31,7 @@ public:
     ~VulkanUnorderedAccessView();
 
     bool Create();
+    const GfxUnorderedAccessViewDesc& GetDesc() const { return m_desc; }
 
     virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
     virtual uint32_t GetHeapIndex() const override { return m_heapIndex; }

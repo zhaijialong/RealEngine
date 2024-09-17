@@ -237,6 +237,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/resource/typed_buffer.h
     ${SOURCE_ROOT}/renderer/base_pass.cpp
     ${SOURCE_ROOT}/renderer/base_pass.h
+    ${SOURCE_ROOT}/renderer/clear_uav.cpp
+    ${SOURCE_ROOT}/renderer/clear_uav.h
     ${SOURCE_ROOT}/renderer/directed_acyclic_graph.cpp
     ${SOURCE_ROOT}/renderer/directed_acyclic_graph.h
     ${SOURCE_ROOT}/renderer/gpu_driven_debug_line.cpp
