@@ -26,14 +26,25 @@ groupshared AF1 spdIntermediateG[16][16];
 AF4 SpdLoadSourceImage(ASU2 p, AU1 slice)
 {
     Texture2D imgSrc = ResourceDescriptorHeap[c_imgSrc];
-    SamplerState minSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
-    SamplerState maxSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
     AF2 textureCoord = p * c_invInputSize + c_invInputSize;
 
-#if MIN_MAX_FILTER
-    AF4 result = AF4(imgSrc.SampleLevel(minSampler, textureCoord, 0).x, imgSrc.SampleLevel(maxSampler, textureCoord, 0).y, 0, 0);
+#if SUPPORTS_MIN_MAX_FILTER
+    SamplerState minSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
+    SamplerState maxSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
+    float minValue = imgSrc.SampleLevel(minSampler, textureCoord, 0).x;
+    float maxValue = imgSrc.SampleLevel(maxSampler, textureCoord, 0).y;
 #else
-    AF4 result = AF4(imgSrc.SampleLevel(minSampler, textureCoord, 0).x, 0, 0, 0);
+    SamplerState pointClampSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+    float4 R = imgSrc.GatherRed(pointClampSampler, textureCoord);
+    float4 G = imgSrc.GatherGreen(pointClampSampler, textureCoord);
+    float minValue = min(min(R.x, R.y), min(R.z, R.w));
+    float maxValue = max(max(G.x, G.y), max(G.z, G.w));
+#endif
+    
+#if MIN_MAX_FILTER
+    AF4 result = AF4(minValue, maxValue, 0, 0);
+#else
+    AF4 result = AF4(minValue, 0, 0, 0);
 #endif
 
     return result;

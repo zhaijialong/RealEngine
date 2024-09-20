@@ -13,11 +13,17 @@ void depth_reprojection(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D<float> prevDepthTexture = ResourceDescriptorHeap[SceneCB.prevSceneDepthSRV];
     RWTexture2D<float> reprojectedDepthTexture = ResourceDescriptorHeap[c_outputUAV];
-    SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
     
     float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_hzbWidth, c_hzbHeight);
 
+#if SUPPORTS_MIN_MAX_FILTER
+    SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
     float prevNdcDepth = prevDepthTexture.SampleLevel(maxReductionSampler, uv, 0);
+#else
+    SamplerState pointClampSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+    float4 prevNdcDepth4 = prevDepthTexture.GatherRed(pointClampSampler, uv);
+    float prevNdcDepth = min(min(prevNdcDepth4.x, prevNdcDepth4.y), min(prevNdcDepth4.z, prevNdcDepth4.w));
+#endif
     
     float4 clipPos = float4((uv * 2.0 - 1.0) * float2(1.0, -1.0), prevNdcDepth, 1.0);
     float4 worldPos = mul(GetCameraCB().mtxPrevViewProjectionInverse, clipPos);
@@ -70,11 +76,19 @@ void init_hzb(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D<float> inputDepthTexture = ResourceDescriptorHeap[c_inputSRV];
     RWTexture2D<float> ouputDepthTexture = ResourceDescriptorHeap[c_outputUAV];
-    SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
     
     float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_hzbWidth, c_hzbHeight);
 
-    ouputDepthTexture[dispatchThreadID.xy] = inputDepthTexture.SampleLevel(minReductionSampler, uv, 0);
+#if SUPPORTS_MIN_MAX_FILTER
+    SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
+    float minDepth = inputDepthTexture.SampleLevel(minReductionSampler, uv, 0);
+#else
+    SamplerState pointClampSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+    float4 depth = inputDepthTexture.GatherRed(pointClampSampler, uv);
+    float minDepth = min(min(depth.x, depth.y), min(depth.z, depth.w));
+#endif
+    
+    ouputDepthTexture[dispatchThreadID.xy] = minDepth;
 }
 
 [numthreads(8, 8, 1)]
@@ -82,13 +96,20 @@ void init_scene_hzb(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D<float> inputDepthTexture = ResourceDescriptorHeap[c_inputSRV];
     RWTexture2D<float2> ouputDepthTexture = ResourceDescriptorHeap[c_outputUAV];
-    SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
-    SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
 
     float2 uv = (dispatchThreadID.xy + 0.5) / float2(c_hzbWidth, c_hzbHeight);
 
-    float min = inputDepthTexture.SampleLevel(minReductionSampler, uv, 0);
-    float max = inputDepthTexture.SampleLevel(maxReductionSampler, uv, 0);
-
-    ouputDepthTexture[dispatchThreadID.xy] = float2(min, max);
+#if SUPPORTS_MIN_MAX_FILTER
+    SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
+    SamplerState maxReductionSampler = SamplerDescriptorHeap[SceneCB.maxReductionSampler];
+    float minDepth = inputDepthTexture.SampleLevel(minReductionSampler, uv, 0);
+    float maxDepth = inputDepthTexture.SampleLevel(maxReductionSampler, uv, 0);
+#else
+    SamplerState pointClampSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+    float4 depth = inputDepthTexture.GatherRed(pointClampSampler, uv);
+    float minDepth = min(min(depth.x, depth.y), min(depth.z, depth.w));
+    float maxDepth = max(max(depth.x, depth.y), max(depth.z, depth.w));
+#endif
+    
+    ouputDepthTexture[dispatchThreadID.xy] = float2(minDepth, maxDepth);
 }

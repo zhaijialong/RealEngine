@@ -1,5 +1,6 @@
 #pragma once
 
+#include "platform.hlsli"
 #include "global_constants.hlsli"
 
 static const float M_PI = 3.141592653f;
@@ -296,13 +297,26 @@ bool OcclusionCull(Texture2D<float> hzbTexture, uint2 hzbSize, float3 center, fl
     float4 aabb;
     if (ProjectSphere(center, radius, GetCameraCB().nearZ, GetCameraCB().mtxProjection[0][0], GetCameraCB().mtxProjection[1][1], aabb))
     {
-        SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
-        
         float width = (aabb.z - aabb.x) * hzbSize.x;
         float height = (aabb.w - aabb.y) * hzbSize.y;
+        float2 uv = (aabb.xy + aabb.zw) * 0.5;
         float level = ceil(log2(max(width, height)));
         
-        float depth = hzbTexture.SampleLevel(minReductionSampler, (aabb.xy + aabb.zw) * 0.5, level).x;
+#if SUPPORTS_MIN_MAX_FILTER
+        SamplerState minReductionSampler = SamplerDescriptorHeap[SceneCB.minReductionSampler];
+        float depth = hzbTexture.SampleLevel(minReductionSampler, uv, level).x;
+#else
+        SamplerState pointClampSampler = SamplerDescriptorHeap[SceneCB.pointClampSampler];
+        
+        float2 mipSize = float2(hzbSize.x >> (uint)level, hzbSize.y >> (uint)level);
+        float2 rcpMipSize = rcp(mipSize);
+        float2 origin = floor(uv * mipSize - 0.5);
+        float depth00 = hzbTexture.SampleLevel(pointClampSampler, (origin + float2(0.5, 0.5)) * rcpMipSize, level).x;
+        float depth10 = hzbTexture.SampleLevel(pointClampSampler, (origin + float2(1.5, 0.5)) * rcpMipSize, level).x;
+        float depth01 = hzbTexture.SampleLevel(pointClampSampler, (origin + float2(0.5, 1.5)) * rcpMipSize, level).x;
+        float depth11 = hzbTexture.SampleLevel(pointClampSampler, (origin + float2(1.5, 1.5)) * rcpMipSize, level).x;
+        float depth = min(min(depth00, depth10), min(depth01, depth11));
+#endif
         float depthSphere = GetNdcDepth(center.z - radius);
 
         visible = depthSphere > depth; //reversed depth
