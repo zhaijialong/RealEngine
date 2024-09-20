@@ -284,7 +284,6 @@ bool MetalSampler::Create()
     descritor->setMinFilter(ToSamplerMinMagFilter(m_desc.min_filter));
     descritor->setMagFilter(ToSamplerMinMagFilter(m_desc.mag_filter));
     descritor->setMipFilter(ToSamplerMipFilter(m_desc.mip_filter));
-    descritor->setMaxAnisotropy((NS::UInteger)m_desc.max_anisotropy);
     descritor->setSAddressMode(ToSamplerAddressMode(m_desc.address_u));
     descritor->setTAddressMode(ToSamplerAddressMode(m_desc.address_v));
     descritor->setRAddressMode(ToSamplerAddressMode(m_desc.address_w));
@@ -292,6 +291,11 @@ bool MetalSampler::Create()
     descritor->setLodMinClamp(m_desc.min_lod);
     descritor->setLodMaxClamp(m_desc.max_lod);
     descritor->setSupportArgumentBuffers(true);
+    
+    if(m_desc.enable_anisotropy)
+    {
+        descritor->setMaxAnisotropy((NS::UInteger)m_desc.max_anisotropy);
+    }
     
     // unfortunately, Metal does not support Min/Max reduction mode
     
@@ -316,6 +320,8 @@ bool MetalSampler::Create()
     {
         RE_ASSERT(false); //unsupported border color
     }
+    
+    SetDebugLabel(descritor, m_name.c_str());
     
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     m_pSampler = device->newSamplerState(descritor);

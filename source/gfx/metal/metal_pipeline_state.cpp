@@ -55,6 +55,7 @@ bool MetalGraphicsPipelineState::Create()
     
     descriptor->setInputPrimitiveTopology(ToTopologyClass(m_desc.primitive_type));
     descriptor->setRasterSampleCount(1);
+    SetDebugLabel(descriptor, m_name.c_str());
     
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     NS::Error* pError = nullptr;
@@ -129,6 +130,7 @@ bool MetalMeshShadingPipelineState::Create()
     }
     
     descriptor->setRasterSampleCount(1);
+    SetDebugLabel(descriptor, m_name.c_str());
     
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     NS::Error* pError = nullptr;
@@ -175,10 +177,15 @@ bool MetalComputePipelineState::Create()
 {
     m_pPSO->release();
     
+    MTL::ComputePipelineDescriptor* descriptor = MTL::ComputePipelineDescriptor::alloc()->init();
+    descriptor->setComputeFunction((MTL::Function*)m_desc.cs->GetHandle());
+    SetDebugLabel(descriptor, m_name.c_str());
+    
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     
     NS::Error* pError = nullptr;
-    m_pPSO = device->newComputePipelineState((MTL::Function*)m_desc.cs->GetHandle(), &pError);
+    m_pPSO = device->newComputePipelineState(descriptor, MTL::PipelineOptionNone, nullptr, &pError);
+    descriptor->release();
 
     if(!m_pPSO)
     {
