@@ -16,6 +16,7 @@ MetalRayTracingTLAS::~MetalRayTracingTLAS()
     m_pDescriptor->release();
     m_pScratchBuffer->release();
     m_pInstanceBuffer->release();
+    m_pGPUHeaderBuffer->release();
 }
 
 bool MetalRayTracingTLAS::Create()
@@ -52,6 +53,20 @@ bool MetalRayTracingTLAS::Create()
     m_pAccelerationStructure->setLabel(label);
     label->release();
 
+    
+    NS::UInteger headerSize = sizeof(IRRaytracingAccelerationStructureGPUHeader) + sizeof(uint32_t) * m_desc.instance_count;
+    m_pGPUHeaderBuffer = device->newBuffer(headerSize, MTL::ResourceStorageModeShared);
+    ((MetalDevice*)m_pDevice)->MakeResident(m_pGPUHeaderBuffer);
+    
+    eastl::vector<uint32_t> instanceContributions;
+    instanceContributions.resize(m_desc.instance_count, 0);
+    
+    IRRaytracingSetAccelerationStructure((uint8_t *)m_pGPUHeaderBuffer->contents(),
+        m_pAccelerationStructure->gpuResourceID(),
+        (uint8_t *)m_pGPUHeaderBuffer->contents() + sizeof(IRRaytracingAccelerationStructureGPUHeader),
+        instanceContributions.data(),
+        m_desc.instance_count);
+    
     return true;
 }
 

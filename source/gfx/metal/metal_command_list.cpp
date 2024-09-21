@@ -627,7 +627,10 @@ void MetalCommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer
 {
     BeginASEncoder();
     
-    //todo
+    MetalRayTracingBLAS* metalBLAS = (MetalRayTracingBLAS*)blas;
+    metalBLAS->UpdateVertexBuffer(vertex_buffer, vertex_buffer_offset);
+    
+    m_pASEncoder->refitAccelerationStructure(metalBLAS->GetAccelerationStructure(), metalBLAS->GetDescriptor(), metalBLAS->GetAccelerationStructure(), metalBLAS->GetScratchBuffer(), 0);
 }
 
 void MetalCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)

@@ -15,12 +15,16 @@ MetalRayTracingBLAS::~MetalRayTracingBLAS()
     m_pAccelerationStructure->release();
     m_pDescriptor->release();
     m_pScratchBuffer->release();
+    
+    for(size_t i = 0; i < m_geometries.size(); ++i)
+    {
+        m_geometries[i]->release();
+    }
 }
 
 bool MetalRayTracingBLAS::Create()
 {
-    eastl::vector<MTL::AccelerationStructureTriangleGeometryDescriptor*> geometries;
-    geometries.reserve(m_desc.geometries.size());
+    m_geometries.reserve(m_desc.geometries.size());
     
     for (size_t i = 0; i < m_desc.geometries.size(); ++i)
     {
@@ -37,10 +41,10 @@ bool MetalRayTracingBLAS::Create()
         geometryDescriptor->setIndexType(geometry.index_format == GfxFormat::R16UI ? MTL::IndexTypeUInt16 : MTL::IndexTypeUInt32);
         geometryDescriptor->setTriangleCount((NS::UInteger)geometry.index_count / 3);
         
-        geometries.push_back(geometryDescriptor);
+        m_geometries.push_back(geometryDescriptor);
     }
     
-    NS::Array* geometryDescriptors = NS::Array::alloc()->init((NS::Object**)geometries.data(), (NS::UInteger)geometries.size());
+    NS::Array* geometryDescriptors = NS::Array::alloc()->init((NS::Object**)m_geometries.data(), (NS::UInteger)m_geometries.size());
     
     m_pDescriptor = MTL::PrimitiveAccelerationStructureDescriptor::alloc()->init();
     m_pDescriptor->setGeometryDescriptors(geometryDescriptors);
@@ -52,10 +56,6 @@ bool MetalRayTracingBLAS::Create()
     m_pAccelerationStructure = device->newAccelerationStructure(asSizes.accelerationStructureSize);
     m_pScratchBuffer = device->newBuffer(eastl::max(asSizes.buildScratchBufferSize, asSizes.refitScratchBufferSize), MTL::ResourceStorageModePrivate);
     
-    for(size_t i = 0; i < geometries.size(); ++i)
-    {
-        geometries[i]->release();
-    }
     geometryDescriptors->release();
     
     if(m_pAccelerationStructure == nullptr || m_pScratchBuffer == nullptr)
@@ -72,4 +72,18 @@ bool MetalRayTracingBLAS::Create()
     label->release();
 
     return true;
+}
+
+
+void MetalRayTracingBLAS::UpdateVertexBuffer(IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
+{
+    RE_ASSERT(m_desc.flags & GfxRayTracingASFlagAllowUpdate);
+    RE_ASSERT(m_geometries.size() == 1); //todo : suppport more than 1
+    
+    m_geometries[0]->setVertexBuffer((MTL::Buffer*)vertex_buffer->GetHandle());
+    m_geometries[0]->setVertexBufferOffset((NS::UInteger)vertex_buffer_offset);
+    
+    NS::Array* geometryDescriptors = NS::Array::alloc()->init((NS::Object**)m_geometries.data(), (NS::UInteger)m_geometries.size());
+    m_pDescriptor->setGeometryDescriptors(geometryDescriptors);
+    geometryDescriptors->release();
 }

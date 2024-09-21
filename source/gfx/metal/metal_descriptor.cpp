@@ -1,6 +1,7 @@
 #include "metal_descriptor.h"
 #include "metal_device.h"
 #include "metal_texture.h"
+#include "metal_rt_tlas.h"
 #include "utils/log.h"
 #include "../gfx.h"
 
@@ -122,7 +123,8 @@ bool MetalShaderResourceView::Create()
         }
         case GfxShaderResourceViewType::RayTracingTLAS:
         {
-            //todo
+            MetalRayTracingTLAS* tlas = (MetalRayTracingTLAS*)m_pResource;
+            IRDescriptorTableSetAccelerationStructure(descriptorTableEntry, tlas->GetGPUHeaderBuffer()->gpuAddress());
             break;
         }
         default:

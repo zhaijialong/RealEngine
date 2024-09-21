@@ -59,5 +59,9 @@ private:
         None
     };
 
+#if RE_PLATFORM_WINDOWS
     DenoiserType m_denoiserType = DenoiserType::NRD;
+#else
+    DenoiserType m_denoiserType = DenoiserType::Custom;
+#endif
 };

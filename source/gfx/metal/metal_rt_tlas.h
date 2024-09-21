@@ -16,6 +16,7 @@ public:
     MTL::AccelerationStructure* GetAccelerationStructure() const { return m_pAccelerationStructure; }
     MTL::InstanceAccelerationStructureDescriptor* GetDescriptor() const  { return m_pDescriptor; }
     MTL::Buffer* GetScratchBuffer() const { return m_pScratchBuffer; }
+    MTL::Buffer* GetGPUHeaderBuffer() const { return m_pGPUHeaderBuffer; }
     
     virtual void* GetHandle() const override { return m_pAccelerationStructure; }
 
@@ -24,6 +25,7 @@ private:
     MTL::InstanceAccelerationStructureDescriptor* m_pDescriptor = nullptr;
     MTL::Buffer* m_pScratchBuffer = nullptr;
     MTL::Buffer* m_pInstanceBuffer = nullptr;
+    MTL::Buffer* m_pGPUHeaderBuffer = nullptr;
     uint32_t m_instanceBufferSize = 0;
     uint32_t m_currentInstanceBufferOffset = 0;
     void* m_instanceBufferCpuAddress = nullptr;
