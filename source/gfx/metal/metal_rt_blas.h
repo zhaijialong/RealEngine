@@ -1,5 +1,6 @@
 #pragma once
 
+#include "metal_utils.h"
 #include "../gfx_rt_blas.h"
 
 class MetalDevice;
@@ -11,6 +12,14 @@ public:
     ~MetalRayTracingBLAS();
 
     bool Create();
+    MTL::AccelerationStructure* GetAccelerationStructure() const { return m_pAccelerationStructure; }
+    MTL::PrimitiveAccelerationStructureDescriptor* GetDescriptor() const  { return m_pDescriptor; }
+    MTL::Buffer* GetScratchBuffer() const { return m_pScratchBuffer; }
     
-    virtual void* GetHandle() const override;
+    virtual void* GetHandle() const override { return m_pAccelerationStructure; }
+    
+private:
+    MTL::AccelerationStructure* m_pAccelerationStructure = nullptr;
+    MTL::PrimitiveAccelerationStructureDescriptor* m_pDescriptor = nullptr;
+    MTL::Buffer* m_pScratchBuffer = nullptr;
 };

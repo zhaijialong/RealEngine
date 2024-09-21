@@ -84,6 +84,9 @@ private:
     void BeginComputeEncoder();
     void EndComputeEncoder();
     
+    void BeginASEncoder();
+    void EndASEncoder();
+    
     void SetRasterizerState(const GfxRasterizerState& state);
 private:
     MTL::CommandBuffer* m_pCommandBuffer = nullptr;
@@ -91,6 +94,7 @@ private:
     MTL::BlitCommandEncoder* m_pBlitCommandEncoder = nullptr;
     MTL::RenderCommandEncoder* m_pRenderCommandEncoder = nullptr;
     MTL::ComputeCommandEncoder* m_pComputeCommandEncoder = nullptr;
+    MTL::AccelerationStructureCommandEncoder* m_pASEncoder = nullptr;
     MTL::Fence* m_pFence = nullptr;
     
     IGfxPipelineState* m_pCurrentPSO = nullptr;

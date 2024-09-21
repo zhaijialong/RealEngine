@@ -501,3 +501,36 @@ inline MTL::SamplerAddressMode ToSamplerAddressMode(GfxSamplerAddressMode mode)
             return MTL::SamplerAddressModeRepeat;
     }
 }
+
+inline MTL::AccelerationStructureUsage ToAccelerationStructureUsage(GfxRayTracingASFlag flags)
+{
+    MTL::AccelerationStructureUsage usage = MTL::AccelerationStructureUsageNone;
+    
+    if(flags & GfxRayTracingASFlagAllowUpdate)
+    {
+        usage |= MTL::AccelerationStructureUsageRefit;
+    }
+    
+    if(flags & GfxRayTracingASFlagPreferFastBuild)
+    {
+        usage |= MTL::AccelerationStructureUsagePreferFastBuild;
+    }
+    
+    return usage;
+}
+
+inline MTL::AttributeFormat ToAttributeFormat(GfxFormat format)
+{
+    switch (format)
+    {
+        case GfxFormat::RGB32F:
+            return MTL::AttributeFormatFloat3;
+        case GfxFormat::RGBA32F:
+            return MTL::AttributeFormatFloat4;
+        case GfxFormat::RGBA16F:
+            return MTL::AttributeFormatHalf4;
+        default:
+            RE_ASSERT(false);
+            return MTL::AttributeFormatInvalid;
+    }
+}

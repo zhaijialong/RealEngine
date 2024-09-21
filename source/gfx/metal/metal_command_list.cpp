@@ -5,6 +5,8 @@
 #include "metal_texture.h"
 #include "metal_pipeline_state.h"
 #include "metal_descriptor.h"
+#include "metal_rt_blas.h"
+#include "metal_rt_tlas.h"
 #include "renderer/clear_uav.h"
 #include "utils/math.h"
 #include "../gfx.h"
@@ -73,6 +75,7 @@ void MetalCommandList::ResetState()
     m_pBlitCommandEncoder = nullptr;
     m_pRenderCommandEncoder = nullptr;
     m_pComputeCommandEncoder = nullptr;
+    m_pASEncoder = nullptr;
     
     m_pCurrentPSO = nullptr;
     
@@ -248,6 +251,7 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
 {
     EndBlitEncoder();
     EndComputeEncoder();
+    EndASEncoder();
     
     uint32_t width = 0;
     uint32_t height = 0;
@@ -613,16 +617,23 @@ void MetalCommandList::MultiDispatchMeshIndirect(uint32_t max_count, IGfxBuffer*
 
 void MetalCommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
-    //todo
+    BeginASEncoder();
+    
+    MetalRayTracingBLAS* metalBLAS = (MetalRayTracingBLAS*)blas;
+    m_pASEncoder->buildAccelerationStructure(metalBLAS->GetAccelerationStructure(), metalBLAS->GetDescriptor(), metalBLAS->GetScratchBuffer(), 0);
 }
 
 void MetalCommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
 {
+    BeginASEncoder();
+    
     //todo
 }
 
 void MetalCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
 {
+    BeginASEncoder();
+    
     //todo
 }
 
@@ -637,6 +648,7 @@ void MetalCommandList::BeginBlitEncoder()
 {
     EndRenderPass();
     EndComputeEncoder();
+    EndASEncoder();
     
     if(m_pBlitCommandEncoder == nullptr)
     {
@@ -659,6 +671,7 @@ void MetalCommandList::BeginComputeEncoder()
 {
     EndRenderPass();
     EndBlitEncoder();
+    EndASEncoder();
     
     if(m_pComputeCommandEncoder == nullptr)
     {
@@ -677,6 +690,29 @@ void MetalCommandList::EndComputeEncoder()
         m_pComputeCommandEncoder->updateFence(m_pFence);
         m_pComputeCommandEncoder->endEncoding();
         m_pComputeCommandEncoder = nullptr;
+    }
+}
+
+void MetalCommandList::BeginASEncoder()
+{
+    EndRenderPass();
+    EndBlitEncoder();
+    EndComputeEncoder();
+    
+    if(m_pASEncoder == nullptr)
+    {
+        m_pASEncoder = m_pCommandBuffer->accelerationStructureCommandEncoder();
+        m_pASEncoder->waitForFence(m_pFence);
+    }
+}
+
+void MetalCommandList::EndASEncoder()
+{
+    if(m_pASEncoder)
+    {
+        m_pASEncoder->updateFence(m_pFence);
+        m_pASEncoder->endEncoding();
+        m_pASEncoder = nullptr;
     }
 }
 
