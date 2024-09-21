@@ -634,7 +634,10 @@ void MetalCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRa
 {
     BeginASEncoder();
     
-    //todo
+    MetalRayTracingTLAS* metalTLAS = (MetalRayTracingTLAS*)tlas;
+    metalTLAS->UpdateInstance(instances, instance_count);
+    
+    m_pASEncoder->buildAccelerationStructure(metalTLAS->GetAccelerationStructure(), metalTLAS->GetDescriptor(), metalTLAS->GetScratchBuffer(), 0);
 }
 
 #if MICROPROFILE_GPU_TIMERS

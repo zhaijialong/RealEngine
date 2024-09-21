@@ -534,3 +534,30 @@ inline MTL::AttributeFormat ToAttributeFormat(GfxFormat format)
             return MTL::AttributeFormatInvalid;
     }
 }
+
+inline MTL::AccelerationStructureInstanceOptions ToAccelerationStructureInstanceOptions(GfxRayTracingInstanceFlag flags)
+{
+    MTL::AccelerationStructureInstanceOptions options = MTL::AccelerationStructureInstanceOptionNone;
+    
+    if(flags & GfxRayTracingInstanceFlagDisableCull)
+    {
+        options |= MTL::AccelerationStructureInstanceOptionDisableTriangleCulling;
+    }
+    
+    if(flags & GfxRayTracingInstanceFlagFrontFaceCCW)
+    {
+        options |= MTL::AccelerationStructureInstanceOptionTriangleFrontFacingWindingCounterClockwise;
+    }
+    
+    if(flags & GfxRayTracingInstanceFlagForceOpaque)
+    {
+        options |= MTL::AccelerationStructureInstanceOptionOpaque;
+    }
+    
+    if(flags & GfxRayTracingInstanceFlagForceNoOpaque)
+    {
+        options |= MTL::AccelerationStructureInstanceOptionNonOpaque;
+    }
+    
+    return options;
+}
