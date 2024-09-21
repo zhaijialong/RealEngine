@@ -32,7 +32,6 @@ bool MetalRayTracingTLAS::Create()
     m_pDescriptor->setInstanceCount((NS::UInteger)m_desc.instance_count);
     m_pDescriptor->setInstanceDescriptorBuffer(m_pInstanceBuffer);
     m_pDescriptor->setInstanceDescriptorType(MTL::AccelerationStructureInstanceDescriptorTypeUserID);
-    m_pDescriptor->setInstanceTransformationMatrixLayout(MTL::MatrixLayoutRowMajor);
     
     MTL::AccelerationStructureSizes asSizes = device->accelerationStructureSizes(m_pDescriptor);
     
@@ -94,7 +93,20 @@ void MetalRayTracingTLAS::UpdateInstance(const GfxRayTracingInstance* instances,
         instanceDescriptors[i].userID = instance.instance_id;
         instanceDescriptors[i].mask = instance.instance_mask;
         instanceDescriptors[i].intersectionFunctionTableOffset = 0;
-        memcpy(&instanceDescriptors[i].transformationMatrix, instance.transform, sizeof(float) * 12);
+        
+        // 3x4 -> 4x3
+        instanceDescriptors[i].transformationMatrix[0][0] = instance.transform[0];
+        instanceDescriptors[i].transformationMatrix[0][1] = instance.transform[4];
+        instanceDescriptors[i].transformationMatrix[0][2] = instance.transform[8];
+        instanceDescriptors[i].transformationMatrix[1][0] = instance.transform[1];
+        instanceDescriptors[i].transformationMatrix[1][1] = instance.transform[5];
+        instanceDescriptors[i].transformationMatrix[1][2] = instance.transform[9];
+        instanceDescriptors[i].transformationMatrix[2][0] = instance.transform[2];
+        instanceDescriptors[i].transformationMatrix[2][1] = instance.transform[6];
+        instanceDescriptors[i].transformationMatrix[2][2] = instance.transform[10];
+        instanceDescriptors[i].transformationMatrix[3][0] = instance.transform[3];
+        instanceDescriptors[i].transformationMatrix[3][1] = instance.transform[7];
+        instanceDescriptors[i].transformationMatrix[3][2] = instance.transform[11];
     }
     
     NS::Array* instancedAccelerationStructures = NS::Array::alloc()->init((NS::Object**)accelerationStructures.data(), (NS::UInteger)accelerationStructures.size());
