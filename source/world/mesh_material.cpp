@@ -262,7 +262,7 @@ void MeshMaterial::OnGui()
                 ImGui::SliderFloat("Alpha Cutoff##Material", &m_alphaCutoff, 0.0f, 1.0f);
             }
 
-            ImGui::ColorEdit3("Emissive##Material", (float*)&m_emissiveColor);
+            ImGui::ColorEdit3("Emissive##Material", (float*)&m_emissiveColor, ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float);
 
             switch (m_shadingModel)
             {
