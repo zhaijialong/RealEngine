@@ -256,26 +256,28 @@ void Editor::DrawToolBar()
 
     ImGui::Begin("EditorToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
         ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 
     ImVec4 focusedBG(1.0f, 0.6f, 0.2f, 0.5f);
     ImVec4 normalBG(0.0f, 0.0f, 0.0f, 0.0f);
 
-    if (ImGui::ImageButton((ImTextureID)m_pTranslateIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), 0, m_selectEditMode == SelectEditMode::Translate ? focusedBG : normalBG))
+    if (ImGui::ImageButton("translate_button##editor", (ImTextureID)m_pTranslateIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), m_selectEditMode == SelectEditMode::Translate ? focusedBG : normalBG))
     {
         m_selectEditMode = SelectEditMode::Translate;
     }
     
     ImGui::SameLine(0.0f, 0.0f);
-    if (ImGui::ImageButton((ImTextureID)m_pRotateIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), 0, m_selectEditMode == SelectEditMode::Rotate ? focusedBG : normalBG))
+    if (ImGui::ImageButton("rotate_button##editor", (ImTextureID)m_pRotateIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), m_selectEditMode == SelectEditMode::Rotate ? focusedBG : normalBG))
     {
         m_selectEditMode = SelectEditMode::Rotate;
     }
     
     ImGui::SameLine(0.0f, 0.0f);
-    if (ImGui::ImageButton((ImTextureID)m_pScaleIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), 0, m_selectEditMode == SelectEditMode::Scale ? focusedBG : normalBG))
+    if (ImGui::ImageButton("scale_button##editor", (ImTextureID)m_pScaleIcon->GetSRV(), ImVec2(20, 20), ImVec2(0, 0), ImVec2(1, 1), m_selectEditMode == SelectEditMode::Scale ? focusedBG : normalBG))
     {
         m_selectEditMode = SelectEditMode::Scale;
     }
+    ImGui::PopStyleVar();
 
     ImGui::SameLine(0.0f, 20.0f);
     ImGui::PushItemWidth(150.0f);

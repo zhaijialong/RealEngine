@@ -17,8 +17,12 @@ GUI::GUI()
     ImGuiIO& io = ImGui::GetIO();
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // todo : multi-viewports
+    
     io.BackendRendererName = "imgui_impl_realengine";
     io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
+    //io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
