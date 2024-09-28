@@ -7,15 +7,17 @@ Tonemapper::Tonemapper(Renderer* pRenderer)
     m_pRenderer = pRenderer;
 }
 
+void Tonemapper::OnGui()
+{
+    if (ImGui::CollapsingHeader("Tone Mapping"))
+    {
+        ImGui::Combo("Mode##Tonemapper", (int*)&m_mode, "Neutral\0ACES\0Tony McMapface\0AgX\0\0");
+        ImGui::Checkbox("Enable Dither##Tonemapper", &m_bEnableDither);
+    }
+}
+
 RGHandle Tonemapper::AddPass(RenderGraph* pRenderGraph, RGHandle inputHandle, RGHandle exposure, RGHandle bloom, float bloom_intensity, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "Tone Mapping",
-        [&]()
-        {
-            ImGui::Combo("Mode##Tonemapper", (int*)&m_mode, "Neutral\0ACES\0Tony McMapface\0AgX\0\0");
-            ImGui::Checkbox("Enable Dither##Tonemapper", &m_bEnableDither);
-        });
-
     struct TonemapPassData
     {
         RGHandle hdrRT;

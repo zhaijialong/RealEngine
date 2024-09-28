@@ -22,18 +22,21 @@ PathTracer::PathTracer(Renderer* pRenderer)
 
 PathTracer::~PathTracer() = default;
 
+void PathTracer::OnGui()
+{
+    if (ImGui::CollapsingHeader("PathTracer"))
+    {
+        m_bHistoryInvalid |= ImGui::Checkbox("Enable Accumulation##PathTracer", &m_bEnableAccumulation);
+#if WITH_OIDN
+        ImGui::Checkbox("Enable OIDN##PathTracer", &m_bEnableOIDN);
+#endif
+        m_bHistoryInvalid |= ImGui::SliderInt("Max Ray Length##PathTracer", (int*)&m_maxRayLength, 1, 16);
+        m_bHistoryInvalid |= ImGui::SliderInt("Max Samples##PathTracer", (int*)&m_spp, 1, 8192);
+    }
+}
+
 RGHandle PathTracer::AddPass(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height)
 {
-    GUI("Lighting", "PathTracer", [&]()
-        {
-            m_bHistoryInvalid |= ImGui::Checkbox("Enable Accumulation##PathTracer", &m_bEnableAccumulation);
-#if WITH_OIDN
-            ImGui::Checkbox("Enable OIDN##PathTracer", &m_bEnableOIDN);
-#endif
-            m_bHistoryInvalid |= ImGui::SliderInt("Max Ray Length##PathTracer", (int*)&m_maxRayLength, 1, 16);
-            m_bHistoryInvalid |= ImGui::SliderInt("Max Samples##PathTracer", (int*)&m_spp, 1, 8192);
-        });
-
     RENDER_GRAPH_EVENT(pRenderGraph, "PathTracer");
 
     if (m_pHistoryColor == nullptr ||

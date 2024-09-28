@@ -29,18 +29,20 @@ MotionBlur::MotionBlur(Renderer* pRenderer) : m_pRenderer(pRenderer)
     m_pReconstructionDebugPSO = pRenderer->GetPipelineState(psoDesc, "MotionBlur Reconstruction PSO");
 }
 
+void MotionBlur::OnGui()
+{
+    if (ImGui::CollapsingHeader("Motion Blur"))
+    {
+        ImGui::Checkbox("Enable##MotionBlur", &m_bEnable);
+        ImGui::SliderInt("Sample Count##MotionBlur", (int*)&m_sampleCount, 10, 20);
+        ImGui::SliderFloat("Min Velocity Length##MotionBlur", &m_minVelocityLength, 0.5f, 5.0f, "%.1f");
+        ImGui::SliderFloat("Max Velocity Length##MotionBlur", &m_maxVelocityLength, 20.0f, 200.0f, "%.1f");
+        ImGui::Checkbox("Debug##MotionBlur", &m_bDebug);
+    }
+}
+
 RGHandle MotionBlur::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColor, RGHandle sceneDepth, RGHandle velocity, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "Motion Blur",
-        [&]()
-        {
-            ImGui::Checkbox("Enable##MotionBlur", &m_bEnable);
-            ImGui::SliderInt("Sample Count##MotionBlur", (int*)&m_sampleCount, 10, 20);
-            ImGui::SliderFloat("Min Velocity Length##MotionBlur", &m_minVelocityLength, 0.5f, 5.0f, "%.1f");
-            ImGui::SliderFloat("Max Velocity Length##MotionBlur", &m_maxVelocityLength, 20.0f, 200.0f, "%.1f");
-            ImGui::Checkbox("Debug##MotionBlur", &m_bDebug);
-        });
-
     if (!m_bEnable)
     {
         return sceneColor;

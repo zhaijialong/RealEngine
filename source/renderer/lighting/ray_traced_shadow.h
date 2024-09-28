@@ -7,6 +7,7 @@ class RTShadow
 public:
     RTShadow(Renderer* pRenderer);
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height);
 
 private:

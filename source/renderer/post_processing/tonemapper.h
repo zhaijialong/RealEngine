@@ -7,6 +7,7 @@ class Tonemapper
 public:
     Tonemapper(Renderer* pRenderer);
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle inputHandle, RGHandle exposure,
         RGHandle bloom, float bloom_intensity, uint32_t width, uint32_t height);
 

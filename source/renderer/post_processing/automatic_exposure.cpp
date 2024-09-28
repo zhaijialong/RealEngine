@@ -20,24 +20,26 @@ AutomaticExposure::AutomaticExposure(Renderer* pRenderer)
     m_pPreviousEV100.reset(pRenderer->CreateTexture2D(1, 1, 1, GfxFormat::R16F, GfxTextureUsageUnorderedAccess, "AutomaticExposure::m_pPreviousEV100"));
 }
 
+void AutomaticExposure::OnGui()
+{
+    if (ImGui::CollapsingHeader("Auto Exposure"))
+    {
+        ImGui::Combo("Exposure Mode##Exposure", (int*)&m_exposuremode, "Automatic\0AutomaticHistogram\0Manual\0\0");
+        ImGui::Combo("Metering Mode##Exposure", (int*)&m_meteringMode, "Average\0Spot\0CenterWeighted\00");
+        ImGui::SliderFloat("Min Luminance##Exposure", &m_minLuminance, 0.0f, 1.0f, "%.3f");
+        ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.3f, 10.0f, "%.3f");
+        ImGui::SliderFloat("Eye Adaption Speed##Exposure", &m_adaptionSpeed, 0.01f, 5.0f, "%.2f");
+        if (m_exposuremode == ExposureMode::AutomaticHistogram)
+        {
+            ImGui::SliderFloat("Low Percentile##Exposure", &m_histogramLowPercentile, 0.0f, 0.49f, "%.2f");
+            ImGui::SliderFloat("High Percentile##Exposure", &m_histogramHighPercentile, 0.51f, 1.0f, "%.2f");
+        }
+        ImGui::Checkbox("Show EV100##Exposure", &m_bDebugEV100);
+    }
+}
+
 RGHandle AutomaticExposure::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "Auto Exposure",
-        [&]()
-        {
-            ImGui::Combo("Exposure Mode##Exposure", (int*)&m_exposuremode, "Automatic\0AutomaticHistogram\0Manual\0\0");
-            ImGui::Combo("Metering Mode##Exposure", (int*)&m_meteringMode, "Average\0Spot\0CenterWeighted\00");
-            ImGui::SliderFloat("Min Luminance##Exposure", &m_minLuminance, 0.0f, 1.0f, "%.3f");
-            ImGui::SliderFloat("Max Luminance##Exposure", &m_maxLuminance, 0.3f, 10.0f, "%.3f");
-            ImGui::SliderFloat("Eye Adaption Speed##Exposure", &m_adaptionSpeed, 0.01f, 5.0f, "%.2f");
-            if (m_exposuremode == ExposureMode::AutomaticHistogram)
-            {
-                ImGui::SliderFloat("Low Percentile##Exposure", &m_histogramLowPercentile, 0.0f, 0.49f, "%.2f");
-                ImGui::SliderFloat("High Percentile##Exposure", &m_histogramHighPercentile, 0.51f, 1.0f, "%.2f");
-            }
-            ImGui::Checkbox("Show EV100##Exposure", &m_bDebugEV100);
-        });
-
     RENDER_GRAPH_EVENT(pRenderGraph, "AutomaticExposure");
 
     RGHandle avgLuminanceRT;

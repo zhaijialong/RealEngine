@@ -9,6 +9,7 @@ class AutomaticExposure
 public:
     AutomaticExposure(Renderer* pRenderer);
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height);
 
 private:

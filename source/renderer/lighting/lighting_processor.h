@@ -8,6 +8,7 @@ public:
     LightingProcessor(Renderer* pRenderer);
     ~LightingProcessor();
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height);
     
 private:

@@ -4,6 +4,7 @@
 #include "utils/assert.h"
 #include "utils/system.h"
 #include "imgui/imgui.h"
+#include "imgui/imgui_internal.h" // for dock builder api
 #include "ImFileDialog/ImFileDialog.h"
 #include "ImGuizmo/ImGuizmo.h"
 
@@ -57,15 +58,50 @@ void Editor::Tick()
         pRenderer->RequestMouseHitTest((uint32_t)mousePos.x, (uint32_t)mousePos.y);
     }
 
+    BuildDockLayout();
     DrawMenu();
     DrawToolBar();
     DrawGizmo();
     DrawFrameStats();
+
+    if (m_bShowRenderer)
+    {
+        ImGui::Begin("Renderer", &m_bShowRenderer);
+        
+        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
+        pRenderer->OnGui();
+
+        ImGui::End();
+    }
 }
 
 void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command)
 {
     m_commands[window].push_back({ section, command });
+}
+
+void Editor::BuildDockLayout()
+{
+    m_dockSpace = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+
+    if (m_bResetLayout)
+    {
+        ImGui::DockBuilderRemoveNode(m_dockSpace);
+        ImGui::DockBuilderAddNode(m_dockSpace, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(m_dockSpace, ImGui::GetMainViewport()->WorkSize);
+
+        m_bResetLayout = false;
+    }
+
+    if (ImGui::DockBuilderGetNode(m_dockSpace)->IsLeafNode())
+    {
+        ImGuiID leftNode, rightNode;
+        ImGui::DockBuilderSplitNode(m_dockSpace, ImGuiDir_Right, 0.2f, &rightNode, &leftNode);
+
+        ImGui::DockBuilderDockWindow("Renderer", rightNode);
+
+        ImGui::DockBuilderFinish(m_dockSpace);
+    }
 }
 
 void Editor::DrawMenu()
@@ -159,8 +195,9 @@ void Editor::DrawMenu()
         {
             ImGui::MenuItem("Inspector", "", &m_bShowInspector);
             ImGui::MenuItem("Settings", "", & m_bShowSettings);
-            ImGui::MenuItem("Lighting", "", &m_bShowLighting);
-            ImGui::MenuItem("PostProcess", "", &m_bShowPostProcess);
+            ImGui::MenuItem("Renderer", "", &m_bShowRenderer);
+
+            m_bResetLayout = ImGui::MenuItem("Reset Layout");
 
             ImGui::EndMenu();
         }
@@ -237,22 +274,12 @@ void Editor::DrawMenu()
     {
         Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("Settings", &m_bShowSettings); });
     }
-
-    if (m_bShowLighting)
-    {
-        Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("Lighting", &m_bShowLighting); });
-    }
-
-    if (m_bShowPostProcess)
-    {
-        Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("PostProcess", &m_bShowPostProcess); });
-    }
 }
 
 void Editor::DrawToolBar()
 {
     ImGui::SetNextWindowPos(ImVec2(0, 20));
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 30));
+    ImGui::SetNextWindowSize(ImVec2(300, 30));
 
     ImGui::Begin("EditorToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
         ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus);
@@ -343,7 +370,16 @@ void Editor::DrawGizmo()
 
 void Editor::DrawFrameStats()
 {
-    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 200.0f, 50.0f));
+    ImVec2 windowPos(ImGui::GetIO().DisplaySize.x - 200.0f, 50.0f);
+
+    ImGuiDockNode* dockSapce = ImGui::DockBuilderGetNode(m_dockSpace);
+    ImGuiDockNode* centralNode = dockSapce->CentralNode;
+    if (centralNode)
+    {
+        windowPos.x = centralNode->Size.x - 200.0f;
+    }
+    
+    ImGui::SetNextWindowPos(windowPos);
     ImGui::SetNextWindowSize(ImVec2(200.0f, 50.0f));
     ImGui::Begin("Frame Stats", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground |
         ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus);

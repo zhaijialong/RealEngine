@@ -7,6 +7,7 @@ class HybridStochasticReflection
 public:
     HybridStochasticReflection(Renderer* pRenderer);
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
     IGfxDescriptor* GetOutputRadianceSRV() const { return m_pDenoiser->GetHistoryRadianceSRV(); }

@@ -11,23 +11,25 @@ TAA::TAA(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "TAA PSO");
 }
 
+void TAA::OnGui()
+{
+    if (ImGui::CollapsingHeader("TAA"))
+    {
+        if (ImGui::Checkbox("Enable##TAA", &m_bEnable))
+        {
+            if (!m_bEnable)
+            {
+                m_pHistoryColorInput.reset();
+                m_pHistoryColorOutput.reset();
+            }
+
+            m_bHistoryInvalid = true;
+        }
+    }
+}
+
 RGHandle TAA::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "TAA",
-        [&]()
-        {
-            if (ImGui::Checkbox("Enable##TAA", &m_bEnable))
-            {
-                if (!m_bEnable)
-                {
-                    m_pHistoryColorInput.reset();
-                    m_pHistoryColorOutput.reset();
-                }
-
-                m_bHistoryInvalid = true;
-            }
-        });
-
     if (!m_bEnable || m_pRenderer->GetOutputType() == RendererOutput::PathTracing)
     {
         return sceneColorRT;

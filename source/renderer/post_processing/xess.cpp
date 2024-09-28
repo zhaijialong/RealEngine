@@ -55,29 +55,31 @@ XeSS::~XeSS()
     }
 }
 
-RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
-    uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
+void XeSS::OnGui()
 {
     xess_version_t version;
     xessGetVersion(&version);
 
-    GUI("PostProcess", fmt::format("XeSS {}.{}.{}", version.major, version.minor, version.patch).c_str(), 
-        [&, displayWidth, displayHeight]()
+    if (ImGui::CollapsingHeader(fmt::format("XeSS {}.{}.{}", version.major, version.minor, version.patch).c_str()))
+    {
+        int qualityMode = m_quality - XESS_QUALITY_SETTING_PERFORMANCE;
+        if (ImGui::Combo("Mode##XeSS", (int*)&qualityMode, "Performance (2.0x)\0Balanced (1.7x)\0Quality (1.5x)\0Ultra Quality (1.3x)\0\0", 4))
         {
-            TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
-            if (mode == TemporalSuperResolution::XeSS)
-            {
-                int qualityMode = m_quality - XESS_QUALITY_SETTING_PERFORMANCE;
-                if (ImGui::Combo("Mode##XeSS", (int*)&qualityMode, "Performance (2.0x)\0Balanced (1.7x)\0Quality (1.5x)\0Ultra Quality (1.3x)\0\0", 4))
-                {
-                    m_quality = (xess_quality_settings_t)(qualityMode + XESS_QUALITY_SETTING_PERFORMANCE);
-                    m_needInitialization = true;
-                }
+            m_quality = (xess_quality_settings_t)(qualityMode + XESS_QUALITY_SETTING_PERFORMANCE);
+            m_needInitialization = true;
+        }
 
-                m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio(displayWidth, displayHeight));
-            }
-        });
+        TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
+        if (mode == TemporalSuperResolution::XeSS)
+        {
+            m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio());
+        }
+    }
+}
 
+RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
+    uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
+{
     struct XeSSData
     {
         RGHandle input;
@@ -142,9 +144,9 @@ RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
     return xess_pass->output;
 }
 
-float XeSS::GetUpscaleRatio(uint32_t displayWidth, uint32_t displayHeight) const
+float XeSS::GetUpscaleRatio() const
 {
-    xess_2d_t outputResolution = { displayWidth, displayHeight };
+    xess_2d_t outputResolution = { m_pRenderer->GetDisplayWidth(), m_pRenderer->GetDisplayHeight() };
     xess_2d_t inputResolution;
     xessGetInputResolution(m_context, &outputResolution, m_quality, &inputResolution);
     return (float)outputResolution.x / (float)inputResolution.x;

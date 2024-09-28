@@ -27,28 +27,30 @@ ReSTIRGI::ReSTIRGI(Renderer* pRenderer)
 
 ReSTIRGI::~ReSTIRGI() = default;
 
+void ReSTIRGI::OnGui()
+{
+    if (ImGui::CollapsingHeader("ReSTIR GI"))
+    {
+        if (ImGui::Checkbox("Enable##ReSTIR GI", &m_bEnable))
+        {
+            ResetTemporalBuffers();
+            m_pDenoiser->InvalidateHistory();
+        }
+
+        if (ImGui::Checkbox("Enable ReSTIR##ReSTIR GI", &m_bEnableReSTIR))
+        {
+            ResetTemporalBuffers();
+        }
+
+        if (ImGui::Combo("Denoiser##ReSTIR GI", (int*)&m_denoiserType, "NRD\0Custom\0None\0\0", 3))
+        {
+            m_pDenoiser->InvalidateHistory();
+        }
+    }
+}
+
 RGHandle ReSTIRGI::AddPass(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {
-    GUI("Lighting", "ReSTIR GI (WIP)",
-        [&]()
-        {
-            if (ImGui::Checkbox("Enable##ReSTIR GI", &m_bEnable))
-            {
-                ResetTemporalBuffers();
-                m_pDenoiser->InvalidateHistory();
-            }
-            
-            if (ImGui::Checkbox("Enable ReSTIR##ReSTIR GI", &m_bEnableReSTIR))
-            {
-                ResetTemporalBuffers();
-            }
-            
-            if(ImGui::Combo("Denoiser##ReSTIR GI", (int*)&m_denoiserType, "NRD\0Custom\0None\0\0", 3))
-            {
-                m_pDenoiser->InvalidateHistory();
-            }
-        });
-
     if (!m_bEnable)
     {
         return RGHandle();

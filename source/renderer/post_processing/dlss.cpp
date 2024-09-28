@@ -29,6 +29,33 @@ DLSS::~DLSS()
     ShutdownNGX();
 }
 
+void DLSS::OnGui()
+{
+    if (ImGui::CollapsingHeader("DLSS 2.4"))
+    {
+        if (ImGui::Combo("Mode##DLSS", &m_qualityMode, "Performance (2.0x)\0Balanced (1.7x)\0Quality (1.5x)\0Ultra Performance (3.0x)\0Custom\0", 5))
+        {
+            m_needInitializeDlss = true;
+        }
+
+        if (m_qualityMode == 4)
+        {
+            if (ImGui::SliderFloat("Upscale Ratio##DLSS", &m_customUpscaleRatio, 1.0f, 3.0f))
+            {
+                m_needInitializeDlss = true;
+            }
+        }
+
+        ImGui::SliderFloat("Sharpness##DLSS", &m_sharpness, 0.0f, 1.0f, "%.2f");
+
+        TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
+        if (mode == TemporalSuperResolution::DLSS)
+        {
+            m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio());
+        }
+    }
+}
+
 RGHandle DLSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
@@ -36,30 +63,6 @@ RGHandle DLSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
     {
         return input;
     }
-
-    GUI("PostProcess", "DLSS 2.4", [&, displayWidth, displayHeight]()
-        {
-            TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
-            if (mode == TemporalSuperResolution::DLSS)
-            {
-                if (ImGui::Combo("Mode##DLSS", &m_qualityMode, "Performance (2.0x)\0Balanced (1.7x)\0Quality (1.5x)\0Ultra Performance (3.0x)\0Custom\0", 5))
-                {
-                    m_needInitializeDlss = true;
-                }
-
-                if (m_qualityMode == 4)
-                {
-                    if (ImGui::SliderFloat("Upscale Ratio##DLSS", &m_customUpscaleRatio, 1.0f, 3.0f))
-                    {
-                        m_needInitializeDlss = true;
-                    }
-                }
-
-                ImGui::SliderFloat("Sharpness##DLSS", &m_sharpness, 0.0f, 1.0f, "%.2f");
-
-                m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio(displayWidth, displayHeight));
-            }
-        });
 
     struct DLSSPassData
     {
@@ -127,7 +130,7 @@ RGHandle DLSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
     return dlss_pass->output;
 }
 
-float DLSS::GetUpscaleRatio(uint32_t displayWidth, uint32_t displayHeight) const
+float DLSS::GetUpscaleRatio() const
 {
     if (m_qualityMode == 4)
     {
@@ -141,11 +144,11 @@ float DLSS::GetUpscaleRatio(uint32_t displayWidth, uint32_t displayHeight) const
     unsigned int minWidth;
     unsigned int minHeight;
     float sharpness;
-    NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, displayWidth, displayHeight,
+    NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters, m_pRenderer->GetDisplayWidth(), m_pRenderer->GetDisplayHeight(),
         (NVSDK_NGX_PerfQuality_Value)m_qualityMode,
         &optimalWidth, &optimalHeight, &maxWidth, &maxHeight, &minWidth, &minHeight, &sharpness);
 
-    return (float)displayWidth / (float)optimalWidth;
+    return (float)m_pRenderer->GetDisplayWidth() / (float)optimalWidth;
 }
 
 void DLSS::OnWindowResize(void* window, uint32_t width, uint32_t height)

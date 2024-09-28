@@ -20,6 +20,14 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
 
 LightingProcessor::~LightingProcessor() = default;
 
+void LightingProcessor::OnGui()
+{
+    m_pGTAO->OnGui();
+    m_pRTShdow->OnGui();
+    m_pReflection->OnGui();
+    m_pReSTIRGI->OnGui();
+}
+
 RGHandle LightingProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height)
 {
     RENDER_GRAPH_EVENT(pRenderGraph, "Lighting");

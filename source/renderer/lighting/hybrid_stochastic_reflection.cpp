@@ -25,34 +25,36 @@ HybridStochasticReflection::HybridStochasticReflection(Renderer* pRenderer)
     m_pRaytracePSO = pRenderer->GetPipelineState(desc, "RT reflection PSO");
 }
 
+void HybridStochasticReflection::OnGui()
+{
+    if (ImGui::CollapsingHeader("Hybrid Stochastic Reflection"))
+    {
+        if (ImGui::Checkbox("Enable##HSR", &m_bEnable))
+        {
+            m_pDenoiser->InvalidateHistory();
+        }
+
+        ImGui::Checkbox("Enable SW Ray##HSR", &m_bEnableSWRay);
+        ImGui::Checkbox("Enable HW Ray##HSR", &m_bEnableHWRay);
+
+        if (ImGui::Checkbox("Enable Denoiser##HSR", &m_bEnableDenoiser))
+        {
+            m_pDenoiser->InvalidateHistory();
+        }
+
+        ImGui::Text("Samples Per Quad : "); ImGui::SameLine();
+        ImGui::RadioButton("1##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 1); ImGui::SameLine();
+        ImGui::RadioButton("2##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 2); ImGui::SameLine();
+        ImGui::RadioButton("4##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 4);
+
+        ImGui::SliderFloat("Max Roughness##HSR", &m_maxRoughness, 0.0f, 1.0f);
+        ImGui::SliderFloat("SSR Thickness##HSR", &m_ssrThickness, 0.0f, 1.0f);
+        ImGui::SliderFloat("Temporal Stability##HSR", &m_temporalStability, 0.0f, 1.0f);
+    }
+}
+
 RGHandle HybridStochasticReflection::AddPass(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height)
 {
-    GUI("Lighting", "Hybrid Stochastic Reflection",
-        [&]()
-        {
-            if (ImGui::Checkbox("Enable##HSR", &m_bEnable))
-            {
-                m_pDenoiser->InvalidateHistory();
-            }
-
-            ImGui::Checkbox("Enable SW Ray##HSR", &m_bEnableSWRay);
-            ImGui::Checkbox("Enable HW Ray##HSR", &m_bEnableHWRay);
-
-            if (ImGui::Checkbox("Enable Denoiser##HSR", &m_bEnableDenoiser))
-            {
-                m_pDenoiser->InvalidateHistory();
-            }
-
-            ImGui::Text("Samples Per Quad : "); ImGui::SameLine();
-            ImGui::RadioButton("1##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 1); ImGui::SameLine();
-            ImGui::RadioButton("2##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 2); ImGui::SameLine();
-            ImGui::RadioButton("4##HSR-samplesPerQuad", (int*)&m_samplesPerQuad, 4);
-
-            ImGui::SliderFloat("Max Roughness##HSR", &m_maxRoughness, 0.0f, 1.0f);
-            ImGui::SliderFloat("SSR Thickness##HSR", &m_ssrThickness, 0.0f, 1.0f);
-            ImGui::SliderFloat("Temporal Stability##HSR", &m_temporalStability, 0.0f, 1.0f);
-        });
-
     if (!m_bEnable)
     {
         return RGHandle();

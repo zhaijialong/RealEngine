@@ -148,6 +148,8 @@ public:
 
     TypedBuffer* GetSPDCounterBuffer() const { return m_pSPDCounterBuffer.get(); }
 
+    void OnGui();
+
 private:
     void CreateCommonResources();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);

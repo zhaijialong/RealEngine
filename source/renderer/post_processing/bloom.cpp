@@ -18,16 +18,18 @@ Bloom::Bloom(Renderer* pRenderer)
     m_pUpsamplePSO = pRenderer->GetPipelineState(desc, "Bloom upsample PSO");
 }
 
+void Bloom::OnGui()
+{
+    if (ImGui::CollapsingHeader("Bloom"))
+    {
+        ImGui::Checkbox("Enable##Bloom", &m_bEnable);
+        ImGui::SliderFloat("Threshold##Bloom", &m_threshold, 0.0f, 10.0f, "%.2f");
+        ImGui::SliderFloat("Intensity##Bloom", &m_intensity, 0.0f, 10.0f, "%.2f");
+    }
+}
+
 RGHandle Bloom::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "Bloom",
-        [&]()
-        {
-            ImGui::Checkbox("Enable##Bloom", &m_bEnable);
-            ImGui::SliderFloat("Threshold##Bloom", &m_threshold, 0.0f, 10.0f, "%.2f");
-            ImGui::SliderFloat("Intensity##Bloom", &m_intensity, 0.0f, 10.0f, "%.2f");
-        });
-
     if (!m_bEnable)
     {
         return RGHandle();

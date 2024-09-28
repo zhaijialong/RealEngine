@@ -15,11 +15,12 @@ public:
     DLSS(Renderer* pRenderer);
     ~DLSS();
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
         uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
 
     bool IsSupported() const { return m_dlssAvailable; }
-    float GetUpscaleRatio(uint32_t displayWidth, uint32_t displayHeight) const;
+    float GetUpscaleRatio() const;
 
 private:
     void OnWindowResize(void* window, uint32_t width, uint32_t height);

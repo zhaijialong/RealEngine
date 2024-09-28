@@ -63,17 +63,19 @@ GTAO::GTAO(Renderer* pRenderer)
     CreateHilbertLUT();
 }
 
+void GTAO::OnGui()
+{
+    if (ImGui::CollapsingHeader("GTAO"))
+    {
+        ImGui::Checkbox("Enable##GTAO", &m_bEnable);
+        ImGui::Checkbox("Enable GTSO##GTAO", &m_bEnableGTSO);
+        ImGui::Combo("Quality Level", &m_qualityLevel, "Low\0Medium\0High\0Ultra\00");
+        ImGui::SliderFloat("Radius##GTAO", &m_radius, 0.0f, 5.0f, "%.1f");
+    }
+}
+
 RGHandle GTAO::AddPass(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, uint32_t width, uint32_t height)
 {
-    GUI("Lighting", "GTAO",
-        [&]()
-        {
-            ImGui::Checkbox("Enable##GTAO", &m_bEnable);
-            ImGui::Checkbox("Enable GTSO##GTAO", &m_bEnableGTSO);
-            ImGui::Combo("Quality Level", &m_qualityLevel, "Low\0Medium\0High\0Ultra\00");
-            ImGui::SliderFloat("Radius##GTAO", &m_radius, 0.0f, 5.0f, "%.1f");
-        });
-
     if (!m_bEnable)
     {
         return RGHandle();

@@ -13,6 +13,7 @@ public:
     FSR2(Renderer* pRenderer);
     ~FSR2();
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
         uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
 

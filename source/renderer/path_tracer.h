@@ -9,6 +9,7 @@ public:
     PathTracer(Renderer* pRenderer);
     ~PathTracer();
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depth, uint32_t width, uint32_t height);
 
 private:

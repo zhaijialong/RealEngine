@@ -59,12 +59,13 @@ public:
     bool IsMoved() const { return m_bMoved; }
     float GetZNear() const { return m_znear; }
 
+    void OnPostProcessSettingGui();
+
 private:
     void UpdateJitter();
     void UpdateMatrix();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
     void OnCameraSettingGui();
-    void OnPostProcessSettingGui();
 
 private:
     float3 m_pos;

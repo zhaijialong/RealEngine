@@ -11,14 +11,16 @@ FXAA::FXAA(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "FXAA PSO");
 }
 
+void FXAA::OnGui()
+{
+    if (ImGui::CollapsingHeader("FXAA"))
+    {
+        ImGui::Checkbox("Enable##FXAA", &m_bEnable);
+    }
+}
+
 RGHandle FXAA::AddPass(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "FXAA",
-        [&]()
-        {
-            ImGui::Checkbox("Enable##FXAA", &m_bEnable);
-        });
-
     if (!m_bEnable)
     {
         return inputHandle;

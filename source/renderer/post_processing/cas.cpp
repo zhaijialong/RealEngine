@@ -16,15 +16,17 @@ CAS::CAS(Renderer* pRenderer)
     m_pPSO = pRenderer->GetPipelineState(psoDesc, "CAS PSO");
 }
 
+void CAS::OnGui()
+{
+    if (ImGui::CollapsingHeader("CAS"))
+    {
+        ImGui::Checkbox("Enable##CAS", &m_bEnable);
+        ImGui::SliderFloat("Sharpness##CAS", &m_sharpenVal, 0.0f, 1.0f, "%.2f");
+    }
+}
+
 RGHandle CAS::AddPass(RenderGraph* pRenderGraph, RGHandle inputHandle, uint32_t width, uint32_t height)
 {
-    GUI("PostProcess", "CAS",
-        [&]()
-        {
-            ImGui::Checkbox("Enable##CAS", &m_bEnable);
-            ImGui::SliderFloat("Sharpness##CAS", &m_sharpenVal, 0.0f, 1.0f, "%.2f");
-        });
-
     if (!m_bEnable)
     {
         return inputHandle;

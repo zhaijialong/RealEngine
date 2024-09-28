@@ -19,36 +19,36 @@ FSR2::~FSR2()
     DestroyFsr2Context();
 }
 
-RGHandle FSR2::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure, 
+void FSR2::OnGui()
+{
+    if (ImGui::CollapsingHeader(fmt::format("FSR {}.{}.{}", FFX_FSR2_VERSION_MAJOR, FFX_FSR2_VERSION_MINOR, FFX_FSR2_VERSION_PATCH).c_str()))
+    {
+        if (ImGui::Combo("Mode##FSR2", (int*)&m_qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5))
+        {
+            m_needCreateContext = true;
+        }
+
+        if (m_qualityMode == 0)
+        {
+            if (ImGui::SliderFloat("Upscale Ratio##FSR2", &m_customUpscaleRatio, 1.0, 3.0))
+            {
+                m_needCreateContext = true;
+            }
+        }
+
+        ImGui::SliderFloat("Sharpness##FSR2", &m_sharpness, 0.0f, 1.0f, "%.2f");
+
+        TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
+        if (mode == TemporalSuperResolution::FSR2)
+        {
+            m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio());
+        }
+    }
+}
+
+RGHandle FSR2::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
-    GUI("PostProcess", fmt::format("FSR {}.{}.{}", FFX_FSR2_VERSION_MAJOR, FFX_FSR2_VERSION_MINOR, FFX_FSR2_VERSION_PATCH).c_str(),
-        [&]()
-        {
-            TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
-            if (mode == TemporalSuperResolution::FSR2)
-            {
-                float ratio = m_pRenderer->GetTemporalUpscaleRatio();
-
-                if (ImGui::Combo("Mode##FSR2", (int*)&m_qualityMode, "Custom\0Quality (1.5x)\0Balanced (1.7x)\0Performance (2.0x)\0Ultra Performance (3.0x)\0\0", 5))
-                {
-                    m_needCreateContext = true;
-                }
-
-                if (m_qualityMode == 0)
-                {
-                    if (ImGui::SliderFloat("Upscale Ratio##FSR2", &m_customUpscaleRatio, 1.0, 3.0))
-                    {
-                        m_needCreateContext = true;
-                    }
-                }
-
-                ImGui::SliderFloat("Sharpness##FSR2", &m_sharpness, 0.0f, 1.0f, "%.2f");
-
-                m_pRenderer->SetTemporalUpscaleRatio(GetUpscaleRatio());
-            }
-        });
-
     struct FSR2Data
     {
         RGHandle input;

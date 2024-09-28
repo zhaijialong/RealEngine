@@ -1185,3 +1185,10 @@ void Renderer::SaveTexture(const eastl::string& file, IGfxTexture* texture)
 {
     //todo
 }
+
+void Renderer::OnGui()
+{
+    m_pLightingProcessor->OnGui();
+    m_pPathTracer->OnGui();
+    m_pPostProcessor->OnGui();
+}

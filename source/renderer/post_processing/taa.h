@@ -8,6 +8,7 @@ class TAA
 public:
     TAA(Renderer* pRenderer);
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT, RGHandle sceneDepthRT, RGHandle velocityRT, uint32_t width, uint32_t height);
 
     bool IsEnabled() const { return m_bEnable; }

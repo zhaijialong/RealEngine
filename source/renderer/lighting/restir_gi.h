@@ -10,6 +10,7 @@ public:
     ReSTIRGI(Renderer* pRenderer);
     ~ReSTIRGI();
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle halfDepthNormal, RGHandle depth, RGHandle linear_depth, RGHandle normal, RGHandle velocity, uint32_t width, uint32_t height);
 
     IGfxDescriptor* GetOutputIrradianceSRV() const;

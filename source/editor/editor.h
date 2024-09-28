@@ -15,6 +15,7 @@ public:
     void AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command);
 
 private:
+    void BuildDockLayout();
     void DrawMenu();
     void DrawToolBar();
     void DrawGizmo();
@@ -33,11 +34,13 @@ private:
     bool m_bViewFrustumLocked = false;
     bool m_bVsync = true;
     bool m_bShowMeshlets = false;
+    bool m_bResetLayout = false;
 
     bool m_bShowInspector = false;
     bool m_bShowSettings = false;
-    bool m_bShowLighting = false;
-    bool m_bShowPostProcess = false;
+    bool m_bShowRenderer = true;
+
+    unsigned int m_dockSpace = 0;
 
     struct Command
     {

@@ -12,16 +12,19 @@ RTShadow::RTShadow(Renderer* pRenderer)
     m_pRaytracePSO = pRenderer->GetPipelineState(psoDesc, "RTShadow PSO");
 }
 
+void RTShadow::OnGui()
+{
+    if (ImGui::CollapsingHeader("Shadow"))
+    {
+        if (ImGui::Checkbox("Enable Denoiser##RTShadow", &m_bEnableDenoiser))
+        {
+            m_pDenoiser->InvalidateHistory();
+        }
+    }
+}
+
 RGHandle RTShadow::AddPass(RenderGraph* pRenderGraph, RGHandle depthRT, RGHandle normalRT, RGHandle velocityRT, uint32_t width, uint32_t height)
 {
-    GUI("Lighting", "Shadow", [&]()
-        {
-            if (ImGui::Checkbox("Enable Denoiser##RTShadow", &m_bEnableDenoiser))
-            {
-                m_pDenoiser->InvalidateHistory();
-            }
-        });
-
     RENDER_GRAPH_EVENT(pRenderGraph, "RTShadow");
 
     struct RTShadowData
