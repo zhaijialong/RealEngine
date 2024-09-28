@@ -268,6 +268,9 @@ private:
     RGHandle m_prevSceneColorHandle;
     bool m_bHistoryValid = false;
 
+    RGHandle m_outputColorHandle;
+    RGHandle m_outputDepthHandle;
+
     eastl::unique_ptr<Texture2D> m_pUpscaledDepthTexture;
     eastl::unique_ptr<TypedBuffer> m_pSPDCounterBuffer;
 

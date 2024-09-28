@@ -8,6 +8,10 @@
 
 void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
 {
+    m_pRenderGraph->Clear();
+
+    ImportPrevFrameTextures();
+
     m_pHZB->Generate1stPhaseCullingHZB(m_pRenderGraph.get());
     m_pBasePass->Render1stPhase(m_pRenderGraph.get());
 
@@ -43,6 +47,59 @@ void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
 
     m_pRenderGraph->Present(outColor, GfxAccessPixelShaderSRV);
     m_pRenderGraph->Present(outDepth, GfxAccessDSVReadOnly);
+
+    m_pRenderGraph->Compile();
+}
+
+void Renderer::ImportPrevFrameTextures()
+{
+    if (m_pPrevSceneDepthTexture == nullptr ||
+        m_pPrevSceneDepthTexture->GetTexture()->GetDesc().width != m_nRenderWidth ||
+        m_pPrevSceneDepthTexture->GetTexture()->GetDesc().height != m_nRenderHeight)
+    {
+        m_pPrevSceneDepthTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::R32F, GfxTextureUsageUnorderedAccess, "Prev SceneDepth"));
+        m_pPrevNormalTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA8UNORM, GfxTextureUsageUnorderedAccess, "Prev Normal"));
+        m_pPrevSceneColorTexture.reset(CreateTexture2D(m_nRenderWidth, m_nRenderHeight, 1, GfxFormat::RGBA16F, GfxTextureUsageUnorderedAccess, "Prev SceneColor"));
+
+        m_bHistoryValid = false;
+    }
+    else
+    {
+        m_bHistoryValid = true;
+    }
+
+    m_prevSceneDepthHandle = m_pRenderGraph->Import(m_pPrevSceneDepthTexture->GetTexture(), GfxAccessComputeUAV);
+    m_prevNormalHandle = m_pRenderGraph->Import(m_pPrevNormalTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
+    m_prevSceneColorHandle = m_pRenderGraph->Import(m_pPrevSceneColorTexture->GetTexture(), m_bHistoryValid ? GfxAccessCopyDst : GfxAccessComputeUAV);
+
+    if (!m_bHistoryValid)
+    {
+        struct ClearHistoryPassData
+        {
+            RGHandle linearDepth;
+            RGHandle normal;
+            RGHandle color;
+        };
+
+        auto clear_pass = m_pRenderGraph->AddPass<ClearHistoryPassData>("Clear Hisotry Textures", RenderPassType::Compute,
+            [&](ClearHistoryPassData& data, RGBuilder& builder)
+            {
+                data.linearDepth = builder.Write(m_prevSceneDepthHandle);
+                data.normal = builder.Write(m_prevNormalHandle);
+                data.color = builder.Write(m_prevSceneColorHandle);
+            },
+            [=](const ClearHistoryPassData& data, IGfxCommandList* pCommandList)
+            {
+                float clear_value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                pCommandList->ClearUAV(m_pPrevSceneDepthTexture->GetTexture(), m_pPrevSceneDepthTexture->GetUAV(), clear_value);
+                pCommandList->ClearUAV(m_pPrevNormalTexture->GetTexture(), m_pPrevNormalTexture->GetUAV(), clear_value);
+                pCommandList->ClearUAV(m_pPrevSceneColorTexture->GetTexture(), m_pPrevSceneColorTexture->GetUAV(), clear_value);
+            });
+
+        m_prevSceneDepthHandle = clear_pass->linearDepth;
+        m_prevNormalHandle = clear_pass->normal;
+        m_prevSceneColorHandle = clear_pass->color;
+    }
 }
 
 void Renderer::ForwardPass(RGHandle& color, RGHandle& depth)
