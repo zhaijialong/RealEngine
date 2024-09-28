@@ -40,9 +40,11 @@ void PostProcessor::OnGui()
     world->GetCamera()->OnPostProcessSettingGui();
 
     UpsacleModeGui();
+#if RE_PLATFORM_WINDOWS
     m_pFSR2->OnGui();
     m_pDLSS->OnGui();
     m_pXeSS->OnGui();
+#endif
     m_pTAA->OnGui();
 
     m_pDoF->OnGui();
