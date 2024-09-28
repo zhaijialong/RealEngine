@@ -21,7 +21,7 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
-extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 711; }
+extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 614; }
 extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
 static void __stdcall D3D12MessageCallback(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
