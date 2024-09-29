@@ -96,9 +96,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         TARGET RealEngine POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/DLSS/lib/Windows_x86_64/rel/nvngx_dlss.dll ${REAL_ENGINE_ROOT}/bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/libxess.dll ${REAL_ENGINE_ROOT}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/igxess.dll ${REAL_ENGINE_ROOT}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX_Loader.dll ${REAL_ENGINE_ROOT}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/xess/bin/XeFX.dll ${REAL_ENGINE_ROOT}/bin
     )
 
     # oidn

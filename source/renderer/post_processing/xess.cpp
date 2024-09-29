@@ -62,10 +62,10 @@ void XeSS::OnGui()
 
     if (ImGui::CollapsingHeader(fmt::format("XeSS {}.{}.{}", version.major, version.minor, version.patch).c_str()))
     {
-        int qualityMode = m_quality - XESS_QUALITY_SETTING_PERFORMANCE;
-        if (ImGui::Combo("Mode##XeSS", (int*)&qualityMode, "Performance (2.0x)\0Balanced (1.7x)\0Quality (1.5x)\0Ultra Quality (1.3x)\0\0", 4))
+        int qualityMode = m_quality - XESS_QUALITY_SETTING_ULTRA_PERFORMANCE;
+        if (ImGui::Combo("Mode##XeSS", (int*)&qualityMode, "Ultra Performance (3.0x)\0Performance (2.3x)\0Balanced (2.0x)\0Quality (1.7x)\0Ultra Quality (1.5x)\0Ultra Quality Plus (1.3x)\0TAA (1.0x)\0\0", 7))
         {
-            m_quality = (xess_quality_settings_t)(qualityMode + XESS_QUALITY_SETTING_PERFORMANCE);
+            m_quality = (xess_quality_settings_t)(qualityMode + XESS_QUALITY_SETTING_ULTRA_PERFORMANCE);
             m_needInitialization = true;
         }
 
