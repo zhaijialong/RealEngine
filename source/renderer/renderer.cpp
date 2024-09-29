@@ -267,99 +267,6 @@ void Renderer::BuildRayTracingAS(IGfxCommandList* pGraphicsCommandList, IGfxComm
     }
 }
 
-void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
-{
-    World* world = Engine::GetInstance()->GetWorld();
-    Camera* camera = world->GetCamera();
-    ILight* light = world->GetPrimaryLight();
-
-    bool enable_jitter = m_pPostProcessor->RequiresCameraJitter() || (m_outputType == RendererOutput::PathTracing);
-    camera->EnableJitter(enable_jitter);
-
-    RGHandle firstPhaseHZBHandle = m_pHZB->Get1stPhaseCullingHZBMip(0);
-    RGHandle secondPhaseHZBHandle = m_pHZB->Get2ndPhaseCullingHZBMip(0);
-    RGHandle sceneHZBHanlde = m_pHZB->GetSceneHZBMip(0);
-    RGTexture* firstPhaseHZBTexture = m_pRenderGraph->GetTexture(firstPhaseHZBHandle);
-    RGTexture* secondPhaseHZBTexture = m_pRenderGraph->GetTexture(secondPhaseHZBHandle);
-    RGTexture* sceneHZBTexture = m_pRenderGraph->GetTexture(sceneHZBHanlde);
-
-    RGHandle occlusionCulledMeshletsBufferHandle = m_pBasePass->GetSecondPhaseMeshletListBuffer();
-    RGHandle occlusionCulledMeshletsCounterBufferHandle = m_pBasePass->GetSecondPhaseMeshletListCounterBuffer();
-    RGBuffer* occlusionCulledMeshletsBuffer = m_pRenderGraph->GetBuffer(occlusionCulledMeshletsBufferHandle);
-    RGBuffer* occlusionCulledMeshletsCounterBuffer = m_pRenderGraph->GetBuffer(occlusionCulledMeshletsCounterBufferHandle);
-
-    SceneConstant sceneCB;
-    camera->SetupCameraCB(sceneCB.cameraCB);
-
-    sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
-    sceneCB.sceneStaticBufferSRV = m_pGpuScene->GetSceneStaticBufferSRV()->GetHeapIndex();
-    sceneCB.sceneAnimationBufferSRV = m_pGpuScene->GetSceneAnimationBufferSRV()->GetHeapIndex();
-    sceneCB.sceneAnimationBufferUAV = m_pGpuScene->GetSceneAnimationBufferUAV()->GetHeapIndex();
-    sceneCB.instanceDataAddress = m_pGpuScene->GetInstanceDataAddress();
-    sceneCB.sceneRayTracingTLAS = m_pGpuScene->GetRayTracingTLASSRV()->GetHeapIndex();
-    sceneCB.bShowMeshlets = m_bShowMeshlets;
-    sceneCB.secondPhaseMeshletsListUAV = occlusionCulledMeshletsBuffer->GetUAV()->GetHeapIndex();
-    sceneCB.secondPhaseMeshletsCounterUAV = occlusionCulledMeshletsCounterBuffer->GetUAV()->GetHeapIndex();
-    sceneCB.lightDir = light->GetLightDirection();
-    sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
-    sceneCB.lightRadius = light->GetLightRadius();
-    sceneCB.renderSize = uint2(m_nRenderWidth, m_nRenderHeight);
-    sceneCB.rcpRenderSize = float2(1.0f / m_nRenderWidth, 1.0f / m_nRenderHeight);
-    sceneCB.displaySize = uint2(m_nDisplayWidth, m_nDisplayHeight);
-    sceneCB.rcpDisplaySize = float2(1.0f / m_nDisplayWidth, 1.0f / m_nDisplayHeight);
-    sceneCB.prevSceneColorSRV = m_pPrevSceneColorTexture->GetSRV()->GetHeapIndex();
-    sceneCB.prevSceneDepthSRV = m_pPrevSceneDepthTexture->GetSRV()->GetHeapIndex();
-    sceneCB.prevNormalSRV = m_pPrevNormalTexture->GetSRV()->GetHeapIndex();
-    sceneCB.HZBWidth = m_pHZB->GetHZBWidth();
-    sceneCB.HZBHeight = m_pHZB->GetHZBHeight();
-    sceneCB.firstPhaseCullingHZBSRV = firstPhaseHZBTexture->GetSRV()->GetHeapIndex();
-    sceneCB.secondPhaseCullingHZBSRV = secondPhaseHZBTexture->GetSRV()->GetHeapIndex();
-    sceneCB.sceneHZBSRV = sceneHZBTexture->IsUsed() ? sceneHZBTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
-    sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
-    sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
-    sceneCB.debugTextCounterBufferUAV = m_pGpuDebugPrint->GetTextCounterBufferUAV()->GetHeapIndex();
-    sceneCB.debugTextBufferUAV = m_pGpuDebugPrint->GetTextBufferUAV()->GetHeapIndex();
-    sceneCB.debugFontCharBufferSRV = m_pGpuDebugPrint->GetFontCharBufferSRV()->GetHeapIndex();
-    sceneCB.bEnableStats = m_bGpuDrivenStatsEnabled;
-    sceneCB.statsBufferUAV = m_pGpuStats->GetStatsBufferUAV()->GetHeapIndex();
-    sceneCB.minReductionSampler = m_pMinReductionSampler->GetHeapIndex();
-    sceneCB.maxReductionSampler = m_pMaxReductionSampler->GetHeapIndex();
-    sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
-    sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
-    sceneCB.bilinearRepeatSampler = m_pBilinearRepeatSampler->GetHeapIndex();
-    sceneCB.bilinearClampSampler = m_pBilinearClampSampler->GetHeapIndex();
-    sceneCB.bilinearBlackBoarderSampler = m_pBilinearBlackBoarderSampler->GetHeapIndex();
-    sceneCB.bilinearWhiteBoarderSampler = m_pBilinearWhiteBoarderSampler->GetHeapIndex();
-    sceneCB.trilinearRepeatSampler = m_pTrilinearRepeatSampler->GetHeapIndex();
-    sceneCB.trilinearClampSampler = m_pTrilinearClampSampler->GetHeapIndex();
-    sceneCB.aniso2xSampler = m_pAniso2xSampler->GetHeapIndex();
-    sceneCB.aniso4xSampler = m_pAniso4xSampler->GetHeapIndex();
-    sceneCB.aniso8xSampler = m_pAniso8xSampler->GetHeapIndex();
-    sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
-    sceneCB.skyCubeTexture = m_pSkyCubeMap->GetCubeTexture()->GetSRV()->GetHeapIndex();
-    sceneCB.skySpecularIBLTexture = m_pSkyCubeMap->GetSpecularCubeTexture()->GetSRV()->GetHeapIndex();
-    sceneCB.skyDiffuseIBLTexture = m_pSkyCubeMap->GetDiffuseCubeTexture()->GetSRV()->GetHeapIndex();
-    sceneCB.preintegratedGFTexture = m_pPreintegratedGFTexture->GetSRV()->GetHeapIndex();
-    sceneCB.blueNoiseTexture = m_pBlueNoise->GetSRV()->GetHeapIndex();
-    sceneCB.sheenETexture = m_pSheenETexture->GetSRV()->GetHeapIndex();
-    sceneCB.tonyMcMapfaceTexture = m_pTonyMcMapface->GetSRV()->GetHeapIndex();
-    sceneCB.scalarSTBN = m_pSTBN->GetScalarTextureSRV()->GetHeapIndex();
-    sceneCB.vec2STBN = m_pSTBN->GetVec2TextureSRV()->GetHeapIndex();
-    sceneCB.vec3STBN = m_pSTBN->GetVec3TextureSRV()->GetHeapIndex();
-    sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
-    sceneCB.frameIndex = (uint32_t)GetFrameID();
-    sceneCB.mipBias = m_mipBias;
-    sceneCB.marschnerTextureM = m_pMarschnerHairLUT->GetM()->GetSRV()->GetHeapIndex();
-    sceneCB.marschnerTextureN = m_pMarschnerHairLUT->GetN()->GetSRV()->GetHeapIndex();
-
-    if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
-    {
-        pCommandList->SetGraphicsConstants(2, &sceneCB, sizeof(sceneCB));
-    }
-
-    pCommandList->SetComputeConstants(2, &sceneCB, sizeof(sceneCB));
-}
-
 void Renderer::Render()
 {
     CPU_EVENT("Render", "Renderer::Render");
@@ -657,6 +564,99 @@ void Renderer::CreateCommonResources()
     GfxComputePipelineDesc computePsoDesc;
     computePsoDesc.cs = GetShader("copy.hlsl", "cs_copy_depth", GfxShaderType::CS);
     m_pCopyDepthPSO = GetPipelineState(computePsoDesc, "Copy Depth PSO");
+}
+
+void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
+{
+    World* world = Engine::GetInstance()->GetWorld();
+    Camera* camera = world->GetCamera();
+    ILight* light = world->GetPrimaryLight();
+
+    bool enable_jitter = m_pPostProcessor->RequiresCameraJitter() || (m_outputType == RendererOutput::PathTracing);
+    camera->EnableJitter(enable_jitter);
+
+    RGHandle firstPhaseHZBHandle = m_pHZB->Get1stPhaseCullingHZBMip(0);
+    RGHandle secondPhaseHZBHandle = m_pHZB->Get2ndPhaseCullingHZBMip(0);
+    RGHandle sceneHZBHanlde = m_pHZB->GetSceneHZBMip(0);
+    RGTexture* firstPhaseHZBTexture = m_pRenderGraph->GetTexture(firstPhaseHZBHandle);
+    RGTexture* secondPhaseHZBTexture = m_pRenderGraph->GetTexture(secondPhaseHZBHandle);
+    RGTexture* sceneHZBTexture = m_pRenderGraph->GetTexture(sceneHZBHanlde);
+
+    RGHandle occlusionCulledMeshletsBufferHandle = m_pBasePass->GetSecondPhaseMeshletListBuffer();
+    RGHandle occlusionCulledMeshletsCounterBufferHandle = m_pBasePass->GetSecondPhaseMeshletListCounterBuffer();
+    RGBuffer* occlusionCulledMeshletsBuffer = m_pRenderGraph->GetBuffer(occlusionCulledMeshletsBufferHandle);
+    RGBuffer* occlusionCulledMeshletsCounterBuffer = m_pRenderGraph->GetBuffer(occlusionCulledMeshletsCounterBufferHandle);
+
+    SceneConstant sceneCB;
+    camera->SetupCameraCB(sceneCB.cameraCB);
+
+    sceneCB.sceneConstantBufferSRV = m_pGpuScene->GetSceneConstantSRV()->GetHeapIndex();
+    sceneCB.sceneStaticBufferSRV = m_pGpuScene->GetSceneStaticBufferSRV()->GetHeapIndex();
+    sceneCB.sceneAnimationBufferSRV = m_pGpuScene->GetSceneAnimationBufferSRV()->GetHeapIndex();
+    sceneCB.sceneAnimationBufferUAV = m_pGpuScene->GetSceneAnimationBufferUAV()->GetHeapIndex();
+    sceneCB.instanceDataAddress = m_pGpuScene->GetInstanceDataAddress();
+    sceneCB.sceneRayTracingTLAS = m_pGpuScene->GetRayTracingTLASSRV()->GetHeapIndex();
+    sceneCB.bShowMeshlets = m_bShowMeshlets;
+    sceneCB.secondPhaseMeshletsListUAV = occlusionCulledMeshletsBuffer->GetUAV()->GetHeapIndex();
+    sceneCB.secondPhaseMeshletsCounterUAV = occlusionCulledMeshletsCounterBuffer->GetUAV()->GetHeapIndex();
+    sceneCB.lightDir = light->GetLightDirection();
+    sceneCB.lightColor = light->GetLightColor() * light->GetLightIntensity();
+    sceneCB.lightRadius = light->GetLightRadius();
+    sceneCB.renderSize = uint2(m_nRenderWidth, m_nRenderHeight);
+    sceneCB.rcpRenderSize = float2(1.0f / m_nRenderWidth, 1.0f / m_nRenderHeight);
+    sceneCB.displaySize = uint2(m_nDisplayWidth, m_nDisplayHeight);
+    sceneCB.rcpDisplaySize = float2(1.0f / m_nDisplayWidth, 1.0f / m_nDisplayHeight);
+    sceneCB.prevSceneColorSRV = m_pPrevSceneColorTexture->GetSRV()->GetHeapIndex();
+    sceneCB.prevSceneDepthSRV = m_pPrevSceneDepthTexture->GetSRV()->GetHeapIndex();
+    sceneCB.prevNormalSRV = m_pPrevNormalTexture->GetSRV()->GetHeapIndex();
+    sceneCB.HZBWidth = m_pHZB->GetHZBWidth();
+    sceneCB.HZBHeight = m_pHZB->GetHZBHeight();
+    sceneCB.firstPhaseCullingHZBSRV = firstPhaseHZBTexture->GetSRV()->GetHeapIndex();
+    sceneCB.secondPhaseCullingHZBSRV = secondPhaseHZBTexture->GetSRV()->GetHeapIndex();
+    sceneCB.sceneHZBSRV = sceneHZBTexture->IsUsed() ? sceneHZBTexture->GetSRV()->GetHeapIndex() : GFX_INVALID_RESOURCE;
+    sceneCB.debugLineDrawCommandUAV = m_pGpuDebugLine->GetArugumentsBufferUAV()->GetHeapIndex();
+    sceneCB.debugLineVertexBufferUAV = m_pGpuDebugLine->GetVertexBufferUAV()->GetHeapIndex();
+    sceneCB.debugTextCounterBufferUAV = m_pGpuDebugPrint->GetTextCounterBufferUAV()->GetHeapIndex();
+    sceneCB.debugTextBufferUAV = m_pGpuDebugPrint->GetTextBufferUAV()->GetHeapIndex();
+    sceneCB.debugFontCharBufferSRV = m_pGpuDebugPrint->GetFontCharBufferSRV()->GetHeapIndex();
+    sceneCB.bEnableStats = m_bGpuDrivenStatsEnabled;
+    sceneCB.statsBufferUAV = m_pGpuStats->GetStatsBufferUAV()->GetHeapIndex();
+    sceneCB.minReductionSampler = m_pMinReductionSampler->GetHeapIndex();
+    sceneCB.maxReductionSampler = m_pMaxReductionSampler->GetHeapIndex();
+    sceneCB.pointRepeatSampler = m_pPointRepeatSampler->GetHeapIndex();
+    sceneCB.pointClampSampler = m_pPointClampSampler->GetHeapIndex();
+    sceneCB.bilinearRepeatSampler = m_pBilinearRepeatSampler->GetHeapIndex();
+    sceneCB.bilinearClampSampler = m_pBilinearClampSampler->GetHeapIndex();
+    sceneCB.bilinearBlackBoarderSampler = m_pBilinearBlackBoarderSampler->GetHeapIndex();
+    sceneCB.bilinearWhiteBoarderSampler = m_pBilinearWhiteBoarderSampler->GetHeapIndex();
+    sceneCB.trilinearRepeatSampler = m_pTrilinearRepeatSampler->GetHeapIndex();
+    sceneCB.trilinearClampSampler = m_pTrilinearClampSampler->GetHeapIndex();
+    sceneCB.aniso2xSampler = m_pAniso2xSampler->GetHeapIndex();
+    sceneCB.aniso4xSampler = m_pAniso4xSampler->GetHeapIndex();
+    sceneCB.aniso8xSampler = m_pAniso8xSampler->GetHeapIndex();
+    sceneCB.aniso16xSampler = m_pAniso16xSampler->GetHeapIndex();
+    sceneCB.skyCubeTexture = m_pSkyCubeMap->GetCubeTexture()->GetSRV()->GetHeapIndex();
+    sceneCB.skySpecularIBLTexture = m_pSkyCubeMap->GetSpecularCubeTexture()->GetSRV()->GetHeapIndex();
+    sceneCB.skyDiffuseIBLTexture = m_pSkyCubeMap->GetDiffuseCubeTexture()->GetSRV()->GetHeapIndex();
+    sceneCB.preintegratedGFTexture = m_pPreintegratedGFTexture->GetSRV()->GetHeapIndex();
+    sceneCB.blueNoiseTexture = m_pBlueNoise->GetSRV()->GetHeapIndex();
+    sceneCB.sheenETexture = m_pSheenETexture->GetSRV()->GetHeapIndex();
+    sceneCB.tonyMcMapfaceTexture = m_pTonyMcMapface->GetSRV()->GetHeapIndex();
+    sceneCB.scalarSTBN = m_pSTBN->GetScalarTextureSRV()->GetHeapIndex();
+    sceneCB.vec2STBN = m_pSTBN->GetVec2TextureSRV()->GetHeapIndex();
+    sceneCB.vec3STBN = m_pSTBN->GetVec3TextureSRV()->GetHeapIndex();
+    sceneCB.frameTime = Engine::GetInstance()->GetFrameDeltaTime();
+    sceneCB.frameIndex = (uint32_t)GetFrameID();
+    sceneCB.mipBias = m_mipBias;
+    sceneCB.marschnerTextureM = m_pMarschnerHairLUT->GetM()->GetSRV()->GetHeapIndex();
+    sceneCB.marschnerTextureN = m_pMarschnerHairLUT->GetN()->GetSRV()->GetHeapIndex();
+
+    if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
+    {
+        pCommandList->SetGraphicsConstants(2, &sceneCB, sizeof(sceneCB));
+    }
+
+    pCommandList->SetComputeConstants(2, &sceneCB, sizeof(sceneCB));
 }
 
 void Renderer::OnWindowResize(void* window, uint32_t width, uint32_t height)

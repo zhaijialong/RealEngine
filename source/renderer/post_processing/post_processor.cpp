@@ -12,6 +12,7 @@
 #include "xess.h"
 #include "../renderer.h"
 #include "utils/gui_util.h"
+#include "utils/log.h"
 
 PostProcessor::PostProcessor(Renderer* pRenderer)
 {
@@ -103,8 +104,7 @@ RGHandle PostProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT
 
         outputHandle = m_pFXAA->AddPass(pRenderGraph, outputHandle, displayWidth, displayHeight);
 
-        if (upscaleMode == TemporalSuperResolution::None ||
-            upscaleMode == TemporalSuperResolution::XeSS)
+        if (upscaleMode != TemporalSuperResolution::FSR2) // FSR2 has a built-in RCAS
         {
             outputHandle = m_pCAS->AddPass(pRenderGraph, outputHandle, displayWidth, displayHeight);
         }
@@ -128,6 +128,8 @@ void PostProcessor::UpsacleModeGui()
 #if RE_PLATFORM_WINDOWS
         if (mode == TemporalSuperResolution::DLSS && !m_pDLSS->IsSupported())
         {
+            RE_INFO("DLSS is not supported on this device.");
+
             mode = TemporalSuperResolution::None;
         }
 #endif

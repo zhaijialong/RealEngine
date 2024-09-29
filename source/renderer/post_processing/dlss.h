@@ -31,8 +31,6 @@ private:
     bool InitializeDLSSFeatures(IGfxCommandList* pCommandList, uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight);
     void ReleaseDLSSFeatures();
 
-    int GetQualityMode() const;
-
 private:
     Renderer* m_pRenderer = nullptr;
 
@@ -43,7 +41,6 @@ private:
 
     int m_qualityMode = 2;// NVSDK_NGX_PerfQuality_Value_MaxQuality;
     float m_customUpscaleRatio = 1.0f;
-    float m_sharpness = 0.5f;
 };
 
 #endif // #if RE_PLATFORM_WINDOWS
