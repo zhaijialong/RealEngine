@@ -79,18 +79,33 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(DXC_SPIRV_PATH ${REAL_ENGINE_ROOT}/bin/dxc.exe)
     set(NRD_SHADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD_Shaders)
     set(GLOBAL_BIN_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/NRD)
-    add_subdirectory(${EXTERNAL_ROOT}/RayTracingDenoiser)	
+    add_subdirectory(${EXTERNAL_ROOT}/RayTracingDenoiser)
     set_target_properties(NRD PROPERTIES FOLDER	External)
     set_target_properties(NRD_Shaders PROPERTIES FOLDER External)
     set_target_properties(ShaderMake PROPERTIES FOLDER External)
     set_target_properties(ShaderMakeBlob PROPERTIES FOLDER External)
+
+    # FSR2
+    add_subdirectory(${EXTERNAL_ROOT}/FidelityFX-FSR2/src/ffx-fsr2-api)
+    set_target_properties(ffx_fsr2_api_dx12_x64 PROPERTIES FOLDER External)
+    set_target_properties(ffx_fsr2_api_vk_x64 PROPERTIES FOLDER External)
+    set_target_properties(ffx_fsr2_api_x64 PROPERTIES FOLDER External)
+    set_target_properties(shader_permutations_dx12 PROPERTIES FOLDER External)
+    set_target_properties(shader_permutations_vk PROPERTIES FOLDER External)
+    target_include_directories(RealEngine PUBLIC ${EXTERNAL_ROOT}/FidelityFX-FSR2/src/ffx-fsr2-api)
 
     target_link_directories(RealEngine PUBLIC
         ${EXTERNAL_ROOT}/DLSS/lib/Windows_x86_64/x86_64
         ${EXTERNAL_ROOT}/xess/lib/
     )
 
-    target_link_libraries(RealEngine NRD ws2_32)
+    target_link_libraries(RealEngine
+        NRD
+        ws2_32
+        ffx_fsr2_api_x64
+        ffx_fsr2_api_dx12_x64
+        ffx_fsr2_api_vk_x64
+    )
 
     add_custom_command(
         TARGET RealEngine POST_BUILD

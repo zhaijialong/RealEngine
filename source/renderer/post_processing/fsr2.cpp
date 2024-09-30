@@ -4,7 +4,7 @@
 
 #include "../renderer.h"
 #include "utils/gui_util.h"
-#include "FSR2/dx12/ffx_fsr2_dx12.h"
+#include "dx12/ffx_fsr2_dx12.h"
 #include "utils/fmt.h"
 
 FSR2::FSR2(Renderer* pRenderer)

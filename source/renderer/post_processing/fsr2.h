@@ -5,7 +5,7 @@
 #if RE_PLATFORM_WINDOWS
 
 #include "../render_graph.h"
-#include "FSR2/ffx_fsr2.h"
+#include "ffx_fsr2.h"
 
 class FSR2
 {

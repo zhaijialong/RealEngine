@@ -70,16 +70,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.cpp
         ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.h
         ${EXTERNAL_ROOT}/d3d12ma/D3D12MemAlloc.natvis
-        ${EXTERNAL_ROOT}/FSR2/dx12/shaders/ffx_fsr2_shaders_dx12.cpp
-        ${EXTERNAL_ROOT}/FSR2/dx12/shaders/ffx_fsr2_shaders_dx12.h
-        ${EXTERNAL_ROOT}/FSR2/dx12/ffx_fsr2_dx12.cpp
-        ${EXTERNAL_ROOT}/FSR2/dx12/ffx_fsr2_dx12.h
-        ${EXTERNAL_ROOT}/FSR2/ffx_assert.cpp
-        ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
-        ${EXTERNAL_ROOT}/FSR2/ffx_fsr2.cpp
-        ${EXTERNAL_ROOT}/FSR2/ffx_fsr2.h
-        ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
-        ${EXTERNAL_ROOT}/FSR2/ffx_assert.h
         ${EXTERNAL_ROOT}/imgui/imgui_impl_win32.cpp
         ${EXTERNAL_ROOT}/imgui/imgui_impl_win32.h
     )
