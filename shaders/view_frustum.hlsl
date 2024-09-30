@@ -19,34 +19,28 @@ void main()
     const float4 right = GetCameraCB().culling.planes[1];
     const float4 top = GetCameraCB().culling.planes[2];
     const float4 bottom = GetCameraCB().culling.planes[3];
-    const float4 far = GetCameraCB().culling.planes[4];
     const float4 near = GetCameraCB().culling.planes[5];
     
+    const float3 leftTop = IntersectPlanes(left, top, near);
+    const float3 rightTop = IntersectPlanes(right, top, near);
+    const float3 rightBottom = IntersectPlanes(right, bottom, near);
+    const float3 leftBottom = IntersectPlanes(left, bottom, near);
+    
+    const float length = 1000000.0;
     const float3 color = float3(1, 0, 0);
     
-    float3 v1 = IntersectPlanes(left, top, far);
-    float3 v2 = IntersectPlanes(left, top, near);
-    float3 v3 = IntersectPlanes(right, top, far);
-    float3 v4 = IntersectPlanes(right, top, near);
-    float3 v5 = IntersectPlanes(right, bottom, far);
-    float3 v6 = IntersectPlanes(right, bottom, near);
-    float3 v7 = IntersectPlanes(left, bottom, far);
-    float3 v8 = IntersectPlanes(left, bottom, near);
-
-    debug::DrawLine(v1, v2, color);
-    debug::DrawLine(v3, v4, color);
-    debug::DrawLine(v5, v6, color);
-    debug::DrawLine(v7, v8, color);
+    debug::DrawLine(leftTop, rightTop, color);
+    debug::DrawLine(rightTop, rightBottom, color);
+    debug::DrawLine(rightBottom, leftBottom, color);
+    debug::DrawLine(leftBottom, leftTop, color);
     
-    /*
-    debug::DrawLine(v1, v3, color);
-    debug::DrawLine(v3, v5, color);
-    debug::DrawLine(v5, v7, color);
-    debug::DrawLine(v7, v1, color);
-    */
+    const float3 leftTopDir = cross(top.xyz, left.xyz);
+    const float3 rightTopDir = cross(right.xyz, top.xyz);
+    const float3 rightBottomDir = cross(bottom.xyz, right.xyz);
+    const float3 leftBottomDir = cross(left.xyz, bottom.xyz);
     
-    debug::DrawLine(v2, v4, color);
-    debug::DrawLine(v4, v6, color);
-    debug::DrawLine(v6, v8, color);
-    debug::DrawLine(v8, v2, color);
+    debug::DrawLine(leftTop, leftTop + leftTopDir * length, color);
+    debug::DrawLine(rightTop, rightTop + rightTopDir * length, color);
+    debug::DrawLine(rightBottom, rightBottom + rightBottomDir * length, color);
+    debug::DrawLine(leftBottom, leftBottom + leftBottomDir * length, color);
 }

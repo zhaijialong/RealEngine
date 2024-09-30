@@ -344,11 +344,12 @@ void Camera::UpdateFrustumPlanes(const float4x4& matrix)
     m_frustumPlanes[3] = normalize_plane(m_frustumPlanes[3]);
 
     // far clipping plane (reversed depth)
-    m_frustumPlanes[4].x = matrix[0][2];
-    m_frustumPlanes[4].y = matrix[1][2];
-    m_frustumPlanes[4].z = matrix[2][2];
-    m_frustumPlanes[4].w = matrix[3][2];
-    m_frustumPlanes[4] = normalize_plane(m_frustumPlanes[4]);
+    //m_frustumPlanes[4].x = matrix[0][2];
+    //m_frustumPlanes[4].y = matrix[1][2];
+    //m_frustumPlanes[4].z = matrix[2][2];
+    //m_frustumPlanes[4].w = matrix[3][2];
+    //m_frustumPlanes[4] = normalize_plane(m_frustumPlanes[4]);
+    m_frustumPlanes[4] = float4(0.0f, 0.0f, 0.0f, 0.0f); // infinite far plane
 
     // near clipping plane (reversed depth)
     m_frustumPlanes[5].x = matrix[0][3] - matrix[0][2];
