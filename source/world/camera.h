@@ -67,6 +67,9 @@ private:
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
     void OnCameraSettingGui();
 
+    void UpdateCameraRotation(float delta_time);
+    void UpdateCameraPosition(float delta_time);
+
 private:
     float3 m_pos;
     float3 m_rotation; //in degrees
@@ -91,6 +94,8 @@ private:
     float m_fov = 0.0f;
     float m_znear = 0.0f;
     float m_moveSpeed = 10.0f;
+
+    float3 m_prevMoveVelocity = {};
 
     float m_aperture = 1.0f;
     int m_shutterSpeed = 60;

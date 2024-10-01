@@ -90,52 +90,23 @@ void Camera::Tick(float delta_time)
 
     m_bMoved = false;
 
+    UpdateCameraRotation(delta_time);
+    UpdateCameraPosition(delta_time);
+
+    UpdateJitter();
+    UpdateMatrix();
+
+    if (!m_bFrustumLocked)
+    {
+        m_frustumViewPos = m_pos;
+
+        UpdateFrustumPlanes(m_viewProjectionJitter);
+    }
+}
+
+void Camera::UpdateCameraRotation(float delta_time)
+{
     ImGuiIO& io = ImGui::GetIO();
-
-    if (!io.WantCaptureKeyboard && !io.NavActive)
-    {
-        if (ImGui::IsKeyDown(ImGuiKey_A) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickLeft))
-        {
-            m_pos += GetLeft() * m_moveSpeed * delta_time;
-            m_bMoved = true;
-        }
-        
-        if (ImGui::IsKeyDown(ImGuiKey_S) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickDown))
-        {
-            m_pos += GetBack() * m_moveSpeed * delta_time;
-            m_bMoved = true;
-        }
-        
-        if (ImGui::IsKeyDown(ImGuiKey_D) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickRight))
-        {
-            m_pos += GetRight() * m_moveSpeed * delta_time;
-            m_bMoved = true;
-        }
-        
-        if (ImGui::IsKeyDown(ImGuiKey_W) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickUp))
-        {
-            m_pos += GetForward() * m_moveSpeed * delta_time;
-            m_bMoved = true;
-        }
-    }
-
-    if (!io.WantCaptureMouse)
-    {
-        if (!nearly_equal(io.MouseWheel, 0.0f))
-        {
-            m_pos += GetForward() * io.MouseWheel * m_moveSpeed * delta_time;
-            m_bMoved = true;
-        }
-
-        if (ImGui::IsMouseDragging(1))
-        {
-            const float rotate_speed = 0.1f;
-
-            m_rotation.x = fmodf(m_rotation.x + io.MouseDelta.y * rotate_speed, 360.0f);
-            m_rotation.y = fmodf(m_rotation.y + io.MouseDelta.x * rotate_speed, 360.0f);
-            m_bMoved = true;
-        }
-    }
 
     if (!io.NavActive)
     {
@@ -162,15 +133,76 @@ void Camera::Tick(float delta_time)
         }
     }
 
-    UpdateJitter();
-    UpdateMatrix();
-
-    if (!m_bFrustumLocked)
+    if (!io.WantCaptureMouse)
     {
-        m_frustumViewPos = m_pos;
+        if (ImGui::IsMouseDragging(1) && !ImGui::IsKeyDown(ImGuiKey_LeftAlt))
+        {
+            const float rotate_speed = 0.1f;
 
-        UpdateFrustumPlanes(m_viewProjectionJitter);
+            m_rotation.x = fmodf(m_rotation.x + io.MouseDelta.y * rotate_speed, 360.0f);
+            m_rotation.y = fmodf(m_rotation.y + io.MouseDelta.x * rotate_speed, 360.0f);
+
+            m_bMoved = true;
+        }
     }
+
+    m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(m_rotation)));
+}
+
+void Camera::UpdateCameraPosition(float delta_time)
+{
+    bool moveLeft = false;
+    bool moveRight = false;
+    bool moveForward = false;
+    bool moveBack = false;
+    float moveSpeed = m_moveSpeed;
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (!io.WantCaptureKeyboard && !io.NavActive)
+    {
+        moveLeft = ImGui::IsKeyDown(ImGuiKey_A) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickLeft);
+        moveBack = ImGui::IsKeyDown(ImGuiKey_S) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickDown);
+        moveRight = ImGui::IsKeyDown(ImGuiKey_D) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickRight);
+        moveForward = ImGui::IsKeyDown(ImGuiKey_W) || ImGui::IsKeyDown(ImGuiKey_GamepadLStickUp);
+    }
+
+    if (!io.WantCaptureMouse)
+    {
+        if (!nearly_equal(io.MouseWheel, 0.0f))
+        {
+            moveForward |= io.MouseWheel > 0.0f;
+            moveBack |= io.MouseWheel < 0.0f;
+
+            moveSpeed *= abs(io.MouseWheel);
+        }
+
+        if (ImGui::IsMouseDragging(1) && ImGui::IsKeyDown(ImGuiKey_LeftAlt))
+        {
+            moveForward |= io.MouseDelta.y > 0.0f;
+            moveBack |= io.MouseDelta.y < 0.0f;
+
+            moveSpeed *= abs(io.MouseDelta.y) * 0.1f;
+        }
+    }
+
+    float3 moveVelocity = float3(0.0f, 0.0f, 0.0f);
+    if (moveForward) moveVelocity += GetForward();
+    if (moveBack) moveVelocity += GetBack();
+    if (moveLeft) moveVelocity += GetLeft();
+    if (moveRight) moveVelocity += GetRight();
+
+    if (length(moveVelocity) > 0.0f)
+    {
+        m_bMoved = true;
+        moveVelocity = normalize(moveVelocity) * moveSpeed;
+    }
+
+    moveVelocity = lerp(m_prevMoveVelocity, moveVelocity, 1.0f - exp(-delta_time * 20.0f));
+    m_prevMoveVelocity = moveVelocity;
+
+    m_pos += moveVelocity * delta_time;
+    m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(m_rotation)));
 }
 
 void Camera::SetupCameraCB(CameraConstant& cameraCB)
