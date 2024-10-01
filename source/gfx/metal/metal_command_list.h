@@ -12,7 +12,8 @@ public:
     ~MetalCommandList();
 
     bool Create();
-    
+    MTL::Fence* GetFence() const { return m_pFence; }
+
     virtual void* GetHandle() const override { return m_pCommandBuffer; }
 
     virtual void ResetAllocator() override;

@@ -10,6 +10,7 @@
 #include "fsr2.h"
 #include "dlss.h"
 #include "xess.h"
+#include "metalfx_temporal_upscaler.h"
 #include "../renderer.h"
 #include "utils/gui_util.h"
 #include "utils/log.h"
@@ -30,6 +31,8 @@ PostProcessor::PostProcessor(Renderer* pRenderer)
     m_pFSR2 = eastl::make_unique<FSR2>(pRenderer);
     m_pDLSS = eastl::make_unique<DLSS>(pRenderer);
     m_pXeSS = eastl::make_unique<XeSS>(pRenderer);
+#elif RE_PLATFORM_MAC || RE_PLATFORM_IOS
+    m_pMetalFXTemporalUpscaler = eastl::make_unique<MetalFXTemporalUpscaler>(pRenderer);
 #endif
 }
 
@@ -45,6 +48,8 @@ void PostProcessor::OnGui()
     m_pFSR2->OnGui();
     m_pDLSS->OnGui();
     m_pXeSS->OnGui();
+#elif RE_PLATFORM_MAC || RE_PLATFORM_IOS
+    m_pMetalFXTemporalUpscaler->OnGui();
 #endif
     m_pTAA->OnGui();
 
@@ -88,6 +93,10 @@ RGHandle PostProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle sceneColorRT
     case TemporalSuperResolution::XeSS:
         outputHandle = m_pXeSS->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
         break;
+#elif RE_PLATFORM_MAC || RE_PLATFORM_IOS
+    case TemporalSuperResolution::MetalFX:
+        outputHandle = m_pMetalFXTemporalUpscaler->AddPass(pRenderGraph, outputHandle, sceneDepthRT, velocityRT, exposure, renderWidth, renderHeight, displayWidth, displayHeight);
+        break;
 #endif
     default:
         RE_ASSERT(renderWidth == displayWidth && renderHeight == displayHeight);
@@ -120,10 +129,11 @@ bool PostProcessor::RequiresCameraJitter()
 
 void PostProcessor::UpsacleModeGui()
 {
+    TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
+    
     if (ImGui::CollapsingHeader("Temporal Super Resolution"))
     {
-        TemporalSuperResolution mode = m_pRenderer->GetTemporalUpscaleMode();
-        ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR2\0DLSS\0XeSS\0\0", (int)TemporalSuperResolution::Max);
+        ImGui::Combo("Upscaler##TemporalUpscaler", (int*)&mode, "None\0FSR2\0DLSS\0XeSS\0MetalFX\0\0", (int)TemporalSuperResolution::Max);
 
 #if RE_PLATFORM_WINDOWS
         if (mode == TemporalSuperResolution::DLSS && !m_pDLSS->IsSupported())
@@ -133,26 +143,30 @@ void PostProcessor::UpsacleModeGui()
             mode = TemporalSuperResolution::None;
         }
 #endif
+    }
+    
+    m_pRenderer->SetTemporalUpscaleMode(mode);
 
-        m_pRenderer->SetTemporalUpscaleMode(mode);
-
-        switch (mode)
-        {
+    switch (mode)
+    {
 #if RE_PLATFORM_WINDOWS
-        case TemporalSuperResolution::FSR2:
-            m_pRenderer->SetTemporalUpscaleRatio(m_pFSR2->GetUpscaleRatio());
-            break;
-        case TemporalSuperResolution::DLSS:
-            m_pRenderer->SetTemporalUpscaleRatio(m_pDLSS->GetUpscaleRatio());
-            break;
-        case TemporalSuperResolution::XeSS:
-            m_pRenderer->SetTemporalUpscaleRatio(m_pXeSS->GetUpscaleRatio());
-            break;
+    case TemporalSuperResolution::FSR2:
+        m_pRenderer->SetTemporalUpscaleRatio(m_pFSR2->GetUpscaleRatio());
+        break;
+    case TemporalSuperResolution::DLSS:
+        m_pRenderer->SetTemporalUpscaleRatio(m_pDLSS->GetUpscaleRatio());
+        break;
+    case TemporalSuperResolution::XeSS:
+        m_pRenderer->SetTemporalUpscaleRatio(m_pXeSS->GetUpscaleRatio());
+        break;
+#elif RE_PLATFORM_MAC || RE_PLATFORM_IOS
+    case TemporalSuperResolution::MetalFX:
+        m_pRenderer->SetTemporalUpscaleRatio(m_pMetalFXTemporalUpscaler->GetUpscaleRatio());
+        break;
 #endif
-        default:
-            m_pRenderer->SetTemporalUpscaleRatio(1.0f);
-            break;
-        }
+    default:
+        m_pRenderer->SetTemporalUpscaleRatio(1.0f);
+        break;
     }
 }
 

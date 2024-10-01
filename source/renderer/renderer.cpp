@@ -53,6 +53,10 @@ bool Renderer::CreateDevice(GfxRenderBackend backend, void* window_handle, uint3
     m_nRenderWidth = window_width;
     m_nRenderHeight = window_height;
 
+#if RE_PLATFORM_MAC || RE_PLATFORM_IOS
+    SetTemporalUpscaleMode(TemporalSuperResolution::MetalFX);
+#endif
+    
     GfxDeviceDesc desc;
     desc.backend = backend;
     m_pDevice.reset(CreateGfxDevice(desc));

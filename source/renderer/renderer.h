@@ -39,6 +39,7 @@ enum class TemporalSuperResolution
     FSR2,
     DLSS,
     XeSS,
+    MetalFX,
 
     Max,
 };

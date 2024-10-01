@@ -337,6 +337,11 @@ void MetalCommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
     m_pRenderCommandEncoder->setFragmentBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
     m_pRenderCommandEncoder->setFragmentBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
     
+    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
+    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
+    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
+    
     SetViewport(0, 0, width, height);
 }
 
@@ -519,12 +524,6 @@ void MetalCommandList::DispatchMesh(uint32_t group_count_x, uint32_t group_count
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
     
-    MetalDevice* pDevice = (MetalDevice*)m_pDevice;
-    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
-    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
-    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
-    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
-    
     m_pRenderCommandEncoder->setObjectBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
     m_pRenderCommandEncoder->setMeshBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
     m_pRenderCommandEncoder->setFragmentBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
@@ -572,12 +571,6 @@ void MetalCommandList::DispatchIndirect(IGfxBuffer* buffer, uint32_t offset)
 void MetalCommandList::DispatchMeshIndirect(IGfxBuffer* buffer, uint32_t offset)
 {
     RE_ASSERT(m_pRenderCommandEncoder != nullptr);
-    
-    MetalDevice* pDevice = (MetalDevice*)m_pDevice;
-    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
-    m_pRenderCommandEncoder->setObjectBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
-    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetResourceDescriptorBuffer(), 0, kIRDescriptorHeapBindPoint);
-    m_pRenderCommandEncoder->setMeshBuffer(pDevice->GetSamplerDescriptorBuffer(), 0, kIRSamplerHeapBindPoint);
     
     m_pRenderCommandEncoder->setObjectBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);
     m_pRenderCommandEncoder->setMeshBytes(&m_graphicsArgumentBuffer, sizeof(TopLevelArgumentBuffer), kIRArgumentBufferBindPoint);

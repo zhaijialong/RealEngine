@@ -34,5 +34,7 @@ private:
     eastl::unique_ptr<class FSR2> m_pFSR2;
     eastl::unique_ptr<class DLSS> m_pDLSS;
     eastl::unique_ptr<class XeSS> m_pXeSS;
+#elif RE_PLATFORM_MAC || RE_PLATFORM_IOS
+    eastl::unique_ptr<class MetalFXTemporalUpscaler> m_pMetalFXTemporalUpscaler;
 #endif
 };

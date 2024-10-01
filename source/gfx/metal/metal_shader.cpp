@@ -17,7 +17,7 @@ MetalShader::~MetalShader()
 
 bool MetalShader::Create(eastl::span<uint8_t> data)
 {
-    m_pFunction->release();
+    m_pFunction->release(); // this looks dangerous, but sending message to nil is safe in objc runtime
     
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     
