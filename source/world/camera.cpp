@@ -108,28 +108,30 @@ void Camera::UpdateCameraRotation(float delta_time)
 {
     ImGuiIO& io = ImGui::GetIO();
 
+    float2 rotateVelocity = {};
+
     if (!io.NavActive)
     {
         const float rotate_speed = 120.0f;
 
         if (ImGui::IsKeyDown(ImGuiKey_GamepadRStickRight))
         {
-            m_rotation.y = fmodf(m_rotation.y + delta_time * rotate_speed, 360.0f);
+            rotateVelocity.y = rotate_speed;
         }
 
         if (ImGui::IsKeyDown(ImGuiKey_GamepadRStickLeft))
         {
-            m_rotation.y = fmodf(m_rotation.y - delta_time * rotate_speed, 360.0f);
+            rotateVelocity.y = -rotate_speed;
         }
 
         if (ImGui::IsKeyDown(ImGuiKey_GamepadRStickDown))
         {
-            m_rotation.x = fmodf(m_rotation.x + delta_time * rotate_speed, 360.0f);
+            rotateVelocity.x = rotate_speed;
         }
 
         if (ImGui::IsKeyDown(ImGuiKey_GamepadRStickUp))
         {
-            m_rotation.x = fmodf(m_rotation.x - delta_time * rotate_speed, 360.0f);
+            rotateVelocity.x = -rotate_speed;
         }
     }
 
@@ -137,16 +139,21 @@ void Camera::UpdateCameraRotation(float delta_time)
     {
         if (ImGui::IsMouseDragging(1) && !ImGui::IsKeyDown(ImGuiKey_LeftAlt))
         {
-            const float rotate_speed = 0.1f;
+            const float rotate_speed = 6.0f;
 
-            m_rotation.x = fmodf(m_rotation.x + io.MouseDelta.y * rotate_speed, 360.0f);
-            m_rotation.y = fmodf(m_rotation.y + io.MouseDelta.x * rotate_speed, 360.0f);
-
-            m_bMoved = true;
+            rotateVelocity.x = io.MouseDelta.y * rotate_speed;
+            rotateVelocity.y = io.MouseDelta.x * rotate_speed;
         }
     }
 
+    rotateVelocity = lerp(m_prevRotateVelocity, rotateVelocity, 1.0f - exp(-delta_time * 10.0f / m_rotateSmoothness));
+    m_prevRotateVelocity = rotateVelocity;
+
+    m_rotation.x += rotateVelocity.x * delta_time;
+    m_rotation.y += rotateVelocity.y * delta_time;
     m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(m_rotation)));
+
+    m_bMoved |= length(rotateVelocity * delta_time) > 1e-3f;
 }
 
 void Camera::UpdateCameraPosition(float delta_time)
@@ -194,15 +201,16 @@ void Camera::UpdateCameraPosition(float delta_time)
 
     if (length(moveVelocity) > 0.0f)
     {
-        m_bMoved = true;
         moveVelocity = normalize(moveVelocity) * moveSpeed;
     }
 
-    moveVelocity = lerp(m_prevMoveVelocity, moveVelocity, 1.0f - exp(-delta_time * 20.0f));
+    moveVelocity = lerp(m_prevMoveVelocity, moveVelocity, 1.0f - exp(-delta_time * 10.0f / m_moveSmoothness));
     m_prevMoveVelocity = moveVelocity;
 
     m_pos += moveVelocity * delta_time;
     m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(m_rotation)));
+
+    m_bMoved |= length(moveVelocity * delta_time) > 1e-3f;
 }
 
 void Camera::SetupCameraCB(CameraConstant& cameraCB)
@@ -400,8 +408,6 @@ void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
 
 void Camera::OnCameraSettingGui()
 {
-    ImGui::SliderFloat("Move Speed", &m_moveSpeed, 1.0f, 200.0f, "%.0f");
-
     bool perspective_updated = false;
     perspective_updated |= ImGui::SliderFloat("Fov", &m_fov, 5.0f, 135.0f, "%.0f");
     perspective_updated |= ImGui::SliderFloat("Near Plane", &m_znear, 0.0001f, 3.0f, "%.4f");
@@ -410,6 +416,10 @@ void Camera::OnCameraSettingGui()
     {
         SetPerpective(m_aspectRatio, m_fov, m_znear);
     }
+
+    ImGui::SliderFloat("Movement Speed", &m_moveSpeed, 1.0f, 200.0f, "%.0f");
+    ImGui::SliderFloat("Movement Smoothness", &m_moveSmoothness, 0.01f, 1.0f, "%.2f");
+    ImGui::SliderFloat("Rotation Smoothness", &m_rotateSmoothness, 0.01f, 1.0f, "%.2f");
 }
 
 void Camera::OnPostProcessSettingGui()

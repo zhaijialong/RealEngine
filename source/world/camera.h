@@ -96,6 +96,9 @@ private:
     float m_moveSpeed = 10.0f;
 
     float3 m_prevMoveVelocity = {};
+    float2 m_prevRotateVelocity = {};
+    float m_moveSmoothness = 0.5f;
+    float m_rotateSmoothness = 0.5f;
 
     float m_aperture = 1.0f;
     int m_shutterSpeed = 60;
