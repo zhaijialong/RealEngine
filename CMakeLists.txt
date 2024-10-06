@@ -168,6 +168,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-framework AppKit"
         "-framework Metal"
         "-framework MetalKit"
+        "-framework MetalFX"
         "-framework GameController"
     )
 endif()

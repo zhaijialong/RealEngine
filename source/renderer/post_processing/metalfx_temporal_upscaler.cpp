@@ -40,7 +40,6 @@ void MetalFXTemporalUpscaler::OnGui()
 RGHandle MetalFXTemporalUpscaler::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth, RGHandle velocity, RGHandle exposure,
     uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
 {
-    
     struct MetalFXPassData
     {
         RGHandle input;
@@ -94,6 +93,7 @@ RGHandle MetalFXTemporalUpscaler::AddPass(RenderGraph* pRenderGraph, RGHandle in
             m_pUpscaler->setMotionVectorScaleX(-0.5f * (float)renderWidth);
             m_pUpscaler->setMotionVectorScaleY(0.5f * (float)renderHeight);
             m_pUpscaler->setDepthReversed(true);
+            m_pUpscaler->setReset(false);
             
             m_pUpscaler->setFence(((MetalCommandList*)pCommandList)->GetFence());
             m_pUpscaler->encodeToCommandBuffer((MTL::CommandBuffer*)pCommandList->GetHandle());
