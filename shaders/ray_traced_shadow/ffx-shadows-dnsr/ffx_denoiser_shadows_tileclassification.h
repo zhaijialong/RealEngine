@@ -385,8 +385,8 @@ void FFX_DNSR_Shadows_TileClassification(uint group_index, uint2 gid)
 
             // Compute the clamping bounding box
             const float std_deviation = sqrt(spatial_variance);
-            const float nmin = mean - 0.5f * std_deviation;
-            const float nmax = mean + 0.5f * std_deviation;
+            const float nmin = mean - 1.0f * std_deviation;
+            const float nmax = mean + 1.0f * std_deviation;
 
             // Clamp reprojected sample to local neighborhood
             float shadow_previous = shadow_current;
@@ -398,7 +398,7 @@ void FFX_DNSR_Shadows_TileClassification(uint group_index, uint2 gid)
             shadow_clamped = clamp(shadow_previous, nmin, nmax);
 
             // Reduce history weighting
-            float const sigma = 20.0f;
+            float const sigma = 5.0f;
             float const temporal_discontinuity = (shadow_previous - mean) / max(0.5f * std_deviation, 0.001f);
             float const sample_counter_damper = exp(-temporal_discontinuity * temporal_discontinuity / sigma);
             moments_current.z *= sample_counter_damper;
