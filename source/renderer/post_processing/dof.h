@@ -11,7 +11,24 @@ public:
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height);
 
 private:
+    void AddDownsamplePass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height, RGHandle& downsampledFar, RGHandle& downsampledNear);
+    RGHandle AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height);
+    RGHandle AddTileCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height);
+    RGHandle AddNearBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height);
+    RGHandle AddCompositePass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, RGHandle farBlur, RGHandle nearBlur, uint32_t width, uint32_t height);
+
+private:
     Renderer* m_pRenderer = nullptr;
 
+    IGfxPipelineState* m_pDownsamplePSO = nullptr;
+    IGfxPipelineState* m_pFarHorizontalBlurPSO = nullptr;
+    IGfxPipelineState* m_pFarVerticalBlurPSO = nullptr;
+    IGfxPipelineState* m_pTileCocXPSO = nullptr;
+    IGfxPipelineState* m_pTileCocYPSO = nullptr;
+    IGfxPipelineState* m_pNearHorizontalBlurPSO = nullptr;
+    IGfxPipelineState* m_pNearVerticalBlurPSO = nullptr;
+    IGfxPipelineState* m_pCompositePSO = nullptr;
+
     bool m_bEnable = true;
+    float m_focusDistance = 5.0f;
 };
