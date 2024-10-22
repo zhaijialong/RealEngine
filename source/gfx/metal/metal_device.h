@@ -49,6 +49,7 @@ public:
     
     void MakeResident(const MTL::Allocation* allocation);
     void Evict(const MTL::Allocation* allocation);
+    void Release(NS::Object* object);
     
 private:
     MTL::Device* m_pDevice = nullptr;
@@ -62,4 +63,6 @@ private:
     
     eastl::queue<eastl::pair<uint32_t, uint64_t>> m_resDescriptorDeletionQueue;
     eastl::queue<eastl::pair<uint32_t, uint64_t>> m_samplerDescriptorDeletionQueue;
+    eastl::queue<eastl::pair<NS::Object*, uint64_t>> m_objectDeletionQueue;
+    eastl::queue<eastl::pair<const MTL::Allocation*, uint64_t>> m_evictQueue;
 };

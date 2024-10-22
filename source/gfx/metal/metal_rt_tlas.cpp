@@ -12,11 +12,13 @@ MetalRayTracingTLAS::MetalRayTracingTLAS(MetalDevice* pDevice, const GfxRayTraci
 
 MetalRayTracingTLAS::~MetalRayTracingTLAS()
 {
-    m_pAccelerationStructure->release();
-    m_pDescriptor->release();
-    m_pScratchBuffer->release();
-    m_pInstanceBuffer->release();
-    m_pGPUHeaderBuffer->release();
+    MetalDevice* pDevice = (MetalDevice*)m_pDevice;
+    
+    pDevice->Release(m_pAccelerationStructure);
+    pDevice->Release(m_pDescriptor);
+    pDevice->Release(m_pScratchBuffer);
+    pDevice->Release(m_pInstanceBuffer);
+    pDevice->Release(m_pGPUHeaderBuffer);
 }
 
 bool MetalRayTracingTLAS::Create()

@@ -12,7 +12,7 @@ MetalSwapchain::MetalSwapchain(MetalDevice* pDevice, const GfxSwapchainDesc& des
 MetalSwapchain::~MetalSwapchain()
 {
     delete m_pTexture;
-    m_pView->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pView);
 }
 
 bool MetalSwapchain::Create()

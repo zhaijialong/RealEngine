@@ -17,7 +17,7 @@ MetalTexture::~MetalTexture()
     
     if(!m_bSwapchainTexture)
     {
-        m_pTexture->release();
+        ((MetalDevice*)m_pDevice)->Release(m_pTexture);
     }
 }
 

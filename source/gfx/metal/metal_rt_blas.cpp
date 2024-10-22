@@ -12,13 +12,15 @@ MetalRayTracingBLAS::MetalRayTracingBLAS(MetalDevice* pDevice, const GfxRayTraci
 
 MetalRayTracingBLAS::~MetalRayTracingBLAS()
 {
-    m_pAccelerationStructure->release();
-    m_pDescriptor->release();
-    m_pScratchBuffer->release();
+    MetalDevice* pDevice = (MetalDevice*)m_pDevice;
+    
+    pDevice->Release(m_pAccelerationStructure);
+    pDevice->Release(m_pDescriptor);
+    pDevice->Release(m_pScratchBuffer);
     
     for(size_t i = 0; i < m_geometries.size(); ++i)
     {
-        m_geometries[i]->release();
+        pDevice->Release(m_geometries[i]);
     }
 }
 

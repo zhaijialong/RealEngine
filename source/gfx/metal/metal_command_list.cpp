@@ -20,7 +20,7 @@ MetalCommandList::MetalCommandList(MetalDevice* pDevice, GfxCommandQueue queue_t
 
 MetalCommandList::~MetalCommandList()
 {
-    m_pFence->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pFence);
 }
 
 bool MetalCommandList::Create()

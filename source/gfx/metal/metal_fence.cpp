@@ -10,7 +10,7 @@ MetalFence::MetalFence(MetalDevice* pDevice, const eastl::string& name)
 
 MetalFence::~MetalFence()
 {
-    m_pEvent->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pEvent);
 }
 
 bool MetalFence::Create()

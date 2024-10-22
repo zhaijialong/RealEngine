@@ -14,14 +14,14 @@ MetalGraphicsPipelineState::MetalGraphicsPipelineState(MetalDevice* pDevice, con
 
 MetalGraphicsPipelineState::~MetalGraphicsPipelineState()
 {
-    m_pPSO->release();
-    m_pDepthStencilState->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pPSO);
+    ((MetalDevice*)m_pDevice)->Release(m_pDepthStencilState);
 }
 
 bool MetalGraphicsPipelineState::Create()
 {
-    m_pPSO->release();
-    m_pDepthStencilState->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pPSO);
+    ((MetalDevice*)m_pDevice)->Release(m_pDepthStencilState);
     
     MTL::RenderPipelineDescriptor* descriptor = MTL::RenderPipelineDescriptor::alloc()->init();
     descriptor->setVertexFunction((MTL::Function*)m_desc.vs->GetHandle());
@@ -86,14 +86,14 @@ MetalMeshShadingPipelineState::MetalMeshShadingPipelineState(MetalDevice* pDevic
 
 MetalMeshShadingPipelineState::~MetalMeshShadingPipelineState()
 {
-    m_pPSO->release();
-    m_pDepthStencilState->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pPSO);
+    ((MetalDevice*)m_pDevice)->Release(m_pDepthStencilState);
 }
 
 bool MetalMeshShadingPipelineState::Create()
 {
-    m_pPSO->release();
-    m_pDepthStencilState->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pPSO);
+    ((MetalDevice*)m_pDevice)->Release(m_pDepthStencilState);
     
     MTL::MeshRenderPipelineDescriptor* descriptor = MTL::MeshRenderPipelineDescriptor::alloc()->init();
     descriptor->setMeshFunction((MTL::Function*)m_desc.ms->GetHandle());
@@ -170,12 +170,12 @@ MetalComputePipelineState::MetalComputePipelineState(MetalDevice* pDevice, const
 
 MetalComputePipelineState::~MetalComputePipelineState()
 {
-    m_pPSO->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pPSO);
 }
 
 bool MetalComputePipelineState::Create()
 {
-    m_pPSO->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pPSO);
     
     MTL::ComputePipelineDescriptor* descriptor = MTL::ComputePipelineDescriptor::alloc()->init();
     descriptor->setComputeFunction((MTL::Function*)m_desc.cs->GetHandle());

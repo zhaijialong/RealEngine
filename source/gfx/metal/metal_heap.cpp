@@ -12,8 +12,7 @@ MetalHeap::MetalHeap(MetalDevice* pDevice, const GfxHeapDesc& desc, const eastl:
 MetalHeap::~MetalHeap()
 {
     ((MetalDevice*)m_pDevice)->Evict(m_pHeap);
-    
-    m_pHeap->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pHeap);
 }
 
 bool MetalHeap::Create()

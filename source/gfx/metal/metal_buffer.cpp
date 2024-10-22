@@ -13,7 +13,7 @@ MetalBuffer::MetalBuffer(MetalDevice* pDevice, const GfxBufferDesc& desc, const 
 MetalBuffer::~MetalBuffer()
 {
     ((MetalDevice*)m_pDevice)->Evict(m_pBuffer);
-    m_pBuffer->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pBuffer);
 }
 
 bool MetalBuffer::Create()

@@ -17,7 +17,7 @@ MetalShaderResourceView::~MetalShaderResourceView()
 {
     if(m_pTextureView)
     {
-        m_pTextureView->release();
+        ((MetalDevice*)m_pDevice)->Release(m_pTextureView);
     }
     
     ((MetalDevice*)m_pDevice)->FreeResourceDescriptor(m_heapIndex);
@@ -146,7 +146,7 @@ MetalUnorderedAccessView::~MetalUnorderedAccessView()
 {
     if(m_pTextureView)
     {
-        m_pTextureView->release();
+        ((MetalDevice*)m_pDevice)->Release(m_pTextureView);
     }
     
     ((MetalDevice*)m_pDevice)->FreeResourceDescriptor(m_heapIndex);
@@ -275,8 +275,7 @@ MetalSampler::MetalSampler(MetalDevice* pDevice, const GfxSamplerDesc& desc, con
 
 MetalSampler::~MetalSampler()
 {
-    m_pSampler->release();
-    
+    ((MetalDevice*)m_pDevice)->Release(m_pSampler);
     ((MetalDevice*)m_pDevice)->FreeSamplerDescriptor(m_heapIndex);
 }
 

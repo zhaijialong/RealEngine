@@ -33,7 +33,7 @@ public:
     ~MetalConstantBufferAllocator()
     {
         m_pDevice->Evict(m_pBuffer);
-        m_pBuffer->release();
+        m_pDevice->Release(m_pBuffer);
     }
 
     void Allocate(uint32_t size, void** cpu_address, uint64_t* gpu_address)
@@ -79,7 +79,7 @@ public:
     ~MetalDescriptorAllocator()
     {
         m_pDevice->Evict(m_pBuffer);
-        m_pBuffer->release();
+        m_pDevice->Release(m_pBuffer);
     }
     
     uint32_t Allocate(IRDescriptorTableEntry** descriptor)
@@ -172,14 +172,28 @@ bool MetalDevice::Create()
 
 void MetalDevice::BeginFrame()
 {
+    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
+    m_pConstantBufferAllocators[index]->Reset();
+    
+    while (!m_evictQueue.empty())
+    {
+        auto item = m_evictQueue.front();
+        if (item.second + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
+        {
+            break;
+        }
+
+        m_pResidencySet->removeAllocation(item.first);
+        m_evictQueue.pop();
+        
+        m_bResidencyDirty = true;
+    }
+    
     if(m_bResidencyDirty)
     {
         m_pResidencySet->commit();
         m_bResidencyDirty = false;
     }
-    
-    uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
-    m_pConstantBufferAllocators[index]->Reset();
     
     while (!m_resDescriptorDeletionQueue.empty())
     {
@@ -203,6 +217,18 @@ void MetalDevice::BeginFrame()
 
         m_pSamplerAllocator->Free(item.first);
         m_samplerDescriptorDeletionQueue.pop();
+    }
+    
+    while (!m_objectDeletionQueue.empty())
+    {
+        auto item = m_objectDeletionQueue.front();
+        if (item.second + GFX_MAX_INFLIGHT_FRAMES > m_frameID)
+        {
+            break;
+        }
+
+        item.first->release();
+        m_objectDeletionQueue.pop();
     }
 }
 
@@ -458,6 +484,16 @@ void MetalDevice::MakeResident(const MTL::Allocation* allocation)
 
 void MetalDevice::Evict(const MTL::Allocation* allocation)
 {
-    m_pResidencySet->removeAllocation(allocation);
-    m_bResidencyDirty = true;
+    if(allocation)
+    {
+        m_evictQueue.push(eastl::make_pair(allocation, m_frameID));
+    }
+}
+
+void MetalDevice::Release(NS::Object* object)
+{
+    if(object)
+    {
+        m_objectDeletionQueue.push(eastl::make_pair(object, m_frameID));
+    }
 }

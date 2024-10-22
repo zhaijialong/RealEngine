@@ -12,12 +12,12 @@ MetalShader::MetalShader(MetalDevice* pDevice, const GfxShaderDesc& desc, const 
 
 MetalShader::~MetalShader()
 {
-    m_pFunction->release();
+    ((MetalDevice*)m_pDevice)->Release(m_pFunction);
 }
 
 bool MetalShader::Create(eastl::span<uint8_t> data)
 {
-    m_pFunction->release(); // this looks dangerous, but sending message to nil is safe in objc runtime
+    ((MetalDevice*)m_pDevice)->Release(m_pFunction);
     
     MTL::Device* device = (MTL::Device*)m_pDevice->GetHandle();
     
