@@ -203,6 +203,12 @@ bool ShaderCompiler::Compile(const eastl::string& source, const eastl::string& f
         arguments.push_back(L"-spirv");
         arguments.push_back(L"-fspv-target-env=vulkan1.3");
         arguments.push_back(L"-fvk-use-dx-layout");
+        arguments.push_back(L"-fvk-bind-resource-heap");
+        arguments.push_back(L"0");
+        arguments.push_back(L"1");
+        arguments.push_back(L"-fvk-bind-sampler-heap");
+        arguments.push_back(L"0");
+        arguments.push_back(L"2");
         break;
     case GfxRenderBackend::Metal:
         arguments.push_back(L"-D");
