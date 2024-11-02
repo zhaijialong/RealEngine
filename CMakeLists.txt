@@ -31,6 +31,9 @@ include(${REAL_ENGINE_ROOT}/external/external.cmake)
 set(USE_AVX OFF)
 set(USE_AVX2 OFF)
 set(USE_AVX512 OFF)
+if(NOT MSVC)
+    set(CPP_RTTI_ENABLED ON) # to fix "Undefined symbol: typeinfo for JPH::DebugRenderer"
+endif()
 add_subdirectory(${EXTERNAL_ROOT}/JoltPhysics/Build)
 set_target_properties(Jolt PROPERTIES FOLDER External)
 
