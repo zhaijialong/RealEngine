@@ -117,6 +117,23 @@ inline float3 rotation_angles(const quaternion& q)
     return float3(rotation_pitch(q), rotation_yaw(q), rotation_roll(q));
 }
 
+inline float normalize_angle(float degree)
+{
+    degree = fmodf(degree, 360.0f); // (-360, 360)
+
+    if (degree < 0.0f)
+    {
+        degree += 360.0f; // [0, 360)
+    }
+
+    if (degree > 180.0f)
+    {
+        degree -= 360.0f; // (-180, 180]
+    }
+
+    return degree;
+}
+
 inline quaternion rotation_slerp(const quaternion& a, quaternion b, float interpolationValue)
 {
     float dotProduct = dot(a, b);

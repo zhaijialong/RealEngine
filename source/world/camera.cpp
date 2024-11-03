@@ -149,8 +149,8 @@ void Camera::UpdateCameraRotation(float delta_time)
     rotateVelocity = lerp(m_prevRotateVelocity, rotateVelocity, 1.0f - exp(-delta_time * 10.0f / m_rotateSmoothness));
     m_prevRotateVelocity = rotateVelocity;
 
-    m_rotation.x += rotateVelocity.x * delta_time;
-    m_rotation.y += rotateVelocity.y * delta_time;
+    m_rotation.x = normalize_angle(m_rotation.x + rotateVelocity.x * delta_time);
+    m_rotation.y = normalize_angle(m_rotation.y + rotateVelocity.y * delta_time);
     m_world = mul(translation_matrix(m_pos), rotation_matrix(rotation_quat(m_rotation)));
 
     m_bMoved |= length(rotateVelocity * delta_time) > 1e-3f;
