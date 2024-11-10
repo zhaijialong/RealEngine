@@ -9,6 +9,7 @@ cbuffer CB : register(b0)
     
     uint c_outputTexture;
     float c_focusDistance;
+    float c_maxCocSize;
 }
 
 static Texture2D colorTexture = ResourceDescriptorHeap[c_colorTexture];
@@ -31,20 +32,15 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     const float focalLength = GetCameraCB().physicalCamera.focalLength;
     const float sensorWidth = GetCameraCB().physicalCamera.sensorWidth;
     const float apertureWidth = focalLength / GetCameraCB().physicalCamera.aperture;
-    float coc = ComputeCoc(depth, apertureWidth, focalLength, c_focusDistance, sensorWidth);
+    float coc = ComputeCoc(depth, apertureWidth, focalLength, c_focusDistance, sensorWidth, c_maxCocSize);
     
     float farCoc = max(coc, 0.0f);
-    float nearCoc = max(-coc, 0.0f);
-    
-    if(nearCoc > 0.0)
-    {
-        nearBlur.xyz /= nearCoc;
-    }
-    
-    float farBlend = saturate(farCoc * MAX_COC_SIZE - 0.5);
+    float nearCoc = nearBlur.w;
+
+    float farBlend = saturate(farCoc * c_maxCocSize - 0.5);
     color = lerp(color, farBlur.xyz, smoothstep(0.0, 1.0, farBlend));
 
-    float nearBlend = saturate(nearCoc * MAX_COC_SIZE * 2.0);
+    float nearBlend = saturate(square(nearCoc) * c_maxCocSize);
     color = lerp(color, nearBlur.xyz, smoothstep(0.0, 1.0, nearBlend));
     
     outputTexture[dispatchThreadID] = float4(color, 1.0);

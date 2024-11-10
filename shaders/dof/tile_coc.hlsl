@@ -29,9 +29,5 @@ void main(int2 dispatchThreadID : SV_DispatchThreadID)
         maxCoc = max(coc, maxCoc);
     }
     
-#if VERTICAL_PASS
-    outputTexture[dispatchThreadID].w = maxCoc;
-#else
     outputTexture[dispatchThreadID] = maxCoc;
-#endif
 }

@@ -6,8 +6,6 @@
 // "Circular Separable Convolution Depth of Field", Kleber Garcia, 2018
 // https://www.shadertoy.com/view/Xd2BWc
 
-static const float MAX_COC_SIZE = 32.0;
-
 static const int KERNEL_RADIUS = 8;
 static const int KERNEL_COUNT = 17;
 
@@ -89,7 +87,7 @@ float2 MulComplex(float2 p, float2 q)
     return float2(p.x * q.x - p.y * q.y, p.x * q.y + p.y * q.x);
 }
 
-float ComputeCoc(float depth, float apertureWidth, float focalLength, float focusDistance, float sensorWidth)
+float ComputeCoc(float depth, float apertureWidth, float focalLength, float focusDistance, float sensorWidth, float maxCocSize)
 {
     float linearDepth = GetLinearDepth(max(depth, 1e-7));
     
@@ -97,5 +95,5 @@ float ComputeCoc(float depth, float apertureWidth, float focalLength, float focu
     float coc = apertureWidth * focalLength * (linearDepth - focusDistance) / (linearDepth * (focusDistance - focalLength));
     coc = coc * SceneCB.renderSize.x * 0.5 / sensorWidth;
     
-    return clamp(coc / MAX_COC_SIZE, -1.0, 1.0);
+    return clamp(coc / maxCocSize, -1.0, 1.0);
 }

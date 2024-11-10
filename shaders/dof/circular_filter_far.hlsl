@@ -9,6 +9,7 @@ cbuffer CB : register(b0)
 
     uint c_outputTexture;
     uint c_weightsTexture;
+    float c_maxCocSize;
 }
 
 static Texture2D inputTexture = ResourceDescriptorHeap[c_inputTexture];
@@ -27,12 +28,13 @@ void main_horizontal(uint2 dispatchThreadID : SV_DispatchThreadID)
         outputRTexture[dispatchThreadID] = 0;
         outputGTexture[dispatchThreadID] = 0;
         outputBTexture[dispatchThreadID] = 0;
+        outputWeightsTexture[dispatchThreadID] = 0;
         return;
     }
     
     uint2 textureSize = (SceneCB.renderSize.xy + 1) / 2;
     float2 uv = (dispatchThreadID + 0.5) / textureSize;
-    float filterRadius = MAX_COC_SIZE * coc * 0.5;
+    float filterRadius = c_maxCocSize * coc * 0.5;
     
     float4 valR = 0.0;
     float4 valG = 0.0;
@@ -78,7 +80,7 @@ void main_vertical(uint2 dispatchThreadID : SV_DispatchThreadID)
     
     uint2 textureSize = (SceneCB.renderSize.xy + 1) / 2;
     float2 uv = (dispatchThreadID + 0.5) / textureSize;
-    float filterRadius = MAX_COC_SIZE * coc * 0.5;
+    float filterRadius = c_maxCocSize * coc * 0.5;
     
     float4 valR = 0.0;
     float4 valG = 0.0;
@@ -115,5 +117,12 @@ void main_vertical(uint2 dispatchThreadID : SV_DispatchThreadID)
     float redChannel = dot(valR.xy, Kernel0Weights_RealX_ImY_2) + dot(valR.zw, Kernel1Weights_RealX_ImY_2);
     float greenChannel = dot(valG.xy, Kernel0Weights_RealX_ImY_2) + dot(valG.zw, Kernel1Weights_RealX_ImY_2);
     float blueChannel = dot(valB.xy, Kernel0Weights_RealX_ImY_2) + dot(valB.zw, Kernel1Weights_RealX_ImY_2);
-    outputTexture[dispatchThreadID] = float4(float3(redChannel, greenChannel, blueChannel) / weights, coc);
+    float3 output = 0.0;
+    
+    if(weights > 0.0)
+    {
+        output = max(0.0, float3(redChannel, greenChannel, blueChannel)) / weights;
+    }
+    
+    outputTexture[dispatchThreadID] = float4(output, coc);
 }

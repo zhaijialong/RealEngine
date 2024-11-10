@@ -35,7 +35,8 @@ void DoF::OnGui()
     if (ImGui::CollapsingHeader("DoF"))
     {
         ImGui::Checkbox("Enable##DoF", &m_bEnable);
-        ImGui::SliderFloat("Focus Distance##DoF", &m_focusDistance, 0.1f, 100.0f);
+        ImGui::SliderFloat("Focus Distance##DoF", &m_focusDistance, 0.001f, 100.0f);
+        ImGui::SliderFloat("Max CoC Size##DoF", &m_maxCocSize, 0.001f, 32.0f);
     }
 }
 
@@ -51,13 +52,12 @@ RGHandle DoF::AddPass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth,
     uint32_t halfWidth = DivideRoudingUp(width, 2);
     uint32_t halfHeight = DivideRoudingUp(height, 2);
 
-    RGHandle downsampledFar, downsampledNear;
-    AddDownsamplePass(pRenderGraph, color, depth, halfWidth, halfHeight, downsampledFar, downsampledNear);
+    RGHandle far, near;
+    AddDownsamplePass(pRenderGraph, color, depth, halfWidth, halfHeight, far, near);
 
-    RGHandle farBlur = AddFarBlurPass(pRenderGraph, downsampledFar, halfWidth, halfHeight);
-    downsampledNear = AddTileCocDilationPass(pRenderGraph, downsampledNear, halfWidth, halfHeight);
-    RGHandle nearBlur = AddNearBlurPass(pRenderGraph, downsampledNear, halfWidth, halfHeight);
-
+    RGHandle farBlur = AddFarBlurPass(pRenderGraph, far, halfWidth, halfHeight);
+    RGHandle nearCoc = AddCocDilationPass(pRenderGraph, near, halfWidth, halfHeight);
+    RGHandle nearBlur = AddNearBlurPass(pRenderGraph, near, nearCoc, halfWidth, halfHeight);
     RGHandle output = AddCompositePass(pRenderGraph, color, depth, farBlur, nearBlur, width, height);
 
     return output;
@@ -97,6 +97,7 @@ void DoF::AddDownsamplePass(RenderGraph* pRenderGraph, RGHandle color, RGHandle 
                 uint downsampledNearTexture;
 
                 float focusDistance;
+                float maxCocSize;
             };
 
             CB cb = {
@@ -106,6 +107,7 @@ void DoF::AddDownsamplePass(RenderGraph* pRenderGraph, RGHandle color, RGHandle 
                 pRenderGraph->GetTexture(data.downsampledNear)->GetUAV()->GetHeapIndex(),
 
                 m_focusDistance,
+                m_maxCocSize,
             };
 
             pCommandList->SetPipelineState(m_pDownsamplePSO);
@@ -156,6 +158,7 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
 
                 0,
                 pRenderGraph->GetTexture(data.outputWeights)->GetUAV()->GetHeapIndex(),
+                asuint(m_maxCocSize),
             };
 
             pCommandList->SetPipelineState(m_pFarHorizontalBlurPSO);
@@ -200,6 +203,7 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
 
                 pRenderGraph->GetTexture(data.output)->GetUAV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.weights)->GetSRV()->GetHeapIndex(),
+                asuint(m_maxCocSize),
             };
 
             pCommandList->SetPipelineState(m_pFarVerticalBlurPSO);
@@ -210,7 +214,7 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
     return verticalPass->output;
 }
 
-RGHandle DoF::AddTileCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height)
+RGHandle DoF::AddCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height)
 {
     struct TileDilationPassData
     {
@@ -246,8 +250,15 @@ RGHandle DoF::AddTileCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, 
     auto verticalPass = pRenderGraph->AddPass<TileDilationPassData>("Coc Dilation Y", RenderPassType::Compute,
         [&](TileDilationPassData& data, RGBuilder& builder)
         {
+            builder.SkipCulling();
             data.input = builder.Read(horizontalPass->output);
-            data.output = builder.Write(input);
+
+            RGTexture::Desc desc;
+            desc.width = width;
+            desc.height = height;
+            desc.format = GfxFormat::R16F;
+
+            data.output = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearCoc Dilation"));
         },
         [=](const TileDilationPassData& data, IGfxCommandList* pCommandList)
         {
@@ -265,20 +276,23 @@ RGHandle DoF::AddTileCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, 
     return verticalPass->output;
 }
 
-RGHandle DoF::AddNearBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height)
+RGHandle DoF::AddNearBlurPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle coc, uint32_t width, uint32_t height)
 {
     struct NearBlurXPassData
     {
         RGHandle input;
+        RGHandle coc;
         RGHandle outputR;
         RGHandle outputG;
         RGHandle outputB;
+        RGHandle outputWeights;
     };
 
     auto horizontalPass = pRenderGraph->AddPass<NearBlurXPassData>("NearBlur X", RenderPassType::Compute,
         [&](NearBlurXPassData& data, RGBuilder& builder)
         {
             data.input = builder.Read(input);
+            data.coc = builder.Read(coc);
 
             RGTexture::Desc desc;
             desc.width = width;
@@ -288,15 +302,23 @@ RGHandle DoF::AddNearBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_
             data.outputR = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearBlur R"));
             data.outputG = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearBlur G"));
             data.outputB = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearBlur B"));
+
+            desc.format = GfxFormat::R16F;
+            data.outputWeights = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearBlur Weights"));
         },
         [=](const NearBlurXPassData& data, IGfxCommandList* pCommandList)
         {
             uint32_t cb[] =
             {
                 pRenderGraph->GetTexture(data.input)->GetSRV()->GetHeapIndex(),
+                pRenderGraph->GetTexture(data.coc)->GetSRV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.outputR)->GetUAV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.outputG)->GetUAV()->GetHeapIndex(),
+
                 pRenderGraph->GetTexture(data.outputB)->GetUAV()->GetHeapIndex(),
+                0,
+                pRenderGraph->GetTexture(data.outputWeights)->GetUAV()->GetHeapIndex(),
+                asuint(m_maxCocSize),
             };
 
             pCommandList->SetPipelineState(m_pNearHorizontalBlurPSO);
@@ -307,9 +329,11 @@ RGHandle DoF::AddNearBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_
     struct NearBlurYPassData
     {
         RGHandle input;
+        RGHandle coc;
         RGHandle R;
         RGHandle G;
         RGHandle B;
+        RGHandle weights;
         RGHandle output;
     };
 
@@ -317,9 +341,11 @@ RGHandle DoF::AddNearBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_
         [&](NearBlurYPassData& data, RGBuilder& builder)
         {
             data.input = builder.Read(input);
+            data.coc = builder.Read(coc);
             data.R = builder.Read(horizontalPass->outputR);
             data.G = builder.Read(horizontalPass->outputG);
             data.B = builder.Read(horizontalPass->outputB);
+            data.weights = builder.Read(horizontalPass->outputWeights);
 
             RGTexture::Desc desc;
             desc.width = width;
@@ -333,10 +359,14 @@ RGHandle DoF::AddNearBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_
             uint32_t cb[] =
             {
                 pRenderGraph->GetTexture(data.input)->GetSRV()->GetHeapIndex(),
+                pRenderGraph->GetTexture(data.coc)->GetSRV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.R)->GetSRV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.G)->GetSRV()->GetHeapIndex(),
+
                 pRenderGraph->GetTexture(data.B)->GetSRV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.output)->GetUAV()->GetHeapIndex(),
+                pRenderGraph->GetTexture(data.weights)->GetSRV()->GetHeapIndex(),
+                asuint(m_maxCocSize),
             };
 
             pCommandList->SetPipelineState(m_pNearVerticalBlurPSO);
@@ -382,9 +412,10 @@ RGHandle DoF::AddCompositePass(RenderGraph* pRenderGraph, RGHandle color, RGHand
                 pRenderGraph->GetTexture(data.farBlur)->GetSRV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.nearBlur)->GetSRV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.output)->GetUAV()->GetHeapIndex(),
-                *((uint32_t*)&m_focusDistance)
+                asuint(m_focusDistance),
+                asuint(m_maxCocSize),
             };
-
+            
             pCommandList->SetPipelineState(m_pCompositePSO);
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
             pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
