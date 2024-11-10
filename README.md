@@ -30,7 +30,7 @@ It is not supposed to be used in production, and prefers clean design and code o
 - [x] RTX
 - [x] a reference pathtracer
 - [x] FSR2/DLSS/XeSS
-- [ ] DOF
+- [x] DOF
 - [x] motion blur
 - [ ] visibility buffer
 - [ ] Direct Storage

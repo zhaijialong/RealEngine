@@ -329,3 +329,13 @@ inline float HalfToFloat(uint16_t value)
     o.u |= (h.u & 0x8000) << 16;    // sign bit
     return o.f;
 }
+
+inline float asfloat(uint32_t value)
+{
+    return *((float*)&value);
+}
+
+inline uint32_t asuint(float value)
+{
+    return *((uint32_t*)&value);
+}
