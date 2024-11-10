@@ -36,11 +36,6 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     float farCoc = max(coc, 0.0f);
     float nearCoc = max(-coc, 0.0f);
     
-    if(farCoc > 0.0)
-    {
-        farBlur.xyz /= farCoc;
-    }
-    
     if(nearCoc > 0.0)
     {
         nearBlur.xyz /= nearCoc;

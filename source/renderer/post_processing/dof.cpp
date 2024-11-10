@@ -125,6 +125,7 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
         RGHandle outputR;
         RGHandle outputG;
         RGHandle outputB;
+        RGHandle outputWeights;
     };
 
     auto horizontalPass = pRenderGraph->AddPass<FarBlurXPassData>("FarBlur X", RenderPassType::Compute,
@@ -140,6 +141,9 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
             data.outputR = builder.Write(builder.Create<RGTexture>(desc, "DoF - FarBlur R"));
             data.outputG = builder.Write(builder.Create<RGTexture>(desc, "DoF - FarBlur G"));
             data.outputB = builder.Write(builder.Create<RGTexture>(desc, "DoF - FarBlur B"));
+
+            desc.format = GfxFormat::R16F;
+            data.outputWeights = builder.Write(builder.Create<RGTexture>(desc, "DoF - FarBlur Weights"));
         },
         [=](const FarBlurXPassData& data, IGfxCommandList* pCommandList)
         {
@@ -149,6 +153,9 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
                 pRenderGraph->GetTexture(data.outputR)->GetUAV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.outputG)->GetUAV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.outputB)->GetUAV()->GetHeapIndex(),
+
+                0,
+                pRenderGraph->GetTexture(data.outputWeights)->GetUAV()->GetHeapIndex(),
             };
 
             pCommandList->SetPipelineState(m_pFarHorizontalBlurPSO);
@@ -162,6 +169,7 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
         RGHandle R;
         RGHandle G;
         RGHandle B;
+        RGHandle weights;
         RGHandle output;
     };
 
@@ -172,6 +180,7 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
             data.R = builder.Read(horizontalPass->outputR);
             data.G = builder.Read(horizontalPass->outputG);
             data.B = builder.Read(horizontalPass->outputB);
+            data.weights = builder.Read(horizontalPass->outputWeights);
 
             RGTexture::Desc desc;
             desc.width = width;
@@ -188,7 +197,9 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
                 pRenderGraph->GetTexture(data.R)->GetSRV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.G)->GetSRV()->GetHeapIndex(),
                 pRenderGraph->GetTexture(data.B)->GetSRV()->GetHeapIndex(),
+
                 pRenderGraph->GetTexture(data.output)->GetUAV()->GetHeapIndex(),
+                pRenderGraph->GetTexture(data.weights)->GetSRV()->GetHeapIndex(),
             };
 
             pCommandList->SetPipelineState(m_pFarVerticalBlurPSO);
