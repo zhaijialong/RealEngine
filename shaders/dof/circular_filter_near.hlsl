@@ -51,9 +51,9 @@ void main_horizontal(uint2 dispatchThreadID : SV_DispatchThreadID)
         
         float2 c0 = Kernel0_RealX_ImY_RealZ_ImW_1[i + KERNEL_RADIUS].xy;
         
-        valR += val.r * val.w * c0;
-        valG += val.g * val.w * c0;
-        valB += val.b * val.w * c0;
+        valR += val.r * c0;
+        valG += val.g * c0;
+        valB += val.b * c0;
         weights += val.w;
     }
 

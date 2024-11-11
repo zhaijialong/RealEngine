@@ -38,16 +38,29 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     float coc01 = ComputeCoc(depth01, apertureWidth, focalLength, c_focusDistance, sensorWidth, c_maxCocSize);
     float coc11 = ComputeCoc(depth11, apertureWidth, focalLength, c_focusDistance, sensorWidth, c_maxCocSize);
     
-    float4 far = float4(color00, 1.0) * max(coc00, 0.0f) +
-        float4(color10, 1.0) * max(coc10, 0.0f) +
-        float4(color01, 1.0) * max(coc01, 0.0f) +
-        float4(color11, 1.0) * max(coc11, 0.0f);
+    float farCoc00 = max(coc00, 0.0f);
+    float farCoc10 = max(coc10, 0.0f);
+    float farCoc01 = max(coc01, 0.0f);
+    float farCoc11 = max(coc11, 0.0f);
     
-    float4 near = float4(color00, max(-coc00, 0.0f)) +
-        float4(color10, max(-coc10, 0.0f)) +
-        float4(color01, max(-coc01, 0.0f)) +
-        float4(color11, max(-coc11, 0.0f));
+    float w00 = rcp(4.0 + Luminance(color00));
+    float w10 = rcp(4.0 + Luminance(color10));
+    float w01 = rcp(4.0 + Luminance(color01));
+    float w11 = rcp(4.0 + Luminance(color11));
     
-    downsampledFarTexture[dispatchThreadID] = far * 0.25;
-    downsampledNearTexture[dispatchThreadID] = near * 0.25;
+    float4 far;
+    far.xyz = (color00 * farCoc00 * w00 + color10 * farCoc10 * w10 + color01 * farCoc01 * w01 + color11 * farCoc11 * w11) / (w00 + w10 + w01 + w11);
+    far.w = max(max(farCoc00, farCoc01), max(farCoc10, farCoc11));
+    
+    float nearCoc00 = max(-coc00, 0.0f);
+    float nearCoc10 = max(-coc10, 0.0f);
+    float nearCoc01 = max(-coc01, 0.0f);
+    float nearCoc11 = max(-coc11, 0.0f);
+    
+    float4 near;
+    near.xyz = (color00 * nearCoc00 * w00 + color10 * nearCoc10 * w10 + color01 * nearCoc01 * w01 + color11 * nearCoc11 * w11) / (w00 + w10 + w01 + w11);
+    near.w = max(max(nearCoc00, nearCoc01), max(nearCoc10, nearCoc11));
+    
+    downsampledFarTexture[dispatchThreadID] = far;
+    downsampledNearTexture[dispatchThreadID] = near;
 }

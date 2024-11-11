@@ -38,10 +38,10 @@ void main(uint2 dispatchThreadID : SV_DispatchThreadID)
     float nearCoc = nearBlur.w;
 
     float farBlend = saturate(farCoc * c_maxCocSize - 0.5);
-    color = lerp(color, farBlur.xyz, smoothstep(0.0, 1.0, farBlend));
+    color = lerp(color, farBlur.xyz, farBlend);
 
-    float nearBlend = saturate(square(nearCoc) * c_maxCocSize);
-    color = lerp(color, nearBlur.xyz, smoothstep(0.0, 1.0, nearBlend));
+    float nearBlend = saturate(square(nearCoc * 0.5) * c_maxCocSize);
+    color = lerp(color, nearBlur.xyz, nearBlend);
     
     outputTexture[dispatchThreadID] = float4(color, 1.0);
 }
