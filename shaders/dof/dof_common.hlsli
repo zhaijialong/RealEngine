@@ -1,5 +1,8 @@
 #pragma once
 
+#define NEAR_COC_TILE_SIZE 16
+
+#ifndef __cplusplus
 #include "../common.hlsli"
 
 // references :
@@ -97,3 +100,5 @@ float ComputeCoc(float depth, float apertureWidth, float focalLength, float focu
     
     return clamp(coc / maxCocSize, -1.0, 1.0);
 }
+
+#endif // #ifndef __cplusplus

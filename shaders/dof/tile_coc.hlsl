@@ -18,12 +18,14 @@ void main(int2 dispatchThreadID : SV_DispatchThreadID)
 {
     float maxCoc = 0.0;
     
-    for (int i = -8; i <= 8; ++i)
+    for (uint i = 0; i < NEAR_COC_TILE_SIZE; ++i)
     {
-#if VERTICAL_PASS
-        float coc = inputTexture[dispatchThreadID + int2(0, i)].x;
+#ifdef VERTICAL_PASS
+        uint2 pos = uint2(dispatchThreadID.x, dispatchThreadID.y * NEAR_COC_TILE_SIZE + i);
+        float coc = inputTexture[pos].x;
 #else
-        float coc = inputTexture[dispatchThreadID + int2(i, 0)].w;
+        uint2 pos = uint2(dispatchThreadID.x * NEAR_COC_TILE_SIZE + i, dispatchThreadID.y);
+        float coc = inputTexture[pos].w;
 #endif
         
         maxCoc = max(coc, maxCoc);

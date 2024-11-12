@@ -1,4 +1,5 @@
 #include "dof_common.hlsli"
+#include "../random.hlsli"
 
 cbuffer CB : register(b0)
 {
@@ -35,6 +36,7 @@ void main_horizontal(uint2 dispatchThreadID : SV_DispatchThreadID)
     uint2 textureSize = (SceneCB.renderSize.xy + 1) / 2;
     float2 uv = (dispatchThreadID + 0.5) / textureSize;
     float filterRadius = c_maxCocSize * coc * 0.5;
+    float2 randomValue = GetVec2STBN(dispatchThreadID, SceneCB.frameIndex) - 0.5;
     
     float4 valR = 0.0;
     float4 valG = 0.0;
@@ -44,7 +46,7 @@ void main_horizontal(uint2 dispatchThreadID : SV_DispatchThreadID)
     for (int i = -KERNEL_RADIUS; i <= KERNEL_RADIUS; ++i)
     {
         float2 offset = float2((float)i / KERNEL_RADIUS, 0.0);
-        float2 coords = uv + offset * filterRadius / textureSize;
+        float2 coords = uv + (offset * filterRadius + randomValue) / textureSize;
         float4 val = inputTexture.SampleLevel(linearSampler, coords, 0);
         
         float2 c0 = Kernel0_RealX_ImY_RealZ_ImW_2[i + KERNEL_RADIUS].xy;
@@ -81,6 +83,7 @@ void main_vertical(uint2 dispatchThreadID : SV_DispatchThreadID)
     uint2 textureSize = (SceneCB.renderSize.xy + 1) / 2;
     float2 uv = (dispatchThreadID + 0.5) / textureSize;
     float filterRadius = c_maxCocSize * coc * 0.5;
+    float2 randomValue = GetVec2STBN(dispatchThreadID, SceneCB.frameIndex) - 0.5;
     
     float4 valR = 0.0;
     float4 valG = 0.0;
@@ -90,7 +93,7 @@ void main_vertical(uint2 dispatchThreadID : SV_DispatchThreadID)
     for (int i = -KERNEL_RADIUS; i <= KERNEL_RADIUS; ++i)
     {
         float2 offset = float2(0.0, (float) i / KERNEL_RADIUS);
-        float2 coords = uv + offset * filterRadius / textureSize;
+        float2 coords = uv + (offset * filterRadius + randomValue) / textureSize;
         
         float4 R = RTexture.SampleLevel(linearSampler, coords, 0);
         float4 G = GTexture.SampleLevel(linearSampler, coords, 0);

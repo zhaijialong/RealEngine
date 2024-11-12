@@ -13,7 +13,7 @@ public:
 private:
     void AddDownsamplePass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, uint32_t width, uint32_t height, RGHandle& downsampledFar, RGHandle& downsampledNear);
     RGHandle AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height);
-    RGHandle AddCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height);
+    RGHandle AddTileCocPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height);
     RGHandle AddNearBlurPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle coc, uint32_t width, uint32_t height);
     RGHandle AddCompositePass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth, RGHandle farBlur, RGHandle nearBlur, uint32_t width, uint32_t height);
 

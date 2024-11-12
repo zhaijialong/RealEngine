@@ -1,6 +1,7 @@
 #include "dof.h"
 #include "../renderer.h"
 #include "utils/gui_util.h"
+#include "dof/dof_common.hlsli"
 
 DoF::DoF(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
@@ -56,7 +57,7 @@ RGHandle DoF::AddPass(RenderGraph* pRenderGraph, RGHandle color, RGHandle depth,
     AddDownsamplePass(pRenderGraph, color, depth, halfWidth, halfHeight, far, near);
 
     RGHandle farBlur = AddFarBlurPass(pRenderGraph, far, halfWidth, halfHeight);
-    RGHandle nearCoc = AddCocDilationPass(pRenderGraph, near, halfWidth, halfHeight);
+    RGHandle nearCoc = AddTileCocPass(pRenderGraph, near, halfWidth, halfHeight);
     RGHandle nearBlur = AddNearBlurPass(pRenderGraph, near, nearCoc, halfWidth, halfHeight);
     RGHandle output = AddCompositePass(pRenderGraph, color, depth, farBlur, nearBlur, width, height);
 
@@ -214,7 +215,7 @@ RGHandle DoF::AddFarBlurPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t
     return verticalPass->output;
 }
 
-RGHandle DoF::AddCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height)
+RGHandle DoF::AddTileCocPass(RenderGraph* pRenderGraph, RGHandle input, uint32_t width, uint32_t height)
 {
     struct TileDilationPassData
     {
@@ -222,17 +223,20 @@ RGHandle DoF::AddCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, uint
         RGHandle output;
     };
 
-    auto horizontalPass = pRenderGraph->AddPass<TileDilationPassData>("Coc Dilation X", RenderPassType::Compute,
+    uint32_t tiledSizeX = DivideRoudingUp(width, NEAR_COC_TILE_SIZE);
+    uint32_t tiledSizeY = DivideRoudingUp(height, NEAR_COC_TILE_SIZE);
+
+    auto horizontalPass = pRenderGraph->AddPass<TileDilationPassData>("Tile Coc X", RenderPassType::Compute,
         [&](TileDilationPassData& data, RGBuilder& builder)
         {
             data.input = builder.Read(input);
 
             RGTexture::Desc desc;
-            desc.width = width;
+            desc.width = tiledSizeX;
             desc.height = height;
             desc.format = GfxFormat::R16F;
 
-            data.output = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearCoc Dilation temp"));
+            data.output = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearCoc Tiled temp"));
         },
         [=](const TileDilationPassData& data, IGfxCommandList* pCommandList)
         {
@@ -244,21 +248,21 @@ RGHandle DoF::AddCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, uint
 
             pCommandList->SetPipelineState(m_pTileCocXPSO);
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
-            pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);            
+            pCommandList->Dispatch(DivideRoudingUp(tiledSizeX, 8), DivideRoudingUp(height, 8), 1);
         });
 
-    auto verticalPass = pRenderGraph->AddPass<TileDilationPassData>("Coc Dilation Y", RenderPassType::Compute,
+    auto verticalPass = pRenderGraph->AddPass<TileDilationPassData>("Tile Coc Y", RenderPassType::Compute,
         [&](TileDilationPassData& data, RGBuilder& builder)
         {
             builder.SkipCulling();
             data.input = builder.Read(horizontalPass->output);
 
             RGTexture::Desc desc;
-            desc.width = width;
-            desc.height = height;
+            desc.width = tiledSizeX;
+            desc.height = tiledSizeY;
             desc.format = GfxFormat::R16F;
 
-            data.output = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearCoc Dilation"));
+            data.output = builder.Write(builder.Create<RGTexture>(desc, "DoF - NearCoc Tiled"));
         },
         [=](const TileDilationPassData& data, IGfxCommandList* pCommandList)
         {
@@ -270,7 +274,7 @@ RGHandle DoF::AddCocDilationPass(RenderGraph* pRenderGraph, RGHandle input, uint
 
             pCommandList->SetPipelineState(m_pTileCocYPSO);
             pCommandList->SetComputeConstants(0, cb, sizeof(cb));
-            pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
+            pCommandList->Dispatch(DivideRoudingUp(tiledSizeX, 8), DivideRoudingUp(tiledSizeY, 8), 1);
         });
 
     return verticalPass->output;

@@ -1,4 +1,5 @@
 #include "dof_common.hlsli"
+#include "../random.hlsli"
 
 cbuffer CB : register(b0)
 {
@@ -24,7 +25,15 @@ static SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampS
 [numthreads(8, 8, 1)]
 void main_horizontal(uint2 dispatchThreadID : SV_DispatchThreadID)
 {
-    float coc = cocTexture[dispatchThreadID].x;
+    uint2 textureSize = (SceneCB.renderSize.xy + 1) / 2;
+    
+    float2 tilePos = (0.5f + dispatchThreadID) / NEAR_COC_TILE_SIZE;
+    float2 tileTextureSize = (textureSize + NEAR_COC_TILE_SIZE - 1) / NEAR_COC_TILE_SIZE;
+    float2 tileUV = tilePos / tileTextureSize;
+    
+    float4 coc4 = cocTexture.GatherAlpha(linearSampler, tileUV);
+    float coc = max(max(coc4.x, coc4.y), max(coc4.z, coc4.w));
+    
     if(coc == 0.0)
     {
         outputRTexture[dispatchThreadID] = 0;
@@ -34,9 +43,9 @@ void main_horizontal(uint2 dispatchThreadID : SV_DispatchThreadID)
         return;
     }
     
-    uint2 textureSize = (SceneCB.renderSize.xy + 1) / 2;
     float2 uv = (dispatchThreadID + 0.5) / textureSize;    
     float filterRadius = c_maxCocSize * coc * 0.5;
+    float2 randomValue = GetVec2STBN(dispatchThreadID, SceneCB.frameIndex) - 0.5;
     
     float2 valR = 0.0;
     float2 valG = 0.0;
@@ -46,7 +55,7 @@ void main_horizontal(uint2 dispatchThreadID : SV_DispatchThreadID)
     for (int i = -KERNEL_RADIUS; i <= KERNEL_RADIUS; ++i)
     {
         float2 offset = float2((float) i / KERNEL_RADIUS, 0.0);
-        float2 coords = uv + offset * filterRadius / textureSize;
+        float2 coords = uv + (offset * filterRadius + randomValue) / textureSize;
         float4 val = inputTexture.SampleLevel(linearSampler, coords, 0);
         
         float2 c0 = Kernel0_RealX_ImY_RealZ_ImW_1[i + KERNEL_RADIUS].xy;
@@ -72,16 +81,24 @@ static RWTexture2D<float4> outputTexture = ResourceDescriptorHeap[c_outputTextur
 [numthreads(8, 8, 1)]
 void main_vertical(uint2 dispatchThreadID : SV_DispatchThreadID)
 {
-    float coc = cocTexture[dispatchThreadID].x;
+    uint2 textureSize = (SceneCB.renderSize.xy + 1) / 2;
+    
+    float2 tilePos = (0.5f + dispatchThreadID) / NEAR_COC_TILE_SIZE;
+    float2 tileTextureSize = (textureSize + NEAR_COC_TILE_SIZE - 1) / NEAR_COC_TILE_SIZE;
+    float2 tileUV = tilePos / tileTextureSize;
+    
+    float4 coc4 = cocTexture.GatherAlpha(linearSampler, tileUV);
+    float coc = max(max(coc4.x, coc4.y), max(coc4.z, coc4.w));
+    
     if (coc == 0.0)
     {
         outputTexture[dispatchThreadID] = 0;
         return;
     }
     
-    uint2 textureSize = (SceneCB.renderSize.xy + 1) / 2;
     float2 uv = (dispatchThreadID + 0.5) / textureSize;    
     float filterRadius = c_maxCocSize * coc * 0.5;
+    float2 randomValue = GetVec2STBN(dispatchThreadID, SceneCB.frameIndex) - 0.5;
     
     float2 valR = 0.0;
     float2 valG = 0.0;
@@ -91,7 +108,7 @@ void main_vertical(uint2 dispatchThreadID : SV_DispatchThreadID)
     for (int i = -KERNEL_RADIUS; i <= KERNEL_RADIUS; ++i)
     {
         float2 offset = float2(0.0, (float) i / KERNEL_RADIUS);
-        float2 coords = uv + offset * filterRadius / textureSize;
+        float2 coords = uv + (offset * filterRadius + randomValue) / textureSize;
         
         float2 R = RTexture.SampleLevel(linearSampler, coords, 0).xy;
         float2 G = GTexture.SampleLevel(linearSampler, coords, 0).xy;
