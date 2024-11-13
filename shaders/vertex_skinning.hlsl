@@ -28,10 +28,16 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     }
 
     uint16_t4 jointID = LoadSceneStaticBuffer<uint16_t4>(c_jointIDBufferAddress, vertex_id);
-    float4x4 jointMatrix0 = transpose(LoadSceneConstantBuffer<float4x4>(c_jointMatrixBufferAddress + sizeof(float4x4) * jointID.x)); //the transpose is due to DXC's bug
-    float4x4 jointMatrix1 = transpose(LoadSceneConstantBuffer<float4x4>(c_jointMatrixBufferAddress + sizeof(float4x4) * jointID.y));
-    float4x4 jointMatrix2 = transpose(LoadSceneConstantBuffer<float4x4>(c_jointMatrixBufferAddress + sizeof(float4x4) * jointID.z));
-    float4x4 jointMatrix3 = transpose(LoadSceneConstantBuffer<float4x4>(c_jointMatrixBufferAddress + sizeof(float4x4) * jointID.w));
+    float4x4 jointMatrix0 = LoadSceneConstantBuffer<float4x4>(c_jointMatrixBufferAddress + sizeof(float4x4) * jointID.x);
+    float4x4 jointMatrix1 = LoadSceneConstantBuffer<float4x4>(c_jointMatrixBufferAddress + sizeof(float4x4) * jointID.y);
+    float4x4 jointMatrix2 = LoadSceneConstantBuffer<float4x4>(c_jointMatrixBufferAddress + sizeof(float4x4) * jointID.z);
+    float4x4 jointMatrix3 = LoadSceneConstantBuffer<float4x4>(c_jointMatrixBufferAddress + sizeof(float4x4) * jointID.w);
+#if !GFX_BACKEND_VULKAN
+    jointMatrix0 = transpose(jointMatrix0);
+    jointMatrix1 = transpose(jointMatrix1);
+    jointMatrix2 = transpose(jointMatrix2);
+    jointMatrix3 = transpose(jointMatrix3);
+#endif
     float4 jointWeight = LoadSceneStaticBuffer<float4>(c_jointWeightBufferAddress, vertex_id);
 
     float3 pos = LoadSceneStaticBuffer<float3>(c_staticPosBufferAddress, vertex_id);
