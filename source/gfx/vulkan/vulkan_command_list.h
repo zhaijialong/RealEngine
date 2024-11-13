@@ -102,6 +102,7 @@ private:
         uint32_t cbv0[GFX_MAX_ROOT_CONSTANTS] = {};
         VkDescriptorAddressInfoEXT cbv1 = { VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT };
         VkDescriptorAddressInfoEXT cbv2 = { VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT };
+        bool dirty = false;
     };
 
     ConstantData m_graphicsConstants;
