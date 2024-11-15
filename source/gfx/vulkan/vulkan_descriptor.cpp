@@ -2,6 +2,7 @@
 #include "vulkan_device.h"
 #include "vulkan_buffer.h"
 #include "vulkan_texture.h"
+#include "vulkan_rt_tlas.h"
 #include "utils/log.h"
 
 VulkanShaderResourceView::VulkanShaderResourceView(VulkanDevice* pDevice, IGfxResource* pResource, const GfxShaderResourceViewDesc& desc, const eastl::string& name)
@@ -146,6 +147,11 @@ bool VulkanShaderResourceView::Create()
     case GfxShaderResourceViewType::RayTracingTLAS:
     {
         return true; //todo
+
+        descriptorInfo.type = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+        descriptorInfo.data.accelerationStructure = ((VulkanRayTracingTLAS*)m_pResource)->GetGpuAddress();
+
+        descriptorSize = descriptorBufferProperties.accelerationStructureDescriptorSize;
         break;
     }
     default:

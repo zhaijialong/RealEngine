@@ -13,6 +13,9 @@ public:
 
     virtual void* GetHandle() const override { return m_accelerationStructure; }
 
+    bool Create();
+    VkDeviceAddress GetGpuAddress() const;
+
 private:
     VkAccelerationStructureKHR m_accelerationStructure = VK_NULL_HANDLE;
 };

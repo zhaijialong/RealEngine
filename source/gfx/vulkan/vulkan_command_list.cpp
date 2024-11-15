@@ -6,6 +6,8 @@
 #include "vulkan_descriptor.h"
 #include "vulkan_descriptor_allocator.h"
 #include "vulkan_constant_buffer_allocator.h"
+#include "vulkan_rt_blas.h"
+#include "vulkan_rt_tlas.h"
 #include "renderer/clear_uav.h"
 #include "utils/profiler.h"
 #include "../gfx.h"
@@ -732,14 +734,23 @@ void VulkanCommandList::BuildRayTracingBLAS(IGfxRayTracingBLAS* blas)
 {
     FlushBarriers();
     
-    //todo
+    VkAccelerationStructureBuildGeometryInfoKHR info = { VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
+    ((VulkanRayTracingBLAS*)blas)->GetBuildInfo(info);
+
+    const VkAccelerationStructureBuildRangeInfoKHR* rangeInfo = ((VulkanRayTracingBLAS*)blas)->GetBuildRangeInfo();
+    vkCmdBuildAccelerationStructuresKHR(m_commandBuffer, 1, &info, &rangeInfo);
 }
 
 void VulkanCommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset)
 {
     FlushBarriers();
     
-    //todo
+    VkAccelerationStructureGeometryKHR geometry = { VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR };
+    VkAccelerationStructureBuildGeometryInfoKHR info = { VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
+    ((VulkanRayTracingBLAS*)blas)->GetUpdateInfo(info, geometry, vertex_buffer, vertex_buffer_offset);
+
+    const VkAccelerationStructureBuildRangeInfoKHR* rangeInfo = ((VulkanRayTracingBLAS*)blas)->GetBuildRangeInfo();
+    vkCmdBuildAccelerationStructuresKHR(m_commandBuffer, 1, &info, &rangeInfo);
 }
 
 void VulkanCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)

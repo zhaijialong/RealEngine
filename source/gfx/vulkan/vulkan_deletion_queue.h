@@ -33,7 +33,8 @@ private:
     eastl::queue<eastl::pair<VkSwapchainKHR, uint64_t>> m_swapchainQueue;
     eastl::queue<eastl::pair<VkSurfaceKHR, uint64_t>> m_surfaceQueue;
     eastl::queue<eastl::pair<VkCommandPool, uint64_t>> m_commandPoolQueue;
+    eastl::queue<eastl::pair<VkAccelerationStructureKHR, uint64_t>> m_asQueue;
 
     eastl::queue<eastl::pair<uint32_t, uint64_t>> m_resourceDescriptorQueue;
-    eastl::queue<eastl::pair<uint32_t, uint64_t>> m_samplerDescritptorQueue;
+    eastl::queue<eastl::pair<uint32_t, uint64_t>> m_samplerDescriptorQueue;
 };

@@ -270,12 +270,24 @@ IGfxDescriptor* VulkanDevice::CreateSampler(const GfxSamplerDesc& desc, const ea
 
 IGfxRayTracingBLAS* VulkanDevice::CreateRayTracingBLAS(const GfxRayTracingBLASDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanRayTracingBLAS* blas = new VulkanRayTracingBLAS(this, desc, name);
+    if (!blas->Create())
+    {
+        delete blas;
+        return nullptr;
+    }
+    return blas;
 }
 
 IGfxRayTracingTLAS* VulkanDevice::CreateRayTracingTLAS(const GfxRayTracingTLASDesc& desc, const eastl::string& name)
 {
-    return nullptr;
+    VulkanRayTracingTLAS* tlas = new VulkanRayTracingTLAS(this, desc, name);
+    if (!tlas->Create())
+    {
+        delete tlas;
+        return nullptr;
+    }
+    return tlas;
 }
 
 uint32_t VulkanDevice::GetAllocationSize(const GfxTextureDesc& desc)
@@ -501,8 +513,12 @@ VkResult VulkanDevice::CreateDevice()
     vulkan13.subgroupSizeControl = VK_TRUE;
     vulkan13.shaderDemoteToHelperInvocation = VK_TRUE;
 
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructure = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
+    accelerationStructure.pNext = &vulkan13;
+    accelerationStructure.accelerationStructure = VK_TRUE;
+
     VkPhysicalDeviceRayQueryFeaturesKHR rayQuery = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR };
-    rayQuery.pNext = &vulkan13;
+    rayQuery.pNext = &accelerationStructure;
     rayQuery.rayQuery = VK_TRUE;
 
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShader = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT };

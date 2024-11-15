@@ -622,3 +622,35 @@ inline VkSamplerReductionMode ToVkSamplerReductionMode(GfxSamplerReductionMode m
         return VK_SAMPLER_REDUCTION_MODE_MAX_ENUM;
     }
 }
+
+inline VkBuildAccelerationStructureFlagsKHR ToVulkanAccelerationStructureFlags(GfxRayTracingASFlag flags)
+{
+    VkBuildAccelerationStructureFlagsKHR vk_flags = 0;
+
+    if (flags & GfxRayTracingASFlagAllowUpdate)
+    {
+        vk_flags |= VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
+    }
+    
+    if (flags & GfxRayTracingASFlagAllowCompaction)
+    {
+        vk_flags |= VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR;
+    }
+    
+    if (flags & GfxRayTracingASFlagPreferFastTrace)
+    {
+        vk_flags |= VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+    }
+    
+    if (flags & GfxRayTracingASFlagPreferFastBuild)
+    {
+        vk_flags |= VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR;
+    }
+
+    if (flags & GfxRayTracingASFlagLowMemory)
+    {
+        vk_flags |= VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR;
+    }
+
+    return vk_flags;
+}

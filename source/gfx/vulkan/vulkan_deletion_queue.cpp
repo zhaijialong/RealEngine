@@ -40,6 +40,7 @@ void VulkanDeletionQueue::Flush(bool force_delete)
     ITERATE_QUEUE(m_semaphoreQueue, vkDestroySemaphore);
     ITERATE_QUEUE(m_swapchainQueue, vkDestroySwapchainKHR);
     ITERATE_QUEUE(m_commandPoolQueue, vkDestroyCommandPool);
+    ITERATE_QUEUE(m_asQueue, vkDestroyAccelerationStructureKHR);
 
     while (!m_surfaceQueue.empty())
     {
@@ -77,16 +78,16 @@ void VulkanDeletionQueue::Flush(bool force_delete)
         m_resourceDescriptorQueue.pop();
     }
 
-    while (!m_samplerDescritptorQueue.empty())
+    while (!m_samplerDescriptorQueue.empty())
     {
-        auto item = m_samplerDescritptorQueue.front();
+        auto item = m_samplerDescriptorQueue.front();
         if (!force_delete && item.second + GFX_MAX_INFLIGHT_FRAMES > frameID)
         {
             break;
         }
 
         m_device->GetSamplerDescriptorAllocator()->Free(item.first);
-        m_samplerDescritptorQueue.pop();
+        m_samplerDescriptorQueue.pop();
     }
 }
 
@@ -97,7 +98,7 @@ void VulkanDeletionQueue::FreeResourceDescriptor(uint32_t index, uint64_t frameI
 
 void VulkanDeletionQueue::FreeSamplerDescriptor(uint32_t index, uint64_t frameID)
 {
-    m_samplerDescritptorQueue.push(eastl::make_pair(index, frameID));
+    m_samplerDescriptorQueue.push(eastl::make_pair(index, frameID));
 }
 
 template<>
@@ -164,4 +165,10 @@ template<>
 void VulkanDeletionQueue::Delete(VkCommandPool object, uint64_t frameID)
 {
     m_commandPoolQueue.push(eastl::make_pair(object, frameID));
+}
+
+template<>
+void VulkanDeletionQueue::Delete(VkAccelerationStructureKHR object, uint64_t frameID)
+{
+    m_asQueue.push(eastl::make_pair(object, frameID));
 }
