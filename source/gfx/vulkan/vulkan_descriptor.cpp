@@ -146,8 +146,6 @@ bool VulkanShaderResourceView::Create()
     }
     case GfxShaderResourceViewType::RayTracingTLAS:
     {
-        return true; //todo
-
         descriptorInfo.type = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
         descriptorInfo.data.accelerationStructure = ((VulkanRayTracingTLAS*)m_pResource)->GetGpuAddress();
 

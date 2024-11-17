@@ -1,7 +1,12 @@
 #include "vulkan_rt_tlas.h"
 #include "vulkan_device.h"
 #include "vulkan_rt_blas.h"
+#include "utils/math.h"
 #include "utils/log.h"
+
+// https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html#VUID-vkCmdBuildAccelerationStructuresKHR-pInfos-03715
+// "geometry.instances.data.deviceAddress in device memory must be aligned to 16 bytes"
+#define INSTANCE_BUFFER_ALIGNMENT (16)
 
 VulkanRayTracingTLAS::VulkanRayTracingTLAS(VulkanDevice* pDevice, const GfxRayTracingTLASDesc& desc, const eastl::string& name)
 {
@@ -70,10 +75,10 @@ bool VulkanRayTracingTLAS::Create()
     SetDebugName(device, VK_OBJECT_TYPE_BUFFER, m_asBuffer, m_name.c_str());
     vmaSetAllocationName(allocator, m_asBufferAllocation, m_name.c_str());
 
-    m_instanceBufferSize = sizeof(VkAccelerationStructureInstanceKHR) * m_desc.instance_count * GFX_MAX_INFLIGHT_FRAMES;
+    m_instanceBufferSize = RoundUpPow2(sizeof(VkAccelerationStructureInstanceKHR) * m_desc.instance_count, INSTANCE_BUFFER_ALIGNMENT) * GFX_MAX_INFLIGHT_FRAMES;
 
     allocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-    allocationInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    allocationInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     bufferInfo.size = m_instanceBufferSize;
     bufferInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
     VmaAllocationInfo info;
@@ -132,4 +137,5 @@ void VulkanRayTracingTLAS::GetBuildInfo(VkAccelerationStructureBuildGeometryInfo
     }
 
     m_currentInstanceBufferOffset += sizeof(VkAccelerationStructureInstanceKHR) * instance_count;
+    m_currentInstanceBufferOffset = RoundUpPow2(m_currentInstanceBufferOffset, INSTANCE_BUFFER_ALIGNMENT);
 }

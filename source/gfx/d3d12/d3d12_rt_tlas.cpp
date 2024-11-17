@@ -46,6 +46,7 @@ bool D3D12RayTracingTLAS::Create()
     pAllocator->CreateResource(&allocationDesc, &scratchBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, &m_pScratchAllocation, IID_PPV_ARGS(&m_pScratchBuffer));
 
     allocationDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+    allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_COMMITTED;
     m_nInstanceBufferSize = RoundUpPow2(sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_desc.instance_count, D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT) * GFX_MAX_INFLIGHT_FRAMES;
     CD3DX12_RESOURCE_DESC instanceBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_nInstanceBufferSize);
     pAllocator->CreateResource(&allocationDesc, &instanceBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, &m_pInstanceAllocation, IID_PPV_ARGS(&m_pInstanceBuffer));
