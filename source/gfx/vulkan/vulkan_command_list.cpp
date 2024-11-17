@@ -756,8 +756,15 @@ void VulkanCommandList::UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffe
 void VulkanCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count)
 {
     FlushBarriers();
-    
-    //todo
+
+    VkAccelerationStructureGeometryKHR geometry = { VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR };
+    VkAccelerationStructureBuildGeometryInfoKHR info = { VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
+    ((VulkanRayTracingTLAS*)tlas)->GetBuildInfo(info, geometry, instances, instance_count);
+
+    VkAccelerationStructureBuildRangeInfoKHR rangeInfo = { instance_count };
+    const VkAccelerationStructureBuildRangeInfoKHR* pRangeInfo = &rangeInfo;
+
+    vkCmdBuildAccelerationStructuresKHR(m_commandBuffer, 1, &info, &pRangeInfo);
 }
 
 #if MICROPROFILE_GPU_TIMERS

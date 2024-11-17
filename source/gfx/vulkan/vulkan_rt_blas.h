@@ -14,6 +14,7 @@ public:
     virtual void* GetHandle() const override { return m_accelerationStructure; }
 
     bool Create();
+    VkDeviceAddress GetGpuAddress() const;
     void GetBuildInfo(VkAccelerationStructureBuildGeometryInfoKHR& info);
     void GetUpdateInfo(VkAccelerationStructureBuildGeometryInfoKHR& info, VkAccelerationStructureGeometryKHR& geometry, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset);
     const VkAccelerationStructureBuildRangeInfoKHR* GetBuildRangeInfo() const { return m_rangeInfos.data(); }

@@ -95,6 +95,14 @@ bool VulkanRayTracingBLAS::Create()
     return true;
 }
 
+VkDeviceAddress VulkanRayTracingBLAS::GetGpuAddress() const
+{
+    VkAccelerationStructureDeviceAddressInfoKHR info = { VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR };
+    info.accelerationStructure = m_accelerationStructure;
+
+    return vkGetAccelerationStructureDeviceAddressKHR((VkDevice)m_pDevice->GetHandle(), &info);
+}
+
 void VulkanRayTracingBLAS::GetBuildInfo(VkAccelerationStructureBuildGeometryInfoKHR& info)
 {
     info.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;

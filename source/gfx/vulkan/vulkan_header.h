@@ -654,3 +654,30 @@ inline VkBuildAccelerationStructureFlagsKHR ToVulkanAccelerationStructureFlags(G
 
     return vk_flags;
 }
+
+inline VkGeometryInstanceFlagsKHR ToVulkanGeometryInstanceFlags(GfxRayTracingInstanceFlag flags)
+{
+    VkGeometryInstanceFlagsKHR vk_flags = 0;
+    
+    if (flags & GfxRayTracingInstanceFlagDisableCull)
+    {
+        vk_flags |= VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+    }
+    
+    if (flags & GfxRayTracingInstanceFlagFrontFaceCCW)
+    {
+        vk_flags |= VK_GEOMETRY_INSTANCE_TRIANGLE_FRONT_COUNTERCLOCKWISE_BIT_KHR;
+    }
+     
+    if (flags & GfxRayTracingInstanceFlagForceOpaque)
+    {
+        vk_flags |= VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
+    }
+
+    if (flags & GfxRayTracingInstanceFlagForceNoOpaque)
+    {
+        vk_flags |= VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR;
+    }
+
+    return vk_flags;
+}
