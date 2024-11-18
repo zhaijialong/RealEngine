@@ -31,19 +31,15 @@ private:
 
     OIDNDevice m_device = nullptr;
     OIDNFilter m_filter = nullptr;
-    OIDNBuffer m_colorBuffer = nullptr;
-    OIDNBuffer m_albedoBuffer = nullptr;
-    OIDNBuffer m_normalBuffer = nullptr;
+    OIDNBuffer m_oidnColorBuffer = nullptr;
+    OIDNBuffer m_oidnAlbedoBuffer = nullptr;
+    OIDNBuffer m_oidnNormalBuffer = nullptr;
 
-    // shared textures for gpu path
-    eastl::unique_ptr<IGfxTexture> m_colorTexture;
-    eastl::unique_ptr<IGfxTexture> m_albedoTexture;
-    eastl::unique_ptr<IGfxTexture> m_normalTexture;
+    // readback buffers for the cpu path, or shared buffers for the gpu path
+    eastl::unique_ptr<IGfxBuffer> m_colorBuffer;
+    eastl::unique_ptr<IGfxBuffer> m_albedoBuffer;
+    eastl::unique_ptr<IGfxBuffer> m_normalBuffer;
 
-    // readback/staging buffers for cpu path
-    eastl::unique_ptr<IGfxBuffer> m_colorReadbackBuffer;
-    eastl::unique_ptr<IGfxBuffer> m_albedoReadbackBuffer;
-    eastl::unique_ptr<IGfxBuffer> m_normalReadbackBuffer;
     eastl::unique_ptr<IGfxBuffer> m_colorUploadBuffer;
 
     eastl::unique_ptr<IGfxFence> m_fence;

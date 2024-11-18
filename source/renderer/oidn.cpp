@@ -56,25 +56,25 @@ void OIDN::ExecuteCPU(IGfxCommandList* commandList, IGfxTexture* color, IGfxText
         m_bDenoised = true;
 
         commandList->TextureBarrier(color, 0, GfxAccessCopyDst, GfxAccessCopySrc);
-        commandList->CopyTextureToBuffer(m_colorReadbackBuffer.get(), 0, color, 0, 0);
-        commandList->CopyTextureToBuffer(m_albedoReadbackBuffer.get(), 0, albedo, 0, 0);
-        commandList->CopyTextureToBuffer(m_normalReadbackBuffer.get(), 0, normal, 0, 0);
+        commandList->CopyTextureToBuffer(m_colorBuffer.get(), 0, color, 0, 0);
+        commandList->CopyTextureToBuffer(m_albedoBuffer.get(), 0, albedo, 0, 0);
+        commandList->CopyTextureToBuffer(m_normalBuffer.get(), 0, normal, 0, 0);
         commandList->End();
         commandList->Signal(m_fence.get(), ++m_fenceValue);
         commandList->Submit();
         m_fence->Wait(m_fenceValue); // to ensure the copy has finished
 
-        void* colorData = oidnGetBufferData(m_colorBuffer);
+        void* colorData = oidnGetBufferData(m_oidnColorBuffer);
         
-        memcpy(colorData, m_colorReadbackBuffer->GetCpuAddress(), oidnGetBufferSize(m_colorBuffer));
-        memcpy(oidnGetBufferData(m_albedoBuffer), m_albedoReadbackBuffer->GetCpuAddress(), oidnGetBufferSize(m_albedoBuffer));
-        memcpy(oidnGetBufferData(m_normalBuffer), m_normalReadbackBuffer->GetCpuAddress(), oidnGetBufferSize(m_normalBuffer));
+        memcpy(colorData, m_colorBuffer->GetCpuAddress(), oidnGetBufferSize(m_oidnColorBuffer));
+        memcpy(oidnGetBufferData(m_oidnAlbedoBuffer), m_albedoBuffer->GetCpuAddress(), oidnGetBufferSize(m_oidnAlbedoBuffer));
+        memcpy(oidnGetBufferData(m_oidnNormalBuffer), m_normalBuffer->GetCpuAddress(), oidnGetBufferSize(m_oidnNormalBuffer));
 
         uint64_t ticks = stm_now();
         oidnExecuteFilter(m_filter);
         RE_INFO("OIDN CPU : {} ms", stm_ms(stm_now() - ticks));
 
-        memcpy(m_colorUploadBuffer->GetCpuAddress(), colorData, oidnGetBufferSize(m_colorBuffer));
+        memcpy(m_colorUploadBuffer->GetCpuAddress(), colorData, oidnGetBufferSize(m_oidnColorBuffer));
 
         commandList->Begin();
         commandList->TextureBarrier(color, 0, GfxAccessCopySrc, GfxAccessCopyDst);
@@ -91,9 +91,9 @@ void OIDN::ExecuteGPU(IGfxCommandList* commandList, IGfxTexture* color, IGfxText
         m_bDenoised = true;
 
         commandList->TextureBarrier(color, 0, GfxAccessCopyDst, GfxAccessCopySrc);
-        commandList->CopyTexture(m_colorTexture.get(), 0, 0, color, 0, 0);
-        commandList->CopyTexture(m_albedoTexture.get(), 0, 0, albedo, 0, 0);
-        commandList->CopyTexture(m_normalTexture.get(), 0, 0, normal, 0, 0);
+        commandList->CopyTextureToBuffer(m_colorBuffer.get(), 0, color, 0, 0);
+        commandList->CopyTextureToBuffer(m_albedoBuffer.get(), 0, albedo, 0, 0);
+        commandList->CopyTextureToBuffer(m_normalBuffer.get(), 0, normal, 0, 0);
         commandList->End();
         commandList->Signal(m_fence.get(), ++m_fenceValue);
         commandList->Submit();
@@ -108,13 +108,13 @@ void OIDN::ExecuteGPU(IGfxCommandList* commandList, IGfxTexture* color, IGfxText
         m_renderer->SetupGlobalConstants(commandList);
     }
 
-    commandList->CopyTexture(color, 0, 0, m_colorTexture.get(), 0, 0);
+    commandList->CopyBufferToTexture(color, 0, 0, m_colorBuffer.get(), 0);
 }
 
 void OIDN::InitBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* normal)
 {
-    if (m_colorBuffer == nullptr ||
-        oidnGetBufferSize(m_colorBuffer) != color->GetRequiredStagingBufferSize())
+    if (m_oidnColorBuffer == nullptr ||
+        oidnGetBufferSize(m_oidnColorBuffer) != color->GetRequiredStagingBufferSize())
     {
         ReleaseBuffers();
 
@@ -130,10 +130,10 @@ void OIDN::InitBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* nor
         const uint32_t width = color->GetDesc().width;
         const uint32_t height = color->GetDesc().height;
 
-        oidnSetFilterImage(m_filter, "color", m_colorBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, color->GetRowPitch());
-        oidnSetFilterImage(m_filter, "albedo", m_albedoBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, albedo->GetRowPitch());
-        oidnSetFilterImage(m_filter, "normal", m_normalBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, normal->GetRowPitch());
-        oidnSetFilterImage(m_filter, "output", m_colorBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, color->GetRowPitch());
+        oidnSetFilterImage(m_filter, "color", m_oidnColorBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, color->GetRowPitch());
+        oidnSetFilterImage(m_filter, "albedo", m_oidnAlbedoBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, albedo->GetRowPitch());
+        oidnSetFilterImage(m_filter, "normal", m_oidnNormalBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, normal->GetRowPitch());
+        oidnSetFilterImage(m_filter, "output", m_oidnColorBuffer, OIDN_FORMAT_HALF3, width, height, 0, 8, color->GetRowPitch());
 
         oidnSetFilterBool(m_filter, "hdr", true);
         oidnSetFilterBool(m_filter, "cleanAux", true);
@@ -143,19 +143,19 @@ void OIDN::InitBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* nor
 
 void OIDN::ReleaseBuffers()
 {
-    if (m_colorBuffer)
+    if (m_oidnColorBuffer)
     {
-        oidnReleaseBuffer(m_colorBuffer);
+        oidnReleaseBuffer(m_oidnColorBuffer);
     }
 
-    if (m_albedoBuffer)
+    if (m_oidnAlbedoBuffer)
     {
-        oidnReleaseBuffer(m_albedoBuffer);
+        oidnReleaseBuffer(m_oidnAlbedoBuffer);
     }
 
-    if (m_normalBuffer)
+    if (m_oidnNormalBuffer)
     {
-        oidnReleaseBuffer(m_normalBuffer);
+        oidnReleaseBuffer(m_oidnNormalBuffer);
     }
 }
 
@@ -167,13 +167,13 @@ void OIDN::InitCPUBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* 
     desc.size = color->GetRequiredStagingBufferSize();
     desc.memory_type = GfxMemoryType::GpuToCpu;
 
-    m_colorReadbackBuffer.reset(device->CreateBuffer(desc, "OIDN.colorReadbackBuffer"));
-    m_albedoReadbackBuffer.reset(device->CreateBuffer(desc, "OIDN.albedoReadbackBuffer"));
-    m_normalReadbackBuffer.reset(device->CreateBuffer(desc, "OIDN.normalReadbackBuffer"));
+    m_colorBuffer.reset(device->CreateBuffer(desc, "OIDN.colorBuffer"));
+    m_albedoBuffer.reset(device->CreateBuffer(desc, "OIDN.albedoBuffer"));
+    m_normalBuffer.reset(device->CreateBuffer(desc, "OIDN.normalBuffer"));
 
-    m_colorBuffer = oidnNewBuffer(m_device, desc.size);
-    m_albedoBuffer = oidnNewBuffer(m_device, desc.size);
-    m_normalBuffer = oidnNewBuffer(m_device, desc.size);
+    m_oidnColorBuffer = oidnNewBuffer(m_device, desc.size);
+    m_oidnAlbedoBuffer = oidnNewBuffer(m_device, desc.size);
+    m_oidnNormalBuffer = oidnNewBuffer(m_device, desc.size);
 
     desc.memory_type = GfxMemoryType::CpuOnly;
     m_colorUploadBuffer.reset(device->CreateBuffer(desc, "OIDN.colorUploadBuffer"));
@@ -183,21 +183,22 @@ void OIDN::InitGPUBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* 
 {
     IGfxDevice* device = m_renderer->GetDevice();
 
-    GfxTextureDesc desc = color->GetDesc();
+    GfxBufferDesc desc;
+    desc.size = color->GetRequiredStagingBufferSize();
+    desc.memory_type = GfxMemoryType::GpuOnly;
     desc.alloc_type = GfxAllocationType::Committed;
-    desc.usage = GfxTextureUsageShared;
-    desc.heap = nullptr;
+    desc.usage = GfxBufferUsageShared;
 
-    m_colorTexture.reset(device->CreateTexture(desc, "OIDN.colorTexture"));
-    m_albedoTexture.reset(device->CreateTexture(desc, "OIDN.albedoTexture"));
-    m_normalTexture.reset(device->CreateTexture(desc, "OIDN.normalTexture"));
+    m_colorBuffer.reset(device->CreateBuffer(desc, "OIDN.colorBuffer"));
+    m_albedoBuffer.reset(device->CreateBuffer(desc, "OIDN.albedoBuffer"));
+    m_normalBuffer.reset(device->CreateBuffer(desc, "OIDN.normalBuffer"));
 
-    m_colorBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
-        m_colorTexture->GetSharedHandle(), nullptr, m_colorTexture->GetRequiredStagingBufferSize());
-    m_albedoBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
-        m_albedoTexture->GetSharedHandle(), nullptr, m_albedoTexture->GetRequiredStagingBufferSize());
-    m_normalBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
-        m_normalTexture->GetSharedHandle(), nullptr, m_normalTexture->GetRequiredStagingBufferSize());
+    m_oidnColorBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
+        m_colorBuffer->GetSharedHandle(), nullptr, desc.size);
+    m_oidnAlbedoBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
+        m_albedoBuffer->GetSharedHandle(), nullptr, desc.size);
+    m_oidnNormalBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
+        m_normalBuffer->GetSharedHandle(), nullptr, desc.size);
 }
 
 #endif // #if WITH_OIDN
