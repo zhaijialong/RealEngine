@@ -17,6 +17,7 @@ public:
     virtual void* GetCpuAddress() override { return m_pCpuAddress; }
     virtual uint64_t GetGpuAddress() override;
     virtual uint32_t GetRequiredStagingBufferSize() const override;
+    virtual void* GetSharedHandle() const override { return nullptr; }
 
 private:
     MTL::Buffer* m_pBuffer = nullptr;

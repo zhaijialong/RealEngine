@@ -121,3 +121,9 @@ uint32_t VulkanBuffer::GetRequiredStagingBufferSize() const
     vkGetBufferMemoryRequirements((VkDevice)m_pDevice->GetHandle(), m_buffer, &requirements);
     return (uint32_t)requirements.size;
 }
+
+void* VulkanBuffer::GetSharedHandle() const
+{
+    // todo
+    return nullptr;
+}

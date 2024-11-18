@@ -21,6 +21,7 @@ public:
     virtual void* GetCpuAddress() override;
     virtual uint64_t GetGpuAddress() override;
     virtual uint32_t GetRequiredStagingBufferSize() const override;
+    virtual void* GetSharedHandle() const override { return m_sharedHandle; }
 
     bool Create();
 
@@ -28,4 +29,6 @@ private:
     ID3D12Resource* m_pBuffer = nullptr;
     D3D12MA::Allocation* m_pAllocation = nullptr;
     void* m_pCpuAddress = nullptr;
+
+    HANDLE m_sharedHandle = 0;
 };

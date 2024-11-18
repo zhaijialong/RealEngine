@@ -47,3 +47,8 @@ uint32_t MockBuffer::GetRequiredStagingBufferSize() const
 {
     return m_desc.size;
 }
+
+void* MockBuffer::GetSharedHandle() const
+{
+    return nullptr;
+}

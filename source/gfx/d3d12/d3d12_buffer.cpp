@@ -54,6 +54,11 @@ bool D3D12Buffer::Create()
         allocationDesc.HeapType = d3d12_heap_type(m_desc.memory_type);
         allocationDesc.Flags = m_desc.alloc_type == GfxAllocationType::Committed ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
 
+        if (m_desc.usage & GfxBufferUsageShared)
+        {
+            allocationDesc.ExtraHeapFlags |= D3D12_HEAP_FLAG_SHARED;
+        }
+
         hr = pAllocator->CreateResource3(&allocationDesc, 
             &resourceDesc1, initial_layout, nullptr, 0, nullptr, &m_pAllocation, IID_PPV_ARGS(&m_pBuffer));
     }
@@ -76,6 +81,19 @@ bool D3D12Buffer::Create()
         CD3DX12_RANGE readRange(0, 0);
         m_pBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pCpuAddress));
     }
+
+    if (m_desc.usage & GfxBufferUsageShared)
+    {
+        ID3D12Device* device = (ID3D12Device*)m_pDevice->GetHandle();
+        hr = device->CreateSharedHandle(m_pBuffer, nullptr, GENERIC_ALL, nullptr, &m_sharedHandle);
+
+        if (FAILED(hr))
+        {
+            RE_ERROR("[D3D12Buffer] failed to create shared handle for {}", m_name);
+            return false;
+        }
+    }
+
     return true;
 }
 

@@ -120,6 +120,7 @@ enum GfxBufferUsageBit
     GfxBufferUsageTypedBuffer       = 1 << 2,
     GfxBufferUsageRawBuffer         = 1 << 3,
     GfxBufferUsageUnorderedAccess   = 1 << 4,
+    GfxBufferUsageShared            = 1 << 5,
 };
 using GfxBufferUsageFlags = uint32_t;
 
