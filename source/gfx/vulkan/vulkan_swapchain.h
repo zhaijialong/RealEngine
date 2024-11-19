@@ -35,6 +35,7 @@ private:
     VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 
     bool m_bEnableVsync = true;
+    bool m_bMailboxSupported = false;
 
     uint32_t m_currentBackBuffer = 0;
     eastl::vector<IGfxTexture*> m_backBuffers;

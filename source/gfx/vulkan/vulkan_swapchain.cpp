@@ -61,7 +61,11 @@ bool VulkanSwapchain::Resize(uint32_t width, uint32_t height)
 
 void VulkanSwapchain::SetVSyncEnabled(bool value)
 {
-    //todo
+    if (m_bEnableVsync != value)
+    {
+        m_bEnableVsync = value;
+        RecreateSwapchain();
+    }
 }
 
 void VulkanSwapchain::Present(VkQueue queue)
@@ -119,6 +123,7 @@ bool VulkanSwapchain::CreateSurface()
 {
     VkInstance instance = ((VulkanDevice*)m_pDevice)->GetInstance();
     VkDevice device = (VkDevice)m_pDevice->GetHandle();
+    VkPhysicalDevice physicalDevice = ((VulkanDevice*)m_pDevice)->GetPhysicalDevice();
 
 #if defined(RE_PLATFORM_WINDOWS)
     VkWin32SurfaceCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
@@ -133,6 +138,14 @@ bool VulkanSwapchain::CreateSurface()
 #endif
     
     SetDebugName(device, VK_OBJECT_TYPE_SURFACE_KHR, m_surface, m_name.c_str());
+
+    uint32_t presentModeCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_surface, &presentModeCount, nullptr);
+
+    eastl::vector<VkPresentModeKHR> presentModes(presentModeCount);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_surface, &presentModeCount, presentModes.data());
+
+    m_bMailboxSupported = eastl::find(presentModes.begin(), presentModes.end(), VK_PRESENT_MODE_MAILBOX_KHR) != presentModes.end();
 
     return true;
 }
@@ -162,7 +175,7 @@ bool VulkanSwapchain::CreateSwapchain()
     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR; // todo
+    createInfo.presentMode = m_bEnableVsync ? VK_PRESENT_MODE_FIFO_KHR : (m_bMailboxSupported ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = oldSwapchain;
     
