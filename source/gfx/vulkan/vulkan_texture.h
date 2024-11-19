@@ -29,4 +29,8 @@ private:
     bool m_bSwapchainImage = false;
 
     eastl::vector<VkImageView> m_renderViews;
+
+#if RE_PLATFORM_WINDOWS
+    HANDLE m_sharedHandle = 0;
+#endif
 };

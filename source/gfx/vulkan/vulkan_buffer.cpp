@@ -80,6 +80,17 @@ bool VulkanBuffer::Create()
             allocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
         }
 
+        VkExternalMemoryBufferCreateInfo externalMemoryInfo = { VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO };
+#if RE_PLATFORM_WINDOWS
+        externalMemoryInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+#endif
+
+        if (m_desc.usage & GfxBufferUsageShared)
+        {
+            createInfo.pNext = &externalMemoryInfo;
+            allocationCreateInfo.pool = ((VulkanDevice*)m_pDevice)->GetSharedResourcePool();
+        }
+
         VmaAllocationInfo allocationInfo;
         result = vmaCreateBuffer(allocator, &createInfo, &allocationCreateInfo, &m_buffer, &m_allocation, &allocationInfo);
 
@@ -97,6 +108,25 @@ bool VulkanBuffer::Create()
     if (m_allocation)
     {
         vmaSetAllocationName(allocator, m_allocation, m_name.c_str());
+    }
+
+    if (m_desc.usage & GfxBufferUsageShared)
+    {
+        VmaAllocationInfo allocationInfo;
+        vmaGetAllocationInfo(allocator, m_allocation, &allocationInfo);
+
+#if RE_PLATFORM_WINDOWS
+        VkMemoryGetWin32HandleInfoKHR handleInfo = { VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR };
+        handleInfo.memory = allocationInfo.deviceMemory;
+        handleInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+
+        result = vkGetMemoryWin32HandleKHR(device, &handleInfo, &m_sharedHandle);
+        if (result != VK_SUCCESS)
+        {
+            RE_ERROR("[VulkanBuffer] failed to create shared handle for {}", m_name);
+            return false;
+        }
+#endif
     }
 
     return true;
@@ -124,6 +154,9 @@ uint32_t VulkanBuffer::GetRequiredStagingBufferSize() const
 
 void* VulkanBuffer::GetSharedHandle() const
 {
-    // todo
+#if RE_PLATFORM_WINDOWS
+    return m_sharedHandle;
+#else
     return nullptr;
+#endif
 }

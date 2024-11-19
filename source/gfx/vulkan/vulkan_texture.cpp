@@ -55,6 +55,17 @@ bool VulkanTexture::Create()
             allocationInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
         }
 
+        VkExternalMemoryImageCreateInfo externalMemoryInfo = { VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO };
+#if RE_PLATFORM_WINDOWS
+        externalMemoryInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+#endif
+
+        if (m_desc.usage & GfxTextureUsageShared)
+        {
+            createInfo.pNext = &externalMemoryInfo;
+            allocationInfo.pool = ((VulkanDevice*)m_pDevice)->GetSharedResourcePool();
+        }
+
         result = vmaCreateImage(allocator, &createInfo, &allocationInfo, &m_image, &m_allocation, nullptr);
     }
 
@@ -69,6 +80,25 @@ bool VulkanTexture::Create()
     if (m_allocation)
     {
         vmaSetAllocationName(allocator, m_allocation, m_name.c_str());
+    }
+
+    if (m_desc.usage & GfxTextureUsageShared)
+    {
+        VmaAllocationInfo allocationInfo;
+        vmaGetAllocationInfo(allocator, m_allocation, &allocationInfo);
+
+#if RE_PLATFORM_WINDOWS
+        VkMemoryGetWin32HandleInfoKHR handleInfo = { VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR };
+        handleInfo.memory = allocationInfo.deviceMemory;
+        handleInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+
+        result = vkGetMemoryWin32HandleKHR(device, &handleInfo, &m_sharedHandle);
+        if (result != VK_SUCCESS)
+        {
+            RE_ERROR("[VulkanTexture] failed to create shared handle for {}", m_name);
+            return false;
+        }
+#endif
     }
 
     ((VulkanDevice*)m_pDevice)->EnqueueDefaultLayoutTransition(this);
@@ -119,8 +149,11 @@ GfxSubresourceTilingDesc VulkanTexture::GetTilingDesc(uint32_t subresource) cons
 
 void* VulkanTexture::GetSharedHandle() const
 {
-    //todo
+#if RE_PLATFORM_WINDOWS
+    return m_sharedHandle;
+#else
     return nullptr;
+#endif
 }
 
 VkImageView VulkanTexture::GetRenderView(uint32_t mip_slice, uint32_t array_slice)

@@ -53,6 +53,7 @@ public:
     VkPhysicalDevice GetPhysicalDevice() const { return m_physicalDevice; }
     VkDevice GetDevice() const { return m_device; }
     VmaAllocator GetVmaAllocator() const { return m_vmaAllocator; }
+    VmaPool GetSharedResourcePool() const { return m_vmaSharedResourcePool; }
     uint32_t GetGraphicsQueueIndex() const { return m_graphicsQueueIndex; }
     uint32_t GetComputeQueueIndex() const { return m_computeQueueIndex; }
     uint32_t GetCopyQueueIndex() const { return m_copyQueueIndex; }
@@ -93,9 +94,14 @@ private:
     VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
     VkDevice m_device = VK_NULL_HANDLE;
     VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
+    VmaPool m_vmaSharedResourcePool = VK_NULL_HANDLE;
     VkDescriptorSetLayout m_descriptorSetLayout[3] = {};
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
     VkPhysicalDeviceDescriptorBufferPropertiesEXT m_descriptorBufferProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT };
+    VkExportMemoryAllocateInfo m_exportMemory = { VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO };
+#if RE_PLATFORM_WINDOWS
+    VkExportMemoryWin32HandleInfoKHR m_exportMemoryWin32 = { VK_STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_KHR };
+#endif
 
     uint32_t m_graphicsQueueIndex = uint32_t(-1);
     uint32_t m_computeQueueIndex = uint32_t(-1);

@@ -193,12 +193,12 @@ void OIDN::InitGPUBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* 
     m_albedoBuffer.reset(device->CreateBuffer(desc, "OIDN.albedoBuffer"));
     m_normalBuffer.reset(device->CreateBuffer(desc, "OIDN.normalBuffer"));
 
-    m_oidnColorBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
-        m_colorBuffer->GetSharedHandle(), nullptr, desc.size);
-    m_oidnAlbedoBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
-        m_albedoBuffer->GetSharedHandle(), nullptr, desc.size);
-    m_oidnNormalBuffer = oidnNewSharedBufferFromWin32Handle(m_device, OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE,
-        m_normalBuffer->GetSharedHandle(), nullptr, desc.size);
+    OIDNExternalMemoryTypeFlag flag = device->GetDesc().backend == GfxRenderBackend::D3D12 ?
+        OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE : OIDN_EXTERNAL_MEMORY_TYPE_FLAG_OPAQUE_WIN32;
+
+    m_oidnColorBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_colorBuffer->GetSharedHandle(), nullptr, desc.size);
+    m_oidnAlbedoBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_albedoBuffer->GetSharedHandle(), nullptr, desc.size);
+    m_oidnNormalBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_normalBuffer->GetSharedHandle(), nullptr, desc.size);
 }
 
 #endif // #if WITH_OIDN

@@ -45,6 +45,7 @@ VulkanDevice::~VulkanDevice()
     delete m_resourceDescriptorAllocator;
     delete m_samplerDescriptorAllocator;
 
+    vmaDestroyPool(m_vmaAllocator, m_vmaSharedResourcePool);
     vmaDestroyAllocator(m_vmaAllocator);
     vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout[0], nullptr);
     vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout[1], nullptr);
@@ -454,6 +455,9 @@ VkResult VulkanDevice::CreateDevice()
         "VK_KHR_bind_memory2",
         "VK_KHR_timeline_semaphore",
         "VK_KHR_dedicated_allocation",
+#if RE_PLATFORM_WINDOWS
+        "VK_KHR_external_memory_win32",
+#endif
         "VK_EXT_mesh_shader",
         "VK_EXT_descriptor_indexing",
         "VK_EXT_mutable_descriptor_type",
@@ -573,7 +577,34 @@ VkResult VulkanDevice::CreateVmaAllocator()
     create_info.vulkanApiVersion = VK_API_VERSION_1_3;
     create_info.pVulkanFunctions = &functions;
 
-    return vmaCreateAllocator(&create_info, &m_vmaAllocator);
+    VkResult result = vmaCreateAllocator(&create_info, &m_vmaAllocator);
+    if (result != VK_SUCCESS)
+    {
+        return result;
+    }
+
+    VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+    bufferInfo.size = 1024; // Doesn't matter
+    bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+    uint32_t memoryTypeIndex;
+    vmaFindMemoryTypeIndexForBufferInfo(m_vmaAllocator, &bufferInfo, &allocInfo, &memoryTypeIndex);
+
+    VmaPoolCreateInfo poolInfo = {};
+    poolInfo.memoryTypeIndex = memoryTypeIndex;
+    poolInfo.pMemoryAllocateNext = &m_exportMemory;
+
+#if RE_PLATFORM_WINDOWS
+    m_exportMemory.pNext = &m_exportMemoryWin32;
+    m_exportMemory.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+
+    m_exportMemoryWin32.dwAccess = GENERIC_ALL;
+#endif
+
+    return vmaCreatePool(m_vmaAllocator, &poolInfo, &m_vmaSharedResourcePool);
 }
 
 VkResult VulkanDevice::CreatePipelineLayout()

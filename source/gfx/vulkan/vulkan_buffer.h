@@ -23,4 +23,8 @@ private:
     VkBuffer m_buffer = VK_NULL_HANDLE;
     VmaAllocation m_allocation = VK_NULL_HANDLE;
     void* m_pCpuAddress = nullptr;
+
+#if RE_PLATFORM_WINDOWS
+    HANDLE m_sharedHandle = 0;
+#endif
 };
