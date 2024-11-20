@@ -174,4 +174,27 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-framework MetalFX"
         "-framework GameController"
     )
+
+    # oidn
+    if(EXISTS ${EXTERNAL_ROOT}/oidn/include/OpenImageDenoise/oidn.h)
+        target_compile_definitions(RealEngine PUBLIC WITH_OIDN=1)
+        target_include_directories(RealEngine PUBLIC ${EXTERNAL_ROOT}/oidn/include)
+        target_link_libraries(RealEngine ${EXTERNAL_ROOT}/oidn/lib/libOpenImageDenoise.dylib)
+
+        file(GLOB_RECURSE OIDN_LIBS
+            "${EXTERNAL_ROOT}/oidn/lib/*.dylib"
+        )
+
+        get_property(EMBED_LIBS
+            TARGET RealEngine PROPERTY XCODE_EMBED_FRAMEWORKS
+        )
+
+        list(APPEND EMBED_LIBS 
+            ${OIDN_LIBS}
+        )
+
+        set_property(TARGET RealEngine PROPERTY
+            XCODE_EMBED_FRAMEWORKS ${EMBED_LIBS}
+        )
+    endif()
 endif()

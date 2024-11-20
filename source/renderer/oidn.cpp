@@ -16,8 +16,12 @@ OIDN::OIDN(Renderer* renderer)
     m_renderer = renderer;
     m_fence.reset(renderer->GetDevice()->CreateFence("OIDN.fence"));
 
+#if TARGET_OS_MAC //todo : got an error "OIDN_ERROR_UNKNOWN : unknown exception caught" with Metal GPU denoising
+    m_device = oidnNewDevice(OIDN_DEVICE_TYPE_CPU);
+#else
     m_device = oidnNewDevice(OIDN_DEVICE_TYPE_DEFAULT);
-    //m_device = oidnNewDevice(OIDN_DEVICE_TYPE_CPU);
+#endif
+
     if (m_device)
     {
         oidnSetDeviceErrorFunction(m_device, OnErrorCallback, nullptr);
@@ -193,12 +197,22 @@ void OIDN::InitGPUBuffers(IGfxTexture* color, IGfxTexture* albedo, IGfxTexture* 
     m_albedoBuffer.reset(device->CreateBuffer(desc, "OIDN.albedoBuffer"));
     m_normalBuffer.reset(device->CreateBuffer(desc, "OIDN.normalBuffer"));
 
-    OIDNExternalMemoryTypeFlag flag = device->GetDesc().backend == GfxRenderBackend::D3D12 ?
-        OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE : OIDN_EXTERNAL_MEMORY_TYPE_FLAG_OPAQUE_WIN32;
-
-    m_oidnColorBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_colorBuffer->GetSharedHandle(), nullptr, desc.size);
-    m_oidnAlbedoBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_albedoBuffer->GetSharedHandle(), nullptr, desc.size);
-    m_oidnNormalBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_normalBuffer->GetSharedHandle(), nullptr, desc.size);
+    GfxRenderBackend backend = device->GetDesc().backend;
+    if(backend == GfxRenderBackend::Metal)
+    {
+        m_oidnColorBuffer = oidnNewSharedBufferFromMetal(m_device, m_colorBuffer->GetHandle());
+        m_oidnAlbedoBuffer = oidnNewSharedBufferFromMetal(m_device, m_albedoBuffer->GetHandle());
+        m_oidnNormalBuffer = oidnNewSharedBufferFromMetal(m_device, m_normalBuffer->GetHandle());
+    }
+    else
+    {
+        OIDNExternalMemoryTypeFlag flag = backend == GfxRenderBackend::D3D12 ?
+            OIDN_EXTERNAL_MEMORY_TYPE_FLAG_D3D12_RESOURCE : OIDN_EXTERNAL_MEMORY_TYPE_FLAG_OPAQUE_WIN32;
+        
+        m_oidnColorBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_colorBuffer->GetSharedHandle(), nullptr, desc.size);
+        m_oidnAlbedoBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_albedoBuffer->GetSharedHandle(), nullptr, desc.size);
+        m_oidnNormalBuffer = oidnNewSharedBufferFromWin32Handle(m_device, flag, m_normalBuffer->GetSharedHandle(), nullptr, desc.size);
+    }
 }
 
 #endif // #if WITH_OIDN
