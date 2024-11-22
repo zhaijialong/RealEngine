@@ -334,14 +334,24 @@ void VulkanCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t
 
 void VulkanCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
+    ConstantData constantData = m_computeConstants;
+
     const GfxUnorderedAccessViewDesc& desc = ((VulkanUnorderedAccessView*)uav)->GetDesc();
     ::ClearUAV(this, resource, uav, desc, clear_value);
+
+    m_computeConstants = constantData;
+    m_computeConstants.dirty = true;
 }
 
 void VulkanCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
+    ConstantData constantData = m_computeConstants;
+
     const GfxUnorderedAccessViewDesc& desc = ((VulkanUnorderedAccessView*)uav)->GetDesc();
     ::ClearUAV(this, resource, uav, desc, clear_value);
+
+    m_computeConstants = constantData;
+    m_computeConstants.dirty = true;
 }
 
 void VulkanCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)

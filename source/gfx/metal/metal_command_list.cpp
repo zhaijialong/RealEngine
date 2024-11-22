@@ -201,14 +201,22 @@ void MetalCommandList::CopyTexture(IGfxTexture* dst, uint32_t dst_mip, uint32_t 
 
 void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const float* clear_value)
 {
+    TopLevelArgumentBuffer computeArgumentBuffer = m_computeArgumentBuffer;
+
     const GfxUnorderedAccessViewDesc& desc = ((MetalUnorderedAccessView*)uav)->GetDesc();
     ::ClearUAV(this, resource, uav, desc, clear_value);
+
+    m_computeArgumentBuffer = computeArgumentBuffer;
 }
 
 void MetalCommandList::ClearUAV(IGfxResource* resource, IGfxDescriptor* uav, const uint32_t* clear_value)
 {
+    TopLevelArgumentBuffer computeArgumentBuffer = m_computeArgumentBuffer;
+
     const GfxUnorderedAccessViewDesc& desc = ((MetalUnorderedAccessView*)uav)->GetDesc();
     ::ClearUAV(this, resource, uav, desc, clear_value);
+
+    m_computeArgumentBuffer = computeArgumentBuffer;
 }
 
 void MetalCommandList::WriteBuffer(IGfxBuffer* buffer, uint32_t offset, uint32_t data)
