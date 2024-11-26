@@ -13,6 +13,7 @@ public:
     ~VulkanShaderResourceView();
 
     bool Create();
+    VkImageView GetImageView() const { return m_imageView; }
 
     virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
     virtual uint32_t GetHeapIndex() const override { return m_heapIndex; }
@@ -32,6 +33,7 @@ public:
 
     bool Create();
     const GfxUnorderedAccessViewDesc& GetDesc() const { return m_desc; }
+    VkImageView GetImageView() const { return m_imageView; }
 
     virtual void* GetHandle() const override { return m_pResource->GetHandle(); }
     virtual uint32_t GetHeapIndex() const override { return m_heapIndex; }

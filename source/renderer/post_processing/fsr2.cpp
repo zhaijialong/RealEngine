@@ -3,9 +3,37 @@
 #if RE_PLATFORM_WINDOWS
 
 #include "../renderer.h"
+#include "gfx/vulkan/vulkan_device.h"
+#include "gfx/vulkan/vulkan_descriptor.h"
 #include "utils/gui_util.h"
-#include "dx12/ffx_fsr2_dx12.h"
 #include "utils/fmt.h"
+#include "dx12/ffx_fsr2_dx12.h"
+#include "vk/ffx_fsr2_vk.h"
+
+static inline FfxResource GetVulkanResource(FfxFsr2Context* context, RGTexture* texture, const wchar_t* name, FfxResourceStates state = FFX_RESOURCE_STATE_COMPUTE_READ)
+{
+    VkImage image = VK_NULL_HANDLE;
+    VkImageView imageView = VK_NULL_HANDLE;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    VkFormat format = VK_FORMAT_UNDEFINED;
+
+    if (texture)
+    {
+        image = (VkImage)texture->GetTexture()->GetHandle();
+
+        imageView = state == FFX_RESOURCE_STATE_UNORDERED_ACCESS ?
+            ((VulkanUnorderedAccessView*)texture->GetUAV())->GetImageView() :
+            ((VulkanShaderResourceView*)texture->GetSRV())->GetImageView();
+
+        const GfxTextureDesc& desc = texture->GetTexture()->GetDesc();
+        width = desc.width;
+        height = desc.height;
+        format = ToVulkanFormat(desc.format);
+    }
+
+    return ffxGetTextureResourceVK(context, image, imageView, width, height, format, name, state);
+}
 
 FSR2::FSR2(Renderer* pRenderer)
 {
@@ -90,16 +118,33 @@ RGHandle FSR2::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
             RGTexture* outputRT = pRenderGraph->GetTexture(data.output);
 
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+            GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
 
             FfxFsr2DispatchDescription dispatchDesc = {};
-            dispatchDesc.commandList = ffxGetCommandListDX12((ID3D12CommandList*)pCommandList->GetHandle());
-            dispatchDesc.color = ffxGetResourceDX12(&m_context, (ID3D12Resource*)inputRT->GetTexture()->GetHandle(), L"FSR2_InputColor");
-            dispatchDesc.depth = ffxGetResourceDX12(&m_context, (ID3D12Resource*)depthRT->GetTexture()->GetHandle(), L"FSR2_InputDepth");
-            dispatchDesc.motionVectors = ffxGetResourceDX12(&m_context, (ID3D12Resource*)velocityRT->GetTexture()->GetHandle(), L"FSR2_InputMotionVectors");
-            dispatchDesc.exposure = ffxGetResourceDX12(&m_context, (ID3D12Resource*)exposureRT->GetTexture()->GetHandle(), L"FSR2_InputExposure");
-            dispatchDesc.reactive = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_InputReactiveMap"); //todo : "applications should write alpha to the reactive mask"
-            dispatchDesc.transparencyAndComposition = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_TransparencyAndCompositionMap"); //todo : "raytraced reflections or animated textures"
-            dispatchDesc.output = ffxGetResourceDX12(&m_context, (ID3D12Resource*)outputRT->GetTexture()->GetHandle(), L"FSR2_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+
+            if (backend == GfxRenderBackend::D3D12)
+            {
+                dispatchDesc.commandList = ffxGetCommandListDX12((ID3D12CommandList*)pCommandList->GetHandle());
+                dispatchDesc.color = ffxGetResourceDX12(&m_context, (ID3D12Resource*)inputRT->GetTexture()->GetHandle(), L"FSR2_InputColor");
+                dispatchDesc.depth = ffxGetResourceDX12(&m_context, (ID3D12Resource*)depthRT->GetTexture()->GetHandle(), L"FSR2_InputDepth");
+                dispatchDesc.motionVectors = ffxGetResourceDX12(&m_context, (ID3D12Resource*)velocityRT->GetTexture()->GetHandle(), L"FSR2_InputMotionVectors");
+                dispatchDesc.exposure = ffxGetResourceDX12(&m_context, (ID3D12Resource*)exposureRT->GetTexture()->GetHandle(), L"FSR2_InputExposure");
+                dispatchDesc.reactive = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_InputReactiveMap"); //todo : "applications should write alpha to the reactive mask"
+                dispatchDesc.transparencyAndComposition = ffxGetResourceDX12(&m_context, nullptr, L"FSR2_TransparencyAndCompositionMap"); //todo : "raytraced reflections or animated textures"
+                dispatchDesc.output = ffxGetResourceDX12(&m_context, (ID3D12Resource*)outputRT->GetTexture()->GetHandle(), L"FSR2_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+            }
+            else if (backend == GfxRenderBackend::Vulkan)
+            {
+                dispatchDesc.commandList = ffxGetCommandListVK((VkCommandBuffer)pCommandList->GetHandle());
+                dispatchDesc.color = GetVulkanResource(&m_context, inputRT, L"FSR2_InputColor");
+                dispatchDesc.depth = GetVulkanResource(&m_context, depthRT, L"FSR2_InputDepth");
+                dispatchDesc.motionVectors = GetVulkanResource(&m_context, velocityRT, L"FSR2_InputMotionVectors");
+                dispatchDesc.exposure = GetVulkanResource(&m_context, exposureRT, L"FSR2_InputExposure");
+                dispatchDesc.reactive = GetVulkanResource(&m_context, nullptr, L"FSR2_InputReactiveMap"); //todo : "applications should write alpha to the reactive mask"
+                dispatchDesc.transparencyAndComposition = GetVulkanResource(&m_context, nullptr, L"FSR2_TransparencyAndCompositionMap"); //todo : "raytraced reflections or animated textures"
+                dispatchDesc.output = GetVulkanResource(&m_context, outputRT, L"FSR2_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+            }
+
             dispatchDesc.jitterOffset.x = camera->GetJitter().x;
             dispatchDesc.jitterOffset.y = camera->GetJitter().y;
             dispatchDesc.motionVectorScale.x = -0.5f * (float)renderWidth;
@@ -147,21 +192,43 @@ void FSR2::CreateFsr2Context(uint32_t renderWidth, uint32_t renderHeight, uint32
 {
     if (m_needCreateContext)
     {
-        ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
+        GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+        if (backend == GfxRenderBackend::D3D12)
+        {
+            ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
 
-        const size_t scratchBufferSize = ffxFsr2GetScratchMemorySizeDX12();
-        void* scratchBuffer = RE_ALLOC(scratchBufferSize);
-        FfxErrorCode errorCode = ffxFsr2GetInterfaceDX12(&m_desc.callbacks, device, scratchBuffer, scratchBufferSize);
-        FFX_ASSERT(errorCode == FFX_OK);
+            const size_t scratchBufferSize = ffxFsr2GetScratchMemorySizeDX12();
+            void* scratchBuffer = RE_ALLOC(scratchBufferSize);
+            FfxErrorCode errorCode = ffxFsr2GetInterfaceDX12(&m_desc.callbacks, device, scratchBuffer, scratchBufferSize);
+            FFX_ASSERT(errorCode == FFX_OK);
 
-        m_desc.device = ffxGetDeviceDX12(device);
+            m_desc.device = ffxGetDeviceDX12(device);
+        }
+        else if (backend == GfxRenderBackend::Vulkan)
+        {
+            VulkanDevice* device = (VulkanDevice*)m_pRenderer->GetDevice();
+
+            const size_t scratchBufferSize = ffxFsr2GetScratchMemorySizeVK(device->GetPhysicalDevice(), vkEnumerateDeviceExtensionProperties);
+            void* scratchBuffer = RE_ALLOC(scratchBufferSize);
+            FfxErrorCode errorCode = ffxFsr2GetInterfaceVK(&m_desc.callbacks, scratchBuffer, scratchBufferSize, 
+                device->GetInstance(), device->GetPhysicalDevice(), vkGetInstanceProcAddr, vkGetDeviceProcAddr);
+            FFX_ASSERT(errorCode == FFX_OK);
+
+            m_desc.device = ffxGetDeviceVK(device->GetDevice());
+        }
+        else
+        {
+            RE_ASSERT(false);
+        }
+
         m_desc.maxRenderSize.width = renderWidth;
         m_desc.maxRenderSize.height = renderHeight;
         m_desc.displaySize.width = displayWidth;
         m_desc.displaySize.height = displayHeight;
         m_desc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE | FFX_FSR2_ENABLE_DEPTH_INVERTED | FFX_FSR2_ENABLE_DEPTH_INFINITE;
 
-        ffxFsr2ContextCreate(&m_context, &m_desc);
+        FfxErrorCode errorCode = ffxFsr2ContextCreate(&m_context, &m_desc);
+        FFX_ASSERT(errorCode == FFX_OK);
 
         m_needCreateContext = false;
     }
