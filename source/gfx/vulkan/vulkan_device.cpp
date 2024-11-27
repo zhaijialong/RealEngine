@@ -19,6 +19,10 @@
 #define VMA_IMPLEMENTATION
 #include "vma/vk_mem_alloc.h"
 
+#if RE_PLATFORM_WINDOWS
+#include "nvsdk_ngx_vk.h"
+#endif
+
 static VkBool32 VulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageTypes,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
@@ -363,7 +367,31 @@ VkResult VulkanDevice::CreateInstance()
         "VK_EXT_debug_utils",
     };
 
-    //todo : check if the required layers/extensions are available
+#if RE_PLATFORM_WINDOWS
+    unsigned int dlssInstanceExtCount, dlssDeviceExtCount;
+    const char** dlssInstanceExts;
+    const char** dlssDeviceExts;
+    NVSDK_NGX_VULKAN_RequiredExtensions(&dlssInstanceExtCount, &dlssInstanceExts, &dlssDeviceExtCount, &dlssDeviceExts);
+
+    for (unsigned int i = 0; i < dlssInstanceExtCount; ++i)
+    {
+        auto found = eastl::find(required_extensions.begin(), required_extensions.end(), dlssInstanceExts[i],
+            [](const char* a, const char* b)
+            {
+                return stricmp(a, b) == 0;
+            });
+
+        if (found == required_extensions.end())
+        {
+            required_extensions.push_back(dlssInstanceExts[i]);
+        }
+    }
+#endif
+
+    if (!CheckExtensions(extensions, required_extensions))
+    {
+        return VK_ERROR_UNKNOWN;
+    }
 
     VkApplicationInfo appInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
     appInfo.pEngineName = "RealEngine";
@@ -436,7 +464,6 @@ VkResult VulkanDevice::CreateDevice()
         RE_DEBUG("    {}", extensions[i].extensionName);
     }
 
-    //todo : check if the required extensions are available
     eastl::vector<const char*> required_extensions =
     {
         "VK_KHR_swapchain",
@@ -464,6 +491,35 @@ VkResult VulkanDevice::CreateDevice()
         "VK_EXT_descriptor_buffer",
         "VK_EXT_scalar_block_layout",
     };
+
+#if RE_PLATFORM_WINDOWS
+    if (m_vendor == GfxVendor::Nvidia)
+    {
+        unsigned int dlssInstanceExtCount, dlssDeviceExtCount;
+        const char** dlssInstanceExts;
+        const char** dlssDeviceExts;
+        NVSDK_NGX_VULKAN_RequiredExtensions(&dlssInstanceExtCount, &dlssInstanceExts, &dlssDeviceExtCount, &dlssDeviceExts);
+
+        for (unsigned int i = 0; i < dlssDeviceExtCount; ++i)
+        {
+            auto found = eastl::find(required_extensions.begin(), required_extensions.end(), dlssDeviceExts[i],
+                [](const char* a, const char* b)
+                {
+                    return stricmp(a, b) == 0;
+                });
+
+            if (found == required_extensions.end())
+            {
+                required_extensions.push_back(dlssDeviceExts[i]);
+            }
+        }
+    }
+#endif
+
+    if (!CheckExtensions(extensions, required_extensions))
+    {
+        return VK_ERROR_UNKNOWN;
+    }
 
     float queue_priorities[1] = { 0.0 };
     FindQueueFamilyIndex();
@@ -722,6 +778,26 @@ void VulkanDevice::FindQueueFamilyIndex()
     RE_ASSERT(m_graphicsQueueIndex != uint32_t(-1));
     RE_ASSERT(m_copyQueueIndex != uint32_t(-1));
     RE_ASSERT(m_computeQueueIndex != uint32_t(-1));
+}
+
+bool VulkanDevice::CheckExtensions(const eastl::vector<VkExtensionProperties>& availableExts, const eastl::vector<const char*> requiredExts)
+{
+    for (size_t i = 0; i < requiredExts.size(); i++)
+    {
+        auto found = eastl::find(availableExts.begin(), availableExts.end(), requiredExts[i],
+            [](const VkExtensionProperties& extensionProperties, const char* ext)
+            {
+                return stricmp(extensionProperties.extensionName, ext) == 0;
+            });
+
+        if (found == availableExts.end())
+        {
+            RE_DEBUG("unsupported extension : {}", requiredExts[i]);
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void VulkanDevice::EnqueueDefaultLayoutTransition(IGfxTexture* texture)

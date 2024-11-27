@@ -142,6 +142,14 @@ void PostProcessor::UpsacleModeGui()
 
             mode = TemporalSuperResolution::None;
         }
+
+        if (mode == TemporalSuperResolution::XeSS &&
+            m_pRenderer->GetDevice()->GetDesc().backend != GfxRenderBackend::D3D12)
+        {
+            RE_INFO("XeSS is only supported with D3D12.");
+
+            mode = TemporalSuperResolution::None;
+        }
 #endif
     }
     

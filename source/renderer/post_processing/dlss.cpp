@@ -3,9 +3,13 @@
 #if RE_PLATFORM_WINDOWS
 
 #include "../renderer.h"
+#include "gfx/vulkan/vulkan_device.h"
+#include "gfx/vulkan/vulkan_descriptor.h"
 #include "utils/gui_util.h"
 #include "nvsdk_ngx.h"
+#include "nvsdk_ngx_vk.h"
 #include "nvsdk_ngx_helpers.h"
+#include "nvsdk_ngx_helpers_vk.h"
 
 #ifdef _DEBUG
 #pragma comment(lib, "nvsdk_ngx_s_dbg.lib")
@@ -14,6 +18,28 @@
 #endif
 
 #define APP_ID 231313132
+
+static inline NVSDK_NGX_Resource_VK GetVulkanResource(RGTexture* texture, bool uav = false)
+{
+    VkImage image = (VkImage)texture->GetTexture()->GetHandle();
+    VkImageView imageView = VK_NULL_HANDLE;
+    if (uav)
+    {
+        imageView = ((VulkanUnorderedAccessView*)texture->GetUAV())->GetImageView();
+    }
+    else
+    {
+        imageView = ((VulkanShaderResourceView*)texture->GetSRV())->GetImageView();
+    }
+
+    const GfxTextureDesc& desc = texture->GetTexture()->GetDesc();
+    uint32_t width = desc.width;
+    uint32_t height = desc.height;
+    VkFormat format = ToVulkanFormat(desc.format);
+    VkImageSubresourceRange subresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+    return NVSDK_NGX_Create_ImageView_Resource_VK(imageView, image, subresource, format, width, height, uav);
+}
 
 DLSS::DLSS(Renderer* pRenderer)
 {
@@ -103,22 +129,50 @@ RGHandle DLSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
             RGTexture* outputRT = pRenderGraph->GetTexture(data.output);
 
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+            GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+            
+            if (backend == GfxRenderBackend::D3D12)
+            {
+                NVSDK_NGX_D3D12_DLSS_Eval_Params dlssEvalParams = {};
+                dlssEvalParams.Feature.pInColor = (ID3D12Resource*)inputRT->GetTexture()->GetHandle();
+                dlssEvalParams.Feature.pInOutput = (ID3D12Resource*)outputRT->GetTexture()->GetHandle();
+                dlssEvalParams.pInDepth = (ID3D12Resource*)depthRT->GetTexture()->GetHandle();
+                dlssEvalParams.pInMotionVectors = (ID3D12Resource*)velocityRT->GetTexture()->GetHandle();
+                dlssEvalParams.pInExposureTexture = (ID3D12Resource*)exposureRT->GetTexture()->GetHandle();
+                dlssEvalParams.InJitterOffsetX = camera->GetJitter().x;
+                dlssEvalParams.InJitterOffsetY = camera->GetJitter().y;
+                dlssEvalParams.InReset = false;
+                dlssEvalParams.InMVScaleX = -0.5f * (float)renderWidth;
+                dlssEvalParams.InMVScaleY = 0.5f * (float)renderHeight;
+                dlssEvalParams.InRenderSubrectDimensions = { renderWidth, renderHeight };
 
-            NVSDK_NGX_D3D12_DLSS_Eval_Params dlssEvalParams = {};
-            dlssEvalParams.Feature.pInColor = (ID3D12Resource*)inputRT->GetTexture()->GetHandle();
-            dlssEvalParams.Feature.pInOutput = (ID3D12Resource*)outputRT->GetTexture()->GetHandle();
-            dlssEvalParams.pInDepth = (ID3D12Resource*)depthRT->GetTexture()->GetHandle();
-            dlssEvalParams.pInMotionVectors = (ID3D12Resource*)velocityRT->GetTexture()->GetHandle();
-            dlssEvalParams.pInExposureTexture = (ID3D12Resource*)exposureRT->GetTexture()->GetHandle();
-            dlssEvalParams.InJitterOffsetX = camera->GetJitter().x;
-            dlssEvalParams.InJitterOffsetY = camera->GetJitter().y;
-            dlssEvalParams.InReset = false;
-            dlssEvalParams.InMVScaleX = -0.5f * (float)renderWidth;
-            dlssEvalParams.InMVScaleY = 0.5f * (float)renderHeight;
-            dlssEvalParams.InRenderSubrectDimensions = { renderWidth, renderHeight };
+                NVSDK_NGX_Result result = NGX_D3D12_EVALUATE_DLSS_EXT((ID3D12GraphicsCommandList*)pCommandList->GetHandle(), m_dlssFeature, m_ngxParameters, &dlssEvalParams);
+                RE_ASSERT(NVSDK_NGX_SUCCEED(result));
+            }
+            else if (backend == GfxRenderBackend::Vulkan)
+            {
+                NVSDK_NGX_Resource_VK colorResource = GetVulkanResource(inputRT);
+                NVSDK_NGX_Resource_VK outputResource = GetVulkanResource(outputRT, true);
+                NVSDK_NGX_Resource_VK depthResource = GetVulkanResource(depthRT);
+                NVSDK_NGX_Resource_VK velocityResource = GetVulkanResource(velocityRT);
+                NVSDK_NGX_Resource_VK exposureResource = GetVulkanResource(exposureRT);
 
-            NVSDK_NGX_Result result = NGX_D3D12_EVALUATE_DLSS_EXT((ID3D12GraphicsCommandList*)pCommandList->GetHandle(), m_dlssFeature, m_ngxParameters, &dlssEvalParams);
-            RE_ASSERT(NVSDK_NGX_SUCCEED(result));
+                NVSDK_NGX_VK_DLSS_Eval_Params dlssEvalParams = {};
+                dlssEvalParams.Feature.pInColor = &colorResource;
+                dlssEvalParams.Feature.pInOutput = &outputResource;
+                dlssEvalParams.pInDepth = &depthResource;
+                dlssEvalParams.pInMotionVectors = &velocityResource;
+                dlssEvalParams.pInExposureTexture = &exposureResource;
+                dlssEvalParams.InJitterOffsetX = camera->GetJitter().x;
+                dlssEvalParams.InJitterOffsetY = camera->GetJitter().y;
+                dlssEvalParams.InReset = false;
+                dlssEvalParams.InMVScaleX = -0.5f * (float)renderWidth;
+                dlssEvalParams.InMVScaleY = 0.5f * (float)renderHeight;
+                dlssEvalParams.InRenderSubrectDimensions = { renderWidth, renderHeight };
+
+                NVSDK_NGX_Result result = NGX_VULKAN_EVALUATE_DLSS_EXT((VkCommandBuffer)pCommandList->GetHandle(), m_dlssFeature, m_ngxParameters, &dlssEvalParams);
+                RE_ASSERT(NVSDK_NGX_SUCCEED(result));
+            }
 
             pCommandList->ResetState();
             m_pRenderer->SetupGlobalConstants(pCommandList);
@@ -160,26 +214,45 @@ bool DLSS::InitializeNGX()
         return false;
     }
 
-    if (m_pRenderer->GetDevice()->GetDesc().backend != GfxRenderBackend::D3D12) //todo : vulkan
+    GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+    if (backend == GfxRenderBackend::D3D12)
     {
-        return false;
-    }
+        ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
+        NVSDK_NGX_Result result = NVSDK_NGX_D3D12_Init(APP_ID, L".", device); // this throws std::runtime_error ...
+        if (NVSDK_NGX_FAILED(result))
+        {
+            return false;
+        }
 
-    ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
-    NVSDK_NGX_Result result = NVSDK_NGX_D3D12_Init(APP_ID, L".", device); // this throws std::runtime_error ...
-    if(NVSDK_NGX_FAILED(result))
-    {
-        return false;
+        result = NVSDK_NGX_D3D12_GetCapabilityParameters(&m_ngxParameters);
+        if (NVSDK_NGX_FAILED(result))
+        {
+            return false;
+        }
     }
-
-    result = NVSDK_NGX_D3D12_GetCapabilityParameters(&m_ngxParameters);
-    if (NVSDK_NGX_FAILED(result))
+    else if(backend == GfxRenderBackend::Vulkan)
     {
-        return false;
+        VulkanDevice* device = (VulkanDevice*)m_pRenderer->GetDevice();
+        NVSDK_NGX_Result result = NVSDK_NGX_VULKAN_Init(APP_ID, L".", 
+            device->GetInstance(), device->GetPhysicalDevice(), device->GetDevice(), vkGetInstanceProcAddr, vkGetDeviceProcAddr);
+        if (NVSDK_NGX_FAILED(result))
+        {
+            return false;
+        }
+
+        result = NVSDK_NGX_VULKAN_GetCapabilityParameters(&m_ngxParameters);
+        if (NVSDK_NGX_FAILED(result))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        RE_ASSERT(false);
     }
 
     int dlssAvailable = 0;
-    result = m_ngxParameters->Get(NVSDK_NGX_Parameter_SuperSampling_Available, &dlssAvailable);
+    NVSDK_NGX_Result result = m_ngxParameters->Get(NVSDK_NGX_Parameter_SuperSampling_Available, &dlssAvailable);
     if (NVSDK_NGX_FAILED(result) || !dlssAvailable)
     {
         return false;
@@ -190,12 +263,25 @@ bool DLSS::InitializeNGX()
 
 void DLSS::ShutdownNGX()
 {
-    if (m_ngxParameters)
+    GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+    if (backend == GfxRenderBackend::D3D12)
     {
-        NVSDK_NGX_D3D12_DestroyParameters(m_ngxParameters);
-    }
+        if (m_ngxParameters)
+        {
+            NVSDK_NGX_D3D12_DestroyParameters(m_ngxParameters);
+        }
 
-    NVSDK_NGX_D3D12_Shutdown1((ID3D12Device*)m_pRenderer->GetDevice()->GetHandle());
+        NVSDK_NGX_D3D12_Shutdown1((ID3D12Device*)m_pRenderer->GetDevice()->GetHandle());
+    }
+    else if (backend == GfxRenderBackend::Vulkan)
+    {
+        if (m_ngxParameters)
+        {
+            NVSDK_NGX_VULKAN_DestroyParameters(m_ngxParameters);
+        }
+
+        NVSDK_NGX_VULKAN_Shutdown1((VkDevice)m_pRenderer->GetDevice()->GetHandle());
+    }
 }
 
 bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList, uint32_t renderWidth, uint32_t renderHeight, uint32_t displayWidth, uint32_t displayHeight)
@@ -216,10 +302,18 @@ bool DLSS::InitializeDLSSFeatures(IGfxCommandList* pCommandList, uint32_t render
             NVSDK_NGX_DLSS_Feature_Flags_MVLowRes |
             NVSDK_NGX_DLSS_Feature_Flags_DepthInverted;
 
-        ID3D12GraphicsCommandList* d3d12CommandList = (ID3D12GraphicsCommandList*)pCommandList->GetHandle();
-        //"D3D12 WARNING: ID3D12Device::CreateCommittedResource: Ignoring InitialState D3D12_RESOURCE_STATE_COPY_DEST. Buffers are effectively created in state D3D12_RESOURCE_STATE_COMMON"
-        NVSDK_NGX_Result result = NGX_D3D12_CREATE_DLSS_EXT(d3d12CommandList, 0, 0, &m_dlssFeature, m_ngxParameters, &dlssCreateParams);
-        RE_ASSERT(NVSDK_NGX_SUCCEED(result));
+        GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+        if (backend == GfxRenderBackend::D3D12)
+        {
+            //"D3D12 WARNING: ID3D12Device::CreateCommittedResource: Ignoring InitialState D3D12_RESOURCE_STATE_COPY_DEST. Buffers are effectively created in state D3D12_RESOURCE_STATE_COMMON"
+            NVSDK_NGX_Result result = NGX_D3D12_CREATE_DLSS_EXT((ID3D12GraphicsCommandList*)pCommandList->GetHandle(), 0, 0, &m_dlssFeature, m_ngxParameters, &dlssCreateParams);
+            RE_ASSERT(NVSDK_NGX_SUCCEED(result));
+        }
+        else if (backend == GfxRenderBackend::Vulkan)
+        {
+            NVSDK_NGX_Result result = NGX_VULKAN_CREATE_DLSS_EXT((VkCommandBuffer)pCommandList->GetHandle(), 0, 0, &m_dlssFeature, m_ngxParameters, &dlssCreateParams);
+            RE_ASSERT(NVSDK_NGX_SUCCEED(result));
+        }
 
         pCommandList->GlobalBarrier(GfxAccessComputeUAV, GfxAccessComputeUAV);
 
@@ -235,7 +329,15 @@ void DLSS::ReleaseDLSSFeatures()
     {
         m_pRenderer->WaitGpuFinished();
 
-        NVSDK_NGX_D3D12_ReleaseFeature(m_dlssFeature);
+        GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+        if (backend == GfxRenderBackend::D3D12)
+        {
+            NVSDK_NGX_D3D12_ReleaseFeature(m_dlssFeature);
+        }
+        else if (backend == GfxRenderBackend::Vulkan)
+        {
+            NVSDK_NGX_VULKAN_ReleaseFeature(m_dlssFeature);
+        }
         m_dlssFeature = nullptr;
     }
 }

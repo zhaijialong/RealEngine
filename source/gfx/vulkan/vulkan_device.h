@@ -87,6 +87,7 @@ private:
     VkResult CreateVmaAllocator();
     VkResult CreatePipelineLayout();
     void FindQueueFamilyIndex();
+    bool CheckExtensions(const eastl::vector<VkExtensionProperties>& availableExts, const eastl::vector<const char*> requiredExts);
 
 private:
     VkInstance m_instance = VK_NULL_HANDLE;
