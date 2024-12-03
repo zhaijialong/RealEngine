@@ -14,6 +14,7 @@
 #include "vulkan_constant_buffer_allocator.h"
 #include "utils/log.h"
 #include "utils/assert.h"
+#include "utils/string.h"
 #define VOLK_IMPLEMENTATION
 #include "volk/volk.h"
 #define VMA_IMPLEMENTATION

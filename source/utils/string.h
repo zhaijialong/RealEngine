@@ -8,6 +8,9 @@
 #include <Windows.h>
 #else
 #include "stdlib.h"
+#include "string.h"
+#define stricmp strcasecmp
+#define strnicmp strncasecmp
 #endif
 
 inline eastl::wstring string_to_wstring(const eastl::string& s)
