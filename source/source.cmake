@@ -171,14 +171,18 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/physics/physics_rigid_body.h
     ${SOURCE_ROOT}/physics/physics_shape.h
     ${SOURCE_ROOT}/physics/physics_system.h
-    ${SOURCE_ROOT}/renderer/lighting/clustered_shading.cpp
-    ${SOURCE_ROOT}/renderer/lighting/clustered_shading.h
+    ${SOURCE_ROOT}/renderer/lighting/clustered_light_lists.cpp
+    ${SOURCE_ROOT}/renderer/lighting/clustered_light_lists.h
+    ${SOURCE_ROOT}/renderer/lighting/direct_lighting.cpp
+    ${SOURCE_ROOT}/renderer/lighting/direct_lighting.h
     ${SOURCE_ROOT}/renderer/lighting/gi_denoiser.cpp
     ${SOURCE_ROOT}/renderer/lighting/gi_denoiser.h
     ${SOURCE_ROOT}/renderer/lighting/gi_denoiser_nrd.cpp
     ${SOURCE_ROOT}/renderer/lighting/gi_denoiser_nrd.h
     ${SOURCE_ROOT}/renderer/lighting/gtao.cpp
     ${SOURCE_ROOT}/renderer/lighting/gtao.h
+    ${SOURCE_ROOT}/renderer/lighting/hash_grid_radiance_cache.cpp
+    ${SOURCE_ROOT}/renderer/lighting/hash_grid_radiance_cache.h
     ${SOURCE_ROOT}/renderer/lighting/hybrid_stochastic_reflection.cpp
     ${SOURCE_ROOT}/renderer/lighting/hybrid_stochastic_reflection.h
     ${SOURCE_ROOT}/renderer/lighting/lighting_processor.cpp
@@ -189,10 +193,14 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/lighting/ray_traced_shadow.h
     ${SOURCE_ROOT}/renderer/lighting/reflection_denoiser.cpp
     ${SOURCE_ROOT}/renderer/lighting/reflection_denoiser.h
+    ${SOURCE_ROOT}/renderer/lighting/restir_di.cpp
+    ${SOURCE_ROOT}/renderer/lighting/restir_di.h
     ${SOURCE_ROOT}/renderer/lighting/restir_gi.cpp
     ${SOURCE_ROOT}/renderer/lighting/restir_gi.h
     ${SOURCE_ROOT}/renderer/lighting/shadow_denoiser.cpp
     ${SOURCE_ROOT}/renderer/lighting/shadow_denoiser.h
+    ${SOURCE_ROOT}/renderer/lighting/tiled_light_trees.cpp
+    ${SOURCE_ROOT}/renderer/lighting/tiled_light_trees.h
     ${SOURCE_ROOT}/renderer/post_processing/automatic_exposure.cpp
     ${SOURCE_ROOT}/renderer/post_processing/automatic_exposure.h
     ${SOURCE_ROOT}/renderer/post_processing/bloom.cpp

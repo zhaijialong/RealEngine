@@ -2,10 +2,11 @@
 
 #include "../render_graph.h"
 
-class ClusteredShading
+class DirectLighting
 {
 public:
-    ClusteredShading(Renderer* pRenderer);
+    DirectLighting(Renderer* pRenderer);
+    ~DirectLighting();
 
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal,
         RGHandle customData, RGHandle depth, RGHandle shadow, uint32_t width, uint32_t height);
@@ -17,4 +18,8 @@ private:
 private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPSO = nullptr;
+
+    eastl::unique_ptr<class ClusteredLightLists> m_pClusteredLightLists;
+    eastl::unique_ptr<class TiledLightTrees> m_pTiledLightTrees;
+    eastl::unique_ptr<class ReSTIRDI> m_pReSTIRDI;
 };

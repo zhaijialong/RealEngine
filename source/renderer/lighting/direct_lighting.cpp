@@ -1,20 +1,29 @@
-#include "clustered_shading.h"
+#include "direct_lighting.h"
+#include "clustered_light_lists.h"
+#include "tiled_light_trees.h"
+#include "restir_di.h"
 #include "../renderer.h"
-#include "core/engine.h"
 
-ClusteredShading::ClusteredShading(Renderer* pRenderer)
+DirectLighting::DirectLighting(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
+    m_pClusteredLightLists = eastl::make_unique<ClusteredLightLists>(pRenderer);
+    m_pTiledLightTrees = eastl::make_unique<TiledLightTrees>(pRenderer);
+    m_pReSTIRDI = eastl::make_unique<ReSTIRDI>(pRenderer);
 
     GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("clustered_shading.hlsl", "main", GfxShaderType::CS);
-    m_pPSO = pRenderer->GetPipelineState(psoDesc, "ClusteredShading PSO");
+    psoDesc.cs = pRenderer->GetShader("direct_lighting.hlsl", "main", GfxShaderType::CS);
+    m_pPSO = pRenderer->GetPipelineState(psoDesc, "direct lighting PSO");
 }
 
-RGHandle ClusteredShading::AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal, 
+DirectLighting::~DirectLighting()
+{
+}
+
+RGHandle DirectLighting::AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal, 
     RGHandle customData, RGHandle depth, RGHandle shadow, uint32_t width, uint32_t height)
 {
-    struct ClusteredShadingData
+    struct DirectLightingData
     {
         RGHandle diffuseRT;
         RGHandle specularRT;
@@ -25,8 +34,8 @@ RGHandle ClusteredShading::AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, 
         RGHandle output;
     };
 
-    auto clustered_shading = pRenderGraph->AddPass<ClusteredShadingData>("Clustered Shading", RenderPassType::Compute,
-        [&](ClusteredShadingData& data, RGBuilder& builder)
+    auto lighting = pRenderGraph->AddPass<DirectLightingData>("Direct Lighting", RenderPassType::Compute,
+        [&](DirectLightingData& data, RGBuilder& builder)
         {
             data.diffuseRT = builder.Read(diffuse);
             data.specularRT = builder.Read(specular);
@@ -42,7 +51,7 @@ RGHandle ClusteredShading::AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, 
             data.output = builder.Create<RGTexture>(desc, "Direct Lighting");
             data.output = builder.Write(data.output);
         },
-        [=](const ClusteredShadingData& data, IGfxCommandList* pCommandList)
+        [=](const DirectLightingData& data, IGfxCommandList* pCommandList)
         {
             Render(pCommandList,
                 pRenderGraph->GetTexture(data.diffuseRT), 
@@ -55,10 +64,10 @@ RGHandle ClusteredShading::AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, 
                 width, height);
         });
 
-    return clustered_shading->output;
+    return lighting->output;
 }
 
-void ClusteredShading::Render(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal,
+void DirectLighting::Render(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal,
     RGTexture* customData, RGTexture* depth, RGTexture* shadow, RGTexture* output, uint32_t width, uint32_t height)
 {
     pCommandList->SetPipelineState(m_pPSO);

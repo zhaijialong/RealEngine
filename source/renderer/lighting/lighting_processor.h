@@ -22,7 +22,8 @@ private:
 
     eastl::unique_ptr<class GTAO> m_pGTAO;
     eastl::unique_ptr<class RTShadow> m_pRTShdow;
+    eastl::unique_ptr<class HashGridRadianceCache> m_pRadianceCache;
     eastl::unique_ptr<class HybridStochasticReflection> m_pReflection;
     eastl::unique_ptr<class ReSTIRGI> m_pReSTIRGI;
-    eastl::unique_ptr<class ClusteredShading> m_pClusteredShading;
+    eastl::unique_ptr<class DirectLighting> m_pDirectLighting;
 };

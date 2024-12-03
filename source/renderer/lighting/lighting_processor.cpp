@@ -1,8 +1,9 @@
 #include "lighting_processor.h"
 #include "gtao.h"
 #include "ray_traced_shadow.h"
-#include "clustered_shading.h"
+#include "direct_lighting.h"
 #include "hybrid_stochastic_reflection.h"
+#include "hash_grid_radiance_cache.h"
 #include "restir_gi.h"
 #include "../renderer.h"
 #include "../base_pass.h"
@@ -13,9 +14,10 @@ LightingProcessor::LightingProcessor(Renderer* pRenderer)
 
     m_pGTAO = eastl::make_unique<GTAO>(pRenderer);
     m_pRTShdow = eastl::make_unique<RTShadow>(pRenderer);
-    m_pClusteredShading = eastl::make_unique<ClusteredShading>(pRenderer);
+    m_pDirectLighting = eastl::make_unique<DirectLighting>(pRenderer);
     m_pReflection = eastl::make_unique<HybridStochasticReflection>(pRenderer);
     m_pReSTIRGI = eastl::make_unique<ReSTIRGI>(pRenderer);
+    m_pRadianceCache = eastl::make_unique<HashGridRadianceCache>(pRenderer);
 }
 
 LightingProcessor::~LightingProcessor() = default;
@@ -43,7 +45,7 @@ RGHandle LightingProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle depth, R
 
     RGHandle gtao = m_pGTAO->AddPass(pRenderGraph, depth, normal, width, height);
     RGHandle shadow = m_pRTShdow->AddPass(pRenderGraph, depth, normal, velocity, width, height);
-    RGHandle direct_lighting = m_pClusteredShading->AddPass(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
+    RGHandle direct_lighting = m_pDirectLighting->AddPass(pRenderGraph, diffuse, specular, normal, customData, depth, shadow, width, height);
     RGHandle indirect_specular = m_pReflection->AddPass(pRenderGraph, depth, linear_depth, normal, velocity, width, height);
     RGHandle indirect_diffuse = m_pReSTIRGI->AddPass(pRenderGraph, half_normal_depth, depth, linear_depth, normal, velocity, width, height);
 
