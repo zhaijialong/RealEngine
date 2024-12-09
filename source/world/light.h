@@ -17,9 +17,17 @@ public:
     float GetLightRadius() const { return m_lightRadius; }
     void SetLightRadius(float radius) { m_lightRadius = radius; }
 
+    float GetLightSourceRadius() const { return m_lightSourceRadius; }
+    void SetLightSourceRadius(float radius) { m_lightSourceRadius = radius; }
+
+    float GetLightFalloff() const { return m_falloff; }
+    void SetLightFalloff(float falloff) { m_falloff = falloff; }
+
 protected:
     float3 m_lightDir = { 0.0f, 1.0f, 0.0f };
     float3 m_lightColor = { 1.0f, 1.0f, 1.0f };
     float m_lightIntensity = 1.0f;
-    float m_lightRadius = 0.005f;
+    float m_lightRadius = 5.0f;
+    float m_lightSourceRadius = 0.005f;
+    float m_falloff = 1.0f;
 };

@@ -44,7 +44,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
         RayDesc ray;
         ray.Origin = worldPos + N * 0.01;
-        ray.Direction = SampleConeUniform(random, SceneCB.lightRadius, SceneCB.lightDir);
+        ray.Direction = SampleConeUniform(random, SceneCB.lightSourceRadius, SceneCB.lightDir);
         ray.TMin = 0.00001;
         ray.TMax = 1000.0;
 

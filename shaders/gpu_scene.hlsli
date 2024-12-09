@@ -60,11 +60,15 @@ struct LocalLightData
     uint type;
     float3 position;
     
-    float3 direction;
     float radius;
-    
     float3 color;
+    
     float falloff;
+    float3 direction;
+    
+    float2 spotAngles;
+    float sourceRadius;
+    float _pad;
     
     LocalLightType GetLocalLightType()
     {

@@ -7,7 +7,4 @@ class PointLight : public ILight
 public:
     virtual bool Create();
     virtual void Tick(float delta_time);
-
-private:
-    float m_falloff = 1.0f;
 };

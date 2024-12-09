@@ -17,6 +17,12 @@ float PointLightAttenuation(float distance, float radius, float falloff)
     return square(1.0 - s2) / (1.0 + falloff * s2);
 }
 
+// https://catlikecoding.com/unity/tutorials/custom-srp/point-and-spot-lights/#2.2
+float SpotLightAttenuation(LocalLightData light, float3 L)
+{
+    return square(saturate(dot(light.direction, L) * light.spotAngles.x + light.spotAngles.y));
+}
+
 float3 CalculatePointLight(LocalLightData light, float3 worldPosition, ShadingModel shadingModel, float3 V, float3 N, float3 diffuse, float3 specular, float roughness, float4 customData)
 {
     float3 ToLight = light.position - worldPosition;
@@ -28,13 +34,16 @@ float3 CalculatePointLight(LocalLightData light, float3 worldPosition, ShadingMo
 
 float3 CalculateSpotLight(LocalLightData light, float3 worldPosition, ShadingModel shadingModel, float3 V, float3 N, float3 diffuse, float3 specular, float roughness, float4 customData)
 {
-    //todo
-    return 0.0;
+    float3 ToLight = light.position - worldPosition;
+    float distance = length(ToLight);
+    float3 L = ToLight / distance;
+    float attenuation = PointLightAttenuation(distance, light.radius, light.falloff) * SpotLightAttenuation(light, L);
+    return EvaluateBRDF(shadingModel, L, V, N, diffuse, specular, roughness, customData, light.color) * attenuation;
 }
 
 float3 CalculateRectLight(LocalLightData light, float3 worldPosition, ShadingModel shadingModel, float3 V, float3 N, float3 diffuse, float3 specular, float roughness, float4 customData)
 {
-    //todo;
+    //todo : LTC area light
     return 0.0;
 }
 

@@ -85,7 +85,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
 
         RayDesc ray;
         ray.Origin = position + N * 0.01;
-        ray.Direction = SampleConeUniform(RandomSample(dispatchThreadID.xy, sampleSetIndex), SceneCB.lightRadius, wi);
+        ray.Direction = SampleConeUniform(RandomSample(dispatchThreadID.xy, sampleSetIndex), SceneCB.lightSourceRadius, wi);
         ray.TMin = 0.00001;
         ray.TMax = 1000.0;
 

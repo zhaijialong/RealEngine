@@ -188,6 +188,12 @@ inline void LoadLight(tinyxml2::XMLElement* element, ILight* light)
     {
         light->SetLightRadius(radius->FloatValue());
     }
+
+    const tinyxml2::XMLAttribute* falloff = element->FindAttribute("falloff");
+    if (falloff)
+    {
+        light->SetLightFalloff(falloff->FloatValue());
+    }
 }
 
 void World::CreateVisibleObject(tinyxml2::XMLElement* element)

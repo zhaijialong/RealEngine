@@ -70,7 +70,7 @@ struct SceneConstant
     float3 lightDir;
 
     float3 lightColor;
-    float lightRadius;
+    float lightSourceRadius;
 
     uint2 renderSize;
     float2 rcpRenderSize;
