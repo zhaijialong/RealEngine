@@ -654,6 +654,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.mipBias = m_mipBias;
     sceneCB.marschnerTextureM = m_pMarschnerHairLUT->GetM()->GetSRV()->GetHeapIndex();
     sceneCB.marschnerTextureN = m_pMarschnerHairLUT->GetN()->GetSRV()->GetHeapIndex();
+    sceneCB.localLightDataAddress = m_pGpuScene->GetLocalLightsDataAddress();
+    sceneCB.localLightCount = m_pGpuScene->GetLocalLightCount();
 
     if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
     {
@@ -970,6 +972,11 @@ uint32_t Renderer::AllocateSceneConstant(const void* data, uint32_t size)
 uint32_t Renderer::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas, GfxRayTracingInstanceFlag flags)
 {
     return m_pGpuScene->AddInstance(data, blas, flags);
+}
+
+uint32_t Renderer::AddLocalLight(const LocalLightData& data)
+{
+    return m_pGpuScene->AddLocalLight(data);
 }
 
 inline void image_copy(char* dst_data, uint32_t dst_row_pitch, char* src_data, uint32_t src_row_pitch, uint32_t row_num, uint32_t d)

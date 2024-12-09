@@ -319,6 +319,10 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/world/light.h
     ${SOURCE_ROOT}/world/mesh_material.cpp
     ${SOURCE_ROOT}/world/mesh_material.h
+    ${SOURCE_ROOT}/world/point_light.cpp
+    ${SOURCE_ROOT}/world/point_light.h
+    ${SOURCE_ROOT}/world/rect_light.cpp
+    ${SOURCE_ROOT}/world/rect_light.h
     ${SOURCE_ROOT}/world/resource_cache.cpp
     ${SOURCE_ROOT}/world/resource_cache.h
     ${SOURCE_ROOT}/world/skeletal_mesh.cpp
@@ -327,6 +331,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/world/skeleton.h
     ${SOURCE_ROOT}/world/sky_sphere.cpp
     ${SOURCE_ROOT}/world/sky_sphere.h
+    ${SOURCE_ROOT}/world/spot_light.cpp
+    ${SOURCE_ROOT}/world/spot_light.h
     ${SOURCE_ROOT}/world/static_mesh.cpp
     ${SOURCE_ROOT}/world/static_mesh.h
     ${SOURCE_ROOT}/world/visible_object.cpp

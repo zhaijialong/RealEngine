@@ -132,6 +132,9 @@ struct SceneConstant
     uint tonyMcMapfaceTexture;
     uint marschnerTextureM;
     uint marschnerTextureN;
+    
+    uint localLightDataAddress;
+    uint localLightCount;
 };
 
 #ifndef __cplusplus

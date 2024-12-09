@@ -4,7 +4,7 @@
 
 enum class InstanceType : uint
 {
-    Model = 1 << 0,
+    Model,
 };
 
 struct InstanceData
@@ -44,6 +44,31 @@ struct InstanceData
     InstanceType GetInstanceType()
     {
         return (InstanceType)instanceType;
+    }
+};
+
+
+enum class LocalLightType : uint
+{
+    Point,
+    Spot,
+    Rect,
+};
+
+struct LocalLightData
+{
+    uint type;
+    float3 position;
+    
+    float3 direction;
+    float radius;
+    
+    float3 color;
+    float falloff;
+    
+    LocalLightType GetLocalLightType()
+    {
+        return (LocalLightType)type;
     }
 };
 
@@ -96,4 +121,8 @@ uint3 GetPrimitiveIndices(uint instance_id, uint primitive_id)
     }
 }
 
+LocalLightData GetLocalLightData(uint light_index)
+{
+    return LoadSceneConstantBuffer<LocalLightData>(SceneCB.localLightDataAddress + sizeof(LocalLightData) * light_index);
+}
 #endif //__cplusplus

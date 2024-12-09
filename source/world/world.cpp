@@ -2,6 +2,9 @@
 #include "gltf_loader.h"
 #include "sky_sphere.h"
 #include "directional_light.h"
+#include "point_light.h"
+#include "spot_light.h"
+#include "rect_light.h"
 #include "static_mesh.h"
 #include "mesh_material.h"
 #include "utils/assert.h"
@@ -179,6 +182,12 @@ inline void LoadLight(tinyxml2::XMLElement* element, ILight* light)
     {
         light->SetLightColor(str_to_float3(color->Value()));
     }
+
+    const tinyxml2::XMLAttribute* radius = element->FindAttribute("radius");
+    if (radius)
+    {
+        light->SetLightRadius(radius->FloatValue());
+    }
 }
 
 void World::CreateVisibleObject(tinyxml2::XMLElement* element)
@@ -212,9 +221,20 @@ void World::CreateLight(tinyxml2::XMLElement* element)
     {
         light = new DirectionalLight();
     }
+    else if (strcmp(type->Value(), "point") == 0)
+    {
+        light = new PointLight();
+    }
+    else if (strcmp(type->Value(), "spot") == 0)
+    {
+        light = new SpotLight();
+    }
+    else if (strcmp(type->Value(), "rect") == 0)
+    {
+        light = new RectLight();
+    }
     else
     {
-        //todo
         RE_ASSERT(false);
     }
 

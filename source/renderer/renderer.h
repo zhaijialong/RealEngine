@@ -113,6 +113,8 @@ public:
     uint32_t AddInstance(const InstanceData& data, IGfxRayTracingBLAS* blas, GfxRayTracingInstanceFlag flags);
     uint32_t GetInstanceCount() const { return m_pGpuScene->GetInstanceCount(); }
 
+    uint32_t AddLocalLight(const LocalLightData& data);
+
     void RequestMouseHitTest(uint32_t x, uint32_t y);
     bool IsEnableMouseHitTest() const { return m_bEnableObjectIDRendering; }
     uint32_t GetMouseHitObjectID() const { return m_nMouseHitObjectID; }

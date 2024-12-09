@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hlsli"
+#include "shading_model.hlsli"
 
 #define MIN_ROUGHNESS (0.03)
 
@@ -172,4 +173,70 @@ float3 HairBSDF(float3 L, float3 V, float3 T, float3 diffuse, float3 specular, f
     
     //todo : multi scatter ?
     return S;
+}
+
+float3 EvaluateBRDF(ShadingModel shadingModel, float3 L, float3 V, float3 N, float3 diffuse, float3 specular, float roughness, float4 customData, float3 lightColor)
+{
+    float3 lighting = 0.0;
+    float NdotL = saturate(dot(N, L));
+        
+    switch (shadingModel)
+    {
+        case ShadingModel::Anisotropy:
+            {
+                float3 T;
+                float anisotropy;
+                DecodeAnisotropy(customData, T, anisotropy);
+                float3 brdf = AnisotropyBRDF(L, V, N, T, diffuse, specular, roughness, anisotropy);
+                lighting = brdf * lightColor * NdotL;
+                break;
+            }
+        case ShadingModel::Sheen:
+            {
+                float3 sheenColor = customData.xyz;
+                float sheenRoughness = customData.w;
+                float3 sheenBRDF = SheenBRDF(L, V, N, sheenColor, sheenRoughness);
+                float sheenScaling = SheenScaling(V, N, sheenColor, sheenRoughness);
+
+                float3 brdf = sheenBRDF + sheenScaling * DefaultBRDF(L, V, N, diffuse, specular, roughness);
+                lighting = brdf * lightColor * NdotL;
+                break;
+            }
+        case ShadingModel::ClearCoat:
+            {
+                float clearCoat;
+                float baseRoughness;
+                float3 baseNormal;
+                DecodeClearCoat(customData, clearCoat, baseRoughness, baseNormal);
+            
+                float clearCoatRoughness = roughness;
+                float3 clearCoatNormal = N;
+                float3 clearCoatSpecular = float3(0.04, 0.04, 0.04);
+            
+                float3 clearCoatF;
+                float3 clearCoatBRDF = SpecularBRDF(clearCoatNormal, V, L, clearCoatSpecular, clearCoatRoughness, clearCoatF);
+                float3 baseBRDF = DefaultBRDF(L, V, baseNormal, diffuse, specular, baseRoughness);
+            
+                float baseNdotL = saturate(dot(baseNormal, L));
+                float3 brdf = baseBRDF * (1.0 - clearCoat * clearCoatF) * baseNdotL + clearCoatBRDF * clearCoat * NdotL;
+                lighting = brdf * lightColor;
+                break;
+            }
+        case ShadingModel::Hair:
+            {
+                float3 T = DecodeNormal(customData.xyz);
+                float3 hairBsdf = HairBSDF(L, V, T, diffuse, specular, roughness);
+                lighting = hairBsdf * lightColor;
+                break;
+            }
+        case ShadingModel::Default:
+        default:
+            {
+                float3 brdf = DefaultBRDF(L, V, N, diffuse, specular, roughness);
+                lighting = brdf * lightColor * NdotL;
+                break;
+            }
+    }
+    
+    return lighting;
 }

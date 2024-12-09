@@ -79,6 +79,8 @@ void GpuScene::Update()
         srvDesc.type = GfxShaderResourceViewType::RayTracingTLAS;
         m_pSceneTLASSRV.reset(device->CreateShaderResourceView(m_pSceneTLAS.get(), srvDesc, "GpuScene::m_pSceneTLAS"));
     }
+
+    m_localLightsDataAddress = m_pRenderer->AllocateSceneConstant(m_localLightsData.data(), sizeof(LocalLightData) * GetLocalLightCount());
 }
 
 void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
@@ -123,9 +125,17 @@ uint32_t GpuScene::AddInstance(const InstanceData& data, IGfxRayTracingBLAS* bla
     return instance_id;
 }
 
+
+uint32_t GpuScene::AddLocalLight(const LocalLightData& data)
+{
+    m_localLightsData.push_back(data);
+    return (uint32_t)m_localLightsData.size() - 1;
+}
+
 void GpuScene::ResetFrameData()
 {
     m_instanceData.clear();
+    m_localLightsData.clear();
     m_nConstantBufferOffset = 0;
 }
 
