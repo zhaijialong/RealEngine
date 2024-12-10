@@ -66,9 +66,8 @@ struct LocalLightData
     float falloff;
     float3 direction;
     
-    float2 spotAngles;
+    float3 spotAngles;
     float sourceRadius;
-    float _pad;
     
     LocalLightType GetLocalLightType()
     {

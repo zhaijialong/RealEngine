@@ -227,6 +227,22 @@ inline bool FrustumCull(const float4* planes, uint32_t plane_count, float3 cente
     return true;
 }
 
+// https://bartwronski.com/2017/04/13/cull-that-cone/
+inline float4 ConeBoundingSphere(float3 origin, float3 forward, float radius, float halfAngle)
+{
+    float4 boundingSphere;
+    if (halfAngle > PI / 4.0f)
+    {
+        boundingSphere = float4(origin + cos(halfAngle) * radius * forward, sin(halfAngle) * radius);
+    }
+    else
+    {
+        boundingSphere = float4(origin + radius / (2.0f * cos(halfAngle)) * forward, radius / (2.0f * cos(halfAngle)));
+    }
+
+    return boundingSphere;
+}
+
 inline uint32_t DivideRoudingUp(uint32_t a, uint32_t b)
 {
     return (a + b - 1) / b;

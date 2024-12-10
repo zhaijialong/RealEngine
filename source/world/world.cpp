@@ -65,12 +65,6 @@ void World::AddObject(IVisibleObject* object)
     m_objects.push_back(eastl::unique_ptr<IVisibleObject>(object));
 }
 
-void World::AddLight(ILight* light)
-{
-    RE_ASSERT(light != nullptr);
-    m_lights.push_back(eastl::unique_ptr<ILight>(light));
-}
-
 void World::Tick(float delta_time)
 {
     CPU_EVENT("Tick", "World::Tick");
@@ -83,11 +77,6 @@ void World::Tick(float delta_time)
     m_pCamera->Tick(delta_time);
 
     for (auto iter = m_objects.begin(); iter != m_objects.end(); ++iter)
-    {
-        (*iter)->Tick(delta_time);
-    }
-
-    for (auto iter = m_lights.begin(); iter != m_lights.end(); ++iter)
     {
         (*iter)->Tick(delta_time);
     }
@@ -134,7 +123,6 @@ ILight* World::GetPrimaryLight() const
 void World::ClearScene()
 {
     m_objects.clear();
-    m_lights.clear();
     m_pPrimaryLight = nullptr;
 }
 
@@ -252,7 +240,7 @@ void World::CreateLight(tinyxml2::XMLElement* element)
         return;
     }
 
-    AddLight(light);
+    AddObject(light);
 
     const tinyxml2::XMLAttribute* primary = element->FindAttribute("primary");
     if (primary && primary->BoolValue())

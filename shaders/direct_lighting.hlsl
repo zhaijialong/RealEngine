@@ -42,7 +42,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
     float4 customData = customDataRT[pos];
     float visibility = shadowRT[pos.xy];
 
-    float3 lighting = EvaluateBRDF(shadingModel, SceneCB.lightDir, V, N, diffuse, specular, roughness, customData, SceneCB.lightColor * visibility);
+    float3 lighting = EvaluateBRDF(shadingModel, SceneCB.lightDir, V, N, diffuse, specular, roughness, customData, SceneCB.lightColor) * visibility;
     
     //TODO : clustered light culling
     

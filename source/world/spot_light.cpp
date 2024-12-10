@@ -1,6 +1,7 @@
 #include "spot_light.h"
 #include "renderer/renderer.h"
 #include "core/engine.h"
+#include "utils/gui_util.h"
 
 bool SpotLight::Create()
 {
@@ -21,13 +22,34 @@ void SpotLight::Tick(float delta_time)
     data.direction = m_lightDir;
     data.sourceRadius = m_lightSourceRadius;
 
-    float cosInnerAngle = cos(degree_to_radian(m_innerAngle * 0.5));
-    float cosOuterAngle = cos(degree_to_radian(m_outerAngle * 0.5));
+    float cosInnerAngle = cos(degree_to_radian(m_innerAngle));
+    float cosOuterAngle = cos(degree_to_radian(m_outerAngle));
     float invAngleRange = 1.0f / max(cosInnerAngle - cosOuterAngle, 0.001f);
 
     data.spotAngles.x = invAngleRange;
     data.spotAngles.y = -cosOuterAngle * invAngleRange;
+    data.spotAngles.z = degree_to_radian(m_outerAngle);
 
     Renderer* pRender = Engine::GetInstance()->GetRenderer();
     pRender->AddLocalLight(data);
+}
+
+bool SpotLight::FrustumCull(const float4* planes, uint32_t plane_count) const
+{
+    float4 boundingSphere = ConeBoundingSphere(m_pos, -m_lightDir, m_lightRadius, degree_to_radian(m_outerAngle));
+    return ::FrustumCull(planes, plane_count, boundingSphere.xyz(), boundingSphere.w);
+}
+
+void SpotLight::OnGui()
+{
+    IVisibleObject::OnGui();
+
+    GUI("Inspector", "SpotLight", [&]()
+        {
+            ImGui::ColorEdit3("Color##Light", (float*)&m_lightColor, ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float);
+            ImGui::SliderFloat("Radius##Light", &m_lightRadius, 0.01f, 20.0f);
+            ImGui::SliderFloat("Falloff##Light", &m_falloff, 1.0f, 16.0f);
+            ImGui::SliderFloat("Inner Angle##Light", &m_innerAngle, 0.0f, 90.0f);
+            ImGui::SliderFloat("Outer Angle##StaticMesh", &m_outerAngle, 0.0f, 90.0f);
+        });
 }

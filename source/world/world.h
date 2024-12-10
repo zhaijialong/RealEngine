@@ -22,7 +22,6 @@ public:
     void SaveScene(const eastl::string& file);
 
     void AddObject(IVisibleObject* object);
-    void AddLight(ILight* light);
 
     void Tick(float delta_time);
 
@@ -45,7 +44,6 @@ private:
     eastl::unique_ptr<IPhysicsSystem> m_pPhysicsSystem;
 
     eastl::vector<eastl::unique_ptr<IVisibleObject>> m_objects;
-    eastl::vector<eastl::unique_ptr<ILight>> m_lights;
 
     ILight* m_pPrimaryLight = nullptr;
 

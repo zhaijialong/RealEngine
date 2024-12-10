@@ -384,3 +384,21 @@ float3x3 GetTangentBasis(float3 N)
 
     return float3x3(T, B, N);
 }
+
+// https://bartwronski.com/2017/04/13/cull-that-cone/
+float4 ConeBoundingSphere(in float3 origin, in float3 forward, in float radius, in float halfAngle)
+{
+    float4 boundingSphere;
+    if (halfAngle > M_PI / 4.0f)
+    {
+        boundingSphere.xyz = origin + cos(halfAngle) * radius * forward;
+        boundingSphere.w = sin(halfAngle) * radius;
+    }
+    else
+    {
+        boundingSphere.xyz = origin + radius / (2.0f * cos(halfAngle)) * forward;
+        boundingSphere.w = radius / (2.0f * cos(halfAngle));
+    }
+ 
+    return boundingSphere;
+}
