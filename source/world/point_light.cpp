@@ -38,6 +38,7 @@ void PointLight::OnGui()
     GUI("Inspector", "PointLight", [&]()
         {
             ImGui::ColorEdit3("Color##Light", (float*)&m_lightColor, ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float);
+            ImGui::SliderFloat("Intensity##Light", &m_lightIntensity, 0.0f, 100.0f);
             ImGui::SliderFloat("Radius##Light", &m_lightRadius, 0.01f, 20.0f);
             ImGui::SliderFloat("Falloff##Light", &m_falloff, 1.0f, 16.0f);
         });

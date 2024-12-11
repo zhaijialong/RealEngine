@@ -11,15 +11,22 @@ struct Sprite
 {
     float3 position;
     float size;
-    float3 color;
+    
+    uint color;
     uint texture;
+    uint objectID;
+    uint _pad;
 };
 
 struct VertexOut
 {
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD;
-    float3 color : COLOR;
+#if OBJECT_ID_PASS
+    nointerpolation uint objectID : OBJECT_ID;
+#else
+    float4 color : COLOR;
+#endif
     nointerpolation uint textureIndex : TEXTURE_INDEX;
 };
 
@@ -69,10 +76,18 @@ void ms_main(uint3 dispatchThreadID : SV_DispatchThreadID,
         vertices[v2].uv = float2(1, 0);
         vertices[v3].uv = float2(1, 1);
         
-        vertices[v0].color = sprite.color;
-        vertices[v1].color = sprite.color;
-        vertices[v2].color = sprite.color;
-        vertices[v3].color = sprite.color;
+#if OBJECT_ID_PASS
+        vertices[v0].objectID = sprite.objectID;
+        vertices[v1].objectID = sprite.objectID;
+        vertices[v2].objectID = sprite.objectID;
+        vertices[v3].objectID = sprite.objectID;
+#else
+        float4 color = UnpackRGBA8Unorm(sprite.color);
+        vertices[v0].color = color;
+        vertices[v1].color = color;
+        vertices[v2].color = color;
+        vertices[v3].color = color;
+#endif
         
         vertices[v0].textureIndex = sprite.texture;
         vertices[v1].textureIndex = sprite.texture;
@@ -84,13 +99,24 @@ void ms_main(uint3 dispatchThreadID : SV_DispatchThreadID,
     }
 }
 
+#if OBJECT_ID_PASS
+uint ps_main(VertexOut input) : SV_Target
+{
+    Texture2D texture = ResourceDescriptorHeap[NonUniformResourceIndex(input.textureIndex)];
+    SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
+
+    float4 color = texture.SampleLevel(linearSampler, input.uv, 0);
+    return color.a > 0 ? input.objectID : 0;
+}
+#else
 float4 ps_main(VertexOut input) : SV_Target
 {
     Texture2D texture = ResourceDescriptorHeap[NonUniformResourceIndex(input.textureIndex)];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     float4 color = texture.SampleLevel(linearSampler, input.uv, 0);
-    color.xyz *= input.color;
+    color *= input.color;
     
     return color;
 }
+#endif

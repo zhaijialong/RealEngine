@@ -46,7 +46,7 @@ void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
     outDepth = sceneDepthRT;
 
     m_pRenderGraph->Present(outColor, GfxAccessPixelShaderSRV);
-    m_pRenderGraph->Present(outDepth, GfxAccessDSVReadOnly);
+    m_pRenderGraph->Present(outDepth, GfxAccessDSV);
 
     m_pRenderGraph->Compile();
 }

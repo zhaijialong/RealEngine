@@ -18,21 +18,27 @@ BillboardSpriteRenderer::BillboardSpriteRenderer(Renderer* pRenderer)
     desc.blend_state[0].alpha_dst = GfxBlendFactor::InvSrcAlpha;
     desc.rt_format[0] = pRenderer->GetSwapchain()->GetDesc().backbuffer_format;
     desc.depthstencil_format = GfxFormat::D32F;
-
     m_pSpritePSO = pRenderer->GetPipelineState(desc, "Billboard Sprite PSO");
+
+    desc.ms = pRenderer->GetShader("billboard_sprite.hlsl", "ms_main", GfxShaderType::MS, { "OBJECT_ID_PASS=1"});
+    desc.ps = pRenderer->GetShader("billboard_sprite.hlsl", "ps_main", GfxShaderType::PS, { "OBJECT_ID_PASS=1" });
+    desc.blend_state[0].blend_enable = false;
+    desc.rt_format[0] = GfxFormat::R32UI;
+    m_pSpriteObjectIDPSO = pRenderer->GetPipelineState(desc, "Billboard Sprite PSO");
 }
 
 BillboardSpriteRenderer::~BillboardSpriteRenderer()
 {
 }
 
-void BillboardSpriteRenderer::AddSprite(const float3& position, float size, Texture2D* texture, const float3& color)
+void BillboardSpriteRenderer::AddSprite(const float3& position, float size, Texture2D* texture, const float4& color, uint32_t objectID)
 {
-    Sprite sprite;
+    Sprite sprite = {};
     sprite.position = position;
     sprite.size = size;
-    sprite.color = color;
+    sprite.color = PackRGBA8Unorm(color);
     sprite.texture = texture->GetSRV()->GetHeapIndex();
+    sprite.objectID = objectID;
 
     m_sprites.push_back(sprite);
 }
@@ -48,11 +54,20 @@ void BillboardSpriteRenderer::Render()
     uint32_t spriteBufferAddress = m_pRenderer->AllocateSceneConstant(m_sprites.data(), sizeof(Sprite) * spriteCount);
     m_sprites.clear();
 
+    uint32_t cb[] = { spriteCount, spriteBufferAddress };
+
     RenderBatch& batch = m_pRenderer->AddGuiPassBatch();
     batch.label = "BillboardSprite";
     batch.SetPipelineState(m_pSpritePSO);
-
-    uint32_t cb[] = { spriteCount, spriteBufferAddress };
     batch.SetConstantBuffer(0, cb, sizeof(cb));
     batch.DispatchMesh(DivideRoudingUp(spriteCount, 32), 1, 1);
+
+    if (m_pRenderer->IsEnableMouseHitTest())
+    {
+        RenderBatch& batch = m_pRenderer->AddObjectIDPassBatch();
+        batch.label = "BillboardSprite";
+        batch.SetPipelineState(m_pSpriteObjectIDPSO);
+        batch.SetConstantBuffer(0, cb, sizeof(cb));
+        batch.DispatchMesh(DivideRoudingUp(spriteCount, 32), 1, 1);
+    }
 }

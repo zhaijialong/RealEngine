@@ -355,3 +355,21 @@ inline uint32_t asuint(float value)
 {
     return *((uint32_t*)&value);
 }
+
+inline float4 UnpackRGBA8Unorm(uint packed)
+{
+    return float4(((packed >> 0) & 0xFF) / 255.0f,
+        ((packed >> 8) & 0xFF) / 255.0f,
+        ((packed >> 16) & 0xFF) / 255.0f,
+        ((packed >> 24) & 0xFF) / 255.0f);
+}
+
+inline uint PackRGBA8Unorm(float4 input)
+{
+    byte4 unpacked = byte4(input.x * 255.0 + 0.5,
+        input.y * 255.0 + 0.5,
+        input.z * 255.0 + 0.5,
+        input.w * 255.0 + 0.5);
+
+    return (unpacked.w << 24) | (unpacked.z << 16) | (unpacked.y << 8) | unpacked.x;
+}

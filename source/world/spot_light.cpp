@@ -51,6 +51,7 @@ void SpotLight::OnGui()
     GUI("Inspector", "SpotLight", [&]()
         {
             ImGui::ColorEdit3("Color##Light", (float*)&m_lightColor, ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float);
+            ImGui::SliderFloat("Intensity##Light", &m_lightIntensity, 0.0f, 100.0f);
             ImGui::SliderFloat("Radius##Light", &m_lightRadius, 0.01f, 20.0f);
             ImGui::SliderFloat("Falloff##Light", &m_falloff, 1.0f, 16.0f);
             ImGui::SliderFloat("Inner Angle##Light", &m_innerAngle, 0.0f, 90.0f);

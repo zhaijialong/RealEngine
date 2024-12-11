@@ -32,12 +32,16 @@ void DirectionalLight::Tick(float delta_time)
 
         m_lightDir = normalize(mul(inverse(mtxView), float4(m_lightDir, 0.0)).xyz());
     }
+}
 
-    GUI("Settings", "Sun Light", [&]()
+void DirectionalLight::OnGui()
+{
+    IVisibleObject::OnGui();
+
+    GUI("Inspector", "DirectionalLight", [&]()
         {
-            ImGui::DragFloat3("Rotation##DirectionalLight", &m_rotation.x, 1.0f, -180.0f, 180.0f);
-            ImGui::DragFloat("Source Radius##DirectionalLight", &m_lightSourceRadius, 0.01f, 0.0f, 0.1f);
-            ImGui::DragFloat("Intensity##DirectionalLight", &m_lightIntensity, 0.1f, 0.0f, 100.0f);
-            ImGui::ColorEdit3("Color##DirectionalLight", &m_lightColor.x);
+            ImGui::ColorEdit3("Color##Light", (float*)&m_lightColor, ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float);
+            ImGui::SliderFloat("Intensity##Light", &m_lightIntensity, 0.0f, 100.0f);
+            ImGui::SliderFloat("Source Radius##Light", &m_lightSourceRadius, 0.0f, 0.01f);
         });
 }
