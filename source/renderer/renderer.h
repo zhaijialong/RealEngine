@@ -135,6 +135,7 @@ public:
     RenderBatch& AddForwardPassBatch() { return m_forwardPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddVelocityPassBatch() { return m_velocityPassBatchs.emplace_back(*m_cbAllocator); }
     RenderBatch& AddObjectIDPassBatch() { return m_idPassBatchs.emplace_back(*m_cbAllocator); }
+    RenderBatch& AddGuiPassBatch() { return m_guiBatchs.emplace_back(*m_cbAllocator); }
     ComputeBatch& AddAnimationBatch() { return m_animationBatchs.emplace_back(*m_cbAllocator); }
 
     void SetupGlobalConstants(IGfxCommandList* pCommandList);
@@ -308,4 +309,5 @@ private:
     eastl::vector<RenderBatch> m_forwardPassBatchs;
     eastl::vector<RenderBatch> m_velocityPassBatchs;
     eastl::vector<RenderBatch> m_idPassBatchs;
+    eastl::vector<RenderBatch> m_guiBatchs;
 };

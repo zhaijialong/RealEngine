@@ -346,6 +346,11 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
 
     CopyToBackbuffer(pCommandList, color, depth, needUpscaleDepth);
 
+    for (size_t i = 0; i < m_guiBatchs.size(); ++i)
+    {
+        DrawBatch(pCommandList, m_guiBatchs[i]);
+    }
+
     m_pGpuDebugLine->Draw(pCommandList);
     m_pGpuDebugPrint->Draw(pCommandList);
     Engine::GetInstance()->GetGUI()->Render(pCommandList);
@@ -395,6 +400,7 @@ void Renderer::EndFrame()
     m_forwardPassBatchs.clear();
     m_velocityPassBatchs.clear();
     m_idPassBatchs.clear();
+    m_guiBatchs.clear();
 
     m_pDevice->EndFrame();
 }

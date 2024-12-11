@@ -54,6 +54,6 @@ void SpotLight::OnGui()
             ImGui::SliderFloat("Radius##Light", &m_lightRadius, 0.01f, 20.0f);
             ImGui::SliderFloat("Falloff##Light", &m_falloff, 1.0f, 16.0f);
             ImGui::SliderFloat("Inner Angle##Light", &m_innerAngle, 0.0f, 90.0f);
-            ImGui::SliderFloat("Outer Angle##StaticMesh", &m_outerAngle, 0.0f, 90.0f);
+            ImGui::SliderFloat("Outer Angle##Light", &m_outerAngle, 0.0f, 90.0f);
         });
 }

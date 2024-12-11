@@ -16,7 +16,7 @@ BillboardSpriteRenderer::BillboardSpriteRenderer(Renderer* pRenderer)
     desc.blend_state[0].color_dst = GfxBlendFactor::InvSrcAlpha;
     desc.blend_state[0].alpha_src = GfxBlendFactor::One;
     desc.blend_state[0].alpha_dst = GfxBlendFactor::InvSrcAlpha;
-    desc.rt_format[0] = GfxFormat::RGBA16F;
+    desc.rt_format[0] = pRenderer->GetSwapchain()->GetDesc().backbuffer_format;
     desc.depthstencil_format = GfxFormat::D32F;
 
     m_pSpritePSO = pRenderer->GetPipelineState(desc, "Billboard Sprite PSO");
@@ -48,7 +48,7 @@ void BillboardSpriteRenderer::Render()
     uint32_t spriteBufferAddress = m_pRenderer->AllocateSceneConstant(m_sprites.data(), sizeof(Sprite) * spriteCount);
     m_sprites.clear();
 
-    RenderBatch& batch = m_pRenderer->AddForwardPassBatch();
+    RenderBatch& batch = m_pRenderer->AddGuiPassBatch();
     batch.label = "BillboardSprite";
     batch.SetPipelineState(m_pSpritePSO);
 

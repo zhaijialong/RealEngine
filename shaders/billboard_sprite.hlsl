@@ -52,12 +52,12 @@ void ms_main(uint3 dispatchThreadID : SV_DispatchThreadID,
         
         Sprite sprite = LoadSceneConstantBuffer<Sprite>(c_spriteBufferAddress + sizeof(Sprite) * spriteIndex);
         
-        float4 clipPos = mul(GetCameraCB().mtxViewProjection, float4(sprite.position, 1.0));
+        float4 clipPos = mul(GetCameraCB().mtxViewProjectionNoJitter, float4(sprite.position, 1.0));
         
-        float x0 = clipPos.x - SceneCB.rcpRenderSize.x * clipPos.w * sprite.size;
-        float y0 = clipPos.y + SceneCB.rcpRenderSize.y * clipPos.w * sprite.size;
-        float x1 = clipPos.x + SceneCB.rcpRenderSize.x * clipPos.w * sprite.size;
-        float y1 = clipPos.y - SceneCB.rcpRenderSize.y * clipPos.w * sprite.size;
+        float x0 = clipPos.x - SceneCB.rcpDisplaySize.x * clipPos.w * sprite.size;
+        float y0 = clipPos.y + SceneCB.rcpDisplaySize.y * clipPos.w * sprite.size;
+        float x1 = clipPos.x + SceneCB.rcpDisplaySize.x * clipPos.w * sprite.size;
+        float y1 = clipPos.y - SceneCB.rcpDisplaySize.y * clipPos.w * sprite.size;
         
         vertices[v0].pos = float4(x0, y0, clipPos.zw);
         vertices[v1].pos = float4(x0, y1, clipPos.zw);
@@ -86,7 +86,7 @@ void ms_main(uint3 dispatchThreadID : SV_DispatchThreadID,
 
 float4 ps_main(VertexOut input) : SV_Target
 {
-    Texture2D texture = ResourceDescriptorHeap[input.textureIndex];
+    Texture2D texture = ResourceDescriptorHeap[NonUniformResourceIndex(input.textureIndex)];
     SamplerState linearSampler = SamplerDescriptorHeap[SceneCB.bilinearClampSampler];
     
     float4 color = texture.SampleLevel(linearSampler, input.uv, 0);
