@@ -1,10 +1,14 @@
 #include "spot_light.h"
+#include "resource_cache.h"
 #include "renderer/renderer.h"
 #include "core/engine.h"
 #include "utils/gui_util.h"
 
 bool SpotLight::Create()
 {
+    eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
+    m_pIconTexture = ResourceCache::GetInstance()->GetTexture2D(asset_path + "ui/spot_light.png");
+
     return true;
 }
 

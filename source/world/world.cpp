@@ -7,6 +7,7 @@
 #include "rect_light.h"
 #include "static_mesh.h"
 #include "mesh_material.h"
+#include "billboard_sprite.h"
 #include "utils/assert.h"
 #include "utils/string.h"
 #include "utils/profiler.h"
@@ -24,6 +25,7 @@ World::World()
     m_pPhysicsSystem.reset(CreatePhysicsSystem(PhysicsEngine::Jolt));
     m_pPhysicsSystem->Initialize();
 
+    m_pBillboardSpriteRenderer = eastl::make_unique<BillboardSpriteRenderer>(pRenderer);
     m_boxShape.reset(m_pPhysicsSystem->CreateBoxShape(float3(1.0f, 1.0f, 1.0f)));
     m_sphereShape.reset(m_pPhysicsSystem->CreateSphereShape(1.0f));
 }
@@ -102,6 +104,8 @@ void World::Tick(float delta_time)
             (*iter)->Render(pRenderer);
         }
     }
+
+    m_pBillboardSpriteRenderer->Render();
 }
 
 IVisibleObject* World::GetVisibleObject(uint32_t index) const

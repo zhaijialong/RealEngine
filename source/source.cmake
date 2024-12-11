@@ -310,12 +310,15 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/utils/system.h
     ${SOURCE_ROOT}/world/animation.cpp
     ${SOURCE_ROOT}/world/animation.h
+    ${SOURCE_ROOT}/world/billboard_sprite.cpp
+    ${SOURCE_ROOT}/world/billboard_sprite.h
     ${SOURCE_ROOT}/world/camera.cpp
     ${SOURCE_ROOT}/world/camera.h
     ${SOURCE_ROOT}/world/directional_light.cpp
     ${SOURCE_ROOT}/world/directional_light.h
     ${SOURCE_ROOT}/world/gltf_loader.cpp
     ${SOURCE_ROOT}/world/gltf_loader.h
+    ${SOURCE_ROOT}/world/light.cpp
     ${SOURCE_ROOT}/world/light.h
     ${SOURCE_ROOT}/world/mesh_material.cpp
     ${SOURCE_ROOT}/world/mesh_material.h

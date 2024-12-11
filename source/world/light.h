@@ -5,6 +5,10 @@
 class ILight : public IVisibleObject
 {
 public:
+    ~ILight();
+
+    virtual void Render(Renderer* pRenderer) override;
+
     float3 GetLightDirection() const { return m_lightDir; }
     void SetLightDirection(const float3& direction) { m_lightDir = direction; }
 
@@ -30,4 +34,6 @@ protected:
     float m_lightRadius = 5.0f;
     float m_lightSourceRadius = 0.005f;
     float m_falloff = 1.0f;
+
+    Texture2D* m_pIconTexture = nullptr;
 };

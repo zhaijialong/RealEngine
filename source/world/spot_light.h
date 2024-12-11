@@ -12,5 +12,5 @@ public:
 
 private:
     float m_innerAngle = 0.0f;
-    float m_outerAngle = 50.0f; //in degrees
+    float m_outerAngle = 45.0f; //in degrees
 };

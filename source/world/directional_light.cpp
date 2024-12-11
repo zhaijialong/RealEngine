@@ -1,8 +1,12 @@
 #include "directional_light.h"
+#include "resource_cache.h"
 #include "utils/gui_util.h"
 
 bool DirectionalLight::Create()
 {
+    eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
+    m_pIconTexture = ResourceCache::GetInstance()->GetTexture2D(asset_path + "ui/directional_light.png");
+
     return true;
 }
 

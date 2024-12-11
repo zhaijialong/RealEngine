@@ -17,6 +17,7 @@ public:
 
     Camera* GetCamera() const { return m_pCamera.get(); }
     IPhysicsSystem* GetPhysicsSystem() const { return m_pPhysicsSystem.get(); }
+    class BillboardSpriteRenderer* GetBillboardSpriteRenderer() const { return m_pBillboardSpriteRenderer.get(); }
 
     void LoadScene(const eastl::string& file);
     void SaveScene(const eastl::string& file);
@@ -42,6 +43,7 @@ private:
 private:
     eastl::unique_ptr<Camera> m_pCamera;
     eastl::unique_ptr<IPhysicsSystem> m_pPhysicsSystem;
+    eastl::unique_ptr<class BillboardSpriteRenderer> m_pBillboardSpriteRenderer;
 
     eastl::vector<eastl::unique_ptr<IVisibleObject>> m_objects;
 
