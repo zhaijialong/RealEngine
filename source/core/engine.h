@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gui.h"
 #include "world/world.h"
 #include "editor/editor.h"
 #include "renderer/renderer.h"
@@ -18,7 +17,6 @@ public:
     void Tick();
 
     World* GetWorld() const { return m_pWorld.get(); }
-    GUI* GetGUI() const { return m_pGUI.get(); }
     Renderer* GetRenderer() const { return m_pRenderer.get(); }
     Editor* GetEditor() const { return m_pEditor.get(); }
     enki::TaskScheduler* GetTaskScheduler() const { return m_pTaskScheduler.get(); }
@@ -39,7 +37,6 @@ private:
 private:
     eastl::unique_ptr<Renderer> m_pRenderer;
     eastl::unique_ptr<World> m_pWorld;
-    eastl::unique_ptr<GUI> m_pGUI;
     eastl::unique_ptr<Editor> m_pEditor;
 
     eastl::unique_ptr<class enki::TaskScheduler> m_pTaskScheduler;

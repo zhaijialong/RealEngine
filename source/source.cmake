@@ -67,11 +67,13 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/core/eastl_allocator.cpp
     ${SOURCE_ROOT}/core/engine.cpp
     ${SOURCE_ROOT}/core/engine.h
-    ${SOURCE_ROOT}/core/gui.cpp
-    ${SOURCE_ROOT}/core/gui.h
     ${SOURCE_ROOT}/core/platform.h
     ${SOURCE_ROOT}/editor/editor.cpp
     ${SOURCE_ROOT}/editor/editor.h
+    ${SOURCE_ROOT}/editor/im3d_impl.cpp
+    ${SOURCE_ROOT}/editor/im3d_impl.h
+    ${SOURCE_ROOT}/editor/imgui_impl.cpp
+    ${SOURCE_ROOT}/editor/imgui_impl.h
     ${SOURCE_ROOT}/gfx/mock/mock_buffer.cpp
     ${SOURCE_ROOT}/gfx/mock/mock_buffer.h
     ${SOURCE_ROOT}/gfx/mock/mock_command_list.cpp

@@ -1,4 +1,5 @@
 #include "editor.h"
+#include "imgui_impl.h"
 #include "core/engine.h"
 #include "renderer/texture_loader.h"
 #include "utils/assert.h"
@@ -10,11 +11,13 @@
 
 #include <fstream>
 
-Editor::Editor()
+Editor::Editor(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
-    ifd::FileDialog::Instance().CreateTexture = [this](uint8_t* data, int w, int h, char fmt) -> void* 
+    m_pGUI = eastl::make_unique<ImGuiImpl>(pRenderer);
+    m_pGUI->Init();
+
+    ifd::FileDialog::Instance().CreateTexture = [this, pRenderer](uint8_t* data, int w, int h, char fmt) -> void* 
     {
-        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
         Texture2D* texture = pRenderer->CreateTexture2D(w, h, 1, fmt == 1 ? GfxFormat::RGBA8SRGB : GfxFormat::BGRA8SRGB, 0, "ImFileDialog Icon");
         pRenderer->UploadTexture(texture->GetTexture(), data);
 
@@ -29,7 +32,6 @@ Editor::Editor()
     };
 
     eastl::string asset_path = Engine::GetInstance()->GetAssetPath();
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
     m_pTranslateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/translate.png", true));
     m_pRotateIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/rotate.png", true));
     m_pScaleIcon.reset(pRenderer->CreateTexture2D(asset_path + "ui/scale.png", true));
@@ -44,18 +46,21 @@ Editor::~Editor()
     }
 }
 
+void Editor::NewFrame()
+{
+    m_pGUI->NewFrame();
+}
+
 void Editor::Tick()
 {
     FlushPendingTextureDeletions();
-    m_commands.clear();
 
     ImGuiIO& io = ImGui::GetIO();
     if (!io.WantCaptureMouse && io.MouseClicked[0])
     {
         ImVec2 mousePos = io.MouseClickedPos[0];
 
-        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-        pRenderer->RequestMouseHitTest((uint32_t)mousePos.x, (uint32_t)mousePos.y);
+        m_pRenderer->RequestMouseHitTest((uint32_t)mousePos.x, (uint32_t)mousePos.y);
     }
 
     BuildDockLayout();
@@ -68,11 +73,27 @@ void Editor::Tick()
     {
         ImGui::Begin("Renderer", &m_bShowRenderer);
         
-        Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-        pRenderer->OnGui();
+        m_pRenderer->OnGui();
 
         ImGui::End();
     }
+}
+
+void Editor::Render(IGfxCommandList* pCommandList)
+{
+    if (m_bShowInspector)
+    {
+        DrawWindow("Inspector", &m_bShowInspector);
+    }
+
+    if (m_bShowSettings)
+    {
+        DrawWindow("Settings", &m_bShowSettings);
+    }
+
+    m_pGUI->Render(pCommandList);
+
+    m_commands.clear();
 }
 
 void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command)
@@ -106,8 +127,6 @@ void Editor::BuildDockLayout()
 
 void Editor::DrawMenu()
 {
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
@@ -124,12 +143,12 @@ void Editor::DrawMenu()
         {
             if (ImGui::MenuItem("VSync", "", &m_bVsync))
             {
-                pRenderer->GetSwapchain()->SetVSyncEnabled(m_bVsync);
+                m_pRenderer->GetSwapchain()->SetVSyncEnabled(m_bVsync);
             }
 
             if (ImGui::MenuItem("GPU Driven Stats", "", &m_bShowGpuDrivenStats))
             {
-                pRenderer->SetGpuDrivenStatsEnabled(m_bShowGpuDrivenStats);
+                m_pRenderer->SetGpuDrivenStatsEnabled(m_bShowGpuDrivenStats);
             }
 
             if (ImGui::MenuItem("Debug View Frustum", "", &m_bViewFrustumLocked))
@@ -143,18 +162,18 @@ void Editor::DrawMenu()
 
             if (ImGui::MenuItem("Show Meshlets", "", &m_bShowMeshlets))
             {
-                pRenderer->SetShowMeshletsEnabled(m_bShowMeshlets);
+                m_pRenderer->SetShowMeshletsEnabled(m_bShowMeshlets);
             }
 
-            bool async_compute = pRenderer->IsAsyncComputeEnabled();
+            bool async_compute = m_pRenderer->IsAsyncComputeEnabled();
             if (ImGui::MenuItem("Async Compute", "", &async_compute))
             {
-                pRenderer->SetAsyncComputeEnabled(async_compute);
+                m_pRenderer->SetAsyncComputeEnabled(async_compute);
             }
 
             if (ImGui::MenuItem("Reload Shaders"))
             {
-                pRenderer->ReloadShaders();
+                m_pRenderer->ReloadShaders();
             }
 
             ImGui::EndMenu();
@@ -264,16 +283,6 @@ void Editor::DrawMenu()
     {
         ImGui::ShowDemoWindow(&m_bShowImguiDemo);
     }
-
-    if (m_bShowInspector)
-    {
-        Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("Inspector", &m_bShowInspector); });
-    }
-
-    if (m_bShowSettings)
-    {
-        Engine::GetInstance()->GetGUI()->AddCommand([&]() { DrawWindow("Settings", &m_bShowSettings); });
-    }
 }
 
 void Editor::DrawToolBar()
@@ -308,11 +317,10 @@ void Editor::DrawToolBar()
 
     ImGui::SameLine(0.0f, 20.0f);
     ImGui::PushItemWidth(150.0f);
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    int renderOutput = (int)pRenderer->GetOutputType();
+    int renderOutput = (int)m_pRenderer->GetOutputType();
     ImGui::Combo("##RenderOutput", &renderOutput, 
         "Default\0Diffuse\0Specular(F0)\0World Normal\0Roughness\0Emissive\0Shading Model\0Custom Data\0AO\0Direct Lighting\0Indirect Specular\0Indirect Diffuse\0Path Tracing\0Physics\0\0", (int)RendererOutput::Max);
-    pRenderer->SetOutputType((RendererOutput)renderOutput);
+    m_pRenderer->SetOutputType((RendererOutput)renderOutput);
     ImGui::PopItemWidth();
 
     ImGui::End();
@@ -321,9 +329,8 @@ void Editor::DrawToolBar()
 void Editor::DrawGizmo()
 {
     World* world = Engine::GetInstance()->GetWorld();
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
-    IVisibleObject* pSelectedObject = world->GetVisibleObject(pRenderer->GetMouseHitObjectID());
+    IVisibleObject* pSelectedObject = world->GetVisibleObject(m_pRenderer->GetMouseHitObjectID());
     if (pSelectedObject == nullptr)
     {
         return;
@@ -390,8 +397,7 @@ void Editor::DrawFrameStats()
 void Editor::CreateGpuMemoryStats()
 {
     Engine* pEngine = Engine::GetInstance();
-    Renderer* pRenderer = pEngine->GetRenderer();
-    IGfxDevice* pDevice = pRenderer->GetDevice();
+    IGfxDevice* pDevice = m_pRenderer->GetDevice();
 
     if (pDevice->DumpMemoryStats(pEngine->GetWorkPath() + "d3d12ma.json"))
     {
@@ -401,7 +407,7 @@ void Editor::CreateGpuMemoryStats()
         if (ExecuteCommand(cmd.c_str()) == 0)
         {
             eastl::string file = path + "d3d12ma.png";
-            m_pGpuMemoryStats.reset(pRenderer->CreateTexture2D(file, true));
+            m_pGpuMemoryStats.reset(m_pRenderer->CreateTexture2D(file, true));
         }
     }
 }
@@ -409,10 +415,9 @@ void Editor::CreateGpuMemoryStats()
 void Editor::ShowRenderGraph()
 {
     Engine* pEngine = Engine::GetInstance();
-    Renderer* pRenderer = pEngine->GetRenderer();
 
     eastl::string file = pEngine->GetWorkPath() + "tools/graphviz/rendergraph.html";
-    eastl::string graph = pRenderer->GetRenderGraph()->Export();
+    eastl::string graph = m_pRenderer->GetRenderGraph()->Export();
     
     std::ofstream stream;
     stream.open(file.c_str());

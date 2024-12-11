@@ -101,10 +101,7 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
     m_pWorld = eastl::make_unique<World>();
     m_pWorld->LoadScene(m_assetPath + configIni.GetValue("World", "Scene"));
 
-    m_pGUI = eastl::make_unique<GUI>();
-    m_pGUI->Init();
-
-    m_pEditor = eastl::make_unique<Editor>();
+    m_pEditor = eastl::make_unique<Editor>(m_pRenderer.get());
 
     stm_setup();
 }
@@ -115,7 +112,6 @@ void Engine::Shut()
 
     m_pWorld.reset();
     m_pEditor.reset();
-    m_pGUI.reset();
     m_pTaskScheduler.reset();
 
     MicroProfileShutdown();
@@ -130,7 +126,7 @@ void Engine::Tick()
 
     m_frameTime = (float)stm_sec(stm_laptime(&m_lastFrameTime));
 
-    m_pGUI->Tick();
+    m_pEditor->NewFrame();
 
     ImGuiIO& io = ImGui::GetIO();
     bool isMinimized = (io.DisplaySize.x <= 0.0f || io.DisplaySize.y <= 0.0f);

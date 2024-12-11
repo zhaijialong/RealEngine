@@ -3,28 +3,25 @@
 #include "renderer/renderer.h"
 #include "EASTL/functional.h"
 
-class GUI
+class ImGuiImpl
 {
 public:
-    GUI();
-    ~GUI();
+    ImGuiImpl(Renderer* pRenderer);
+    ~ImGuiImpl();
 
     bool Init();
-    void Tick();
+    void NewFrame();
     void Render(IGfxCommandList* pCommandList);
-
-    void AddCommand(const eastl::function<void()>& command) { m_commands.push_back(command); }
 
 private:
     void SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index);
 
 private:
+    Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPSO = nullptr;
 
     eastl::unique_ptr<Texture2D> m_pFontTexture;
 
     eastl::unique_ptr<StructuredBuffer> m_pVertexBuffer[GFX_MAX_INFLIGHT_FRAMES];
     eastl::unique_ptr<IndexBuffer> m_pIndexBuffer[GFX_MAX_INFLIGHT_FRAMES];
-
-    eastl::vector<eastl::function<void()>> m_commands;
 };

@@ -7,10 +7,12 @@
 class Editor
 {
 public:
-    Editor();
+    Editor(Renderer* pRenderer);
     ~Editor();
 
+    void NewFrame();
     void Tick();
+    void Render(IGfxCommandList* pCommandList);
 
     void AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command);
 
@@ -28,6 +30,9 @@ private:
     void DrawWindow(const eastl::string& window, bool* open);
 
 private:
+    Renderer* m_pRenderer = nullptr;
+    eastl::unique_ptr<class ImGuiImpl> m_pGUI;
+
     bool m_bShowGpuMemoryStats = false;
     bool m_bShowImguiDemo = false;
     bool m_bShowGpuDrivenStats = false;

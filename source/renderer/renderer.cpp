@@ -353,7 +353,7 @@ void Renderer::RenderBackbufferPass(IGfxCommandList* pCommandList, RGHandle colo
 
     m_pGpuDebugLine->Draw(pCommandList);
     m_pGpuDebugPrint->Draw(pCommandList);
-    Engine::GetInstance()->GetGUI()->Render(pCommandList);
+    Engine::GetInstance()->GetEditor()->Render(pCommandList);
 
     pCommandList->EndRenderPass();
     pCommandList->TextureBarrier(m_pSwapchain->GetBackBuffer(), 0, GfxAccessRTV, GfxAccessPresent);

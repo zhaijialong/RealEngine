@@ -1,6 +1,6 @@
-#include "gui.h"
-#include "engine.h"
-#include "platform.h"
+#include "imgui_impl.h"
+#include "core/engine.h"
+#include "core/platform.h"
 #include "imgui/imgui.h"
 #if RE_PLATFORM_WINDOWS
 #include "imgui/imgui_impl_win32.h"
@@ -9,7 +9,7 @@
 #endif
 #include "ImGuizmo/ImGuizmo.h"
 
-GUI::GUI()
+ImGuiImpl::ImGuiImpl(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -34,7 +34,7 @@ GUI::GUI()
 #endif
 }
 
-GUI::~GUI()
+ImGuiImpl::~ImGuiImpl()
 {
 #if RE_PLATFORM_WINDOWS
     ImGui_ImplWin32_Shutdown();
@@ -44,10 +44,9 @@ GUI::~GUI()
     ImGui::DestroyContext();
 }
 
-bool GUI::Init()
+bool ImGuiImpl::Init()
 {
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    IGfxDevice* pDevice = pRenderer->GetDevice();
+    IGfxDevice* pDevice = m_pRenderer->GetDevice();
 
 #if RE_PLATFORM_WINDOWS
     float scaling = ImGui_ImplWin32_GetDpiScaleForHwnd(Engine::GetInstance()->GetWindowHandle());
@@ -69,28 +68,28 @@ bool GUI::Init()
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-    m_pFontTexture.reset(pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA8UNORM, 0, "GUI::m_pFontTexture"));
-    pRenderer->UploadTexture(m_pFontTexture->GetTexture(), pixels);
+    m_pFontTexture.reset(m_pRenderer->CreateTexture2D(width, height, 1, GfxFormat::RGBA8UNORM, 0, "GUI::m_pFontTexture"));
+    m_pRenderer->UploadTexture(m_pFontTexture->GetTexture(), pixels);
 
     io.Fonts->TexID = (ImTextureID)m_pFontTexture->GetSRV();
 
     GfxGraphicsPipelineDesc psoDesc;
-    psoDesc.vs = pRenderer->GetShader("imgui.hlsl", "vs_main", GfxShaderType::VS);
-    psoDesc.ps = pRenderer->GetShader("imgui.hlsl", "ps_main", GfxShaderType::PS);
+    psoDesc.vs = m_pRenderer->GetShader("imgui.hlsl", "vs_main", GfxShaderType::VS);
+    psoDesc.ps = m_pRenderer->GetShader("imgui.hlsl", "ps_main", GfxShaderType::PS);
     psoDesc.depthstencil_state.depth_write = false;
     psoDesc.blend_state[0].blend_enable = true;
     psoDesc.blend_state[0].color_src = GfxBlendFactor::SrcAlpha;
     psoDesc.blend_state[0].color_dst = GfxBlendFactor::InvSrcAlpha;
     psoDesc.blend_state[0].alpha_src = GfxBlendFactor::One;
     psoDesc.blend_state[0].alpha_dst = GfxBlendFactor::InvSrcAlpha;
-    psoDesc.rt_format[0] = pRenderer->GetSwapchain()->GetDesc().backbuffer_format;
+    psoDesc.rt_format[0] = m_pRenderer->GetSwapchain()->GetDesc().backbuffer_format;
     psoDesc.depthstencil_format = GfxFormat::D32F;
-    m_pPSO = pRenderer->GetPipelineState(psoDesc, "GUI PSO");
+    m_pPSO = m_pRenderer->GetPipelineState(psoDesc, "GUI PSO");
 
     return true;
 }
 
-void GUI::Tick()
+void ImGuiImpl::NewFrame()
 {
 #if RE_PLATFORM_WINDOWS
     ImGui_ImplWin32_NewFrame();
@@ -105,20 +104,13 @@ void GUI::Tick()
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 }
 
-void GUI::Render(IGfxCommandList* pCommandList)
+void ImGuiImpl::Render(IGfxCommandList* pCommandList)
 {
-    GPU_EVENT(pCommandList, "GUI");
-
-    for (size_t i = 0; i < m_commands.size(); ++i)
-    {
-        m_commands[i]();
-    }
-    m_commands.clear();
+    GPU_EVENT(pCommandList, "ImGui");
 
     ImGui::Render();
 
-    Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
-    IGfxDevice* pDevice = pRenderer->GetDevice();
+    IGfxDevice* pDevice = m_pRenderer->GetDevice();
     ImDrawData* draw_data = ImGui::GetDrawData();
 
     // Avoid rendering when minimized
@@ -131,12 +123,12 @@ void GUI::Render(IGfxCommandList* pCommandList)
 
     if (m_pVertexBuffer[frame_index] == nullptr || m_pVertexBuffer[frame_index]->GetBuffer()->GetDesc().size < draw_data->TotalVtxCount * sizeof(ImDrawVert))
     {
-        m_pVertexBuffer[frame_index].reset(pRenderer->CreateStructuredBuffer(nullptr, sizeof(ImDrawVert), draw_data->TotalVtxCount + 5000, "GUI VB", GfxMemoryType::CpuToGpu));
+        m_pVertexBuffer[frame_index].reset(m_pRenderer->CreateStructuredBuffer(nullptr, sizeof(ImDrawVert), draw_data->TotalVtxCount + 5000, "GUI VB", GfxMemoryType::CpuToGpu));
     }
 
     if (m_pIndexBuffer[frame_index] == nullptr || m_pIndexBuffer[frame_index]->GetIndexCount() < (uint32_t)draw_data->TotalIdxCount)
     {
-        m_pIndexBuffer[frame_index].reset(pRenderer->CreateIndexBuffer(nullptr, sizeof(ImDrawIdx), draw_data->TotalIdxCount + 10000, "GUI IB", GfxMemoryType::CpuToGpu));
+        m_pIndexBuffer[frame_index].reset(m_pRenderer->CreateIndexBuffer(nullptr, sizeof(ImDrawIdx), draw_data->TotalIdxCount + 10000, "GUI IB", GfxMemoryType::CpuToGpu));
     }
 
     ImDrawVert* vtx_dst = (ImDrawVert*)m_pVertexBuffer[frame_index]->GetBuffer()->GetCpuAddress();
@@ -198,7 +190,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
                     m_pVertexBuffer[frame_index]->GetSRV()->GetHeapIndex(),
                     pcmd->VtxOffset + global_vtx_offset,
                     ((IGfxDescriptor*)pcmd->TextureId)->GetHeapIndex(),
-                    pRenderer->GetLinearSampler()->GetHeapIndex() };
+                    m_pRenderer->GetLinearSampler()->GetHeapIndex() };
 
                 pCommandList->SetGraphicsConstants(0, resource_ids, sizeof(resource_ids));
 
@@ -210,7 +202,7 @@ void GUI::Render(IGfxCommandList* pCommandList)
     }
 }
 
-void GUI::SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index)
+void ImGuiImpl::SetupRenderStates(IGfxCommandList* pCommandList, uint32_t frame_index)
 {
     ImDrawData* draw_data = ImGui::GetDrawData();
 
