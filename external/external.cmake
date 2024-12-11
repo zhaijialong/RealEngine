@@ -19,6 +19,10 @@ set(EXTERNAL_FILES
     ${EXTERNAL_ROOT}/enkiTS/TaskScheduler_c.cpp
     ${EXTERNAL_ROOT}/enkiTS/TaskScheduler_c.h
     ${EXTERNAL_ROOT}/fmt/src/format.cc
+    ${EXTERNAL_ROOT}/im3d/im3d.cpp
+    ${EXTERNAL_ROOT}/im3d/im3d.h
+    ${EXTERNAL_ROOT}/im3d/im3d_config.h
+    ${EXTERNAL_ROOT}/im3d/im3d_math.h
     ${EXTERNAL_ROOT}/ImFileDialog/ImFileDialog.cpp
     ${EXTERNAL_ROOT}/ImFileDialog/ImFileDialog.h
     ${EXTERNAL_ROOT}/imgui/imgui.cpp
