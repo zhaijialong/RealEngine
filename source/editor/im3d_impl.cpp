@@ -1,5 +1,7 @@
 #include "im3d_impl.h"
 #include "im3d/im3d.h"
+#include "core/engine.h"
+#include "imgui/imgui.h"
 
 Im3dImpl::Im3dImpl(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
@@ -11,7 +13,7 @@ Im3dImpl::~Im3dImpl()
 
 bool Im3dImpl::Init()
 {
-    GfxGraphicsPipelineDesc desc;
+    GfxMeshShadingPipelineDesc desc;
     desc.rasterizer_state.cull_mode = GfxCullMode::None;
     desc.depthstencil_state.depth_write = false;
     desc.depthstencil_state.depth_test = true;
@@ -24,19 +26,16 @@ bool Im3dImpl::Init()
     desc.rt_format[0] = m_pRenderer->GetSwapchain()->GetDesc().backbuffer_format;
     desc.depthstencil_format = GfxFormat::D32F;
 
-    desc.vs = m_pRenderer->GetShader("im3d.hlsl", "vs_main", GfxShaderType::VS, { "POINTS=1" });
+    desc.ms = m_pRenderer->GetShader("im3d.hlsl", "ms_main", GfxShaderType::MS, { "POINTS=1" });
     desc.ps = m_pRenderer->GetShader("im3d.hlsl", "ps_main", GfxShaderType::PS, { "POINTS=1" });
-    desc.primitive_type = GfxPrimitiveType::PointList;
     m_pPointPSO = m_pRenderer->GetPipelineState(desc, "Im3d Points PSO");
 
-    desc.vs = m_pRenderer->GetShader("im3d.hlsl", "vs_main", GfxShaderType::VS, { "LINES=1" });
+    desc.ms = m_pRenderer->GetShader("im3d.hlsl", "ms_main", GfxShaderType::MS, { "LINES=1" });
     desc.ps = m_pRenderer->GetShader("im3d.hlsl", "ps_main", GfxShaderType::PS, { "LINES=1" });
-    desc.primitive_type = GfxPrimitiveType::LineList;
     m_pLinePSO = m_pRenderer->GetPipelineState(desc, "Im3d Lines PSO");
 
-    desc.vs = m_pRenderer->GetShader("im3d.hlsl", "vs_main", GfxShaderType::VS, { "TRIANGLES=1" });
+    desc.ms = m_pRenderer->GetShader("im3d.hlsl", "ms_main", GfxShaderType::MS, { "TRIANGLES=1" });
     desc.ps = m_pRenderer->GetShader("im3d.hlsl", "ps_main", GfxShaderType::PS, { "TRIANGLES=1" });
-    desc.primitive_type = GfxPrimitiveType::TriangleList;
     m_pTrianglePSO = m_pRenderer->GetPipelineState(desc, "Im3d Triangles PSO");
 
     return true;
@@ -85,10 +84,70 @@ void Im3dImpl::NewFrame()
 
 void Im3dImpl::Render(IGfxCommandList* pCommandList)
 {
+    GPU_EVENT(pCommandList, "Im3d");
+
     Im3d::EndFrame();
+
+    uint32_t frameIndex = m_pRenderer->GetFrameID() % GFX_MAX_INFLIGHT_FRAMES;
+    uint vertexCount = GetVertexCount();
+
+    if (m_pVertexBuffer[frameIndex] == nullptr || m_pVertexBuffer[frameIndex]->GetBuffer()->GetDesc().size < vertexCount * sizeof(Im3d::VertexData))
+    {
+        m_pVertexBuffer[frameIndex].reset(m_pRenderer->CreateRawBuffer(nullptr, (vertexCount + 1000) * sizeof(Im3d::VertexData), "Im3d VB", GfxMemoryType::CpuToGpu));
+    }
+
+    uint32_t vertexBufferOffset = 0;
 
     for (unsigned int i = 0; i < Im3d::GetDrawListCount(); ++i)
     {
         const Im3d::DrawList& drawList = Im3d::GetDrawLists()[i];
+
+        memcpy((char*)m_pVertexBuffer[frameIndex]->GetBuffer()->GetCpuAddress() + vertexBufferOffset,
+            drawList.m_vertexData, sizeof(Im3d::VertexData) * drawList.m_vertexCount);
+
+        uint32_t primitveCount = 0;
+
+        switch (drawList.m_primType)
+        {
+        case Im3d::DrawPrimitive_Points:
+            primitveCount = drawList.m_vertexCount;
+            pCommandList->SetPipelineState(m_pPointPSO);
+            break;
+        case Im3d::DrawPrimitive_Lines:
+            primitveCount = drawList.m_vertexCount / 2;
+            pCommandList->SetPipelineState(m_pLinePSO);
+            break;
+        case Im3d::DrawPrimitive_Triangles:
+            primitveCount = drawList.m_vertexCount / 3;
+            pCommandList->SetPipelineState(m_pTrianglePSO);
+            break;
+        default:
+            break;
+        }
+
+        uint32_t cb[] = 
+        {
+            primitveCount,
+            m_pVertexBuffer[frameIndex]->GetSRV()->GetHeapIndex(),
+            vertexBufferOffset,
+        };
+
+        pCommandList->SetGraphicsConstants(0, cb, sizeof(cb));
+        pCommandList->DispatchMesh(DivideRoudingUp(primitveCount, 64), 1, 1);
+
+        vertexBufferOffset += sizeof(Im3d::VertexData) * drawList.m_vertexCount;
     }
+}
+
+uint32_t Im3dImpl::GetVertexCount() const
+{
+    uint32_t vertexCount = 0;
+
+    for (unsigned int i = 0; i < Im3d::GetDrawListCount(); ++i)
+    {
+        const Im3d::DrawList& drawList = Im3d::GetDrawLists()[i];
+        vertexCount += drawList.m_vertexCount;
+    }
+
+    return vertexCount;
 }

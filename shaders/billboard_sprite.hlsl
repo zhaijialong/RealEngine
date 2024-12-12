@@ -102,8 +102,8 @@ void ms_main(uint3 dispatchThreadID : SV_DispatchThreadID,
         vertices[v2].textureIndex = sprite.texture;
         vertices[v3].textureIndex = sprite.texture;
         
-        indices[primitive0] = uint3(groupIndex * 4, groupIndex * 4 + 1, groupIndex * 4 + 2);
-        indices[primitive1] = uint3(groupIndex * 4 + 1, groupIndex * 4 + 2, groupIndex * 4 + 3);
+        indices[primitive0] = uint3(v0, v1, v2);
+        indices[primitive1] = uint3(v1, v3, v2);
     }
 }
 

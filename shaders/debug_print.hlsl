@@ -116,8 +116,8 @@ void main_ms(
         vertices[v2].color = color;
         vertices[v3].color = color;
     
-        indices[primitive0] = uint3(groupIndex * 4, groupIndex * 4 + 1, groupIndex * 4 + 2);
-        indices[primitive1] = uint3(groupIndex * 4 + 1, groupIndex * 4 + 2, groupIndex * 4 + 3);
+        indices[primitive0] = uint3(v0, v1, v2);
+        indices[primitive1] = uint3(v1, v3, v2);
     }
 }
 
