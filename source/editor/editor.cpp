@@ -1,5 +1,6 @@
 #include "editor.h"
 #include "imgui_impl.h"
+#include "im3d_impl.h"
 #include "core/engine.h"
 #include "renderer/texture_loader.h"
 #include "utils/assert.h"
@@ -13,8 +14,11 @@
 
 Editor::Editor(Renderer* pRenderer) : m_pRenderer(pRenderer)
 {
-    m_pGUI = eastl::make_unique<ImGuiImpl>(pRenderer);
-    m_pGUI->Init();
+    m_pImGui = eastl::make_unique<ImGuiImpl>(pRenderer);
+    m_pImGui->Init();
+
+    m_pIm3d = eastl::make_unique<Im3dImpl>(pRenderer);
+    m_pIm3d->Init();
 
     ifd::FileDialog::Instance().CreateTexture = [this, pRenderer](uint8_t* data, int w, int h, char fmt) -> void* 
     {
@@ -48,7 +52,8 @@ Editor::~Editor()
 
 void Editor::NewFrame()
 {
-    m_pGUI->NewFrame();
+    m_pImGui->NewFrame();
+    m_pIm3d->NewFrame();
 }
 
 void Editor::Tick()
@@ -91,7 +96,8 @@ void Editor::Render(IGfxCommandList* pCommandList)
         DrawWindow("Settings", &m_bShowSettings);
     }
 
-    m_pGUI->Render(pCommandList);
+    m_pIm3d->Render(pCommandList);
+    m_pImGui->Render(pCommandList);
 
     m_commands.clear();
 }

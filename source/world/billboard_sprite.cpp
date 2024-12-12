@@ -60,7 +60,7 @@ void BillboardSpriteRenderer::Render()
     batch.label = "BillboardSprite";
     batch.SetPipelineState(m_pSpritePSO);
     batch.SetConstantBuffer(0, cb, sizeof(cb));
-    batch.DispatchMesh(DivideRoudingUp(spriteCount, 32), 1, 1);
+    batch.DispatchMesh(DivideRoudingUp(spriteCount, 64), 1, 1);
 
     if (m_pRenderer->IsEnableMouseHitTest())
     {
@@ -68,6 +68,6 @@ void BillboardSpriteRenderer::Render()
         batch.label = "BillboardSprite";
         batch.SetPipelineState(m_pSpriteObjectIDPSO);
         batch.SetConstantBuffer(0, cb, sizeof(cb));
-        batch.DispatchMesh(DivideRoudingUp(spriteCount, 32), 1, 1);
+        batch.DispatchMesh(DivideRoudingUp(spriteCount, 64), 1, 1);
     }
 }

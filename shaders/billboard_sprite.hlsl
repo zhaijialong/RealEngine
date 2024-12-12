@@ -30,9 +30,11 @@ struct VertexOut
     nointerpolation uint textureIndex : TEXTURE_INDEX;
 };
 
-#define GROUP_SIZE (32)
+#define GROUP_SIZE (64)
 #define MAX_VERTEX_COUNT (GROUP_SIZE * 4)
 #define MAX_PRIMITIVE_COUNT (GROUP_SIZE * 2)
+
+groupshared uint s_validSpriteCount;
 
 [numthreads(GROUP_SIZE, 1, 1)]
 [outputtopology("triangle")]
@@ -41,13 +43,19 @@ void ms_main(uint3 dispatchThreadID : SV_DispatchThreadID,
     out indices uint3 indices[MAX_PRIMITIVE_COUNT],
     out vertices VertexOut vertices[MAX_VERTEX_COUNT])
 {
+    s_validSpriteCount = 0;
+    
     uint spriteIndex = dispatchThreadID.x;
-    bool validSprite = spriteIndex < c_spriteCount;
+    if (spriteIndex < c_spriteCount)
+    {
+        InterlockedAdd(s_validSpriteCount, 1);
+    }
     
-    uint validSpriteCount = WaveActiveCountBits(validSprite);
-    SetMeshOutputCounts(validSpriteCount * 4, validSpriteCount * 2);
+    GroupMemoryBarrierWithGroupSync();
     
-    if (groupIndex < validSpriteCount)
+    SetMeshOutputCounts(s_validSpriteCount * 4, s_validSpriteCount * 2);
+    
+    if (groupIndex < s_validSpriteCount)
     {
         uint v0 = groupIndex * 4 + 0;
         uint v1 = groupIndex * 4 + 1;

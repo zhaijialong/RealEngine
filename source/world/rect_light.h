@@ -5,6 +5,6 @@
 class RectLight : public ILight
 {
 public:
-    virtual bool Create();
-    virtual void Tick(float delta_time);
+    virtual bool Create() override;
+    virtual void Tick(float delta_time) override;
 };

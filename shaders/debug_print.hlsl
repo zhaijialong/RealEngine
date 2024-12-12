@@ -1,7 +1,7 @@
 #include "common.hlsli"
 #include "debug.hlsli"
 
-#define GROUP_SIZE (32)
+#define GROUP_SIZE (64)
 
 cbuffer RootConstants : register(b0)
 {
@@ -35,6 +35,8 @@ struct VertexOut
 #define MAX_VERTEX_COUNT (GROUP_SIZE * 4)
 #define MAX_PRIMITIVE_COUNT (GROUP_SIZE * 2)
 
+groupshared uint s_validTextCount;
+
 [numthreads(GROUP_SIZE, 1, 1)]
 [outputtopology("triangle")]
 void main_ms(
@@ -44,20 +46,23 @@ void main_ms(
     out indices uint3 indices[MAX_PRIMITIVE_COUNT],
     out vertices VertexOut vertices[MAX_VERTEX_COUNT])
 {
+    s_validTextCount = 0;
+    
     ByteAddressBuffer debugTextCounterBuffer = ResourceDescriptorHeap[c_debugTextCounterBufferSRV];
     uint text_count = debugTextCounterBuffer.Load(0);
  
-#if 0
     uint text_index = dispatchThreadID.x; //amd crashes
-#else
-    uint text_index = groupID * GROUP_SIZE + groupIndex;
-#endif
-    bool valid_text = text_index < text_count;
+
+    if(text_index < text_count)
+    {
+        InterlockedAdd(s_validTextCount, 1);
+    }
     
-    uint valid_text_count = WaveActiveCountBits(valid_text);
-    SetMeshOutputCounts(valid_text_count * 4, valid_text_count * 2);
+    GroupMemoryBarrierWithGroupSync();
     
-    if (groupIndex < valid_text_count)
+    SetMeshOutputCounts(s_validTextCount * 4, s_validTextCount * 2);
+    
+    if (groupIndex < s_validTextCount)
     {
         StructuredBuffer<debug::Text> textBuffer = ResourceDescriptorHeap[c_debugTextBufferSRV];
         StructuredBuffer<debug::BakedChar> bakedCharBuffer = ResourceDescriptorHeap[SceneCB.debugFontCharBufferSRV];
