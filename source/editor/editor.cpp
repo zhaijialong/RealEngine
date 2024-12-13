@@ -59,6 +59,8 @@ void Editor::NewFrame()
     if (!io.WantCaptureMouse && io.MouseClicked[0])
     {
         ImVec2 mousePos = io.MouseClickedPos[0];
+        mousePos.x *= io.DisplayFramebufferScale.x;
+        mousePos.y *= io.DisplayFramebufferScale.y;
 
         m_pRenderer->RequestMouseHitTest((uint32_t)mousePos.x, (uint32_t)mousePos.y);
     }
