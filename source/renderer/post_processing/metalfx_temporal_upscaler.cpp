@@ -1,8 +1,9 @@
 #include "metalfx_temporal_upscaler.h"
 #if RE_PLATFORM_MAC || RE_PLATFORM_IOS
 
-#include "gfx/metal/metal_command_list.h"
 #include "../renderer.h"
+#include "gfx/metal/metal_command_list.h"
+#include "core/engine.h"
 #include "utils/gui_util.h"
 
 #define MTLFX_PRIVATE_IMPLEMENTATION
