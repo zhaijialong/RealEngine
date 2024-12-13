@@ -18,9 +18,11 @@ struct VertexOutput
 {
     float4 position : SV_POSITION;
     float4 color : COLOR;
+#if POINTS || LINES
     float2 uv : TEXCOORD;
     noperspective float size : SIZE;
     noperspective float edgeDistance : EDGE_DISTANCE;
+#endif
 };
 
 #define kAntialiasing 2.0
@@ -175,15 +177,12 @@ void ms_main(uint3 dispatchThreadID : SV_DispatchThreadID,
         uint v1 = groupIndex * 3 + 1;
         uint v2 = groupIndex * 3 + 2;
         
-        vertices[v0] = (VertexOutput)0;
         vertices[v0].position = mul(GetCameraCB().mtxViewProjectionNoJitter, float4(vertex0.positionSize.xyz, 1.0));
         vertices[v0].color = UnpackRGBA8Unorm(vertex0.color).abgr;
         
-        vertices[v1] = (VertexOutput) 0;
         vertices[v1].position = mul(GetCameraCB().mtxViewProjectionNoJitter, float4(vertex1.positionSize.xyz, 1.0));
         vertices[v1].color = UnpackRGBA8Unorm(vertex1.color).abgr;
         
-        vertices[v2] = (VertexOutput) 0;
         vertices[v2].position = mul(GetCameraCB().mtxViewProjectionNoJitter, float4(vertex2.positionSize.xyz, 1.0));
         vertices[v2].color = UnpackRGBA8Unorm(vertex2.color).abgr;
         

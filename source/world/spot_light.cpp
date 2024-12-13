@@ -57,4 +57,16 @@ void SpotLight::OnGui()
             ImGui::SliderFloat("Inner Angle##Light", &m_innerAngle, 0.0f, 90.0f);
             ImGui::SliderFloat("Outer Angle##Light", &m_outerAngle, 0.0f, 90.0f);
         });
+
+    float4x4 T = translation_matrix(m_pos);
+    float4x4 R = rotation_matrix(m_rotation);
+
+    float height = cos(degree_to_radian(m_outerAngle)) * m_lightRadius;
+    float radius = sin(degree_to_radian(m_outerAngle)) * m_lightRadius;
+
+    Im3d::PushMatrix(mul(T, R));
+    Im3d::PushSize(3.0);
+    Im3d::DrawCone(float3(0.0f, -height, 0.0f), float3(0.0f, 1.0f, 0.0f), height, radius, 30);
+    Im3d::PopSize();
+    Im3d::PopMatrix();
 }

@@ -54,11 +54,6 @@ void Editor::NewFrame()
 {
     m_pImGui->NewFrame();
     m_pIm3d->NewFrame();
-}
-
-void Editor::Tick()
-{
-    FlushPendingTextureDeletions();
 
     ImGuiIO& io = ImGui::GetIO();
     if (!io.WantCaptureMouse && io.MouseClicked[0])
@@ -67,6 +62,11 @@ void Editor::Tick()
 
         m_pRenderer->RequestMouseHitTest((uint32_t)mousePos.x, (uint32_t)mousePos.y);
     }
+}
+
+void Editor::Tick()
+{
+    FlushPendingTextureDeletions();
 
     BuildDockLayout();
     DrawMenu();
@@ -82,10 +82,7 @@ void Editor::Tick()
 
         ImGui::End();
     }
-}
 
-void Editor::Render(IGfxCommandList* pCommandList)
-{
     if (m_bShowInspector)
     {
         DrawWindow("Inspector", &m_bShowInspector);
@@ -96,10 +93,13 @@ void Editor::Render(IGfxCommandList* pCommandList)
         DrawWindow("Settings", &m_bShowSettings);
     }
 
+    m_commands.clear();
+}
+
+void Editor::Render(IGfxCommandList* pCommandList)
+{
     m_pIm3d->Render(pCommandList);
     m_pImGui->Render(pCommandList);
-
-    m_commands.clear();
 }
 
 void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command)

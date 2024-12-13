@@ -42,4 +42,13 @@ void PointLight::OnGui()
             ImGui::SliderFloat("Radius##Light", &m_lightRadius, 0.01f, 20.0f);
             ImGui::SliderFloat("Falloff##Light", &m_falloff, 1.0f, 16.0f);
         });
+
+    float4x4 T = translation_matrix(m_pos);
+    float4x4 R = rotation_matrix(m_rotation);
+
+    Im3d::PushMatrix(mul(T, R));
+    Im3d::PushSize(3.0);
+    Im3d::DrawSphere(float3(0.0f, 0.0f, 0.0f), m_lightRadius);
+    Im3d::PopSize();
+    Im3d::PopMatrix();
 }

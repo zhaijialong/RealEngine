@@ -44,4 +44,15 @@ void DirectionalLight::OnGui()
             ImGui::SliderFloat("Intensity##Light", &m_lightIntensity, 0.0f, 100.0f);
             ImGui::SliderFloat("Source Radius##Light", &m_lightSourceRadius, 0.0f, 0.01f);
         });
+
+    float4x4 T = translation_matrix(m_pos);
+    float4x4 R = rotation_matrix(m_rotation);
+
+    float length = Im3d::GetContext().pixelsToWorldSize(m_pos, 100.0f);
+
+    Im3d::PushMatrix(mul(T, R));
+    Im3d::PushSize(3.0);
+    Im3d::DrawArrow(float3(0.0f, 0.0f, 0.0f), float3(0.0f, -length, 0.0f));
+    Im3d::PopSize();
+    Im3d::PopMatrix();
 }

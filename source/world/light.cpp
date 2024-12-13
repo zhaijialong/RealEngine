@@ -13,6 +13,6 @@ void ILight::Render(Renderer* pRenderer)
     if (m_pIconTexture)
     {
         World* world = Engine::GetInstance()->GetWorld();
-        world->GetBillboardSpriteRenderer()->AddSprite(m_pos, 32, m_pIconTexture, float4(1.0f, 1.0f, 1.0f, 1.0f), m_nID);
+        world->GetBillboardSpriteRenderer()->AddSprite(m_pos, 64, m_pIconTexture, float4(1.0f, 1.0f, 1.0f, 1.0f), m_nID);
     }
 }

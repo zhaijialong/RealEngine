@@ -2,5 +2,7 @@
     <model file="model/sponza/untitled.gltf" position="5.000,0.000,0.000" scale="0.01,0.01,0.01" />
     <skysphere />
     <camera position="17.3395653,6.17326212,-4.56773663" rotation="9.60000420,-59.6000061,0" fov="60.0" znear="0.01" zfar="1000.0"/>
-    <light type="directional" primary="true" rotation="15.000,0.000,0.000" intensity="3.0"/>
+    <light type="directional" position="0.000,5.000,0.000" primary="true" rotation="15.000,0.000,0.000" intensity="3.0"/>
+	<light type="point" position="-7.5,1.8,-1.0" radius="2.5" color="1.0, 0.15, 0.1" intensity="2.0" />
+	<light type="spot" position="-6.7,3.1,1.4" rotation="0.0,0.0,-37.8" radius="4.0" color="0.0, 0.75, 1.0" intensity="2.0" />
 </scene>
