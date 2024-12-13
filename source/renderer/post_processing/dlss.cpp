@@ -3,6 +3,7 @@
 #if RE_PLATFORM_WINDOWS
 
 #include "../renderer.h"
+#include "core/engine.h"
 #include "gfx/vulkan/vulkan_device.h"
 #include "gfx/vulkan/vulkan_descriptor.h"
 #include "utils/gui_util.h"

@@ -137,8 +137,8 @@ void Engine::Tick()
     }
     else
     {
-        m_pWorld->Tick(m_frameTime);
         m_pEditor->Tick();
+        m_pWorld->Tick(m_frameTime);
 
         m_pRenderer->RenderFrame();
     }

@@ -63,13 +63,12 @@ public:
     float GetFocalLength() const { return m_focalLength; }
     float GetSensorWidth() const { return m_sensorWidth; }
     
-    void OnPostProcessSettingGui();
+    void OnGui();
 
 private:
     void UpdateJitter();
     void UpdateMatrix();
     void OnWindowResize(void* window, uint32_t width, uint32_t height);
-    void OnCameraSettingGui();
 
     void UpdateCameraRotation(float delta_time);
     void UpdateCameraPosition(float delta_time);

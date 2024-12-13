@@ -14,8 +14,6 @@ public:
     void Tick();
     void Render(IGfxCommandList* pCommandList);
 
-    void AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command);
-
 private:
     void BuildDockLayout();
     void DrawMenu();
@@ -26,8 +24,6 @@ private:
     void CreateGpuMemoryStats();
     void ShowRenderGraph();
     void FlushPendingTextureDeletions();
-
-    void DrawWindow(const eastl::string& window, bool* open);
 
 private:
     Renderer* m_pRenderer = nullptr;
@@ -42,19 +38,10 @@ private:
     bool m_bShowMeshlets = false;
     bool m_bResetLayout = false;
 
-    bool m_bShowInspector = false;
-    bool m_bShowSettings = false;
+    bool m_bShowInspector = true;
     bool m_bShowRenderer = true;
 
     unsigned int m_dockSpace = 0;
-
-    struct Command
-    {
-        eastl::string section;
-        eastl::function<void()> func;
-    };
-    using WindowCommand = eastl::vector<Command>;
-    eastl::hash_map<eastl::string, WindowCommand> m_commands;
 
     eastl::hash_map<IGfxDescriptor*, Texture2D*> m_fileDialogIcons;
     eastl::vector<IGfxDescriptor*> m_pendingDeletions;

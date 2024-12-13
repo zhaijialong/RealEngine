@@ -1,5 +1,6 @@
 #include "sky_cubemap.h"
 #include "renderer.h"
+#include "core/engine.h"
 #include "utils/gui_util.h"
 #include "ImFileDialog/ImFileDialog.h"
 
@@ -34,6 +35,39 @@ SkyCubeMap::SkyCubeMap(Renderer* pRenderer)
     m_pHDRITexture.reset(pRenderer->CreateTexture2D(Engine::GetInstance()->GetAssetPath() + "textures/hdri/rural_landscape_1k.hdr", false));
 }
 
+void SkyCubeMap::OnGui()
+{
+    if (ImGui::CollapsingHeader("Sky Light"))
+    {
+        if (ImGui::Combo("Source##SkyCubeMap", (int*)&m_source, "Realtime\0HDRI\0\0"))
+        {
+            m_bDirty = true;
+        }
+
+        if (ifd::FileDialog::Instance().IsDone("Select HDRI"))
+        {
+            if (ifd::FileDialog::Instance().HasResult())
+            {
+                eastl::string file = ifd::FileDialog::Instance().GetResult().u8string().c_str();
+                m_pHDRITexture.reset(m_pRenderer->CreateTexture2D(file, false));
+
+                m_bDirty = true;
+            }
+            ifd::FileDialog::Instance().Close();
+        }
+
+        if (m_source == SkySource::HDRI)
+        {
+            ImGui::Image((ImTextureID)m_pHDRITexture->GetSRV(), ImVec2(300, 150));
+        }
+
+        if (ImGui::Button("Select##SkyCubeMap"))
+        {
+            ifd::FileDialog::Instance().Open("Select HDRI", "Select HDRI", "HDRI file (*.hdr){.hdr},.*");
+        }
+    }
+}
+
 void SkyCubeMap::Update(IGfxCommandList* pCommandList)
 {
     if (m_source == SkySource::Realtime)
@@ -49,43 +83,6 @@ void SkyCubeMap::Update(IGfxCommandList* pCommandList)
             m_bDirty = true;
         }
     }
-    else
-    {
-        if (m_pPendingHDRITexture)
-        {
-            eastl::swap(m_pHDRITexture, m_pPendingHDRITexture);
-            m_pPendingHDRITexture.reset();
-            m_bDirty = true;
-        }
-    }
-
-    GUI("Settings", "Sky Light", [&]()
-        {
-            if (ImGui::Combo("Source##SkyCubeMap", (int*)&m_source, "Realtime\0HDRI\0\0"))
-            {
-                m_bDirty = true;
-            }
-
-            if (m_source == SkySource::HDRI)
-            {
-                ImGui::Image((ImTextureID)m_pHDRITexture->GetSRV(), ImVec2(300, 150));
-            }
-
-            if (ImGui::Button("Select##SkyCubeMap"))
-            {
-                ifd::FileDialog::Instance().Open("Select HDRI", "Select HDRI", "HDRI file (*.hdr){.hdr},.*");
-            }
-
-            if (ifd::FileDialog::Instance().IsDone("Select HDRI"))
-            {
-                if (ifd::FileDialog::Instance().HasResult())
-                {
-                    eastl::string file = ifd::FileDialog::Instance().GetResult().u8string().c_str();
-                    m_pPendingHDRITexture.reset(m_pRenderer->CreateTexture2D(file, false));
-                }
-                ifd::FileDialog::Instance().Close();
-            }
-        });
 
     if (m_bDirty)
     {

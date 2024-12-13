@@ -12,6 +12,7 @@
 #include "xess.h"
 #include "metalfx_temporal_upscaler.h"
 #include "../renderer.h"
+#include "core/engine.h"
 #include "utils/gui_util.h"
 #include "utils/log.h"
 
@@ -40,9 +41,6 @@ PostProcessor::~PostProcessor() = default;
 
 void PostProcessor::OnGui()
 {
-    World* world = Engine::GetInstance()->GetWorld();
-    world->GetCamera()->OnPostProcessSettingGui();
-
     UpsacleModeGui();
 #if RE_PLATFORM_WINDOWS
     m_pFSR2->OnGui();

@@ -200,13 +200,13 @@ void StaticMesh::OnGui()
 {
     IVisibleObject::OnGui();
 
-    GUI("Inspector", "StaticMesh", [&]()
-        {
-            ImGui::Checkbox("Show BoundingSphere##StaticMesh", &m_bShowBoundingSphere);
-            ImGui::Checkbox("Show Tangent##StaticMesh", &m_bShowTangent);
-            ImGui::Checkbox("Show Bitangent##StaticMesh", &m_bShowBitangent);
-            ImGui::Checkbox("Show Normal##StaticMesh", &m_bShowNormal);
-        });
+    if (ImGui::CollapsingHeader("StaticMesh"))
+    {
+        ImGui::Checkbox("Show BoundingSphere##StaticMesh", &m_bShowBoundingSphere);
+        ImGui::Checkbox("Show Tangent##StaticMesh", &m_bShowTangent);
+        ImGui::Checkbox("Show Bitangent##StaticMesh", &m_bShowBitangent);
+        ImGui::Checkbox("Show Normal##StaticMesh", &m_bShowNormal);
+    }
 
     m_pMaterial->OnGui();
 }

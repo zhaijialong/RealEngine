@@ -1,5 +1,6 @@
 #include "directional_light.h"
 #include "resource_cache.h"
+#include "core/engine.h"
 #include "utils/gui_util.h"
 
 bool DirectionalLight::Create()
@@ -38,12 +39,12 @@ void DirectionalLight::OnGui()
 {
     IVisibleObject::OnGui();
 
-    GUI("Inspector", "DirectionalLight", [&]()
-        {
-            ImGui::ColorEdit3("Color##Light", (float*)&m_lightColor, ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float);
-            ImGui::SliderFloat("Intensity##Light", &m_lightIntensity, 0.0f, 100.0f);
-            ImGui::SliderFloat("Source Radius##Light", &m_lightSourceRadius, 0.0f, 0.01f);
-        });
+    if (ImGui::CollapsingHeader("DirectionalLight"))
+    {
+        ImGui::ColorEdit3("Color##Light", (float*)&m_lightColor, ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float);
+        ImGui::SliderFloat("Intensity##Light", &m_lightIntensity, 0.0f, 100.0f);
+        ImGui::SliderFloat("Source Radius##Light", &m_lightSourceRadius, 0.0f, 0.01f);
+    }
 
     float4x4 T = translation_matrix(m_pos);
     float4x4 R = rotation_matrix(m_rotation);

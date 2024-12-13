@@ -307,8 +307,5 @@ void SkeletalMesh::OnGui()
 {
     IVisibleObject::OnGui();
 
-    GUI("Inspector", "SkeletalMesh", []()
-        {
-            ImGui::Text("TODO");
-        });
+    //todo
 }

@@ -10,6 +10,7 @@ class SkyCubeMap
 public:
     SkyCubeMap(Renderer* pRenderer);
 
+    void OnGui();
     void Update(IGfxCommandList* pCommandList);
 
     TextureCube* GetCubeTexture() const { return m_pTexture.get(); }
@@ -46,6 +47,4 @@ private:
     float3 m_prevLightDir;
     float3 m_prevLightColor;
     float m_prevLightIntensity = 0.0f;
-
-    eastl::unique_ptr<Texture2D> m_pPendingHDRITexture;
 };

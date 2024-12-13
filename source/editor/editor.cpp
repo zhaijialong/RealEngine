@@ -85,26 +85,23 @@ void Editor::Tick()
 
     if (m_bShowInspector)
     {
-        DrawWindow("Inspector", &m_bShowInspector);
-    }
+        ImGui::Begin("Inspector", &m_bShowInspector);
 
-    if (m_bShowSettings)
-    {
-        DrawWindow("Settings", &m_bShowSettings);
-    }
+        World* world = Engine::GetInstance()->GetWorld();
+        IVisibleObject* pSelectedObject = world->GetVisibleObject(m_pRenderer->GetMouseHitObjectID());
+        if (pSelectedObject)
+        {
+            pSelectedObject->OnGui();
+        }
 
-    m_commands.clear();
+        ImGui::End();
+    }
 }
 
 void Editor::Render(IGfxCommandList* pCommandList)
 {
     m_pIm3d->Render(pCommandList);
     m_pImGui->Render(pCommandList);
-}
-
-void Editor::AddGuiCommand(const eastl::string& window, const eastl::string& section, const eastl::function<void()>& command)
-{
-    m_commands[window].push_back({ section, command });
 }
 
 void Editor::BuildDockLayout()
@@ -126,6 +123,7 @@ void Editor::BuildDockLayout()
         ImGui::DockBuilderSplitNode(m_dockSpace, ImGuiDir_Right, 0.2f, &rightNode, &leftNode);
 
         ImGui::DockBuilderDockWindow("Renderer", rightNode);
+        ImGui::DockBuilderDockWindow("Inspector", rightNode);
 
         ImGui::DockBuilderFinish(m_dockSpace);
     }
@@ -219,7 +217,6 @@ void Editor::DrawMenu()
         if (ImGui::BeginMenu("Window"))
         {
             ImGui::MenuItem("Inspector", "", &m_bShowInspector);
-            ImGui::MenuItem("Settings", "", & m_bShowSettings);
             ImGui::MenuItem("Renderer", "", &m_bShowRenderer);
 
             m_bResetLayout = ImGui::MenuItem("Reset Layout");
@@ -377,8 +374,6 @@ void Editor::DrawGizmo()
     pSelectedObject->SetPosition(pos);
     pSelectedObject->SetRotation(rotation_quat(rotation));
     pSelectedObject->SetScale(scale);
-
-    pSelectedObject->OnGui();
 }
 
 void Editor::DrawFrameStats()
@@ -475,23 +470,3 @@ void Editor::FlushPendingTextureDeletions()
     m_pendingDeletions.clear();
 }
 
-void Editor::DrawWindow(const eastl::string& window, bool* open)
-{
-    ImGui::Begin(window.c_str(), open);
-
-    auto iter = m_commands.find(window);
-    if (iter != m_commands.end())
-    {
-        for (size_t i = 0; i < iter->second.size(); ++i)
-        {
-            const Command& cmd = iter->second[i];
-
-            if (ImGui::CollapsingHeader(cmd.section.c_str()))
-            {
-                cmd.func();
-            }
-        }
-    }
-
-    ImGui::End();
-}

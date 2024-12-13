@@ -86,8 +86,6 @@ void Camera::EnableJitter(bool value)
 
 void Camera::Tick(float delta_time)
 {
-    GUI("Settings", "Camera", [&]() { OnCameraSettingGui(); });
-
     m_bMoved = false;
 
     UpdateCameraRotation(delta_time);
@@ -409,35 +407,6 @@ void Camera::OnWindowResize(void* window, uint32_t width, uint32_t height)
     SetPerpective(m_aspectRatio, m_fov, m_znear);
 }
 
-void Camera::OnCameraSettingGui()
-{
-    bool perspective_updated = false;
-    perspective_updated |= ImGui::SliderFloat("Fov##Camera", &m_fov, 5.0f, 135.0f, "%.0f");
-    perspective_updated |= ImGui::SliderFloat("Near Plane##Camera", &m_znear, 0.0001f, 3.0f, "%.4f");
-
-    if (perspective_updated)
-    {
-        SetPerpective(m_aspectRatio, m_fov, m_znear);
-    }
-
-    ImGui::SliderFloat("Movement Speed##Camera", &m_moveSpeed, 1.0f, 200.0f, "%.0f");
-    ImGui::SliderFloat("Movement Smoothness##Camera", &m_moveSmoothness, 0.01f, 1.0f, "%.2f");
-    ImGui::SliderFloat("Rotation Smoothness##Camera", &m_rotateSmoothness, 0.01f, 1.0f, "%.2f");
-}
-
-void Camera::OnPostProcessSettingGui()
-{
-    if (ImGui::CollapsingHeader("Physical Camera"))
-    {
-        ImGui::SliderFloat("Aperture##Camera", &m_aperture, 0.7f, 32.0f, "f/%.1f");
-        ImGui::SliderInt("Shutter Speed##Camera", &m_shutterSpeed, 1, 4000, "1/%d");
-        ImGui::SliderInt("ISO##Camera", &m_iso, 100, 20000, "%d");
-        ImGui::SliderFloat("Exposure Compensation##Camera", &m_exposureCompensation, -5.0f, 5.0f, "%.1f");
-        ImGui::SliderFloat("Focal Length##Camera", &m_focalLength, 1.0f, 300.0f, "%.1f mm");
-    	ImGui::SliderFloat("Sensor Width##Camera", &m_sensorWidth, 1.0f, 50.0f, "%.1f mm");
-    }
-}
-
 void Camera::DrawViewFrustum(IGfxCommandList* pCommandList)
 {
     if (!m_bFrustumLocked)
@@ -455,4 +424,30 @@ void Camera::DrawViewFrustum(IGfxCommandList* pCommandList)
 
     pCommandList->SetPipelineState(pso);
     pCommandList->Dispatch(1, 1, 1);
+}
+
+void Camera::OnGui()
+{
+    if (ImGui::CollapsingHeader("Camera"))
+    {
+        bool perspective_updated = false;
+        perspective_updated |= ImGui::SliderFloat("Fov##Camera", &m_fov, 5.0f, 135.0f, "%.0f");
+        perspective_updated |= ImGui::SliderFloat("Near Plane##Camera", &m_znear, 0.0001f, 3.0f, "%.4f");
+
+        if (perspective_updated)
+        {
+            SetPerpective(m_aspectRatio, m_fov, m_znear);
+        }
+
+        ImGui::SliderFloat("Aperture##Camera", &m_aperture, 0.7f, 32.0f, "f/%.1f");
+        ImGui::SliderInt("Shutter Speed##Camera", &m_shutterSpeed, 1, 4000, "1/%d");
+        ImGui::SliderInt("ISO##Camera", &m_iso, 100, 20000, "%d");
+        ImGui::SliderFloat("Exposure Compensation##Camera", &m_exposureCompensation, -5.0f, 5.0f, "%.1f");
+        ImGui::SliderFloat("Focal Length##Camera", &m_focalLength, 1.0f, 300.0f, "%.1f mm");
+        ImGui::SliderFloat("Sensor Width##Camera", &m_sensorWidth, 1.0f, 50.0f, "%.1f mm");
+
+        ImGui::SliderFloat("Movement Speed##Camera", &m_moveSpeed, 1.0f, 200.0f, "%.0f");
+        ImGui::SliderFloat("Movement Smoothness##Camera", &m_moveSmoothness, 0.01f, 1.0f, "%.2f");
+        ImGui::SliderFloat("Rotation Smoothness##Camera", &m_rotateSmoothness, 0.01f, 1.0f, "%.2f");
+    }
 }

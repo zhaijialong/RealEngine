@@ -1148,6 +1148,10 @@ void Renderer::SaveTexture(const eastl::string& file, IGfxTexture* texture)
 
 void Renderer::OnGui()
 {
+    World* world = Engine::GetInstance()->GetWorld();
+    world->GetCamera()->OnGui();
+
+    m_pSkyCubeMap->OnGui();
     m_pLightingProcessor->OnGui();
     m_pPathTracer->OnGui();
     m_pPostProcessor->OnGui();
