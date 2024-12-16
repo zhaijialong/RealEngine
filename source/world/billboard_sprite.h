@@ -24,7 +24,7 @@ private:
         uint32_t color;
         uint32_t texture;
         uint32_t objectID;
-        uint32_t _pad;
+        float distance;
     };
     eastl::vector<Sprite> m_sprites;
 };

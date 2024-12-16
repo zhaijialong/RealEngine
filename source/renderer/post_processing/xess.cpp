@@ -3,6 +3,7 @@
 #if RE_PLATFORM_WINDOWS
 
 #include "../renderer.h"
+#include "core/engine.h"
 #include "utils/gui_util.h"
 #include "utils/log.h"
 #include "xess/xess_d3d12.h"

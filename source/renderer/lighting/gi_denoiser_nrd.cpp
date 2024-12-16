@@ -3,6 +3,7 @@
 #if RE_PLATFORM_WINDOWS
 
 #include "nrd_integration.h"
+#include "core/engine.h"
 #include "utils/gui_util.h"
 #include "../renderer.h"
 

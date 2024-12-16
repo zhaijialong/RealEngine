@@ -1,4 +1,6 @@
 #include "billboard_sprite.h"
+#include "core/engine.h"
+#include "EASTL/sort.h"
 
 BillboardSpriteRenderer::BillboardSpriteRenderer(Renderer* pRenderer)
 {
@@ -49,6 +51,18 @@ void BillboardSpriteRenderer::Render()
     {
         return;
     }
+
+    Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
+
+    for (size_t i = 0; i < m_sprites.size(); ++i)
+    {
+        m_sprites[i].distance = distance(m_sprites[i].position, camera->GetPosition());
+    }
+
+    eastl::sort(m_sprites.begin(), m_sprites.end(), [](const Sprite& a, const Sprite& b)
+        {
+            return a.distance > b.distance;
+        });
 
     uint32_t spriteCount = (uint32_t)m_sprites.size();
     uint32_t spriteBufferAddress = m_pRenderer->AllocateSceneConstant(m_sprites.data(), sizeof(Sprite) * spriteCount);

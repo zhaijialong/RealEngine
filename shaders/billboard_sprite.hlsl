@@ -15,7 +15,7 @@ struct Sprite
     uint color;
     uint texture;
     uint objectID;
-    uint _pad;
+    float distance;
 };
 
 struct VertexOut
