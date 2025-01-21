@@ -1,6 +1,7 @@
 #include "ray_trace.hlsli"
 #include "random.hlsli"
 #include "importance_sampling.hlsli"
+#include "local_light.hlsli"
 #include "debug.hlsli"
 
 cbuffer PathTracingConstants : register(b1)
@@ -80,7 +81,7 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     for (uint i = 0; i < c_maxRayLength + 1; ++i)
     {
-        //direct light
+        //direct light, todo NEE
         float3 wi = SceneCB.lightDir;
 
         RayDesc ray;
@@ -92,6 +93,23 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
         float NdotL = saturate(dot(N, wi));
         float3 direct_light = DefaultBRDF(wi, wo, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor * NdotL;
+        
+        for (uint localLightIndex = 0; localLightIndex < SceneCB.localLightCount; ++localLightIndex)
+        {
+            LocalLightData localLight = GetLocalLightData(localLightIndex);
+            
+            float3 ToLight = localLight.position - position;
+            float distance = length(ToLight);
+            
+            ray.Direction = ToLight / distance;
+            ray.TMax = distance;
+            
+            if (rt::TraceVisibilityRay(ray))
+            {
+                direct_light += CalculateLocalLight(localLight, position, ShadingModel::Default, wo, N, diffuse, specular, roughness, 0);
+            }
+        }
+        
         radiance += (direct_light + emissive) * throughput / pdf;
 
         if (i == c_maxRayLength)
