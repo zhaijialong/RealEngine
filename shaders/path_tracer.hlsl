@@ -81,22 +81,27 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     for (uint i = 0; i < c_maxRayLength + 1; ++i)
     {
-        //direct light, todo NEE
-        float3 wi = SceneCB.lightDir;
-
+        //direct light
+        float3 lighting = 0.0;
+        
         RayDesc ray;
         ray.Origin = position + N * 0.01;
-        ray.Direction = SampleConeUniform(RandomSample(dispatchThreadID.xy, sampleSetIndex), SceneCB.lightSourceRadius, wi);
         ray.TMin = 0.00001;
-        ray.TMax = 1000.0;
-
-        float visibility = rt::TraceVisibilityRay(ray) ? 1.0 : 0.0;
-        float NdotL = saturate(dot(N, wi));
-        float3 direct_light = DefaultBRDF(wi, wo, N, diffuse, specular, roughness) * visibility * SceneCB.lightColor * NdotL;
         
-        for (uint localLightIndex = 0; localLightIndex < SceneCB.localLightCount; ++localLightIndex)
+        uint lightIndex = uint(RandomSample(dispatchThreadID.xy, sampleSetIndex).x * SceneCB.localLightCount + 0.5);
+        if (lightIndex == SceneCB.localLightCount)
         {
-            LocalLightData localLight = GetLocalLightData(localLightIndex);
+            ray.Direction = SampleConeUniform(RandomSample(dispatchThreadID.xy, sampleSetIndex), SceneCB.lightSourceRadius, SceneCB.lightDir);
+            ray.TMax = 10000.0;
+            
+            if (rt::TraceVisibilityRay(ray))
+            {
+                lighting += EvaluateBRDF(ShadingModel::Default, SceneCB.lightDir, wo, N, diffuse, specular, roughness, 0, SceneCB.lightColor);
+            }
+        }
+        else
+        {
+            LocalLightData localLight = GetLocalLightData(lightIndex);
             
             float3 ToLight = localLight.position - position;
             float distance = length(ToLight);
@@ -106,11 +111,14 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
             
             if (rt::TraceVisibilityRay(ray))
             {
-                direct_light += CalculateLocalLight(localLight, position, ShadingModel::Default, wo, N, diffuse, specular, roughness, 0);
+                lighting += CalculateLocalLight(localLight, position, ShadingModel::Default, wo, N, diffuse, specular, roughness, 0);
             }
         }
+
+        float lightSamplePdf = 1.0 / (SceneCB.localLightCount + 1.0);
+        lighting /= lightSamplePdf;
         
-        radiance += (direct_light + emissive) * throughput / pdf;
+        radiance += (lighting + emissive) * throughput / pdf;
 
         if (i == c_maxRayLength)
         {
@@ -118,6 +126,8 @@ void path_tracing(uint3 dispatchThreadID : SV_DispatchThreadID)
         }
 
         //indirect light
+        float3 wi = 0.0;
+        
         float probDiffuse = ProbabilityToSampleDiffuse(diffuse, specular);
         float2 randomSample = RandomSample(dispatchThreadID.xy, sampleSetIndex);
         
