@@ -17,17 +17,8 @@ struct GBufferOutput
     float4 customDataRT : SV_TARGET4;
 };
 
-GBufferOutput ps_main(model::VertexOutput input
-#if !GFX_VENDOR_AMD
-    , bool isFrontFace : SV_IsFrontFace //using SV_IsFrontFace with mesh shaders will result in crashes on AMD
-#endif
-)
+GBufferOutput ps_main(model::VertexOutput input, bool isFrontFace : SV_IsFrontFace)
 {
-#if GFX_VENDOR_AMD
-    float3 V = normalize(GetCameraCB().cameraPos - input.worldPos);
-    bool isFrontFace = dot(input.normal, V) > 0.0; //workaround for AMD driver bug
-#endif
-
 #if UNIFORM_RESOURCE
     uint instanceIndex = c_InstanceIndex;
 #else

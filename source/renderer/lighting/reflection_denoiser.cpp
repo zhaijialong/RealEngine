@@ -7,10 +7,9 @@ ReflectionDenoiser::ReflectionDenoiser(Renderer* pRenderer)
 
     GfxShaderCompilerFlags flags = 0;
 #ifdef _DEBUG
-    if (m_pRenderer->GetDevice()->GetVendor() == GfxVendor::AMD ||
-        m_pRenderer->GetDevice()->GetVendor() == GfxVendor::Apple)
+    if (m_pRenderer->GetDevice()->GetVendor() == GfxVendor::Apple)
     {
-        flags = GfxShaderCompilerFlagO1; //todo : AMD/Apple crashes with -O0
+        flags = GfxShaderCompilerFlagO1; //todo : Apple crashes with -O0
     }
 #endif
 
