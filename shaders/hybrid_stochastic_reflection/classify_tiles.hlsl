@@ -52,16 +52,12 @@ bool IsBaseRay(uint2 dispatch_thread_id, uint samples_per_quad)
 
 groupshared uint s_TileCount;
 
-[numthreads(8, 8, 1)]
+[numthreads(64, 1, 1)]
 void main(uint2 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     s_TileCount = 0;
 
-#if GFX_VENDOR_AMD
-#define HSR_REMAP_LANE 0 //todo : remap seems not working correctly on AMD
-#else
 #define HSR_REMAP_LANE 1
-#endif
 
 #if HSR_REMAP_LANE
     // Remap lanes to ensure four neighboring lanes are arranged in a quad pattern
@@ -106,7 +102,7 @@ void main(uint2 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex, uint3 dis
     
     bool require_copy = !needs_ray && needs_denoiser; // Our pixel only requires a copy if we want to run a denoiser on it but don't want to shoot a ray for it.
     
-#if 0 //HSR_REMAP_LANE
+#if HSR_REMAP_LANE
     bool x_require_copy = WaveReadLaneAt(require_copy, WaveGetLaneIndex() ^ 0b01);
     bool y_require_copy = WaveReadLaneAt(require_copy, WaveGetLaneIndex() ^ 0b10);
     bool d_require_copy = WaveReadLaneAt(require_copy, WaveGetLaneIndex() ^ 0b11);

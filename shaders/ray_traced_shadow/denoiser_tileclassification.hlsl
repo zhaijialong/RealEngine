@@ -94,7 +94,7 @@ bool FFX_DNSR_Shadows_IsShadowReciever(uint2 p)
 #if GFX_VENDOR_AMD && GFX_BACKEND_D3D12
 [wavesize(64)] //faster than wave32 mode
 #endif
-[numthreads(8, 8, 1)]
+[numthreads(64, 1, 1)]
 void main(uint group_index : SV_GroupIndex, uint2 gid : SV_GroupID)
 {
     FFX_DNSR_Shadows_TileClassification(group_index, gid);
