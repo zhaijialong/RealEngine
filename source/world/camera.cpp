@@ -43,10 +43,10 @@ void Camera::SetPerpective(float aspectRatio, float yfov, float znear)
     m_fov = yfov;
     m_znear = znear;
 
-    //m_projection = perspective_matrix(degree_to_radian(yfov), aspectRatio, zfar, znear, pos_z, zero_to_one);
+    //m_projection = perspective_matrix(radians(yfov), aspectRatio, zfar, znear, pos_z, zero_to_one);
 
     //LH + reversed z + infinite far plane
-    float h = 1.0 / std::tan(0.5f * degree_to_radian(yfov));
+    float h = 1.0 / std::tan(0.5f * radians(yfov));
     float w = h / aspectRatio;
     m_projection = float4x4(0.0);
     m_projection[0][0] = w;
@@ -216,7 +216,7 @@ void Camera::SetupCameraCB(CameraConstant& cameraCB)
     Renderer* pRenderer = Engine::GetInstance()->GetRenderer();
 
     cameraCB.cameraPos = GetPosition();
-    cameraCB.spreadAngle = atanf(2.0f * tanf(degree_to_radian(m_fov) * 0.5f) / pRenderer->GetRenderHeight()); // "Texture Level-of-Detail Strategies for Real-Time Ray Tracing", Eq.20
+    cameraCB.spreadAngle = atanf(2.0f * tanf(radians(m_fov) * 0.5f) / pRenderer->GetRenderHeight()); // "Texture Level-of-Detail Strategies for Real-Time Ray Tracing", Eq.20
     cameraCB.nearZ = m_znear;
     cameraCB.linearZParams = CalcDepthLinearizationParams(m_projection);
     cameraCB.jitter = m_jitter;

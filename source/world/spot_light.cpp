@@ -26,13 +26,13 @@ void SpotLight::Tick(float delta_time)
     data.direction = m_lightDir;
     data.sourceRadius = m_lightSourceRadius;
 
-    float cosInnerAngle = cos(degree_to_radian(m_innerAngle));
-    float cosOuterAngle = cos(degree_to_radian(m_outerAngle));
+    float cosInnerAngle = cos(radians(m_innerAngle));
+    float cosOuterAngle = cos(radians(m_outerAngle));
     float invAngleRange = 1.0f / max(cosInnerAngle - cosOuterAngle, 0.001f);
 
     data.spotAngles.x = invAngleRange;
     data.spotAngles.y = -cosOuterAngle * invAngleRange;
-    data.spotAngles.z = degree_to_radian(m_outerAngle);
+    data.spotAngles.z = radians(m_outerAngle);
 
     Renderer* pRender = Engine::GetInstance()->GetRenderer();
     pRender->AddLocalLight(data);
@@ -40,7 +40,7 @@ void SpotLight::Tick(float delta_time)
 
 bool SpotLight::FrustumCull(const float4* planes, uint32_t plane_count) const
 {
-    float4 boundingSphere = ConeBoundingSphere(m_pos, -m_lightDir, m_lightRadius, degree_to_radian(m_outerAngle));
+    float4 boundingSphere = ConeBoundingSphere(m_pos, -m_lightDir, m_lightRadius, radians(m_outerAngle));
     return ::FrustumCull(planes, plane_count, boundingSphere.xyz(), boundingSphere.w);
 }
 
@@ -61,8 +61,8 @@ void SpotLight::OnGui()
     float4x4 T = translation_matrix(m_pos);
     float4x4 R = rotation_matrix(m_rotation);
 
-    float height = cos(degree_to_radian(m_outerAngle)) * m_lightRadius;
-    float radius = sin(degree_to_radian(m_outerAngle)) * m_lightRadius;
+    float height = cos(radians(m_outerAngle)) * m_lightRadius;
+    float radius = sin(radians(m_outerAngle)) * m_lightRadius;
 
     Im3d::PushMatrix(mul(T, R));
     Im3d::PushSize(3.0);

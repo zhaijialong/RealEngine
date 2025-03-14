@@ -60,14 +60,14 @@ inline float4x4 inverse(const float4x4& m)
 }
 
 template<class T>
-inline T degree_to_radian(T degree)
+inline T radians(T degree)
 {
     const float PI = 3.141592653f;
     return degree * PI / 180.0f;
 }
 
 template<class T>
-inline T radian_to_degree(T radian)
+inline T degrees(T radian)
 {
     const float PI = 3.141592653f;
     return radian * 180.0f / PI;
@@ -75,7 +75,7 @@ inline T radian_to_degree(T radian)
 
 inline quaternion rotation_quat(const float3& euler_angles) //pitch-yaw-roll order, in degrees
 {
-    float3 radians = degree_to_radian(euler_angles);
+    float3 radians = ::radians(euler_angles);
 
     float3 c = cos(radians * 0.5f);
     float3 s = sin(radians * 0.5f);
@@ -96,20 +96,20 @@ inline float rotation_pitch(const quaternion& q)
     const float x = q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z;
     if (y == 0.0f && x == 0.0f) //avoid atan2(0,0) - handle singularity
     {
-        return radian_to_degree(2.0f * atan2(q.x, q.w));
+        return degrees(2.0f * atan2(q.x, q.w));
     }
 
-    return radian_to_degree(atan2(y, x));
+    return degrees(atan2(y, x));
 }
 
 inline float rotation_yaw(const quaternion& q)
 {
-    return radian_to_degree(asin(clamp(-2.0f * (q.x * q.z - q.w * q.y), -1.0f, 1.0f)));
+    return degrees(asin(clamp(-2.0f * (q.x * q.z - q.w * q.y), -1.0f, 1.0f)));
 }
 
 inline float rotation_roll(const quaternion& q)
 {
-    return radian_to_degree(atan2(2.0f * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z));
+    return degrees(atan2(2.0f * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z));
 }
 
 inline float3 rotation_angles(const quaternion& q)

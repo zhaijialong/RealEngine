@@ -51,7 +51,7 @@ void Im3dImpl::NewFrame()
     appData.m_viewOrigin = camera->GetPosition();
     appData.m_viewDirection = camera->GetForward();
     appData.m_worldUp = Im3d::Vec3(0.0f, 1.0f, 0.0f);
-    appData.m_projScaleY = tanf(degree_to_radian(camera->GetFov()) * 0.5f) * 2.0f;
+    appData.m_projScaleY = tanf(radians(camera->GetFov()) * 0.5f) * 2.0f;
 
     Im3d::Vec2 cursorPos(ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
     cursorPos.x = (cursorPos.x / appData.m_viewportSize.x) * 2.0f - 1.0f;
@@ -76,7 +76,7 @@ void Im3dImpl::NewFrame()
     appData.m_keyDown[Im3d::Mouse_Left] = ImGui::IsKeyDown(ImGuiKey_MouseLeft);
 
     appData.m_snapTranslation = ctrlDown ? 0.1f : 0.0f;
-    appData.m_snapRotation = ctrlDown ? degree_to_radian(30.0f) : 0.0f;
+    appData.m_snapRotation = ctrlDown ? radians(30.0f) : 0.0f;
     appData.m_snapScale = ctrlDown ? 0.5f : 0.0f;
 
     Im3d::NewFrame();
