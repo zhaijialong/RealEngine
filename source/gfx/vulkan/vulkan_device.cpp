@@ -22,6 +22,7 @@
 
 #if RE_PLATFORM_WINDOWS
 #include "nvsdk_ngx_vk.h"
+#include "xess/xess_vk.h"
 #endif
 
 static VkBool32 VulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageTypes,
@@ -387,6 +388,25 @@ VkResult VulkanDevice::CreateInstance()
             required_extensions.push_back(dlssInstanceExts[i]);
         }
     }
+
+    uint32_t xessInstanceExtensionsCount;
+    const char* const* xessInstanceExtensions;
+    uint32_t xessMinApiVersion;
+    xessVKGetRequiredInstanceExtensions(&xessInstanceExtensionsCount, &xessInstanceExtensions, &xessMinApiVersion);
+
+    for (unsigned int i = 0; i < xessInstanceExtensionsCount; ++i)
+    {
+        auto found = eastl::find(required_extensions.begin(), required_extensions.end(), xessInstanceExtensions[i],
+            [](const char* a, const char* b)
+            {
+                return stricmp(a, b) == 0;
+            });
+
+        if (found == required_extensions.end())
+        {
+            required_extensions.push_back(xessInstanceExtensions[i]);
+        }
+    }
 #endif
 
     if (!CheckExtensions(extensions, required_extensions))
@@ -515,6 +535,24 @@ VkResult VulkanDevice::CreateDevice()
             }
         }
     }
+
+    uint32_t xessExtensionsCount;
+    const char* const* xessExtensions;
+    xessVKGetRequiredDeviceExtensions(m_instance, m_physicalDevice, &xessExtensionsCount, &xessExtensions);
+
+    for (uint32_t i = 0; i < xessExtensionsCount; ++i)
+    {
+        auto found = eastl::find(required_extensions.begin(), required_extensions.end(), xessExtensions[i],
+            [](const char* a, const char* b)
+            {
+                return stricmp(a, b) == 0;
+            });
+
+        if (found == required_extensions.end())
+        {
+            required_extensions.push_back(xessExtensions[i]);
+        }
+    }
 #endif
 
     if (!CheckExtensions(extensions, required_extensions))
@@ -573,6 +611,7 @@ VkResult VulkanDevice::CreateDevice()
     vulkan13.dynamicRendering = VK_TRUE;
     vulkan13.subgroupSizeControl = VK_TRUE;
     vulkan13.shaderDemoteToHelperInvocation = VK_TRUE;
+    vulkan13.shaderIntegerDotProduct = VK_TRUE;
 
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructure = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
     accelerationStructure.pNext = &vulkan13;

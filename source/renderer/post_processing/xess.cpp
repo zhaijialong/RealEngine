@@ -4,9 +4,12 @@
 
 #include "../renderer.h"
 #include "core/engine.h"
+#include "gfx/vulkan/vulkan_device.h"
+#include "gfx/vulkan/vulkan_descriptor.h"
 #include "utils/gui_util.h"
 #include "utils/log.h"
 #include "xess/xess_d3d12.h"
+#include "xess/xess_vk.h"
 
 #pragma comment(lib, "libxess.lib")
 
@@ -31,19 +34,41 @@ static void XeSSLog(const char* message, xess_logging_level_t logging_level)
     }
 }
 
+static inline xess_vk_image_view_info GetVulkanImageInfo(RGTexture* texture, bool uav = false)
+{
+    xess_vk_image_view_info info;
+    info.image = (VkImage)texture->GetTexture()->GetHandle();
+    info.imageView = uav ? ((VulkanUnorderedAccessView*)texture->GetUAV())->GetImageView() : ((VulkanShaderResourceView*)texture->GetSRV())->GetImageView();
+
+    const GfxTextureDesc& desc = texture->GetTexture()->GetDesc();
+    info.width = desc.width;
+    info.height = desc.height;
+    info.format = ToVulkanFormat(desc.format);
+    info.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+    return info;
+}
+
 XeSS::XeSS(Renderer* pRenderer)
 {
     m_pRenderer = pRenderer;
 
-    IGfxDevice* pDevice = m_pRenderer->GetDevice();
-    if (pDevice->GetDesc().backend == GfxRenderBackend::D3D12)
+    GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+    if (backend == GfxRenderBackend::D3D12)
     {
         ID3D12Device* device = (ID3D12Device*)m_pRenderer->GetDevice()->GetHandle();
         xess_result_t result = xessD3D12CreateContext(device, &m_context);
         RE_ASSERT(result == XESS_RESULT_SUCCESS);
-
-        xessSetLoggingCallback(m_context, XESS_LOGGING_LEVEL_DEBUG, XeSSLog);
     }
+    else if(backend == GfxRenderBackend::Vulkan)
+    {
+        VulkanDevice* pVulkanDevice = (VulkanDevice*)m_pRenderer->GetDevice();
+        xess_result_t result = xessVKCreateContext(pVulkanDevice->GetInstance(),
+            pVulkanDevice->GetPhysicalDevice(), pVulkanDevice->GetDevice(), &m_context);
+        RE_ASSERT(result == XESS_RESULT_SUCCESS);
+    }
+
+    xessSetLoggingCallback(m_context, XESS_LOGGING_LEVEL_DEBUG, XeSSLog);
 
     Engine::GetInstance()->WindowResizeSignal.connect(&XeSS::OnWindowResize, this);
 }
@@ -108,6 +133,8 @@ RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
         [=](const XeSSData& data, IGfxCommandList* pCommandList)
         {
             InitializeXeSS(displayWidth, displayHeight);
+            xessSetJitterScale(m_context, 1.0f, 1.0f);
+            xessSetVelocityScale(m_context, -0.5f * renderWidth, 0.5f * renderHeight);
 
             pCommandList->FlushBarriers();
 
@@ -119,24 +146,43 @@ RGHandle XeSS::AddPass(RenderGraph* pRenderGraph, RGHandle input, RGHandle depth
 
             Camera* camera = Engine::GetInstance()->GetWorld()->GetCamera();
 
-            xess_d3d12_execute_params_t params = {};
-            params.pColorTexture = (ID3D12Resource*)inputRT->GetTexture()->GetHandle();
-            params.pVelocityTexture = (ID3D12Resource*)velocityRT->GetTexture()->GetHandle();
-            params.pDepthTexture = (ID3D12Resource*)depthRT->GetTexture()->GetHandle();
-            params.pExposureScaleTexture = (ID3D12Resource*)exposureRT->GetTexture()->GetHandle();
-            params.pOutputTexture = (ID3D12Resource*)outputRT->GetTexture()->GetHandle();
-            params.jitterOffsetX = camera->GetJitter().x;
-            params.jitterOffsetY = camera->GetJitter().y;
-            params.exposureScale = 1.0f;
-            params.resetHistory = false;
-            params.inputWidth = renderWidth;
-            params.inputHeight = renderHeight;
+            GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+            if (backend == GfxRenderBackend::D3D12)
+            {
+                xess_d3d12_execute_params_t params = {};
+                params.pColorTexture = (ID3D12Resource*)inputRT->GetTexture()->GetHandle();
+                params.pVelocityTexture = (ID3D12Resource*)velocityRT->GetTexture()->GetHandle();
+                params.pDepthTexture = (ID3D12Resource*)depthRT->GetTexture()->GetHandle();
+                params.pExposureScaleTexture = (ID3D12Resource*)exposureRT->GetTexture()->GetHandle();
+                params.pOutputTexture = (ID3D12Resource*)outputRT->GetTexture()->GetHandle();
+                params.jitterOffsetX = camera->GetJitter().x;
+                params.jitterOffsetY = camera->GetJitter().y;
+                params.exposureScale = 1.0f;
+                params.resetHistory = false;
+                params.inputWidth = renderWidth;
+                params.inputHeight = renderHeight;
 
-            xessSetJitterScale(m_context, 1.0f, 1.0f);
-            xessSetVelocityScale(m_context, -0.5f * renderWidth, 0.5f * renderHeight);
+                xess_result_t result = xessD3D12Execute(m_context, (ID3D12GraphicsCommandList*)pCommandList->GetHandle(), &params);
+                RE_ASSERT(result == XESS_RESULT_SUCCESS);
+            }
+            else if (backend == GfxRenderBackend::Vulkan)
+            {
+                xess_vk_execute_params_t params = {};
+                params.colorTexture = GetVulkanImageInfo(inputRT);
+                params.velocityTexture = GetVulkanImageInfo(velocityRT);
+                params.depthTexture = GetVulkanImageInfo(depthRT);
+                params.exposureScaleTexture = GetVulkanImageInfo(exposureRT);
+                params.outputTexture = GetVulkanImageInfo(outputRT, true);
+                params.jitterOffsetX = camera->GetJitter().x;
+                params.jitterOffsetY = camera->GetJitter().y;
+                params.exposureScale = 1.0f;
+                params.resetHistory = false;
+                params.inputWidth = renderWidth;
+                params.inputHeight = renderHeight;
 
-            xess_result_t result = xessD3D12Execute(m_context, (ID3D12GraphicsCommandList*)pCommandList->GetHandle(), &params);
-            RE_ASSERT(result == XESS_RESULT_SUCCESS);
+                xess_result_t result = xessVKExecute(m_context, (VkCommandBuffer)pCommandList->GetHandle(), &params);
+                RE_ASSERT(result == XESS_RESULT_SUCCESS);
+            }
 
             pCommandList->ResetState();
             m_pRenderer->SetupGlobalConstants(pCommandList);
@@ -164,15 +210,29 @@ void XeSS::InitializeXeSS(uint32_t displayWidth, uint32_t displayHeight)
     {
         m_pRenderer->WaitGpuFinished();
 
-        xess_d3d12_init_params_t params = {};
-        params.outputResolution.x = displayWidth;
-        params.outputResolution.y = displayHeight;
-        params.qualitySetting = m_quality;
-        params.initFlags = XESS_INIT_FLAG_INVERTED_DEPTH | 
-            XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE;
+        GfxRenderBackend backend = m_pRenderer->GetDevice()->GetDesc().backend;
+        if (backend == GfxRenderBackend::D3D12)
+        {
+            xess_d3d12_init_params_t params = {};
+            params.outputResolution.x = displayWidth;
+            params.outputResolution.y = displayHeight;
+            params.qualitySetting = m_quality;
+            params.initFlags = XESS_INIT_FLAG_INVERTED_DEPTH | XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE;
 
-        xess_result_t result = xessD3D12Init(m_context, &params);
-        RE_ASSERT(result == XESS_RESULT_SUCCESS);
+            xess_result_t result = xessD3D12Init(m_context, &params);
+            RE_ASSERT(result == XESS_RESULT_SUCCESS);
+        }
+        else if (backend == GfxRenderBackend::Vulkan)
+        {
+            xess_vk_init_params_t params = {};
+            params.outputResolution.x = displayWidth;
+            params.outputResolution.y = displayHeight;
+            params.qualitySetting = m_quality;
+            params.initFlags = XESS_INIT_FLAG_INVERTED_DEPTH | XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE;
+
+            xess_result_t result = xessVKInit(m_context, &params);
+            RE_ASSERT(result == XESS_RESULT_SUCCESS);
+        }
 
         m_needInitialization = false;
     }
