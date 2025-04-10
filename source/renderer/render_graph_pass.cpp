@@ -248,7 +248,6 @@ void RenderGraphPassBase::Execute(const RenderGraph& graph, RenderGraphPassExecu
     for (size_t i = 0; i < m_eventNames.size(); ++i)
     {
         context.graphicsCommandList->BeginEvent(m_eventNames[i]);
-        BeginMPGpuEvent(context.graphicsCommandList, m_eventNames[i]);
     }
 
     if (!IsCulled())
@@ -263,7 +262,6 @@ void RenderGraphPassBase::Execute(const RenderGraph& graph, RenderGraphPassExecu
     for (uint32_t i = 0; i < m_nEndEventNum; ++i)
     {
         context.graphicsCommandList->EndEvent();
-        EndMPGpuEvent(context.graphicsCommandList);
     }
 
     if (m_signalValue != -1)

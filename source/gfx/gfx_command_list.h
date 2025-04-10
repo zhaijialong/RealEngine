@@ -28,8 +28,6 @@ public:
     virtual void Submit() = 0;
     virtual void ResetState() = 0;
 
-    virtual void BeginProfiling() = 0;
-    virtual void EndProfiling() = 0;
     virtual void BeginEvent(const eastl::string& event_name) = 0;
     virtual void EndEvent() = 0;
 
@@ -76,10 +74,6 @@ public:
     virtual void BuildRayTracingBLAS(IGfxRayTracingBLAS* blas) = 0;
     virtual void UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset) = 0;
     virtual void BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count) = 0;
-
-#if MICROPROFILE_GPU_TIMERS
-    virtual struct MicroProfileThreadLogGpu* GetProfileLog() const = 0;
-#endif
 
 protected:
     GfxCommandQueue m_queueType;

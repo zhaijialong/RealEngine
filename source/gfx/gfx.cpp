@@ -4,7 +4,6 @@
 #include "mock/mock_device.h"
 #include "utils/assert.h"
 #include "xxHash/xxhash.h"
-#include "microprofile/microprofile.h"
 
 #if RE_PLATFORM_WINDOWS
 #include "d3d12/d3d12_device.h"
@@ -47,39 +46,6 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
     }
     
     return pDevice;
-}
-
-void BeginMPGpuEvent(IGfxCommandList* pCommandList, const eastl::string& event_name)
-{
-#if MICROPROFILE_GPU_TIMERS
-    static const uint32_t EVENT_COLOR[] =
-    {
-        MP_LIGHTCYAN4,
-        MP_SKYBLUE2,
-        MP_SEAGREEN4,
-        MP_LIGHTGOLDENROD4,
-        MP_BROWN3,
-        MP_MEDIUMPURPLE2,
-        MP_SIENNA,
-        MP_LIMEGREEN,
-        MP_MISTYROSE,
-        MP_LIGHTYELLOW,
-    };
-
-    uint32_t color_count = sizeof(EVENT_COLOR) / sizeof(EVENT_COLOR[0]);
-    uint32_t color = EVENT_COLOR[XXH32(event_name.c_str(), strlen(event_name.c_str()), 0) % color_count];
-
-    MicroProfileToken token = MicroProfileGetToken("GPU", event_name.c_str(), color, MicroProfileTokenTypeGpu);
-
-    MicroProfileEnterGpu(token, pCommandList->GetProfileLog());
-#endif
-}
-
-void EndMPGpuEvent(IGfxCommandList* pCommandList)
-{
-#if MICROPROFILE_GPU_TIMERS
-    MicroProfileLeaveGpu(pCommandList->GetProfileLog());
-#endif
 }
 
 uint32_t GetFormatRowPitch(GfxFormat format, uint32_t width)

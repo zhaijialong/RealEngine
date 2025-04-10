@@ -55,8 +55,6 @@ set(EXTERNAL_FILES
     ${EXTERNAL_ROOT}/meshoptimizer/vertexfilter.cpp
     ${EXTERNAL_ROOT}/meshoptimizer/vfetchanalyzer.cpp
     ${EXTERNAL_ROOT}/meshoptimizer/vfetchoptimizer.cpp
-    ${EXTERNAL_ROOT}/microprofile/microprofile.cpp
-    ${EXTERNAL_ROOT}/microprofile/microprofile.h
     ${EXTERNAL_ROOT}/rpmalloc/rpmalloc.c
     ${EXTERNAL_ROOT}/rpmalloc/rpmalloc.h
     ${EXTERNAL_ROOT}/rpmalloc/rpnew.h

@@ -39,22 +39,16 @@ void Engine::Init(const eastl::string& work_path, void* window_handle, uint32_t 
     spdlog::set_level(spdlog::level::trace);
     spdlog::flush_every(std::chrono::milliseconds(10));
 
-    MicroProfileSetEnableAllGroups(true);
-    MicroProfileSetForceMetaCounters(true);
-    MicroProfileOnThreadCreate("Main Thread");
-
     enki::TaskSchedulerConfig tsConfig;
     tsConfig.profilerCallbacks.threadStart = [](uint32_t i)
     {
         rpmalloc_thread_initialize();
 
         eastl::string thread_name = fmt::format("Worker Thread {}", i).c_str();
-        MicroProfileOnThreadCreate(thread_name.c_str());
         SetCurrentThreadName(thread_name);
     };
     tsConfig.profilerCallbacks.threadStop = [](uint32_t)
     {
-        MicroProfileOnThreadExit();
         rpmalloc_thread_finalize(1); 
     };
     tsConfig.customAllocator.alloc = [](size_t align, size_t size, void* userData, const char* file, int line)
@@ -114,7 +108,6 @@ void Engine::Shut()
     m_pEditor.reset();
     m_pTaskScheduler.reset();
 
-    MicroProfileShutdown();
     m_pRenderer.reset();
 
     spdlog::shutdown();
@@ -142,6 +135,4 @@ void Engine::Tick()
 
         m_pRenderer->RenderFrame();
     }
-
-    MicroProfileFlip(0);
 }

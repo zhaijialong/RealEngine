@@ -25,9 +25,6 @@ bool IsSRGBFormat(GfxFormat format);
 uint32_t CalcSubresource(const GfxTextureDesc& desc, uint32_t mip, uint32_t slice);
 void DecomposeSubresource(const GfxTextureDesc& desc, uint32_t subresource, uint32_t& mip, uint32_t& slice);
 
-void BeginMPGpuEvent(IGfxCommandList* pCommandList, const eastl::string& event_name);
-void EndMPGpuEvent(IGfxCommandList* pCommandList);
-
 class RenderEvent
 {
 public:
@@ -46,27 +43,9 @@ private:
     IGfxCommandList* m_pCommandList;
 };
 
-class MPRenderEvent
-{
-public:
-    MPRenderEvent(IGfxCommandList* pCommandList, const eastl::string& event_name) :
-        m_pCommandList(pCommandList)
-    {
-        BeginMPGpuEvent(pCommandList, event_name);
-    }
-
-    ~MPRenderEvent()
-    {
-        EndMPGpuEvent(m_pCommandList);
-    }
-
-private:
-    IGfxCommandList* m_pCommandList;
-};
-
 #if 1
 #define GPU_EVENT_DEBUG(pCommandList, event_name) RenderEvent __render_event__(pCommandList, event_name)
-#define GPU_EVENT_PROFILER(pCommandList, event_name) MPRenderEvent __mp_event__(pCommandList, event_name)
+#define GPU_EVENT_PROFILER(pCommandList, event_name) 
 #define GPU_EVENT(pCommandList, event_name) GPU_EVENT_DEBUG(pCommandList, event_name); GPU_EVENT_PROFILER(pCommandList, event_name)
 #else
 #define GPU_EVENT(pCommandList, event_name) 

@@ -24,8 +24,6 @@ public:
     virtual void Submit() override;
     virtual void ResetState() override;
 
-    virtual void BeginProfiling() override;
-    virtual void EndProfiling() override;
     virtual void BeginEvent(const eastl::string& event_name) override;
     virtual void EndEvent() override;
 
@@ -73,10 +71,6 @@ public:
     virtual void UpdateRayTracingBLAS(IGfxRayTracingBLAS* blas, IGfxBuffer* vertex_buffer, uint32_t vertex_buffer_offset) override;
     virtual void BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRayTracingInstance* instances, uint32_t instance_count) override;
 
-#if MICROPROFILE_GPU_TIMERS
-    virtual struct MicroProfileThreadLogGpu* GetProfileLog() const override;
-#endif
-
 private:
     ID3D12CommandQueue* m_pCommandQueue = nullptr;
     ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
@@ -93,9 +87,4 @@ private:
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
 
     eastl::vector<IGfxSwapchain*> m_pendingSwapchain;
-
-#if MICROPROFILE_GPU_TIMERS_D3D12
-    struct MicroProfileThreadLogGpu* m_pProfileLog = nullptr;
-    int m_nProfileQueue = -1;
-#endif
 };

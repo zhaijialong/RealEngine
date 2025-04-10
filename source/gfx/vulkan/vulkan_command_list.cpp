@@ -213,14 +213,6 @@ void VulkanCommandList::ResetState()
     }
 }
 
-void VulkanCommandList::BeginProfiling()
-{
-}
-
-void VulkanCommandList::EndProfiling()
-{
-}
-
 void VulkanCommandList::BeginEvent(const eastl::string& event_name)
 {
     VkDebugUtilsLabelEXT info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };

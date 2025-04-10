@@ -92,14 +92,6 @@ void MetalCommandList::ResetState()
     m_depthSlopeScale = 0.0f;
 }
 
-void MetalCommandList::BeginProfiling()
-{
-}
-
-void MetalCommandList::EndProfiling()
-{
-}
-
 void MetalCommandList::BeginEvent(const eastl::string& event_name)
 {
     NS::String* label = NS::String::alloc()->init(event_name.c_str(), NS::StringEncoding::UTF8StringEncoding);

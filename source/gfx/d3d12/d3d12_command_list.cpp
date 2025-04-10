@@ -163,28 +163,6 @@ void D3D12CommandList::ResetState()
     }
 }
 
-void D3D12CommandList::BeginProfiling()
-{
-#if MICROPROFILE_GPU_TIMERS_D3D12
-    if (m_nProfileQueue != -1)
-    {
-        m_pProfileLog = MicroProfileThreadLogGpuAlloc();
-        MicroProfileGpuBegin(m_pCommandList, m_pProfileLog);
-    }
-#endif
-}
-
-void D3D12CommandList::EndProfiling()
-{
-#if MICROPROFILE_GPU_TIMERS_D3D12	
-    if (m_nProfileQueue != -1)
-    {
-        MicroProfileGpuSubmit(m_nProfileQueue, MicroProfileGpuEnd(m_pProfileLog));
-        MicroProfileThreadLogGpuFree(m_pProfileLog);
-    }
-#endif
-}
-
 void D3D12CommandList::BeginEvent(const eastl::string& event_name)
 {
     pix::BeginEvent(m_pCommandList, event_name.c_str());

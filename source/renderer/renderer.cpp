@@ -145,12 +145,10 @@ void Renderer::BeginFrame()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->ResetAllocator();
     pCommandList->Begin();
-    pCommandList->BeginProfiling();
 
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
     pComputeCommandList->ResetAllocator();
     pComputeCommandList->Begin();
-    pComputeCommandList->BeginProfiling();
 }
 
 void Renderer::UploadResources()
@@ -380,7 +378,6 @@ void Renderer::EndFrame()
 
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
     pComputeCommandList->End();
-    pComputeCommandList->EndProfiling();
 
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     pCommandList->End();
@@ -390,7 +387,6 @@ void Renderer::EndFrame()
     pCommandList->Present(m_pSwapchain.get());
     pCommandList->Signal(m_pFrameFence.get(), m_nCurrentFrameFenceValue);
     pCommandList->Submit();
-    pCommandList->EndProfiling();
 
     m_pStagingBufferAllocator[frame_index]->Reset();
     m_cbAllocator->Reset();

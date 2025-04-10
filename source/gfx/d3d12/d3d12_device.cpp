@@ -491,15 +491,6 @@ bool D3D12Device::Create()
 
     pix::Init();
 
-#if MICROPROFILE_GPU_TIMERS_D3D12
-    m_nProfileGraphicsQueue = MicroProfileInitGpuQueue("GPU Graphics Queue");
-    m_nProfileComputeQueue = MicroProfileInitGpuQueue("GPU Compute Queue");
-    //m_nProfileCopyQueue = MicroProfileInitGpuQueue("GPU Copy Queue");
-
-    MicroProfileGpuInitD3D12(m_pDevice, 1, (void**)&m_pGraphicsQueue);
-    MicroProfileSetCurrentNodeD3D12(0);
-#endif
-
     return true;
 }
 

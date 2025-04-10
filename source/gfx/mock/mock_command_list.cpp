@@ -56,14 +56,6 @@ void MockCommandList::ResetState()
 {
 }
 
-void MockCommandList::BeginProfiling()
-{
-}
-
-void MockCommandList::EndProfiling()
-{
-}
-
 void MockCommandList::BeginEvent(const eastl::string& event_name)
 {
 }
