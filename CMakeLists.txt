@@ -63,6 +63,7 @@ target_include_directories(RealEngine PUBLIC
 )
 
 target_compile_definitions(RealEngine PUBLIC
+    TRACY_ENABLE
     EASTL_EASTDC_VSNPRINTF=0
     EASTL_USER_DEFINED_ALLOCATOR=1
     _CRT_SECURE_NO_WARNINGS

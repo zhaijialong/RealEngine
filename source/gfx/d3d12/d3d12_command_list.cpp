@@ -39,23 +39,14 @@ bool D3D12CommandList::Create()
     case GfxCommandQueue::Graphics:
         type = D3D12_COMMAND_LIST_TYPE_DIRECT;
         m_pCommandQueue = pDevice->GetGraphicsQueue();
-#if MICROPROFILE_GPU_TIMERS_D3D12
-        m_nProfileQueue = pDevice->GetProfileGraphicsQueue();
-#endif
         break;
     case GfxCommandQueue::Compute:
         type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
         m_pCommandQueue = pDevice->GetComputeQueue();
-#if MICROPROFILE_GPU_TIMERS_D3D12
-        m_nProfileQueue = pDevice->GetProfileComputeQueue();
-#endif
         break;
     case GfxCommandQueue::Copy:
         type = D3D12_COMMAND_LIST_TYPE_COPY;
         m_pCommandQueue = pDevice->GetCopyQueue();
-#if MICROPROFILE_GPU_TIMERS_D3D12
-        m_nProfileQueue = pDevice->GetProfileCopyQueue();
-#endif
         break;
     default:
         break;
@@ -754,14 +745,3 @@ void D3D12CommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRa
     m_pCommandList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
     ++m_commandCount;
 }
-
-#if MICROPROFILE_GPU_TIMERS
-MicroProfileThreadLogGpu* D3D12CommandList::GetProfileLog() const
-{
-#if MICROPROFILE_GPU_TIMERS_D3D12
-    return m_pProfileLog;
-#else
-    return nullptr;
-#endif
-}
-#endif

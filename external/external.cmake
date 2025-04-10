@@ -61,6 +61,8 @@ set(EXTERNAL_FILES
     ${EXTERNAL_ROOT}/simpleini/ConvertUTF.c
     ${EXTERNAL_ROOT}/simpleini/ConvertUTF.h
     ${EXTERNAL_ROOT}/simpleini/SimpleIni.h
+    ${EXTERNAL_ROOT}/tracy/public/TracyClient.cpp
+     ${EXTERNAL_ROOT}/tracy/public/tracy/Tracy.hpp
     ${EXTERNAL_ROOT}/tinyxml2/tinyxml2.cpp
     ${EXTERNAL_ROOT}/tinyxml2/tinyxml2.h
     ${EXTERNAL_ROOT}/xxHash/xxhash.c

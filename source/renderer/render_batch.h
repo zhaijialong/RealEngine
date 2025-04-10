@@ -94,7 +94,7 @@ private:
 
 inline void DrawBatch(IGfxCommandList* pCommandList, const RenderBatch& batch)
 {
-    GPU_EVENT_DEBUG(pCommandList, batch.label);
+    GPU_EVENT(pCommandList, batch.label);
 
     pCommandList->SetPipelineState(batch.pso);
 
@@ -171,7 +171,7 @@ private:
 
 inline void DispatchBatch(IGfxCommandList* pCommandList, const ComputeBatch& batch)
 {
-    GPU_EVENT_DEBUG(pCommandList, batch.label);
+    GPU_EVENT(pCommandList, batch.label);
 
     pCommandList->SetPipelineState(batch.pso);
 

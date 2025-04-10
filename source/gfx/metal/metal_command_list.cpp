@@ -636,13 +636,6 @@ void MetalCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRa
     m_pASEncoder->buildAccelerationStructure(metalTLAS->GetAccelerationStructure(), metalTLAS->GetDescriptor(), metalTLAS->GetScratchBuffer(), 0);
 }
 
-#if MICROPROFILE_GPU_TIMERS
-MicroProfileThreadLogGpu* MetalCommandList::GetProfileLog() const
-{
-    return nullptr;
-}
-#endif
-
 void MetalCommandList::BeginBlitEncoder()
 {
     EndRenderPass();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "string.h"
+#include "tracy/public/tracy/Tracy.hpp"
 #if RE_PLATFORM_WINDOWS
 #include <Windows.h>
 #else
@@ -80,4 +81,6 @@ inline void SetCurrentThreadName(const eastl::string& name)
 #else
     pthread_setname_np(name.c_str());
 #endif
+
+    tracy::SetThreadName(name.c_str());
 }

@@ -135,4 +135,6 @@ void Engine::Tick()
 
         m_pRenderer->RenderFrame();
     }
+
+    FrameMark;
 }

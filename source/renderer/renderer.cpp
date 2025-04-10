@@ -166,7 +166,7 @@ void Renderer::UploadResources()
     pUploadCommandList->Begin();
 
     {
-        GPU_EVENT_DEBUG(pUploadCommandList, "Renderer::UploadResources");
+        GPU_EVENT(pUploadCommandList, "Renderer::UploadResources");
 
         for (size_t i = 0; i < m_pendingBufferUpload.size(); ++i)
         {
@@ -277,9 +277,7 @@ void Renderer::Render()
     IGfxCommandList* pCommandList = m_pCommandLists[frame_index].get();
     IGfxCommandList* pComputeCommandList = m_pComputeCommandLists[frame_index].get();
 
-    GPU_EVENT_DEBUG(pCommandList, fmt::format("Render Frame {}", m_pDevice->GetFrameID()).c_str());
-
-    GPU_EVENT_PROFILER(pCommandList, "Render Frame");
+    GPU_EVENT(pCommandList, fmt::format("Render Frame {}", m_pDevice->GetFrameID()).c_str());
 
     if (m_pDevice->GetFrameID() == 0)
     {

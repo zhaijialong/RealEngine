@@ -212,9 +212,3 @@ void MockCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxRay
 {
 }
 
-#if MICROPROFILE_GPU_TIMERS
-MicroProfileThreadLogGpu* MockCommandList::GetProfileLog() const
-{
-    return nullptr;
-}
-#endif

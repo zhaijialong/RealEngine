@@ -769,13 +769,6 @@ void VulkanCommandList::BuildRayTracingTLAS(IGfxRayTracingTLAS* tlas, const GfxR
     vkCmdBuildAccelerationStructuresKHR(m_commandBuffer, 1, &info, &pRangeInfo);
 }
 
-#if MICROPROFILE_GPU_TIMERS
-MicroProfileThreadLogGpu* VulkanCommandList::GetProfileLog() const
-{
-    return nullptr;
-}
-#endif
-
 void VulkanCommandList::UpdateGraphicsDescriptorBuffer()
 {
     if (m_graphicsConstants.dirty)
