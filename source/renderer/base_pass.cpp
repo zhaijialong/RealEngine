@@ -35,7 +35,7 @@ struct BasePassData
     RGHandle outDepthRT;
 };
 
-static inline uint32_t roundup(uint32_t a, uint32_t b)
+static inline uint32_t RoundUp(uint32_t a, uint32_t b)
 {
     return (a / b + 1) * b;
 }
@@ -73,9 +73,9 @@ void BasePass::Render1stPhase(RenderGraph* pRenderGraph)
 
     MergeBatches();
 
-    uint32_t max_dispatch_num = roundup((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint32_t));
-    uint32_t max_instance_num = roundup(m_pRenderer->GetInstanceCount(), 65536 / sizeof(uint8_t));
-    uint32_t max_meshlets_num = roundup(m_nTotalMeshletCount, 65536 / sizeof(uint2));
+    uint32_t max_dispatch_num = RoundUp((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint32_t));
+    uint32_t max_instance_num = RoundUp(m_pRenderer->GetInstanceCount(), 65536 / sizeof(uint8_t));
+    uint32_t max_meshlets_num = RoundUp(m_nTotalMeshletCount, 65536 / sizeof(uint2));
 
     HZB* pHZB = m_pRenderer->GetHZB();
 
@@ -276,9 +276,9 @@ void BasePass::Render2ndPhase(RenderGraph* pRenderGraph)
 
     HZB* pHZB = m_pRenderer->GetHZB();
 
-    uint32_t max_dispatch_num = roundup((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint32_t));
-    uint32_t max_instance_num = roundup(m_pRenderer->GetInstanceCount(), 65536 / sizeof(uint8_t));
-    uint32_t max_meshlets_num = roundup(m_nTotalMeshletCount, 65536 / sizeof(uint2));
+    uint32_t max_dispatch_num = RoundUp((uint32_t)m_indirectBatches.size(), 65536 / sizeof(uint32_t));
+    uint32_t max_instance_num = RoundUp(m_pRenderer->GetInstanceCount(), 65536 / sizeof(uint8_t));
+    uint32_t max_meshlets_num = RoundUp(m_nTotalMeshletCount, 65536 / sizeof(uint2));
 
     struct BuildCullingCommandData
     {
