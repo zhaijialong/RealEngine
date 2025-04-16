@@ -1,6 +1,7 @@
 #include "im3d_impl.h"
-#include "im3d/im3d.h"
 #include "core/engine.h"
+#include "utils/profiler.h"
+#include "im3d/im3d.h"
 #include "imgui/imgui.h"
 
 Im3dImpl::Im3dImpl(Renderer* pRenderer) : m_pRenderer(pRenderer)

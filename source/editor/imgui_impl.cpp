@@ -1,6 +1,7 @@
 #include "imgui_impl.h"
 #include "core/engine.h"
 #include "core/platform.h"
+#include "utils/profiler.h"
 #include "imgui/imgui.h"
 #if RE_PLATFORM_WINDOWS
 #include "imgui/imgui_impl_win32.h"

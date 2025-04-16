@@ -25,7 +25,7 @@ public:
     virtual void Submit() override;
     virtual void ResetState() override;
 
-    virtual void BeginEvent(const eastl::string& event_name) override;
+    virtual void BeginEvent(const eastl::string& event_name, const eastl::string& file = "", const eastl::string& function = "", uint32_t line = 0) override;
     virtual void EndEvent() override;
 
     virtual void CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset) override;

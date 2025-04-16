@@ -56,7 +56,7 @@ void MockCommandList::ResetState()
 {
 }
 
-void MockCommandList::BeginEvent(const eastl::string& event_name)
+void MockCommandList::BeginEvent(const eastl::string& event_name, const eastl::string& file, const eastl::string& function, uint32_t line)
 {
 }
 

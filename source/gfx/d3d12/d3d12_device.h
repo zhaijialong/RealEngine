@@ -11,6 +11,11 @@ namespace D3D12MA
     class Allocation;
 }
 
+namespace tracy
+{
+    class D3D12QueueCtx;
+}
+
 class D3D12DescriptorAllocator
 {
 public:
@@ -113,6 +118,10 @@ public:
 
     bool IsSteamDeck() const { return m_bSteamDeck; }
 
+    tracy::D3D12QueueCtx* GetTracyGraphicsQueueCtx() const { return m_pTracyGraphicsQueueCtx; }
+    tracy::D3D12QueueCtx* GetTracyComputeQueueCtx() const { return m_pTracyComputeQueueCtx; }
+    tracy::D3D12QueueCtx* GetTracyCopyQueueCtx() const { return m_pTracyCopyQueueCtx; }
+
 private:
     void DoDeferredDeletion(bool force_delete = false);
     void CreateRootSignature();
@@ -172,6 +181,10 @@ private:
     eastl::queue<DescriptorDeletion> m_resourceDeletionQueue;
     eastl::queue<DescriptorDeletion> m_samplerDeletionQueue;
     eastl::queue<DescriptorDeletion> m_nonShaderVisibleUAVDeletionQueue;
+
+    tracy::D3D12QueueCtx* m_pTracyGraphicsQueueCtx = nullptr;
+    tracy::D3D12QueueCtx* m_pTracyComputeQueueCtx = nullptr;
+    tracy::D3D12QueueCtx* m_pTracyCopyQueueCtx = nullptr;
 
     bool m_bSteamDeck = false;
 };

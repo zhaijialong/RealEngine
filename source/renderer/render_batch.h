@@ -3,6 +3,7 @@
 #include "gfx/gfx.h"
 #include "utils/math.h"
 #include "utils/linear_allocator.h"
+#include "utils/profiler.h"
 
 #define MAX_RENDER_BATCH_CB_COUNT GFX_MAX_CBV_BINDINGS
 

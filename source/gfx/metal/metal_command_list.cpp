@@ -92,7 +92,7 @@ void MetalCommandList::ResetState()
     m_depthSlopeScale = 0.0f;
 }
 
-void MetalCommandList::BeginEvent(const eastl::string& event_name)
+void MetalCommandList::BeginEvent(const eastl::string& event_name, const eastl::string& file, const eastl::string& function, uint32_t line)
 {
     NS::String* label = NS::String::alloc()->init(event_name.c_str(), NS::StringEncoding::UTF8StringEncoding);
     m_pCommandBuffer->pushDebugGroup(label);

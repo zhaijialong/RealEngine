@@ -17,6 +17,7 @@
 #include "utils/profiler.h"
 #include "utils/math.h"
 #include "magic_enum/magic_enum.hpp"
+#include "tracy/public/tracy/TracyD3D12.hpp"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -81,6 +82,10 @@ D3D12Device::~D3D12Device()
     }
 
     FlushDeferredDeletions();
+
+    TracyD3D12Destroy(m_pTracyGraphicsQueueCtx);
+    TracyD3D12Destroy(m_pTracyComputeQueueCtx);
+    TracyD3D12Destroy(m_pTracyCopyQueueCtx);
 
     m_pRTVAllocator.reset();
     m_pDSVAllocator.reset();
@@ -337,10 +342,18 @@ void D3D12Device::BeginFrame()
 
     uint32_t index = m_frameID % GFX_MAX_INFLIGHT_FRAMES;
     m_pConstantBufferAllocators[index]->Reset();
+
+    TracyD3D12NewFrame(m_pTracyGraphicsQueueCtx);
+    TracyD3D12NewFrame(m_pTracyComputeQueueCtx);
+    TracyD3D12NewFrame(m_pTracyCopyQueueCtx);
 }
 
 void D3D12Device::EndFrame()
 {
+    TracyD3D12Collect(m_pTracyGraphicsQueueCtx);
+    TracyD3D12Collect(m_pTracyComputeQueueCtx);
+    TracyD3D12Collect(m_pTracyCopyQueueCtx);
+
     ++m_frameID;
 
     m_pResourceAllocator->SetCurrentFrameIndex((UINT)m_frameID);
@@ -490,6 +503,15 @@ bool D3D12Device::Create()
     CreateIndirectCommandSignatures();
 
     pix::Init();
+
+    m_pTracyGraphicsQueueCtx = TracyD3D12Context(m_pDevice, m_pGraphicsQueue);
+    TracyD3D12ContextName(m_pTracyGraphicsQueueCtx, "Graphics Queue", strlen("Graphics Queue"));
+
+    m_pTracyComputeQueueCtx = TracyD3D12Context(m_pDevice, m_pComputeQueue);
+    TracyD3D12ContextName(m_pTracyComputeQueueCtx, "Compute Queue", strlen("Compute Queue"));
+
+    m_pTracyCopyQueueCtx = TracyD3D12Context(m_pDevice, m_pCopyQueue);
+    TracyD3D12ContextName(m_pTracyCopyQueueCtx, "Copy Queue", strlen("Copy Queue"));
 
     return true;
 }

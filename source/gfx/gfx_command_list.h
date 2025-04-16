@@ -28,7 +28,7 @@ public:
     virtual void Submit() = 0;
     virtual void ResetState() = 0;
 
-    virtual void BeginEvent(const eastl::string& event_name) = 0;
+    virtual void BeginEvent(const eastl::string& event_name, const eastl::string& file = "", const eastl::string& function = "", uint32_t line = 0) = 0;
     virtual void EndEvent() = 0;
 
     virtual void CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset) = 0;

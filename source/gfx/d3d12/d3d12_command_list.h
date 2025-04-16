@@ -5,6 +5,12 @@
 
 class D3D12Device;
 
+namespace tracy
+{
+    class D3D12QueueCtx;
+    class D3D12ZoneScope;
+}
+
 class D3D12CommandList : public IGfxCommandList
 {
 public:
@@ -24,7 +30,7 @@ public:
     virtual void Submit() override;
     virtual void ResetState() override;
 
-    virtual void BeginEvent(const eastl::string& event_name) override;
+    virtual void BeginEvent(const eastl::string& event_name, const eastl::string& file = "", const eastl::string& function = "", uint32_t line = 0) override;
     virtual void EndEvent() override;
 
     virtual void CopyBufferToTexture(IGfxTexture* texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* buffer, uint32_t offset) override;
@@ -87,4 +93,9 @@ private:
     eastl::vector<eastl::pair<IGfxFence*, uint64_t>> m_pendingSignals;
 
     eastl::vector<IGfxSwapchain*> m_pendingSwapchain;
+
+    bool m_bInsideRenderPass = false;
+
+    tracy::D3D12QueueCtx* m_pTracyQueueCtx = nullptr;
+    eastl::vector<tracy::D3D12ZoneScope*> m_tracyZoneScopes;
 };

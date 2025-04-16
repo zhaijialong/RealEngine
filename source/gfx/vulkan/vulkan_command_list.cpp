@@ -213,7 +213,7 @@ void VulkanCommandList::ResetState()
     }
 }
 
-void VulkanCommandList::BeginEvent(const eastl::string& event_name)
+void VulkanCommandList::BeginEvent(const eastl::string& event_name, const eastl::string& file, const eastl::string& function, uint32_t line)
 {
     VkDebugUtilsLabelEXT info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
     info.pLabelName = event_name.c_str();

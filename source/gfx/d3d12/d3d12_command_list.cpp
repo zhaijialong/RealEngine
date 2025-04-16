@@ -14,6 +14,7 @@
 #include "../gfx.h"
 #include "utils/assert.h"
 #include "utils/profiler.h"
+#include "tracy/public/tracy/TracyD3D12.hpp"
 
 D3D12CommandList::D3D12CommandList(D3D12Device* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
 {
@@ -39,14 +40,17 @@ bool D3D12CommandList::Create()
     case GfxCommandQueue::Graphics:
         type = D3D12_COMMAND_LIST_TYPE_DIRECT;
         m_pCommandQueue = pDevice->GetGraphicsQueue();
+        m_pTracyQueueCtx = pDevice->GetTracyGraphicsQueueCtx();
         break;
     case GfxCommandQueue::Compute:
         type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
         m_pCommandQueue = pDevice->GetComputeQueue();
+        m_pTracyQueueCtx = pDevice->GetTracyComputeQueueCtx();
         break;
     case GfxCommandQueue::Copy:
         type = D3D12_COMMAND_LIST_TYPE_COPY;
         m_pCommandQueue = pDevice->GetCopyQueue();
+        m_pTracyQueueCtx = pDevice->GetTracyCopyQueueCtx();
         break;
     default:
         break;
@@ -154,16 +158,29 @@ void D3D12CommandList::ResetState()
     }
 }
 
-void D3D12CommandList::BeginEvent(const eastl::string& event_name)
+void D3D12CommandList::BeginEvent(const eastl::string& event_name, const eastl::string& file, const eastl::string& function, uint32_t line)
 {
     pix::BeginEvent(m_pCommandList, event_name.c_str());
     ags::BeginEvent(m_pCommandList, event_name.c_str());
+
+    if (!m_bInsideRenderPass)
+    {
+        tracy::D3D12ZoneScope* scope = new tracy::D3D12ZoneScope(m_pTracyQueueCtx, line, file.c_str(), file.length(), function.c_str(), function.length(), event_name.c_str(), event_name.length(), m_pCommandList, true);
+        m_tracyZoneScopes.push_back(scope);
+    }
 }
 
 void D3D12CommandList::EndEvent()
 {
     pix::EndEvent(m_pCommandList);
     ags::EndEvent(m_pCommandList);
+
+    if (!m_bInsideRenderPass)
+    {
+        RE_ASSERT(!m_tracyZoneScopes.empty());
+        delete m_tracyZoneScopes.back();
+        m_tracyZoneScopes.pop_back();
+    }
 }
 
 void D3D12CommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)
@@ -525,6 +542,7 @@ void D3D12CommandList::BeginRenderPass(const GfxRenderPassDesc& render_pass)
         (D3D12_RENDER_PASS_FLAGS)flags);
 
     ++m_commandCount;
+    m_bInsideRenderPass = true;
 
     SetViewport(0, 0, width, height);
 }
@@ -534,6 +552,7 @@ void D3D12CommandList::EndRenderPass()
     m_pCommandList->EndRenderPass();
 
     ++m_commandCount;
+    m_bInsideRenderPass = false;
 }
 
 void D3D12CommandList::SetPipelineState(IGfxPipelineState* state)

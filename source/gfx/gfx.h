@@ -28,10 +28,10 @@ void DecomposeSubresource(const GfxTextureDesc& desc, uint32_t subresource, uint
 class ScopedGpuEvent
 {
 public:
-    ScopedGpuEvent(IGfxCommandList* pCommandList, const eastl::string& event_name) :
+    ScopedGpuEvent(IGfxCommandList* pCommandList, const eastl::string& event_name, const eastl::string& file = "", const eastl::string& function = "", uint32_t line = 0) :
         m_pCommandList(pCommandList)
     {
-        pCommandList->BeginEvent(event_name);
+        pCommandList->BeginEvent(event_name, file, function, line);
     }
 
     ~ScopedGpuEvent()
@@ -42,5 +42,3 @@ public:
 private:
     IGfxCommandList* m_pCommandList;
 };
-
-#define GPU_EVENT(pCommandList, event_name) ScopedGpuEvent __gpu_event(pCommandList, event_name)
