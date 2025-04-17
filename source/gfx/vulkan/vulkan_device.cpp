@@ -42,6 +42,8 @@ VulkanDevice::VulkanDevice(const GfxDeviceDesc& desc)
 
 VulkanDevice::~VulkanDevice()
 {
+    vkDeviceWaitIdle(m_device);
+
     for (size_t i = 0; i < GFX_MAX_INFLIGHT_FRAMES; ++i)
     {
         delete m_transitionCopyCommandList[i];
