@@ -18,6 +18,11 @@ namespace eastl
     };
 }
 
+namespace tracy
+{
+    class VkCtx;
+}
+
 class VulkanDevice : public IGfxDevice
 {
 public:
@@ -81,11 +86,16 @@ public:
     void CancelDefaultLayoutTransition(IGfxTexture* texture);
     void FlushLayoutTransition(GfxCommandQueue queue_type);
 
+    tracy::VkCtx* GetTracyGraphicsQueueCtx() const { return m_pTracyGraphicsQueueCtx; }
+    tracy::VkCtx* GetTracyComputeQueueCtx() const { return m_pTracyComputeQueueCtx; }
+    tracy::VkCtx* GetTracyCopyQueueCtx() const { return nullptr; } // not supported
+
 private:
     VkResult CreateInstance();
     VkResult CreateDevice();
     VkResult CreateVmaAllocator();
     VkResult CreatePipelineLayout();
+    VkResult CreateTracyCtx();
     void FindQueueFamilyIndex();
     bool CheckExtensions(const eastl::vector<VkExtensionProperties>& availableExts, const eastl::vector<const char*> requiredExts);
 
@@ -123,6 +133,9 @@ private:
     eastl::vector<eastl::pair<IGfxTexture*, GfxAccessFlags>> m_pendingCopyTransitions;
 
     eastl::hash_map<GfxTextureDesc, uint32_t> m_textureSizeMap;
+
+    tracy::VkCtx* m_pTracyGraphicsQueueCtx = nullptr;
+    tracy::VkCtx* m_pTracyComputeQueueCtx = nullptr;
 };
 
 template<typename T>

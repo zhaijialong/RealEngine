@@ -5,6 +5,12 @@
 
 class VulkanDevice;
 
+namespace tracy
+{
+    class VkCtx;
+    class VkCtxScope;
+}
+
 class VulkanCommandList : public IGfxCommandList
 {
 public:
@@ -101,4 +107,7 @@ private:
 
     ConstantData m_graphicsConstants;
     ConstantData m_computeConstants;
+
+    tracy::VkCtx* m_pTracyQueueCtx = nullptr;
+    eastl::vector<tracy::VkCtxScope*> m_tracyZoneScopes;
 };

@@ -11,6 +11,8 @@
 #include "renderer/clear_uav.h"
 #include "utils/profiler.h"
 #include "../gfx.h"
+#define TRACY_VK_USE_SYMBOL_TABLE
+#include "tracy/public/tracy/TracyVulkan.hpp"
 
 VulkanCommandList::VulkanCommandList(VulkanDevice* pDevice, GfxCommandQueue queue_type, const eastl::string& name)
 {
@@ -35,14 +37,17 @@ bool VulkanCommandList::Create()
     case GfxCommandQueue::Graphics:
         createInfo.queueFamilyIndex = pDevice->GetGraphicsQueueIndex();
         m_queue = pDevice->GetGraphicsQueue();
+        m_pTracyQueueCtx = pDevice->GetTracyGraphicsQueueCtx();
         break;
     case GfxCommandQueue::Compute:
         createInfo.queueFamilyIndex = pDevice->GetComputeQueueIndex();
         m_queue = pDevice->GetComputeQueue();
+        m_pTracyQueueCtx = pDevice->GetTracyComputeQueueCtx();
         break;
     case GfxCommandQueue::Copy:
         createInfo.queueFamilyIndex = pDevice->GetCopyQueueIndex();
         m_queue = pDevice->GetCopyQueue();
+        m_pTracyQueueCtx = pDevice->GetTracyCopyQueueCtx();
         break;
     default:
         break;
@@ -98,6 +103,11 @@ void VulkanCommandList::Begin()
 void VulkanCommandList::End()
 {
     FlushBarriers();
+
+    if (m_pTracyQueueCtx)
+    {
+        TracyVkCollect(m_pTracyQueueCtx, m_commandBuffer);
+    }
 
     vkEndCommandBuffer(m_commandBuffer);
 
@@ -219,11 +229,24 @@ void VulkanCommandList::BeginEvent(const eastl::string& event_name, const eastl:
     info.pLabelName = event_name.c_str();
 
     vkCmdBeginDebugUtilsLabelEXT(m_commandBuffer, &info);
+
+    if (m_pTracyQueueCtx)
+    {
+        tracy::VkCtxScope* scope = new tracy::VkCtxScope(m_pTracyQueueCtx, line, file.c_str(), file.length(), function.c_str(), function.length(), event_name.c_str(), event_name.length(), m_commandBuffer, true);
+        m_tracyZoneScopes.push_back(scope);
+    }
 }
 
 void VulkanCommandList::EndEvent()
 {
     vkCmdEndDebugUtilsLabelEXT(m_commandBuffer);
+
+    if (m_pTracyQueueCtx)
+    {
+        RE_ASSERT(!m_tracyZoneScopes.empty());
+        delete m_tracyZoneScopes.back();
+        m_tracyZoneScopes.pop_back();
+    }
 }
 
 void VulkanCommandList::CopyBufferToTexture(IGfxTexture* dst_texture, uint32_t mip_level, uint32_t array_slice, IGfxBuffer* src_buffer, uint32_t offset)

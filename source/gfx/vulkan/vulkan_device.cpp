@@ -19,6 +19,8 @@
 #include "volk/volk.h"
 #define VMA_IMPLEMENTATION
 #include "vma/vk_mem_alloc.h"
+#define TRACY_VK_USE_SYMBOL_TABLE
+#include "tracy/public/tracy/TracyVulkan.hpp"
 
 #if RE_PLATFORM_WINDOWS
 #include "nvsdk_ngx_vk.h"
@@ -51,6 +53,16 @@ VulkanDevice::~VulkanDevice()
     delete m_resourceDescriptorAllocator;
     delete m_samplerDescriptorAllocator;
 
+    if (m_pTracyGraphicsQueueCtx)
+    {
+        TracyVkDestroy(m_pTracyGraphicsQueueCtx);
+    }
+
+    if (m_pTracyComputeQueueCtx)
+    {
+        TracyVkDestroy(m_pTracyComputeQueueCtx);
+    }
+
     vmaDestroyPool(m_vmaAllocator, m_vmaSharedResourcePool);
     vmaDestroyAllocator(m_vmaAllocator);
     vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout[0], nullptr);
@@ -71,6 +83,7 @@ bool VulkanDevice::Create()
     CHECK_VK_RESULT(CreateDevice());
     CHECK_VK_RESULT(CreateVmaAllocator());
     CHECK_VK_RESULT(CreatePipelineLayout());
+    CHECK_VK_RESULT(CreateTracyCtx());
 
     m_deferredDeletionQueue = new VulkanDeletionQueue(this);
 
@@ -503,6 +516,7 @@ VkResult VulkanDevice::CreateDevice()
         "VK_KHR_bind_memory2",
         "VK_KHR_timeline_semaphore",
         "VK_KHR_dedicated_allocation",
+        "VK_EXT_calibrated_timestamps",
 #if RE_PLATFORM_WINDOWS
         "VK_KHR_external_memory_win32",
 #endif
@@ -772,6 +786,47 @@ VkResult VulkanDevice::CreatePipelineLayout()
     createInfo.pSetLayouts = m_descriptorSetLayout;
 
     return vkCreatePipelineLayout(m_device, &createInfo, nullptr, &m_pipelineLayout);
+}
+
+VkResult VulkanDevice::CreateTracyCtx()
+{
+    VkCommandPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+    VkCommandBufferAllocateInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+    commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    commandBufferInfo.commandBufferCount = 1;
+
+    VkCommandPool commandPool;
+    VkCommandBuffer commandBuffer;
+
+    {
+        poolInfo.queueFamilyIndex = m_graphicsQueueIndex;
+        vkCreateCommandPool(m_device, &poolInfo, nullptr, &commandPool);
+
+        commandBufferInfo.commandPool = commandPool;
+        vkAllocateCommandBuffers(m_device, &commandBufferInfo, &commandBuffer);
+
+        m_pTracyGraphicsQueueCtx = TracyVkContextCalibrated(m_instance, m_physicalDevice, m_device, m_graphicsQueue, commandBuffer, vkGetInstanceProcAddr, vkGetDeviceProcAddr);
+
+        vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer);
+        vkDestroyCommandPool(m_device, commandPool, nullptr);
+    }
+
+    {
+        poolInfo.queueFamilyIndex = m_computeQueueIndex;
+        vkCreateCommandPool(m_device, &poolInfo, nullptr, &commandPool);
+
+        commandBufferInfo.commandPool = commandPool;
+        vkAllocateCommandBuffers(m_device, &commandBufferInfo, &commandBuffer);
+
+        m_pTracyComputeQueueCtx = TracyVkContextCalibrated(m_instance, m_physicalDevice, m_device, m_computeQueue, commandBuffer, vkGetInstanceProcAddr, vkGetDeviceProcAddr);
+
+        vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer);
+        vkDestroyCommandPool(m_device, commandPool, nullptr);
+    }
+
+    return VK_SUCCESS;
 }
 
 void VulkanDevice::FindQueueFamilyIndex()
