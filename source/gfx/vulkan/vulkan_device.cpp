@@ -810,6 +810,7 @@ VkResult VulkanDevice::CreateTracyCtx()
         vkAllocateCommandBuffers(m_device, &commandBufferInfo, &commandBuffer);
 
         m_pTracyGraphicsQueueCtx = TracyVkContextCalibrated(m_instance, m_physicalDevice, m_device, m_graphicsQueue, commandBuffer, vkGetInstanceProcAddr, vkGetDeviceProcAddr);
+        TracyVkContextName(m_pTracyGraphicsQueueCtx, "Graphics Queue", strlen("Graphics Queue"))
 
         vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer);
         vkDestroyCommandPool(m_device, commandPool, nullptr);
@@ -823,6 +824,7 @@ VkResult VulkanDevice::CreateTracyCtx()
         vkAllocateCommandBuffers(m_device, &commandBufferInfo, &commandBuffer);
 
         m_pTracyComputeQueueCtx = TracyVkContextCalibrated(m_instance, m_physicalDevice, m_device, m_computeQueue, commandBuffer, vkGetInstanceProcAddr, vkGetDeviceProcAddr);
+        TracyVkContextName(m_pTracyComputeQueueCtx, "Compute Queue", strlen("Compute Queue"))
 
         vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer);
         vkDestroyCommandPool(m_device, commandPool, nullptr);
