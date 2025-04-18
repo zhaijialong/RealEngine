@@ -4,6 +4,7 @@
 #include "utils/system.h"
 #include "enkiTS/TaskScheduler.h"
 #include "rpmalloc/rpmalloc.h"
+#include "rpmalloc/rpnew.h"
 #include "spdlog/sinks/msvc_sink.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
