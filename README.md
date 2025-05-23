@@ -1,3 +1,5 @@
+This branch is just for some WebGPU testing. WebGPU is not capable to support RealEngine currently, as it lacks some modern features, such as bindless, mesh shaders, ray tracing etc.
+
 # RealEngine
 
 My toy engine, mainly for rendering experiment and prototyping. 

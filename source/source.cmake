@@ -129,6 +129,30 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_swapchain.h
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_texture.cpp
     ${SOURCE_ROOT}/gfx/vulkan/vulkan_texture.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_buffer.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_buffer.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_command_list.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_command_list.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_descriptor.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_descriptor.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_device.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_device.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_fence.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_fence.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_heap.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_heap.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_pipeline_state.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_pipeline_state.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_rt_blas.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_rt_blas.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_rt_tlas.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_rt_tlas.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_shader.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_shader.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_swapchain.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_swapchain.h
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_texture.cpp
+    ${SOURCE_ROOT}/gfx/webgpu/webgpu_texture.h
     ${SOURCE_ROOT}/gfx/gfx.cpp
     ${SOURCE_ROOT}/gfx/gfx.h
     ${SOURCE_ROOT}/gfx/gfx_buffer.h
