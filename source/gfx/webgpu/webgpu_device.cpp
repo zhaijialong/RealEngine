@@ -12,6 +12,8 @@
 #include "webgpu_rt_tlas.h"
 #include "../gfx.h"
 
+#pragma comment(lib, "wgpu_native.dll.lib")
+
 WebGPUDevice::WebGPUDevice(const GfxDeviceDesc& desc)
 {
     m_desc = desc;

@@ -60,6 +60,7 @@ target_include_directories(RealEngine PUBLIC
     ${EXTERNAL_ROOT}/DLSS/include
     ${EXTERNAL_ROOT}/xess/inc
     ${EXTERNAL_ROOT}/RayTracingDenoiser/Include
+    ${EXTERNAL_ROOT}/webgpu/include
 )
 
 target_compile_definitions(RealEngine PUBLIC
@@ -98,6 +99,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_directories(RealEngine PUBLIC
         ${EXTERNAL_ROOT}/DLSS/lib/Windows_x86_64/x86_64
         ${EXTERNAL_ROOT}/xess/lib/
+        ${EXTERNAL_ROOT}/webgpu/lib
     )
 
     target_link_libraries(RealEngine
