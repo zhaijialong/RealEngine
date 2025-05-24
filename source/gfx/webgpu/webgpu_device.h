@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../gfx_device.h"
+#include "webgpu/webgpu.h"
 
 class WebGPUDevice : public IGfxDevice
 {
@@ -32,4 +33,9 @@ public:
 
     virtual uint32_t GetAllocationSize(const GfxTextureDesc& desc) override;
     virtual bool DumpMemoryStats(const eastl::string& file) override;
+
+private:
+    WGPUInstance m_instance = nullptr;
+    WGPUAdapter m_adapter = nullptr;
+    WGPUDevice m_device = nullptr;
 };

@@ -1,6 +1,7 @@
 #include "gfx.h"
 #include "core/platform.h"
 #include "vulkan/vulkan_device.h"
+#include "webgpu/webgpu_device.h"
 #include "mock/mock_device.h"
 #include "utils/assert.h"
 #include "xxHash/xxhash.h"
@@ -32,6 +33,9 @@ IGfxDevice* CreateGfxDevice(const GfxDeviceDesc& desc)
         pDevice = new MetalDevice(desc);
         break;
 #endif
+    case GfxRenderBackend::WebGPU:
+        pDevice = new WebGPUDevice(desc);
+        break;
     case GfxRenderBackend::Mock:
         pDevice = new MockDevice(desc);
         break;

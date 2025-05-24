@@ -21,10 +21,32 @@ WebGPUDevice::WebGPUDevice(const GfxDeviceDesc& desc)
 
 WebGPUDevice::~WebGPUDevice()
 {
+    wgpuInstanceRelease(m_instance);
 }
 
 bool WebGPUDevice::Create()
 {
+    WGPUInstanceDescriptor desc = {};
+    m_instance = wgpuCreateInstance(&desc);
+    if (!m_instance)
+    {
+        return false;
+    }
+
+    WGPURequestAdapterOptions options = {};
+    options.featureLevel = WGPUFeatureLevel_Core;
+
+    WGPURequestAdapterCallbackInfo callbackInfo = {};
+    callbackInfo.mode = WGPUCallbackMode_WaitAnyOnly;
+    callbackInfo.callback = [](WGPURequestAdapterStatus status, WGPUAdapter adapter, WGPUStringView message, void* userdata1, void* userdata2)
+        {
+        };
+
+    WGPUFuture future = wgpuInstanceRequestAdapter(m_instance, &options, callbackInfo);
+
+    WGPUFutureWaitInfo waitInfo = { future };
+    wgpuInstanceWaitAny(m_instance, 1, &waitInfo, UINT64_MAX); // crashes here, I don't why
+
     return true;
 }
 

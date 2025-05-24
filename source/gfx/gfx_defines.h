@@ -21,6 +21,7 @@ enum class GfxRenderBackend
     D3D12,
     Vulkan,
     Metal,
+    WebGPU,
     Mock,
 };
 
