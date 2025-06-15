@@ -2,12 +2,23 @@
 
 #include "../render_graph.h"
 
+enum class DirectLightingMode
+{
+    Clustered,
+    TiledTree,
+    Hybrid,
+    ReSTIR,
+
+    Num,
+};
+
 class DirectLighting
 {
 public:
     DirectLighting(Renderer* pRenderer);
     ~DirectLighting();
 
+    void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal,
         RGHandle customData, RGHandle depth, RGHandle shadow, uint32_t width, uint32_t height);
 
@@ -18,6 +29,8 @@ private:
 private:
     Renderer* m_pRenderer = nullptr;
     IGfxPipelineState* m_pPSO = nullptr;
+
+    DirectLightingMode m_mode = DirectLightingMode::Clustered;
 
     eastl::unique_ptr<class ClusteredLightLists> m_pClusteredLightLists;
     eastl::unique_ptr<class TiledLightTrees> m_pTiledLightTrees;

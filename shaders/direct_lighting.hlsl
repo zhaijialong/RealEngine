@@ -1,12 +1,13 @@
 #include "common.hlsli"
 #include "local_light.hlsli"
 
-cbuffer CB : register(b1)
+cbuffer CB : register(b0)
 {
     uint c_diffuseRT;
     uint c_specularRT;
     uint c_normalRT;
     uint c_customDataRT;
+
     uint c_depthRT;
     uint c_shadowRT;
     uint c_outputRT;

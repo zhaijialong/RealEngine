@@ -3,6 +3,7 @@
 #include "tiled_light_trees.h"
 #include "restir_di.h"
 #include "../renderer.h"
+#include "utils/gui_util.h"
 
 DirectLighting::DirectLighting(Renderer* pRenderer)
 {
@@ -20,9 +21,35 @@ DirectLighting::~DirectLighting()
 {
 }
 
+void DirectLighting::OnGui()
+{
+    if (ImGui::CollapsingHeader("Direct Lighting"))
+    {
+        ImGui::Combo("Mode##DirectLighting", (int*)&m_mode, "Clustered\0TiledTree\0Hybrid\0ReSTIR\0\0", (int)DirectLightingMode::Num);
+    }
+}
+
 RGHandle DirectLighting::AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, RGHandle specular, RGHandle normal, 
     RGHandle customData, RGHandle depth, RGHandle shadow, uint32_t width, uint32_t height)
 {
+    switch (m_mode)
+    {
+    case DirectLightingMode::Clustered:
+        m_pClusteredLightLists->Build(width, height);
+        break;
+    case DirectLightingMode::TiledTree:
+        //todo
+        break;
+    case DirectLightingMode::Hybrid:
+        //todo
+        break;
+    case DirectLightingMode::ReSTIR:
+        //todo
+        break;
+    default:
+        break;
+    }
+
     struct DirectLightingData
     {
         RGHandle diffuseRT;
@@ -70,27 +97,18 @@ RGHandle DirectLighting::AddPass(RenderGraph* pRenderGraph, RGHandle diffuse, RG
 void DirectLighting::Render(IGfxCommandList* pCommandList, RGTexture* diffuse, RGTexture* specular, RGTexture* normal,
     RGTexture* customData, RGTexture* depth, RGTexture* shadow, RGTexture* output, uint32_t width, uint32_t height)
 {
-    pCommandList->SetPipelineState(m_pPSO);
-
-    struct CB
+    uint cb[] =
     {
-        uint diffuseRT;
-        uint specularRT;
-        uint normalRT;
-        uint customDataRT;
-        uint depthRT;
-        uint shadowRT;
-        uint outputRT;
+        diffuse->GetSRV()->GetHeapIndex(),
+        specular->GetSRV()->GetHeapIndex(),
+        normal->GetSRV()->GetHeapIndex(),
+        customData->GetSRV()->GetHeapIndex(),
+        depth->GetSRV()->GetHeapIndex(),
+        shadow->GetSRV()->GetHeapIndex(),
+        output->GetUAV()->GetHeapIndex()
     };
 
-    CB cb;
-    cb.diffuseRT = diffuse->GetSRV()->GetHeapIndex();
-    cb.specularRT = specular->GetSRV()->GetHeapIndex();
-    cb.normalRT = normal->GetSRV()->GetHeapIndex();
-    cb.customDataRT = customData->GetSRV()->GetHeapIndex();
-    cb.depthRT = depth->GetSRV()->GetHeapIndex();
-    cb.shadowRT = shadow->GetSRV()->GetHeapIndex();
-    cb.outputRT = output->GetUAV()->GetHeapIndex();
-    pCommandList->SetComputeConstants(1, &cb, sizeof(cb));
+    pCommandList->SetPipelineState(m_pPSO);
+    pCommandList->SetComputeConstants(0, cb, sizeof(cb));
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }

@@ -114,6 +114,8 @@ public:
     uint32_t GetInstanceCount() const { return m_pGpuScene->GetInstanceCount(); }
 
     uint32_t AddLocalLight(const LocalLightData& data);
+    uint32_t GetLocalLightCount() const { return m_pGpuScene->GetLocalLightCount(); }
+    const LocalLightData* GetLocalLights() const { return m_pGpuScene->GetLocalLights(); }
 
     void RequestMouseHitTest(uint32_t x, uint32_t y);
     bool IsEnableMouseHitTest() const { return m_bEnableObjectIDRendering; }

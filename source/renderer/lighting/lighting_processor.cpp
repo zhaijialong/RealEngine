@@ -26,6 +26,7 @@ void LightingProcessor::OnGui()
 {
     m_pGTAO->OnGui();
     m_pRTShdow->OnGui();
+    m_pDirectLighting->OnGui();
     m_pReflection->OnGui();
     m_pReSTIRGI->OnGui();
 }

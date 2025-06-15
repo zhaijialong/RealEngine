@@ -26,6 +26,7 @@ public:
 
     uint32_t AddLocalLight(const LocalLightData& data);
     uint32_t GetLocalLightCount() const { return (uint32_t)m_localLightsData.size(); }
+    const LocalLightData* GetLocalLights() const { return m_localLightsData.data(); }
 
     void Update();
     void BuildRayTracingAS(IGfxCommandList* pCommandList);

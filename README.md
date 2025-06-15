@@ -21,7 +21,7 @@ It is not supposed to be used in production, and prefers clean design and code o
 - [x] GTAO
 - [x] specular GI
 - [x] diffuse GI
-- [ ] clustered shading
+- [x] clustered shading
 - [x] Bloom
 - [x] Auto Exposure
 - [x] TAA
