@@ -53,6 +53,11 @@ RGHandle LightingProcessor::AddPass(RenderGraph* pRenderGraph, RGHandle depth, R
     return CompositeLight(pRenderGraph, depth, gtao, direct_lighting, indirect_specular, indirect_diffuse, width, height);
 }
 
+ClusteredLightLists* LightingProcessor::GetClusteredLightLists() const
+{
+    return m_pDirectLighting->GetClusteredLightLists();
+}
+
 RGHandle LightingProcessor::CompositeLight(RenderGraph* pRenderGraph, RGHandle depth, RGHandle ao, RGHandle direct_lighting,
     RGHandle indirect_specular, RGHandle indirect_diffuse, uint32_t width, uint32_t height)
 {

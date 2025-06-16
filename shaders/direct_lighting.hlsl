@@ -1,5 +1,7 @@
 #include "common.hlsli"
 #include "local_light.hlsli"
+#include "clustered_shading.hlsli"
+#include "debug.hlsli"
 
 cbuffer CB : register(b0)
 {
@@ -45,14 +47,32 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 lighting = EvaluateBRDF(shadingModel, SceneCB.lightDir, V, N, diffuse, specular, roughness, customData, SceneCB.lightColor) * visibility;
     
-    //TODO : clustered light culling
+#if 1
+    uint lightGridIndex = GetLightGridIndex(pos, depth);
+    uint2 lightGrid = GetLightGridData(lightGridIndex);
     
+    if (all((pos % tileSize) == 0))
+    {
+        //float2 screenPos = pos;
+        //debug::PrintInt(screenPos, float3(1, 1, 1), lightGrid.y);
+    }
+    
+    for (uint i = 0; i < lightGrid.y; ++i)
+    {
+        uint lightIndex = GetLightIndex(lightGrid.x + i);
+        LocalLightData light = GetLocalLightData(lightIndex);
+        
+        lighting += CalculateLocalLight(light, worldPos, shadingModel, V, N, diffuse, specular, roughness, customData);
+        
+    }
+#else
     for (uint i = 0; i < SceneCB.localLightCount; ++i)
     {
         LocalLightData light = GetLocalLightData(i);
         
         lighting += CalculateLocalLight(light, worldPos, shadingModel, V, N, diffuse, specular, roughness, customData);
     }
-
+#endif
+    
     outTexture[pos] = float4(lighting, 1.0);
 }

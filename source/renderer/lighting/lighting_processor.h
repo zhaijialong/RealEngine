@@ -11,6 +11,8 @@ public:
     void OnGui();
     RGHandle AddPass(RenderGraph* pRenderGraph, RGHandle depth, RGHandle linear_depth, RGHandle velocity, uint32_t width, uint32_t height);
     
+    class ClusteredLightLists* GetClusteredLightLists() const;
+
 private:
     RGHandle CompositeLight(RenderGraph* pRenderGraph, RGHandle depth, RGHandle ao, RGHandle direct_lighting, 
         RGHandle indirect_specular, RGHandle indirect_diffuse, uint32_t width, uint32_t height);

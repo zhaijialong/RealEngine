@@ -135,6 +135,8 @@ struct SceneConstant
     
     uint localLightDataAddress;
     uint localLightCount;
+    uint lightGridsAddress;
+    uint lightIndicesAddress;
 };
 
 #ifndef __cplusplus

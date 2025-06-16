@@ -14,6 +14,7 @@
 #include "sky_cubemap.h"
 #include "stbn.h"
 #include "lighting/lighting_processor.h"
+#include "lighting/clustered_light_lists.h"
 #include "post_processing/post_processor.h"
 #include "core/engine.h"
 #include "utils/profiler.h"
@@ -656,6 +657,8 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.marschnerTextureN = m_pMarschnerHairLUT->GetN()->GetSRV()->GetHeapIndex();
     sceneCB.localLightDataAddress = m_pGpuScene->GetLocalLightsDataAddress();
     sceneCB.localLightCount = m_pGpuScene->GetLocalLightCount();
+    sceneCB.lightGridsAddress = m_pLightingProcessor->GetClusteredLightLists()->GetLightGridBufferAddress();
+    sceneCB.lightIndicesAddress = m_pLightingProcessor->GetClusteredLightLists()->GetLightIndicesBufferAddress();
 
     if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
     {
