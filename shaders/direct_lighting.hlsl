@@ -47,11 +47,11 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 lighting = EvaluateBRDF(shadingModel, SceneCB.lightDir, V, N, diffuse, specular, roughness, customData, SceneCB.lightColor) * visibility;
     
-#if 1
+#if CLUSTERED_SHADING
     uint lightGridIndex = GetLightGridIndex(pos, depth);
     uint2 lightGrid = GetLightGridData(lightGridIndex);
     
-    if (all((pos % tileSize) == 0))
+    if (all((pos % SceneCB.lightGridTileSize) == 0))
     {
         //float2 screenPos = pos;
         //debug::PrintInt(screenPos, float3(1, 1, 1), lightGrid.y);
@@ -63,7 +63,6 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
         LocalLightData light = GetLocalLightData(lightIndex);
         
         lighting += CalculateLocalLight(light, worldPos, shadingModel, V, N, diffuse, specular, roughness, customData);
-        
     }
 #else
     for (uint i = 0; i < SceneCB.localLightCount; ++i)

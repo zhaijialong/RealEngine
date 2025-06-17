@@ -137,6 +137,10 @@ struct SceneConstant
     uint localLightCount;
     uint lightGridsAddress;
     uint lightIndicesAddress;
+    
+    float2 lightGridSliceParams;
+    uint lightGridTileSize;
+    uint lightGridSliceCount;
 };
 
 #ifndef __cplusplus

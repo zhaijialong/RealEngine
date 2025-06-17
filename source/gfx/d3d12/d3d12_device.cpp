@@ -770,6 +770,7 @@ void D3D12Device::CreateIndirectCommandSignatures()
     RE_ASSERT(SUCCEEDED(hr));
     m_pDispatchMeshSignature->SetName(L"D3D12Device::m_pDispatchMeshSignature");
 
+    // todo : incrementing constant https://microsoft.github.io/DirectX-Specs/d3d/IndirectDrawing.html#incrementing-constant
     D3D12_INDIRECT_ARGUMENT_DESC mdiArgumentDesc[2] = {};
     mdiArgumentDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT; //a uint32 root constant ("gl_DrawID")
     mdiArgumentDesc[0].Constant.RootParameterIndex = 0;

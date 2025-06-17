@@ -657,8 +657,13 @@ void Renderer::SetupGlobalConstants(IGfxCommandList* pCommandList)
     sceneCB.marschnerTextureN = m_pMarschnerHairLUT->GetN()->GetSRV()->GetHeapIndex();
     sceneCB.localLightDataAddress = m_pGpuScene->GetLocalLightsDataAddress();
     sceneCB.localLightCount = m_pGpuScene->GetLocalLightCount();
-    sceneCB.lightGridsAddress = m_pLightingProcessor->GetClusteredLightLists()->GetLightGridBufferAddress();
-    sceneCB.lightIndicesAddress = m_pLightingProcessor->GetClusteredLightLists()->GetLightIndicesBufferAddress();
+
+    ClusteredLightLists* clusteredLightLists = m_pLightingProcessor->GetClusteredLightLists();
+    sceneCB.lightGridsAddress = clusteredLightLists->GetLightGridBufferAddress();
+    sceneCB.lightIndicesAddress = clusteredLightLists->GetLightIndicesBufferAddress();
+    sceneCB.lightGridTileSize = clusteredLightLists->GetTileSize();
+    sceneCB.lightGridSliceCount = clusteredLightLists->GetSliceCount();
+    sceneCB.lightGridSliceParams = clusteredLightLists->GetSliceParams(camera);
 
     if (pCommandList->GetQueue() == GfxCommandQueue::Graphics)
     {

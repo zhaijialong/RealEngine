@@ -30,7 +30,6 @@ private:
 
 private:
     Renderer* m_pRenderer = nullptr;
-    IGfxPipelineState* m_pPSO = nullptr;
 
     DirectLightingMode m_mode = DirectLightingMode::Clustered;
 

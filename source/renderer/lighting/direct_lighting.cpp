@@ -11,10 +11,6 @@ DirectLighting::DirectLighting(Renderer* pRenderer)
     m_pClusteredLightLists = eastl::make_unique<ClusteredLightLists>(pRenderer);
     m_pTiledLightTrees = eastl::make_unique<TiledLightTrees>(pRenderer);
     m_pReSTIRDI = eastl::make_unique<ReSTIRDI>(pRenderer);
-
-    GfxComputePipelineDesc psoDesc;
-    psoDesc.cs = pRenderer->GetShader("direct_lighting.hlsl", "main", GfxShaderType::CS);
-    m_pPSO = pRenderer->GetPipelineState(psoDesc, "direct lighting PSO");
 }
 
 DirectLighting::~DirectLighting()
@@ -108,7 +104,22 @@ void DirectLighting::Render(IGfxCommandList* pCommandList, RGTexture* diffuse, R
         output->GetUAV()->GetHeapIndex()
     };
 
-    pCommandList->SetPipelineState(m_pPSO);
+    eastl::vector<eastl::string> defines;
+
+    switch (m_mode)
+    {
+    case DirectLightingMode::Clustered:
+        defines.push_back("CLUSTERED_SHADING=1");
+        break;
+    default:
+        break;
+    }
+
+    GfxComputePipelineDesc psoDesc;
+    psoDesc.cs = m_pRenderer->GetShader("direct_lighting.hlsl", "main", GfxShaderType::CS, defines);
+    IGfxPipelineState* pPSO = m_pRenderer->GetPipelineState(psoDesc, "direct lighting PSO");
+
+    pCommandList->SetPipelineState(pPSO);
     pCommandList->SetComputeConstants(0, cb, sizeof(cb));
     pCommandList->Dispatch(DivideRoudingUp(width, 8), DivideRoudingUp(height, 8), 1);
 }

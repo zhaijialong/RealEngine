@@ -4,6 +4,7 @@
 #include "utils/parallel_for.h"
 #include "EASTL/atomic.h"
 
+// todo : need a cvar system
 static const uint32_t tileSize = 48;
 static const uint32_t sliceCount = 16;
 static const float maxSliceDepth = 500.0f;
@@ -178,4 +179,21 @@ void ClusteredLightLists::Build(uint32_t width, uint32_t height)
 
     m_lightGridBufferAddress = m_pRenderer->AllocateSceneConstant(lightGrids.data(), sizeof(uint2) * lightGrids.size());
     m_lightIndicesBufferAddress = m_pRenderer->AllocateSceneConstant(lightIndices.data(), sizeof(uint32_t) * lightIndices.size());
+}
+
+uint32_t ClusteredLightLists::GetTileSize() const
+{
+    return tileSize;
+}
+
+uint32_t ClusteredLightLists::GetSliceCount() const
+{
+    return sliceCount;
+}
+
+float2 ClusteredLightLists::GetSliceParams(Camera* camera) const
+{
+    float nearZ = camera->GetZNear();
+
+    return float2(1.0f / nearZ, (float)sliceCount / log(maxSliceDepth / nearZ));
 }

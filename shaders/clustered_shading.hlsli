@@ -2,25 +2,21 @@
 
 #include "common.hlsli"
 
-// todo : move these to cb
-static const uint tileSize = 48;
-static const uint sliceCount = 16;
-static const float maxSliceDepth = 500.0f;
-
 uint GetLightGridSliceIndex(float linearDepth)
 {
-    uint sliceIndex = log(abs(linearDepth) / GetCameraCB().nearZ) * sliceCount / log(maxSliceDepth / GetCameraCB().nearZ);
+    // uint sliceIndex = log(linearDepth / GetCameraCB().nearZ) * sliceCount / log(maxSliceDepth / GetCameraCB().nearZ);
+    uint sliceIndex = log(linearDepth * SceneCB.lightGridSliceParams.x) * SceneCB.lightGridSliceParams.y;
     
-    return clamp(sliceIndex, 0, sliceCount - 1);
+    return clamp(sliceIndex, 0, SceneCB.lightGridSliceCount - 1);
 }
 
 uint GetLightGridIndex(uint2 screenPos, float depth)
 {
-    uint tileCountX = (SceneCB.renderSize.x + tileSize - 1) / tileSize;
-    uint tileCountY = (SceneCB.renderSize.y + tileSize - 1) / tileSize;
+    uint tileCountX = (SceneCB.renderSize.x + SceneCB.lightGridTileSize - 1) / SceneCB.lightGridTileSize;
+    uint tileCountY = (SceneCB.renderSize.y + SceneCB.lightGridTileSize - 1) / SceneCB.lightGridTileSize;
     uint tilesPerSlice = tileCountX * tileCountY;
     
-    uint2 tilePos = screenPos / tileSize;
+    uint2 tilePos = screenPos / SceneCB.lightGridTileSize;
     uint sliceIndex = GetLightGridSliceIndex(GetLinearDepth(depth));
     return tilePos.x + tilePos.y * tileCountX + sliceIndex * tilesPerSlice;
 }
