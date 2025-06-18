@@ -5,7 +5,7 @@
 #include "EASTL/atomic.h"
 
 // todo : need a cvar system
-static const uint32_t tileSize = 48;
+static const uint32_t tileSize = 64;
 static const uint32_t sliceCount = 16;
 static const float maxSliceDepth = 500.0f;
 
@@ -166,7 +166,7 @@ void ClusteredLightLists::Build(uint32_t width, uint32_t height)
         {
             Cluster& cluster = clusters[index];
 
-            uint32_t lightCount = cluster.lightIndices.size();
+            uint32_t lightCount = (uint32_t)cluster.lightIndices.size();
             uint32_t offset = lightIndicesOffset.fetch_add(lightCount);
 
             lightGrids[index] = uint2(offset, lightCount);
@@ -177,8 +177,8 @@ void ClusteredLightLists::Build(uint32_t width, uint32_t height)
             }
         });
 
-    m_lightGridBufferAddress = m_pRenderer->AllocateSceneConstant(lightGrids.data(), sizeof(uint2) * lightGrids.size());
-    m_lightIndicesBufferAddress = m_pRenderer->AllocateSceneConstant(lightIndices.data(), sizeof(uint32_t) * lightIndices.size());
+    m_lightGridBufferAddress = m_pRenderer->AllocateSceneConstant(lightGrids.data(), sizeof(uint2) * (uint32_t)lightGrids.size());
+    m_lightIndicesBufferAddress = m_pRenderer->AllocateSceneConstant(lightIndices.data(), sizeof(uint32_t) * (uint32_t)lightIndices.size());
 }
 
 uint32_t ClusteredLightLists::GetTileSize() const
