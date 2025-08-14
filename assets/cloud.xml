@@ -1,0 +1,5 @@
+<scene>
+    <skysphere />
+    <camera fov="60.0" znear="0.01"/>
+    <light type="directional" primary="true" rotation="15.000,0.000,0.000" intensity="3.0"/>
+</scene>

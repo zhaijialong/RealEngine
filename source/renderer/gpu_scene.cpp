@@ -87,10 +87,13 @@ void GpuScene::BuildRayTracingAS(IGfxCommandList* pCommandList)
 {
     GPU_EVENT(pCommandList, "BuildTLAS");
 
-    pCommandList->BuildRayTracingTLAS(m_pSceneTLAS.get(), m_raytracingInstances.data(), (uint32_t)m_raytracingInstances.size());
-    pCommandList->GlobalBarrier(GfxAccessMaskAS, GfxAccessMaskSRV);
-
-    m_raytracingInstances.clear();
+    if(m_raytracingInstances.size() > 0)
+    {
+        pCommandList->BuildRayTracingTLAS(m_pSceneTLAS.get(), m_raytracingInstances.data(), (uint32_t)m_raytracingInstances.size());
+        pCommandList->GlobalBarrier(GfxAccessMaskAS, GfxAccessMaskSRV);
+        
+        m_raytracingInstances.clear();
+    }
 }
 
 uint32_t GpuScene::AllocateConstantBuffer(uint32_t size)

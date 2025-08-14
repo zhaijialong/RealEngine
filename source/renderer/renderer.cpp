@@ -12,6 +12,7 @@
 #include "base_pass.h"
 #include "path_tracer.h"
 #include "sky_cubemap.h"
+#include "volumetric_cloud.h"
 #include "stbn.h"
 #include "lighting/lighting_processor.h"
 #include "lighting/clustered_light_lists.h"
@@ -112,6 +113,7 @@ bool Renderer::CreateDevice(GfxRenderBackend backend, void* window_handle, uint3
     m_pGpuStats = eastl::make_unique<GpuDrivenStats>(this);
     m_pPathTracer = eastl::make_unique<PathTracer>(this);
     m_pSkyCubeMap = eastl::make_unique<SkyCubeMap>(this);
+    m_pVolumetricCloud = eastl::make_unique<VolumetricCloud>(this);
 
     return true;
 }
@@ -1156,5 +1158,6 @@ void Renderer::OnGui()
     m_pSkyCubeMap->OnGui();
     m_pLightingProcessor->OnGui();
     m_pPathTracer->OnGui();
+    m_pVolumetricCloud->OnGui();
     m_pPostProcessor->OnGui();
 }

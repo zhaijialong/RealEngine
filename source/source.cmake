@@ -298,6 +298,8 @@ set(ENGINE_SRC_FILES
     ${SOURCE_ROOT}/renderer/stbn.h
     ${SOURCE_ROOT}/renderer/texture_loader.cpp
     ${SOURCE_ROOT}/renderer/texture_loader.h
+    ${SOURCE_ROOT}/renderer/volumetric_cloud.cpp
+    ${SOURCE_ROOT}/renderer/volumetric_cloud.h
     ${SOURCE_ROOT}/utils/assert.h
     ${SOURCE_ROOT}/utils/autorelease_pool.h
     ${SOURCE_ROOT}/utils/fmt.h

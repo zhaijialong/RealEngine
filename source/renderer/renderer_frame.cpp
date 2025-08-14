@@ -4,6 +4,7 @@
 #include "path_tracer.h"
 #include "lighting/lighting_processor.h"
 #include "post_processing/post_processor.h"
+#include "volumetric_cloud.h"
 #include "core/engine.h"
 
 void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
@@ -34,6 +35,8 @@ void Renderer::BuildRenderGraph(RGHandle& outColor, RGHandle& outDepth)
         sceneColorRT = m_pLightingProcessor->AddPass(m_pRenderGraph.get(), sceneDepthRT, linearDepthRT, velocityRT, m_nRenderWidth, m_nRenderHeight);
 
         ForwardPass(sceneColorRT, sceneDepthRT);
+        
+        sceneColorRT = m_pVolumetricCloud->AddPass(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, m_nRenderWidth, m_nRenderHeight);
     }
 
     RGHandle output = m_pPostProcessor->AddPass(m_pRenderGraph.get(), sceneColorRT, sceneDepthRT, velocityRT,
