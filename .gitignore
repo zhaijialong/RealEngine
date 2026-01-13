@@ -65,3 +65,7 @@ bin/tbbbind_2_5.dll
 .DS_Store
 _Build
 bin/ffx_fsr2_api
+bin/sycl8.dll
+bin/ur_adapter_level_zero.dll
+bin/ur_loader.dll
+bin/ur_win_proxy_loader.dll
