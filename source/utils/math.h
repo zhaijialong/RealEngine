@@ -13,7 +13,12 @@ using quaternion = float4;
 
 static const float PI = 3.14159265f;
 
+#ifdef _WIN32
+#define ENABLE_HLSLPP 0
+#else
 #define ENABLE_HLSLPP 1
+#endif
+
 
 inline hlslpp::float4 to_hlslpp(const float4& v)
 {
