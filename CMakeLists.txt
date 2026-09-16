@@ -139,6 +139,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 
     target_include_directories(RealEngine PUBLIC
         ${EXTERNAL_ROOT}/metal-cpp
+        ${EXTERNAL_ROOT}/metal-cpp-ext
         ${EXTERNAL_ROOT}/MetalShaderConverter/include
     )
 

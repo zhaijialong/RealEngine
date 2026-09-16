@@ -2,6 +2,14 @@
 
 #include "assert.h"
 #include "float.h" // for FLT_EPSILON
+
+#if defined(__APPLE__)
+// Must be included before linalg.h: the using-directives below expose linalg's
+// functions to the global namespace, which makes unqualified calls inside
+// Apple's <simd/simd.h> (pulled in by metal-cpp's MetalFX headers) ambiguous.
+#include <simd/simd.h>
+#endif
+
 #include "linalg/linalg.h"
 #include "hlslpp/hlsl++.h"
 
