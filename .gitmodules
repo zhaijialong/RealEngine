@@ -16,3 +16,6 @@
 [submodule "external/FidelityFX-FSR2"]
 	path = external/FidelityFX-FSR2
 	url = https://github.com/zhaijialong/FidelityFX-FSR2.git
+[submodule "external/metal-cpp"]
+	path = external/metal-cpp
+	url = https://github.com/apple/metal-cpp.git
